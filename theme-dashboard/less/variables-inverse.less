@@ -1,0 +1,180 @@
+@import "./variables.less";
+
+// Gray scale
+@gray-base:    #252830;
+@gray-darker:  lighten(@gray-base, 13.5%);
+@gray-dark:    lighten(@gray-base, 20%);
+@gray:         lighten(@gray-base, 33.5%);
+@gray-light:   lighten(@gray-base, 66.7%);
+@gray-lighter: lighten(@gray-base, 93.5%);
+
+// reset gray subtle
+@gray-subtle: @gray-light;
+
+// Scaffolding
+@body-bg:           @gray-base;
+@text-color:        @gray-light;
+@btn-default-color: @gray-dark;
+
+// Typography
+@headings-color:                 @gray-lighter;
+@code-bg:                        darken(@gray-base, 5%);
+@blockquote-border-color:        @gray-darker;
+@page-header-border-color:       @gray-darker;
+@hr-border:                      @gray-darker;
+
+// Tables
+@table-bg-accent:                @gray-darker;
+@table-border-color:             @gray-darker;
+@table-bg-hover:                 @gray-darker;
+
+// Forms
+@input-bg:                       @gray-darker;
+@input-bg-disabled:              lighten(@gray-base, 5%);
+@input-color:                    #fff;
+@input-border:                   @gray-darker;
+@input-border-focus:             #fff;
+@input-group-addon-bg:           lighten(@gray-base, 18%);
+@input-group-addon-border-color: transparent;
+@input-color-placeholder:        @gray-light;
+
+// Thumbnails
+@thumbnail-bg:                   transparent;
+@thumbnail-border:               lighten(@gray-base, 5%);
+@thumbnail-caption-color:        inherit;
+
+// Jumbotron
+@jumbotron-bg:                   darken(@gray-base, 5%);
+@jumbotron-heading-color:        #fff;
+
+// Badges
+@badge-color:                    @gray-base;
+
+// Progress bars
+@progress-bg:                    @gray-darker;
+
+// Navs
+@nav-link-hover-bg:                         @gray-darker;
+@nav-pills-active-link-hover-color:         @body-bg;
+@nav-pills-active-link-hover-bg:            @brand-primary;
+@nav-tabs-border-color:                     @gray-darker;
+@nav-tabs-active-link-hover-color:          @component-active-color;
+@nav-tabs-active-link-hover-bg:             transparent;
+@nav-tabs-active-link-hover-border-color:   @nav-tabs-border-color;
+
+// Inverted navbar
+@navbar-inverse-color:                      @gray-light;
+@navbar-inverse-bg:                         darken(@gray-base, 5%);
+@navbar-inverse-border:                     darken(@gray-base, 5%);
+@navbar-inverse-link-color:                 @gray-light;
+@navbar-inverse-link-hover-color:           #fff;
+// @navbar-inverse-link-hover-bg:              transparent;
+@navbar-inverse-link-active-color:          @component-active-color;
+@navbar-inverse-link-active-bg:             transparent;
+@navbar-inverse-link-disabled-color:        @gray-dark;
+// @navbar-inverse-link-disabled-bg:           transparent;
+@navbar-inverse-brand-color:                @gray-light;
+@navbar-inverse-brand-hover-color:          #fff;
+@navbar-inverse-brand-hover-bg:             transparent;
+@navbar-inverse-toggle-hover-bg:            @gray-base;
+@navbar-inverse-toggle-icon-bar-bg:         #fff;
+@navbar-inverse-toggle-border-color:        transparent;
+
+// Pagination
+@pagination-color:                     @gray-dark;
+@pagination-bg:                        @body-bg;
+@pagination-border:                    @gray-darker;
+
+@pagination-hover-color:               #fff;
+@pagination-hover-bg:                  @gray-darker;
+@pagination-hover-border:              @pagination-hover-bg;
+
+@pagination-active-color:              @component-active-color;
+@pagination-active-bg:                 @gray-dark;
+@pagination-active-border:             @gray-dark;
+
+@pagination-disabled-color:            @gray-dark;
+@pagination-disabled-bg:               transparent;
+@pagination-disabled-border:           @gray-darker;
+
+// Breadcrumbs
+@breadcrumb-bg:                        lighten(@gray-base, 5%);
+@breadcrumb-color:                     @gray-dark;
+@breadcrumb-active-color:              @component-active-color;
+
+// List groups
+@list-group-bg:                        transparent;
+@list-group-border:                    @gray-darker;
+@list-group-hover-bg:                  @gray-darker;
+@list-group-link-color:                @gray-light;
+@list-group-link-hover-color:          @gray-light;
+@list-group-link-heading-color:        @gray-light;
+@list-group-active-color:              @component-active-color;
+@list-group-active-bg:                 @gray-dark;
+@list-group-active-border:             @gray-dark;
+@list-group-active-text-color:         lighten(@list-group-active-bg, 40%);
+@list-group-disabled-color:            @gray-dark;
+@list-group-disabled-bg:               transparent;
+@list-group-disabled-text-color:       inherit;
+
+// Panels
+@panel-bg:                             transparent;
+
+// Wells
+@well-bg:                              lighten(@gray-base, 5%);
+@well-border:                          @gray-darker;
+
+// Tooltips
+@tooltip-arrow-color: #fff;
+
+@thumbnail-bg: transparent;
+@thumbnail-border: lighten(@gray-base, 5%);
+
+@label-color: @gray-base;
+
+@badge-color: @gray-base;
+@badge-bg: #fff;
+
+@btn-toolbar-divider-bg:      @gray-darker;
+
+@custom-select-color:         @text-color;
+@custom-select-bg:            @gray-darker;
+@custom-select-disabled-bg:   darken(@gray-darker, 10%);
+
+@custom-control-indicator-bg: @gray-darker;
+
+@custom-control-indicator-disabled-bg:     darken(@gray-darker, 10%);
+@custom-control-indicator-disabled-border: @custom-control-indicator-disabled-bg;
+
+@hr-divider-content-color:  @gray;
+@hr-divider-content-bg:     @body-bg;
+@hr-divider-before-bg:      @gray-darker;
+
+@nav-header-color: @gray-dark;
+@nav-tabs-border-color: @body-bg;
+@nav-bordered-color-active: @brand-primary;
+
+@list-group-header-color:  #fff;
+@list-group-border:        @gray-darker;
+
+@tooltip-bg: #fff;
+@tooltip-color: @gray-base;
+
+@statlist-border-color: @gray-darker;
+@statlist-link-color: #fff;
+@statlist-progress-bg: lighten(@gray-base, 5%);
+
+@sidebar-toggler-color:        @gray-darker;
+
+@dashhead-toolbar-divider-bg: @gray-darker;
+@dashhead-subtitle-color: @gray-darker;
+
+@iconav-bg:           lighten(@body-bg, 5%);
+@iconav-brand-bg:     darken(@body-bg, 10%);
+@iconav-brand-color:  @gray;
+@iconav-brand-hover-color:  @gray-light;
+@iconav-link-border:  @body-bg;
+@iconav-link-active-bg: @body-bg;
+
+@sidebar-brand-color:       @gray-dark;
+@sidebar-brand-hover-color: @gray;

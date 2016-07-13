@@ -1,0 +1,154 @@
+//
+// Icon nav
+//
+
+.iconav {
+  margin-top: -20px; // offset the min body padding
+  margin-bottom: 30px;
+
+  @media (min-width: @screen-sm-min) {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: @iconav-width;
+    margin-top: 0;
+    margin-bottom: 0;
+    background-color: @iconav-bg;
+    overflow-y: auto;
+    -webkit-transform: translate3d(0,0,0); // Make the sidebar scrollable at all times in Safari
+  }
+
+  .tooltip {
+    white-space: nowrap;
+  }
+}
+
+// Account for the width of the iconav
+.with-iconav > .container,
+.with-iconav > .container-fluid {
+  @media (min-width: @screen-sm-min) {
+    padding-left: 85px;
+  }
+}
+
+.iconav-brand {
+  display: block;
+  padding-top:    10px;
+  padding-bottom: 10px;
+  font-size: 18px;
+  line-height: 1;
+  color: @iconav-brand-color;
+  text-align: center;
+  border-bottom: 0;
+  background-color: @iconav-brand-bg;
+
+  @media (min-width: @screen-sm-min) {
+    padding-top:    20px;
+    padding-bottom: 20px;
+  }
+
+  &:hover {
+    color: @iconav-brand-hover-color;
+    text-decoration: none;
+  }
+}
+
+.iconav-brand-icon {
+  font-size: 30px;
+}
+
+.iconav-nav {
+  // For unread counts and the like
+  .label {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    z-index: 5;
+    padding: .2em .4em;
+    font-size: 11px;
+    line-height: 1;
+    border-radius: 10px;
+    border: 2px solid @iconav-bg;
+  }
+
+  // Nav items
+  > li {
+    float: none;
+    display: inline-block;
+
+    @media (min-width: @screen-sm-min) {
+      display: block;
+    }
+
+    > a {
+      position: relative;
+      padding: 10px 12px;
+      font-size: 18px;
+      color: @iconav-link-color;
+      text-align: center;
+      border-radius: 0;
+
+      @media (min-width: @screen-sm-min) {
+        padding: 15px;
+      }
+    }
+
+    + li {
+      margin-left: -3px;
+
+      > a {
+        border-left: 1px solid @iconav-link-border;
+      }
+
+      @media (min-width: @screen-sm-min) {
+        margin-left: 0;
+
+        > a {
+          border-top: 1px solid @iconav-link-border;
+          border-right: 0;
+        }
+      }
+    }
+
+    &.active {
+      > a {
+        &,
+        &:focus,
+        &:hover,
+        &:active {
+          color: @iconav-link-active-color;
+          background-color: @iconav-link-active-bg;
+
+          .label {
+            border-color: @iconav-link-active-bg;
+          }
+        }
+      }
+    }
+
+    > a > img {
+      width: 26px;
+      margin: 0 auto;
+    }
+  }
+}
+
+
+// Slider nav
+//
+// Move from a horizontal slider nav like iOS's tab bar to a stacked nav easily.
+
+// Show text labels for xs viewports (uses inline utility classes for toggling visibility)
+.iconav-nav-label {
+  font-size: 11px;
+}
+
+// Make it slide
+@media (max-width: @screen-sm-min) {
+  .iconav-slider {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}
