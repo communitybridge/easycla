@@ -5,6 +5,7 @@
   "main": "gulpfile.js",
   "private": true,
   "scripts": {
+    "start": "node ./server/bin/www",
     "develop": "concurrently \"tsc -w -p ./server\" \"tsc -w -p ./client\" \"nodemon ./server/bin/www\" ",
     "twc:client:w": "tsc -w -p ./client",
     "twc:server:w": "tsc -w -p ./server",
