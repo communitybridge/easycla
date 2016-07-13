@@ -1,0 +1,69 @@
+//
+// Toggler for navigation
+//
+
+.nav-toggler {
+  display: block;
+  width: 40px;
+  padding: 10px;
+  font-size: 16px;
+  color: @gray;
+  background: transparent; // remove *all* bg properties
+  border: 1px solid #e5e5e5;
+  border-radius: @border-radius-base;
+
+  // Generate the three lines
+  &:before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-bottom: .125em;
+    border-top: .375em double;
+    border-bottom: .125em solid;
+  }
+
+  &:hover,
+  &:focus {
+    color: #fff;
+    background-color: @gray;
+  }
+
+  &-sm {
+    @media (min-width: @screen-sm-min) {
+      display: none;
+    }
+  }
+
+  &-md {
+    @media (min-width: @screen-md-min) {
+      display: none;
+    }
+  }
+
+  &-lg {
+    @media (min-width: @screen-lg-min) {
+      display: none;
+    }
+  }
+}
+
+.nav-toggleable {
+  &-xs {
+    @media (min-width: @screen-xs-min) {
+      display: block !important;
+      height: auto !important;
+    }
+  }
+  &-sm {
+    @media (min-width: @screen-sm-min) {
+      display: block !important;
+      height: auto !important;
+    }
+  }
+  &-md {
+    @media (min-width: @screen-md-min) {
+      display: block !important;
+      height: auto !important;
+    }
+  }
+}

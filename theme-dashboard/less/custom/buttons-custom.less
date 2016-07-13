@@ -1,0 +1,65 @@
+//
+// Custom button styles
+//
+.btn {
+  font-size: @btn-font-size;
+  text-transform: @btn-text-transform;
+  letter-spacing: @btn-letter-spacing;
+}
+.btn-borderless {
+  border: 0;
+}
+
+.btn-lg {
+  // line-height: ensure even-numbered height of button next to large input
+  .button-size(@padding-large-vertical; @padding-large-horizontal; @font-size-large; @line-height-large; @btn-border-radius-large);
+}
+.btn-sm {
+  // line-height: ensure proper height of button next to small input
+  .button-size(@padding-small-vertical; @padding-small-horizontal; @font-size-small; @line-height-small; @btn-border-radius-small);
+}
+.btn-xs {
+  .button-size(@padding-xs-vertical; @padding-xs-horizontal; @font-size-small; @line-height-small; @btn-border-radius-small);
+}
+
+
+
+// More buttons
+.btn-more:after {
+  position: relative;
+  top: 1px;
+  content: '〉';
+  display: inline-block;
+  padding-left: .3em;
+  color: inherit;
+}
+
+//
+// Custom button groups
+//
+.btn-toolbar {
+  .btn-toolbar-item {
+    float: left;
+  }
+
+  > .btn-toolbar-item {
+    margin-left: 5px;
+  }
+}
+
+.btn-toolbar-divider {
+  float: left;
+  width: 1px;
+  height: 34px;
+  margin-left: 10px;
+  margin-right: 5px;
+  background-color: @btn-toolbar-divider-bg; // @eee
+}
+
+.btn-group-justified {
+  &.btn-group-justified-spaced {
+    width: calc(100% + 10px);
+    margin-left: -5px;
+    border-spacing: 5px;
+  }
+}
