@@ -1,0 +1,35 @@
+// factory for button outline styles
+
+.button-outline-variant(@color; @activeTextColor: #fff) {
+  color: @color;
+  background-color: transparent;
+  border-color: @color;
+
+  &:focus,
+  &.focus,
+  &:hover,
+  &:active,
+  &.active,
+  .open > .dropdown-toggle& {
+    color: @activeTextColor;
+    background-color: @color;
+    box-shadow: none;
+  }
+  &.disabled,
+  &[disabled],
+  fieldset[disabled] & {
+    &,
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active {
+      border-color: @color;
+    }
+  }
+
+  .badge {
+    color: @activeTextColor;
+    background-color: @color;
+  }
+}
