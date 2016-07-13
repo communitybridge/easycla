@@ -1,0 +1,55 @@
+{
+  "name": "",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gulpfile.js",
+  "private": true,
+  "scripts": {
+    "start": "node ./server/bin/www",
+    "develop": "concurrently \"tsc -w -p ./server\" \"tsc -w -p ./client\" \"nodemon ./server/bin/www\" ",
+    "twc:client:w": "tsc -w -p ./client",
+    "twc:server:w": "tsc -w -p ./server",
+    "typings": "typings install",
+    "bundle": "node tools/builder.js",
+    "bundle:prod": "node tools/builder.js --prod",
+    "postinstall": "typings install && tsc -p ./server"
+  },
+  "engines": {
+    "node": ">= 5.4.1 < 6"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "body-parser": "~1.13.2",
+    "cookie-parser": "~1.3.5",
+    "express": "^4.13.4",
+    "express-jwt": "^3.3.0",
+    "jsonwebtoken": "^5.7.0",
+    "serve-favicon": "~2.3.0",
+    "typescript": "^1.8.10",
+    "typings": "^1.3.1"
+  },
+  "devDependencies": {
+    "@angular/common": "2.0.0-rc.4",
+    "@angular/compiler": "2.0.0-rc.4",
+    "@angular/core": "2.0.0-rc.4",
+    "@angular/http": "2.0.0-rc.4",
+    "@angular/forms": "0.2.0",
+    "@angular/platform-browser": "2.0.0-rc.4",
+    "@angular/platform-browser-dynamic": "2.0.0-rc.4",
+    "@angular/router": "^3.0.0-beta.2",
+    "@angular/upgrade": "2.0.0-rc.4",
+    "angular2-in-memory-web-api": "0.0.14",
+    "systemjs": "0.19.27",
+    "core-js": "^2.4.0",
+    "reflect-metadata": "^0.1.3",
+    "rxjs": "5.0.0-beta.6",
+    "zone.js": "^0.6.12",
+    "angular2-jwt": "^0.1.9",
+    "concurrently": "^2.0.0",
+    "ng-semantic": "^1.0.28",
+    "nodemon": "^1.9.1",
+    "systemjs-builder": "^0.15.17",
+    "yargs": "^4.7.1"
+  }
+}
