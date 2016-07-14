@@ -4,7 +4,7 @@
   "description": "Integration Console",
   "main": "app.js",
   "scripts": {
-    "start": "node ./app",
+    "start": "node app.js",
     "develop": "tsc && concurrently \"npm run tsc:w\" \"npm run lite\" ",
     "lite": "lite-server",
     "postinstall": "./node_modules/.bin/typings install",
