@@ -29,5 +29,5 @@ app.use(require('express-session')({ secret: process.env['SESSION_SECRET'] != nu
 var routes = require('./routes')
 app.use(routes);
 
-const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 3000
+const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
