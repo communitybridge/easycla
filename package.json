@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "develop": "tsc && concurrently \"npm run tsc:w\" \"npm run lite\" ",
+    "develop": "tsc && concurrently \"npm run tsc:w\" \"npm run start\" ",
     "lite": "lite-server",
     "postinstall": "./node_modules/.bin/typings install",
     "tsc": "tsc",
@@ -19,15 +19,15 @@
   },
   "homepage": "",
   "dependencies": {
-    "@angular/common":  "2.0.0-rc.1",
-    "@angular/compiler":  "2.0.0-rc.1",
-    "@angular/core":  "2.0.0-rc.1",
-    "@angular/http":  "2.0.0-rc.1",
-    "@angular/platform-browser":  "2.0.0-rc.1",
-    "@angular/platform-browser-dynamic":  "2.0.0-rc.1",
-    "@angular/router":  "2.0.0-rc.1",
-    "@angular/router-deprecated":  "2.0.0-rc.1",
-    "@angular/upgrade":  "2.0.0-rc.1",
+    "@angular/common": "2.0.0-rc.1",
+    "@angular/compiler": "2.0.0-rc.1",
+    "@angular/core": "2.0.0-rc.1",
+    "@angular/http": "2.0.0-rc.1",
+    "@angular/platform-browser": "2.0.0-rc.1",
+    "@angular/platform-browser-dynamic": "2.0.0-rc.1",
+    "@angular/router": "2.0.0-rc.1",
+    "@angular/router-deprecated": "2.0.0-rc.1",
+    "@angular/upgrade": "2.0.0-rc.1",
     "angular2-in-memory-web-api": "0.0.10",
     "body-parser": "^1.15.1",
     "bootstrap": "^3.3.6",
@@ -50,8 +50,8 @@
   },
   "devDependencies": {
     "concurrently": "^2.0.0",
-    "lite-server": "^2.2.0",
+    "lite-server": "^2.2.2",
     "typescript": "^1.8.10",
-    "typings":"^1.0.4"
+    "typings": "^1.0.4"
   }
 }
