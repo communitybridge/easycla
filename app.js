@@ -20,10 +20,15 @@ app.use('/node_modules/@angular/', express.static(path.join(__dirname, 'node_mod
 app.use('/node_modules/angular2-in-memory-web-api/', express.static(path.join(__dirname, 'node_modules/angular2-in-memory-web-api/')));
 app.use('/node_modules/rxjs/', express.static(path.join(__dirname, 'node_modules/rxjs/')));
 
-app.use(require('morgan')('combined'));
+//app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 823dwj34 @#kbdwe3 ghdklnj32lj l2303', resave: false, saveUninitialized: false }));
+
+app.use(function (req, res, next) {
+    res.locals.req = req;
+    next();
+});
 
 // Routes
 var routes = require('./routes')
