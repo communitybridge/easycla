@@ -1,0 +1,246 @@
+//
+// Import Bootstrap variables
+//
+
+@import "./bootstrap/variables.less";
+
+
+// Local variables
+//
+// Custom and override variables for this toolkit.
+
+// icons
+@icon-font-path: "../fonts/";
+@icon-font-name: "toolkit-entypo";
+
+
+// Colors
+//
+// Overrides Bootstrap defaults.
+
+@gray-base:              #000;
+@gray-dark:              #222;
+@gray-darker:            #111;
+@gray:                   #555;
+@gray-light:             #aaa;
+@gray-lighter:           #f5f5f5;
+
+// special light gray for flourishes like hr's
+@gray-subtle:            #eee;
+
+@brand-primary:          #1CA8DD;
+@brand-success:          #1BC98E;
+@brand-info:             #9F86FF;
+@brand-warning:          #E4D836;
+@brand-danger:           #E64759;
+
+
+// States
+//
+// Overrides Bootstrap defaults.
+
+@state-success-text:             @brand-success;
+@state-info-text:                @brand-info;
+@state-warning-text:             @brand-warning;
+@state-danger-text:              @brand-danger;
+
+
+// Spacing
+//
+// Custom variables. Utilities for quickly spacing items consistently.
+
+@spacer:   20px;
+@spacer-x: @spacer;
+@spacer-y: @spacer;
+
+// Breakpoints
+//
+
+@grid-float-breakpoint:     @screen-md-min;
+
+
+// Typography
+//
+// Overrides Bootstrap defaults.
+
+// Fonts
+@font-family-sans-serif:  "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+// Body
+@font-weight-base:        300;
+@letter-spacing-base:     0;
+@line-height-base:        1.5;
+@text-color:              @gray;
+
+// Lead
+@lead-font-size:      floor((@font-size-base * 1.15));
+@lead-font-size-sm:   floor((@font-size-base * 1.5));
+@lead-font-weight:    inherit;
+@lead-line-height:    1.4;
+@lead-letter-spacing: 0;
+
+// Headings
+@headings-font-weight:    300;
+@headings-color:          inherit;
+
+@text-muted:              #999;
+@hr-border:               @gray-subtle;
+
+
+// Forms
+//
+// Overrides Bootstrap defaults.
+
+@input-border:                   #d5d5d5;
+@input-border-focus:             @brand-primary;
+
+
+// Buttons
+//
+// Overrides and custom.
+
+// Custom
+@btn-font-size:      @font-size-base;
+@btn-text-transform: none;
+@btn-letter-spacing: normal;
+
+// Overrides
+@btn-font-weight:                normal;
+@btn-default-color:              @gray-darker;
+@btn-default-bg:                 @gray-lighter;
+@btn-default-border:             darken(@btn-default-bg, 10%);
+
+@btn-toolbar-divider-bg:         #eee;
+
+
+// Badges
+//
+// Overrides Bootstrap defaults.
+
+@badge-color:                 #fff;
+
+
+// Alerts
+//
+// Overrides Bootstrap defaults.
+
+@alert-success-bg:            @brand-success;
+@alert-success-text:          lighten(@brand-success, 50%);
+@alert-success-border:        @alert-success-bg;
+
+@alert-info-bg:               @brand-info;
+@alert-info-text:             lighten(@brand-info, 50%);
+@alert-info-border:           @alert-info-bg;
+
+@alert-warning-bg:            @brand-warning;
+@alert-warning-text:          lighten(@brand-warning, 50%);
+@alert-warning-border:        @alert-warning-bg;
+
+@alert-danger-bg:             @brand-danger;
+@alert-danger-text:           lighten(@brand-danger, 45%);
+@alert-danger-border:         @alert-danger-bg;
+
+
+// Panels
+//
+// Overrides Bootstrap defaults.
+
+@panel-success-text:          #fff;
+@panel-success-border:        @state-success-text;
+@panel-success-heading-bg:    @state-success-text;
+
+@panel-info-text:             #fff;
+@panel-info-border:           @state-info-text;
+@panel-info-heading-bg:       @state-info-text;
+
+@panel-warning-text:          #fff;
+@panel-warning-border:        @state-warning-text;
+@panel-warning-heading-bg:    @state-warning-text;
+
+@panel-danger-text:           #fff;
+@panel-danger-border:         @state-danger-text;
+@panel-danger-heading-bg:     @state-danger-text;
+
+
+// Navs
+//
+// Overrides Bootstrap defaults.
+
+@nav-link-padding:               7px 15px;
+
+@nav-bordered-color:              #777;
+@nav-bordered-color-active:       #777;
+@nav-bordered-font-weight:        300;
+@nav-bordered-font-weight-active: 500;
+
+@nav-link-hover-bg: lighten(@brand-primary, 45%);
+
+@nav-header-color: lighten(@gray, 35%);
+
+// Navbar
+//
+// Overrides Bootstrap defaults.
+
+@navbar-inverse-bg: @gray-darker;
+
+
+// Thumbnail
+//
+// Overrides Bootstrap defaults.
+
+@thumbnail-caption-padding:   15px 11px;
+
+
+// Icon nav
+//
+// Custom variables. Built for the icon nav example.
+
+@iconav-bg:                  @gray-subtle;
+@iconav-border:              #fff;
+@iconav-width:               70px;
+@iconav-brand-color:         inherit;
+@iconav-brand-hover-color:   inherit;
+@iconav-brand-bg:            @gray-dark;
+@iconav-brand-border:        @iconav-border;
+@iconav-link-color:          @gray-dark;
+@iconav-link-border:         @iconav-border;
+@iconav-link-active-color:   @gray;
+@iconav-link-active-bg:      @iconav-border;
+
+@list-group-bg: transparent;
+@list-group-header-color: inherit;
+
+@statlist-border-color: #e5e5e5;
+@statlist-link-color:   inherit;
+@statlist-progress-bg:  #f5f5f5;
+
+@hr-divider-content-color:  @gray;
+@hr-divider-content-bg:     @body-bg;
+@hr-divider-before-bg:      @gray-subtle;
+
+@custom-select-color:       @input-color;
+@custom-select-bg:          @input-bg;
+@custom-select-disabled-bg: @input-bg-disabled;
+
+@custom-control-indicator-bg:     @input-bg;
+@custom-control-indicator-border: rgba(0,0,0,.15);
+
+@custom-control-indicator-checked-bg:      @brand-primary;
+@custom-control-indicator-checked-border:  @brand-primary;
+@custom-control-indicator-active-bg:       lighten(@brand-primary, 15%);
+@custom-control-indicator-active-border:   lighten(@brand-primary, 15%);
+@custom-control-indicator-disabled-bg:     darken(@input-bg, 5%);
+@custom-control-indicator-disabled-border: @custom-control-indicator-border;
+
+@sidebar-brand-color:          @gray;
+@sidebar-brand-hover-color:    @gray-dark;
+@sidebar-toggler-color:        #ccc;
+@sidebar-toggler-hover-color:  #fff;
+
+@dashhead-toolbar-divider-bg: #eee;
+@dashhead-subtitle-color: @nav-header-color;
+
+@well-border: rgba(0,0,0,.1);
+
+@nav-pills-active-weight: 500;
+@navbar-nav-active-font-weight: 500;
