@@ -1,4 +1,6 @@
 var express = require('express');
+var passport = require('passport');
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var path = require('path');
 var bodyParser = require('body-parser');
 
@@ -25,9 +27,12 @@ app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 823dwj34 @#kbdwe3 ghdklnj32lj l2303', resave: false, saveUninitialized: false }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(function (req, res, next) {
-    res.locals.req = req;
-    next();
+  res.locals.req = req;
+  next();
 });
 
 // Routes
@@ -36,3 +41,25 @@ app.use(routes);
 
 const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com/auth/google/callback"
+    // callbackURL: "http://localhost:8081/auth/google/callback"
+  },
+  function(accessToken, refreshToken, profile, callback) {
+    //User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      //return callback(err, user);
+    //});
+    return callback(null, profile);
+  }
+));
+
+passport.serializeUser(function(user, callback) {
+  callback(null, user);
+});
+
+passport.deserializeUser(function(obj, callback) {
+  callback(null, obj);
+});
