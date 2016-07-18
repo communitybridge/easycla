@@ -12,14 +12,19 @@ router.get('/angular', function(req,res) {
 });
 
 router.route('/login').get(function(req, res) {
-  req.session.me = 'Beta Tester';
-  // TODO: implement g auth
-  res.redirect('/');
+  res.redirect('/auth/google');
 });
 
 router.get('/logout', function(req, res){
   req.session.me = '';
-  // req.logout(); TODO: implement g auth
+  req.logout();
+  res.redirect('/');
+});
+
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+
+router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), function(req, res) {
+  req.session.me = req.user.displayName;
   res.redirect('/');
 });
 
