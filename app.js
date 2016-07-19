@@ -1,6 +1,6 @@
 var express = require('express');
 var passport = require('passport');
-var GoogleStrategy = require('passport-google-oauth20').Strategy;
+var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var bodyParser = require('body-parser');
 
@@ -42,19 +42,25 @@ app.use(routes);
 const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
 
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com/auth/google/callback"
-    // callbackURL: "http://localhost:8081/auth/google/callback"
-  },
-  function(accessToken, refreshToken, profile, callback) {
-    //User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      //return callback(err, user);
-    //});
-    return callback(null, profile);
-  }
-));
+passport.use(new CasStrategy({
+  version: 'CAS3.0',
+  validateURL: '/serviceValidate',
+  ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
+  serverBaseURL: 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com'
+  // serverBaseURL: 'http://localhost:8081'
+
+}, function(login, done) {
+  // User.findOne({login: login}, function (err, user) {
+  //   if (err) {
+  //     return done(err);
+  //   }
+  //   if (!user) {
+  //     return done(null, false, {message: 'Unknown user'});
+  //   }
+  //   return done(null, user);
+  // });
+  return done(null, login);
+}));
 
 passport.serializeUser(function(user, callback) {
   callback(null, user);

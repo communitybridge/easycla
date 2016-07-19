@@ -9,8 +9,8 @@
       <br />
       <form action="/login">
         <button class="btn btn-primary" type="submit" >
-          <span class="icon icon-google-plus"></span>
-          Sign in with Google
+          <!-- <span class="icon icon-google-plus"></span> -->
+          Sign in
         </button>
       </form>
     </div>
@@ -19,6 +19,12 @@
 <% } else { %>
   <%- include('partials/header') %>
   Welcome <%= req.session.me  %>
+  <br>
+  <%= req.session.group  %>
+  <br>
+  <%= req.session.timezone  %>
+  <br>
+  <br>
   <div class="col-sm-9 content">
     <div class="dashhead">
       <div class="dashhead-titles">
