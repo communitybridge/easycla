@@ -3,37 +3,43 @@ var passport = require('passport');
 
 var router = express.Router();
 
-router.get('/', function(req,res) {
+router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
 });
 
-router.get('/angular', function(req,res) {
+router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('angular');
 });
 
-router.get('/logout', function(req, res){
-  req.session.me = '';
+router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  req.session.user = '';
   req.logout();
   res.redirect('/');
 });
 
-router.route('/login').get(function(req, res, next) {
+router.get('/login', function(req,res) {
+  res.render('login');
+});
+
+router.get('/login_cas', function(req, res, next) {
   passport.authenticate('cas', function (err, user, info) {
     if (err) return next(err);
     if(user)
     {
-      req.session.me = user.attributes.profile_name_full;
-      req.session.group = user.attributes.group;
-      req.session.timezone = user.attributes.timezone;
+      req.session.user = user;
     }
     if (!user) {
-      return res.redirect('/');
+      return res.redirect('/login');
     }
     req.logIn(user, function (err) {
       if (err) return next(err);
       return res.redirect('/');
     });
   })(req, res, next);
+});
+
+router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+    res.render('profile');
 });
 
 module.exports = router;

@@ -1,157 +1,116 @@
-<% if (!req.session.me) { %>
-  <%- include('partials/login') %>
-  <div class="col-sm-12 content">
-    <div class="text-center">
-      <br />
-      <br />
-      <br />
-      <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 300px;  display: block; margin-left: auto; margin-right: auto;"/>
-      <br />
-      <form action="/login">
-        <button class="btn btn-primary" type="submit" >
-          <!-- <span class="icon icon-google-plus"></span> -->
-          Sign in
-        </button>
-      </form>
+<%- include('partials/header') %>
+<div class="col-sm-9 content">
+
+  Welcome <a href="/profile"><%= req.session.user.attributes.field_lf_full_name %></a><br><br>
+  <div class="dashhead">
+    <div class="dashhead-titles">
+      <h6 class="dashhead-subtitle">Dashboards</h6>
+      <h2 class="dashhead-title">Overview</h2>
     </div>
   </div>
-  <%- include('partials/footer') %>
-<% } else { %>
-  <%- include('partials/header') %>
-  Welcome <%= req.session.me  %>
-  <br>
-  <%= req.session.group  %>
-  <br>
-  <%= req.session.timezone  %>
-  <br>
-  <br>
-  <div class="col-sm-9 content">
-    <div class="dashhead">
-      <div class="dashhead-titles">
-        <h6 class="dashhead-subtitle">Dashboards</h6>
-        <h2 class="dashhead-title">Overview</h2>
+
+  <hr class="m-t">
+
+  <div class="row text-center m-t-lg">
+    <div class="col-sm-4 m-b-md">
+      <div class="w-lg m-x-auto">
+        <canvas
+          class="ex-graph"
+          width="200" height="200"
+          data-chart="doughnut"
+          data-value="[{ value: 230, color: '#1ca8dd', label: 'Returning' }, { value: 130, color: '#1bc98e', label: 'New' }]"
+          data-segment-stroke-color="#252830">
+        </canvas>
       </div>
-
-      <div class="btn-toolbar dashhead-toolbar">
-
-        <form action="/logout">
-          <button class="btn btn btn-default-outline" type="submit" >
-            <span class="icon icon-exit"></span>
-            Logout
-          </button>
-        </form>
-
-        <!-- <div class="btn-toolbar-item input-with-icon">
-          <input type="text" value="01/01/15 - 01/08/15" class="form-control" data-provide="datepicker">
-          <span class="icon icon-calendar"></span>
-        </div> -->
-      </div>
+      <strong class="text-muted">Traffic</strong>
+      <h3>New vs Returning</h3>
     </div>
-
-    <hr class="m-t">
-
-    <div class="row text-center m-t-lg">
-      <div class="col-sm-4 m-b-md">
-        <div class="w-lg m-x-auto">
-          <canvas
-            class="ex-graph"
-            width="200" height="200"
-            data-chart="doughnut"
-            data-value="[{ value: 230, color: '#1ca8dd', label: 'Returning' }, { value: 130, color: '#1bc98e', label: 'New' }]"
-            data-segment-stroke-color="#252830">
-          </canvas>
-        </div>
-        <strong class="text-muted">Traffic</strong>
-        <h3>New vs Returning</h3>
+    <div class="col-sm-4 m-b-md">
+      <div class="w-lg m-x-auto">
+        <canvas
+          class="ex-graph"
+          width="200" height="200"
+          data-chart="doughnut"
+          data-value="[{ value: 330, color: '#1ca8dd', label: 'Recurring' }, { value: 30, color: '#1bc98e', label: 'New' }]"
+          data-segment-stroke-color="#252830">
+        </canvas>
       </div>
-      <div class="col-sm-4 m-b-md">
-        <div class="w-lg m-x-auto">
-          <canvas
-            class="ex-graph"
-            width="200" height="200"
-            data-chart="doughnut"
-            data-value="[{ value: 330, color: '#1ca8dd', label: 'Recurring' }, { value: 30, color: '#1bc98e', label: 'New' }]"
-            data-segment-stroke-color="#252830">
-          </canvas>
-        </div>
-        <strong class="text-muted">Revenue</strong>
-        <h3>New vs Recurring</h3>
-      </div>
-      <div class="col-sm-4 m-b-md">
-        <div class="w-lg m-x-auto">
-          <canvas
-            class="ex-graph"
-            width="200" height="200"
-            data-chart="doughnut"
-            data-value="[{ value: 100, color: '#1ca8dd', label: 'Referrals' }, { value: 260, color: '#1bc98e', label: 'Direct' }]"
-            data-segment-stroke-color="#252830">
-          </canvas>
-        </div>
-        <strong class="text-muted">Traffic</strong>
-        <h3>Direct vs Referrals</h3>
-      </div>
+      <strong class="text-muted">Revenue</strong>
+      <h3>New vs Recurring</h3>
     </div>
-
-    <div class="hr-divider m-t-md m-b">
-      <h3 class="hr-divider-content hr-divider-heading">Quick stats</h3>
+    <div class="col-sm-4 m-b-md">
+      <div class="w-lg m-x-auto">
+        <canvas
+          class="ex-graph"
+          width="200" height="200"
+          data-chart="doughnut"
+          data-value="[{ value: 100, color: '#1ca8dd', label: 'Referrals' }, { value: 260, color: '#1bc98e', label: 'Direct' }]"
+          data-segment-stroke-color="#252830">
+        </canvas>
+      </div>
+      <strong class="text-muted">Traffic</strong>
+      <h3>Direct vs Referrals</h3>
     </div>
-
-    <div class="row statcards">
-      <div class="col-sm-6 col-lg-3 m-b">
-        <div class="statcard statcard-success">
-          <div class="p-a">
-            <span class="statcard-desc">Page views</span>
-            <h2 class="statcard-number">
-              12,938
-              <small class="delta-indicator delta-positive">5%</small>
-            </h2>
-            <hr class="statcard-hr m-b-0">
-          </div>
-          <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[28,68,41,43,96,45,100]}]" data-labels="['a','b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3 m-b">
-        <div class="statcard statcard-danger">
-          <div class="p-a">
-            <span class="statcard-desc">Downloads</span>
-            <h2 class="statcard-number">
-              758
-              <small class="delta-indicator delta-negative">1.3%</small>
-            </h2>
-            <hr class="statcard-hr m-b-0">
-          </div>
-          <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[4,34,64,27,96,50,80]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3 m-b">
-        <div class="statcard statcard-info">
-          <div class="p-a">
-            <span class="statcard-desc">Sign-ups</span>
-            <h2 class="statcard-number">
-              1,293
-              <small class="delta-indicator delta-positive">6.75%</small>
-            </h2>
-            <hr class="statcard-hr m-b-0">
-          </div>
-          <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[12,38,32,60,36,54,68]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
-        </div>
-      </div>
-      <div class="col-sm-6 col-lg-3 m-b">
-        <div class="statcard statcard-warning">
-          <div class="p-a">
-            <span class="statcard-desc">Downloads</span>
-            <h2 class="statcard-number">
-              758
-              <small class="delta-indicator delta-negative">1.3%</small>
-            </h2>
-            <hr class="statcard-hr m-b-0">
-          </div>
-          <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[43,48,52,58,50,95,100]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
-        </div>
-      </div>
-    </div>
-    <hr class="m-t">
   </div>
 
-  <%- include('partials/footer') %>
-<% } %>
+  <div class="hr-divider m-t-md m-b">
+    <h3 class="hr-divider-content hr-divider-heading">Quick stats</h3>
+  </div>
+
+  <div class="row statcards">
+    <div class="col-sm-6 col-lg-3 m-b">
+      <div class="statcard statcard-success">
+        <div class="p-a">
+          <span class="statcard-desc">Page views</span>
+          <h2 class="statcard-number">
+            12,938
+            <small class="delta-indicator delta-positive">5%</small>
+          </h2>
+          <hr class="statcard-hr m-b-0">
+        </div>
+        <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[28,68,41,43,96,45,100]}]" data-labels="['a','b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 m-b">
+      <div class="statcard statcard-danger">
+        <div class="p-a">
+          <span class="statcard-desc">Downloads</span>
+          <h2 class="statcard-number">
+            758
+            <small class="delta-indicator delta-negative">1.3%</small>
+          </h2>
+          <hr class="statcard-hr m-b-0">
+        </div>
+        <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[4,34,64,27,96,50,80]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 m-b">
+      <div class="statcard statcard-info">
+        <div class="p-a">
+          <span class="statcard-desc">Sign-ups</span>
+          <h2 class="statcard-number">
+            1,293
+            <small class="delta-indicator delta-positive">6.75%</small>
+          </h2>
+          <hr class="statcard-hr m-b-0">
+        </div>
+        <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[12,38,32,60,36,54,68]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 m-b">
+      <div class="statcard statcard-warning">
+        <div class="p-a">
+          <span class="statcard-desc">Downloads</span>
+          <h2 class="statcard-number">
+            758
+            <small class="delta-indicator delta-negative">1.3%</small>
+          </h2>
+          <hr class="statcard-hr m-b-0">
+        </div>
+        <canvas id="sparkline1" width="378" height="94" class="sparkline" data-chart="spark-line" data-value="[{data:[43,48,52,58,50,95,100]}]" data-labels="['a', 'b','c','d','e','f','g']" style="width: 189px; height: 47px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <hr class="m-t">
+</div>
+<%- include('partials/footer') %>

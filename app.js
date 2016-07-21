@@ -42,12 +42,14 @@ app.use(routes);
 const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
 
+var serverBaseURL = 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com';
+if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:8081';
+console.log('serverBaseURL: ' + serverBaseURL);
 passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
   ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
-  serverBaseURL: 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com'
-  // serverBaseURL: 'http://localhost:8081'
+  serverBaseURL: serverBaseURL
 
 }, function(login, done) {
   // User.findOne({login: login}, function (err, user) {
