@@ -1,0 +1,176 @@
+<%- include('partials/header') %>
+<div class="col-sm-9 content">
+
+  <div class="dashhead">
+    <div class="dashhead-titles">
+      <h6 class="dashhead-subtitle">LF Console</h6>
+      <h2 class="dashhead-title">Create Project</h2>
+    </div>
+  </div>
+
+  <hr class="m-t">
+
+  <form class="form-horizontal" method="" action="/create_project">
+
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Project Name</label>
+      <div class="col-sm-9">
+        <input type="text" name="project_name" value="" placeholder="Project Name" id="input_project_name" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Project Description</label>
+      <div class="col-sm-9">
+        <textarea name="project_description" value="" placeholder="Project Description" id="input_project_description" class="form-control"></textarea>
+      </div>
+    </div>
+
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Project Goals</label>
+      <div class="col-sm-9">
+        <textarea name="project_goals" value="" placeholder="Project Goals" id="input_project_goals" class="form-control"></textarea>
+      </div>
+    </div>
+
+    <br>
+    <div class="hr-divider">
+      <h3 class="hr-divider-content hr-divider-heading">
+        Project Details
+      </h3>
+    </div>
+    <br>
+
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Project Type</label>
+      <div class="col-sm-9">
+        <select name="project_type" id="input_project_type" class="form-control">
+          <option>Direct Funded</option>
+          <option>Incorporated</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Project Status</label>
+      <div class="col-sm-9">
+        <select name="project_status" id="input_project_status" class="form-control">
+          <option>Forming</option>
+          <option>Official</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Starting Budget</label>
+      <div class="col-sm-9">
+        <input type="text" name="starting_budget" value="" placeholder="Starting Budget" id="input_starting_budget" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Budget Status</label>
+      <div class="col-sm-9">
+        <select name="budget_status" id="input_budget_status" class="form-control">
+          <option>In Progress</option>
+          <option>Not Started</option>
+          <option>Approved</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Agreement Status</label>
+      <div class="col-sm-9">
+        <select name="agreement_status" id="input_agreement_status" class="form-control">
+          <option>In Progress</option>
+          <option>Not Started</option>
+          <option>Approved</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Domain URL</label>
+      <div class="col-sm-9">
+        <input type="text" name="domain" value="" placeholder="www.domain.org" id="input_domain" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Membership Tier Structure</label>
+      <div class="col-sm-9">
+        <select multiple name="agreement_status" id="input_agreement_status" class="form-control">
+          <option>Platinum</option>
+          <option>Gold</option>
+          <option>Silver</option>
+          <option>Community</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Company Logo</label>
+      <div class="col-sm-9">
+        <div class="dropzone dropzone-clickable" name="shop_banner" id="dropzoneArea">
+        </div>
+      </div>
+    </div>
+
+    <br>
+    <div class="hr-divider">
+      <h3 class="hr-divider-content hr-divider-heading">
+        LF Member Details
+      </h3>
+    </div>
+    <br>
+
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">LF Program Manager</label>
+      <div class="col-sm-9">
+        <input type="text" name="lf_project_manager" value="" placeholder="@manager" id="input_lf_project_manager" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">LF Legal</label>
+      <div class="col-sm-9">
+        <input type="text" name="lf_legal" value="" placeholder="@legal" id="input_lf_legal" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">LF PR</label>
+      <div class="col-sm-9">
+        <input type="text" name="lf_pr" value="" placeholder="@pr" id="input_lf_pr" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">LF Events</label>
+      <div class="col-sm-9">
+        <input type="text" name="lf_events" value="" placeholder="@events" id="input_lf_events" class="form-control">
+      </div>
+    </div>
+
+    <br>
+    <div class="hr-divider">
+      <h3 class="hr-divider-content hr-divider-heading">
+        Internal Team Contact Information
+      </h3>
+    </div>
+    <br>
+
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Name</label>
+      <div class="col-sm-9">
+        <input type="text" name="internal_contact_fullname" value="" placeholder="Full Name" id="input_internal_contact_fullname" class="form-control">
+      </div>
+    </div>
+    <div class="form-group required">
+      <label class="col-sm-3 control-label">Email</label>
+      <div class="col-sm-9">
+        <input type="text" name="internal_contact_email" value="" placeholder="@" id="input_internal_contact_email" class="form-control">
+      </div>
+    </div>
+
+    <div class="statcard p-a-md text-center">
+      <button type="submit" class="btn btn-lg btn-pill btn-primary">
+        <span class="icon icon-circle-with-plus"></span>
+        <span>Create New Project</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>
+<%- include('partials/footer') %>

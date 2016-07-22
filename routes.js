@@ -42,4 +42,8 @@ router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'),
     res.render('profile');
 });
 
+router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+    res.render('create_project');
+});
+
 module.exports = router;
