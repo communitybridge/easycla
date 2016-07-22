@@ -50,7 +50,6 @@ passport.use(new CasStrategy({
   validateURL: '/serviceValidate',
   ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
   serverBaseURL: serverBaseURL
-
 }, function(login, done) {
   // User.findOne({login: login}, function (err, user) {
   //   if (err) {

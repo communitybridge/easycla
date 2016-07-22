@@ -2,11 +2,57 @@
 <div class="col-sm-9 content">
 
   Welcome <a href="/profile"><%= req.session.user.attributes.field_lf_full_name %></a><br><br>
+
   <div class="dashhead">
     <div class="dashhead-titles">
       <h6 class="dashhead-subtitle">Dashboards</h6>
       <h2 class="dashhead-title">Overview</h2>
     </div>
+  </div>
+
+  <div class="hr-divider m-t-md m-b">
+    <h3 class="hr-divider-content hr-divider-heading">Projects</h3>
+  </div>
+
+  <div class="row text-center">
+    <div class="box">
+      <br>
+      <a class="project-logo img-responsive" href="/">
+        <img src="/assets/img/test/logo1.png" alt=""/>
+      </a>
+      <h4>Uno Ltd.</h4>
+    </div>
+    <div class="box">
+      <br>
+      <a class="project-logo img-responsive" href="/">
+        <img src="/assets/img/test/logo2.png" alt=""/>
+      </a>
+      <h4>Pyra Corp.</h4>
+    </div>
+    <div class="box">
+      <br>
+      <a class="project-logo img-responsive" href="/">
+        <img src="/assets/img/test/logo3.png" alt=""/>
+      </a>
+      <h4>Umbrella Corp.</h4>
+    </div>
+    <div class="box">
+      <br>
+      <a class="project-logo img-responsive" href="/">
+        <img src="/assets/img/test/logo4.png" alt=""/>
+      </a>
+      <h4>OCP Pty.</h4>
+    </div>
+
+    <div class="statcard p-a-md text-center">
+      <form action="/create_project">
+        <button class="btn btn-lg btn-primary" type="submit" >
+          <span class="icon icon-circle-with-plus"></span>
+          <span>Create New Project</span>
+        </button>
+      </form>
+    </div>
+
   </div>
 
   <hr class="m-t">

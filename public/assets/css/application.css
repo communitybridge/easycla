@@ -26,3 +26,33 @@ hr {
 .navbar-static-top {
   border-bottom: 0;
 }
+
+.box {
+  display: inline-block;
+  width: 300px;
+  height: 170px;
+  margin: 1em;
+  border: 1px solid #a9aebd;
+  border-radius: 15px;
+  letter-spacing: .05em;
+}
+
+.project-logo {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  color: #51586a;
+  margin: 0 auto;
+}
+.project-logo > img {
+  height: 100px;
+}
+@media (min-width: 768px) {
+  .project-logo > img {
+    height: 120px;
+  }
+}
+.project-logo:hover {
+  color: #6f7890;
+  text-decoration: none;
+}
