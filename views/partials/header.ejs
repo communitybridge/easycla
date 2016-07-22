@@ -17,6 +17,8 @@
         <!-- Ligth UI version -->
         <link href="assets/css/toolkit-light.css" rel="stylesheet">
         <link href="assets/css/application.css" rel="stylesheet">
+        <link href="assets/css/dropzone/basic.css" rel="stylesheet">
+        <link href="assets/css/dropzone/dropzone.css" rel="stylesheet">
     </head>
 <body>
   <div class="container">
@@ -29,45 +31,11 @@
           </button>
           <a class="sidebar-brand img-responsive" href="/">
             <img src="/assets/img/lf_logo.png" alt=""/>
-          </a>
+          </a><br><br>
+          <span class="statcard-desc">Admin Mode</span>
         </div>
         <div class="collapse nav-toggleable-sm" id="nav-toggleable-sm">
-          <form class="sidebar-form">
-            <input class="form-control" type="text" placeholder="Search...">
-            <button type="submit" class="btn-link">
-              <span class="icon icon-magnifying-glass"></span>
-            </button>
-          </form>
-          <ul class="nav nav-pills nav-stacked">
-            <li class="nav-header">Dashboards</li>
-            <li class="active">
-              <a href="/">Overview</a>
-            </li>
-            <li >
-              <a href="#">Create Project</a>
-            </li>
-            <li >
-              <a href="#">Project Status</a>
-            </li>
-            <li >
-              <a href="#">Agreement Review</a>
-            </li>
-
-            <li class="nav-header">Members Area</li>
-            <li >
-              <a href="#">
-                Main
-              </a>
-            </li>
-            <li >
-              <a href="#">Member Company</a>
-            </li>
-            <li>
-              <a href="#docsModal" data-toggle="modal">
-                Member Contacts
-              </a>
-            </li>
-          </ul>
+          <%- include('nav') %>
           <hr class="visible-xs m-t">
         </div>
       </nav>
@@ -76,7 +44,7 @@
       <div class="btn-toolbar dashhead-toolbar">
         <form action="/logout">
           <button class="btn btn btn-default-outline" type="submit" >
-            <span class="icon icon-exit"></span>
+            <span class="icon icon-log-out"></span>
             Logout
           </button>
         </form>
