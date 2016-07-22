@@ -39,11 +39,11 @@ router.get('/login_cas', function(req, res, next) {
 });
 
 router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-    res.render('profile');
+  res.render('profile');
 });
 
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-    res.render('create_project');
+  res.render('create_project');
 });
 
 module.exports = router;
