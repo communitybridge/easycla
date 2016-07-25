@@ -1,5 +1,6 @@
 var express = require('express');
 var passport = require('passport');
+var dummy_data = require('./dummy_db/dummy_data');
 
 var router = express.Router();
 
@@ -44,6 +45,13 @@ router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'),
 
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('create_project');
+});
+
+router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  dummy_data.findProjectById(req.query.id, function(err, project_data) {
+    res.render('project', { project_data: project_data });
+  });
+
 });
 
 module.exports = router;
