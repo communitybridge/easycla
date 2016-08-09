@@ -45,6 +45,7 @@ app.listen(port, function() {});
 var serverBaseURL = 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com';
 if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:8081';
 console.log('serverBaseURL: ' + serverBaseURL);
+
 passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
