@@ -4,6 +4,9 @@ var dummy_data = require('./dummy_db/dummy_data');
 
 var router = express.Router();
 
+const integration_user = process.env['CONSOLE_INTEGRATION_USER'];
+const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
+
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
 });
@@ -52,6 +55,20 @@ router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'),
     res.render('project', { project_data: project_data });
   });
 
+});
+
+// Testing integration-platform keys endpoint
+// TODO: Move to lib
+router.get('/keys-test', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  var request = require('request');
+  request.get('http://localhost:5000/auth/trusted/cas/LaneMeyer', function (error, response, body) {
+    if(response.statusCode == 200){
+      body = JSON.parse(body);
+      req.session.user.keyId = body.keyId;
+      req.session.user.secret = body.secret;
+    }
+    res.render('keys-test');
+   }).auth(integration_user, integration_pass, false);
 });
 
 module.exports = router;
