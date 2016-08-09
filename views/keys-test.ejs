@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<div class="col-sm-9 content">
+
+  <div class="dashhead">
+    <div class="dashhead-titles">
+      <h6 class="dashhead-subtitle">Data</h6>
+      <h2 class="dashhead-title">My Keys</h2>
+    </div>
+  </div>
+
+  <hr class="m-t">
+
+  <strong class="text-muted">keyId:</strong> <%= req.session.user.keyId  %> <br><br>
+  <strong class="text-muted">secret:</strong> <%= req.session.user.secret  %> <br><br>
+
+</div>
+<%- include('partials/footer') %>
