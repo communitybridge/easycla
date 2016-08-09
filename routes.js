@@ -59,9 +59,11 @@ router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'),
 
 // Testing integration-platform keys endpoint
 // TODO: Move to lib
+var serverBaseURL = 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com';
+if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:5000';
 router.get('/keys-test', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   var request = require('request');
-  request.get('http://localhost:5000/auth/trusted/cas/LaneMeyer', function (error, response, body) {
+  request.get(serverBaseURL + '/auth/trusted/cas/LaneMeyer', function (error, response, body) {
     if(response.statusCode == 200){
       body = JSON.parse(body);
       req.session.user.keyId = body.keyId;
