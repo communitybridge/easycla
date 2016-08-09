@@ -18,8 +18,10 @@
   <strong class="text-muted">Timezone:</strong> <%= req.session.user.attributes.timezone  %> <br><br>
   <strong class="text-muted">Date Created:</strong> <%= new Date(req.session.user.attributes.created*1000) %> <br><br>
   <br><br>
-  <strong class="text-muted">keyId:</strong> <%= req.session.user.keyId  %> <br><br>
-  <strong class="text-muted">secret:</strong> <%= req.session.user.secret  %> <br><br>
+  <strong class="text-muted">CINCO keyId:</strong> <%= req.session.user.keyId  %> <br><br>
+  <strong class="text-muted">CINCO secret:</strong> <%= req.session.user.secret  %> <br><br>
+  <strong class="text-muted">CINCO userId:</strong> <%= req.session.user.integration_userId  %> <br><br>
+  <strong class="text-muted">CINCO groups:</strong> <%= req.session.user.integration_groups  %> <br><br>
 
 </div>
 <%- include('partials/footer') %>
