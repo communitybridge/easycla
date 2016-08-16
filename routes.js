@@ -10,6 +10,7 @@ const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
 
 var hostURL = 'http://lf-integration-platform-sandbox.us-west-2.elasticbeanstalk.com';
 if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
+console.log("hostURL: " + hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
