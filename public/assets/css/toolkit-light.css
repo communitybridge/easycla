@@ -263,7 +263,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: #555555;
-  background-color: #ffffff;
+  background-color: #fafafb;
 }
 input,
 button,
@@ -3445,7 +3445,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   padding: 9px 10px;
   margin-top: 8px;
   margin-bottom: 8px;
-  background-color: transparent;
+  background-color: gray;;
   background-image: none;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -8946,6 +8946,11 @@ canvas {
   margin-bottom: 0;
   font-size: 100%;
   color: inherit;
+}
+.hr-divider-keyline {
+  width: 100%;
+  height: 1px;
+  background-color: #cccccc;
 }
 .hr-divider-nav > li > a {
   padding-top: 4px;
