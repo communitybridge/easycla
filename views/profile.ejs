@@ -1,15 +1,19 @@
 <%- include('partials/header') %>
-<div class="col-sm-9 content">
-
-  <div class="dashhead">
-    <div class="dashhead-titles">
-      <h6 class="dashhead-subtitle">Data</h6>
-      <h2 class="dashhead-title">My Profile</h2>
-    </div>
+<div class="main-header">
+  <span class="main-header-title">
+    My Profile
+  </span>
+</div>
+<div class="white-subheader">
+  <div class="text-subheader">
+    Welcome <%= req.session.user.attributes.field_lf_first_name  %>!
   </div>
+</div>
+<div class="hr-divider-keyline"></div>
 
-  <hr class="m-t">
 
+<div class="col-sm-9 content">
+  <br><br>
   <strong class="text-muted">First Name:</strong> <%= req.session.user.attributes.field_lf_first_name  %> <br><br>
   <strong class="text-muted">Last Name:</strong> <%= req.session.user.attributes.field_lf_last_name  %> <br><br>
   <strong class="text-muted">Username:</strong> <%= req.session.user.user  %> <br><br>

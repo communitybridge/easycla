@@ -26,7 +26,55 @@ hr {
 .navbar-static-top {
   border-bottom: 0;
 }
-
+.header-email {
+  font-family: HelveticaNeue;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  line-height: 4;
+  color: #044d74;
+}
+.main-header {
+  margin-top: 6px;
+  width: 100%;
+  height: 150px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background-color: #044d74;
+  padding: 0px;
+}
+.main-header-title {
+  font-family: HelveticaNeue;
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 3.5;
+  margin-left: 80px;
+  color: #ffffff;
+}
+.white-subheader {
+  width: 100%;
+  height: 68px;
+  background-color: #ffffff;
+}
+.text-subheader {
+  margin-left: 80px;
+  font-family: HelveticaNeue;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 4.5;
+  color: #777777;
+  float:left;
+}
+.add-project-title {
+  text-align: right;
+  margin-right: 100px;
+  font-family: HelveticaNeue;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 7.5;
+  color: #11abde;
+}
 .box {
   display: inline-block;
   width: 300px;
@@ -36,7 +84,36 @@ hr {
   border-radius: 15px;
   letter-spacing: .05em;
 }
+.card {
+  margin-top: 54px;
+  margin-right: 30px;
+  display: inline-block;
+  width: 320px;
+  height: 329px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #e5e5e5;
+}
+.add-a-new-project {
+  font-family: HelveticaNeue;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.06;
+  color: #11abde;
+}
+.card-content {
+  text-align: left;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.67;
+  color: #777777;
 
+}
+.card-new-img {
+  border-radius: 4px;
+  background-color: #d9edf7;
+}
 .project-logo {
   display: block;
   font-size: 18px;
