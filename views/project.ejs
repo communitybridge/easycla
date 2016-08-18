@@ -1,19 +1,37 @@
 <%- include('partials/header') %>
-<div class="col-sm-9 content">
 
-  <div class="dashhead">
-    <div class="dashhead-titles">
-      <h6 class="dashhead-subtitle">LF Console</h6>
-      <h2 class="dashhead-title">Project View</h2>
-    </div>
+<div class="main-header-project">
+  <a class="project-logo-project img-responsive" href="/project?id=<%= project_data.project_id%>">
+    <br>
+    <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
+  </a>
+  <div class="main-header-title-project">
+    <%= project_data.project_name%>
   </div>
+  <br><br>
+  <div class="last-edited-project">
+    Last edited 11:47 AM
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
+<div class="white-subheader">
+  <div class="text-subheader">
+    Project Type | Direct Fund
+    Budget Status | Not Started
+    Agreement Status | Approved Delivered
+    Membership Tier | Community
+  </div>
+  <div class="add-project-button">
+    <a href="/project?id=<%= project_data.project_id%>"> <span class="icon icon-circle-with-plus"></span> </a>
+  </div>
+  <div class="edit-project-title">
+    <a href="/project?id=<%= project_data.project_id%>">Edit</a>
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
 
-  <hr class="m-t">
-
-  <h1><%= project_data.project_name%></h1>
-
+<div class="col-sm-12 content">
   <br>
-
   <form class="form-horizontal" method="" action="#">
 
     <div class="form-group required">
