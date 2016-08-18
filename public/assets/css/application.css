@@ -65,7 +65,17 @@ hr {
   color: #777777;
   float:left;
 }
+.add-project-button {
+  height: 10px;
+  position: relative;
+  margin-right: 110px;
+  margin-top: -18px;
+  float:right;
+  font-size: 50px;
+  color: #11abde;
+}
 .add-project-title {
+  height: 10px;
   text-align: right;
   margin-right: 100px;
   font-family: HelveticaNeue;
@@ -89,12 +99,37 @@ hr {
   margin-right: 30px;
   display: inline-block;
   width: 320px;
-  height: 329px;
+  height: 369px;
   border-radius: 4px;
   background-color: #ffffff;
   border: solid 1px #e5e5e5;
 }
 .add-a-new-project {
+  width: 280px;
+  display: inline-block;
+  text-align: left;
+  font-family: HelveticaNeue;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.06;
+  color: #11abde;
+}
+.card-title {
+  margin-top: 10px;
+  width: 280px;
+  display: inline-block;
+  text-align: left;
+  font-family: HelveticaNeue;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.06;
+  color: #2a2c2e;
+}
+.card-title-new {
+  margin-top: 10px;
+  width: 280px;
+  display: inline-block;
+  text-align: left;
   font-family: HelveticaNeue;
   font-size: 18px;
   font-weight: 500;
@@ -102,6 +137,8 @@ hr {
   color: #11abde;
 }
 .card-content {
+  width: 280px;
+  display: inline-block;
   text-align: left;
   font-family: HelveticaNeue;
   font-size: 12px;
@@ -110,9 +147,28 @@ hr {
   color: #777777;
 
 }
+.card-mailing {
+  padding: 10px;
+  width: 280px;
+  display: inline-block;
+  text-align: center;
+  font-family: HelveticaNeue;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.26;
+  text-align: center;
+  color: #11abde;
+}
 .card-new-img {
   border-radius: 4px;
   background-color: #d9edf7;
+}
+.card-line {
+  display: inline-block;
+  text-align: center;
+  width: 280px;
+  height: 1px;
+  background-color: #cccccc;
 }
 .project-logo {
   display: block;
