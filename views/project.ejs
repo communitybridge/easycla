@@ -66,7 +66,7 @@
     <br>
     <div class="member-company-project">
       <div class="col-sm-4 content">
-        LOGO
+          <img src="/assets/img/test/members/oracle.png" alt="" class="member-logo-project"/>
       </div>
       <div class="col-sm-8 content">
         <div class="member-company-name-label">Oracle</div>
@@ -75,7 +75,7 @@
     </div>
     <div class="member-company-project">
       <div class="col-sm-4 content">
-        LOGO
+        <img src="/assets/img/test/members/sega.png" alt="" class="member-logo-project"/>
       </div>
       <div class="col-sm-8 content">
         <div class="member-company-name-label">SEGA</div>
@@ -84,7 +84,7 @@
     </div>
     <div class="member-company-project">
       <div class="col-sm-4 content">
-        LOGO
+        <img src="/assets/img/test/members/fedex.png" alt="" class="member-logo-project"/>
       </div>
       <div class="col-sm-8 content">
         <div class="member-company-name-label">FedEx</div>
@@ -93,7 +93,7 @@
     </div>
     <div class="member-company-project">
       <div class="col-sm-4 content">
-        LOGO
+        <img src="/assets/img/test/members/amd.png" alt="" class="member-logo-project"/>
       </div>
       <div class="col-sm-8 content">
         <div class="member-company-name-label">AMD</div>
@@ -105,186 +105,47 @@
   </div>
 </div>
 
-
-
-<div class="col-sm-12 content">
-
-  <br><br>
-
-  <form class="form-horizontal" method="" action="#">
-
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Project Name</label>
-      <div class="col-sm-9">
-        <input type="text" name="project_name" value="<%= project_data.project_name%>" placeholder="Project Name" id="input_project_name" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Project Description</label>
-      <div class="col-sm-9">
-        <textarea rows="5" name="project_description" value="<%= project_data.project_description%>" placeholder="Project Description" id="input_project_description" class="form-control"><%= project_data.project_description%></textarea>
-      </div>
-    </div>
-
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Project Goals</label>
-      <div class="col-sm-9">
-        <textarea name="project_goals" value="<%= project_data.project_goals%>" placeholder="Project Goals" id="input_project_goals" class="form-control"><%= project_data.project_goals%></textarea>
-      </div>
-    </div>
-
+<div class="container-fluid">
+  <div class="col-sm-12 content mailing-list-project">
+    <div class="subtitle-content-project">Mailing List</div>
+    <div class="add-edit-member-companies-label"><a>+ Create New List</a></div>
+    <div class="hr-divider-keyline"></div>
     <br>
-    <div class="hr-divider">
-      <h3 class="hr-divider-content hr-divider-heading">
-        Project Details
-      </h3>
-    </div>
-    <br>
-
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Project Type</label>
-      <div class="col-sm-9">
-        <select name="project_type" id="input_project_type" class="form-control">
-          <option selected disabled><%= project_data.project_type%></option>
-          <option>Direct Funded</option>
-          <option>Incorporated</option>
-        </select>
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>New Mailing List Title #1</strong>
       </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Project Status</label>
-      <div class="col-sm-9">
-        <select name="project_status" id="input_project_status" class="form-control">
-          <option selected disabled><%= project_data.project_status%></option>
-          <option>Forming</option>
-          <option>Official</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Starting Budget</label>
-      <div class="col-sm-9">
-        <input type="text" name="starting_budget" value="<%= project_data.starting_budget%>" placeholder="Starting Budget" id="input_starting_budget" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Budget Status</label>
-      <div class="col-sm-9">
-        <select name="budget_status" id="input_budget_status" class="form-control">
-          <option selected disabled><%= project_data.budget_status%></option>
-          <option>In Progress</option>
-          <option>Not Started</option>
-          <option>Approved</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Agreement Status</label>
-      <div class="col-sm-9">
-        <select name="agreement_status" id="input_agreement_status" class="form-control">
-          <option selected disabled><%= project_data.agreement_status%></option>
-          <option>In Progress</option>
-          <option>Not Started</option>
-          <option>Approved</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Domain URL</label>
-      <div class="col-sm-9">
-        <input type="text" name="domain" value="<%= project_data.domain%>" placeholder="www.domain.org" id="input_domain" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Membership Tier Structure</label>
-      <div class="col-sm-9">
-        <select multiple name="membership_tier_structure" id="input_membership_tier_structure" class="form-control">
-          <option selected disabled><%= project_data.membership_tier_structure%></option>
-          <option>Platinum</option>
-          <option>Gold</option>
-          <option>Silver</option>
-          <option>Community</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Company Logo</label>
-      <div class="col-sm-9">
-        <div class="statcard p-a-md text-center">
-          <img class="project-logo img-responsive" src="<%= project_data.company_logo%>" alt=""/>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          105 Email Contacts
         </div>
       </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 11:47 AM July 24, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+      </div>
     </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label"></label>
-      <div class="col-sm-9">
-        <div class="dropzone dropzone-clickable" name="company_logo" id="dropzoneArea">
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>Mailing List Title #2</strong>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          96 Email Contacts
         </div>
       </div>
-    </div>
-    <br>
-    <div class="hr-divider">
-      <h3 class="hr-divider-content hr-divider-heading">
-        LF Member Details
-      </h3>
-    </div>
-    <br>
-
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">LF Program Manager</label>
-      <div class="col-sm-9">
-        <input type="text" name="lf_project_manager" value="<%= project_data.lf_project_manager%>" placeholder="@manager" id="input_lf_project_manager" class="form-control">
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 08:35 AM August 3, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
       </div>
     </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">LF Legal</label>
-      <div class="col-sm-9">
-        <input type="text" name="lf_legal" value="<%= project_data.lf_legal%>" placeholder="@legal" id="input_lf_legal" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">LF PR</label>
-      <div class="col-sm-9">
-        <input type="text" name="lf_pr" value="<%= project_data.lf_pr%>" placeholder="@pr" id="input_lf_pr" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">LF Events</label>
-      <div class="col-sm-9">
-        <input type="text" name="lf_events" value="<%= project_data.lf_events%>" placeholder="@events" id="input_lf_events" class="form-control">
-      </div>
-    </div>
-
-    <br>
-    <div class="hr-divider">
-      <h3 class="hr-divider-content hr-divider-heading">
-        Internal Team Contact Information
-      </h3>
-    </div>
-    <br>
-
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Name</label>
-      <div class="col-sm-9">
-        <input type="text" name="internal_contact_fullname" value="<%= project_data.internal_contact_fullname%>" placeholder="Full Name" id="input_internal_contact_fullname" class="form-control">
-      </div>
-    </div>
-    <div class="form-group required">
-      <label class="col-sm-3 control-label">Email</label>
-      <div class="col-sm-9">
-        <input type="text" name="internal_contact_email" value="<%= project_data.internal_contact_email%>" placeholder="@" id="input_internal_contact_email" class="form-control">
-      </div>
-    </div>
-
-    <div class="statcard p-a-md text-center">
-      <button type="submit" class="btn btn-lg btn-pill btn-primary">
-        <span class="icon icon-circle-with-plus"></span>
-        <span>Save Changes</span>
-      </button>
-    </div>
-
-  </form>
-
+  </div>
 </div>
 
 <%- include('partials/footer') %>
