@@ -15,11 +15,16 @@
 </div>
 <div class="hr-divider-keyline"></div>
 <div class="white-subheader">
-  <div class="text-subheader">
-    Project Type | Direct Fund
-    Budget Status | Not Started
-    Agreement Status | Approved Delivered
-    Membership Tier | Community
+  <div class="content-subheader-project">
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Project Type | <strong style="color:black;">Direct Fund</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Budget Status | <strong style="color:#F5A623;">In Progress</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Agreement Status | <strong style="color:#449D44;">Approved - Signed</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Membership Tier | <strong style="color:#006087;">Community</strong> </div>
+    <div class="hr-divider-vertical"></div>
   </div>
   <div class="add-project-button">
     <a href="/project?id=<%= project_data.project_id%>"> <span class="icon icon-circle-with-plus"></span> </a>
@@ -32,6 +37,80 @@
 
 <div class="col-sm-12 content">
   <br>
+  <div class="col-sm-3 content">
+    <div class="subtitle-content-project">Email Aliases</div>
+    <div class="hr-divider-keyline"></div>
+    <div class="email-aliases-projects">
+        <span style="color:#373A3C">pr@</span>  Active · 8 Participants <br>
+        <span style="color:#373A3C">info@ </span> Active · 30 Participants <br>
+        <span style="color:#373A3C">legal@</span> Active · 4 Participants <br>
+        <span style="color:#373A3C">events@</span> Active · 9 Participants <br>
+        <span style="color:#373A3C">membership@</span> Active · 32 Participants <br>
+        <span style="color:#373A3C">trademark@</span> Active · 12 Participants <br>
+    </div>
+    <div class="view-all-member-aliases-label"><a>View All</a></div>
+    <div class="hr-divider-keyline"></div>
+  </div>
+  <div class="col-sm-5 content">
+    <div class="subtitle-content-project">Project Description</div>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <%= project_data.project_description%>
+    <br> <br>
+    <strong style="color: #333333;"><%= project_data.domain%></strong>
+  </div>
+  <div class="col-sm-4 content">
+    <div class="subtitle-content-project">Member Companies</div>
+    <div class="add-edit-member-companies-label"><a>+ Add/Edit</a></div>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="member-company-project">
+      <div class="col-sm-4 content">
+        LOGO
+      </div>
+      <div class="col-sm-8 content">
+        <div class="member-company-name-label">Oracle</div>
+        <div class="member-company-subheader-label">Active · 6 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-sm-4 content">
+        LOGO
+      </div>
+      <div class="col-sm-8 content">
+        <div class="member-company-name-label">SEGA</div>
+        <div class="member-company-subheader-label">Active · 10 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-sm-4 content">
+        LOGO
+      </div>
+      <div class="col-sm-8 content">
+        <div class="member-company-name-label">FedEx</div>
+        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-sm-4 content">
+        LOGO
+      </div>
+      <div class="col-sm-8 content">
+        <div class="member-company-name-label">AMD</div>
+        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="view-all-member-aliases-label"><a>View All</a></div>
+    <div class="hr-divider-keyline"></div>
+  </div>
+</div>
+
+
+
+<div class="col-sm-12 content">
+
+  <br><br>
+
   <form class="form-horizontal" method="" action="#">
 
     <div class="form-group required">
@@ -206,6 +285,6 @@
 
   </form>
 
-
 </div>
+
 <%- include('partials/footer') %>
