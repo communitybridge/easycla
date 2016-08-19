@@ -8947,11 +8947,6 @@ canvas {
   font-size: 100%;
   color: inherit;
 }
-.hr-divider-keyline {
-  width: 100%;
-  height: 1px;
-  background-color: #cccccc;
-}
 .hr-divider-nav > li > a {
   padding-top: 4px;
   padding-bottom: 4px;
