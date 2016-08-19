@@ -336,3 +336,66 @@ hr {
   color: #666666;
   margin-bottom: 15px;
 }
+.member-logo-project{
+  height: 30px;
+}
+.mailing-list-project{
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+.mailing-list-control {
+  margin-top: 25px;
+  /*width: 1140px;*/
+  height: 52px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+}
+.mailing-list-title-project{
+  margin-top: 10px;
+  font-family: HelveticaNeue;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333333;
+}
+.mailing-list-hr-divider-vertical-project{
+  float: left;
+  position: relative;
+  display: inline-block;
+  margin-top: 5px;
+  margin-right: 10px;
+  width: 1px;
+  height: 40px;
+  background-color: #cccccc;
+}
+.mailing-list-counter-project{
+  position: relative;
+  display: inline-block;
+  float: left;
+  margin-top: 15px;
+  font-family: HelveticaNeue;
+  font-size: 13px;
+  font-weight: 400;
+  color: #999999;
+}
+.mailing-list-last-edited-project{
+  margin-top: 15px;
+  position: relative;
+  display: inline-block;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  color: #999999;
+}
+.mailing-list-button-project{
+  margin-top: 5px;
+  position: relative;
+  display: inline-block;
+  float: right;
+  width: 140px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+}
