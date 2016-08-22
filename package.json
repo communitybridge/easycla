@@ -8,6 +8,7 @@
     "develop": "tsc && concurrently \"npm run tsc:w\" \"npm run start\" ",
     "lite": "lite-server",
     "postinstall": "./node_modules/.bin/typings install",
+    "test": "./node_modules/.bin/mocha",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "typings": "typings"
