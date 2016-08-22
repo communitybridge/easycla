@@ -270,7 +270,7 @@ hr {
   margin-left: 10px;
   margin-right: 10px;
   font-family: HelveticaNeue;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #777777;
 }
@@ -393,7 +393,7 @@ hr {
   position: relative;
   display: inline-block;
   float: right;
-  width: 140px;
+  width: 100px;
   height: 38px;
   border-radius: 4px;
   background-color: #ffffff;
@@ -436,4 +436,8 @@ hr {
   font-family: HelveticaNeue;
   font-size: 14px;
   font-weight: 400;
+}
+.login-container{
+  text-align: center;
+  margin-top: 60px;
 }
