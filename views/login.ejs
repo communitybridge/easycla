@@ -4,14 +4,23 @@
       <br />
       <br />
       <br />
-      <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 300px;  display: block; margin-left: auto; margin-right: auto;"/>
-      <br />
-      <form action="/login_cas">
-        <button class="btn btn-primary" type="submit" >
-          <span class="icon icon-login"></span>
-          Sign in
-        </button>
-      </form>
+
+
+      <div class="gray-rectangle">
+        <div class="white-rectangle"></div>
+        <div class="login-content">
+          <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 200px;  display: block; margin-left: auto; margin-right: auto;"/>
+          <br />
+          <br />
+          <form action="/login_cas">
+            <button class="btn btn-primary btn-login" type="submit" >
+              <span class="icon icon-login"></span>
+              <span class="btn-label">Sign in</span>
+            </button>
+          </form>
+        </div>
+        <div class="white-rectangle"></div>
+      </div>
     </div>
   </div>
 <%- include('partials/footer') %>
