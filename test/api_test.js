@@ -1,5 +1,14 @@
-var assert = require('assert');
 var api = require("../lib/api");
+var assert = require('assert');
+var randomstring = require('randomstring');
+
+
+function randomUserName() {
+  return randomstring.generate({
+    length: 10,
+    charset: 'alphabetic'
+  }).toLowerCase();
+}
 
 describe('api', function () {
 
@@ -22,6 +31,17 @@ describe('api', function () {
           assert.equal(keys.secret.length, 40, "secret length should be 40");
           done();
         });
+      });
+    });
+  });
+
+  describe('Admin Endoints', function() {
+    describe('POST user/', function(done) {
+      var username = randomUserName()
+      apiObj.createUser(username, function(err, created) {
+        assert.ifError(err);
+        assert(created,"New user with username of " + username + " should have been created");
+        done();
       });
     });
   });
