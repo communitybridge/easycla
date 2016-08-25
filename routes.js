@@ -99,7 +99,15 @@ router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/l
 
 router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   dummy_data.findProjectById(req.query.id, function(err, project_data) {
-    res.render('project', { project_data: project_data });
+    if(project_data) res.render('project', { project_data: project_data });
+    else res.redirect('/');
+  });
+});
+
+router.get('/mailing', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  dummy_data.findProjectById(req.query.id, function(err, project_data) {
+    if(project_data) res.render('mailing', { project_data: project_data });
+    else res.redirect('/');
   });
 });
 
