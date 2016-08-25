@@ -1,0 +1,103 @@
+<%- include('partials/header') %>
+
+<div class="main-header-mailing">
+  <div class="project-logo-mailing ">
+    <a href="/project?id=<%= project_data.project_id%>">
+      <img src="/assets/img/test/<%= project_data.project_id%>.png" style="height: 150px;"alt=""/>
+    </a>
+  </div>
+  <div class="main-header-title-mailing">
+    <%= project_data.project_name%>
+  </div>
+  <div class="main-header-subtitle-mailing">
+    Mailing Lists
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
+<div class="white-subheader">
+  <div class="content-subheader-project">
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Mailing Lists | <strong style="color:#044D74;">Select</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Email Templates | <strong style="color:#044D74;">Select</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Email Aliases | <strong style="color:#044D74;">Select</strong></div>
+    <button type="button" name="button" class="mailing-list-button-mailing">Create New Mailing List</button>
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
+
+<div class="container-fluid">
+  <div class="col-sm-12 content mailing-list-project">
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>New Mailing List Title #1</strong>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          105 Participants
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 11:47 AM July 24, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+      </div>
+    </div>
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>Mailing List Title #2</strong>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          50 Participants
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 08:35 AM August 3, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+      </div>
+    </div>
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>Mailing List Title #3</strong>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          200 Participants
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 18:54 AM August 8, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+      </div>
+    </div>
+    <div class="mailing-list-control">
+      <div class="col-sm-4 mailing-list-title-project">
+        <strong>Mailing List Title #4</strong>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          125 Participants
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="mailing-list-last-edited-project">
+          Last updated 05:19 AM August 12, 2016
+        </div>
+        <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

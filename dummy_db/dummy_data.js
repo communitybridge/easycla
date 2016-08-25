@@ -82,6 +82,7 @@ const project_dummy_data = [{
 
 exports.findProjectById = function(id, callback) {
   // Temporal Dummy Method for Testing
+  if(!id) return callback('Project ID not provided', null);
   process.nextTick(function() {
     for(var i=0; i < project_dummy_data.length; i++)
     {
