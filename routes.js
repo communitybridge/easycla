@@ -111,4 +111,12 @@ router.get('/mailing', require('connect-ensure-login').ensureLoggedIn('/login'),
   });
 });
 
+router.get('/aliases', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  dummy_data.findProjectById(req.query.id, function(err, project_data) {
+    if(project_data) res.render('aliases', { project_data: project_data });
+    else res.redirect('/');
+  });
+});
+
+
 module.exports = router;
