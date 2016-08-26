@@ -35,15 +35,22 @@ describe('api', function () {
     });
   });
 
-  describe('Admin Endoints', function() {
-    describe('POST user/', function(done) {
-      var username = randomUserName()
-      apiObj.createUser(username, function(err, created) {
+  describe('Admin Endoints', function () {
+    var adminClient;
+    before(function (done) {
+      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = apiObj.client(keys);
+        done();
+      });
+    });
+
+    it('POST user/', function (done) {
+      var username = randomUserName();
+      adminClient.createUser(username, function (err, created) {
         assert.ifError(err);
-        assert(created,"New user with username of " + username + " should have been created");
+        assert(created, "New user with username of " + username + " should have been created");
         done();
       });
     });
   });
-
 });
