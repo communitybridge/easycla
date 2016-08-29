@@ -17,7 +17,7 @@ describe('api', function () {
   describe('Properties', function () {
     describe('apiUrlRoot', function () {
       it('The passed in api root parameter should be available on the returned object', function () {
-        assert.equal(apiObj.apiRootUrl, "http://localhost:5000");
+        assert.equal(apiObj.apiRootUrl, "http://localhost:5000/");
       });
     });
   });
@@ -29,8 +29,9 @@ describe('api', function () {
           assert.ifError(err);
           assert.equal(keys.keyId.length, 20, "keyId length should be 20");
           assert.equal(keys.secret.length, 40, "secret length should be 40");
+          done();
         });
-        done();
+
       });
     });
   });
@@ -42,16 +43,16 @@ describe('api', function () {
         adminClient = apiObj.client(keys);
         done();
       });
+
     });
 
     it('POST user/', function (done) {
-      // var username = randomUserName();
-      // adminClient.createUser(username, function (err, created) {
-      //   assert.ifError(err);
-      //   assert(created, "New user with username of " + username + " should have been created");
-      //   done();
-      // });
-      done();
+      var username = randomUserName();
+      adminClient.createUser(username, function (err, created) {
+        assert.ifError(err);
+        assert(created, "New user with username of " + username + " should have been created");
+        done();
+      });
     });
   });
 
