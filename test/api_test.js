@@ -54,6 +54,19 @@ describe('api', function () {
         done();
       });
     });
+
+    it('GET user/{id}', function (done) {
+      var username = 'LaneMeyer';
+      adminClient.getUser(username, function(err, user) {
+        assert.ifError(err);
+        assert.equal(user.lfId, username, 'Username is not the same as requested');
+        assert(user.userId, 'userId property should exist');
+        assert.equal(user.groups[0].groupId, 1, 'user should belong to group with id of 1');
+        done();
+      })
+    });
+
+
   });
 
 
