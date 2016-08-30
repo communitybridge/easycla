@@ -38,12 +38,15 @@ describe('api', function () {
 
   describe('Admin Endoints', function () {
     var adminClient;
+    var sampleUserName = randomUserName();
+
     before(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = apiObj.client(keys);
-        done();
+        adminClient.createUser(sampleUserName, function(err, created) {
+          done();
+        });
       });
-
     });
 
     it('POST user/', function (done) {
@@ -56,17 +59,27 @@ describe('api', function () {
     });
 
     it('GET user/{id}', function (done) {
-      var username = 'LaneMeyer';
-      adminClient.getUser(username, function(err, user) {
+      adminClient.getUser(sampleUserName, function(err, user) {
         assert.ifError(err);
-        assert.equal(user.lfId, username, 'Username is not the same as requested');
+        assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
         assert(user.userId, 'userId property should exist');
-        assert.equal(user.groups[0].groupId, 1, 'user should belong to group with id of 1');
         done();
-      })
+      });
     });
 
-
+    it('POST user/{id}/group', function (done) {
+      var adminGroup = {
+        groupId: 1,
+        name: 'ADMIN'
+      }
+      adminClient.addGroupForUser(sampleUserName, adminGroup, function(err, isUpdated, user) {
+        assert.ifError(err);
+        assert(isUpdated, "User resource should be updated with new group")
+        assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
+        assert.deepEqual(user.groups[0], adminGroup, 'Added group is not the same');
+        done();
+      });
+    });
   });
 
 
