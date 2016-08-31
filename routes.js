@@ -2,6 +2,7 @@ var express = require('express');
 var passport = require('passport');
 var dummy_data = require('./dummy_db/dummy_data');
 var request = require('request');
+var cinco_api = require("./lib/api");
 
 var router = express.Router();
 
@@ -11,6 +12,8 @@ const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
 var hostURL = 'http://lf-integration-platform-sandbox.us-west-2.elasticbeanstalk.com';
 if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
 console.log("hostURL: " + hostURL);
+
+var cinco = cinco_api(hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
@@ -22,12 +25,17 @@ router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'),
 
 router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   req.session.user = '';
+  req.session.destroy();
   req.logout();
   res.redirect('/');
 });
 
 router.get('/login', function(req,res) {
   res.render('login');
+});
+
+router.get('/404', function(req,res) {
+  res.render('404', { lfid: "" });
 });
 
 router.get('/login_cas', function(req, res, next) {
@@ -38,21 +46,26 @@ router.get('/login_cas', function(req, res, next) {
       req.session.user = user;
     }
     if (!user) {
+      req.session.destroy();
       return res.redirect('/login');
     }
     req.logIn(user, function (err) {
       if (err) return next(err);
-      request.get(hostURL + '/auth/trusted/cas/LaneMeyer', function (error, response, body) {
-        if(response.statusCode == 200){
-          body = JSON.parse(body);
-          req.session.user.keyId = body.keyId;
-          req.session.user.secret = body.secret;
+      var lfid = req.session.user.user;
+      cinco.getKeysForLfId(lfid, function (err, keys) {
+        if(keys){
+          req.session.user.keyId = keys.keyId;
+          req.session.user.secret = keys.secret;
+          req.session.user.keys = keys;
           return res.redirect('/');
         }
-        else{
-          return res.redirect('/');
+        if(err){
+          req.session.destroy();
+          if(err.statusCode == 404) { // Returned if a user with the given id is not found
+            return res.render('404', { lfid: lfid });
+          }
         }
-       }).auth(integration_user, integration_pass, false);
+      });
     });
   })(req, res, next);
 });
@@ -123,6 +136,15 @@ router.get('/members', require('connect-ensure-login').ensureLoggedIn('/login'),
     if(project_data) res.render('members', { project_data: project_data });
     else res.redirect('/');
   });
+});
+
+router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  var adminClient = cinco.client(req.session.user.keys);
+  var lfid = req.session.user.user;
+  adminClient.getUser(lfid, function(err, user) {
+    console.log(user);
+  });
+  res.render('admin');
 });
 
 module.exports = router;
