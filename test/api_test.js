@@ -36,7 +36,7 @@ describe('api', function () {
     });
   });
 
-  describe('Admin Endoints', function () {
+  describe('Admin Endpoints', function () {
     var adminClient;
     var sampleUserName = randomUserName();
 
@@ -69,7 +69,7 @@ describe('api', function () {
 
     it('POST user/{id}/group', function (done) {
       var adminGroup = {
-        groupId: 1,
+        groupId: 2,
         name: 'ADMIN'
       }
       adminClient.addGroupForUser(sampleUserName, adminGroup, function(err, isUpdated, user) {
