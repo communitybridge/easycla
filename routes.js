@@ -71,38 +71,17 @@ router.get('/login_cas', function(req, res, next) {
 });
 
 router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  // Testing user/{lfid} endpoint
-  // TODO: Move to lib
-  var crypto = require('crypto');
-  var payload = "";
-  var httpMethod = 'GET';
-  var uriPath = '/user/LaneMeyer';
-  var currentTime = new Date().toISOString();
-  var md5 = crypto.createHash('md5').update(payload).digest('hex');
-  var signatureVersion = '1';
-  var toSign = httpMethod + '\n' + uriPath + '\n' + currentTime + '\n' + md5 + '\n' + signatureVersion;
-  var signature = crypto.createHmac('sha1', req.session.user.secret).update(toSign).digest('base64')
-  request({
-    method: httpMethod,
-    url: hostURL + uriPath,
-    headers: {
-      'Content-Type': 'application/json',
-      'Date': currentTime,
-      'Signature-Version': '1',
-      'Content-MD5': md5,
-      'Authorization': 'CINCO '+ req.session.user.keyId + ': ' + signature
-      }
-    }, function(error, response){
-      if(!error){
-        var body = JSON.parse(response.body);
-        req.session.user.integration_userId = body.userId;
-        req.session.user.integration_groups = body.groups;
-        res.render('profile');
-      }
-      else {
-        console.log(error);
-        res.render('profile');
-      }
+  var adminClient = cinco.client(req.session.user.keys);
+  var lfid = req.session.user.user;
+  adminClient.getUser(lfid, function(err, user) {
+    if(user){
+      req.session.user.integration_userId = user.userId;
+      req.session.user.integration_groups = JSON.stringify(user.groups);
+      res.render('profile');
+    }
+    else {
+      res.render('profile');
+    }
   });
 });
 
