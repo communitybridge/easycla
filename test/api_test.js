@@ -1,5 +1,6 @@
 var api = require("../lib/api");
 var assert = require('assert');
+var _ = require('underscore');
 var randomstring = require('randomstring');
 
 
@@ -43,7 +44,7 @@ describe('api', function () {
     before(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = apiObj.client(keys);
-        adminClient.createUser(sampleUserName, function(err, created) {
+        adminClient.createUser(sampleUserName, function (err, created) {
           done();
         });
       });
@@ -59,7 +60,7 @@ describe('api', function () {
     });
 
     it('GET user/{id}', function (done) {
-      adminClient.getUser(sampleUserName, function(err, user) {
+      adminClient.getUser(sampleUserName, function (err, user) {
         assert.ifError(err);
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
         assert(user.userId, 'userId property should exist');
@@ -72,7 +73,7 @@ describe('api', function () {
         groupId: 2,
         name: 'ADMIN'
       }
-      adminClient.addGroupForUser(sampleUserName, adminGroup, function(err, isUpdated, user) {
+      adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated with new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
@@ -80,8 +81,22 @@ describe('api', function () {
         done();
       });
     });
+
+    it('GET usergroup/', function (done) {
+      var expected = [{groupId: 1, name: 'USER'}, {groupId: 2, name: 'ADMIN'},
+        {groupId: 3, name: 'PROJECT_MANAGER'}];
+
+      adminClient.getAllGroups(function (err, groups) {
+        assert.ifError(err);
+
+        _.each(expected, function (eg) {
+          var found = _.find(groups, function (g) {
+            return (eg.groupId === g.groupId) && (eg.name === g.name);
+          });
+          assert(found, "Expected group [" + eg + "] not found in returned groups");
+        });
+        done();
+      });
+    });
   });
-
-
-
 });
