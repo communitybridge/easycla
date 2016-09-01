@@ -23,6 +23,15 @@ describe('api', function () {
     });
   });
 
+  describe('Public Endpoints', function () {
+    it('about/version', function (done) {
+      apiObj.getVersion(function(err, body) {
+        assert.equal(body['Application-Name'], 'CINCO');
+        done();
+      });
+    });
+  });
+
   describe('Trusted Auth Endpoints', function () {
     describe('keysForLfId', function () {
       it('Calling keysForLfId with an lfId returns an object with keys', function (done) {
@@ -82,19 +91,19 @@ describe('api', function () {
       });
     });
 
-    it('DELETE user/{id}/group/{groupId}', function (done){
+    it('DELETE user/{id}/group/{groupId}', function (done) {
       var adminGroup = {
         groupId: 2,
         name: 'ADMIN'
       };
       adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
-        adminClient.removeGroupFromUser(sampleUserName, adminGroup.groupId, function(err, isUpdated) {
+        adminClient.removeGroupFromUser(sampleUserName, adminGroup.groupId, function (err, isUpdated) {
           assert.ifError(err);
           assert(isUpdated);
-          adminClient.getUser(sampleUserName, function(err, user) {
+          adminClient.getUser(sampleUserName, function (err, user) {
             assert.ifError(err);
-            assert(!_.some(user.groups, function(g) {
+            assert(!_.some(user.groups, function (g) {
               return g.groupId == adminGroup.groupId;
             }));
             done();
