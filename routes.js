@@ -38,6 +38,10 @@ router.get('/404', function(req,res) {
   res.render('404', { lfid: "" });
 });
 
+router.get('/401', function(req,res) {
+  res.render('401', { lfid: "" });
+});
+
 router.get('/login_cas', function(req, res, next) {
   passport.authenticate('cas', function (err, user, info) {
     if (err) return next(err);
@@ -54,16 +58,36 @@ router.get('/login_cas', function(req, res, next) {
       var lfid = req.session.user.user;
       cinco.getKeysForLfId(lfid, function (err, keys) {
         if(keys){
-          req.session.user.keyId = keys.keyId;
-          req.session.user.secret = keys.secret;
-          req.session.user.keys = keys;
-          return res.redirect('/');
+          req.session.user.cinco_keys = keys;
+          var adminClient = cinco.client(keys);
+          adminClient.getUser(lfid, function(err, user) {
+            if(user){
+              req.session.user.cinco_groups = JSON.stringify(user.groups);
+              req.session.user.isAdmin = false;
+              req.session.user.isUser = false;
+              req.session.user.isProjectManager = false;
+              if(user.groups)
+              {
+                if(user.groups.length > 0){
+                  for(var i = 0; i < user.groups.length; i ++)
+                  {
+                    if(user.groups[i].name == "ADMIN") req.session.user.isAdmin = true;
+                    if(user.groups[i].name == "USER") req.session.user.isUser = true;
+                    if(user.groups[i].name == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
+                  }
+                }
+              }
+              return res.redirect('/');
+            }
+            else {
+              return res.redirect('/login');
+            }
+          });
         }
         if(err){
           req.session.destroy();
-          if(err.statusCode == 404) { // Returned if a user with the given id is not found
-            return res.render('404', { lfid: lfid });
-          }
+          if(err.statusCode == 404) return res.render('404', { lfid: lfid }); // Returned if a user with the given id is not found
+          if(err.statusCode == 401) return res.render('401', { lfid: lfid }); // Unable to get keys for lfid given. User unauthorized.
         }
       });
     });
@@ -71,12 +95,11 @@ router.get('/login_cas', function(req, res, next) {
 });
 
 router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  var adminClient = cinco.client(req.session.user.keys);
+  var adminClient = cinco.client(req.session.user.cinco_keys);
   var lfid = req.session.user.user;
   adminClient.getUser(lfid, function(err, user) {
     if(user){
-      req.session.user.integration_userId = user.userId;
-      req.session.user.integration_groups = JSON.stringify(user.groups);
+      req.session.user.cinco_groups = JSON.stringify(user.groups);
       res.render('profile');
     }
     else {
@@ -118,12 +141,50 @@ router.get('/members', require('connect-ensure-login').ensureLoggedIn('/login'),
 });
 
 router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  var adminClient = cinco.client(req.session.user.keys);
-  var lfid = req.session.user.user;
-  adminClient.getUser(lfid, function(err, user) {
-    console.log(user);
-  });
-  res.render('admin');
+  if(req.session.user.isAdmin) res.render('admin', { message: "" });
+  else res.redirect('/');
+});
+
+router.post('/create_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var projectManagerGroup = {
+      groupId: 3,
+      name: 'PROJECT_MANAGER'
+    }
+    var userGroup = {
+      groupId: 1,
+      name: 'USER'
+    }
+    adminClient.createUser(username, function (err, created) {
+      var message = '';
+      if (err) {
+        message = err;
+        return res.render('admin', { message: message });
+      }
+      if(created) {
+        message = 'Project Manager has been created.';
+        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
+        adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
+          if (err) message = err;
+          return res.render('admin', { message: message });
+        });
+      }
+      else {
+        message = 'User already exists.';
+        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
+        adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
+          if (err) message = err;
+          return res.render('admin', { message: message });
+        });
+      }
+    });
+  }
+});
+
+router.get('*', function(req, res) {
+    res.redirect('/');
 });
 
 module.exports = router;
