@@ -39,7 +39,14 @@
       <div id="navbar" class="navbar-collapse collapse">
         <%- include('nav') %>
         <div class="header-email">
-          MANAGER: <a href="/profile"><%= req.session.user.attributes.mail %></a>
+          <% if (req.session.user.isAdmin) { %>
+            || <a href="/admin">User Management</a>  ||
+            ADMIN:
+          <% } %>
+          <% if (req.session.user.isProjectManager) { %>
+            MANAGER:
+          <% } %>
+          <a href="/profile"><%= req.session.user.attributes.mail %></a>
         </div>
       </div>
     </div>
