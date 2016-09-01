@@ -72,13 +72,34 @@ describe('api', function () {
       var adminGroup = {
         groupId: 2,
         name: 'ADMIN'
-      }
+      };
       adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated with new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
         assert.deepEqual(user.groups[0], adminGroup, 'Added group is not the same');
         done();
+      });
+    });
+
+    it('DELETE user/{id}/group/{groupId}', function (done){
+      var adminGroup = {
+        groupId: 2,
+        name: 'ADMIN'
+      };
+      adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
+        assert.ifError(err);
+        adminClient.removeGroupFromUser(sampleUserName, adminGroup.groupId, function(err, isUpdated) {
+          assert.ifError(err);
+          assert(isUpdated);
+          adminClient.getUser(sampleUserName, function(err, user) {
+            assert.ifError(err);
+            assert(!_.some(user.groups, function(g) {
+              return g.groupId == adminGroup.groupId;
+            }));
+            done();
+          });
+        });
       });
     });
 
