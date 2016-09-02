@@ -42,7 +42,7 @@
   <br>
   <div class="col-sm-3 content">
     <div class="subtitle-content-project">Email Aliases</div>
-    <div class="add-edit-member-companies-label"><a>+ Add</a></div>
+    <div class="add-edit-member-companies-label"><a href="#docsModal" data-toggle="modal">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <br>
     <span style="font-style: italic;">Start configuring this project's aliases.</span>
@@ -95,5 +95,60 @@
   </div>
 </div>
 
+
+<div id="docsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+ <div class="modal-dialog">
+   <div class="modal-content">
+     <div class="modal-header-listing">
+       <button type="button" class="close" data-dismiss="modal" style="color: #fff;" aria-label="Close"><span aria-hidden="true" style="color:#fff">X</span></button>
+       <div class="modal-title-mailing">
+         <span id="myModalLabel">CREATE A MAILING LIST</span>
+       </div>
+     </div>
+     <div class="modal-subheader-listing">
+       <div class="modal-subheader-title">
+         <span>| Add New Mailing List Title</span>
+
+       </div>
+     </div>
+     <div class="modal-body-mailing">
+       <br>
+       <div class="modal-body-nav">
+          Include email aliases
+       </div>
+       <br>
+       <div style="text-align: center; margin-bottom:20px;">
+          — or start by adding email addresses —
+       </div>
+       <div class="col-sm-12 content">
+         <div class="col-sm-3 content">
+           <input type="text" name="name" class="domain-project-edit" value="Jake">
+         </div>
+         <div class="col-sm-3 content">
+           <input type="text" name="name" class="domain-project-edit" value="Armstrong">
+         </div>
+         <div class="col-sm-6 content">
+           <input type="text" name="name" class="domain-project-edit" value="jake.armstrong@business.com">
+         </div>
+       </div>
+       <div class="col-sm-12 content">
+         <div class="col-sm-3 content">
+           <input type="text" name="name" class="domain-project-edit" value="First Name">
+         </div>
+         <div class="col-sm-3 content">
+           <input type="text" name="name" class="domain-project-edit" value="Last Name">
+         </div>
+         <div class="col-sm-6 content">
+           <input type="text" name="name" class="domain-project-edit" value="Email address">
+         </div>
+       </div>
+       <div class="col-sm-12 content">
+         <br>
+         <button type="button" class="btn btn-primary" data-dismiss="modal" style="background-color: #5cb85c; float:right; margin-right:5%;">Save</button>
+       </div>
+     </div>
+   </div>
+ </div>
+</div>
 
 <%- include('partials/footer') %>
