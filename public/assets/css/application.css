@@ -561,3 +561,171 @@ hr {
   font-weight: 500;
   color: #777777;
 }
+.upload-logo-border{
+  display: inline-block;
+  margin-left: 100px;
+  width: 360px;
+  height: 203px;
+  border-radius: 4px;
+  border: solid 1px #979797;
+
+}
+
+
+
+.main-header-project-edit {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background-color: #ffffff;
+  padding: 0px;
+}
+
+.project-logo-project-edit {
+  display: inline-block;
+  margin-left: 100px;
+  margin-top: 20px;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1;
+  color: #51586a;
+  width: 350px;
+  height: 200px;
+  border-radius: 4px;
+  border: dashed 2px #979797;
+}
+.project-logo-project-edit > img {
+  height: 120;
+}
+@media (min-width: 768px) {
+  .project-logo-project-edit > img {
+    height: 160px;
+  }
+}
+.project-logo-project-edit:hover {
+  color: #6f7890;
+  text-decoration: none;
+}
+.project-logo-project-edit-inside {
+  width: 200px;
+  height: 33px;
+  margin-left: 75px;
+  margin-top: 80px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 2;
+  letter-spacing: 4px;
+  color: #777777;
+}
+
+.main-header-title-project-edit{
+  display: inline-block;
+  margin-left: 35px;
+  font-family: HelveticaNeue;
+  font-size: 42px;
+  font-weight: 300;
+  color: #777777;
+  border-bottom: 2px dashed #999;
+}
+.button-title-project-edit{
+  display: inline-block;
+  width: 80px;
+  height: 30px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  margin-left: 20px;
+  text-align: center;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 2;
+  letter-spacing: 4px;
+  color: #777777;
+}
+.last-edited-project-edit{
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  margin-right: 170px;
+  float: right;
+  color: #999999;
+}
+.image-message-project-edit{
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  margin-left: 100px;
+  float: left;
+  color: #999999;
+}
+
+.save-button-project-edit
+{
+
+  position: relative;
+  margin-right: 110px;
+  margin-top: -18px;
+  float:right;
+  width:60px;
+  height:60px;
+  border-radius:30px;
+  font-size:15px;
+  line-height:60px;
+  text-align:center;
+  text-decoration:none;
+  color: #fff;
+  background:#5cb85c;
+}
+.save-button-project-edit:hover{
+  color:gray;
+  text-decoration:none;
+  background:green;
+  color: white;
+}
+.description-project-edit {
+  width: 100%;
+  height: 280px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  text-indent: 10px;
+}
+.domain-project-edit {
+  width: 100%;
+  height: 52px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  margin-left: 10px;
+}
+.discard-message-edit-project{
+  margin-left: 10%;
+
+  margin-top: 40px;
+}
+.button-save-changes-edit-project{
+  margin-left: 80%;
+
+  /*position: relative;*/
+  /*display: inline-block;*/
+  /*float: right;*/
+  border: solid 1px #cccccc;
+  color: white;
+  width: 200px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #449d44;
+}
