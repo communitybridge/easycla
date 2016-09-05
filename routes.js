@@ -112,6 +112,10 @@ router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/l
   res.render('create_project');
 });
 
+router.get('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  res.render('add_company');
+});
+
 router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   dummy_data.findProjectById(req.query.id, function(err, project_data) {
     if(project_data) res.render('project', { project_data: project_data });
