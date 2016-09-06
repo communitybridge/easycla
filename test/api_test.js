@@ -25,7 +25,7 @@ describe('api', function () {
 
   describe('Public Endpoints', function () {
     it('about/version', function (done) {
-      apiObj.getVersion(function(err, body) {
+      apiObj.getVersion(function (err, body) {
         assert.equal(body['Application-Name'], 'CINCO');
         done();
       });
@@ -125,6 +125,20 @@ describe('api', function () {
           });
           assert(found, "Expected group [" + eg + "] not found in returned groups");
         });
+        done();
+      });
+    });
+
+    it('GET user/', function (done) {
+      adminClient.getAllUsers(function (err, users) {
+        assert.ifError(err);
+        assert(users.length >= 2);
+        assert(_.some(users, function(u) {
+          return u.lfId == 'fvega';
+        }));
+        assert(_.some(users, function(u) {
+          return u.lfId == 'LaneMeyer';
+        }));
         done();
       });
     });
