@@ -710,7 +710,7 @@ hr {
   background-color: #ffffff;
   border: solid 1px #cccccc;
   margin-left: 10px;
-  text-indent: 30px;
+  text-indent: 10px;
 }
 .discard-message-edit-project{
   margin-left: 10%;
@@ -802,4 +802,14 @@ hr {
   background-color: #ffffff;
   border: solid 1px #cccccc;
   text-indent: 30px;
+}
+.table-contact-add-company {
+  font-family: HelveticaNeue;
+  font-size: 14px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.71;
+  letter-spacing: 0.5px;
+  color: #333333;
 }
