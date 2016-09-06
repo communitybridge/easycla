@@ -763,7 +763,7 @@ hr {
 }
 .modal-body-mailing{
   width: 100%;
-  height: 300px;
+  height: 450px;
   border-radius: 5px;
   background-color: #eceeef;
 }
@@ -774,6 +774,29 @@ hr {
   height: 30px;
   border-radius: 4px;
   background-color: #eceeef;
+  border: solid 1px #cccccc;
+}
+.modal-body-mailing-list-admin{
+  /*margin-top: 10px;*/
+  display: inline-block;
+  margin-left: 5%;
+  width: 90%;
+  height: 30px;
+  border-radius: 4px;
+  background-color: #eceeef;
+}
+.modal-body-radio{
+  width: 45px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #eceeef;
+  border: solid 1px #cccccc;
+}
+.modal-body-radio-text {
+  display: inline-block;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #ffffff;
   border: solid 1px #cccccc;
 }
 .button-title-add-company{
