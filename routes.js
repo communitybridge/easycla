@@ -9,7 +9,7 @@ var router = express.Router();
 const integration_user = process.env['CONSOLE_INTEGRATION_USER'];
 const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
 
-var hostURL = 'http://lf-integration-platform-sandbox.us-west-2.elasticbeanstalk.com';
+var hostURL = process.env['CINCO_SERVER_URL'];
 if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
 console.log("hostURL: " + hostURL);
 
@@ -86,6 +86,7 @@ router.get('/login_cas', function(req, res, next) {
         }
         if(err){
           req.session.destroy();
+          console.log("getKeysForLfId err: " + err);
           if(err.statusCode == 404) return res.render('404', { lfid: lfid }); // Returned if a user with the given id is not found
           if(err.statusCode == 401) return res.render('401', { lfid: lfid }); // Unable to get keys for lfid given. User unauthorized.
         }
