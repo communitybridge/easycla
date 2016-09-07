@@ -42,7 +42,7 @@ app.use(routes);
 const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
 
-var serverBaseURL = 'http://lf-integration-console-sandbox.us-west-2.elasticbeanstalk.com';
+var serverBaseURL = process.env['CINCO_CONSOLE_URL'];
 if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:8081';
 console.log('serverBaseURL: ' + serverBaseURL);
 
