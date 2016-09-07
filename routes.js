@@ -149,7 +149,7 @@ router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), f
   else res.redirect('/');
 });
 
-router.post('/create_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.post('/create_project_manager_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var username = req.body.form_lfid;
@@ -179,6 +179,45 @@ router.post('/create_user', require('connect-ensure-login').ensureLoggedIn('/log
         message = 'User already exists.';
         adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
         adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
+          message = 'User already exists. ' + 'Project Manager has been created.';
+          if (err) message = err;
+          return res.render('admin', { message: message });
+        });
+      }
+    });
+  }
+});
+
+router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var adminGroup = {
+      groupId: 2,
+      name: 'ADMIN'
+    }
+    var userGroup = {
+      groupId: 1,
+      name: 'USER'
+    }
+    adminClient.createUser(username, function (err, created) {
+      var message = '';
+      if (err) {
+        message = err;
+        return res.render('admin', { message: message });
+      }
+      if(created) {
+        message = 'Admin has been created.';
+        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
+        adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
+          if (err) message = err;
+          return res.render('admin', { message: message });
+        });
+      }
+      else {
+        message = 'User already exists. ' + 'Admin has been created.';
+        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
+        adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
           if (err) message = err;
           return res.render('admin', { message: message });
         });
