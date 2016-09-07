@@ -44,6 +44,7 @@ app.listen(port, function() {});
 
 var serverBaseURL = process.env['CINCO_CONSOLE_URL'];
 if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:8081';
+if(!serverBaseURL.startsWith('http') ) serverBaseURL = 'http://' + serverBaseURL;
 console.log('serverBaseURL: ' + serverBaseURL);
 
 passport.use(new CasStrategy({
