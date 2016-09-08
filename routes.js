@@ -169,13 +169,11 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
       groupId: 1,
       name: 'USER'
     }
-    var users;
     adminClient.createUser(username, function (err, created) {
       var message = '';
       if (err) {
         message = err;
         adminClient.getAllUsers(function (err, users) {
-          users = users;
           return res.render('admin', { message: message, users: users });
         });
       }
@@ -185,7 +183,6 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
         adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
           if (err) message = err;
           adminClient.getAllUsers(function (err, users) {
-            users = users;
             return res.render('admin', { message: message, users: users });
           });
         });
@@ -197,7 +194,6 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
           message = 'User already exists. ' + 'Project Manager has been created.';
           if (err) message = err;
           adminClient.getAllUsers(function (err, users) {
-            users = users;
             return res.render('admin', { message: message, users: users });
           });
         });
@@ -223,7 +219,6 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
       if (err) {
         message = err;
         adminClient.getAllUsers(function (err, users) {
-          users = users;
           return res.render('admin', { message: message, users: users });
         });
       }
@@ -233,7 +228,6 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
         adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
           if (err) message = err;
           adminClient.getAllUsers(function (err, users) {
-            users = users;
             return res.render('admin', { message: message, users: users });
           });
         });
@@ -244,7 +238,6 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
         adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
           if (err) message = err;
           adminClient.getAllUsers(function (err, users) {
-            users = users;
             return res.render('admin', { message: message, users: users });
           });
         });
