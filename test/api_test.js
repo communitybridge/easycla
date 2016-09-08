@@ -82,11 +82,12 @@ describe('api', function () {
         groupId: 2,
         name: 'ADMIN'
       };
+      var expected = [{groupId:1, name:'USER'},adminGroup];
       adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated with new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
-        assert.deepEqual(user.groups[0], adminGroup, 'Added group is not the same');
+        assert.deepEqual(user.groups, expected, 'Expected groups not the same');
         done();
       });
     });
