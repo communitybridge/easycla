@@ -39,6 +39,27 @@
       <input type="submit" value="Add Admin" class="btn btn-primary">
     </div>
   </form>
+  <br><br><br><br>
+  <div class="col-sm-9">
+    <table class="table" >
+      <tr>
+        <td><strong>User</strong></td>
+        <td><strong>Groups</strong></td>
+      </tr>
+      <% for(var i=0; i < users.length; i++) { %>
+      <tr>
+        <td><%= users[i].lfId %></td>
+        <td>
+          <% if(users[i].groups.length>0) { %>
+          <% for(var j=0; j < users[i].groups.length; j++) { %>
+            | <%= users[i].groups[j].name %>
+          <% } %>
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </table>
+  </div>
 </div>
 
 <%- include('partials/footer') %>
