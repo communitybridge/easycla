@@ -46,7 +46,10 @@
       </tr>
       <% for(var i=0; i < users.length; i++) { %>
       <tr>
-        <td><%= users[i].lfId %></td>
+        <td>
+          <span class="pull-left" style="margin-right: 5px;"><%= users[i].lfId %></span>
+          <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
+          <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times;</a></td>
         <td>
           <% if(users[i].groups.length>0) { %>
           <% for(var j=0; j < users[i].groups.length; j++) { %>
@@ -59,5 +62,41 @@
     </table>
   </div>
 </div>
+
+<div id="delete-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h3 class="modal-title"><strong>Delete User</strong></h3>
+        </div>
+        <div class="modal-body">
+          <p><span class="username">Are you sure you want to delete the user</span>?</p>
+          <form>
+            <div class="form-group">
+              <input disabled type="text" class="form-control" id="recipient-name">
+            </div>
+          </form>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">
+            <strong style="color: #cc1010">Delete</strong>
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+  $('#delete-user-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var user = button.data('user');
+    var modal = $(this);
+    modal.find('.modal-title').text('Delete user ' + user);
+    modal.find('.username').text('Are you sure you want to delete the user ' + user);
+    modal.find('.modal-body input').val(user);
+  })
+</script>
 
 <%- include('partials/footer') %>
