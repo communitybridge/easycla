@@ -19,6 +19,8 @@
         <link href="assets/css/application.css" rel="stylesheet">
         <link href="assets/css/dropzone/basic.css" rel="stylesheet">
         <link href="assets/css/dropzone/dropzone.css" rel="stylesheet">
+
+        <script src="assets/js/jquery.min.js"></script>
     </head>
 <body class="with-top-navbar">
   <nav class="navbar navbar-light navbar-fixed-top" style="background-color: #fafafb;">
@@ -46,7 +48,11 @@
           <% if (req.session.user.isProjectManager) { %>
             MANAGER:
           <% } %>
-          <a href="/profile"><%= req.session.user.attributes.mail %></a>
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#"><%= req.session.user.attributes.mail %></a></a>
+          <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
         </div>
       </div>
     </div>
