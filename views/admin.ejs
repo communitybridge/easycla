@@ -49,17 +49,44 @@
       <% for(var i=0; i < users.length; i++) { %>
       <tr>
         <td>
-          <span class="pull-left" style="margin-right: 5px;"><%= users[i].lfId %></span>
-          <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
-          <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times;</a></td>
-        <td>
-          <% if(groups[i].isUser) { %> Yes <% } else { %> No <% } %>
+          <div class="checkbox">
+            <span class="pull-left" style="margin-right: 5px;"><%= users[i].lfId %></span>
+            <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
+            <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times; </a>
+          </div>
         </td>
         <td>
-          <% if(groups[i].isAdmin) { %> Yes <% } else { %> No <% } %>
+          <div class="checkbox custom-control custom-checkbox">
+            <label>
+              <a href data-toggle="modal" data-target="#active-user-modal" data-user="<%= users[i].lfId %>" data-is-user="<%= groups[i].isUser %>">
+                <input type="checkbox" <% if(groups[i].isUser) { %> checked <% } else { %> <% } %> >
+                <span class="custom-control-indicator"></span>
+              </a>
+               <% if(groups[i].isUser) { %> Yes <% } else { %> No <% } %>
+            </label>
+          </div>
         </td>
         <td>
-          <% if(groups[i].isProjectManager) { %> Yes <% } else { %> No <% } %>
+          <div class="checkbox custom-control custom-checkbox">
+            <label>
+              <a href data-toggle="modal" data-target="#admin-user-modal" data-user="<%= users[i].lfId %>" data-is-admin="<%= groups[i].isAdmin %>">
+                <input type="checkbox" <% if(groups[i].isAdmin) { %> checked <% } else { %> <% } %> >
+                <span class="custom-control-indicator"></span>
+              </a>
+               <% if(groups[i].isAdmin) { %> Yes <% } else { %> No <% } %>
+            </label>
+          </div>
+        </td>
+        <td>
+          <div class="checkbox custom-control custom-checkbox">
+            <label>
+              <a href data-toggle="modal" data-target="#project-manager-user-modal" data-user="<%= users[i].lfId %>" data-is-project-manager="<%= groups[i].isProjectManager %>">
+                <input type="checkbox" <% if(groups[i].isProjectManager) { %> checked <% } else { %> <% } %> >
+                <span class="custom-control-indicator"></span>
+              </a>
+               <% if(groups[i].isProjectManager) { %> Yes <% } else { %> No <% } %>
+            </label>
+          </div>
         </td>
       </tr>
       <% } %>
@@ -92,6 +119,81 @@
     </div>
 </div>
 
+<div id="active-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h3 class="modal-title"><strong>Active User</strong></h3>
+        </div>
+        <div class="modal-body">
+          <p><span class="username">Are you sure you want to activate the user</span>?</p>
+          <form>
+            <div class="form-group">
+              <input disabled type="text" class="form-control" id="recipient-name">
+            </div>
+          </form>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">
+            <strong><span strong style="color: #cc1010" class="call-to-action">Activate</span></strong>
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div id="admin-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h3 class="modal-title"><strong>Make User Admin</strong></h3>
+        </div>
+        <div class="modal-body">
+          <p><span class="username">Are you sure you want to make the user admin</span>?</p>
+          <form>
+            <div class="form-group">
+              <input disabled type="text" class="form-control" id="recipient-name">
+            </div>
+          </form>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">
+            <strong><span strong style="color: #cc1010" class="call-to-action">Make Admin</span></strong>
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div id="project-manager-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h3 class="modal-title"><strong>Make User Project Manager</strong></h3>
+        </div>
+        <div class="modal-body">
+          <p><span class="username">Are you sure you want to make the user a project manager</span>?</p>
+          <form>
+            <div class="form-group">
+              <input disabled type="text" class="form-control" id="recipient-name">
+            </div>
+          </form>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-link modal-action" data-dismiss="modal">
+            <strong><span strong style="color: #cc1010" class="call-to-action">Make Project Manager</span></strong>
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
 <script type="text/javascript">
   $('#delete-user-modal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
@@ -100,7 +202,67 @@
     modal.find('.modal-title').text('Delete user ' + user);
     modal.find('.username').text('Are you sure you want to delete the user ' + user);
     modal.find('.modal-body input').val(user);
-  })
+  });
+
+  $('#active-user-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var user = button.data('user');
+    var isUser = button.data('is-user');
+    if(isUser){
+      var modal = $(this);
+      modal.find('.modal-title').text('Deactivate user ' + user);
+      modal.find('.username').text('Are you sure you want to deactivate the user ' + user);
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Deactivate');
+    }
+    else{
+      var modal = $(this);
+      modal.find('.modal-title').text('Activate user ' + user);
+      modal.find('.username').text('Are you sure you want to activate the user ' + user);
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Activate');
+    }
+  });
+
+  $('#admin-user-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var user = button.data('user');
+    var isAdmin = button.data('is-admin');
+    if(isAdmin){
+      var modal = $(this);
+      modal.find('.modal-title').text('Remove Admin privileges for the user ' + user);
+      modal.find('.username').text('Are you sure you want to remove Admin privileges for the user ' + user);
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Remove Admin');
+    }
+    else{
+      var modal = $(this);
+      modal.find('.modal-title').text('Make user ' + user + ' an Admin');
+      modal.find('.username').text('Are you sure you want to make the user ' + user + ' an Admin');
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Make Admin');
+    }
+  });
+
+  $('#project-manager-user-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var user = button.data('user');
+    var isProjectManager = button.data('is-project-manager');
+    if(isProjectManager){
+      var modal = $(this);
+      modal.find('.modal-title').text('Remove Project Manager privileges for the user ' + user);
+      modal.find('.username').text('Are you sure you want to remove Project Manager privileges for the user ' + user);
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Remove Project Manager');
+    }
+    else{
+      var modal = $(this);
+      modal.find('.modal-title').text('Make user ' + user + ' a Project Manager');
+      modal.find('.username').text('Are you sure you want to make the user ' + user + ' a Project Manager');
+      modal.find('.modal-body input').val(user);
+      modal.find('.call-to-action').text('Make Project Manager');
+    }
+  });
 </script>
 
 <%- include('partials/footer') %>
