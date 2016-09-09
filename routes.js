@@ -150,8 +150,8 @@ router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), f
   if(req.session.user.isAdmin) {
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var username = req.body.form_lfid;
-    adminClient.getAllUsers(function (err, users) {
-      res.render('admin', { message: "", users: users });
+    adminClient.getAllUsers(function (err, users, groups) {
+      res.render('admin', { message: "", users: users, groups: groups });
     });
   }
   else res.redirect('/');
@@ -173,8 +173,8 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users) {
-          return res.render('admin', { message: message, users: users });
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
         });
       }
       if(created) {
@@ -182,8 +182,8 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
         adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
         adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
           if (err) message = err;
-          adminClient.getAllUsers(function (err, users) {
-            return res.render('admin', { message: message, users: users });
+          adminClient.getAllUsers(function (err, users, groups) {
+            return res.render('admin', { message: message, users: users, groups:groups });
           });
         });
       }
@@ -193,8 +193,8 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
         adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
           message = 'User already exists. ' + 'Project Manager has been created.';
           if (err) message = err;
-          adminClient.getAllUsers(function (err, users) {
-            return res.render('admin', { message: message, users: users });
+          adminClient.getAllUsers(function (err, users, groups) {
+            return res.render('admin', { message: message, users: users, groups:groups });
           });
         });
       }
@@ -218,8 +218,8 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users) {
-          return res.render('admin', { message: message, users: users });
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
         });
       }
       if(created) {
@@ -227,8 +227,8 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
         adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
         adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
           if (err) message = err;
-          adminClient.getAllUsers(function (err, users) {
-            return res.render('admin', { message: message, users: users });
+          adminClient.getAllUsers(function (err, users, groups) {
+            return res.render('admin', { message: message, users: users, groups:groups });
           });
         });
       }
@@ -237,8 +237,8 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
         adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
         adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
           if (err) message = err;
-          adminClient.getAllUsers(function (err, users) {
-            return res.render('admin', { message: message, users: users });
+          adminClient.getAllUsers(function (err, users, groups) {
+            return res.render('admin', { message: message, users: users, groups:groups });
           });
         });
       }
