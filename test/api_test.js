@@ -131,7 +131,7 @@ describe('api', function () {
     });
 
     it('GET user/', function (done) {
-      adminClient.getAllUsers(function (err, users) {
+      adminClient.getAllUsers(function (err, users, groups) {
         assert.ifError(err);
         assert(users.length >= 2);
         assert(_.some(users, function(u) {
