@@ -42,7 +42,9 @@
     <table class="table" >
       <tr>
         <td><strong>User</strong></td>
-        <td><strong>Groups</strong></td>
+        <td><strong>Active</strong></td>
+        <td><strong>Admin</strong></td>
+        <td><strong>PM</strong></td>
       </tr>
       <% for(var i=0; i < users.length; i++) { %>
       <tr>
@@ -51,11 +53,13 @@
           <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
           <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times;</a></td>
         <td>
-          <% if(users[i].groups.length>0) { %>
-          <% for(var j=0; j < users[i].groups.length; j++) { %>
-            | <%= users[i].groups[j].name %>
-          <% } %>
-          <% } %>
+          <% if(groups[i].isUser) { %> Yes <% } else { %> No <% } %>
+        </td>
+        <td>
+          <% if(groups[i].isAdmin) { %> Yes <% } else { %> No <% } %>
+        </td>
+        <td>
+          <% if(groups[i].isProjectManager) { %> Yes <% } else { %> No <% } %>
         </td>
       </tr>
       <% } %>
