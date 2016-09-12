@@ -87,7 +87,13 @@ describe('api', function () {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated with new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
-        assert.deepEqual(user.groups, expected, 'Expected groups not the same');
+        assert.equal(user.groups.length, 2, 'User must have 2 groups');
+        assert(_.some(user.groups, function(g) {
+          return (g.groupId === adminGroup.groupId) && (g.name === adminGroup.name);
+        }));
+        assert(_.some(user.groups, function(g) {
+          return (g.groupId === 1) && (g.name === 'USER');
+        }));
         done();
       });
     });
