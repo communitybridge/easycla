@@ -351,6 +351,28 @@ router.post('/remove_project_manager_user', require('connect-ensure-login').ensu
   }
 });
 
+router.post('/remove_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    adminClient.removeUser(username, function (err, removed) {
+      var message = '';
+      if (err) {
+        message = err;
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+      if(removed) {
+        message = 'User has been removed.';
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+    });
+  }
+});
+
 router.get('*', function(req, res) {
     res.redirect('/');
 });
