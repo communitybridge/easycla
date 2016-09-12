@@ -101,48 +101,21 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h3 class="modal-title"><strong>Delete User</strong></h3>
         </div>
-        <div class="modal-body">
-          <p><span class="username">Are you sure you want to delete the user</span>?</p>
-          <form>
-            <div class="form-group">
-              <input disabled type="text" class="form-control" id="recipient-name">
+        <div class="modal-form">
+          <form method="post" action="/remove_user">
+            <div class="modal-body">
+              <p><span class="username">Are you sure you want to delete the user</span>?</p>
+              <input type="hidden" name="form_lfid" class="form-control" id="recipient-name">
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+              <input type="submit" class="btn-link modal-action" style="color: #cc1010" value="Delete User">
             </div>
           </form>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn-link modal-action" data-dismiss="modal">
-            <strong style="color: #cc1010">Delete</strong>
-          </button>
         </div>
       </div>
     </div>
 </div>
-
-<!-- <div id="active-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h3 class="modal-title"><strong>Active User</strong></h3>
-        </div>
-        <div class="modal-body">
-          <p><span class="username">Are you sure you want to activate the user</span>?</p>
-          <form>
-            <div class="form-group">
-              <input disabled type="text" class="form-control" id="recipient-name">
-            </div>
-          </form>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn-link modal-action" data-dismiss="modal">
-            <strong><span strong style="color: #cc1010" class="call-to-action">Activate</span></strong>
-          </button>
-        </div>
-      </div>
-    </div>
-</div> -->
 
 <div id="active-user-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog">
