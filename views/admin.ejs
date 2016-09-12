@@ -12,33 +12,21 @@
 </div>
 <div class="hr-divider-keyline"></div>
 
-<div class="col-sm-9 content">
-  <br><br>
+<div class="col-sm-12 content" style="padding:50px;">
   <%= message %>
   <br><br>
-  <span>Create new user as Project Manager</span>
+  <span>Create new user</span>
   <br><br>
-  <form method="post" action="/create_project_manager_user">
+  <form method="post" action="/create_user">
     <div class="col-sm-9">
       <input type="text" name="form_lfid" class="form-control" placeholder="Type lfid">
     </div>
     <div class="col-sm-3">
-      <input type="submit" value="Add PM" class="btn btn-primary">
-    </div>
-  </form>
-  <br><br><br>
-  <span>Create new user as Admin</span>
-  <br><br>
-  <form method="post" action="/create_admin_user">
-    <div class="col-sm-9">
-      <input type="text" name="form_lfid" class="form-control" placeholder="Type lfid">
-    </div>
-    <div class="col-sm-3">
-      <input type="submit" value="Add Admin" class="btn btn-primary">
+      <input type="submit" value="Create User" class="btn btn-primary">
     </div>
   </form>
   <br><br><br><br>
-  <div class="col-sm-9">
+  <div class="col-sm-12">
     <table class="table" >
       <tr>
         <td><strong>User</strong></td>
