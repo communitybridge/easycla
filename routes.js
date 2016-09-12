@@ -78,7 +78,13 @@ router.get('/login_cas', function(req, res, next) {
                   }
                 }
               }
-              return res.redirect('/');
+              if( (req.session.user.isAdmin || req.session.user.isProjectManager) && (req.session.user.isUser)) {
+                return res.redirect('/');
+              }
+              else {
+                req.session.destroy();
+                return res.render('401', { lfid: lfid }); // User unauthorized.
+              }
             }
             else {
               return res.redirect('/login');
