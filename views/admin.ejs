@@ -7,7 +7,7 @@
 </div>
 <div class="white-subheader">
   <div class="text-subheader">
-    Welcome <%= req.session.user.attributes.field_lf_first_name  %>!
+    Welcome <%= req.session.user.attributes.field_lf_first_name  %>! <%= req.session.user.user %>
   </div>
 </div>
 <div class="hr-divider-keyline"></div>
@@ -40,13 +40,19 @@
           <div class="checkbox">
             <span class="pull-left" style="margin-right: 5px;"><%= users[i].lfId %></span>
             <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
-            <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times; </a>
+            <% if( users[i].lfId != req.session.user.user) { %>
+              <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times; </a>
+            <% } %>
           </div>
         </td>
         <td>
           <div class="checkbox custom-control custom-checkbox">
             <label>
-              <a href data-toggle="modal" data-target="#active-user-modal" data-user="<%= users[i].lfId %>" data-is-user="<%= groups[i].isUser %>">
+              <a href data-toggle="modal"
+                <% if( users[i].lfId != req.session.user.user) { %>
+                  data-target="#active-user-modal"
+                <% } %>
+                data-user="<%= users[i].lfId %>" data-is-user="<%= groups[i].isUser %>">
                 <input type="checkbox" <% if(groups[i].isUser) { %> checked <% } else { %> <% } %> >
                 <span class="custom-control-indicator"></span>
               </a>
@@ -57,7 +63,11 @@
         <td>
           <div class="checkbox custom-control custom-checkbox">
             <label>
-              <a href data-toggle="modal" data-target="#admin-user-modal" data-user="<%= users[i].lfId %>" data-is-admin="<%= groups[i].isAdmin %>">
+              <a href data-toggle="modal"
+                <% if( users[i].lfId != req.session.user.user) { %>
+                  data-target="#admin-user-modal"
+                <% } %>
+                data-user="<%= users[i].lfId %>" data-is-admin="<%= groups[i].isAdmin %>">
                 <input type="checkbox" <% if(groups[i].isAdmin) { %> checked <% } else { %> <% } %> >
                 <span class="custom-control-indicator"></span>
               </a>
