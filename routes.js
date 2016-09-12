@@ -157,6 +157,24 @@ router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), f
   else res.redirect('/');
 });
 
+router.post('/activate_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var userGroup = {
+      groupId: 1,
+      name: 'USER'
+    }
+    adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {
+      var message = 'User has been activated.';
+      if (err) message = err;
+      adminClient.getAllUsers(function (err, users, groups) {
+        return res.render('admin', { message: message, users: users, groups:groups });
+      });
+    });
+  }
+});
+
 router.post('/create_project_manager_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
@@ -205,7 +223,9 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
 router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
+    console.log(req);
     var username = req.body.form_lfid;
+    console.log(username);
     var adminGroup = {
       groupId: 2,
       name: 'ADMIN'
@@ -240,6 +260,85 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
           adminClient.getAllUsers(function (err, users, groups) {
             return res.render('admin', { message: message, users: users, groups:groups });
           });
+        });
+      }
+    });
+  }
+});
+
+router.post('/deactivate_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var userGroup = {
+      groupId: 1,
+      name: 'USER'
+    }
+    adminClient.removeGroupFromUser(username, userGroup.groupId, function (err, removed) {
+      var message = '';
+      if (err) {
+        message = err;
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+      if(removed) {
+        message = 'User has been deactivated.';
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+    });
+  }
+});
+
+
+router.post('/remove_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var adminGroup = {
+      groupId: 2,
+      name: 'ADMIN'
+    }
+    adminClient.removeGroupFromUser(username, adminGroup.groupId, function (err, removed) {
+      var message = '';
+      if (err) {
+        message = err;
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+      if(removed) {
+        message = 'Admin has been removed.';
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+    });
+  }
+});
+
+router.post('/remove_project_manager_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin){
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var username = req.body.form_lfid;
+    var projectManagerGroup = {
+      groupId: 3,
+      name: 'PROJECT_MANAGER'
+    }
+    adminClient.removeGroupFromUser(username, projectManagerGroup.groupId, function (err, removed) {
+      var message = '';
+      if (err) {
+        message = err;
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
+        });
+      }
+      if(removed) {
+        message = 'Project Manager has been removed.';
+        adminClient.getAllUsers(function (err, users, groups) {
+          return res.render('admin', { message: message, users: users, groups:groups });
         });
       }
     });

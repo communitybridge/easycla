@@ -44,13 +44,14 @@
           <% if (req.session.user.isAdmin) { %>
             || <a href="/admin">User Management</a>  ||
             ADMIN:
-          <% } %>
+          <% } else { %>
           <% if (req.session.user.isProjectManager) { %>
             MANAGER:
-          <% } %>
+          <% } } %>
           <a class="dropdown-toggle" data-toggle="dropdown" href="#"><%= req.session.user.attributes.mail %></a></a>
           <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
             <li><a href="/profile">Profile</a></li>
+            <li><a href="/admin">User Management</a></li>
             <li><a href="/logout">Logout</a></li>
           </ul>
         </div>
