@@ -20,6 +20,16 @@ router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), functi
   res.render('homepage');
 });
 
+router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  // TODO: Confirm only Admin can see All Projects.
+  // if( (req.session.user.isAdmin) && (req.session.user.isUser)) {
+    res.render('all_projects');
+  // }
+  // else {
+  //   res.render('homepage');
+  // }
+});
+
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('angular');
 });
