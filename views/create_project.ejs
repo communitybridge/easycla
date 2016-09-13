@@ -48,7 +48,7 @@
   <br>
   <div class="col-sm-3 content">
     <div class="subtitle-content-project">Email Aliases</div>
-    <div class="add-edit-member-companies-label"><a href="#create-mailing-list-modal" data-toggle="modal">+ Add</a></div>
+    <div class="add-edit-member-companies-label"><a href="#create-email-alias-modal" data-toggle="modal">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <br>
     <span style="font-style: italic;">Start configuring this project's aliases.</span>
@@ -98,6 +98,73 @@
     <span class="discard-message-edit-project">x Discard Changes</span>
     <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
     <div class="hr-divider-keyline"></div>
+  </div>
+</div>
+
+<div id="create-email-alias-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header-listing">
+        <button type="button" class="close" data-dismiss="modal" style="color: #fff;" aria-label="Close"><span aria-hidden="true" style="color:#fff">X</span></button>
+        <div class="modal-title-mailing">
+          <span id="myModalLabel">CREATE AN EMAIL ALIAS</span>
+        </div>
+      </div>
+      <div class="modal-body-mailing">
+        <br>
+        <div class="col-sm-12 content">
+          <div class="col-sm-4 content">
+            <select class="custom-select custom-select-sm domain-project-edit" style="margin-left:0px;">
+              <option>Select</option>
+              <option>contact@</option>
+              <option>events@</option>
+              <option>pr@</option>
+              <option>legal@</option>
+              <option>membership@</option>
+              <option>(new)</option>
+            </select>
+          </div>
+          <div class="col-sm-6 content">
+            <input type="text" name="name" class="domain-project-edit" value="Email Address">
+          </div>
+          <div class="col-sm-2 content">
+            <button type="button" class="btn btn-primary" data-dismiss="modal" style="margin-top:10px;">Add</button>
+          </div>
+        </div>
+        <br><br><br>
+        <div class="modal-body-mailing-list-admin">
+          <br>
+          <span style="margin-left:12px;">Participants</span>
+          <div class="hr-divider-keyline"></div>
+
+        </div>
+        <br><br><br>
+        <div class="col-sm-12">
+          <table class="table" >
+            <tr>
+              <td><strong>Email</strong></td>
+              <td><strong>Remove</strong></td>
+            </tr>
+            <tr>
+              <td>
+                john.doe@business.org
+              </td>
+              <td>
+                 &nbsp &nbsp &nbsp <a> &times; </a>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                lane.meyer@business.org
+              </td>
+              <td>
+                &nbsp  &nbsp &nbsp <a> &times; </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
