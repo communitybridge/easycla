@@ -26,12 +26,18 @@
   <nav class="navbar navbar-light navbar-fixed-top" style="background-color: #fafafb;">
     <div class="container-fluid container-fluid-spacious">
       <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <div class="navbar-toggle">
+          <button class="nav-toggler sidebar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle nav</span>
+          </button>
+        </div>
+
+        <!-- <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
           <span class="sr-only">Toggle navigation</span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
-        </button>
+        </button> -->
         <a class="navbar-brand navbar-brand-emphasized" href="/">
           <a class="sidebar-brand img-responsive" href="/" >
             <img style="height: 50px; padding: 10px" src="/assets/img/lf_logo.png" alt=""/>
@@ -42,7 +48,7 @@
         <%- include('nav') %>
         <div class="header-email">
           <% if (req.session.user.isAdmin) { %>
-            || <a href="/admin">User Management</a>  ||
+             | <a href="/admin">User Management</a>  |
             ADMIN:
           <% } else { %>
           <% if (req.session.user.isProjectManager) { %>
