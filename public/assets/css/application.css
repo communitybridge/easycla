@@ -95,23 +95,25 @@ hr {
   float:left;
 }
 .add-project-button {
-  height: 10px;
+  height: 5px;
   position: relative;
-  margin-right: 110px;
-  margin-top: -18px;
+  margin-right: 10%;
+  margin-top: -8px;
   float:right;
   font-size: 50px;
   color: #11abde;
 }
 .add-project-title {
+  display: inline-block;
   height: 10px;
-  text-align: right;
-  margin-right: 100px;
+  float: right;
+  margin-top: 6px;
+  margin-right: 9%;
   font-family: HelveticaNeue;
   font-size: 14px;
   font-weight: 400;
   font-style: italic;
-  line-height: 7.5;
+  line-height: 7.6;
   color: #11abde;
 }
 .edit-project-title {
@@ -135,9 +137,9 @@ hr {
   letter-spacing: .05em;
 }
 .card {
-  margin-top: 54px;
-  margin-right: 30px;
   display: inline-block;
+  margin-top: 30px;
+  margin-right: 30px;
   width: 320px;
   height: 315px;
   border-radius: 4px;
