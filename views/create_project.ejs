@@ -1,31 +1,32 @@
 <%- include('partials/header') %>
 
 <div class="main-header-project-edit">
-  <div class="project-logo-project-edit">
-    <div class="project-logo-project-edit-inside">
-      UPLOAD LOGO
+  <div class="project-logo-project-edit-main">
+    <div class="project-logo-project-edit">
+      <button class="project-logo-project-edit-inside">
+        UPLOAD LOGO
+      </button>
+    </div>
+    <div class="image-message-project-edit">
+      Add .jpg, .png, or vector image files under 1 mb
     </div>
   </div>
-
   <div class="main-header-title-project-edit">
-    <span style="color:#11ABDE">| </span>Untitled New Open Source Project
+    <span style="color:#11ABDE">| </span>
+    <input class="main-header-title-project-input" type="text" name="name" value="" placeholder="Untitled New Open Source Project">
   </div>
-
-  <div class="button-title-project-edit">
+  <!-- <div class="button-title-project-edit">
     EDIT
-  </div>
+  </div> -->
   <div class="last-edited-project-edit">
     New Project -  Last saved 11:35 AM
-  </div>
-  <div class="image-message-project-edit">
-    Add .jpg, .png, or vector image files under 1 mb
   </div>
 </div>
 <div class="hr-divider-keyline"></div>
 <div class="white-subheader">
   <div class="content-subheader-project">
     <div class="hr-divider-vertical"></div>
-    <div class=" title-subheader-project">
+    <div class="title-subheader-project">
       <span class="dropdown-toggle" data-toggle="dropdown">
         Project Type | <strong style="color:#044D74;"> Select </strong> <span class="caret"></span>
       </span>
@@ -94,10 +95,12 @@
 
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-    <div class="hr-divider-keyline"></div>
-    <span class="discard-message-edit-project">x Discard Changes</span>
-    <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
-    <div class="hr-divider-keyline"></div>
+    <div class="hr-divider-keyline-save"></div>
+    <div class="discard-message-edit-project">x Discard Changes</div>
+    <div class="button-save-changes-edit-project-div">
+      <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
+    </div>
+    <div class="hr-divider-keyline-save"></div>
   </div>
 </div>
 
