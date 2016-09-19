@@ -104,7 +104,9 @@
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
     <div class="subtitle-content-project">Mailing Lists</div>
-    <div class="add-edit-member-companies-label"><a>+ Create New List</a></div>
+    <a href="#create-mailing-list-modal" data-toggle="modal" style="margin-left: 50px;">
+      <div class="add-edit-member-companies-label">+ Create New List</div>
+    </a>
     <div class="hr-divider-keyline"></div>
     <br>
     <div class="mailing-list-control">
@@ -165,5 +167,7 @@
     <div class="hr-divider-keyline"></div>
   </div>
 </div>
+
+<%- include('partials/mailing_list_modal') %>
 
 <%- include('partials/footer') %>
