@@ -1,16 +1,17 @@
 <%- include('partials/header') %>
 
-<div class="main-header-mailing">
-  <div class="project-logo-mailing ">
-    <a href="/project?id=<%= project_data.project_id%>">
-      <img src="/assets/img/test/<%= project_data.project_id%>.png" style="height: 150px;"alt=""/>
-    </a>
-  </div>
-  <div class="main-header-title-mailing">
-    <%= project_data.project_name%>
-  </div>
-  <div class="main-header-subtitle-mailing">
-    Member Companies
+<div class="main-header-project">
+  <div class="">
+    <div class="project-logo-project-main">
+      <a class="project-logo-project" href="/project?id=<%= project_data.project_id%>">
+        <br>
+        <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
+      </a>
+    </div>
+    <div class="main-header-title-project" style="margin-top:30px;">
+      <span style="color: #999999;"><%= project_data.project_name%> <br></span>
+      Member Companies
+    </div>
   </div>
 </div>
 <div class="hr-divider-keyline"></div>
@@ -23,269 +24,104 @@
   </div>
 </div>
 <div class="hr-divider-keyline"></div>
-
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-
-    <div class="menu-members-table" >
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">MEMBER NAME & LOGO</div>
-      </div>
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">MEMBERSHIP TIER</div>
-      </div>
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">MEMBER SINCE</div>
-      </div>
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">RENEWAL DATE</div>
-      </div>
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">INVOICE DUE</div>
-      </div>
-      <div class="col-sm-2">
-        <div class="hr-divider-vertical"></div>
-        <div class="title-subheader-member">INVOICE STATUS</div>
-        <div class="hr-divider-vertical"></div>
-      </div>
-    </div>
-    <!-- <div class="hr-divider-keyline-member "></div> -->
-
-    <div class="members-table">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Acer
-        </div>
-        <div class="col-sm-2">
-          Platinum
-        </div>
-        <div class="col-sm-2">
-          February 2, 2016
-        </div>
-        <div class="col-sm-2">
-          February 15, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table-dark">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Adobe
-        </div>
-        <div class="col-sm-2">
-          Gold
-        </div>
-        <div class="col-sm-2">
-          June 5, 2016
-        </div>
-        <div class="col-sm-2">
-          June 15, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Apple
-        </div>
-        <div class="col-sm-2">
-          Premium
-        </div>
-        <div class="col-sm-2">
-          July 7, 2016
-        </div>
-        <div class="col-sm-2">
-          July 17, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table-dark">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          AMD
-        </div>
-        <div class="col-sm-2">
-          Premium
-        </div>
-        <div class="col-sm-2">
-          March 8, 2016
-        </div>
-        <div class="col-sm-2">
-          March 18, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          BenQ
-        </div>
-        <div class="col-sm-2">
-          Platinum
-        </div>
-        <div class="col-sm-2">
-          May 16, 2016
-        </div>
-        <div class="col-sm-2">
-          May 26, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table-dark">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Cisco
-        </div>
-        <div class="col-sm-2">
-          Gold
-        </div>
-        <div class="col-sm-2">
-          July 21, 2016
-        </div>
-        <div class="col-sm-2">
-          July 31, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Dell
-        </div>
-        <div class="col-sm-2">
-          Gold
-        </div>
-        <div class="col-sm-2">
-          June 1, 2016
-        </div>
-        <div class="col-sm-2">
-          June 11, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table-dark">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Intel
-        </div>
-        <div class="col-sm-2">
-          Platinum
-        </div>
-        <div class="col-sm-2">
-          December 5, 2016
-        </div>
-        <div class="col-sm-2">
-          December 15, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Fisher Price
-        </div>
-        <div class="col-sm-2">
-          Platinum
-        </div>
-        <div class="col-sm-2">
-          November 4, 2016
-        </div>
-        <div class="col-sm-2">
-          November 14, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
-    <div class="members-table-dark">
-      <div class="members-table-text">
-        <div class="col-sm-2">
-          Fedex
-        </div>
-        <div class="col-sm-2">
-          Premium
-        </div>
-        <div class="col-sm-2">
-          January 3, 2016
-        </div>
-        <div class="col-sm-2">
-          January 13, 2017
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-        <div class="col-sm-2">
-          -
-        </div>
-      </div>
-    </div>
-
+    <!-- <div class="table-responsive"> -->
+      <table class="table">
+        <thead>
+          <tr>
+            <th>MEMBER NAME</th>
+            <th>MEMBERSHIP TIER</th>
+            <th>MEMBER SINCE</th>
+            <th>RENEWAL DATE</th>
+            <th>INVOICE DUE</th>
+            <th>INVOICE STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Acer</th>
+            <td>Platinum</td>
+            <td>February 2, 2016</td>
+            <td>February 15, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Adobe</th>
+            <td>Gold</td>
+            <td>June 5, 2016</td>
+            <td>June 15, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Apple</th>
+            <td>Premium</td>
+            <td>July 7, 2016</td>
+            <td>July 17, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">AMD</th>
+            <td>Premium</td>
+            <td>March 8, 2016</td>
+            <td>March 18, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">BenQ</th>
+            <td>Platinum</td>
+            <td>May 16, 2016</td>
+            <td>May 26, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Cisco</th>
+            <td>Gold</td>
+            <td>July 21, 2016</td>
+            <td>July 31, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Dell</th>
+            <td>Gold</td>
+            <td>June 1, 2016</td>
+            <td>June 11, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Intel</th>
+            <td>Platinum</td>
+            <td>December 5, 2016</td>
+            <td>December 15, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Fisher Price</th>
+            <td>Premium</td>
+            <td>November 4, 2016</td>
+            <td>November 14, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th scope="row">Fedex</th>
+            <td>Platinum</td>
+            <td>January 3, 2016</td>
+            <td>January 13, 2017</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    <!-- </div> -->
   </div>
 </div>
 
