@@ -1,29 +1,31 @@
 <%- include('partials/header') %>
 
 <div class="main-header-project-edit">
-  <div class="project-logo-project-edit">
-    <div class="project-logo-project-edit-inside">
-      UPLOAD LOGO
+  <div class="project-logo-project-edit-main">
+    <div class="project-logo-project-edit">
+      <button class="project-logo-project-edit-inside">
+        UPLOAD LOGO
+      </button>
+    </div>
+    <div class="image-message-project-edit">
+      Add .jpg, .png, or vector image files under 1 mb
     </div>
   </div>
   <div class="main-header-title-project-edit">
-    <span style="color:#11ABDE">|</span>Add Your Company Name
-  </div>
-  <div class="button-title-project-edit">
-    EDIT
+    <span style="color:#11ABDE">| </span>
+    <input class="main-header-title-project-input" type="text" name="name" value="" placeholder="Add Your Company Name">
   </div>
   <div class="last-edited-project-edit">
     EDITING COMPANY CONTACTS -  Last saved 1:05 PM
   </div>
-  <div class="image-message-project-edit">
-    Add .jpg, .png, or vector image files under 1 mb
-  </div>
 </div>
 <div class="hr-divider-keyline"></div>
 <div class="white-subheader">
-  <div class="content-subheader-project">
-    <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
-  </div>
+  <a>
+    <div class="content-subheader-project">
+      <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
+    </div>
+  </a>
   <div class="save-button-project-edit">
     <strong>SAVE</strong>
   </div>
@@ -35,52 +37,69 @@
   <div class="hr-divider-keyline"></div>
   <br>
   <br>
-  <div class="col-sm-6 " style="padding: 30px;">
-    <div class="subtitle-content-project">Headquarters Address</div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <input type="text" name="name" class="domain-project-edit" value="Address"> <br><br>
-    <input type="text" name="name" class="domain-project-edit" value="Additional Address Information (suite, floor, etc.)"> <br><br>
-    <div style="margin-left:-5px">
-      <div class="col-sm-5 ">
-        <input type="text" name="name" class="textbox-add-company" value="City">
+  <div class="col-sm-6 ">
+    <div class="col-lg-12 ">
+      <div class="subtitle-content-project">Headquarters Address</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+    </div>
+    <div class="col-lg-12 ">
+      <input type="text" name="name" class="domain-project-edit" placeholder="Address"> <br><br>
+    </div>
+    <div class="col-lg-12 " >
+      <input type="text" name="name" class="domain-project-edit" placeholder="Additional Address Information (suite, floor, etc.)"> <br><br>
+    </div>
+    <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+      <div class="col-lg-5 ">
+        <input type="text" name="name" class="textbox-add-company" placeholder="City">
       </div>
-      <div class="col-sm-2">
-        <input type="text" name="name" class="textbox-add-company" value="State">  <br><br>
+      <div class="col-lg-2">
+        <input type="text" name="name" class="textbox-add-company" placeholder="State">
       </div>
-      <div class="col-sm-3">
-        <input type="text" name="name" class="textbox-add-company" value="Country">  <br><br>
+      <div class="col-lg-3">
+        <input type="text" name="name" class="textbox-add-company" placeholder="Country">
       </div>
-      <div class="col-sm-2">
-        <input type="text" name="name" class="textbox-add-company" value="Zip Code">  <br><br>
+      <div class="col-lg-2">
+        <input type="text" name="name" class="textbox-add-company" placeholder="Zip Code">
       </div>
     </div>
-    <div class="col-sm-5 " style="margin-left:-15px">
-      <input type="text" name="name" class="domain-project-edit" value="Phone number"> <br><br>
+    <div class="col-lg-12 " style="margin-top: 20px;">
+      <div class="col-lg-5 " style="margin-left:-15px">
+        <input type="text" name="name" class="domain-project-edit" placeholder="Phone number"> <br><br>
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 " style="padding: 30px;">
-    <div class="subtitle-content-project">Billing Address</div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <input type="text" name="name" class="domain-project-edit" value="Address"> <br><br>
-    <input type="text" name="name" class="domain-project-edit" value="Additional Address Information (suite, floor, etc.)"> <br><br>
-    <div style="margin-left:-5px">
-      <div class="col-sm-5 ">
-        <input type="text" name="name" class="textbox-add-company" value="City">
+
+  <div class="col-sm-6 ">
+    <div class="col-lg-12 ">
+      <div class="subtitle-content-project">Billing Address</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+    </div>
+    <div class="col-lg-12 ">
+      <input type="text" name="name" class="domain-project-edit" placeholder="Address"> <br><br>
+    </div>
+    <div class="col-lg-12 " >
+      <input type="text" name="name" class="domain-project-edit" placeholder="Additional Address Information (suite, floor, etc.)"> <br><br>
+    </div>
+    <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+      <div class="col-lg-5 ">
+        <input type="text" name="name" class="textbox-add-company" placeholder="City">
       </div>
-      <div class="col-sm-2">
-        <input type="text" name="name" class="textbox-add-company" value="State">  <br><br>
+      <div class="col-lg-2">
+        <input type="text" name="name" class="textbox-add-company" placeholder="State">
       </div>
-      <div class="col-sm-3">
-        <input type="text" name="name" class="textbox-add-company" value="Country">  <br><br>
+      <div class="col-lg-3">
+        <input type="text" name="name" class="textbox-add-company" placeholder="Country">
       </div>
-      <div class="col-sm-2">
-        <input type="text" name="name" class="textbox-add-company" value="Zip Code">  <br><br>
+      <div class="col-lg-2">
+        <input type="text" name="name" class="textbox-add-company" placeholder="Zip Code">
       </div>
     </div>
-    <div class="col-sm-5 " style="margin-left:-15px">
-      <input type="text" name="name" class="domain-project-edit" value="Phone number"> <br><br>
+    <div class="col-lg-12 " style="margin-top: 20px;">
+      <div class="col-lg-5 " style="margin-left:-15px">
+        <input type="text" name="name" class="domain-project-edit" placeholder="Phone number"> <br><br>
+      </div>
     </div>
   </div>
 </div>
@@ -99,11 +118,11 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
     <div class="col-sm-1"><a>Add</a></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Lauren"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Maxwell"></div>
-    <div class="col-sm-3"><input type="text" class="domain-project-edit" value="lauren.maxwell@business.com"></div>
-    <div class="col-sm-2"><input type="text" class="domain-project-edit" value="Phone"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="info@"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Lauren"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Maxwell"></div>
+    <div class="col-sm-3"><input type="text" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
+    <div class="col-sm-2"><input type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="info@"></div>
     <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
   </div>
   <br><br><br>
@@ -112,11 +131,11 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
     <div class="col-sm-1"><a>Add</a></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Jake"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Armstrong"></div>
-    <div class="col-sm-3"><input type="text" class="domain-project-edit" value="jake.armstrong@business.com"></div>
-    <div class="col-sm-2"><input type="text" class="domain-project-edit" value="Phone"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Select"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Jake"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Armstrong"></div>
+    <div class="col-sm-3"><input type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
+    <div class="col-sm-2"><input type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
   </div>
   <br><br><br>
@@ -125,11 +144,11 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">MARKETING</div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="First name"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Last name"></div>
-    <div class="col-sm-3"><input type="text" class="domain-project-edit" value="Email address"></div>
-    <div class="col-sm-2"><input type="text" class="domain-project-edit" value="Phone"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Select"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
   <br><br><br>
@@ -138,24 +157,24 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">FINANCE</div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="First name"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Last name"></div>
-    <div class="col-sm-3"><input type="text" class="domain-project-edit" value="Email address"></div>
-    <div class="col-sm-2"><input type="text" class="domain-project-edit" value="Phone"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Select"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
   <br>
   <div class="subtitle-content-project col-sm-12">
-    <div class="col-sm-2 table-contact-add-company"><input type="text" class="domain-project-edit" style="margin-left:-5px;" value="Contact Type"></div>
+    <div class="col-sm-2 table-contact-add-company"><input type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="First name"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Last name"></div>
-    <div class="col-sm-3"><input type="text" class="domain-project-edit" value="Email address"></div>
-    <div class="col-sm-2"><input type="text" class="domain-project-edit" value="Phone"></div>
-    <div class="col-sm-1"><input type="text" class="domain-project-edit" value="Select"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
   <br><br><br>
@@ -163,11 +182,14 @@
 </div>
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-    <div class="hr-divider-keyline"></div>
-    <span class="discard-message-edit-project">x Discard Changes</span>
-    <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
-    <div class="hr-divider-keyline"></div>
+    <div class="hr-divider-keyline-save"></div>
+    <div class="discard-message-edit-project">x Discard Changes</div>
+    <div class="button-save-changes-edit-project-div">
+      <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
+    </div>
+    <div class="hr-divider-keyline-save"></div>
   </div>
 </div>
+
 
 <%- include('partials/footer') %>
