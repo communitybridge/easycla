@@ -689,6 +689,8 @@ hr {
   color: #777777;
 }
 .last-edited-project-edit{
+  margin-top: 10px;
+  margin-bottom: 10px;
   font-family: HelveticaNeue;
   font-size: 12px;
   font-weight: 400;
@@ -778,6 +780,33 @@ hr {
   border-radius: 4px;
   background-color: #449d44;
 }
+.close-modal {
+  float: right;
+  font-size: 18px;
+  /*font-weight: bold;*/
+  line-height: 1;
+  color: #000000;
+  text-shadow: 0 1px 0 #ffffff;
+  opacity: 1;
+  filter: alpha(opacity=20);
+}
+.close-modal:hover,
+.close-modal:focus {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.5;
+  filter: alpha(opacity=100);
+}
+button.close-modal {
+  margin-top: 12px;
+  margin-right: 10px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+}
 .modal-header-listing{
   display: inline-block;
   width: 100%;
@@ -787,6 +816,7 @@ hr {
   text-align: center;
 }
 .modal-title-mailing{
+  display: inline-block;
   margin-top: 10px;
   font-family: HelveticaNeue;
   font-size: 14px;
@@ -812,8 +842,9 @@ hr {
   color: #999999;
 }
 .modal-body-mailing{
+  display: table;
   width: 100%;
-  height: 450px;
+  height: 100%;
   border-radius: 5px;
   background-color: #eceeef;
 }
