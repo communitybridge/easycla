@@ -843,6 +843,16 @@ button.close-modal {
   text-align: left;
   color: #999999;
 }
+.modal-subheader-title-input{
+  font-family: HelveticaNeue;
+  font-size: 18px;
+  font-style: normal;
+  font-stretch: normal;
+  text-align: left;
+  color: #999999;
+  border: 0px;
+  width: 70%;
+}
 .modal-body-mailing{
   display: table;
   width: 100%;
