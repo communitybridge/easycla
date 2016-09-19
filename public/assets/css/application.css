@@ -699,8 +699,9 @@ hr {
 }
 .image-message-project-edit{
   display: inline-block;
+  margin-top: 10px;
   font-family: HelveticaNeue;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 400;
   font-style: italic;
   float: left;
@@ -748,13 +749,19 @@ hr {
   text-indent: 10px;
 }
 .discard-message-edit-project{
+  margin-top: 15px;
   float: left;
-  /*display: inline-block;*/
-  /*margin-left: 10%;*/
-  /*margin-top: auto;*/
-  /*margin-top: 40px;*/
+  margin-left: 30px;
+  font-family: HelveticaNeue;
+  font-size: 14px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  text-align: left;
+  color: #999999;
 }
 .button-save-changes-edit-project-div{
+  margin-top: 5px;
   /*display: inline-block;*/
   float: right;
   /*margin-left: 70%;*/
