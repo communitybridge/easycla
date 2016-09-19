@@ -1,14 +1,17 @@
 <%- include('partials/header') %>
 
 <div class="main-header-project">
-  <a class="project-logo-project img-responsive" href="/project?id=<%= project_data.project_id%>">
-    <br>
-    <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
-  </a>
-  <div class="main-header-title-project">
-    <%= project_data.project_name%>
+  <div class="">
+    <div class="project-logo-project-main">
+      <a class="project-logo-project" href="/project?id=<%= project_data.project_id%>">
+        <br>
+        <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
+      </a>
+    </div>
+    <div class="main-header-title-project">
+      <%= project_data.project_name%>
+    </div>
   </div>
-  <br><br>
   <div class="last-edited-project">
     Last edited 11:47 AM
   </div>
@@ -28,7 +31,11 @@
   <div class="edit-project-title">
     <a href="/project?id=<%= project_data.project_id%>">Edit</a>
   </div>
+  <!-- <div class="save-button-project-edit">
+    <strong>SAVE</strong>
+  </div> -->
 </div>
+
 <div class="hr-divider-keyline"></div>
 
 <div class="col-sm-12 content">
@@ -61,37 +68,37 @@
     <div class="hr-divider-keyline"></div>
     <br>
     <div class="member-company-project">
-      <div class="col-sm-4 content">
+      <div class="col-lg-4 content">
           <img src="/assets/img/test/members/oracle.png" alt="" class="member-logo-project"/>
       </div>
-      <div class="col-sm-8 content">
+      <div class="col-lg-8 content">
         <div class="member-company-name-label">Oracle</div>
         <div class="member-company-subheader-label">Active · 6 Contacts | <span style="color:#11ABDE">Expand</span></div>
       </div>
     </div>
     <div class="member-company-project">
-      <div class="col-sm-4 content">
+      <div class="col-lg-4 content">
         <img src="/assets/img/test/members/sega.png" alt="" class="member-logo-project"/>
       </div>
-      <div class="col-sm-8 content">
+      <div class="col-lg-8 content">
         <div class="member-company-name-label">SEGA</div>
         <div class="member-company-subheader-label">Active · 10 Contacts | <span style="color:#11ABDE">Expand</span></div>
       </div>
     </div>
     <div class="member-company-project">
-      <div class="col-sm-4 content">
+      <div class="col-lg-4 content">
         <img src="/assets/img/test/members/fedex.png" alt="" class="member-logo-project"/>
       </div>
-      <div class="col-sm-8 content">
+      <div class="col-lg-8 content">
         <div class="member-company-name-label">FedEx</div>
         <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
       </div>
     </div>
     <div class="member-company-project">
-      <div class="col-sm-4 content">
+      <div class="col-lg-4 content">
         <img src="/assets/img/test/members/amd.png" alt="" class="member-logo-project"/>
       </div>
-      <div class="col-sm-8 content">
+      <div class="col-lg-8 content">
         <div class="member-company-name-label">AMD</div>
         <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
       </div>
@@ -128,12 +135,16 @@
         </div>
       </div>
       <div class="col-sm-4">
-        <div class="mailing-list-last-edited-project">
-          Last updated 11:47 AM July 24, 2016
+        <div class="col-sm-8">
+          <div class="mailing-list-last-edited-project">
+            Last updated 11:47 AM July 24, 2016
+          </div>
         </div>
-        <a href="/mailing?id=<%= project_data.project_id%>">
-          <button type="button" name="button" class="mailing-list-button-project">Manage</button>
-        </a>
+        <div class="col-sm-4">
+          <a href="/mailing?id=<%= project_data.project_id%>">
+            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+          </a>
+        </div>
       </div>
     </div>
     <div class="mailing-list-control">
@@ -155,12 +166,16 @@
         </div>
       </div>
       <div class="col-sm-4">
-        <div class="mailing-list-last-edited-project">
-          Last updated 08:35 AM August 3, 2016
+        <div class="col-sm-8">
+          <div class="mailing-list-last-edited-project">
+            Last updated 08:35 AM August 3, 2016
+          </div>
         </div>
-        <a href="/mailing?id=<%= project_data.project_id%>">
-          <button type="button" name="button" class="mailing-list-button-project">Manage</button>
-        </a>
+        <div class="col-sm-4">
+          <a href="/mailing?id=<%= project_data.project_id%>">
+            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+          </a>
+        </div>
       </div>
     </div>
     <div class="view-all-member-aliases-label"><a href="/mailing?id=<%= project_data.project_id%>">View All</a></div>

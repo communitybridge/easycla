@@ -44,8 +44,8 @@ hr {
   padding: 0px;
 }
 .main-header-project {
+  display: inline-block;
   width: 100%;
-  height: 260px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   background-color: #ffffff;
@@ -59,25 +59,40 @@ hr {
   margin-left: 80px;
   color: #ffffff;
 }
-.main-header-title-project {
-  position: relative;
+
+.main-header-title-project{
   display: inline-block;
-  margin-top: 90px;
-  /*margin-left: 330px;*/
+  margin-left: 35px;
   font-family: HelveticaNeue;
   font-size: 42px;
   font-weight: 300;
   color: #333333;
 }
+.main-header-title-project{
+  border: 0px;
+}
+@media (min-width: 0px) and (max-width: 900px) {
+    .main-header-title-project {
+      margin-top: 20px;
+      font-size: 28px;
+    }
+  }
+@media (min-width: 901px) and (max-width: 1200px) {
+    .main-header-title-project {
+      font-size: 32px;
+    }
+  }
+
 .last-edited-project{
-  position: relative;
   display: inline-block;
+  margin-top: 10px;
+  margin-bottom: 10px;
   font-family: HelveticaNeue;
   font-size: 12px;
   font-weight: 400;
   font-style: italic;
+  margin-right: 5%;
   float: right;
-  margin-right: 170px;
   color: #999999;
 }
 .white-subheader {
@@ -85,6 +100,11 @@ hr {
   height: 68px;
   background-color: #ffffff;
 }
+@media (min-width: 0px) and (max-width: 600px) {
+    .white-subheader {
+      height: 140px;
+    }
+  }
 .text-subheader {
   margin-left: 80px;
   font-family: HelveticaNeue;
@@ -119,7 +139,7 @@ hr {
 .edit-project-title {
   height: 10px;
   text-align: right;
-  margin-right: 123px;
+  margin-right: 11%;
   font-family: HelveticaNeue;
   font-size: 14px;
   font-weight: 400;
@@ -211,26 +231,57 @@ hr {
   height: 1px;
   background-color: #cccccc;
 }
+
+
+.project-logo-project-main {
+  display: inline-block;
+  margin-left: 10%;
+  margin-top: 20px;
+  text-align: center;
+  line-height: 1;
+  width: 350px;
+  height: 100%;
+}
+
 .project-logo-project {
   display: inline-block;
+  text-align: center;
   font-size: 18px;
   line-height: 1;
   color: #51586a;
-  margin-left: 100px;
-  margin-right: 50px;
+  width: 100%;
+  height: 200px;
+  border-radius: 4px;
 }
 .project-logo-project > img {
-  height: 120;
+  width: 80%;
 }
 @media (min-width: 768px) {
   .project-logo-project > img {
-    height: 160px;
+    width: 80%;
   }
 }
 .project-logo-project:hover {
   color: #6f7890;
   text-decoration: none;
 }
+.project-logo-project-inside {
+  width: 200px;
+  height: 33px;
+  margin-top: 80px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 2;
+  letter-spacing: 4px;
+  color: #777777;
+}
+
 
 .project-logo {
   display: block;
@@ -352,9 +403,9 @@ hr {
   margin-bottom: 30px;
 }
 .mailing-list-control {
+  display: inline-block;
   margin-top: 25px;
-  /*width: 1140px;*/
-  height: 52px;
+  width: 100%;
   border-radius: 4px;
   background-color: #ffffff;
   border: solid 1px #cccccc;
