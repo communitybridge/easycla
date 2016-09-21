@@ -59,7 +59,7 @@ describe('api', function () {
       });
     });
 
-    it('POST user/', function (done) {
+    it('POST users/', function (done) {
       var username = randomUserName();
       adminClient.createUser(username, function (err, created) {
         assert.ifError(err);
@@ -98,7 +98,7 @@ describe('api', function () {
       });
     });
 
-    it('DELETE user/{id}/group/{groupId}', function (done) {
+    it('DELETE users/{id}/group/{groupId}', function (done) {
       var adminGroup = {
         groupId: 2,
         name: 'ADMIN'
@@ -119,7 +119,7 @@ describe('api', function () {
       });
     });
 
-    it('GET usergroup/', function (done) {
+    it('GET usergroups/', function (done) {
       var expected = [{groupId: 1, name: 'USER'}, {groupId: 2, name: 'ADMIN'},
         {groupId: 3, name: 'PROJECT_MANAGER'}];
 
@@ -136,7 +136,7 @@ describe('api', function () {
       });
     });
 
-    it('GET user/', function (done) {
+    it('GET users/', function (done) {
       adminClient.getAllUsers(function (err, users, groups) {
         assert.ifError(err);
         assert(users.length >= 2);
