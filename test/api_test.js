@@ -185,7 +185,7 @@ describe('api', function () {
         assert(sampleProj.name, "name property should exist");
         assert(sampleProj.description, "description property should exist");
         assert(sampleProj.pm, "pm property should exist");
-        assert(sampleProj.url, "description property should exist");
+        assert(sampleProj.url, "url property should exist");
         assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
             "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
         done();
@@ -211,6 +211,21 @@ describe('api', function () {
           done();
         });
       })
+    });
+
+    it('POST /project', function (done) {
+      var sampleProj = {
+        name: 'Sample Project',
+        description: 'Sample Project Description',
+        pm: 'pyao',
+        url: 'http://www.sample.org/',
+        type: 'DIRECT_FUNDED'
+      };
+      projManagerClient.createProject(sampleProj, function (err, created) {
+        assert.ifError(err);
+        assert(created);
+        done();
+      });
     })
   });
 });
