@@ -979,3 +979,106 @@ button.close-modal {
   letter-spacing: 0.5px;
   color: #333333;
 }
+.modal-title-content-email-template{
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 20px;
+  font-family: HelveticaNeue;
+  font-size: 24px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.08;
+  text-align: left;
+  color: #2a2c2e;
+}
+.modal-content-email-template{
+  padding: 20px;
+  font-family: Helvetica;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.5;
+  text-align: left;
+  color: #343434;
+}
+.select-email-template-input {
+  margin-top: 10px !important;
+  margin-bottom: 20px !important;
+  width: 100%;
+  height: 52px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  text-indent: 10px;
+  font-family: HelveticaNeue;
+  font-size: 16px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.63;
+  text-align: left;
+  color: #11abde;
+}
+.description-email-template-input {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  height: 280px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  font-family: Helvetica;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.5;
+  text-align: left;
+  color: #343434;
+}
+.membership-email-template-checkbox{
+  display: inline-block;
+  text-align: center;
+  margin-left: -6px !important;
+  margin-right: -6px !important;
+  width: 45px;
+  height: 36px;
+  background-color: #eceeef;
+  border: solid 1px #cccccc;
+  border-radius: 4px;
+}
+.membership-email-template{
+  margin-bottom: 7px;
+  padding-left: 5px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  font-family: HelveticaNeue;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 2;
+  color: #999999;
+}
+
+.cancel-button-email-template{
+  margin: 15px;
+  width: 73px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+}
+.save-button-email-template{
+  margin: 15px;
+  width: 128px;
+  height: 38px;
+  border-radius: 4px;
+  background-color: #11abde;
+  color: #fff;
+  float: right;
+}
