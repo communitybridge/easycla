@@ -226,6 +226,20 @@ describe('api', function () {
         assert(created);
         done();
       });
-    })
+    });
+
+    it('DELETE /project/{id}', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var proj = _.last(projects);
+        projManagerClient.archiveProject(proj.id, function (err) {
+          assert.ifError(err);
+          projManagerClient.getProject(proj.id, function(err) {
+            assert.equal(err.statusCode, 404);
+            done();
+          });
+        });
+      });
+    });
   });
 });
