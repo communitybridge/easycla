@@ -234,10 +234,39 @@ describe('api', function () {
         var proj = _.last(projects);
         projManagerClient.archiveProject(proj.id, function (err) {
           assert.ifError(err);
-          projManagerClient.getProject(proj.id, function(err) {
+          projManagerClient.getProject(proj.id, function (err) {
             assert.equal(err.statusCode, 404);
             done();
           });
+        });
+      });
+    });
+
+    it('PATCH /project/{id}', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var project = _.last(projects);
+        var updatedProps = {
+          id: project.id,
+          name: randomstring.generate({
+            length: 20,
+            charset: 'alphabetic'
+          }),
+          description: randomstring.generate({
+            length: 200,
+            charset: 'alphabetic'
+          })
+        };
+        projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
+          assert.ifError(err);
+
+          assert.equal(updatedProject.id, project.id);
+          assert.equal(updatedProject.url, project.url);
+
+          assert.equal(updatedProject.name, updatedProps.name);
+          assert.equal(updatedProject.description, updatedProps.description);
+
+          done();
         });
       });
     });
