@@ -82,16 +82,16 @@ describe('api', function () {
         groupId: 2,
         name: 'ADMIN'
       };
-      var expected = [{groupId:1, name:'USER'},adminGroup];
+      var expected = [{groupId: 1, name: 'USER'}, adminGroup];
       adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated with new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
         assert.equal(user.groups.length, 2, 'User must have 2 groups');
-        assert(_.some(user.groups, function(g) {
+        assert(_.some(user.groups, function (g) {
           return (g.groupId === adminGroup.groupId) && (g.name === adminGroup.name);
         }));
-        assert(_.some(user.groups, function(g) {
+        assert(_.some(user.groups, function (g) {
           return (g.groupId === 1) && (g.name === 'USER');
         }));
         done();
@@ -140,12 +140,54 @@ describe('api', function () {
       adminClient.getAllUsers(function (err, users, groups) {
         assert.ifError(err);
         assert(users.length >= 2);
-        assert(_.some(users, function(u) {
+        assert(_.some(users, function (u) {
           return u.lfId == 'fvega';
         }));
-        assert(_.some(users, function(u) {
+        assert(_.some(users, function (u) {
           return u.lfId == 'LaneMeyer';
         }));
+        done();
+      });
+    });
+  });
+
+
+  describe('Projects Endpoints', function () {
+    var projManagerClient;
+    var projUserName = randomUserName();
+
+    before(function (done) {
+      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = apiObj.client(keys);
+        adminClient.createUser(projUserName, function (err, created) {
+          var projManagementGroup = {
+            groupId: 3,
+            name: 'PROJECT_MANAGER'
+          };
+          adminClient.addGroupForUser(projUserName, projManagementGroup, function (err, updated, user) {
+            apiObj.getKeysForLfId(projUserName, function (err, keys) {
+              projManagerClient = apiObj.client(keys);
+              done();
+            });
+          });
+        });
+      });
+
+
+    });
+
+    it('GET /projects', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var sampleProj = projects[0];
+        assert(sampleProj, "A single project should exist in the returned response array");
+        assert(sampleProj.id, "id property should exist");
+        assert(sampleProj.name, "name property should exist");
+        assert(sampleProj.description, "description property should exist");
+        assert(sampleProj.pm, "pm property should exist");
+        assert(sampleProj.url, "description property should exist");
+        assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
+            "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
         done();
       });
     });
