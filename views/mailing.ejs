@@ -18,7 +18,14 @@
 <div class="white-subheader">
   <div class="content-subheader-project">
     <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">Email Templates | <strong style="color:#044D74;">Select</strong></div>
+    <div class="title-subheader-project">
+      Email Templates |
+      <strong style="color:#044D74;">
+        <a href="#select-email-template-modal" data-toggle="modal">
+          Select
+        </a>
+      </strong>
+    </div>
     <div class="hr-divider-vertical"></div>
     <a href="#create-mailing-list-modal" data-toggle="modal" style="margin-left: 50px;">
       <button type="button" name="button" class="mailing-list-button-mailing">Create New Mailing List</button>
@@ -132,5 +139,6 @@
 </div>
 
 <%- include('partials/mailing_list_modal') %>
+<%- include('partials/email_template_modal') %>
 
 <%- include('partials/footer') %>
