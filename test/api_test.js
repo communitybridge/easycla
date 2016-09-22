@@ -191,5 +191,26 @@ describe('api', function () {
         done();
       });
     });
+
+    it('GET /project/{id}', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var id = projects[0].id;
+        projManagerClient.getProject(id, function (err, project) {
+          assert.ifError(err);
+          assert(project)
+          done();
+        });
+      })
+    });
+
+    it('GET /project/{id} 404', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        projManagerClient.getProject("not_a_real_id", function (err, project) {
+          assert.equal(err.statusCode, 404);
+          done();
+        });
+      })
+    })
   });
 });
