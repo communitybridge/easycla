@@ -405,6 +405,19 @@ router.post('/remove_user', require('connect-ensure-login').ensureLoggedIn('/log
   }
 });
 
+router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("GET /projects");
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getAllProjects(function (err, projects) {
+      console.log(projects);
+      // TODO: Render in proper view
+      // Testing response
+      res.send(projects);
+    });
+  }
+});
+
 router.get('*', function(req, res) {
     res.redirect('/');
 });
