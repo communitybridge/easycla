@@ -13,7 +13,7 @@
         <br>
         <div class="col-sm-12 content">
           <div class="col-sm-4 content">
-            <select class="custom-select custom-select-sm domain-project-edit" style="margin-left:0px;">
+            <select class="custom-select custom-select-sm domain-project-edit" style="margin-left:0px;" onchange="toggleDiv(this)">
               <option value="" disabled selected>Select</option>
               <option>contact@</option>
               <option>events@</option>
@@ -22,6 +22,16 @@
               <option>membership@</option>
               <option>(new)</option>
             </select>
+          </div>
+          <div id="alias-input-div" style="display: none;">
+            <div class="col-sm-6 content">
+              <input type="text" name="name" class="domain-project-edit" placeholder="Email Alias Name">
+            </div>
+            <div class="col-sm-2 content">
+              <button type="button" class="btn btn-primary" style="margin-top:10px;">Add</button>
+            </div>
+            <div class="col-sm-4 content">
+            </div>
           </div>
           <div class="col-sm-6 content">
             <input type="text" name="name" class="domain-project-edit" placeholder="Email Address">
@@ -63,3 +73,10 @@
     </div>
   </div>
 </div>
+
+<script type="text/javascript">
+  function toggleDiv(selected){
+   if(selected.value == '(new)') document.getElementById('alias-input-div').style.display = "block";
+   else document.getElementById('alias-input-div').style.display = "none";
+  }
+</script>
