@@ -155,6 +155,7 @@ describe('api', function () {
   describe('Projects Endpoints', function () {
     var projManagerClient;
     var projUserName = randomUserName();
+    var adminClient;
 
     before(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
@@ -192,7 +193,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /project/{id}', function (done) {
+    it('GET /projects/{id}', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var id = projects[0].id;
@@ -204,7 +205,7 @@ describe('api', function () {
       })
     });
 
-    it('GET /project/{id} 404', function (done) {
+    it('GET /projects/{id} 404', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         projManagerClient.getProject("not_a_real_id", function (err, project) {
           assert.equal(err.statusCode, 404);
@@ -213,7 +214,7 @@ describe('api', function () {
       })
     });
 
-    it('POST /project', function (done) {
+    it('POST /projects', function (done) {
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
@@ -228,7 +229,22 @@ describe('api', function () {
       });
     });
 
-    it('DELETE /project/{id}', function (done) {
+    it('POST /projects 403 ', function (done) {
+      var username = randomUserName();
+      adminClient.createUser(username, function (err) {
+        assert.ifError(err);
+        apiObj.getKeysForLfId(username, function (err, keys) {
+          assert.ifError(err);
+          var client = apiObj.client(keys);
+          client.createProject({}, function (err) {
+            assert.equal(err.statusCode, 403);
+            done();
+          });
+        });
+      });
+    });
+
+    it('DELETE /projects/{id}', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var proj = _.last(projects);
@@ -242,7 +258,7 @@ describe('api', function () {
       });
     });
 
-    it('PATCH /project/{id}', function (done) {
+    it('PATCH /projects/{id}', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var project = _.last(projects);
