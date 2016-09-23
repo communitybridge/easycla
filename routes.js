@@ -20,9 +20,7 @@ router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), functi
   res.render('homepage');
 });
 
-router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  res.render('all_projects');
-});
+
 
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('angular');
@@ -83,7 +81,12 @@ router.get('/login_cas', function(req, res, next) {
                 }
               }
               if( (req.session.user.isAdmin || req.session.user.isProjectManager) && (req.session.user.isUser)) {
-                return res.redirect('/');
+                var projManagerClient = cinco.client(req.session.user.cinco_keys);
+                projManagerClient.getAllProjects(function (err, projects) {
+                  req.session.projects = projects;
+                  return res.redirect('/');
+                });
+
               }
               else {
                 req.session.destroy();
@@ -405,18 +408,17 @@ router.post('/remove_user', require('connect-ensure-login').ensureLoggedIn('/log
   }
 });
 
-router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+
+router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("GET /projects");
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getAllProjects(function (err, projects) {
-      console.log(projects);
-      // TODO: Render in proper view
-      // Testing response
-      res.send(projects);
+      req.session.projects = projects;
+      res.render('all_projects', {projects: projects});
     });
   }
 });
+
 
 router.get('*', function(req, res) {
     res.redirect('/');
