@@ -37,7 +37,7 @@
 
     <% projects.forEach(function(project){ %>
       <div class="card">
-        <a class="project-logo img-responsive" href="/project?id=<%= project.id %>">
+        <a class="project-logo img-responsive" href="/project/<%= project.id %>">
           <br>
           <img src="/assets/img/test/<%= project.id %>.png" alt=""/>
         </a>
