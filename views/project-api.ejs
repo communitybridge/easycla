@@ -1,0 +1,188 @@
+<%- include('partials/header') %>
+
+<div class="main-header-project">
+  <div class="">
+    <div class="project-logo-project-main">
+      <a class="project-logo-project" href="/project?id=<%= project.id %>">
+        <br>
+        <img src="/assets/img/test/<%= project.id %>.png" alt=""/>
+      </a>
+    </div>
+    <div class="main-header-title-project">
+      <%= project.name %>
+    </div>
+  </div>
+  <div class="last-edited-project">
+    Last edited 11:47 AM
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
+<div class="white-subheader">
+  <div class="content-subheader-project">
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Project Type | <strong style="color:black;">Direct Fund</strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Agreement | <strong style="color:#449D44;">Revision Date: </strong> Aug 8, 2016 | <a> View </a> </div>
+    <div class="hr-divider-vertical"></div>
+  </div>
+  <div class="add-project-button">
+    <a href="/project?id=<%= project.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
+  </div>
+  <div class="edit-project-title">
+    <a href="/project?id=<%= project.id %>">Edit</a>
+  </div>
+  <!-- <div class="save-button-project-edit">
+    <strong>SAVE</strong>
+  </div> -->
+</div>
+
+<div class="hr-divider-keyline"></div>
+
+<div class="col-sm-12 content">
+  <br>
+  <div class="col-sm-3 content">
+    <div class="subtitle-content-project">Email Aliases</div>
+    <div class="hr-divider-keyline"></div>
+    <div class="email-aliases-projects">
+        <span style="color:#373A3C">pr@</span>  Active · 8 Participants <br>
+        <span style="color:#373A3C">info@ </span> Active · 30 Participants <br>
+        <span style="color:#373A3C">legal@</span> Active · 4 Participants <br>
+        <span style="color:#373A3C">events@</span> Active · 9 Participants <br>
+        <span style="color:#373A3C">membership@</span> Active · 32 Participants <br>
+        <span style="color:#373A3C">trademark@</span> Active · 12 Participants <br>
+    </div>
+    <div class="view-all-member-aliases-label"><a href="/aliases?id=<%= project.id %>">View All</a></div>
+    <div class="hr-divider-keyline"></div>
+  </div>
+  <div class="col-sm-5 content">
+    <div class="subtitle-content-project">Project Description</div>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <%= project.description %>
+    <br> <br>
+    <strong style="color: #333333;"><%= project.url %></strong>
+  </div>
+  <div class="col-sm-4 content">
+    <div class="subtitle-content-project">Member Companies</div>
+    <div class="add-edit-member-companies-label"><a href="/members?id=<%= project.id %>">+ Add/Edit</a></div>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="member-company-project">
+      <div class="col-lg-4 content">
+          <img src="/assets/img/test/members/oracle.png" alt="" class="member-logo-project"/>
+      </div>
+      <div class="col-lg-8 content">
+        <div class="member-company-name-label">Oracle</div>
+        <div class="member-company-subheader-label">Active · 6 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-lg-4 content">
+        <img src="/assets/img/test/members/sega.png" alt="" class="member-logo-project"/>
+      </div>
+      <div class="col-lg-8 content">
+        <div class="member-company-name-label">SEGA</div>
+        <div class="member-company-subheader-label">Active · 10 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-lg-4 content">
+        <img src="/assets/img/test/members/fedex.png" alt="" class="member-logo-project"/>
+      </div>
+      <div class="col-lg-8 content">
+        <div class="member-company-name-label">FedEx</div>
+        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="member-company-project">
+      <div class="col-lg-4 content">
+        <img src="/assets/img/test/members/amd.png" alt="" class="member-logo-project"/>
+      </div>
+      <div class="col-lg-8 content">
+        <div class="member-company-name-label">AMD</div>
+        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
+      </div>
+    </div>
+    <div class="view-all-member-aliases-label"><a href="/members?id=<%= project.id %>">View All</a></div>
+    <div class="hr-divider-keyline"></div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="col-sm-12 content mailing-list-project">
+    <div class="subtitle-content-project">Mailing Lists</div>
+    <a href="#create-mailing-list-modal" data-toggle="modal" style="margin-left: 50px;">
+      <div class="add-edit-member-companies-label">+ Create New List</div>
+    </a>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="mailing-list-control">
+      <div class="col-sm-2 mailing-list-title-project">
+        <strong>New Mailing List Title #1</strong>
+      </div>
+      <div class="col-sm-6">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          105 Participants
+        </div>
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          List Type: Public
+        </div>
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          Membership Access: Public
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="col-sm-8">
+          <div class="mailing-list-last-edited-project">
+            Last updated 11:47 AM July 24, 2016
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <a href="/mailing?id=<%= project.id %>">
+            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="mailing-list-control">
+      <div class="col-sm-2 mailing-list-title-project">
+        <strong>Mailing List Title #2</strong>
+      </div>
+      <div class="col-sm-6">
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          &nbsp; 96 Participants
+        </div>
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          List Type: Private
+        </div>
+        <div class="mailing-list-hr-divider-vertical-project"></div>
+        <div class="mailing-list-counter-project">
+          Membership Access: Public
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="col-sm-8">
+          <div class="mailing-list-last-edited-project">
+            Last updated 08:35 AM August 3, 2016
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <a href="/mailing?id=<%= project.id %>">
+            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="view-all-member-aliases-label"><a href="/mailing?id=<%= project.id %>">View All</a></div>
+    <div class="hr-divider-keyline"></div>
+  </div>
+</div>
+
+<%- include('partials/mailing_list_modal') %>
+
+<%- include('partials/footer') %>

@@ -264,9 +264,7 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
 router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
-    console.log(req);
     var username = req.body.form_lfid;
-    console.log(username);
     var adminGroup = {
       groupId: 2,
       name: 'ADMIN'
@@ -408,7 +406,6 @@ router.post('/remove_user', require('connect-ensure-login').ensureLoggedIn('/log
   }
 });
 
-
 router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
@@ -419,6 +416,17 @@ router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/log
   }
 });
 
+router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var id = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(id, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.redirect('/');
+      return res.render('project-api', {project: project});
+    });
+  }
+});
 
 router.get('*', function(req, res) {
     res.redirect('/');
