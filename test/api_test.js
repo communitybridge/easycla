@@ -187,6 +187,7 @@ describe('api', function () {
         assert(sampleProj.description, "description property should exist");
         assert(sampleProj.pm, "pm property should exist");
         assert(sampleProj.url, "url property should exist");
+        assert(sampleProj.startDate, "startDate property should exist");
         assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
             "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
         done();
@@ -220,7 +221,8 @@ describe('api', function () {
         description: 'Sample Project Description',
         pm: 'pyao',
         url: 'http://www.sample.org/',
-        type: 'DIRECT_FUNDED'
+        type: 'DIRECT_FUNDED',
+        startDate: '2016-09-26T09:26:36Z'
       };
       projManagerClient.createProject(sampleProj, function (err, created) {
         assert.ifError(err);
@@ -240,6 +242,30 @@ describe('api', function () {
             assert.equal(err.statusCode, 403);
             done();
           });
+        });
+      });
+    });
+
+    it("POST then GET project", function (done) {
+      var sampleProj = {
+        name: 'Sample Project',
+        description: 'Sample Project Description',
+        pm: 'pyao',
+        url: 'http://www.sample.org/',
+        type: 'DIRECT_FUNDED',
+        startDate: new Date().toISOString()
+      };
+      projManagerClient.createProject(sampleProj, function (err, created, id) {
+        assert.ifError(err);
+        projManagerClient.getProject(id, function (err, returnedProject) {
+          assert.ifError(err);
+          assert(returnedProject, "A single project should exist in the returned response array");
+          assert.equal(returnedProject.name, sampleProj.name);
+          assert.equal(returnedProject.description, sampleProj.description);
+          assert.equal(returnedProject.pm, sampleProj.pm);
+          assert.equal(returnedProject.url, sampleProj.url);
+          assert.equal(returnedProject.startDate, sampleProj.startDate);
+          done();
         });
       });
     });
