@@ -423,7 +423,33 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
     projManagerClient.getProject(id, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
+      console.log(project);
       return res.render('project-api', {project: project});
+    });
+  }
+});
+
+router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var username = req.body.form_lfid;
+
+    var adminClient = cinco.client(req.session.user.cinco_keys);
+    var title = req.body.title;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var newProject = {
+      name: req.body.project_name,
+      description: req.body.project_description,
+      pm: req.session.user.user,
+      url: req.body.url,
+      type: 'DIRECT_FUNDED'
+    };
+
+    console.log(newProject);
+
+    projManagerClient.createProject(newProject, function (err, created) {
+      console.log(err);
+      console.log(created);
+      return res.redirect('/all_projects');
     });
   }
 });

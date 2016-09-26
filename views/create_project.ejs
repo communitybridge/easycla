@@ -1,5 +1,7 @@
 <%- include('partials/header') %>
 
+<form method="post" action="/create_project">
+
 <div class="main-header-project-edit">
   <div class="project-logo-project-edit-main">
     <div class="project-logo-project-edit">
@@ -13,7 +15,7 @@
   </div>
   <div class="main-header-title-project-edit">
     <span style="color:#11ABDE">| </span>
-    <input class="main-header-title-project-input" type="text" name="name" value="" placeholder="Untitled New Open Source Project">
+    <input class="main-header-title-project-input" type="text" name="project_name" value="" placeholder="Untitled New Open Source Project">
   </div>
   <!-- <div class="button-title-project-edit">
     EDIT
@@ -58,7 +60,7 @@
     <div class="subtitle-content-project">Project Description</div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <textarea class="description-project-edit" placeholder="Add a brief description  0/2500"></textarea>
+    <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"></textarea>
     <br> <br>
     <strong style="color: #333333;"></strong>
   </div>
@@ -86,7 +88,7 @@
     <div class="subtitle-content-project">Domain URL</div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <input type="text" name="name" class="domain-project-edit" placeholder="http://www.yourdomain.com">
+    <input type="text" name="url" class="domain-project-edit" placeholder="http://www.yourdomain.com">
     <br> <br>
     <strong style="color: #333333;"></strong>
   </div>
@@ -98,11 +100,14 @@
     <div class="hr-divider-keyline-save"></div>
     <div class="discard-message-edit-project">x Discard Changes</div>
     <div class="button-save-changes-edit-project-div">
-      <button type="button" class="button-save-changes-edit-project" name="button">Save Changes</button>
+      <button type="submit" class="button-save-changes-edit-project" name="button">Save Changes</button>
+      <!-- <input type="submit" value="Create User" class="btn btn-primary"> -->
     </div>
     <div class="hr-divider-keyline-save"></div>
   </div>
 </div>
+
+</form>
 
 <%- include('partials/email_alias_modal') %>
 
