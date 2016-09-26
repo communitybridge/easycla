@@ -436,12 +436,14 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var title = req.body.title;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var now = new Date().toISOString();
     var newProject = {
       name: req.body.project_name,
       description: req.body.project_description,
       pm: req.session.user.user,
       url: req.body.url,
-      type: 'DIRECT_FUNDED'
+      startDate: now,
+      type: req.body.project_type
     };
 
     console.log(newProject);

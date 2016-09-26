@@ -30,12 +30,13 @@
     <div class="hr-divider-vertical"></div>
     <div class="title-subheader-project">
       <span class="dropdown-toggle" data-toggle="dropdown">
-        Project Type | <strong style="color:#044D74;"> Select </strong> <span class="caret"></span>
+        Project Type | <strong style="color:#044D74;"> <span id="project_type_label" >Select</span> </strong> <span class="caret"></span>
       </span>
       <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-        <li role="presentation"><a role="menuitem" tabindex="-1">Direct Funded</a></li>
-        <li role="presentation"><a role="menuitem" tabindex="-1">Incorporated</a></li>
+        <li role="presentation"><a onclick="changeProjectType('DIRECT_FUNDED')" role="menuitem" tabindex="-1">Direct Funded</a></li>
+        <li role="presentation"><a onclick="changeProjectType('INCORPORATED')" role="menuitem" tabindex="-1">Incorporated</a></li>
       </ul>
+      <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
     </div>
     <div class="hr-divider-vertical"></div>
     <div class="title-subheader-project">Agreement | <strong style="color:#044D74;"><a>Upload</a></strong></div>
@@ -108,6 +109,13 @@
 </div>
 
 </form>
+
+<script type="text/javascript">
+  function changeProjectType(project_type){
+    document.getElementById("project_type").value = project_type;
+    document.getElementById("project_type_label").innerHTML = project_type;
+  }
+</script>
 
 <%- include('partials/email_alias_modal') %>
 
