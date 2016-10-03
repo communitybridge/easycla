@@ -455,9 +455,9 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var now = new Date().toISOString();
-    var logoFileName = "";
     var url = req.body.url;
     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    var logoFileName = "";
     if(req.file) logoFileName = req.file.originalname;
     var newProject = {
       name: req.body.project_name,
@@ -473,6 +473,46 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       console.log(id);
       console.log(err);
       return res.redirect('/all_projects');
+    });
+  }
+});
+
+router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var id = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(id, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.redirect('/');
+      console.log(project);
+      return res.render('edit_project', {project: project});
+    });
+  }
+});
+
+router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), upload.single('file'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var id = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    // var now = new Date().toISOString();
+    // var logoFileName = "";
+    var url = req.body.url;
+    if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    // if(req.file) logoFileName = req.file.originalname;
+    var updatedProps = {
+      id: id,
+      name: req.body.project_name,
+      description: req.body.project_description,
+      url: url,
+      // startDate: now,
+      // logoRef: logoFileName,
+      type: req.body.project_type
+    };
+    console.log(updatedProps);
+    projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
+      console.log(err);
+      console.log(updatedProject);
+      return res.redirect('/project/' + id);
     });
   }
 });
