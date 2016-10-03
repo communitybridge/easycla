@@ -20,16 +20,16 @@
 <div class="white-subheader">
   <div class="content-subheader-project">
     <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">Project Type | <strong style="color:black;">Direct Fund</strong></div>
+    <div class="title-subheader-project">Project Type | <strong style="color:black;"><%= project.type %></strong></div>
     <div class="hr-divider-vertical"></div>
     <div class="title-subheader-project">Agreement | <strong style="color:#449D44;">Revision Date: </strong> Aug 8, 2016 | <a> View </a> </div>
     <div class="hr-divider-vertical"></div>
   </div>
   <div class="add-project-button">
-    <a href="/project?id=<%= project.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
+    <a href="/edit_project/<%= project.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
   </div>
   <div class="edit-project-title">
-    <a href="/project?id=<%= project.id %>">Edit</a>
+    <a href="/edit_project/<%= project.id %>">Edit</a>
   </div>
   <!-- <div class="save-button-project-edit">
     <strong>SAVE</strong>
