@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-<form method="post" action="/create_project" enctype="multipart/form-data">
+<form method="post" action="/edit_project/<%= project.id %>" enctype="multipart/form-data">
 
 <div class="main-header-project-edit">
   <div class="project-logo-project-edit-main">
@@ -18,7 +18,7 @@
   </div>
   <div class="main-header-title-project-edit">
     <span style="color:#11ABDE">| </span>
-    <input class="main-header-title-project-input" type="text" name="project_name" value="" placeholder="Untitled New Open Source Project">
+    <input class="main-header-title-project-input" type="text" name="project_name" value="<%= project.name %>" placeholder="<%= project.name %>">
   </div>
   <div class="last-edited-project-edit">
     NEW PROJECT -  Last saved 11:35 AM
@@ -42,9 +42,11 @@
     <div class="title-subheader-project">Agreement | <strong style="color:#044D74;"><a>Upload</a></strong></div>
     <div class="hr-divider-vertical"></div>
   </div>
+  <div >
   <button class="save-button-project-edit" type="submit">
       <strong>SAVE</strong>
   </button>
+  </div>
 </div>
 <div class="hr-divider-keyline"></div>
 
@@ -61,7 +63,7 @@
     <div class="subtitle-content-project">Project Description</div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"></textarea>
+    <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"><%= project.description %></textarea>
     <br> <br>
     <strong style="color: #333333;"></strong>
   </div>
@@ -89,7 +91,7 @@
     <div class="subtitle-content-project">Domain URL</div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <input type="text" name="url" class="domain-project-edit" placeholder="http://www.yourdomain.com">
+    <input type="text" name="url" class="domain-project-edit" placeholder="<%= project.url %>" value="<%= project.url %>">
     <br> <br>
     <strong style="color: #333333;"></strong>
   </div>
@@ -111,6 +113,10 @@
 </form>
 
 <script type="text/javascript">
+
+  document.getElementById("project_type").value = "<%= project.type %>" ;
+  document.getElementById("project_type_label").innerHTML = "<%= project.type %>";
+
   function changeProjectType(project_type){
     document.getElementById("project_type").value = project_type;
     document.getElementById("project_type_label").innerHTML = project_type;
