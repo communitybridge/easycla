@@ -429,6 +429,17 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
   }
 });
 
+router.get('/archive_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var id = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.archiveProject(id, function (err) {
+      console.log(err);
+      return res.redirect('/all_projects');
+    });
+  }
+});
+
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploads/logos')

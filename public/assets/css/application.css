@@ -166,6 +166,12 @@ hr {
   background-color: #ffffff;
   border: solid 1px #e5e5e5;
 }
+.card-more-menu {
+  position: absolute;
+  padding: 15px;
+  margin-left: 260px;
+  color: #777777;
+}
 .add-a-new-project {
   width: 280px;
   display: inline-block;

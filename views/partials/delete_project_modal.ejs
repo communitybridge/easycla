@@ -1,0 +1,37 @@
+<div id="delete-project-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h3 class="modal-title"><strong>Make User Admin</strong></h3>
+        </div>
+        <div class="modal-form">
+          <form method="get" action="/create_admin_user">
+            <div class="modal-body">
+              <p><span class="username">Are you sure you want to make the user an admin</span>?</p>
+              <input type="hidden" name="project_id" class="form-control" id="recipient-name">
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-link modal-action" data-dismiss="modal">Cancel</button>
+              <input type="submit" class="btn-link modal-action" style="color: #cc1010" value="Make Admin">
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+  $('#delete-project-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var project_name = button.data('project-name');
+    var project_id = button.data('project-id');
+    var modal = $(this);
+    modal.find('.modal-title').text('Delete ' + project_name + ' Project');
+    modal.find('.username').text('Are you sure you want to archive the project ' + project_name + "  [ ID=" + project_id+  " ] " );
+    modal.find('.modal-body input').val(project_id);
+    modal.find('.modal-form form').attr('action', '/archive_project/' + project_id);
+    modal.find('.modal-actions input').val('Remove Project');
+  });
+</script>
