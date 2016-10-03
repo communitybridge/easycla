@@ -42,6 +42,7 @@
     "express-session": "^1.13.0",
     "mocha": "^2.4.5",
     "morgan": "^1.7.0",
+    "multer": "^1.2.0",
     "passport": "^0.3.2",
     "passport-cas": "^0.1.0",
     "passport-local": "^1.0.0",
