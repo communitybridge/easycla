@@ -1,7 +1,9 @@
 var express = require('express');
 var passport = require('passport');
-var dummy_data = require('./dummy_db/dummy_data');
 var request = require('request');
+var multer  = require('multer');
+
+var dummy_data = require('./dummy_db/dummy_data');
 var cinco_api = require("./lib/api");
 
 var router = express.Router();
@@ -19,8 +21,6 @@ var cinco = cinco_api(hostURL);
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
 });
-
-
 
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('angular');
@@ -429,28 +429,36 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
   }
 });
 
-router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var username = req.body.form_lfid;
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/logos')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+});
 
-    var adminClient = cinco.client(req.session.user.cinco_keys);
-    var title = req.body.title;
+var upload = multer({ storage: storage });
+
+router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), upload.single('file'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var now = new Date().toISOString();
+    var logoFileName = "";
+    if(req.file) logoFileName = req.file.originalname;
     var newProject = {
       name: req.body.project_name,
       description: req.body.project_description,
       pm: req.session.user.user,
       url: req.body.url,
       startDate: now,
+      logoRef: logoFileName,
       type: req.body.project_type
     };
-
     console.log(newProject);
-
-    projManagerClient.createProject(newProject, function (err, created) {
+    projManagerClient.createProject(newProject, function (err, created, id) {
+      console.log(id);
       console.log(err);
-      console.log(created);
       return res.redirect('/all_projects');
     });
   }
