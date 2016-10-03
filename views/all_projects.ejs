@@ -37,6 +37,17 @@
 
     <% projects.forEach(function(project){ %>
       <div class="card">
+        <div class="card-more-menu">
+          <span class="dropdown-toggle" data-toggle="dropdown">
+            &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+          </span>
+          <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+            <li role="presentation"><a href="/project/<%= project.id %>" role="menuitem" tabindex="-1">View</a></li>
+            <!-- <li role="presentation"><a role="menuitem" tabindex="-1">Edit</a></li> -->
+            <li role="presentation"><a href="#delete-project-modal" data-toggle="modal" data-project-name="<%= project.name %>" data-project-id="<%= project.id %>" role="menuitem" tabindex="-1">Delete</a></li>
+          </ul>
+        </div>
+
         <a class="project-logo img-responsive" href="/project/<%= project.id %>">
           <br>
           <img src="/uploads/logos/<%= project.logoRef %>" alt=""/>
@@ -55,4 +66,7 @@
 
   <hr class="m-t">
 </div>
+
+<%- include('partials/delete_project_modal') %>
+
 <%- include('partials/footer') %>
