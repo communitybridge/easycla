@@ -1,13 +1,16 @@
 <%- include('partials/header') %>
-
-<form method="post" action="/create_project">
+<form method="post" action="/create_project" enctype="multipart/form-data">
 
 <div class="main-header-project-edit">
   <div class="project-logo-project-edit-main">
-    <div class="project-logo-project-edit">
-      <button class="project-logo-project-edit-inside">
-        UPLOAD LOGO
-      </button>
+    <div class="project-logo-project-edit" id="logoRef">
+      <div style="position: relative;">
+        <div class="project-logo-project-edit-inside" style="position: absolute;" >
+          <a href="#" onclick="document.getElementById('file').click(); return false;" /> UPLOAD LOGO </a>
+          <input type="file" name='file' id="file" style="visibility: hidden;" />
+        </div>
+        <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
+      </div>
     </div>
     <div class="image-message-project-edit">
       Add .jpg, .png, or vector image files under 1 mb
@@ -17,9 +20,6 @@
     <span style="color:#11ABDE">| </span>
     <input class="main-header-title-project-input" type="text" name="project_name" value="" placeholder="Untitled New Open Source Project">
   </div>
-  <!-- <div class="button-title-project-edit">
-    EDIT
-  </div> -->
   <div class="last-edited-project-edit">
     NEW PROJECT -  Last saved 11:35 AM
   </div>
@@ -115,6 +115,24 @@
     document.getElementById("project_type").value = project_type;
     document.getElementById("project_type_label").innerHTML = project_type;
   }
+
+  function readImgSrc(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        $('#previewLogo').attr('src', e.target.result);
+        document.getElementById('previewLogo').style.display = "block";
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+    else {
+      document.getElementById('previewLogo').style.display = "none";
+    }
+  }
+  $("#file").change(function(){
+    readImgSrc(this);
+  });
+
 </script>
 
 <%- include('partials/email_alias_modal') %>
