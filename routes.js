@@ -463,15 +463,18 @@ var storage = multer.diskStorage({
 });
 
 var upload = multer({ storage: storage });
+var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }])
 
-router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), upload.single('file'), function(req, res){
+router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var now = new Date().toISOString();
     var url = req.body.url;
     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
     var logoFileName = "";
-    if(req.file) logoFileName = req.file.originalname;
+    var agreementFileName = "";
+    if(req.files.logo) logoFileName = req.files.logo[0].originalname;
+    if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
     var newProject = {
       name: req.body.project_name,
       description: req.body.project_description,
@@ -479,6 +482,7 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       url: url,
       startDate: now,
       logoRef: logoFileName,
+      agreementRef: agreementFileName,
       type: req.body.project_type
     };
     console.log(newProject);
@@ -503,16 +507,19 @@ router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('
   }
 });
 
-router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), upload.single('file'), function(req, res){
+router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var id = req.params.id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     // var now = new Date().toISOString();
     var logoFileName = "";
+    var agreementFileName = "";
     var url = req.body.url;
     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-    if(req.file) logoFileName = req.file.originalname;
+    if(req.files.logo) logoFileName = req.files.logo[0].originalname;
     else logoFileName = req.body.old_logoRef;
+    if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
+    else agreementFileName = req.body.old_agreementRef;
     var updatedProps = {
       id: id,
       name: req.body.project_name,
@@ -520,6 +527,7 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       url: url,
       // startDate: now,
       logoRef: logoFileName,
+      agreementRef: agreementFileName,
       type: req.body.project_type
     };
     console.log(updatedProps);
