@@ -20,6 +20,7 @@ var cinco = cinco_api(hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('homepage');
+  // res.redirect('/my_projects');
 });
 
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
@@ -412,6 +413,18 @@ router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/log
     projManagerClient.getAllProjects(function (err, projects) {
       req.session.projects = projects;
       res.render('all_projects', {projects: projects});
+    });
+  }
+});
+
+router.get('/my_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getMyProjects(function (err, myProjects) {
+      console.log(err);
+      console.log(myProjects);
+      req.session.myProjects = myProjects;
+      res.render('my_projects', {myProjects: myProjects});
     });
   }
 });
