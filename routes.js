@@ -495,17 +495,18 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
     var id = req.params.id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     // var now = new Date().toISOString();
-    // var logoFileName = "";
+    var logoFileName = "";
     var url = req.body.url;
     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-    // if(req.file) logoFileName = req.file.originalname;
+    if(req.file) logoFileName = req.file.originalname;
+    else logoFileName = req.body.old_logoRef;
     var updatedProps = {
       id: id,
       name: req.body.project_name,
       description: req.body.project_description,
       url: url,
       // startDate: now,
-      // logoRef: logoFileName,
+      logoRef: logoFileName,
       type: req.body.project_type
     };
     console.log(updatedProps);
