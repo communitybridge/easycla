@@ -1,12 +1,12 @@
 <%- include('partials/header') %>
 <div class="main-header">
   <span class="main-header-title">
-    All Projects
+    My Projects
   </span>
 </div>
 <div class="white-subheader">
   <div class="text-subheader">
-    Manage your projects:
+    Welcome! Manage your projects:
   </div>
   <div class="add-project-button">
     <a href="/create_project"> <span class="icon icon-circle-with-plus"></span> </a>
@@ -34,30 +34,30 @@
         Program Manager | <strong style="color:#373A3C;"> — </strong>  <br>
       </div>
     </div>
-    <% if (req.session.projects){ %>
-      <% projects.forEach(function(project){ %>
+    <% if (req.session.myProjects){ %>
+      <% myProjects.forEach(function(myProject){ %>
         <div class="card">
           <div class="card-more-menu">
             <span class="dropdown-toggle" data-toggle="dropdown">
               &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
             </span>
             <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
-              <li role="presentation"><a href="/project/<%= project.id %>" role="menuitem" tabindex="-1">View</a></li>
-              <li role="presentation"><a href="/edit_project/<%= project.id %>" role="menuitem" tabindex="-1">Edit</a></li>
-              <li role="presentation"><a href="#delete-project-modal" data-toggle="modal" data-project-name="<%= project.name %>" data-project-id="<%= project.id %>" role="menuitem" tabindex="-1">Delete</a></li>
+              <li role="presentation"><a href="/project/<%= myProject.id %>" role="menuitem" tabindex="-1">View</a></li>
+              <li role="presentation"><a href="/edit_project/<%= myProject.id %>" role="menuitem" tabindex="-1">Edit</a></li>
+              <li role="presentation"><a href="#delete-project-modal" data-toggle="modal" data-project-name="<%= myProject.name %>" data-project-id="<%= myProject.id %>" role="menuitem" tabindex="-1">Delete</a></li>
             </ul>
           </div>
 
-          <a class="project-logo img-responsive" href="/project/<%= project.id %>">
+          <a class="project-logo img-responsive" href="/project/<%= myProject.id %>">
             <br>
-            <img src="/uploads/logos/<%= project.logoRef %>" alt=""/>
+            <img src="/uploads/logos/<%= myProject.logoRef %>" alt=""/>
           </a>
-          <span class="card-title"><%= project.name %><br><br></span>
+          <span class="card-title"><%= myProject.name %><br><br></span>
           <div class="card-content">
             ACTIVE · 2 Members<br>
-            Project Type | <strong style="color:black;"><%= project.type %></strong> <br>
-            Project Since | <strong style="color:#009900;"><%= project.startDate %></strong> <br>
-            Program Manager | <strong style="color:#000099;"><%= project.pm %></strong> <br>
+            Project Type | <strong style="color:black;"><%= myProject.type %></strong> <br>
+            Project Since | <strong style="color:#009900;"><%= myProject.startDate %></strong> <br>
+            Program Manager | <strong style="color:#000099;"><%= myProject.pm %></strong> <br>
           </div>
         </div>
       <% }) %>
