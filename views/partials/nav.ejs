@@ -8,10 +8,26 @@
     <a href="/" class="navbar-nav-heading">HOME</a>
   </li>
   <li >
-    <a href="/" class="navbar-nav-heading-dark">MY PROJECTS (6)</a>
+    <a href="/my_projects" class="navbar-nav-heading-dark">MY PROJECTS (
+      <% if (req.session.myProjects) {  %>
+        <%= req.session.myProjects.length %>
+      <% } else { %>
+        0
+      <%  } %>
+      )
+
+    </a>
   </li>
   <li >
-    <a href="/all_projects" class="navbar-nav-heading-dark">ALL PROJECTS (<%= req.session.projects.length %>)</a>
+    <a href="/all_projects" class="navbar-nav-heading-dark">
+      ALL PROJECTS (
+      <% if (req.session.projects) {  %>
+        <%= req.session.projects.length %>
+      <% } else { %>
+        0
+      <%  } %>
+      )
+    </a>
   </li>
   <!-- <li >
     <a href="/create_project">Create Project</a>
