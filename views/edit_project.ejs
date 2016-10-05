@@ -8,8 +8,9 @@
         <div class="project-logo-project-edit-inside" style="position: absolute;" >
           <a href="#" onclick="document.getElementById('file').click(); return false;" /> UPLOAD LOGO </a>
           <input type="file" accept="image/*" name='file' id="file" style="visibility: hidden;" />
+          <input type="hidden" name="old_logoRef" class="form-control" id="old_logoRef" value="<%= project.logoRef %>">
         </div>
-        <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
+        <img src="/uploads/logos/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
       </div>
     </div>
     <div class="image-message-project-edit">
@@ -123,6 +124,7 @@
   }
 
   function readImgSrc(input) {
+
     if (input.files && input.files[0]) {
       var reader = new FileReader();
       reader.onload = function (e) {
