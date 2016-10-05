@@ -6,8 +6,8 @@
     <div class="project-logo-project-edit" id="logoRef">
       <div style="position: relative;">
         <div class="project-logo-project-edit-inside" style="position: absolute;" >
-          <a href="#" onclick="document.getElementById('file').click(); return false;" /> UPLOAD LOGO </a>
-          <input type="file" accept="image/*" name='file' id="file" style="visibility: hidden;" />
+          <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
+          <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
           <input type="hidden" name="old_logoRef" class="form-control" id="old_logoRef" value="<%= project.logoRef %>">
         </div>
         <img src="/uploads/logos/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
@@ -40,7 +40,14 @@
       <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
     </div>
     <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">Agreement | <strong style="color:#044D74;"><a>Upload</a></strong></div>
+    <div class="title-subheader-project">
+      Agreement |
+      <!-- <strong style="color:#044D74;"><a>Upload</a></strong> -->
+      <div style="display: inline-block">
+        <input type="file" accept="image/*,application/pdf" name='agreement' id="agreement" style="visibility: block;" />
+        <input type="hidden" name="old_agreementRef" class="form-control" id="old_agreementRef" value="<%= project.agreementRef %>">
+      </div>
+    </div>
     <div class="hr-divider-vertical"></div>
   </div>
   <div >
@@ -137,7 +144,7 @@
       document.getElementById('previewLogo').style.display = "none";
     }
   }
-  $("#file").change(function(){
+  $("#logo").change(function(){
     readImgSrc(this);
   });
 
