@@ -85,7 +85,10 @@ router.get('/login_cas', function(req, res, next) {
                 var projManagerClient = cinco.client(req.session.user.cinco_keys);
                 projManagerClient.getAllProjects(function (err, projects) {
                   req.session.projects = projects;
-                  return res.redirect('/');
+                  projManagerClient.getMyProjects(function (err, myProjects) {
+                    req.session.myProjects = myProjects;
+                    return res.redirect('/');
+                  });
                 });
 
               }
