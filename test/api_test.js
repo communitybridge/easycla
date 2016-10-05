@@ -312,5 +312,24 @@ describe('api', function () {
         });
       });
     });
+
+    it('GET /project', function (done) {
+      projManagerClient.getMyProjects(function (err, projects) {
+        assert.ifError(err);
+        var sampleProj = projects[0];
+        assert(sampleProj, "A single project should exist in the returned response array");
+        assert(sampleProj.id, "id property should exist");
+        assert(sampleProj.name, "name property should exist");
+        assert(sampleProj.description, "description property should exist");
+        assert(sampleProj.pm, "pm property should exist");
+        assert(sampleProj.url, "url property should exist");
+        assert(sampleProj.startDate, "startDate property should exist");
+        assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
+            "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
+        done();
+      });
+    });
+
+
   });
 });
