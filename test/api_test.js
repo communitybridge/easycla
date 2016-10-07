@@ -330,6 +330,18 @@ describe('api', function () {
       });
     });
 
+    it('GET /projects/{id}/emailaliases', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var id = projects[0].id;
+        projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+          assert.ifError(err);
+          assert(emailAliases)
+          done();
+        });
+      })
+    });
+
 
   });
 });
