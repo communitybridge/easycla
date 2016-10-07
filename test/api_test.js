@@ -219,7 +219,7 @@ describe('api', function () {
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
-        pm: 'pyao',
+        pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
         startDate: '2016-09-26T09:26:36Z'
@@ -250,7 +250,7 @@ describe('api', function () {
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
-        pm: 'pyao',
+        pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
         startDate: new Date().toISOString()
@@ -271,7 +271,7 @@ describe('api', function () {
     });
 
     it('DELETE /projects/{id}', function (done) {
-      projManagerClient.getAllProjects(function (err, projects) {
+      projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var proj = _.last(projects);
         projManagerClient.archiveProject(proj.id, function (err) {
@@ -285,7 +285,7 @@ describe('api', function () {
     });
 
     it('PATCH /projects/{id}', function (done) {
-      projManagerClient.getAllProjects(function (err, projects) {
+      projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var project = _.last(projects);
         var updatedProps = {
