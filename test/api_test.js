@@ -330,16 +330,48 @@ describe('api', function () {
       });
     });
 
-    it('GET /projects/{id}/emailaliases', function (done) {
-      projManagerClient.getAllProjects(function (err, projects) {
-        assert.ifError(err);
-        var id = projects[0].id;
-        projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+    describe('Email Aliases Endpoints', function () {
+      it('GET /projects/{id}/emailaliases', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
           assert.ifError(err);
-          assert(emailAliases)
-          done();
+          var id = projects[0].id;
+          projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+            assert.ifError(err);
+            assert(emailAliases)
+            done();
+          });
+        })
+      });
+
+      it('GET /projects/{id}/emailaliases 404', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
+          projManagerClient.getEmailAliases("not_a_real_id", function (err, project) {
+            assert.equal(err.statusCode, 404);
+            done();
+          });
+        })
+      });
+
+      it('POST /projects/{id}/emailaliases', function (done) {
+        var sampleAlias = {
+          "address": "ab@cd.org",
+          "participants": [
+            {
+              "address": "foo@bar.com"
+            }
+          ]
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
+            assert.ifError(err);
+            assert(created);
+            done();
+          });
         });
-      })
+      });
+
     });
 
 
