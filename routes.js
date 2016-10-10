@@ -149,11 +149,18 @@ router.get('/mailing', require('connect-ensure-login').ensureLoggedIn('/login'),
   });
 });
 
-router.get('/aliases', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  dummy_data.findProjectById(req.query.id, function(err, project_data) {
-    if(project_data) res.render('aliases', { project_data: project_data });
-    else res.redirect('/');
-  });
+router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var id = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(id, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.redirect('/');
+      projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+        return res.render('aliases', {project: project, emailAliases: emailAliases});
+      });
+    });
+  }
 });
 
 router.get('/members', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
@@ -424,8 +431,6 @@ router.get('/my_projects', require('connect-ensure-login').ensureLoggedIn('/logi
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getMyProjects(function (err, myProjects) {
-      console.log(err);
-      console.log(myProjects);
       req.session.myProjects = myProjects;
       res.render('my_projects', {myProjects: myProjects});
     });
