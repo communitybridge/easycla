@@ -345,7 +345,7 @@ describe('api', function () {
 
       it('GET /projects/{id}/emailaliases 404', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
-          projManagerClient.getEmailAliases("not_a_real_id", function (err, project) {
+          projManagerClient.getEmailAliases("not_a_real_id", function (err, emailAliases) {
             assert.equal(err.statusCode, 404);
             done();
           });
