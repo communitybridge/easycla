@@ -44,14 +44,31 @@
     <div class="subtitle-content-project">Email Aliases</div>
     <div class="hr-divider-keyline"></div>
     <div class="email-aliases-projects">
-        <span style="color:#373A3C">pr@</span>  Active · 8 Participants <br>
-        <span style="color:#373A3C">info@ </span> Active · 30 Participants <br>
-        <span style="color:#373A3C">legal@</span> Active · 4 Participants <br>
-        <span style="color:#373A3C">events@</span> Active · 9 Participants <br>
-        <span style="color:#373A3C">membership@</span> Active · 32 Participants <br>
-        <span style="color:#373A3C">trademark@</span> Active · 12 Participants <br>
+      <div class="col-sm-12 content">
+        <% if (emailAliases){ %>
+          <% emailAliases.forEach(function(emailAlias){ %>
+            <span style="color:#373A3C"><%= emailAlias.address %></span>
+             ·
+            <% if (emailAlias.participants.length == 1){ %>
+            <%= emailAlias.participants.length %> Participant
+            <% } else { %>
+            <%= emailAlias.participants.length %> Participants
+            <% } %>
+            <span class="dropdown-toggle" data-toggle="dropdown">
+              &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+            </span>
+            <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+              <% emailAlias.participants.forEach(function(participant){ %>
+                <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
+              <% }) %>
+            </ul>
+            <br>
+          <% }) %>
+        <% } %>
+      </div>
+
     </div>
-    <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">View All</a></div>
+    <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">View All (<%= emailAliases.length %>)</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
   <div class="col-sm-5 content">
