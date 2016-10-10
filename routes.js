@@ -445,7 +445,10 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       console.log(project);
-      return res.render('project-api', {project: project});
+      projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+        console.log(emailAliases);
+        return res.render('project-api', {project: project, emailAliases: emailAliases});
+      });
     });
   }
 });
