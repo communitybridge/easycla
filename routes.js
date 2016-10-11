@@ -163,6 +163,34 @@ router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/logi
   }
 });
 
+router.post('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.params.id;
+    // var now = new Date().toISOString();
+    // var url = req.body.url;
+    // var name = req.body.project_name;
+    var newAlias = {
+      "address": "ab@cd.org",
+      "participants": [
+        {
+          "address": "foo@bar.com"
+        },
+        {
+          "address": "foo2@bar.com"
+        },
+        {
+          "address": "foo3@bar.com"
+        }
+      ]
+    };
+    console.log(newAlias);
+    projManagerClient.createEmailAliases(projectId, newAlias, function (err, created, aliasId) {
+      return res.redirect('/aliases/' + projectId);
+    });
+  }
+});
+
 router.get('/members', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   dummy_data.findProjectById(req.query.id, function(err, project_data) {
     if(project_data) res.render('members', { project_data: project_data });

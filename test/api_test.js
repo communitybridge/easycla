@@ -358,6 +358,12 @@ describe('api', function () {
           "participants": [
             {
               "address": "foo@bar.com"
+            },
+            {
+              "address": "foo2@bar.com"
+            },
+            {
+              "address": "foo3@bar.com"
             }
           ]
         };
