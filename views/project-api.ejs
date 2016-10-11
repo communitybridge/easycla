@@ -3,7 +3,7 @@
 <div class="main-header-project">
   <div class="">
     <div class="project-logo-project-main">
-      <a class="project-logo-project" href="/project?id=<%= project.id %>">
+      <a class="project-logo-project" href="/project/<%= project.id %>">
         <br>
         <img src="/uploads/logos/<%= project.logoRef %>" alt=""/>
       </a>
@@ -47,8 +47,7 @@
       <div class="col-sm-12 content">
         <% if (emailAliases){ %>
           <% emailAliases.forEach(function(emailAlias){ %>
-            <span style="color:#373A3C"><%= emailAlias.address %></span>
-             ·
+            <span style="color:#373A3C"><%= emailAlias.address %></span> ·
             <% if (emailAlias.participants.length == 1){ %>
             <%= emailAlias.participants.length %> Participant
             <% } else { %>
@@ -66,7 +65,6 @@
           <% }) %>
         <% } %>
       </div>
-
     </div>
     <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">View All (<%= emailAliases.length %>)</a></div>
     <div class="hr-divider-keyline"></div>
