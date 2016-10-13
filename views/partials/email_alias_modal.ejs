@@ -1,3 +1,6 @@
+<link href="/assets/css/typeahead.css" rel="stylesheet">
+<script src="/assets/js/typeahead.bundle.js"></script>
+
 <div id="create-email-alias-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -13,36 +16,22 @@
         <br>
         <form class="" action="/aliases/<%= project.id %>" method="post">
           <div class="col-sm-12 content">
-            <div class="col-sm-4 content">
-              <select class="custom-select custom-select-sm domain-project-edit" style="margin-left:0px;" onchange="toggleDiv(this)">
-                <option value="" disabled selected>Select</option>
-                <option>contact@</option>
-                <option>events@</option>
-                <option>pr@</option>
-                <option>legal@</option>
-                <option>membership@</option>
-                <option>(new)</option>
-              </select>
+            <div class="col-sm-12 content" id="email-aliases-input-div">
+              <input type="text" name="email_alias" class="typeahead" placeholder="Email Alias">
             </div>
-            <div id="alias-input-div" style="display: none;">
-              <div class="col-sm-6 content">
-                <input type="text" name="name" class="domain-project-edit" placeholder="Email Alias Name">
-              </div>
-              <div class="col-sm-2 content">
-                <button type="button" class="btn btn-primary" style="margin-top:10px;">Add</button>
-              </div>
-              <div class="col-sm-4 content">
-              </div>
+          </div>
+          <div class="col-sm-12 content" style="margin-top: 10px;">
+            <div class="col-sm-12 content">
+              <input type="text" name="participant_email" class="modal-email-address-input" placeholder="Participant Email Address">
             </div>
-            <div class="col-sm-6 content">
-              <input type="text" name="name" class="domain-project-edit" placeholder="Email Address">
-            </div>
-            <div class="col-sm-2 content">
-              <!-- <button type="button" class="btn btn-primary" data-dismiss="modal" style="margin-top:10px;">Add</button> -->
-              <input type="submit" class="btn btn-primary" style="margin-top:10px;" value="Add">
+          </div>
+          <div class="col-sm-12 text-center">
+            <div class="col-sm-12 content">
+                <input type="submit" class="btn btn-primary" style="margin-top:10px; margin-bottom:20px; width:30%" value="Add">
             </div>
           </div>
         </form>
+        <!--
         <div class="modal-body-mailing-list-admin">
           <br>
           <span style="margin-left:12px;">Participants</span>
@@ -72,6 +61,7 @@
             <span>&nbsp;</span>
           </div>
         </div>
+        -->
       </div>
     </div>
   </div>
@@ -82,4 +72,41 @@
    if(selected.value == '(new)') document.getElementById('alias-input-div').style.display = "block";
    else document.getElementById('alias-input-div').style.display = "none";
   }
+</script>
+
+<script type="text/javascript">
+  var substringMatcher = function(strs) {
+    return function findMatches(q, cb) {
+      var matches = [];
+      var substringRegex;
+      substrRegex = new RegExp(q, 'i');
+      $.each(strs, function(i, str){
+        if(substrRegex.test(str)){
+          matches.push(str);
+        }
+      });
+      cb(matches);
+    };
+  };
+
+  var emailAliasesSample = [
+    'contact@<%= project.domain %>',
+    'events@<%= project.domain %>',
+    'pr@<%= project.domain %>',
+    'legal@<%= project.domain %>',
+    'membership@<%= project.domain %>'
+  ];
+
+  $('#email-aliases-input-div .typeahead').typeahead(
+    {
+      hint: true,
+      highlight: true,
+      minLength: 0
+    },
+    {
+      name: 'emailAliasesSample',
+      source: substringMatcher(emailAliasesSample)
+    }
+  );
+
 </script>
