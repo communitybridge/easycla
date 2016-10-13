@@ -19,8 +19,8 @@ console.log("hostURL: " + hostURL);
 var cinco = cinco_api(hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  res.render('homepage');
-  // res.redirect('/my_projects');
+  // res.render('homepage');
+  res.redirect('/all_projects');
 });
 
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
