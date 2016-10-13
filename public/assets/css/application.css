@@ -935,6 +935,17 @@ button.close-modal {
   border-radius: 4px;
   background-color: #eceeef;
 }
+.modal-email-address-input{
+  width: 500px;
+  height: 52px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: solid 1px #cccccc;
+  margin-left: 10px;
+  text-indent: 10px;
+  font-family: HelveticaNeue;
+  font-size: 14px;
+}
 .modal-body-radio{
   width: 45px;
   height: 38px;
