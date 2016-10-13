@@ -156,6 +156,7 @@ router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/logi
     projManagerClient.getProject(id, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
+      project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('/','');
       projManagerClient.getEmailAliases(id, function (err, emailAliases) {
         return res.render('aliases', {project: project, emailAliases: emailAliases});
       });
@@ -167,24 +168,16 @@ router.post('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/log
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.params.id;
-    // var now = new Date().toISOString();
-    // var url = req.body.url;
-    // var name = req.body.project_name;
+    var email_alias = req.body.email_alias;
+    var participant_email = req.body.participant_email;
     var newAlias = {
-      "address": "ab@cd.org",
+      "address": email_alias,
       "participants": [
         {
-          "address": "foo@bar.com"
-        },
-        {
-          "address": "foo2@bar.com"
-        },
-        {
-          "address": "foo3@bar.com"
+          "address": participant_email
         }
       ]
     };
-    console.log(newAlias);
     projManagerClient.createEmailAliases(projectId, newAlias, function (err, created, aliasId) {
       return res.redirect('/aliases/' + projectId);
     });
@@ -472,9 +465,7 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
     projManagerClient.getProject(id, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
-      console.log(project);
       projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-        console.log(emailAliases);
         return res.render('project-api', {project: project, emailAliases: emailAliases});
       });
     });
@@ -524,7 +515,6 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       agreementRef: agreementFileName,
       type: req.body.project_type
     };
-    console.log(newProject);
     projManagerClient.createProject(newProject, function (err, created, id) {
       console.log(id);
       console.log(err);
@@ -540,7 +530,6 @@ router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('
     projManagerClient.getProject(id, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
-      console.log(project);
       return res.render('edit_project', {project: project});
     });
   }
@@ -569,7 +558,6 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       agreementRef: agreementFileName,
       type: req.body.project_type
     };
-    console.log(updatedProps);
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
       console.log(err);
       console.log(updatedProject);
