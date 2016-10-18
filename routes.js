@@ -150,6 +150,7 @@ router.get('/mailing', require('connect-ensure-login').ensureLoggedIn('/login'),
   });
 });
 
+
 router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var id = req.params.id;
@@ -159,7 +160,27 @@ router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/logi
       if (err) return res.redirect('/');
       project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('/','');
       projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-        return res.render('aliases', {project: project, emailAliases: emailAliases});
+        
+        var isAlias = {
+          "isContactAlias": false,
+          "isEventsAlias": false,
+          "isPrAlias": false,
+          "isLegalAlias": false,
+          "isMembershipAlias": false,
+        };
+
+        if( emailAliases.length >= 1 ){
+          for (var i = 0; i < emailAliases.length; i++) {
+            var email_alias = emailAliases[i].address;
+            var alias_name = email_alias.match(/^([^@]*)@/)[1];
+            if(alias_name == "contact") isAlias.isContactAlias = true;
+            if(alias_name == "events") isAlias.isEventsAlias = true;
+            if(alias_name == "pr") isAlias.isPrAlias = true;
+            if(alias_name == "legal") isAlias.isLegalAlias = true;
+            if(alias_name == "membership") isAlias.isMembershipAlias = true;
+          }
+        }
+        return res.render('aliases', {project: project, emailAliases: emailAliases, isAlias:isAlias });
       });
     });
   }
