@@ -1,122 +1,140 @@
 <%- include('partials/header') %>
+
 <form method="post" action="/create_project" enctype="multipart/form-data">
 
-<div class="main-header-project-edit">
-  <div class="project-logo-project-edit-main">
-    <div class="project-logo-project-edit" id="logoRef">
-      <div style="position: relative;">
-        <div class="project-logo-project-edit-inside" style="position: absolute;" >
-          <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
-          <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
+  <div class="main-header-project-edit">
+    <div class="project-logo-project-edit-main">
+      <div class="project-logo-project-edit" id="logoRef">
+        <div style="position: relative;">
+          <div class="project-logo-project-edit-inside" style="position: absolute;" >
+            <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
+            <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
+          </div>
+          <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
         </div>
-        <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
+      </div>
+      <div class="image-message-project-edit">
+        Add .jpg, .png, or vector image files under 1 mb
       </div>
     </div>
-    <div class="image-message-project-edit">
-      Add .jpg, .png, or vector image files under 1 mb
+    <div class="main-header-title-project-edit">
+      <span style="color:#11ABDE">| </span>
+      <input class="main-header-title-project-input" type="text" name="project_name" value="" placeholder="Untitled New Open Source Project">
+    </div>
+    <div class="last-edited-project-edit">
+      NEW PROJECT -  Last saved 11:35 AM
     </div>
   </div>
-  <div class="main-header-title-project-edit">
-    <span style="color:#11ABDE">| </span>
-    <input class="main-header-title-project-input" type="text" name="project_name" value="" placeholder="Untitled New Open Source Project">
-  </div>
-  <div class="last-edited-project-edit">
-    NEW PROJECT -  Last saved 11:35 AM
-  </div>
-</div>
-<div class="hr-divider-keyline"></div>
-<div class="white-subheader">
-  <div class="content-subheader-project">
-    <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">
-      <span class="dropdown-toggle" data-toggle="dropdown">
-        Project Type | <strong style="color:#044D74;"> <span id="project_type_label" >Select</span> </strong> <span class="caret"></span>
-      </span>
-      <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-        <li role="presentation"><a onclick="changeProjectType('DIRECT_FUNDED')" role="menuitem" tabindex="-1">Direct Funded</a></li>
-        <li role="presentation"><a onclick="changeProjectType('INCORPORATED')" role="menuitem" tabindex="-1">Incorporated</a></li>
-      </ul>
-      <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
-    </div>
-    <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">
-      Agreement |
-      <!-- <strong style="color:#044D74;"><a>Upload</a></strong> -->
-      <div style="display: inline-block">
-        <input type="file" accept="image/*,application/pdf" name='agreement' id="agreement" style="visibility: block;" />
+  <div class="hr-divider-keyline"></div>
+  <div class="white-subheader">
+    <div class="content-subheader-project">
+      <div class="hr-divider-vertical"></div>
+      <div class="title-subheader-project">
+        <span class="dropdown-toggle" data-toggle="dropdown">
+          Project Type | <strong style="color:#044D74;"> <span id="project_type_label" >Select</span> </strong> <span class="caret"></span>
+        </span>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+          <li role="presentation"><a onclick="changeProjectType('DIRECT_FUNDED')" role="menuitem" tabindex="-1">Direct Funded</a></li>
+          <li role="presentation"><a onclick="changeProjectType('INCORPORATED')" role="menuitem" tabindex="-1">Incorporated</a></li>
+        </ul>
+        <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
       </div>
+      <div class="hr-divider-vertical"></div>
+      <div class="title-subheader-project">
+        Agreement |
+        <!-- <strong style="color:#044D74;"><a>Upload</a></strong> -->
+        <div style="display: inline-block">
+          <input type="file" accept="image/*,application/pdf" name='agreement' id="agreement" style="visibility: block;" />
+        </div>
+      </div>
+      <div class="hr-divider-vertical"></div>
     </div>
-    <div class="hr-divider-vertical"></div>
+    <button class="save-button-project-edit" type="submit">
+        <strong>SAVE</strong>
+    </button>
   </div>
-  <button class="save-button-project-edit" type="submit">
-      <strong>SAVE</strong>
-  </button>
-</div>
-<div class="hr-divider-keyline"></div>
+  <div class="hr-divider-keyline"></div>
 
-<div class="col-sm-12 content">
-  <br>
-  <div class="col-sm-3 content">
-    <div class="subtitle-content-project">Email Aliases</div>
-    <div class="add-edit-member-companies-label"><a href="#create-email-alias-modal" data-toggle="modal">+ Add</a></div>
-    <div class="hr-divider-keyline"></div>
+  <div class="col-sm-12 content">
     <br>
-    <span style="font-style: italic;">Start configuring this project's aliases.</span>
-  </div>
-  <div class="col-sm-5 content">
-    <div class="subtitle-content-project">Project Description</div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"></textarea>
-    <br> <br>
-    <strong style="color: #333333;"></strong>
-  </div>
-  <div class="col-sm-4 content">
-    <div class="subtitle-content-project">Member Companies</div>
-    <div class="add-edit-member-companies-label"><a href="/add_company">+ Add/Edit</a></div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <div class="member-company-project">
-      <div class="col-sm-3 content">
-          <img src="/assets/img/add_member.png" alt="" class="member-logo-project"/>
+    <div class="col-sm-3 content">
+      <div class="subtitle-content-project">Email Aliases</div>
+      <div class="add-edit-member-companies-label"><a href="#create-email-alias-modal" data-toggle="modal">+ Add</a></div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <div class="email-aliases-projects">
+        <div class="col-sm-12 content">
+          <input type="hidden" id="isNewAlias"  name="isNewAlias" value="false">
+          <input type="hidden" id="newAlias"  name="newAlias" value="">
+          <div id="email_alias_list">
+            <div id="divOrigin"></div>
+          </div>
+          <!-- <span style="color:#373A3C">test@cccdc.com</span> ·
+          1 Participant
+          <span class="dropdown-toggle" data-toggle="dropdown">
+            &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+          </span>
+          <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+              <li role="presentation"><a role="menuitem" tabindex="-1">test@test.com</a></li>
+          </ul> -->
+        </div>
       </div>
-      <div class="col-sm-9 content">
-        <div class="member-company-name-label">Company Name</div>
-        <div class="member-company-subheader-label">Active · 1 Contact | <a style="color:#11ABDE" href="/add_company">Add Contacts</a></div>
+      <div id="start-aliases-message" style="font-style: italic;">Start configuring this project's aliases.</div>
+    </div>
+    <div class="col-sm-5 content">
+      <div class="subtitle-content-project">Project Description</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"></textarea>
+      <br> <br>
+      <strong style="color: #333333;"></strong>
+    </div>
+    <div class="col-sm-4 content">
+      <div class="subtitle-content-project">Member Companies</div>
+      <div class="add-edit-member-companies-label"><a href="/add_company">+ Add/Edit</a></div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <div class="member-company-project">
+        <div class="col-sm-3 content">
+            <img src="/assets/img/add_member.png" alt="" class="member-logo-project"/>
+        </div>
+        <div class="col-sm-9 content">
+          <div class="member-company-name-label">Company Name</div>
+          <div class="member-company-subheader-label">Active · 1 Contact | <a style="color:#11ABDE" href="/add_company">Add Contacts</a></div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="col-sm-12 content">
-  <br>
-  <div class="col-sm-3 content"></div>
-  <div class="col-sm-5 content">
-    <div class="subtitle-content-project">Domain URL</div>
-    <div class="hr-divider-keyline"></div>
+  <div class="col-sm-12 content">
     <br>
-    <input type="text" name="url" class="domain-project-edit" placeholder="http://www.yourdomain.com">
-    <br> <br>
-    <strong style="color: #333333;"></strong>
-  </div>
-  <div class="col-sm-4 content"></div>
-</div>
-
-<div class="container-fluid">
-  <div class="col-sm-12 content mailing-list-project">
-    <div class="hr-divider-keyline-save"></div>
-    <div class="discard-message-edit-project">x Discard Changes</div>
-    <div class="button-save-changes-edit-project-div">
-      <button type="submit" class="button-save-changes-edit-project" name="button">Save Changes</button>
-      <!-- <input type="submit" value="Create User" class="btn btn-primary"> -->
+    <div class="col-sm-3 content"></div>
+    <div class="col-sm-5 content">
+      <div class="subtitle-content-project">Domain URL</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <input type="text" name="url" class="domain-project-edit" placeholder="http://www.yourdomain.com">
+      <br> <br>
+      <strong style="color: #333333;"></strong>
     </div>
-    <div class="hr-divider-keyline-save"></div>
+    <div class="col-sm-4 content"></div>
   </div>
-</div>
+
+  <div class="container-fluid">
+    <div class="col-sm-12 content mailing-list-project">
+      <div class="hr-divider-keyline-save"></div>
+      <div class="discard-message-edit-project">x Discard Changes</div>
+      <div class="button-save-changes-edit-project-div">
+        <button type="submit" class="button-save-changes-edit-project" name="button">Save Changes</button>
+      </div>
+      <div class="hr-divider-keyline-save"></div>
+    </div>
+  </div>
 
 </form>
 
 <script type="text/javascript">
+
   function changeProjectType(project_type){
     document.getElementById("project_type").value = project_type;
     document.getElementById("project_type_label").innerHTML = project_type;
@@ -139,7 +157,48 @@
     readImgSrc(this);
   });
 
+  var aliasCounter = 0;
+  var newAlias = [];
+  function addAlias(){
+    var email_alias = document.getElementById('email_alias').value;
+    var participant_email = document.getElementById('participant_email').value;
+
+    if(email_alias){
+
+      document.getElementById("isNewAlias").value = true;
+      document.getElementById("start-aliases-message").style.display = 'none';
+
+      newAlias[aliasCounter] = {
+        "address": email_alias,
+        "participants": [
+          {
+            "address": participant_email
+          }
+        ]
+      };
+      document.getElementById("newAlias").value = JSON.stringify(newAlias);
+
+      var currentDiv = document.getElementById("divOrigin");
+      var parentDiv = document.getElementById("email_alias_list");
+
+      var newDiv = document.createElement("div");
+      var newContent = document.createTextNode(email_alias);
+      newDiv.appendChild(newContent);
+      newDiv.className = "new-email-alias-div";
+      parentDiv.insertBefore(newDiv, currentDiv);
+
+      var newDiv = document.createElement("div");
+      var newContent = document.createTextNode(participant_email);
+      newDiv.appendChild(newContent);
+      newDiv.className = "new-participant-email-div";
+      parentDiv.insertBefore(newDiv, currentDiv);
+
+      aliasCounter = aliasCounter + 1;
+
+    }
+  }
+
 </script>
 
-
+<%- include('partials/email_alias_modal_create_project') %>
 <%- include('partials/footer') %>

@@ -2,6 +2,7 @@ var express = require('express');
 var passport = require('passport');
 var request = require('request');
 var multer  = require('multer');
+var async = require('async');
 
 var dummy_data = require('./dummy_db/dummy_data');
 var cinco_api = require("./lib/api");
@@ -503,8 +504,10 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
     var logoFileName = "";
     var agreementFileName = "";
-    if(req.files.logo) logoFileName = req.files.logo[0].originalname;
-    if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
+    if(req.files){
+      if(req.files.logo) logoFileName = req.files.logo[0].originalname;
+      if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
+    }
     var newProject = {
       name: req.body.project_name,
       description: req.body.project_description,
@@ -516,9 +519,21 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       type: req.body.project_type
     };
     projManagerClient.createProject(newProject, function (err, created, id) {
-      console.log(id);
-      console.log(err);
-      return res.redirect('/all_projects');
+      if(req.body.isNewAlias){
+        var projectId = id;
+        var newAlias = JSON.parse(req.body.newAlias);
+        async.forEach(newAlias, function (eachAlias, callback){
+          projManagerClient.createEmailAliases(projectId, eachAlias, function (err, created, aliasId) {
+            callback();
+          });
+        }, function(err) {
+          // Email aliases iteration done.
+         return res.redirect('/project/' + projectId);
+        });
+      }
+      else{
+        return res.redirect('/project/' + projectId);
+      }
     });
   }
 });

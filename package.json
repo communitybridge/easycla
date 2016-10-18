@@ -30,6 +30,7 @@
     "@angular/router-deprecated": "2.0.0-rc.1",
     "@angular/upgrade": "2.0.0-rc.1",
     "angular2-in-memory-web-api": "0.0.10",
+    "async": "^2.1.2",
     "body-parser": "^1.15.1",
     "bootstrap": "^3.3.6",
     "chai": "^3.5.0",
