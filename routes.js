@@ -518,9 +518,10 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       agreementRef: agreementFileName,
       type: req.body.project_type
     };
-    projManagerClient.createProject(newProject, function (err, created, id) {
-      if(req.body.isNewAlias){
-        var projectId = id;
+    projManagerClient.createProject(newProject, function (err, created, projectId) {
+      var isNewAlias = req.body.isNewAlias;
+      isNewAlias = (isNewAlias == "true");
+      if(isNewAlias){
         var newAlias = JSON.parse(req.body.newAlias);
         async.forEach(newAlias, function (eachAlias, callback){
           projManagerClient.createEmailAliases(projectId, eachAlias, function (err, created, aliasId) {
@@ -528,7 +529,7 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
           });
         }, function(err) {
           // Email aliases iteration done.
-         return res.redirect('/project/' + projectId);
+          return res.redirect('/project/' + projectId);
         });
       }
       else{
