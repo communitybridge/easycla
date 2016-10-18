@@ -90,11 +90,11 @@
   };
 
   var emailAliasesSample = [
-    'contact@<%= project.domain %>',
-    'events@<%= project.domain %>',
-    'pr@<%= project.domain %>',
-    'legal@<%= project.domain %>',
-    'membership@<%= project.domain %>'
+    <% if (!isAlias.isContactAlias) { %> 'contact@<%= project.domain %>', <% } %>
+    <% if (!isAlias.isEventsAlias) { %> 'events@<%= project.domain %>',  <% } %>
+    <% if (!isAlias.isPrAlias) { %> 'pr@<%= project.domain %>',  <% } %>
+    <% if (!isAlias.isLegalAlias) { %> 'legal@<%= project.domain %>',  <% } %>
+    <% if (!isAlias.isMembershipAlias) { %> 'membership@<%= project.domain %>'  <% } %>
   ];
 
   $('#email-aliases-input-div .typeahead').typeahead(
