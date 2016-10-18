@@ -31,9 +31,6 @@
   <div class="edit-project-title">
     <a href="/edit_project/<%= project.id %>">Edit</a>
   </div>
-  <!-- <div class="save-button-project-edit">
-    <strong>SAVE</strong>
-  </div> -->
 </div>
 
 <div class="hr-divider-keyline"></div>
@@ -44,9 +41,9 @@
     <div class="subtitle-content-project">Email Aliases</div>
     <div class="hr-divider-keyline"></div>
     <div class="email-aliases-projects">
-      <div class="col-sm-12 content">
-        <% if (emailAliases){ %>
-          <% emailAliases.forEach(function(emailAlias){ %>
+      <% if (emailAliases){ %>
+        <% emailAliases.forEach(function(emailAlias){ %>
+          <div class="col-sm-12 content">
             <span style="color:#373A3C"><%= emailAlias.address %></span> ·
             <% if (emailAlias.participants.length == 1){ %>
             <%= emailAlias.participants.length %> Participant
@@ -62,9 +59,9 @@
               <% }) %>
             </ul>
             <br>
-          <% }) %>
-        <% } %>
-      </div>
+          </div>
+        <% }) %>
+      <% } %>
     </div>
     <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">View All (<%= emailAliases.length %>)</a></div>
     <div class="hr-divider-keyline"></div>
@@ -199,5 +196,4 @@
 </div>
 
 <%- include('partials/mailing_list_modal') %>
-
 <%- include('partials/footer') %>

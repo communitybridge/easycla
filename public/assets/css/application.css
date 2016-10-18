@@ -1100,3 +1100,12 @@ button.close-modal {
   color: #fff;
   float: right;
 }
+.new-email-alias-div{
+  display: inline-block;
+  width: 50%;
+  color:#373A3C;
+}
+.new-participant-email-div{
+  display: inline-block;
+  width: 50%;
+}
