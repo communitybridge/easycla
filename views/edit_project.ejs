@@ -62,10 +62,32 @@
   <br>
   <div class="col-sm-3 content">
     <div class="subtitle-content-project">Email Aliases</div>
-    <div class="add-edit-member-companies-label"><a href="#create-email-alias-modal" data-toggle="modal">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
-    <br>
-    <span style="font-style: italic;">Start configuring this project's aliases.</span>
+    <div class="email-aliases-projects">
+      <% if (emailAliases){ %>
+        <% emailAliases.forEach(function(emailAlias){ %>
+          <div class="col-sm-12 content">
+            <span style="color:#373A3C"><%= emailAlias.address %></span> ·
+            <% if (emailAlias.participants.length == 1){ %>
+            <%= emailAlias.participants.length %> Participant
+            <% } else { %>
+            <%= emailAlias.participants.length %> Participants
+            <% } %>
+            <span class="dropdown-toggle" data-toggle="dropdown">
+              &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+            </span>
+            <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+              <% emailAlias.participants.forEach(function(participant){ %>
+                <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
+              <% }) %>
+            </ul>
+            <br>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+    <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">Edit (<%= emailAliases.length %>)</a></div>
+    <div class="hr-divider-keyline"></div>
   </div>
   <div class="col-sm-5 content">
     <div class="subtitle-content-project">Project Description</div>
@@ -149,7 +171,5 @@
   });
 
 </script>
-
-<%- include('partials/email_alias_modal') %>
 
 <%- include('partials/footer') %>

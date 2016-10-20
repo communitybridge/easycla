@@ -39,7 +39,7 @@
       <% emailAliases.forEach(function(emailAlias){ %>
         <div class="mailing-list-control">
           <div class="col-sm-4 mailing-list-title-project">
-            <strong><%= emailAlias.address %></strong>
+            <strong><%= emailAlias.address %></strong> (<%= emailAlias.id %>)
           </div>
           <div class="col-sm-4">
             <div class="mailing-list-hr-divider-vertical-project"></div>
@@ -65,7 +65,9 @@
             <div class="mailing-list-last-edited-project">
               Last updated -
             </div>
-            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+            <a href="#manage-email-alias-modal" data-toggle="modal" data-email-alias="<%= emailAlias.address %>" data-email-alias-id="<%= emailAlias.id %>" data-participants="<%= JSON.stringify(emailAlias.participants) %>" style="margin-left: 50px;">
+              <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+            </a>
           </div>
         </div>
       <% }) %>
@@ -74,6 +76,7 @@
 </div>
 
 <%- include('partials/email_alias_modal') %>
+<%- include('partials/manage_email_alias_modal') %>
 <%- include('partials/email_template_modal') %>
 
 <%- include('partials/footer') %>
