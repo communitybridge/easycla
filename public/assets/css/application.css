@@ -1109,3 +1109,10 @@ button.close-modal {
   display: inline-block;
   width: 50%;
 }
+.manage-email-alias-modal-title{
+  text-align: left;
+  margin-left: 30px;
+  font-family: HelveticaNeue;
+  font-size: 22px;
+  font-weight: 500;
+}
