@@ -378,6 +378,31 @@ describe('api', function () {
         });
       });
 
+      it('POST /projects/{projectId}/emailaliases/{aliasid}/participants', function (done) {
+        var newParticipant = {
+          "address": "newFoo@bar.com"
+        };
+        var sampleAlias = {
+          "address": "anEmailAlias@myDomain.org",
+          "participants": [
+            {
+              "address": "foo@bar.com"
+            }
+          ]
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
+            assert.ifError(err);
+            projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
+              assert(created);
+              done();
+            });
+          });
+        });
+      });
+
     });
 
 
