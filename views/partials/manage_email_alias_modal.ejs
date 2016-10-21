@@ -17,52 +17,39 @@
         <div name="email-alias-title" class="manage-email-alias-modal-title">
           Email Alias Participants
         </div>
-
         <div class="modal-body-mailing-list-admin">
           <br>
-
           <div id="participants_div">
           </div>
           <br>
         </div>
-
-          <form class="" action="/addParticipantToEmailAlias/<%= project.id %>" method="post">
+        <form class="" action="/addParticipantToEmailAlias/<%= project.id %>" method="post">
+          <div class="col-sm-12 content">
             <div class="col-sm-12 content">
-              <div class="col-sm-12 content">
-                <input type="text" name="participant_email" class="modal-email-address-input" placeholder="Add Participant Email Address">
-                <input type="hidden" id="alias_id" name="alias_id">
-              </div>
+              <input type="text" name="participant_email" class="modal-email-address-input" placeholder="Add Participant Email Address">
+              <input type="hidden" id="alias_id" name="alias_id">
             </div>
-            <div class="col-sm-12 text-center">
-              <div class="col-sm-12 content">
-                  <input type="submit" class="btn btn-primary" style="margin-top:30px; margin-bottom:40px; width:30%" value="Add">
-              </div>
+          </div>
+          <div class="col-sm-12 text-center">
+            <div class="col-sm-12 content">
+                <input type="submit" class="btn btn-primary" style="margin-top:30px; margin-bottom:40px; width:30%" value="Add">
             </div>
-          </form>
-
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-
 <script type="text/javascript">
-
   $('#manage-email-alias-modal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
     var participants = button.data('participants');
     var emailAlias = button.data('email-alias');
     var emailAliasId = button.data('email-alias-id');
-
-    console.log(emailAlias);
-    console.log(participants.length);
-    console.log(participants[0].address);
-
     var modal = $(this);
     modal.find('[name=email-alias-title]').text(emailAlias  + " participants");
-
     $('#alias_id').val(emailAliasId);
-
     $("#participants_table").remove();
     $('#participants_div').append(  '<table id="participants_table" class="table" />' );
     $('#participants_div table')
@@ -70,14 +57,15 @@
       '<td><strong>Email</strong></td>'+
       '<td><strong>Remove</strong></td>'+
     '</tr>' );
-    for(i=0; i<participants.length; i++){
-      $('#participants_div table')
-      .append( '<tr>'+
-        '<td>' + participants[i].address + '</td>' +
-        '<td> &nbsp  &nbsp &nbsp <a> &times; </a> </td>' +
-      '</tr>' );
+    if(participants.length >= 1){
+      for(i=0; i<participants.length; i++){
+        $('#participants_div table')
+        .append( '<tr>'+
+          '<td>' + participants[i].address + '</td>' +
+          '<td> &nbsp  &nbsp &nbsp <a href="/removeParticipantFromEmailAlias/<%= project.id %>/' +
+          emailAliasId + '/' + encodeURI(participants[i].address) + '"> &times; </a> </td>' +
+        '</tr>' );
+      }
     }
-
   });
-
 </script>

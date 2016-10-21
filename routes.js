@@ -221,6 +221,18 @@ router.post('/addParticipantToEmailAlias/:projectId/', require('connect-ensure-l
   }
 });
 
+router.get('/removeParticipantFromEmailAlias/:projectId/:aliasId/:participantEmail', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.params.projectId;
+    var aliasId = req.params.aliasId;
+    var participantTBR = req.params.participantEmail;
+    projManagerClient.removeParticipantFromEmailAlias(projectId, aliasId, participantTBR, function (err, removed) {
+      return res.redirect('/aliases/' + projectId);
+    });
+  }
+});
+
 router.get('/members', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   dummy_data.findProjectById(req.query.id, function(err, project_data) {
     if(project_data) res.render('members', { project_data: project_data });
@@ -540,7 +552,6 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
     if(url){
       if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
     }
-    console.log(url);
     var logoFileName = "";
     var agreementFileName = "";
     if(req.files){
@@ -602,7 +613,9 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
     var logoFileName = "";
     var agreementFileName = "";
     var url = req.body.url;
-    if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    if(url){
+      if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    }
     if(req.files.logo) logoFileName = req.files.logo[0].originalname;
     else logoFileName = req.body.old_logoRef;
     if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
