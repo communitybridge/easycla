@@ -159,7 +159,7 @@ router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/logi
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       project.domain = "";
-      if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('/','');
+      if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('http://','').replace('/','');
       projManagerClient.getEmailAliases(id, function (err, emailAliases) {
         var isAlias = {
           "isContactAlias": false,
@@ -597,7 +597,7 @@ router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       project.domain = "";
-      if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('/','');
+      if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('http://','').replace('/','');
       projManagerClient.getEmailAliases(id, function (err, emailAliases) {
         return res.render('edit_project', {project: project, emailAliases: emailAliases });
       });
