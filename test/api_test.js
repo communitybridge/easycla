@@ -494,6 +494,27 @@ describe('api', function () {
         });
       });
 
+      it('GET /projects/{projectId}/members/{memberId}', function (done) {
+        var sampleMember = {
+          orgId: "CBXH43",
+          tier: "PLATINUM",
+          startDate: "2016-10-24T15:16:52.885Z",
+          renewalDate: "2017-10-24T00:00:00.000Z"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
+            projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
+              assert.ifError(err);
+              assert(memberCompany);
+              done();
+            });
+          });
+        });
+      });
+
+
     });
 
   });
