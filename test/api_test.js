@@ -434,6 +434,29 @@ describe('api', function () {
 
     });
 
+    describe('Member Companies Endpoints', function () {
+      it('GET /projects/{projectId}/members', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+            assert.ifError(err);
+            assert(memberCompanies)
+            done();
+          });
+        })
+      });
+
+      it('GET /projects/{projectId}/members 404', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
+          projManagerClient.getMemberCompanies("not_a_real_id", function (err, emailAliases) {
+            assert.equal(err.statusCode, 404);
+            done();
+          });
+        })
+      });
+
+    });
 
   });
 });
