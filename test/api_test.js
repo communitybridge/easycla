@@ -449,7 +449,7 @@ describe('api', function () {
 
       it('GET /projects/{projectId}/members 404', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
-          projManagerClient.getMemberCompanies("not_a_real_id", function (err, emailAliases) {
+          projManagerClient.getMemberCompanies("not_a_real_id", function (err, memberCompanies) {
             assert.equal(err.statusCode, 404);
             done();
           });
@@ -472,7 +472,26 @@ describe('api', function () {
             done();
           });
         });
+      });
 
+      it('DELETE /projects/{projectId}/members/{memberId}', function (done) {
+        var memberToBeRemoved = {
+          orgId: "HDV492",
+          tier: "GOLD",
+          startDate: "2016-03-24T15:16:52.885Z",
+          renewalDate: "2017-04-24T00:00:00.000Z"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.addMemberToProject(projectId, memberToBeRemoved, function (err, created, memberId) {
+            projManagerClient.removeMemberFromProject(projectId, memberId, function (err, removed) {
+              assert.ifError(err);
+              assert(removed);
+              done();
+            });
+          });
+        });
       });
 
     });
