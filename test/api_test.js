@@ -542,4 +542,115 @@ describe('api', function () {
     });
 
   });
+
+  describe('Organizations Endpoints', function () {
+    var projManagerClient;
+    var projUserName = randomUserName();
+    var adminClient;
+
+    before(function (done) {
+      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = apiObj.client(keys);
+        adminClient.createUser(projUserName, function (err, created) {
+          var projManagementGroup = {
+            groupId: 3,
+            name: 'PROJECT_MANAGER'
+          };
+          adminClient.addGroupForUser(projUserName, projManagementGroup, function (err, updated, user) {
+            apiObj.getKeysForLfId(projUserName, function (err, keys) {
+              projManagerClient = apiObj.client(keys);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('POST /organizations', function (done) {
+      var sampleOrganization = {
+        name: "Company Sample Name",
+        addresses: [
+          {
+            type: "Headquarters",
+            address: {
+              country: "US",
+              administrativeArea: "Some Province (e.g. Alaska)",
+              localityName: "Some City (e.g. Anchorage)",
+              postalCode: 99501,
+              thoroughfare: "Some street address"
+            }
+          },
+          {
+            type: "Billing",
+            address: {
+              country: "US",
+              administrativeArea: "Some Province (e.g. Alaska)",
+              localityName: "Some City (e.g. Anchorage)",
+              postalCode: 99501,
+              thoroughfare: "Some street address"
+            }
+          }
+        ],
+        logoRef : "logoName.jpg"
+      }
+      projManagerClient.createOrganization(sampleOrganization, function (err, created) {
+        assert.ifError(err);
+        assert(created);
+        done();
+      });
+    });
+
+    it('POST /projects 403 ', function (done) {
+      var username = randomUserName();
+      adminClient.createUser(username, function (err) {
+        assert.ifError(err);
+        apiObj.getKeysForLfId(username, function (err, keys) {
+          assert.ifError(err);
+          var client = apiObj.client(keys);
+          client.createOrganization({}, function (err) {
+            assert.equal(err.statusCode, 403);
+            done();
+          });
+        });
+      });
+    });
+
+    it('GET /organizations', function (done) {
+      projManagerClient.getAllOrganizations(function (err, organizations) {
+        assert.ifError(err);
+        var sampleOrganization = organizations[0];
+        assert(sampleOrganization, "A single organization should exist in the returned response array");
+        assert(sampleOrganization.id, "id property should exist");
+        assert(sampleOrganization.name, "name property should exist");
+        assert(sampleOrganization.addresses, "addresses array should exist");
+        assert(sampleOrganization.logoRef, "logoRef property should exist");
+        done();
+      });
+    });
+
+    it('GET /organizations/{id}', function (done) {
+      projManagerClient.getAllOrganizations(function (err, organizations) {
+        assert.ifError(err);
+        var id = organizations[0].id;
+        projManagerClient.getOrganization(id, function (err, organization) {
+          assert.ifError(err);
+          assert(organization)
+          done();
+        });
+      })
+    });
+
+    it('GET /organizations/{id} 404', function (done) {
+      projManagerClient.getAllOrganizations(function (err, organizations) {
+        projManagerClient.getOrganization("not_a_real_id", function (err, organization) {
+          assert.equal(err.statusCode, 404);
+          done();
+        });
+      })
+    });
+
+
+
+  });
+
 });
