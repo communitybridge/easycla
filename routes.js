@@ -7,6 +7,29 @@ var async = require('async');
 var dummy_data = require('./dummy_db/dummy_data');
 var cinco_api = require("./lib/api");
 
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/logos')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+});
+var upload = multer({ storage: storage });
+var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }]);
+
+var storageLogoCompany = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/logos')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+});
+var uploadLogoCompany = multer({ storage: storageLogoCompany });
+var cpUploadLogoCompany = uploadLogoCompany.fields([{ name: 'logoCompany', maxCount: 1 }]);
+
 var router = express.Router();
 
 const integration_user = process.env['CONSOLE_INTEGRATION_USER'];
@@ -134,6 +157,73 @@ router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/l
 
 router.get('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('add_company');
+});
+
+router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var now = new Date().toISOString();
+    var logoCompanyFileName = "";
+    if(req.files){
+      if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
+    }
+    var newOrganization = {
+      name: req.body.company_name,
+      addresses: [
+        {
+          type: "Headquarters",
+          address: {
+            country: req.body.headquarters_country,
+            administrativeArea: req.body.headquarters_state,
+            localityName: req.body.headquarters_city,
+            postalCode: req.body.headquarters_zip_code,
+            thoroughfare: req.body.headquarters_address_line_1 + " /// " + req.body.headquarters_address_line_2
+          }
+        },
+        {
+          type: "Billing",
+          address: {
+            country: req.body.billing_country,
+            administrativeArea: req.body.billing_state,
+            localityName: req.body.billing_city,
+            postalCode: req.body.billing_zip_code,
+            thoroughfare: req.body.billing_address_line_1 + " /// " + req.body.billing_address_line_2
+          }
+        }
+      ],
+      logoRef : logoCompanyFileName
+    }
+    projManagerClient.createOrganization(newOrganization, function (err, created, organizationId) {
+      var newMember = {
+        orgId: organizationId,
+        tier: "PLATINUM",
+        startDate: now,
+        renewalDate: "2017-10-24T00:00:00.000Z"
+      };
+      console.log("newMember: " + newMember);
+      projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
+        console.log("memberId: " + memberId);
+        // var isNewContact = req.body.isNewContact;
+        // isNewContact = (isNewContact == "true");
+        // if(isNewContact){
+        //   var newContact = JSON.parse(req.body.newContact);
+        //   async.forEach(newContact, function (eachContact, callback){
+        //     projManagerClient.addMemberToProject(projectId, eachContact, function (err, created, contactId) {
+        //       callback();
+        //     });
+        //   }, function(err) {
+        //     // Contact Members iteration done.
+        //     return res.redirect('/project/' + projectId);
+        //   });
+        // }
+        // else{
+        //   return res.redirect('/project/' + projectId);
+        // }
+        return res.redirect('/members/');
+      });
+
+    });
+  }
 });
 
 router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
@@ -531,18 +621,6 @@ router.get('/archive_project/:id', require('connect-ensure-login').ensureLoggedI
     });
   }
 });
-
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads/logos')
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname)
-  }
-});
-
-var upload = multer({ storage: storage });
-var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }])
 
 router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
