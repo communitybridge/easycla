@@ -159,20 +159,29 @@ router.get('/add_company', require('connect-ensure-login').ensureLoggedIn('/logi
   res.render('add_company');
 });
 
+router.get('/add_company/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  var projectId = req.params.project_id;
+  res.render('add_company', {projectId: projectId});
+});
+
+
 router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+
+    var projectId = req.body.project_id;
+
     var now = new Date().toISOString();
     var logoCompanyFileName = "";
     if(req.files){
       if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
     }
     //country code must be exactly 2 Alphabetic characters or null
-    var headquarters_country = req.body.headquarters_country;
-    if(headquarters_country == "") headquarters_country = null;
+    var headquartersCountry = req.body.headquarters_country;
+    if(headquartersCountry == "") headquartersCountry = null;
 
-    var billing_country = req.body.billing_country;
-    if(billing_country == "") billing_country = null;
+    var billingCountry = req.body.billing_country;
+    if(billingCountry == "") billingCountry = null;
 
     var newOrganization = {
       name: req.body.company_name,
@@ -180,7 +189,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
         {
           type: "Headquarters",
           address: {
-            country: headquarters_country,
+            country: headquartersCountry,
             administrativeArea: req.body.headquarters_state,
             localityName: req.body.headquarters_city,
             postalCode: req.body.headquarters_zip_code,
@@ -190,7 +199,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
         {
           type: "Billing",
           address: {
-            country: billing_country,
+            country: billingCountry,
             administrativeArea: req.body.billing_state,
             localityName: req.body.billing_city,
             postalCode: req.body.billing_zip_code,
@@ -202,34 +211,40 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
     }
     projManagerClient.createOrganization(newOrganization, function (err, created, organizationId) {
       console.log("organizationId: ", organizationId);
-      // var newMember = {
-      //   orgId: organizationId,
-      //   tier: "PLATINUM",
-      //   startDate: now,
-      //   renewalDate: "2017-10-24T00:00:00.000Z"
-      // };
-      // console.log("newMember: " + newMember);
-      // projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
-        // console.log("memberId: " + memberId);
-        // var isNewContact = req.body.isNewContact;
-        // isNewContact = (isNewContact == "true");
-        // if(isNewContact){
-        //   var newContact = JSON.parse(req.body.newContact);
-        //   async.forEach(newContact, function (eachContact, callback){
-        //     projManagerClient.addMemberToProject(projectId, eachContact, function (err, created, contactId) {
-        //       callback();
-        //     });
-        //   }, function(err) {
-        //     // Contact Members iteration done.
-        //     return res.redirect('/project/' + projectId);
-        //   });
-        // }
-        // else{
-        //   return res.redirect('/project/' + projectId);
-        // }
+      if(created && projectId){
+        var newMember = {
+          orgId: organizationId,
+          tier: "PLATINUM",
+          startDate: now,
+          renewalDate: "2017-10-24T00:00:00.000Z"
+        };
+        console.log("newMember: " + newMember);
+        projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
+          console.log("memberId: " + memberId);
 
-      // });
-      return res.redirect('/members/');
+          // var isNewContact = req.body.isNewContact;
+          // isNewContact = (isNewContact == "true");
+          // if(isNewContact){
+          //   var newContact = JSON.parse(req.body.newContact);
+          //   async.forEach(newContact, function (eachContact, callback){
+          //     projManagerClient.addMemberToProject(projectId, eachContact, function (err, created, contactId) {
+          //       callback();
+          //     });
+          //   }, function(err) {
+          //     // Contact Members iteration done.
+          //     return res.redirect('/project/' + projectId);
+          //   });
+          // }
+          // else{
+          //   return res.redirect('/project/' + projectId);
+          // }
+
+          return res.redirect('/project/' + projectId);
+        });
+      }
+      else{
+        return res.redirect('/members/');
+      }
     });
   }
 });
