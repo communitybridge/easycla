@@ -2,6 +2,9 @@
 
 <form method="post" action="/add_company" enctype="multipart/form-data">
 
+  <% if(locals.projectId) { %>
+    <input type="hidden" name="project_id" value="<%= projectId %>">
+  <% } %>
   <div class="main-header-project-edit">
     <div class="project-logo-project-edit-main">
       <div class="project-logo-project-edit">
