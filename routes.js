@@ -167,13 +167,20 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
     if(req.files){
       if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
     }
+    //country code must be exactly 2 Alphabetic characters or null
+    var headquarters_country = req.body.headquarters_country;
+    if(headquarters_country == "") headquarters_country = null;
+
+    var billing_country = req.body.billing_country;
+    if(billing_country == "") billing_country = null;
+
     var newOrganization = {
       name: req.body.company_name,
       addresses: [
         {
           type: "Headquarters",
           address: {
-            country: req.body.headquarters_country,
+            country: headquarters_country,
             administrativeArea: req.body.headquarters_state,
             localityName: req.body.headquarters_city,
             postalCode: req.body.headquarters_zip_code,
@@ -183,7 +190,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
         {
           type: "Billing",
           address: {
-            country: req.body.billing_country,
+            country: billing_country,
             administrativeArea: req.body.billing_state,
             localityName: req.body.billing_city,
             postalCode: req.body.billing_zip_code,
@@ -194,15 +201,16 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
       logoRef : logoCompanyFileName
     }
     projManagerClient.createOrganization(newOrganization, function (err, created, organizationId) {
-      var newMember = {
-        orgId: organizationId,
-        tier: "PLATINUM",
-        startDate: now,
-        renewalDate: "2017-10-24T00:00:00.000Z"
-      };
-      console.log("newMember: " + newMember);
-      projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
-        console.log("memberId: " + memberId);
+      console.log("organizationId: ", organizationId);
+      // var newMember = {
+      //   orgId: organizationId,
+      //   tier: "PLATINUM",
+      //   startDate: now,
+      //   renewalDate: "2017-10-24T00:00:00.000Z"
+      // };
+      // console.log("newMember: " + newMember);
+      // projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
+        // console.log("memberId: " + memberId);
         // var isNewContact = req.body.isNewContact;
         // isNewContact = (isNewContact == "true");
         // if(isNewContact){
@@ -219,9 +227,9 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
         // else{
         //   return res.redirect('/project/' + projectId);
         // }
-        return res.redirect('/members/');
-      });
 
+      // });
+      return res.redirect('/members/');
     });
   }
 });

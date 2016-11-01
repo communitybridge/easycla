@@ -600,7 +600,7 @@ describe('api', function () {
       });
     });
 
-    it('POST /projects 403 ', function (done) {
+    it('POST /organizations 403 ', function (done) {
       var username = randomUserName();
       adminClient.createUser(username, function (err) {
         assert.ifError(err);
@@ -648,8 +648,6 @@ describe('api', function () {
         });
       })
     });
-
-
 
   });
 
