@@ -164,13 +164,10 @@ router.get('/add_company/:project_id', require('connect-ensure-login').ensureLog
   res.render('add_company', {projectId: projectId});
 });
 
-
 router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-
     var projectId = req.body.project_id;
-
     var now = new Date().toISOString();
     var logoCompanyFileName = "";
     if(req.files){
@@ -622,13 +619,25 @@ router.get('/my_projects', require('connect-ensure-login').ensureLoggedIn('/logi
 
 router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var id = req.params.id;
+    var projectId = req.params.id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProject(id, function (err, project) {
+    projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
-      projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-        return res.render('project-api', {project: project, emailAliases: emailAliases});
+      projManagerClient.getEmailAliases(projectId, function (err, emailAliases) {
+        projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+          console.log(memberCompanies.length);
+          console.log(memberCompanies);
+          for(var i = 0; i < memberCompanies.length; i ++)
+          {
+            var orgId = memberCompanies[i].orgId
+            console.log("orgId: ", memberCompanies[i].orgId);
+            projManagerClient.getOrganization(orgId, function (err, organization) {
+              console.log(organization);
+            });
+          }
+          return res.render('project-api', {project: project, emailAliases: emailAliases});
+        });
       });
     });
   }
