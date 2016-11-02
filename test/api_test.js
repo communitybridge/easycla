@@ -591,7 +591,7 @@ describe('api', function () {
             }
           }
         ],
-        logoRef : "logoName.jpg"
+        logoRef: "logoName.jpg"
       }
       projManagerClient.createOrganization(sampleOrganization, function (err, created) {
         assert.ifError(err);
@@ -614,6 +614,17 @@ describe('api', function () {
         });
       });
     });
+
+    it('POST /organizations 400 on missing name', function (done) {
+      var noNameOrg = {
+        logoRef: "logoName.jpg"
+      };
+      projManagerClient.createOrganization(noNameOrg, function (err) {
+        assert.equal(err.statusCode, 400);
+        done();
+      });
+    });
+
 
     it('GET /organizations', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
