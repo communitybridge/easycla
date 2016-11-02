@@ -458,7 +458,7 @@ describe('api', function () {
 
       it('POST /projects/{projectId}/members', function (done) {
         var sampleMember = {
-          orgId: "CBXH43",
+          orgId: "3b163a9b-3281-4076-8963-f440ed6f559e",
           tier: "PLATINUM",
           startDate: "2016-10-24T15:16:52.885Z",
           renewalDate: "2017-10-24T00:00:00.000Z"
@@ -476,7 +476,7 @@ describe('api', function () {
 
       it('DELETE /projects/{projectId}/members/{memberId}', function (done) {
         var memberToBeRemoved = {
-          orgId: "HDV492",
+          orgId: "3b163a9b-3281-4076-8963-f440ed6f559e",
           tier: "GOLD",
           startDate: "2016-03-24T15:16:52.885Z",
           renewalDate: "2017-04-24T00:00:00.000Z"
@@ -496,7 +496,7 @@ describe('api', function () {
 
       it('GET /projects/{projectId}/members/{memberId}', function (done) {
         var sampleMember = {
-          orgId: "CBXH43",
+          orgId: "3b163a9b-3281-4076-8963-f440ed6f559e",
           tier: "PLATINUM",
           startDate: "2016-10-24T15:16:52.885Z",
           renewalDate: "2017-10-24T00:00:00.000Z"
@@ -516,7 +516,7 @@ describe('api', function () {
 
       it('PATCH /projects/{projectId}/members/{memberId}', function (done) {
         var sampleMember = {
-          orgId: "YYT235",
+          orgId: "3b163a9b-3281-4076-8963-f440ed6f559e",
           tier: "PLATINUM",
           startDate: "2016-10-24T15:16:52.885Z",
           renewalDate: "2017-10-24T00:00:00.000Z"
