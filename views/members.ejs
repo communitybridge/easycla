@@ -3,13 +3,13 @@
 <div class="main-header-project">
   <div class="">
     <div class="project-logo-project-main">
-      <a class="project-logo-project" href="/project?id=<%= project_data.project_id%>">
+      <a class="project-logo-project" href="/project/<%= project.id%>">
         <br>
-        <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
+        <img src="/assets/img/test/<%= project.id%>.png" alt=""/>
       </a>
     </div>
     <div class="main-header-title-project" style="margin-top:30px;">
-      <span style="color: #999999;"><%= project_data.project_name%> <br></span>
+      <span style="color: #999999;"><%= project.name%><br></span>
       Member Companies
     </div>
   </div>
@@ -17,8 +17,8 @@
 <div class="hr-divider-keyline"></div>
 <div class="white-subheader">
   <div class="content-subheader-project">
-    <div class="title-subheader-members">View, Track, or Add Member Companies to the Zephyr Open Source Project</div>
-    <a href="/add_company" style="margin-left: 50px;">
+    <div class="title-subheader-members">View, Track, or Add Member Companies to the <%= project.name%> Project</div>
+    <a href="/add_company/<%= project.id%>" style="margin-left: 50px;">
       <button type="button" name="button" class="mailing-list-button-mailing">Add Member Company</button>
     </a>
   </div>
@@ -39,86 +39,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <th scope="row">Acer</th>
-            <td>Platinum</td>
-            <td>February 2, 2016</td>
-            <td>February 15, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Adobe</th>
-            <td>Gold</td>
-            <td>June 5, 2016</td>
-            <td>June 15, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Apple</th>
-            <td>Premium</td>
-            <td>July 7, 2016</td>
-            <td>July 17, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">AMD</th>
-            <td>Premium</td>
-            <td>March 8, 2016</td>
-            <td>March 18, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">BenQ</th>
-            <td>Platinum</td>
-            <td>May 16, 2016</td>
-            <td>May 26, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Cisco</th>
-            <td>Gold</td>
-            <td>July 21, 2016</td>
-            <td>July 31, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Dell</th>
-            <td>Gold</td>
-            <td>June 1, 2016</td>
-            <td>June 11, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Intel</th>
-            <td>Platinum</td>
-            <td>December 5, 2016</td>
-            <td>December 15, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Fisher Price</th>
-            <td>Premium</td>
-            <td>November 4, 2016</td>
-            <td>November 14, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <th scope="row">Fedex</th>
-            <td>Platinum</td>
-            <td>January 3, 2016</td>
-            <td>January 13, 2017</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
+          <% if (memberCompanies){ %>
+            <% if (memberCompanies.length > 0){ %>
+              <% memberCompanies.forEach(function(memberCompany){ %>
+                <tr>
+                  <th scope="row"><%= memberCompany.orgName %></th>
+                  <td><%= memberCompany.tier %></td>
+                  <td><%= memberCompany.startDate %></td>
+                  <td><%= memberCompany.renewalDate %></td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+              <% }) %>
+            <% } %>
+          <% } %>
         </tbody>
       </table>
     <!-- </div> -->
