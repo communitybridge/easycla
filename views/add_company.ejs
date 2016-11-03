@@ -7,10 +7,14 @@
   <% } %>
   <div class="main-header-project-edit">
     <div class="project-logo-project-edit-main">
-      <div class="project-logo-project-edit">
-        <button class="project-logo-project-edit-inside">
-          UPLOAD LOGO
-        </button>
+      <div class="project-logo-project-edit" id="logoRef">
+        <div style="position: relative;">
+          <div class="project-logo-project-edit-inside" style="position: absolute;" >
+            <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
+            <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" />
+          </div>
+          <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
+        </div>
       </div>
       <div class="image-message-project-edit">
         Add .jpg, .png, or vector image files under 1 mb
@@ -31,9 +35,9 @@
         <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
       </div>
     </a>
-    <div class="save-button-project-edit">
-      <strong>SAVE</strong>
-    </div>
+    <button class="save-button-project-edit" type="submit">
+        <strong>SAVE</strong>
+    </button>
   </div>
   <div class="hr-divider-keyline"></div>
   <div class="col-sm-12">
@@ -197,5 +201,24 @@
   </div>
 
 </form>
+
+<script type="text/javascript">
+  function readImgSrc(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        $('#previewLogo').attr('src', e.target.result);
+        document.getElementById('previewLogo').style.display = "block";
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+    else {
+      document.getElementById('previewLogo').style.display = "none";
+    }
+  }
+  $("#logo").change(function(){
+    readImgSrc(this);
+  });
+</script>
 
 <%- include('partials/footer') %>

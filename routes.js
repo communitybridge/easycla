@@ -626,17 +626,18 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
       if (err) return res.redirect('/');
       projManagerClient.getEmailAliases(projectId, function (err, emailAliases) {
         projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
-          console.log(memberCompanies.length);
-          console.log(memberCompanies);
-          for(var i = 0; i < memberCompanies.length; i ++)
-          {
-            var orgId = memberCompanies[i].orgId
-            console.log("orgId: ", memberCompanies[i].orgId);
-            projManagerClient.getOrganization(orgId, function (err, organization) {
-              console.log(organization);
+          async.forEach(memberCompanies, function (eachMember, callback){
+            eachMember.orgName = "";
+            eachMember.orgLogoRef = "";
+            projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
+              eachMember.orgName = organization.name;
+              eachMember.orgLogoRef = organization.logoRef;
+              callback();
             });
-          }
-          return res.render('project-api', {project: project, emailAliases: emailAliases});
+          }, function(err) {
+            // Member Companies iteration done.
+            return res.render('project-api', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
+          });
         });
       });
     });

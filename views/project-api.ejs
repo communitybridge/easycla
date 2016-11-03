@@ -79,42 +79,23 @@
     <div class="add-edit-member-companies-label"><a href="/add_company/<%= project.id %>">+ Add/Edit</a></div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-          <img src="/assets/img/test/members/oracle.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">Oracle</div>
-        <div class="member-company-subheader-label">Active · 6 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/sega.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">SEGA</div>
-        <div class="member-company-subheader-label">Active · 10 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/fedex.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">FedEx</div>
-        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/amd.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">AMD</div>
-        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
+    <% if (memberCompanies){ %>
+      <% if (memberCompanies.length > 0){ %>
+        <% memberCompanies.forEach(function(memberCompany){ %>
+          <div class="member-company-project">
+            <div class="col-lg-4 content">
+              <% if (memberCompany.orgLogoRef){ %>
+                <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" alt="" class="member-logo-project"/>
+              <% } %>
+            </div>
+            <div class="col-lg-8 content">
+              <div class="member-company-name-label"><%= memberCompany.orgName %></div>
+              <div class="member-company-subheader-label">Active · <%= memberCompany.contacts.length %> Contacts | <span style="color:#11ABDE">Expand</span></div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    <% } %>
     <div class="view-all-member-aliases-label"><a href="/members?id=<%= project.id %>">View All</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
