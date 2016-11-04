@@ -184,7 +184,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
       name: req.body.company_name,
       addresses: [
         {
-          type: "Headquarters",
+          type: "MAIN",
           address: {
             country: headquartersCountry,
             administrativeArea: req.body.headquarters_state,
@@ -194,7 +194,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
           }
         },
         {
-          type: "Billing",
+          type: "BILL",
           address: {
             country: billingCountry,
             administrativeArea: req.body.billing_state,
