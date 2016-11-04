@@ -538,7 +538,65 @@ describe('api', function () {
         });
       });
 
+      it('POST /projects/{projectId}/members', function (done) {
+        var sampleMember = {
+          orgId: "5a423a9b-6481-7476-6563-g740ed6f885h",
+          tier: "GOLD",
+          startDate: new Date().toISOString(),
+          renewalDate: "2017-10-24T00:00:00.000Z"
+        };
+        var sampleContact = {
+          type: "VOTING",
+          givenName: "Grace",
+          familyName: "Hopper",
+          bio: "Grace Rocks!",
+          email: "grace@navy.gov",
+          phone: "800-867-5309"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
+            projManagerClient.addContactToMember(projectId, memberId, sampleContact, function (err, created, contactId) {
+              assert.ifError(err);
+              assert(created);
+              done();
+            });
+          });
+        });
+      });
 
+      it('DELETE /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
+        var sampleMember = {
+          orgId: "6a423a9b-6481-7476-6563-g740ed6f885f",
+          tier: "SILVER",
+          startDate: new Date().toISOString(),
+          renewalDate: "2017-10-24T00:00:00.000Z"
+        };
+        var contactToBeRemoved = {
+          type: "LEGAL",
+          givenName: "Ecarg",
+          familyName: "Reppoh",
+          bio: "Ecarg Rocks!",
+          email: "ecarg@yvan.vog",
+          phone: "900-123-4567"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
+            projManagerClient.addContactToMember(projectId, memberId, contactToBeRemoved, function (err, created, contactId) {
+              projManagerClient.removeContactFromMember(projectId, memberId, contactId, function (err, removed) {
+                assert.ifError(err);
+                assert(removed);
+                done();
+              });
+            });
+          });
+        });
+      });
+
+      
     });
 
   });
@@ -571,7 +629,7 @@ describe('api', function () {
         name: "Company Sample Name",
         addresses: [
           {
-            type: "Headquarters",
+            type: "MAIN",
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
@@ -581,7 +639,7 @@ describe('api', function () {
             }
           },
           {
-            type: "Billing",
+            type: "BILLING",
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
