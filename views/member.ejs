@@ -1,7 +1,5 @@
 <%- include('partials/header') %>
 
-
-
 <div class="main-header-project">
   <div class="">
     <div class="project-logo-project-main">
@@ -26,8 +24,6 @@
     </div>
   </a>
 </div>
-
-
 <div class="hr-divider-keyline"></div>
 <div class="col-sm-12">
   <br>
@@ -118,10 +114,10 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
     <div class="col-sm-1"><a>Add</a></div>
-    <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
-    <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
-    <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
-    <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><div name="board_contact_first_name"><%= memberCompany.contacts.board.givenName %></div></div>
+    <div class="col-sm-1"><div name="board_contact_last_name"><%= memberCompany.contacts.board.familyName %></div></div>
+    <div class="col-sm-3"><div name="board_contact_email"><%= memberCompany.contacts.board.email %></div></div>
+    <div class="col-sm-2"><div name="board_contact_phone"><%= memberCompany.contacts.board.phone %></div></div>
     <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
     <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
   </div>
@@ -131,10 +127,10 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
     <div class="col-sm-1"><a>Add</a></div>
-    <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
-    <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
-    <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
-    <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><div name="technical_contact_first_name"><%= memberCompany.contacts.technical.givenName %></div></div>
+    <div class="col-sm-1"><div name="technical_contact_last_name"><%= memberCompany.contacts.technical.familyName %></div></div>
+    <div class="col-sm-3"><div name="technical_contact_email"><%= memberCompany.contacts.technical.email %></div></div>
+    <div class="col-sm-2"><div name="technical_contact_phone"><%= memberCompany.contacts.technical.phone %></div></div>
     <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
   </div>
@@ -144,10 +140,10 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">MARKETING</div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-    <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-    <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
-    <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><div name="marketing_contact_first_name"><%= memberCompany.contacts.marketing.givenName %></div></div>
+    <div class="col-sm-1"><div name="marketing_contact_last_name"><%= memberCompany.contacts.marketing.familyName %></div></div>
+    <div class="col-sm-3"><div name="marketing_contact_email"><%= memberCompany.contacts.marketing.email %></div></div>
+    <div class="col-sm-2"><div name="marketing_contact_phone"><%= memberCompany.contacts.marketing.phone %></div></div>
     <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
@@ -157,10 +153,10 @@
   <div class="subtitle-content-project col-sm-12">
     <div class="col-sm-2 table-contact-add-company">FINANCE</div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-    <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-    <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
-    <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><div name="finance_contact_first_name"><%= memberCompany.contacts.finance.givenName %></div></div>
+    <div class="col-sm-1"><div name="finance_contact_last_name"><%= memberCompany.contacts.finance.givenName %></div></div>
+    <div class="col-sm-3"><div name="finance_contact_email"><%= memberCompany.contacts.finance.email %></div></div>
+    <div class="col-sm-2"><div name="finance_contact_phone"><%= memberCompany.contacts.finance.phone %></div></div>
     <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
@@ -168,13 +164,13 @@
   <div class="hr-divider-keyline"></div>
   <br>
   <div class="subtitle-content-project col-sm-12">
-    <div class="col-sm-2 table-contact-add-company"><input type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
+    <div class="col-sm-2 table-contact-add-company"><div name="other_contact_type"><%= memberCompany.contacts.other.type %></div></div>
     <div class="col-sm-1"></div>
-    <div class="col-sm-1"><input name="extra_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-    <div class="col-sm-1"><input name="extra_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-    <div class="col-sm-3"><input name="extra_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
-    <div class="col-sm-2"><input name="extra_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-    <div class="col-sm-1"><input name="extra_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+    <div class="col-sm-1"><div name="other_contact_first_name"><%= memberCompany.contacts.other.givenName %></div></div>
+    <div class="col-sm-1"><div name="other_contact_last_name"><%= memberCompany.contacts.other.familyName %></div></div>
+    <div class="col-sm-3"><div name="other_contact_email"><%= memberCompany.contacts.other.email %></div></div>
+    <div class="col-sm-2"><div name="other_contact_phone"><%= memberCompany.contacts.other.phone %></div></div>
+    <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
     <div class="col-sm-1"></div>
   </div>
   <br><br><br>
