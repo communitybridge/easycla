@@ -66,7 +66,9 @@
           <input type="text" name="headquarters_state" class="textbox-add-company" placeholder="State">
         </div>
         <div class="col-lg-3">
-          <input type="text" name="headquarters_country" class="textbox-add-company" placeholder="Country">
+          <select class="textbox-add-company" name="headquarters_country">
+            <%- include('partials/selectCountryCode') %>
+          </select>
         </div>
         <div class="col-lg-2">
           <input type="text" name="headquarters_zip_code" class="textbox-add-company" placeholder="Zip Code">
@@ -99,7 +101,9 @@
           <input type="text" name="billing_state" class="textbox-add-company" placeholder="State">
         </div>
         <div class="col-lg-3">
-          <input type="text" name="billing_country" class="textbox-add-company" placeholder="Country">
+          <select class="textbox-add-company" name="billing_country">
+            <%- include('partials/selectCountryCode') %>
+          </select>
         </div>
         <div class="col-lg-2">
           <input type="text" name="billing_zip_code" class="textbox-add-company" placeholder="Zip Code">

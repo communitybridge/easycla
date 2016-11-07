@@ -538,7 +538,7 @@ describe('api', function () {
         });
       });
 
-      it('POST /projects/{projectId}/members', function (done) {
+      it('POST /projects/{projectId}/members/{memberId}/contacts', function (done) {
         var sampleMember = {
           orgId: "5a423a9b-6481-7476-6563-g740ed6f885h",
           tier: "GOLD",
@@ -596,7 +596,7 @@ describe('api', function () {
         });
       });
 
-      
+
     });
 
   });
