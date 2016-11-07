@@ -85,12 +85,14 @@
           <div class="member-company-project">
             <div class="col-lg-4 content">
               <% if (memberCompany.orgLogoRef){ %>
-                <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" alt="" class="member-logo-project"/>
+                <a href="/member/<%= project.id %>/<%= memberCompany.id %>">
+                  <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" alt="" class="member-logo-project"/>
+                </a>
               <% } %>
             </div>
             <div class="col-lg-8 content">
-              <div class="member-company-name-label"><%= memberCompany.orgName %></div>
-              <div class="member-company-subheader-label">Active · <%= memberCompany.contacts.length %> Contacts | <span style="color:#11ABDE">Expand</span></div>
+              <div class="member-company-name-label"><a href="/member/<%= project.id %>/<%= memberCompany.id %>"><%= memberCompany.orgName %></a></div>
+              <div class="member-company-subheader-label">Active · <%= memberCompany.contacts.length %> Contacts | <a href="/member/<%= project.id %>/<%= memberCompany.id %>"><span style="color:#11ABDE">Expand</span></a></div>
             </div>
           </div>
         <% }) %>

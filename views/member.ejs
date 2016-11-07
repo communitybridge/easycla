@@ -1,0 +1,184 @@
+<%- include('partials/header') %>
+
+
+
+<div class="main-header-project">
+  <div class="">
+    <div class="project-logo-project-main">
+      <a class="project-logo-project" href="/project/<%= project.id %>">
+        <br>
+        <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" alt=""/>
+      </a>
+    </div>
+    <div class="main-header-title-project">
+      <%= memberCompany.orgName %>
+    </div>
+  </div>
+  <div class="last-edited-project">
+    Last edited 11:47 AM
+  </div>
+</div>
+<div class="hr-divider-keyline"></div>
+<div class="white-subheader">
+  <a>
+    <div class="content-subheader-project">
+      <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
+    </div>
+  </a>
+</div>
+
+
+<div class="hr-divider-keyline"></div>
+<div class="col-sm-12">
+  <br>
+  <div class="subtitle-content-project">Company Info</div>
+  <div class="hr-divider-keyline"></div>
+  <br>
+  <br>
+  <div class="col-sm-6 ">
+    <div class="col-lg-12 ">
+      <div class="subtitle-content-project">Headquarters Address</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+    </div>
+    <div class="col-lg-12 ">
+      <div name="headquarters_address_line_1"><%= memberCompany.addresses.main.address.thoroughfare %></div> <br><br>
+    </div>
+    <!-- <div class="col-lg-12 " >
+      <input type="text" name="headquarters_address_line_2" class="domain-project-edit" placeholder="Additional Address Information (suite, floor, etc.)"> <br><br>
+    </div> -->
+    <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+      <div class="col-lg-5 ">
+        <div name="headquarters_city"><%= memberCompany.addresses.main.address.localityName %></div>
+      </div>
+      <div class="col-lg-2">
+        <div name="headquarters_state"><%= memberCompany.addresses.main.address.administrativeArea %></div>
+      </div>
+      <div class="col-lg-3">
+        <div name="headquarters_country"><%= memberCompany.addresses.main.address.country %></div>
+      </div>
+      <div class="col-lg-2">
+        <div name="headquarters_zip_code"><%= memberCompany.addresses.main.address.postalCode %></div>
+      </div>
+    </div>
+    <div class="col-lg-12 " style="margin-top: 20px;">
+      <div class="col-lg-5 " style="margin-left:-15px">
+        <input type="text" name="headquarters_phone" class="domain-project-edit" placeholder="Phone number"> <br><br>
+        <div name="headquarters_phone"><%= memberCompany.addresses.main.address.phone %></div> <br><br>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 ">
+    <div class="col-lg-12 ">
+      <div class="subtitle-content-project">Billing Address</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+    </div>
+    <div class="col-lg-12 ">
+      <div name="billing_address_line_1"><%= memberCompany.addresses.billing.address.thoroughfare %></div><br><br>
+    </div>
+    <!-- <div class="col-lg-12 " >
+      <input type="text" name="billing_address_line_2" class="domain-project-edit" placeholder="Additional Address Information (suite, floor, etc.)"> <br><br>
+    </div> -->
+    <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+      <div class="col-lg-5 ">
+        <div name="billing_city"><%= memberCompany.addresses.billing.address.localityName %></div>
+      </div>
+      <div class="col-lg-2">
+        <div name="billing_state"><%= memberCompany.addresses.billing.address.administrativeArea %></div>
+      </div>
+      <div class="col-lg-3">
+        <div name="billing_country"><%= memberCompany.addresses.billing.address.country %></div>
+      </div>
+      <div class="col-lg-2">
+        <div name="billing_zip_code"><%= memberCompany.addresses.billing.address.postalCode %></div>
+      </div>
+    </div>
+    <div class="col-lg-12 " style="margin-top: 20px;">
+      <div class="col-lg-5 " style="margin-left:-15px">
+        <input type="text" name="billing_phone" class="domain-project-edit" placeholder="Phone number"> <br><br>
+        <div name="billing_phone"><%= memberCompany.addresses.billing.address.phone %></div> <br><br>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-sm-12">
+  <br><br><br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2">Contacts</div>
+    <div class="col-sm-1">Bio</div>
+    <div class="col-sm-7">Information</div>
+    <div class="col-sm-1">Email Alias</div>
+    <div class="col-sm-1">Headshot</div>
+  </div>
+  <br><br>
+  <div class="hr-divider-keyline"></div>
+  <br><br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
+    <div class="col-sm-1"><a>Add</a></div>
+    <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
+    <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
+    <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
+    <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
+    <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+  </div>
+  <br><br><br>
+  <div class="hr-divider-keyline"></div>
+  <br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
+    <div class="col-sm-1"><a>Add</a></div>
+    <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
+    <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
+    <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
+    <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+    <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+  </div>
+  <br><br><br>
+  <div class="hr-divider-keyline"></div>
+  <br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2 table-contact-add-company">MARKETING</div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+    <div class="col-sm-1"></div>
+  </div>
+  <br><br><br>
+  <div class="hr-divider-keyline"></div>
+  <br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2 table-contact-add-company">FINANCE</div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+    <div class="col-sm-1"></div>
+  </div>
+  <br><br><br>
+  <div class="hr-divider-keyline"></div>
+  <br>
+  <div class="subtitle-content-project col-sm-12">
+    <div class="col-sm-2 table-contact-add-company"><input type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><input name="extra_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+    <div class="col-sm-1"><input name="extra_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+    <div class="col-sm-3"><input name="extra_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+    <div class="col-sm-2"><input name="extra_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+    <div class="col-sm-1"><input name="extra_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+    <div class="col-sm-1"></div>
+  </div>
+  <br><br><br>
+  <div class="hr-divider-keyline"></div>
+</div>
+
+<%- include('partials/footer') %>
