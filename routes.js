@@ -219,24 +219,27 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
           renewalDate: "2017-10-24T00:00:00.000Z"
         };
         projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
-          // var isNewContact = req.body.isNewContact;
-          // isNewContact = (isNewContact == "true");
-          // if(isNewContact){
-          //   var newContact = JSON.parse(req.body.newContact);
-          //   async.forEach(newContact, function (eachContact, callback){
-          //     projManagerClient.addMemberToProject(projectId, eachContact, function (err, created, contactId) {
-          //       callback();
-          //     });
-          //   }, function(err) {
-          //     // Contact Members iteration done.
-          //     return res.redirect('/project/' + projectId);
-          //   });
-          // }
-          // else{
-          //   return res.redirect('/project/' + projectId);
-          // }
 
-          return res.redirect('/project/' + projectId);
+          // var boardMemberContact = {
+          //   type: "BOARD MEMBER",
+          //   givenName: req.body.board_contact_first_name,
+          //   familyName: req.body.board_contact_last_name,
+          //   bio: req.body.board_contact__bio,
+          //   email: req.body.board_contact_email,
+          //   phone: req.body.board_contact_phone,
+          // };
+          // projManagerClient.addContactToMember(projectId, memberId, boardMemberContact, function (err, created, contactId) {
+          //   return res.redirect('/project/' + projectId);
+          // });
+          var newContacts = JSON.parse(req.body.newContacts);
+          async.forEach(newContacts, function (eachContact, callback){
+            projManagerClient.addContactToMember(projectId, memberId, eachContact, function (err, created, contactId) {
+              callback();
+            });
+          }, function(err) {
+            // Contacts iteration done.
+            return res.redirect('/project/' + projectId);
+          });
         });
       }
       else{
@@ -384,6 +387,11 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
           memberCompany.addresses = [];
           memberCompany.addresses.main = [];
           memberCompany.addresses.billing = [];
+          memberCompany.contacts.board = [];
+          memberCompany.contacts.technical = [];
+          memberCompany.contacts.marketing = [];
+          memberCompany.contacts.finance = [];
+          memberCompany.contacts.other = [];
         }
         projManagerClient.getOrganization(memberCompany.orgId, function (err, organization) {
           if(organization){
@@ -391,30 +399,19 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
             memberCompany.orgLogoRef = organization.logoRef;
             memberCompany.addresses = organization.addresses;
             for (var j = 0; j < organization.addresses.length; j++){
-            	if (organization.addresses[j].type == 'MAIN'){
-                 memberCompany.addresses.main = organization.addresses[j];
-            	}
-              if (organization.addresses[j].type == 'BILLING'){
-                 memberCompany.addresses.billing = organization.addresses[j];
-            	}
+            	if (organization.addresses[j].type == 'MAIN') memberCompany.addresses.main = organization.addresses[j];
+              else if (organization.addresses[j].type == 'BILLING') memberCompany.addresses.billing = organization.addresses[j];
+            }
+            for (var j = 0; j < memberCompany.contacts.length; j++){
+            	if (memberCompany.contacts[j].type == 'BOARD MEMBER') memberCompany.contacts.board = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'TECHNICAL') memberCompany.contacts.technical = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'MARKETING') memberCompany.contacts.marketing = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'FINANCE') memberCompany.contacts.finance = memberCompany.contacts[j];
+              else memberCompany.contacts.other = memberCompany.contacts[j];
             }
           }
           return res.render('member', {project: project, memberCompany:memberCompany});
         });
-        // async.forEach(memberCompanies, function (eachMember, callback){
-        //   eachMember.orgName = "";
-        //   eachMember.orgLogoRef = "";
-        //   projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
-        //     if(organization) {
-        //       eachMember.orgName = organization.name;
-        //       eachMember.orgLogoRef = organization.logoRef;
-        //     }
-        //     callback();
-        //   });
-        // }, function(err) {
-        //   // Member Companies iteration done.
-        //   console.log(memberCompanies);
-        // });
       });
     });
   }
