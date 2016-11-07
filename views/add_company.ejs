@@ -1,7 +1,6 @@
 <%- include('partials/header') %>
 
-<form method="post" action="/add_company" enctype="multipart/form-data">
-
+<form method="post" action="/add_company" enctype="multipart/form-data" onsubmit="arrangeContacts()">
   <% if(locals.projectId) { %>
     <input type="hidden" name="project_id" value="<%= projectId %>">
   <% } %>
@@ -117,6 +116,7 @@
     </div>
   </div>
   <div class="col-sm-12">
+    <input type="hidden" id="newContacts"  name="newContacts" value="">
     <br><br><br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2">Contacts</div>
@@ -181,13 +181,13 @@
     <div class="hr-divider-keyline"></div>
     <br>
     <div class="subtitle-content-project col-sm-12">
-      <div class="col-sm-2 table-contact-add-company"><input type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
+      <div class="col-sm-2 table-contact-add-company"><input name="other_contact_type" type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
       <div class="col-sm-1"></div>
-      <div class="col-sm-1"><input name="extra_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-      <div class="col-sm-1"><input name="extra_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-      <div class="col-sm-3"><input name="extra_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
-      <div class="col-sm-2"><input name="extra_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input name="extra_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+      <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-3"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="other_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
       <div class="col-sm-1"></div>
     </div>
     <br><br><br>
@@ -223,6 +223,51 @@
   $("#logo").change(function(){
     readImgSrc(this);
   });
+
+  function arrangeContacts(){
+    var newContacts = [];
+    newContacts[0] = {
+      type: "BOARD MEMBER",
+      givenName: document.getElementsByName('board_contact_first_name')[0].value,
+      familyName: document.getElementsByName('board_contact_last_name')[0].value,
+      // bio: document.getElementsByName('board_contact__bio')[0].value,
+      email: document.getElementsByName('board_contact_email')[0].value,
+      phone: document.getElementsByName('board_contact_phone')[0].value
+    };
+    newContacts[1] = {
+      type: "TECHNICAL",
+      givenName: document.getElementsByName('technical_contact_first_name')[0].value,
+      familyName: document.getElementsByName('technical_contact_last_name')[0].value,
+      // bio: document.getElementsByName('technical_contact__bio')[0].value,
+      email: document.getElementsByName('technical_contact_email')[0].value,
+      phone: document.getElementsByName('technical_contact_phone')[0].value
+    };
+    newContacts[2] = {
+      type: "MARKETING",
+      givenName: document.getElementsByName('marketing_contact_first_name')[0].value,
+      familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
+      // bio: document.getElementsByName('marketing_contact__bio')[0].value,
+      email: document.getElementsByName('marketing_contact_email')[0].value,
+      phone: document.getElementsByName('marketing_contact_phone')[0].value
+    };
+    newContacts[3] = {
+      type: "FINANCE",
+      givenName: document.getElementsByName('finance_contact_first_name')[0].value,
+      familyName: document.getElementsByName('finance_contact_last_name')[0].value,
+      // bio: document.getElementsByName('finance_contact__bio')[0].value,
+      email: document.getElementsByName('finance_contact_email')[0].value,
+      phone: document.getElementsByName('finance_contact_phone')[0].value
+    };
+    newContacts[4] = {
+      type: document.getElementsByName('other_contact_type')[0].value,
+      givenName: document.getElementsByName('other_contact_first_name')[0].value,
+      familyName: document.getElementsByName('other_contact_last_name')[0].value,
+      // bio: document.getElementsByName('other_contact__bio')[0].value,
+      email: document.getElementsByName('other_contact_email')[0].value,
+      phone: document.getElementsByName('other_contact_phone')[0].value
+    };
+    document.getElementById("newContacts").value = JSON.stringify(newContacts);
+  }
 </script>
 
 <%- include('partials/footer') %>
