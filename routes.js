@@ -193,6 +193,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
             administrativeArea: req.body.headquarters_state,
             localityName: req.body.headquarters_city,
             postalCode: req.body.headquarters_zip_code,
+            phone: req.body.headquarters_phone,
             thoroughfare: mainThoroughfare
           }
         },
@@ -203,6 +204,7 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
             administrativeArea: req.body.billing_state,
             localityName: req.body.billing_city,
             postalCode: req.body.billing_zip_code,
+            phone: req.body.billing_phone,
             thoroughfare: billingThoroughfare
           }
         }
@@ -219,18 +221,6 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
           renewalDate: "2017-10-24T00:00:00.000Z"
         };
         projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
-
-          // var boardMemberContact = {
-          //   type: "BOARD MEMBER",
-          //   givenName: req.body.board_contact_first_name,
-          //   familyName: req.body.board_contact_last_name,
-          //   bio: req.body.board_contact__bio,
-          //   email: req.body.board_contact_email,
-          //   phone: req.body.board_contact_phone,
-          // };
-          // projManagerClient.addContactToMember(projectId, memberId, boardMemberContact, function (err, created, contactId) {
-          //   return res.redirect('/project/' + projectId);
-          // });
           var newContacts = JSON.parse(req.body.newContacts);
           async.forEach(newContacts, function (eachContact, callback){
             projManagerClient.addContactToMember(projectId, memberId, eachContact, function (err, created, contactId) {
@@ -399,9 +389,17 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
             memberCompany.orgLogoRef = organization.logoRef;
             memberCompany.addresses = organization.addresses;
             for (var j = 0; j < organization.addresses.length; j++){
-            	if (organization.addresses[j].type == 'MAIN') memberCompany.addresses.main = organization.addresses[j];
+              if (organization.addresses[j].type == 'MAIN') memberCompany.addresses.main = organization.addresses[j];
               else if (organization.addresses[j].type == 'BILLING') memberCompany.addresses.billing = organization.addresses[j];
             }
+            var mainAddresses = memberCompany.addresses.main.address.thoroughfare.split(' /// ');
+            memberCompany.addresses.main.address.thoroughfareLine1 = mainAddresses[0];
+            memberCompany.addresses.main.address.thoroughfareLine2 = mainAddresses[1];
+
+            var billingAddresses = memberCompany.addresses.billing.address.thoroughfare.split(' /// ');
+            memberCompany.addresses.billing.address.thoroughfareLine1 = billingAddresses[0];
+            memberCompany.addresses.billing.address.thoroughfareLine2 = billingAddresses[1];
+
             for (var j = 0; j < memberCompany.contacts.length; j++){
             	if (memberCompany.contacts[j].type == 'BOARD MEMBER') memberCompany.contacts.board = memberCompany.contacts[j];
               else if (memberCompany.contacts[j].type == 'TECHNICAL') memberCompany.contacts.technical = memberCompany.contacts[j];

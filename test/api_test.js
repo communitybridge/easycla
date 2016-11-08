@@ -635,6 +635,7 @@ describe('api', function () {
               administrativeArea: "Some Province (e.g. Alaska)",
               localityName: "Some City (e.g. Anchorage)",
               postalCode: 99501,
+              phone: 800-867-5309,
               thoroughfare: "Some street address"
             }
           },
@@ -645,6 +646,7 @@ describe('api', function () {
               administrativeArea: "Some Province (e.g. Alaska)",
               localityName: "Some City (e.g. Anchorage)",
               postalCode: 99501,
+              phone: 800-867-5309,
               thoroughfare: "Some street address"
             }
           }
