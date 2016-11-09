@@ -200,7 +200,7 @@ describe('api', function () {
         var id = projects[0].id;
         projManagerClient.getProject(id, function (err, project) {
           assert.ifError(err);
-          assert(project)
+          assert(project);
           done();
         });
       })
@@ -337,7 +337,7 @@ describe('api', function () {
           var id = projects[0].id;
           projManagerClient.getEmailAliases(id, function (err, emailAliases) {
             assert.ifError(err);
-            assert(emailAliases)
+            assert(emailAliases);
             done();
           });
         })
@@ -441,7 +441,7 @@ describe('api', function () {
           var projectId = projects[0].id;
           projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
             assert.ifError(err);
-            assert(memberCompanies)
+            assert(memberCompanies);
             done();
           });
         })
@@ -596,6 +596,44 @@ describe('api', function () {
         });
       });
 
+      it('PUT /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
+        var sampleMember = {
+          orgId: "8a423a9b-6481-7476-6563-g740ed6f885g",
+          tier: "GOLD",
+          startDate: new Date().toISOString(),
+          renewalDate: "2019-10-24T00:00:00.000Z"
+        };
+        var contactToBeUpdated = {
+          type: "MARKETING",
+          givenName: "Mark",
+          familyName: "Eting",
+          bio: "Mark Eting Rocks!",
+          email: "mark@eting.rock",
+          phone: "880-123-4567"
+        };
+        var updatedContact = {
+          type: "FINANCE",
+          givenName: "Fin",
+          familyName: "Ance",
+          bio: "Fin Ance Rocks!",
+          email: "fin@ance.rock",
+          phone: "990-123-4567"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
+            projManagerClient.addContactToMember(projectId, memberId, contactToBeUpdated, function (err, created, contactId) {
+              projManagerClient.updateContactFromMember(projectId, memberId, contactId, updatedContact, function (err, udpated, contact) {
+                assert.ifError(err);
+                assert(udpated);
+                assert(contact);
+                done();
+              });
+            });
+          });
+        });
+      });
 
     });
 
@@ -705,10 +743,10 @@ describe('api', function () {
         var id = organizations[0].id;
         projManagerClient.getOrganization(id, function (err, organization) {
           assert.ifError(err);
-          assert(organization)
+          assert(organization);
           done();
         });
-      })
+      });
     });
 
     it('GET /organizations/{id} 404', function (done) {
@@ -717,7 +755,49 @@ describe('api', function () {
           assert.equal(err.statusCode, 404);
           done();
         });
-      })
+      });
+    });
+
+    it('PUT /organizations/{id}', function (done) {
+      projManagerClient.getAllOrganizations(function (err, organizations) {
+        assert.ifError(err);
+        var organizationId = organizations[0].id;
+        var updatedOrganization = {
+          id: organizationId,
+          name: "Company Updated Name",
+          addresses: [
+            {
+              type: "MAIN",
+              address: {
+                country: "US",
+                administrativeArea: "Some updated Province (e.g. Alaska)",
+                localityName: "Some updated City (e.g. Anchorage)",
+                postalCode: 99501,
+                phone: 888-867-5309,
+                thoroughfare: "Some updated street address"
+              }
+            },
+            {
+              type: "BILLING",
+              address: {
+                country: "US",
+                administrativeArea: "Some updated Province (e.g. Alaska)",
+                localityName: "Some updated City (e.g. Anchorage)",
+                postalCode: 99501,
+                phone: 888-867-5309,
+                thoroughfare: "Some updated street address"
+              }
+            }
+          ],
+          logoRef: "logoUpdatedName.jpg"
+        }
+        projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
+          assert.ifError(err);
+          assert(updated);
+          assert(organization);
+          done();
+        });
+      });
     });
 
   });
