@@ -1,0 +1,273 @@
+<%- include('partials/header') %>
+
+<form method="post" action="/add_company" enctype="multipart/form-data" onsubmit="arrangeContacts()">
+  <% if(locals.projectId) { %>
+    <input type="hidden" name="project_id" value="<%= projectId %>">
+  <% } %>
+  <div class="main-header-project-edit">
+    <div class="project-logo-project-edit-main">
+      <div class="project-logo-project-edit" id="logoRef">
+        <div style="position: relative;">
+          <div class="project-logo-project-edit-inside" style="position: absolute;" >
+            <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
+            <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" value="<%= memberCompany.orgLogoRef %>" />
+          </div>
+          <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" id="previewLogo" alt="LogoRef" style="width: 100%;">
+        </div>
+      </div>
+      <div class="image-message-project-edit">
+        Add .jpg, .png, or vector image files under 1 mb
+      </div>
+    </div>
+    <div class="main-header-title-project-edit">
+      <span style="color:#11ABDE">| </span>
+      <input class="main-header-title-project-input" type="text" name="company_name" value="" placeholder="<%= memberCompany.orgName %>" value="<%= memberCompany.orgName %>">
+    </div>
+    <div class="last-edited-project-edit">
+      EDITING COMPANY CONTACTS -  Last saved 1:05 PM
+    </div>
+  </div>
+  <div class="hr-divider-keyline"></div>
+  <div class="white-subheader">
+    <a>
+      <div class="content-subheader-project">
+        <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
+      </div>
+    </a>
+    <button class="save-button-project-edit" type="submit">
+        <strong>SAVE</strong>
+    </button>
+  </div>
+  <div class="hr-divider-keyline"></div>
+  <div class="col-sm-12">
+    <br>
+    <div class="subtitle-content-project">Company Info</div>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <br>
+    <div class="col-sm-6 ">
+      <div class="col-lg-12 ">
+        <div class="subtitle-content-project">Headquarters Address</div>
+        <div class="hr-divider-keyline"></div>
+        <br>
+      </div>
+      <div class="col-lg-12 ">
+        <input type="text" name="headquarters_address_line_1" class="domain-project-edit" placeholder="<%= memberCompany.addresses.main.address.thoroughfareLine1 %>" value="<%= memberCompany.addresses.main.address.thoroughfareLine1 %>"> <br><br>
+      </div>
+      <div class="col-lg-12 " >
+        <input type="text" name="headquarters_address_line_2" class="domain-project-edit" placeholder="<%= memberCompany.addresses.main.address.thoroughfareLine2 %>" value="<%= memberCompany.addresses.main.address.thoroughfareLine2 %>"> <br><br>
+      </div>
+      <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+        <div class="col-lg-5 ">
+          <input type="text" name="headquarters_city" class="textbox-add-company" placeholder="<%= memberCompany.addresses.main.address.localityName %>" value="<%= memberCompany.addresses.main.address.localityName %>">
+        </div>
+        <div class="col-lg-2">
+          <input type="text" name="headquarters_state" class="textbox-add-company" placeholder="<%= memberCompany.addresses.main.address.administrativeArea %>" value="<%= memberCompany.addresses.main.address.administrativeArea %>">
+        </div>
+        <div class="col-lg-3">
+          <select class="textbox-add-company" name="headquarters_country">
+            <%- include('partials/selectCountryCode') %>
+          </select>
+        </div>
+        <div class="col-lg-2">
+          <input type="text" name="headquarters_zip_code" class="textbox-add-company" placeholder="<%= memberCompany.addresses.main.address.postalCode %>" value="<%= memberCompany.addresses.main.address.postalCode %>">
+        </div>
+      </div>
+      <div class="col-lg-12 " style="margin-top: 20px;">
+        <div class="col-lg-5 " style="margin-left:-15px">
+          <input type="text" name="headquarters_phone" class="domain-project-edit" placeholder="<%= memberCompany.addresses.main.address.phone %>" value="<%= memberCompany.addresses.main.address.phone %>"> <br><br>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 ">
+      <div class="col-lg-12 ">
+        <div class="subtitle-content-project">Billing Address</div>
+        <div class="hr-divider-keyline"></div>
+        <br>
+      </div>
+      <div class="col-lg-12 ">
+        <input type="text" name="billing_address_line_1" class="domain-project-edit" placeholder="<%= memberCompany.addresses.billing.address.thoroughfareLine1 %>" value="<%= memberCompany.addresses.billing.address.thoroughfareLine1 %>" > <br><br>
+      </div>
+      <div class="col-lg-12 " >
+        <input type="text" name="billing_address_line_2" class="domain-project-edit" placeholder="<%= memberCompany.addresses.billing.address.thoroughfareLine2 %>" value="<%= memberCompany.addresses.billing.address.thoroughfareLine2 %>" > <br><br>
+      </div>
+      <div class="col-lg-12 " style="padding: 0px; margin-left:10px;">
+        <div class="col-lg-5 ">
+          <input type="text" name="billing_city" class="textbox-add-company" placeholder="<%= memberCompany.addresses.billing.address.localityName %>" value="<%= memberCompany.addresses.billing.address.localityName %>" >
+        </div>
+        <div class="col-lg-2">
+          <input type="text" name="billing_state" class="textbox-add-company" placeholder="<%= memberCompany.addresses.billing.address.administrativeArea %>" value="<%= memberCompany.addresses.billing.address.administrativeArea %>" >
+        </div>
+        <div class="col-lg-3">
+          <select class="textbox-add-company" name="billing_country">
+            <%- include('partials/selectCountryCode') %>
+          </select>
+        </div>
+        <div class="col-lg-2">
+          <input type="text" name="billing_zip_code" class="textbox-add-company" placeholder="<%= memberCompany.addresses.billing.address.postalCode %>" value="<%= memberCompany.addresses.billing.address.postalCode %>" >
+        </div>
+      </div>
+      <div class="col-lg-12 " style="margin-top: 20px;">
+        <div class="col-lg-5 " style="margin-left:-15px">
+          <input type="text" name="billing_phone" class="domain-project-edit" placeholder="<%= memberCompany.addresses.billing.address.phone %>" value="<%= memberCompany.addresses.billing.address.phone %>" > <br><br>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12">
+    <input type="hidden" id="newContacts"  name="newContacts" value="">
+    <br><br><br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2">Contacts</div>
+      <div class="col-sm-1">Bio</div>
+      <div class="col-sm-7">Information</div>
+      <div class="col-sm-1">Email Alias</div>
+      <div class="col-sm-1">Headshot</div>
+    </div>
+    <br><br>
+    <div class="hr-divider-keyline"></div>
+    <br><br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
+      <div class="col-sm-1"><a>Add</a></div>
+      <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
+      <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
+      <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
+      <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
+      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+    </div>
+    <br><br><br>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
+      <div class="col-sm-1"><a>Add</a></div>
+      <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
+      <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
+      <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
+      <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+    </div>
+    <br><br><br>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2 table-contact-add-company">MARKETING</div>
+      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+      <div class="col-sm-1"></div>
+    </div>
+    <br><br><br>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2 table-contact-add-company">FINANCE</div>
+      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+      <div class="col-sm-1"></div>
+    </div>
+    <br><br><br>
+    <div class="hr-divider-keyline"></div>
+    <br>
+    <div class="subtitle-content-project col-sm-12">
+      <div class="col-sm-2 table-contact-add-company"><input name="other_contact_type" type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
+      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-3"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="other_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
+      <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
+      <div class="col-sm-1"></div>
+    </div>
+    <br><br><br>
+    <div class="hr-divider-keyline"></div>
+  </div>
+  <div class="container-fluid">
+    <div class="col-sm-12 content mailing-list-project">
+      <div class="hr-divider-keyline-save"></div>
+      <div class="discard-message-edit-project">x Discard Changes</div>
+      <div class="button-save-changes-edit-project-div">
+        <input type="submit" class="button-save-changes-edit-project" name="button" value="Save Changes" />
+      </div>
+      <div class="hr-divider-keyline-save"></div>
+    </div>
+  </div>
+
+</form>
+
+<script type="text/javascript">
+  function readImgSrc(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        $('#previewLogo').attr('src', e.target.result);
+        document.getElementById('previewLogo').style.display = "block";
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+    else {
+      document.getElementById('previewLogo').style.display = "none";
+    }
+  }
+  $("#logo").change(function(){
+    readImgSrc(this);
+  });
+
+  function arrangeContacts(){
+    var newContacts = [];
+    newContacts[0] = {
+      type: "BOARD MEMBER",
+      givenName: document.getElementsByName('board_contact_first_name')[0].value,
+      familyName: document.getElementsByName('board_contact_last_name')[0].value,
+      // bio: document.getElementsByName('board_contact__bio')[0].value,
+      email: document.getElementsByName('board_contact_email')[0].value,
+      phone: document.getElementsByName('board_contact_phone')[0].value
+    };
+    newContacts[1] = {
+      type: "TECHNICAL",
+      givenName: document.getElementsByName('technical_contact_first_name')[0].value,
+      familyName: document.getElementsByName('technical_contact_last_name')[0].value,
+      // bio: document.getElementsByName('technical_contact__bio')[0].value,
+      email: document.getElementsByName('technical_contact_email')[0].value,
+      phone: document.getElementsByName('technical_contact_phone')[0].value
+    };
+    newContacts[2] = {
+      type: "MARKETING",
+      givenName: document.getElementsByName('marketing_contact_first_name')[0].value,
+      familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
+      // bio: document.getElementsByName('marketing_contact__bio')[0].value,
+      email: document.getElementsByName('marketing_contact_email')[0].value,
+      phone: document.getElementsByName('marketing_contact_phone')[0].value
+    };
+    newContacts[3] = {
+      type: "FINANCE",
+      givenName: document.getElementsByName('finance_contact_first_name')[0].value,
+      familyName: document.getElementsByName('finance_contact_last_name')[0].value,
+      // bio: document.getElementsByName('finance_contact__bio')[0].value,
+      email: document.getElementsByName('finance_contact_email')[0].value,
+      phone: document.getElementsByName('finance_contact_phone')[0].value
+    };
+    newContacts[4] = {
+      type: document.getElementsByName('other_contact_type')[0].value,
+      givenName: document.getElementsByName('other_contact_first_name')[0].value,
+      familyName: document.getElementsByName('other_contact_last_name')[0].value,
+      // bio: document.getElementsByName('other_contact__bio')[0].value,
+      email: document.getElementsByName('other_contact_email')[0].value,
+      phone: document.getElementsByName('other_contact_phone')[0].value
+    };
+    document.getElementById("newContacts").value = JSON.stringify(newContacts);
+  }
+</script>
+
+<%- include('partials/footer') %>
