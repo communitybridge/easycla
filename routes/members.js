@@ -27,12 +27,16 @@ var uploadLogoCompany = multer({ storage: storageLogoCompany });
 var cpUploadLogoCompany = uploadLogoCompany.fields([{ name: 'logoCompany', maxCount: 1 }]);
 
 router.get('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  res.render('add_company');
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    res.render('add_company');
+  }
 });
 
 router.get('/add_company/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  var projectId = req.params.project_id;
-  res.render('add_company', {projectId: projectId});
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.project_id;
+    res.render('add_company', {projectId: projectId});
+  }
 });
 
 router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
@@ -184,6 +188,59 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
             }
           }
           return res.render('member', {project: project, memberCompany:memberCompany});
+        });
+      });
+    });
+  }
+});
+
+router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.project_id;
+    var memberId = req.params.member_id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(projectId, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.redirect('/');
+      projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
+        if(memberCompany){
+          memberCompany.orgName = "";
+          memberCompany.orgLogoRef = "";
+          memberCompany.addresses = [];
+          memberCompany.addresses.main = [];
+          memberCompany.addresses.billing = [];
+          memberCompany.contacts.board = [];
+          memberCompany.contacts.technical = [];
+          memberCompany.contacts.marketing = [];
+          memberCompany.contacts.finance = [];
+          memberCompany.contacts.other = [];
+        }
+        projManagerClient.getOrganization(memberCompany.orgId, function (err, organization) {
+          if(organization){
+            memberCompany.orgName = organization.name;
+            memberCompany.orgLogoRef = organization.logoRef;
+            memberCompany.addresses = organization.addresses;
+            for (var j = 0; j < organization.addresses.length; j++){
+              if (organization.addresses[j].type == 'MAIN') memberCompany.addresses.main = organization.addresses[j];
+              else if (organization.addresses[j].type == 'BILLING') memberCompany.addresses.billing = organization.addresses[j];
+            }
+            var mainAddresses = memberCompany.addresses.main.address.thoroughfare.split(' /// ');
+            memberCompany.addresses.main.address.thoroughfareLine1 = mainAddresses[0];
+            memberCompany.addresses.main.address.thoroughfareLine2 = mainAddresses[1];
+
+            var billingAddresses = memberCompany.addresses.billing.address.thoroughfare.split(' /// ');
+            memberCompany.addresses.billing.address.thoroughfareLine1 = billingAddresses[0];
+            memberCompany.addresses.billing.address.thoroughfareLine2 = billingAddresses[1];
+
+            for (var j = 0; j < memberCompany.contacts.length; j++){
+              if (memberCompany.contacts[j].type == 'BOARD MEMBER') memberCompany.contacts.board = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'TECHNICAL') memberCompany.contacts.technical = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'MARKETING') memberCompany.contacts.marketing = memberCompany.contacts[j];
+              else if (memberCompany.contacts[j].type == 'FINANCE') memberCompany.contacts.finance = memberCompany.contacts[j];
+              else memberCompany.contacts.other = memberCompany.contacts[j];
+            }
+          }
+          return res.render('edit_member', {project: project, memberCompany:memberCompany});
         });
       });
     });
