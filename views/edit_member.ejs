@@ -11,7 +11,7 @@
           <div class="project-logo-project-edit-inside" style="position: absolute;" >
             <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
             <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" value="<%= memberCompany.orgLogoRef %>" />
-            <input type="text" name="old_logoRef" id="old_logoRef" value="<%= memberCompany.orgLogoRef %>">
+            <input type="hidden" name="old_logoRef" id="old_logoRef" value="<%= memberCompany.orgLogoRef %>">
           </div>
           <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" id="previewLogo" alt="LogoRef" style="width: 100%;">
         </div>
@@ -117,7 +117,7 @@
     </div>
   </div>
   <div class="col-sm-12">
-    <input type="hidden" id="newContacts"  name="newContacts" value="">
+    <input type="hidden" id="updatedContacts"  name="updatedContacts" value="">
     <br><br><br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2">Contacts</div>
@@ -132,6 +132,7 @@
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
       <div class="col-sm-1"><a>Add</a></div>
+      <input type="hidden" name="board_contact_id" id="board_contact_id" value="<%= memberCompany.contacts.board.id %>">
       <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.givenName %>" value="<%= memberCompany.contacts.board.givenName %>" ></div>
       <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.familyName %>" value="<%= memberCompany.contacts.board.familyName %>" ></div>
       <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.email %>" value="<%= memberCompany.contacts.board.email %>" ></div>
@@ -144,6 +145,7 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
+      <input type="hidden" name="technical_contact_id" id="technical_contact_id" value="<%= memberCompany.contacts.technical.id %>">
       <div class="col-sm-1"><a>Add</a></div>
       <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.givenName %>" value="<%= memberCompany.contacts.technical.givenName %>" ></div>
       <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.familyName %>" value="<%= memberCompany.contacts.technical.familyName %>" ></div>
@@ -157,6 +159,7 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">MARKETING</div>
+      <input type="hidden" name="marketing_contact_id" id="marketing_contact_id" value="<%= memberCompany.contacts.marketing.id %>">
       <div class="col-sm-1"></div>
       <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.givenName %>" value="<%= memberCompany.contacts.marketing.givenName %>" ></div>
       <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.familyName %>" value="<%= memberCompany.contacts.marketing.familyName %>" ></div>
@@ -170,6 +173,7 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">FINANCE</div>
+      <input type="hidden" name="finance_contact_id" id="finance_contact_id" value="<%= memberCompany.contacts.finance.id %>">
       <div class="col-sm-1"></div>
       <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.givenName %>" value="<%= memberCompany.contacts.finance.givenName %>" ></div>
       <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.familyName %>" value="<%= memberCompany.contacts.finance.familyName %>" ></div>
@@ -183,6 +187,7 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company"><input name="other_contact_type" type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="<%= memberCompany.contacts.other.type %>" value="<%= memberCompany.contacts.other.type %>" ></div>
+      <input type="hidden" name="other_contact_id" id="other_contact_id" value="<%= memberCompany.contacts.other.id %>">
       <div class="col-sm-1"></div>
       <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.givenName %>" value="<%= memberCompany.contacts.other.givenName %>" ></div>
       <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.familyName %>" value="<%= memberCompany.contacts.other.familyName %>" ></div>
@@ -226,48 +231,53 @@
   });
 
   function arrangeContacts(){
-    var newContacts = [];
-    newContacts[0] = {
+    var updatedContacts = [];
+    updatedContacts[0] = {
       type: "BOARD MEMBER",
+      id: document.getElementsByName('board_contact_id')[0].value,
       givenName: document.getElementsByName('board_contact_first_name')[0].value,
       familyName: document.getElementsByName('board_contact_last_name')[0].value,
       // bio: document.getElementsByName('board_contact__bio')[0].value,
       email: document.getElementsByName('board_contact_email')[0].value,
       phone: document.getElementsByName('board_contact_phone')[0].value
     };
-    newContacts[1] = {
+    updatedContacts[1] = {
       type: "TECHNICAL",
+      id: document.getElementsByName('technical_contact_id')[0].value,
       givenName: document.getElementsByName('technical_contact_first_name')[0].value,
       familyName: document.getElementsByName('technical_contact_last_name')[0].value,
       // bio: document.getElementsByName('technical_contact__bio')[0].value,
       email: document.getElementsByName('technical_contact_email')[0].value,
       phone: document.getElementsByName('technical_contact_phone')[0].value
     };
-    newContacts[2] = {
+    updatedContacts[2] = {
       type: "MARKETING",
+      id: document.getElementsByName('marketing_contact_id')[0].value,
       givenName: document.getElementsByName('marketing_contact_first_name')[0].value,
       familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
       // bio: document.getElementsByName('marketing_contact__bio')[0].value,
       email: document.getElementsByName('marketing_contact_email')[0].value,
       phone: document.getElementsByName('marketing_contact_phone')[0].value
     };
-    newContacts[3] = {
+    updatedContacts[3] = {
       type: "FINANCE",
+      id: document.getElementsByName('finance_contact_id')[0].value,
       givenName: document.getElementsByName('finance_contact_first_name')[0].value,
       familyName: document.getElementsByName('finance_contact_last_name')[0].value,
       // bio: document.getElementsByName('finance_contact__bio')[0].value,
       email: document.getElementsByName('finance_contact_email')[0].value,
       phone: document.getElementsByName('finance_contact_phone')[0].value
     };
-    newContacts[4] = {
+    updatedContacts[4] = {
       type: document.getElementsByName('other_contact_type')[0].value,
+      id: document.getElementsByName('other_contact_id')[0].value,
       givenName: document.getElementsByName('other_contact_first_name')[0].value,
       familyName: document.getElementsByName('other_contact_last_name')[0].value,
       // bio: document.getElementsByName('other_contact__bio')[0].value,
       email: document.getElementsByName('other_contact_email')[0].value,
       phone: document.getElementsByName('other_contact_phone')[0].value
     };
-    document.getElementById("newContacts").value = JSON.stringify(newContacts);
+    document.getElementById("updatedContacts").value = JSON.stringify(updatedContacts);
   }
 </script>
 
