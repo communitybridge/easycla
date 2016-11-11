@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 <form method="post" action="/edit_project/<%= project.id %>" enctype="multipart/form-data">
-
+<input type="hidden" name="creator_pm" class="form-control" id="creator_pm" value="<%= project.pm %>">
 <div class="main-header-project-edit">
   <div class="project-logo-project-edit-main">
     <div class="project-logo-project-edit" id="logoRef">
