@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<form method="post" action="/add_company" enctype="multipart/form-data" onsubmit="arrangeContacts()">
+<form method="post" action="/edit_member/<%= project.id %>/<%= memberCompany.orgId %>/<%= memberCompany.id %>" enctype="multipart/form-data" onsubmit="arrangeContacts()">
   <% if(locals.projectId) { %>
     <input type="hidden" name="project_id" value="<%= projectId %>">
   <% } %>
@@ -11,6 +11,7 @@
           <div class="project-logo-project-edit-inside" style="position: absolute;" >
             <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
             <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" value="<%= memberCompany.orgLogoRef %>" />
+            <input type="text" name="old_logoRef" id="old_logoRef" value="<%= memberCompany.orgLogoRef %>">
           </div>
           <img src="/uploads/logos/<%= memberCompany.orgLogoRef %>" id="previewLogo" alt="LogoRef" style="width: 100%;">
         </div>
@@ -21,7 +22,7 @@
     </div>
     <div class="main-header-title-project-edit">
       <span style="color:#11ABDE">| </span>
-      <input class="main-header-title-project-input" type="text" name="company_name" value="" placeholder="<%= memberCompany.orgName %>" value="<%= memberCompany.orgName %>">
+      <input class="main-header-title-project-input" type="text" name="company_name" placeholder="<%= memberCompany.orgName %>" value="<%= memberCompany.orgName %>">
     </div>
     <div class="last-edited-project-edit">
       EDITING COMPANY CONTACTS -  Last saved 1:05 PM

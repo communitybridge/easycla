@@ -247,4 +247,61 @@ router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login'
   }
 });
 
+router.post('/edit_member/:project_id/:organization_id/:member_id', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.project_id;
+    var organizationId = req.params.organization_id;
+    var memberId = req.params.member_id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var now = new Date().toISOString();
+    var logoCompanyFileName = "";
+    if(req.files){
+      if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
+      else logoCompanyFileName = req.body.old_logoRef;
+    }
+    //country code must be exactly 2 Alphabetic characters or null
+    var headquartersCountry = req.body.headquarters_country;
+    if(headquartersCountry == "") headquartersCountry = null;
+
+    var billingCountry = req.body.billing_country;
+    if(billingCountry == "") billingCountry = null;
+
+    var mainThoroughfare = req.body.headquarters_address_line_1 + " /// " + req.body.headquarters_address_line_2;
+    var billingThoroughfare = req.body.billing_address_line_1 + " /// " + req.body.billing_address_line_2;
+
+    var updatedOrganization = {
+      id: organizationId,
+      name: req.body.company_name,
+      addresses: [
+        {
+          type: "MAIN",
+          address: {
+            country: headquartersCountry,
+            administrativeArea: req.body.headquarters_state,
+            localityName: req.body.headquarters_city,
+            postalCode: req.body.headquarters_zip_code,
+            phone: req.body.headquarters_phone,
+            thoroughfare: mainThoroughfare
+          }
+        },
+        {
+          type: "BILLING",
+          address: {
+            country: billingCountry,
+            administrativeArea: req.body.billing_state,
+            localityName: req.body.billing_city,
+            postalCode: req.body.billing_zip_code,
+            phone: req.body.billing_phone,
+            thoroughfare: billingThoroughfare
+          }
+        }
+      ],
+      logoRef : logoCompanyFileName
+    }
+    projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
+      return res.redirect('/member/' + projectId + '/' + memberId);
+    });
+  }
+});
+
 module.exports = router;
