@@ -1,4 +1,5 @@
 <%- include('partials/header') %>
+
 <div class="main-header">
   <span class="main-header-title">
     My Profile
@@ -10,8 +11,6 @@
   </div>
 </div>
 <div class="hr-divider-keyline"></div>
-
-
 <div class="col-sm-9 content">
   <br><br>
   <strong class="text-muted">First Name:</strong> <%= req.session.user.attributes.field_lf_first_name  %> <br><br>
@@ -23,6 +22,6 @@
   <strong class="text-muted">Date Created:</strong> <%= new Date(req.session.user.attributes.created*1000) %> <br><br>
   <br><br>
   <strong class="text-muted">CINCO groups:</strong> <%= req.session.user.cinco_groups  %> <br><br>
-
 </div>
+
 <%- include('partials/footer') %>
