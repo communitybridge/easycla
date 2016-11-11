@@ -452,6 +452,7 @@ describe('api', function () {
         var project = _.last(projects);
         var updatedProps = {
           id: project.id,
+          pm: projUserName,
           name: randomstring.generate({
             length: 20,
             charset: 'alphabetic'
