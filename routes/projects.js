@@ -177,7 +177,6 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       id: id,
       name: req.body.project_name,
       description: req.body.project_description,
-      // pm: req.session.user.user,
       pm: req.body.creator_pm,
       url: url,
       // startDate: now,

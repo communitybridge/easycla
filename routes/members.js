@@ -299,7 +299,16 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
       logoRef : logoCompanyFileName
     }
     projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
-      return res.redirect('/member/' + projectId + '/' + memberId);
+        var updatedContacts = JSON.parse(req.body.updatedContacts);
+        async.forEach(updatedContacts, function (eachUpdatedContact, callback){
+          // pass each contactId
+          projManagerClient.updateContactFromMember(projectId, memberId, eachUpdatedContact.id, eachUpdatedContact, function (err, udpated, contactId) {
+            callback();
+          });
+        }, function(err) {
+          // Contacts iteration done.
+          return res.redirect('/member/' + projectId + '/' + memberId);
+        });
     });
   }
 });
