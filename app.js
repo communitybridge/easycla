@@ -68,15 +68,6 @@ passport.use(new CasStrategy({
   ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
   serverBaseURL: serverBaseURL
 }, function(login, done) {
-  // User.findOne({login: login}, function (err, user) {
-  //   if (err) {
-  //     return done(err);
-  //   }
-  //   if (!user) {
-  //     return done(null, false, {message: 'Unknown user'});
-  //   }
-  //   return done(null, user);
-  // });
   return done(null, login);
 }));
 

@@ -86,12 +86,13 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
       ],
       logoRef : logoCompanyFileName
     }
+
     projManagerClient.createOrganization(newOrganization, function (err, created, organizationId) {
       console.log(err);
       if(created && projectId){
         var newMember = {
           orgId: organizationId,
-          tier: "PLATINUM",
+          tier: req.body.membership_tier,
           startDate: now,
           renewalDate: "2017-10-24T00:00:00.000Z"
         };
@@ -298,7 +299,11 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
       ],
       logoRef : logoCompanyFileName
     }
+    var updatedMember = {
+      tier: req.body.membership_tier
+    }
     projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
+      projManagerClient.updateMember(projectId, memberId, updatedMember, function (err, updated, updatedMember) {
         var updatedContacts = JSON.parse(req.body.updatedContacts);
         async.forEach(updatedContacts, function (eachUpdatedContact, callback){
           // pass each contactId
@@ -309,6 +314,7 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
           // Contacts iteration done.
           return res.redirect('/member/' + projectId + '/' + memberId);
         });
+      });
     });
   }
 });
