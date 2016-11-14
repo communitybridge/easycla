@@ -29,11 +29,31 @@
   </div>
   <div class="hr-divider-keyline"></div>
   <div class="white-subheader">
-    <a>
+    <!-- <a>
       <div class="content-subheader-project">
         <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
       </div>
-    </a>
+    </a> -->
+    <div class="content-subheader-project">
+      <div class="hr-divider-vertical"></div>
+      <div class="title-subheader-project">
+        <span class="dropdown-toggle" data-toggle="dropdown">
+          Membership Tier | <strong style="color:#044D74;"> <span id="membership_tier_label" >Select</span> </strong> <span class="caret"></span>
+        </span>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+          <li role="presentation"><a onclick="changeMembershipTier('PLATINUM')" role="menuitem" tabindex="-1">Platinum</a></li>
+          <li role="presentation"><a onclick="changeMembershipTier('GOLD')" role="menuitem" tabindex="-1">Gold</a></li>
+          <li role="presentation"><a onclick="changeMembershipTier('SILVER')" role="menuitem" tabindex="-1">Silver</a></li>
+          <li role="presentation"><a onclick="changeMembershipTier('AFFILIATE')" role="menuitem" tabindex="-1">Affiliate</a></li>
+        </ul>
+        <input type="hidden" name="membership_tier" class="form-control" id="membership_tier" value="UNSPECIFIED">
+      </div>
+      <div class="hr-divider-vertical"></div>
+      <!-- <div class="title-subheader-project">
+
+      </div>
+      <div class="hr-divider-vertical"></div> -->
+    </div>
     <button class="save-button-project-edit" type="submit">
         <strong>SAVE</strong>
     </button>
@@ -223,6 +243,11 @@
   $("#logo").change(function(){
     readImgSrc(this);
   });
+
+  function changeMembershipTier(membership_tier){
+    document.getElementById("membership_tier").value = membership_tier;
+    document.getElementById("membership_tier_label").innerHTML = membership_tier;
+  }
 
   function arrangeContacts(){
     var newContacts = [];
