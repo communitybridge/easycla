@@ -1116,3 +1116,38 @@ button.close-modal {
   font-size: 22px;
   font-weight: 500;
 }
+.content-subheader-member {
+  display: inline-block;
+  margin-left: 10%;
+  font-family: HelveticaNeue;
+  font-size: 16px;
+  font-weight: 500;
+  color: #777777;
+}
+.subheader-options {
+  display: inline-block;
+  position: relative;
+  float: left;
+  margin-top: 25px;
+  margin-left: 10px;
+  margin-right: 10px;
+  font-family: HelveticaNeue;
+  font-size: 12px;
+  font-weight: 500;
+  color: #777777;
+}
+.subheader-datetime-options {
+  display: inline-block;
+  float: left;
+  margin-top: 15px;
+  width: 250px;
+  overflow:hidden;
+}
+.hr-subheader-divider-vertical {
+  display: inline-block;
+  float: left;
+  margin-top: 15px;
+  width: 1px;
+  height: 40px;
+  background-color: #cccccc;
+}
