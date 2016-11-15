@@ -22,15 +22,10 @@
     <div class="hr-divider-vertical"></div>
     <div class="title-subheader-project">Membership Tier | <strong style="color:black;"><%= memberCompany.tier %></strong></div>
     <div class="hr-divider-vertical"></div>
-    <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
-
+    <div class="title-subheader-project">Member Since | <strong style="color:black;"><%= memberCompany.startDate %></strong></div>
+    <div class="hr-divider-vertical"></div>
+    <div class="title-subheader-project">Renewal Date | <strong style="color:black;"><%= memberCompany.renewalDate %></strong></div>
   </div>
-  <!-- <div class="add-project-button">
-    <a href="/edit_member/<%= project.id %>/<%= memberCompany.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
-  </div>
-  <div class="edit-project-title">
-    <a href="/edit_member/<%= project.id %>/<%= memberCompany.id %>">Edit</a>
-  </div> -->
   <div class="add-project-button">
     <a href="/edit_member/<%= project.id %>/<%= memberCompany.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
   </div>

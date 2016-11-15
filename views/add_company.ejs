@@ -34,9 +34,9 @@
         <div class="button-title-add-company">VIEW MEMBERSHIP AGREEMENT</div>
       </div>
     </a> -->
-    <div class="content-subheader-project">
-      <div class="hr-divider-vertical"></div>
-      <div class="title-subheader-project">
+    <div class="content-subheader-member">
+      <div class="hr-subheader-divider-vertical"></div>
+      <div class="subheader-options">
         <span class="dropdown-toggle" data-toggle="dropdown">
           Membership Tier | <strong style="color:#044D74;"> <span id="membership_tier_label" >Select</span> </strong> <span class="caret"></span>
         </span>
@@ -48,11 +48,32 @@
         </ul>
         <input type="hidden" name="membership_tier" class="form-control" id="membership_tier" value="UNSPECIFIED">
       </div>
-      <div class="hr-divider-vertical"></div>
-      <!-- <div class="title-subheader-project">
-
+      <div class="hr-subheader-divider-vertical"></div>
+      <div class="subheader-options">
+        Member Since:
       </div>
-      <div class="hr-divider-vertical"></div> -->
+      <div class="subheader-datetime-options">
+        <div class="input-group">
+          <span class="input-group-addon">
+            <span class="icon icon-calendar"></span>
+          </span>
+          <!-- <input type="text" name="start_date" id="start_date" value="01/01/2015" class="form-control" data-provide="datepicker" style="width: 200px;"> -->
+          <input type="text" name="start_date" id="start_date" value="UNSPECIFIED" class="form-control" data-provide="datepicker" style="width: 200px;">
+        </div>
+      </div>
+      <div class="hr-subheader-divider-vertical"></div>
+      <div class="subheader-options">
+        Renewal Date:
+      </div>
+      <div class="subheader-datetime-options">
+        <div class="input-group">
+          <span class="input-group-addon">
+            <span class="icon icon-calendar"></span>
+          </span>
+          <!-- <input type="text" name="renewal_date" id="renewal_date" value="01/01/2015" class="form-control" data-provide="datepicker" style="width: 200px;"> -->
+          <input type="text" name="renewal_date" id="renewal_date" value="UNSPECIFIED" class="form-control" data-provide="datepicker" style="width: 200px;">
+        </div>
+      </div>
     </div>
     <button class="save-button-project-edit" type="submit">
         <strong>SAVE</strong>

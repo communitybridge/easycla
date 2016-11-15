@@ -44,6 +44,9 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.body.project_id;
     var now = new Date().toISOString();
+    var startDate = new Date(req.body.start_date).toISOString();
+    var renewalDate = new Date(req.body.renewal_date).toISOString();
+    console.log(startDate);
     var logoCompanyFileName = "";
     if(req.files){
       if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
@@ -93,8 +96,8 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
         var newMember = {
           orgId: organizationId,
           tier: req.body.membership_tier,
-          startDate: now,
-          renewalDate: "2017-10-24T00:00:00.000Z"
+          startDate: startDate,
+          renewalDate: renewalDate
         };
         projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
           var newContacts = JSON.parse(req.body.newContacts);
