@@ -13,12 +13,15 @@
         <br>
           <div class="col-sm-12 content">
             <div class="col-sm-12 content" id="bio-input-div">
-              <textarea name="bio" class="description-project-edit" placeholder="Add a bio"></textarea>
+              <textarea id="bio" name="bio" class="description-project-edit" placeholder="Add a bio"></textarea>
+              <div class="input_member_name">
+                <input type="hidden" name="member_name" id="member_name"  value="">
+              </div>
             </div>
           </div>
           <div class="col-sm-12 text-center">
             <div class="col-sm-12 content">
-                <button class="btn btn-primary" style="margin-top:10px; margin-bottom:20px; width:30%" data-dismiss="modal">Add</button>
+                <button class="btn btn-primary" style="margin-top:10px; margin-bottom:20px; width:30%" onclick="updateBio()" data-dismiss="modal">Add</button>
             </div>
           </div>
       </div>
@@ -27,12 +30,20 @@
 </div>
 
 <script type="text/javascript">
+
   $('#add-bio-modal').on('show.bs.modal', function (event) {
     var button = $(event.relatedTarget);
     var memberType = button.data('member-type');
+    var memberBioName = button.data('member-bio-name');
     var modal = $(this);
     modal.find('.modal-title-mailing').text('Add bio for ' + memberType);
-    // modal.find('.username').text(' ' + user);
-    // modal.find('.modal-body input').val(user);
+    modal.find('.input_member_name input').val(memberBioName);
+    document.getElementById("bio").value = document.getElementById(memberBioName).value;
   });
+
+  function updateBio(){
+    var bio_target = document.getElementById("member_name").value
+    document.getElementById(bio_target).value = document.getElementById("bio").value;
+  }
+
 </script>
