@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<form method="post" action="/add_company" enctype="multipart/form-data" onsubmit="arrangeContacts()">
+<form method="post" action="/add_member" enctype="multipart/form-data" onsubmit="arrangeContacts()">
   <% if(locals.projectId) { %>
     <input type="hidden" name="project_id" value="<%= projectId %>">
   <% } %>
@@ -155,8 +155,7 @@
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2">Contacts</div>
       <div class="col-sm-1">Bio</div>
-      <div class="col-sm-7">Information</div>
-      <div class="col-sm-1">Email Alias</div>
+      <div class="col-sm-8">Information</div>
       <div class="col-sm-1">Headshot</div>
     </div>
     <br><br>
@@ -168,12 +167,11 @@
         <input type="hidden" name="board_contact_bio" value="">
         <a href="#add-bio-modal" data-toggle="modal" data-member-type="Board Member">Add</a>
       </div>
-      <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
-      <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
-      <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
+      <div class="col-sm-2"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
+      <div class="col-sm-2"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
+      <div class="col-sm-2"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lmaxwell@business.com"></div>
       <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
-      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -184,12 +182,11 @@
         <input type="hidden" name="technical_contact_bio" value="">
         <a href="#add-bio-modal" data-toggle="modal" data-member-type="Technical Member">Add</a>
       </div>
-      <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
-      <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
-      <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
+      <div class="col-sm-2"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
+      <div class="col-sm-2"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
+      <div class="col-sm-2"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jarmstrong@business.com"></div>
       <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -200,12 +197,11 @@
         <input type="hidden" name="marketing_contact_bio" value="">
         <a href="#add-bio-modal" data-toggle="modal" data-member-type="Marketing Member">Add</a>
       </div>
-      <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-      <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-      <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-2"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-2"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -216,12 +212,11 @@
         <input type="hidden" name="finance_contact_bio" value="">
         <a href="#add-bio-modal" data-toggle="modal" data-member-type="Finance Member">Add</a>
       </div>
-      <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-      <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-      <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-2"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-2"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -232,12 +227,11 @@
         <input type="hidden" name="other_contact_bio" value="">
         <a href="#add-bio-modal" data-toggle="modal" data-member-type="Other Member">Add</a>
       </div>
-      <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
-      <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
-      <div class="col-sm-3"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
+      <div class="col-sm-2"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
+      <div class="col-sm-2"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
+      <div class="col-sm-2"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="other_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
