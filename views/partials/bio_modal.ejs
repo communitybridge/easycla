@@ -1,0 +1,38 @@
+<div id="add-bio-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header-listing">
+        <div class="modal-title-mailing">
+          <span id="myModalLabel">ADD BIO</span>
+        </div>
+        <button type="button" class="close-modal" data-dismiss="modal" style="color: #fff;" aria-label="Close">
+          <span aria-hidden="true" style="color:#fff">X</span>
+        </button>
+      </div>
+      <div class="modal-body-mailing">
+        <br>
+          <div class="col-sm-12 content">
+            <div class="col-sm-12 content" id="bio-input-div">
+              <textarea name="bio" class="description-project-edit" placeholder="Add a bio"></textarea>
+            </div>
+          </div>
+          <div class="col-sm-12 text-center">
+            <div class="col-sm-12 content">
+                <button class="btn btn-primary" style="margin-top:10px; margin-bottom:20px; width:30%" data-dismiss="modal">Add</button>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $('#add-bio-modal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var memberType = button.data('member-type');
+    var modal = $(this);
+    modal.find('.modal-title-mailing').text('Add bio for ' + memberType);
+    // modal.find('.username').text(' ' + user);
+    // modal.find('.modal-body input').val(user);
+  });
+</script>
