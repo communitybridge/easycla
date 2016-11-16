@@ -39,6 +39,7 @@
   <br>
   <div class="col-sm-3 content">
     <div class="subtitle-content-project">Email Aliases</div>
+    <div class="add-edit-member-companies-label"><a href="/aliases/<%= project.id %>">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <div class="email-aliases-projects">
       <% if (emailAliases){ %>
@@ -76,7 +77,7 @@
   </div>
   <div class="col-sm-4 content">
     <div class="subtitle-content-project">Member Companies</div>
-    <div class="add-edit-member-companies-label"><a href="/add_company/<%= project.id %>">+ Add/Edit</a></div>
+    <div class="add-edit-member-companies-label"><a href="/add_member/<%= project.id %>">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <br>
     <% if (memberCompanies){ %>

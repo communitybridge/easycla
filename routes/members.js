@@ -26,20 +26,20 @@ var storageLogoCompany = multer.diskStorage({
 var uploadLogoCompany = multer({ storage: storageLogoCompany });
 var cpUploadLogoCompany = uploadLogoCompany.fields([{ name: 'logoCompany', maxCount: 1 }]);
 
-router.get('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/add_member', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    res.render('add_company');
+    res.render('add_member');
   }
 });
 
-router.get('/add_company/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/add_member/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.project_id;
-    res.render('add_company', {projectId: projectId});
+    res.render('add_member', {projectId: projectId});
   }
 });
 
-router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+router.post('/add_member', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.body.project_id;
