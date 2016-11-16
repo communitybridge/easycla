@@ -43,7 +43,6 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.body.project_id;
-    var now = new Date().toISOString();
     var startDate = "";
     var renewalDate = "";
     if (req.body.start_date) startDate = new Date(req.body.start_date).toISOString();
@@ -211,6 +210,8 @@ router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login'
         if(memberCompany){
           memberCompany.orgName = "";
           memberCompany.orgLogoRef = "";
+          memberCompany.datepickerStartDate = "";
+          memberCompany.datepickerRenewalDate = "";
           memberCompany.addresses = [];
           memberCompany.addresses.main = [];
           memberCompany.addresses.billing = [];
@@ -245,6 +246,22 @@ router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login'
               else memberCompany.contacts.other = memberCompany.contacts[j];
             }
           }
+          if(memberCompany.startDate){
+            // An integer number, between 0 and 11, representing the month in the given date according to local time.
+            // 0 corresponds to January, 1 to February, and so on.
+            var datepickerStartDate = new Date(memberCompany.startDate);
+            startDateMonth = datepickerStartDate.getMonth() + 1;
+            startDateDay = datepickerStartDate.getDate();
+            startDateYear = datepickerStartDate.getFullYear();
+            memberCompany.datepickerStartDate = startDateMonth + "/" + startDateDay + "/" + startDateYear;
+          }
+          if(memberCompany.renewalDate){
+            var datepickerRenewalDate = new Date(memberCompany.renewalDate);
+            renewalDateMonth = datepickerRenewalDate.getMonth() + 1;
+            renewalDateDay = datepickerRenewalDate.getDate();
+            renewalDateYear = datepickerRenewalDate.getFullYear();
+            memberCompany.datepickerRenewalDate = renewalDateMonth + "/" + renewalDateDay + "/" + renewalDateYear;
+          }
           return res.render('edit_member', {project: project, memberCompany:memberCompany});
         });
       });
@@ -258,7 +275,10 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
     var organizationId = req.params.organization_id;
     var memberId = req.params.member_id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var now = new Date().toISOString();
+    var startDate = "";
+    var renewalDate = "";
+    if (req.body.start_date) startDate = new Date(req.body.start_date).toISOString();
+    if (req.body.renewal_date) renewalDate = new Date(req.body.renewal_date).toISOString();
     var logoCompanyFileName = "";
     if(req.files){
       if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
@@ -304,7 +324,9 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
       logoRef : logoCompanyFileName
     }
     var updatedMember = {
-      tier: req.body.membership_tier
+      tier: req.body.membership_tier,
+      startDate: startDate,
+      renewalDate: renewalDate
     }
     projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
       projManagerClient.updateMember(projectId, memberId, updatedMember, function (err, updated, updatedMember) {
