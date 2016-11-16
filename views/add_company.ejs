@@ -164,7 +164,10 @@
     <br><br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
-      <div class="col-sm-1"><a>Add</a></div>
+      <div class="col-sm-1">
+        <input type="hidden" name="board_contact_bio" value="">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Board Member">Add</a>
+      </div>
       <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="Lauren"></div>
       <div class="col-sm-1"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
       <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lauren.maxwell@business.com"></div>
@@ -177,7 +180,10 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
-      <div class="col-sm-1"><a>Add</a></div>
+      <div class="col-sm-1">
+        <input type="hidden" name="technical_contact_bio" value="">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Technical Member">Add</a>
+      </div>
       <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="Jake"></div>
       <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
       <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jake.armstrong@business.com"></div>
@@ -190,7 +196,10 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">MARKETING</div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <input type="hidden" name="marketing_contact_bio" value="">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Marketing Member">Add</a>
+      </div>
       <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
       <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
@@ -203,7 +212,10 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">FINANCE</div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <input type="hidden" name="finance_contact_bio" value="">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Finance Member">Add</a>
+      </div>
       <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
       <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
@@ -216,7 +228,10 @@
     <br>
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company"><input name="other_contact_type" type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="Contact Type"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <input type="hidden" name="other_contact_bio" value="">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Other Member">Add</a>
+      </div>
       <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="First name"></div>
       <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-3"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
@@ -309,4 +324,5 @@
   }
 </script>
 
+<%- include('partials/bio_modal') %>
 <%- include('partials/footer') %>
