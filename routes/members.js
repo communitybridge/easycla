@@ -44,9 +44,10 @@ router.post('/add_company', require('connect-ensure-login').ensureLoggedIn('/log
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.body.project_id;
     var now = new Date().toISOString();
-    var startDate = new Date(req.body.start_date).toISOString();
-    var renewalDate = new Date(req.body.renewal_date).toISOString();
-    console.log(startDate);
+    var startDate = "";
+    var renewalDate = "";
+    if (req.body.start_date) startDate = new Date(req.body.start_date).toISOString();
+    if (req.body.renewal_date) renewalDate = new Date(req.body.renewal_date).toISOString();
     var logoCompanyFileName = "";
     if(req.files){
       if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
