@@ -166,8 +166,8 @@
     <div class="subtitle-content-project col-sm-12">
       <div class="col-sm-2 table-contact-add-company">BOARD MEMBER</div>
       <div class="col-sm-1">
-        <input type="hidden" name="board_contact_bio" value="">
-        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Board Member">Edit</a>
+        <input type="hidden" name="board_contact_bio" id="board_contact_bio" value="<%= memberCompany.contacts.board.bio %>">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-bio-name="board_contact_bio" data-member-type="Board Member">Edit</a>
       </div>
       <input type="hidden" name="board_contact_id" id="board_contact_id" value="<%= memberCompany.contacts.board.id %>">
       <div class="col-sm-1"><input type="text" name="board_contact_first_name" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.givenName %>" value="<%= memberCompany.contacts.board.givenName %>" ></div>
@@ -184,8 +184,8 @@
       <div class="col-sm-2 table-contact-add-company">TECHNICAL (TSC)</div>
       <input type="hidden" name="technical_contact_id" id="technical_contact_id" value="<%= memberCompany.contacts.technical.id %>">
       <div class="col-sm-1">
-        <input type="hidden" name="technical_contact_bio" value="">
-        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Technical Member">Edit</a>
+        <input type="hidden" name="technical_contact_bio" id="technical_contact_bio" value="<%= memberCompany.contacts.technical.bio %>">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-bio-name="technical_contact_bio" data-member-type="Technical Member">Edit</a>
       </div>
       <div class="col-sm-1"><input name="technical_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.givenName %>" value="<%= memberCompany.contacts.technical.givenName %>" ></div>
       <div class="col-sm-1"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.familyName %>" value="<%= memberCompany.contacts.technical.familyName %>" ></div>
@@ -201,8 +201,8 @@
       <div class="col-sm-2 table-contact-add-company">MARKETING</div>
       <input type="hidden" name="marketing_contact_id" id="marketing_contact_id" value="<%= memberCompany.contacts.marketing.id %>">
       <div class="col-sm-1">
-        <input type="hidden" name="marketing_contact_bio" value="">
-        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Marketing Member">Edit</a>
+        <input type="hidden" name="marketing_contact_bio" id="marketing_contact_bio" value="<%= memberCompany.contacts.marketing.bio %>">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-bio-name="marketing_contact_bio" data-member-type="Marketing Member">Edit</a>
       </div>
       <div class="col-sm-1"><input name="marketing_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.givenName %>" value="<%= memberCompany.contacts.marketing.givenName %>" ></div>
       <div class="col-sm-1"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.familyName %>" value="<%= memberCompany.contacts.marketing.familyName %>" ></div>
@@ -218,8 +218,8 @@
       <div class="col-sm-2 table-contact-add-company">FINANCE</div>
       <input type="hidden" name="finance_contact_id" id="finance_contact_id" value="<%= memberCompany.contacts.finance.id %>">
       <div class="col-sm-1">
-        <input type="hidden" name="finance_contact_bio" value="">
-        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Finance Member">Edit</a>
+        <input type="hidden" name="finance_contact_bio" id="finance_contact_bio" value="<%= memberCompany.contacts.finance.bio %>">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-bio-name="finance_contact_bio" data-member-type="Finance Member">Edit</a>
       </div>
       <div class="col-sm-1"><input name="finance_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.givenName %>" value="<%= memberCompany.contacts.finance.givenName %>" ></div>
       <div class="col-sm-1"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.familyName %>" value="<%= memberCompany.contacts.finance.familyName %>" ></div>
@@ -235,8 +235,8 @@
       <div class="col-sm-2 table-contact-add-company"><input name="other_contact_type" type="text" class="domain-project-edit" style="margin-left:-5px;" placeholder="<%= memberCompany.contacts.other.type %>" value="<%= memberCompany.contacts.other.type %>" ></div>
       <input type="hidden" name="other_contact_id" id="other_contact_id" value="<%= memberCompany.contacts.other.id %>">
       <div class="col-sm-1">
-        <input type="hidden" name="other_contact_bio" value="">
-        <a href="#add-bio-modal" data-toggle="modal" data-member-type="Other Member">Edit</a>
+        <input type="hidden" name="other_contact_bio" id="other_contact_bio" value="<%= memberCompany.contacts.other.bio %>">
+        <a href="#add-bio-modal" data-toggle="modal" data-member-bio-name="other_contact_bio" data-member-type="Other Member">Edit</a>
       </div>
       <div class="col-sm-1"><input name="other_contact_first_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.givenName %>" value="<%= memberCompany.contacts.other.givenName %>" ></div>
       <div class="col-sm-1"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.familyName %>" value="<%= memberCompany.contacts.other.familyName %>" ></div>
@@ -294,7 +294,7 @@
       id: document.getElementsByName('board_contact_id')[0].value,
       givenName: document.getElementsByName('board_contact_first_name')[0].value,
       familyName: document.getElementsByName('board_contact_last_name')[0].value,
-      // bio: document.getElementsByName('board_contact__bio')[0].value,
+      bio: document.getElementsByName('board_contact_bio')[0].value,
       email: document.getElementsByName('board_contact_email')[0].value,
       phone: document.getElementsByName('board_contact_phone')[0].value
     };
@@ -303,7 +303,7 @@
       id: document.getElementsByName('technical_contact_id')[0].value,
       givenName: document.getElementsByName('technical_contact_first_name')[0].value,
       familyName: document.getElementsByName('technical_contact_last_name')[0].value,
-      // bio: document.getElementsByName('technical_contact__bio')[0].value,
+      bio: document.getElementsByName('technical_contact_bio')[0].value,
       email: document.getElementsByName('technical_contact_email')[0].value,
       phone: document.getElementsByName('technical_contact_phone')[0].value
     };
@@ -312,7 +312,7 @@
       id: document.getElementsByName('marketing_contact_id')[0].value,
       givenName: document.getElementsByName('marketing_contact_first_name')[0].value,
       familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
-      // bio: document.getElementsByName('marketing_contact__bio')[0].value,
+      bio: document.getElementsByName('marketing_contact_bio')[0].value,
       email: document.getElementsByName('marketing_contact_email')[0].value,
       phone: document.getElementsByName('marketing_contact_phone')[0].value
     };
@@ -321,7 +321,7 @@
       id: document.getElementsByName('finance_contact_id')[0].value,
       givenName: document.getElementsByName('finance_contact_first_name')[0].value,
       familyName: document.getElementsByName('finance_contact_last_name')[0].value,
-      // bio: document.getElementsByName('finance_contact__bio')[0].value,
+      bio: document.getElementsByName('finance_contact_bio')[0].value,
       email: document.getElementsByName('finance_contact_email')[0].value,
       phone: document.getElementsByName('finance_contact_phone')[0].value
     };
@@ -330,7 +330,7 @@
       id: document.getElementsByName('other_contact_id')[0].value,
       givenName: document.getElementsByName('other_contact_first_name')[0].value,
       familyName: document.getElementsByName('other_contact_last_name')[0].value,
-      // bio: document.getElementsByName('other_contact__bio')[0].value,
+      bio: document.getElementsByName('other_contact_bio')[0].value,
       email: document.getElementsByName('other_contact_email')[0].value,
       phone: document.getElementsByName('other_contact_phone')[0].value
     };
