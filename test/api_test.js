@@ -821,6 +821,47 @@ describe('api', function () {
 
     });
 
+    describe('Maling Lists Endpoints', function () {
+      it('POST /projects/{id}/mailinglists', function (done) {
+        var sampleMailingList = {
+          "name": "Test Mailing List",
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subsribePolicy": "CONFIRM",
+          "archivePolicy": "PRIVATE"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailingListId) {
+            assert.ifError(err);
+            assert(created);
+            done();
+          });
+        });
+      });
+
+      it('GET /projects/{id}/mailinglists', function (done) {
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.getMailingLists(projectId, function (err, mailingList) {
+            assert.ifError(err);
+            assert(mailingList);
+            done();
+          });
+        })
+      });
+
+      it('GET /projects/{id}/mailinglists 404', function (done) {
+        projManagerClient.getMailingLists("not_a_real_id", function (err, mailingList) {
+          assert.equal(err.statusCode, 404);
+          done();
+        });
+      });
+
+    });
+
   });
 
 
