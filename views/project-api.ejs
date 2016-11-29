@@ -107,7 +107,7 @@
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
     <div class="subtitle-content-project">Mailing Lists</div>
-    <a href="#create-mailing-list-modal" data-toggle="modal" style="margin-left: 50px;">
+    <a href="#create-mailing-list-modal" data-toggle="modal" data-project-id="<%= project.id %>" style="margin-left: 50px;">
       <div class="add-edit-member-companies-label">+ Create New List</div>
     </a>
     <div class="hr-divider-keyline"></div>
@@ -137,7 +137,7 @@
           </div>
         </div>
         <div class="col-sm-4">
-          <a href="/mailing?id=<%= project.id %>">
+          <a href="/mailing/<%= project.id %>">
             <button type="button" name="button" class="mailing-list-button-project">Manage</button>
           </a>
         </div>
@@ -168,13 +168,13 @@
           </div>
         </div>
         <div class="col-sm-4">
-          <a href="/mailing?id=<%= project.id %>">
+          <a href="/mailing/<%= project.id %>">
             <button type="button" name="button" class="mailing-list-button-project">Manage</button>
           </a>
         </div>
       </div>
     </div>
-    <div class="view-all-member-aliases-label"><a href="/mailing?id=<%= project.id %>">View All</a></div>
+    <div class="view-all-member-aliases-label"><a href="/mailing/<%= project.id %>">View All</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
 </div>
