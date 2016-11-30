@@ -23,7 +23,14 @@ var storageLogoCompany = multer.diskStorage({
   }
 });
 var uploadLogoCompany = multer({ storage: storageLogoCompany });
-var cpUploadLogoCompany = uploadLogoCompany.fields([{ name: 'logoCompany', maxCount: 1 }]);
+var cpUploadLogoCompany = uploadLogoCompany.fields([
+  {name: 'logoCompany', maxCount: 1},
+  {name: 'board_headshot', maxCount: 1 },
+  {name: 'technical_headshot', maxCount: 1 },
+  {name: 'marketing_headshot', maxCount: 1 },
+  {name: 'finance_headshot', maxCount: 1 },
+  {name: 'other_headshot', maxCount: 1 }
+]);
 
 router.get('/create_member', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
