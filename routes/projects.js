@@ -4,7 +4,6 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var dummy_data = require('../dummy_db/dummy_data');
 var cinco_api = require("../lib/api");
 
 var router = express.Router();
@@ -28,13 +27,6 @@ var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement'
 
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('create_project');
-});
-
-router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  dummy_data.findProjectById(req.query.id, function(err, project_data) {
-    if(project_data) res.render('project', { project_data: project_data });
-    else res.redirect('/');
-  });
 });
 
 router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
