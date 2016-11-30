@@ -3,13 +3,13 @@
 <div class="main-header-project">
   <div class="">
     <div class="project-logo-project-main">
-      <a class="project-logo-project" href="/project?id=<%= project_data.project_id%>">
+      <a class="project-logo-project" href="/project/<%= project.id %>">
         <br>
-        <img src="/assets/img/test/<%= project_data.project_id%>.png" alt=""/>
+        <img src="/uploads/<%= project.logoRef %>" alt=""/>
       </a>
     </div>
     <div class="main-header-title-project">
-      <%= project_data.project_name%>
+      <%= project.name %>
     </div>
   </div>
   <div class="last-edited-project">
@@ -20,20 +20,17 @@
 <div class="white-subheader">
   <div class="content-subheader-project">
     <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">Project Type | <strong style="color:black;">Direct Fund</strong></div>
+    <div class="title-subheader-project">Project Type | <strong style="color:black;"><%= project.type %></strong></div>
     <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">Agreement | <strong style="color:#449D44;">Revision Date: </strong> Aug 8, 2016 | <a> View </a> </div>
+    <div class="title-subheader-project">Agreement | <strong style="color:#449D44;">Revision Date: </strong> Aug 8, 2016 | <a target="_blank" href='/uploads/<%= project.agreementRef %>'> View </a> </div>
     <div class="hr-divider-vertical"></div>
   </div>
   <div class="add-project-button">
-    <a href="/project?id=<%= project_data.project_id%>"> <span class="icon icon-circle-with-plus"></span> </a>
+    <a href="/edit_project/<%= project.id %>"> <span class="icon icon-circle-with-plus"></span> </a>
   </div>
   <div class="edit-project-title">
-    <a href="/project?id=<%= project_data.project_id%>">Edit</a>
+    <a href="/edit_project/<%= project.id %>">Edit</a>
   </div>
-  <!-- <div class="save-button-project-edit">
-    <strong>SAVE</strong>
-  </div> -->
 </div>
 
 <div class="hr-divider-keyline"></div>
@@ -42,68 +39,67 @@
   <br>
   <div class="col-sm-3 content">
     <div class="subtitle-content-project">Email Aliases</div>
+    <div class="add-edit-member-companies-label"><a href="/aliases/<%= project.id %>">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <div class="email-aliases-projects">
-        <span style="color:#373A3C">pr@</span>  Active · 8 Participants <br>
-        <span style="color:#373A3C">info@ </span> Active · 30 Participants <br>
-        <span style="color:#373A3C">legal@</span> Active · 4 Participants <br>
-        <span style="color:#373A3C">events@</span> Active · 9 Participants <br>
-        <span style="color:#373A3C">membership@</span> Active · 32 Participants <br>
-        <span style="color:#373A3C">trademark@</span> Active · 12 Participants <br>
+      <% if (emailAliases){ %>
+        <% emailAliases.forEach(function(emailAlias){ %>
+          <div class="col-sm-12 content">
+            <span style="color:#373A3C"><%= emailAlias.address %></span> ·
+            <% if (emailAlias.participants.length == 1){ %>
+            <%= emailAlias.participants.length %> Participant
+            <% } else { %>
+            <%= emailAlias.participants.length %> Participants
+            <% } %>
+            <span class="dropdown-toggle" data-toggle="dropdown">
+              &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+            </span>
+            <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+              <% emailAlias.participants.forEach(function(participant){ %>
+                <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
+              <% }) %>
+            </ul>
+            <br>
+          </div>
+        <% }) %>
+      <% } %>
     </div>
-    <div class="view-all-member-aliases-label"><a href="/aliases?id=<%= project_data.project_id%>">View All</a></div>
+    <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">View All (<%= emailAliases.length %>)</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
   <div class="col-sm-5 content">
     <div class="subtitle-content-project">Project Description</div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <%= project_data.project_description%>
+    <%= project.description %>
     <br> <br>
-    <strong style="color: #333333;"><%= project_data.domain%></strong>
+    <strong style="color: #333333;"><%= project.url %></strong>
   </div>
   <div class="col-sm-4 content">
     <div class="subtitle-content-project">Member Companies</div>
-    <div class="add-edit-member-companies-label"><a href="/members?id=<%= project_data.project_id%>">+ Add/Edit</a></div>
+    <div class="add-edit-member-companies-label"><a href="/add_member/<%= project.id %>">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <br>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-          <img src="/assets/img/test/members/oracle.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">Oracle</div>
-        <div class="member-company-subheader-label">Active · 6 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/sega.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">SEGA</div>
-        <div class="member-company-subheader-label">Active · 10 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/fedex.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">FedEx</div>
-        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="member-company-project">
-      <div class="col-lg-4 content">
-        <img src="/assets/img/test/members/amd.png" alt="" class="member-logo-project"/>
-      </div>
-      <div class="col-lg-8 content">
-        <div class="member-company-name-label">AMD</div>
-        <div class="member-company-subheader-label">Active · 5 Contacts | <span style="color:#11ABDE">Expand</span></div>
-      </div>
-    </div>
-    <div class="view-all-member-aliases-label"><a href="/members?id=<%= project_data.project_id%>">View All</a></div>
+    <% if (memberCompanies){ %>
+      <% if (memberCompanies.length > 0){ %>
+        <% memberCompanies.forEach(function(memberCompany){ %>
+          <div class="member-company-project">
+            <div class="col-lg-4 content">
+              <% if (memberCompany.orgLogoRef){ %>
+                <a href="/member/<%= project.id %>/<%= memberCompany.id %>">
+                  <img src="/uploads/<%= memberCompany.orgLogoRef %>" alt="" class="member-logo-project"/>
+                </a>
+              <% } %>
+            </div>
+            <div class="col-lg-8 content">
+              <div class="member-company-name-label"><a href="/member/<%= project.id %>/<%= memberCompany.id %>"><%= memberCompany.orgName %></a></div>
+              <div class="member-company-subheader-label">Active · <%= memberCompany.contacts.length %> Contacts | <a href="/member/<%= project.id %>/<%= memberCompany.id %>"><span style="color:#11ABDE">Expand</span></a></div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    <% } %>
+    <div class="view-all-member-aliases-label"><a href="/members/<%= project.id %>">View All</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
 </div>
@@ -111,7 +107,7 @@
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
     <div class="subtitle-content-project">Mailing Lists</div>
-    <a href="#create-mailing-list-modal" data-toggle="modal" style="margin-left: 50px;">
+    <a href="#create-mailing-list-modal" data-toggle="modal" data-project-id="<%= project.id %>" style="margin-left: 50px;">
       <div class="add-edit-member-companies-label">+ Create New List</div>
     </a>
     <div class="hr-divider-keyline"></div>
@@ -141,7 +137,7 @@
           </div>
         </div>
         <div class="col-sm-4">
-          <a href="/mailing?id=<%= project_data.project_id%>">
+          <a href="/mailing/<%= project.id %>">
             <button type="button" name="button" class="mailing-list-button-project">Manage</button>
           </a>
         </div>
@@ -172,17 +168,16 @@
           </div>
         </div>
         <div class="col-sm-4">
-          <a href="/mailing?id=<%= project_data.project_id%>">
+          <a href="/mailing/<%= project.id %>">
             <button type="button" name="button" class="mailing-list-button-project">Manage</button>
           </a>
         </div>
       </div>
     </div>
-    <div class="view-all-member-aliases-label"><a href="/mailing?id=<%= project_data.project_id%>">View All</a></div>
+    <div class="view-all-member-aliases-label"><a href="/mailing/<%= project.id %>">View All</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
 </div>
 
 <%- include('partials/mailing_list_modal') %>
-
 <%- include('partials/footer') %>

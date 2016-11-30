@@ -60,7 +60,7 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
             });
           }, function(err) {
             // Member Companies iteration done.
-            return res.render('project-api', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
+            return res.render('project', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
           });
         });
       });
