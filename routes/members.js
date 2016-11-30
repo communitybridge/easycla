@@ -4,7 +4,6 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var dummy_data = require('../dummy_db/dummy_data');
 var cinco_api = require("../lib/api");
 
 var router = express.Router();
