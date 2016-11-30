@@ -10,7 +10,7 @@
           <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
           <input type="hidden" name="old_logoRef" class="form-control" id="old_logoRef" value="<%= project.logoRef %>">
         </div>
-        <img src="/uploads/logos/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
+        <img src="/uploads/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
       </div>
     </div>
     <div class="image-message-project-edit">
