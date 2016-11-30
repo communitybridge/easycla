@@ -4,7 +4,6 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var dummy_data = require('../dummy_db/dummy_data');
 var cinco_api = require("../lib/api");
 
 var router = express.Router();
@@ -17,29 +16,36 @@ var cinco = cinco_api(hostURL);
 
 var storageLogoCompany = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/logos')
+    cb(null, 'public/uploads')
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname)
   }
 });
 var uploadLogoCompany = multer({ storage: storageLogoCompany });
-var cpUploadLogoCompany = uploadLogoCompany.fields([{ name: 'logoCompany', maxCount: 1 }]);
+var cpUploadLogoCompany = uploadLogoCompany.fields([
+  {name: 'logoCompany', maxCount: 1},
+  {name: 'board_headshot', maxCount: 1 },
+  {name: 'technical_headshot', maxCount: 1 },
+  {name: 'marketing_headshot', maxCount: 1 },
+  {name: 'finance_headshot', maxCount: 1 },
+  {name: 'other_headshot', maxCount: 1 }
+]);
 
-router.get('/add_member', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/create_member', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    res.render('add_member');
+    res.render('create_member');
   }
 });
 
-router.get('/add_member/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/create_member/:project_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.project_id;
-    res.render('add_member', {projectId: projectId});
+    res.render('create_member', {projectId: projectId});
   }
 });
 
-router.post('/add_member', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+router.post('/create_member', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.body.project_id;

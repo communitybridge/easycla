@@ -4,7 +4,6 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var dummy_data = require('../dummy_db/dummy_data');
 var cinco_api = require("../lib/api");
 
 var router = express.Router();
@@ -20,8 +19,13 @@ console.log("hostURL: " + hostURL);
 var cinco = cinco_api(hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  // res.render('homepage');
-  res.redirect('/all_projects');
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getAllProjects(function (err, projects) {
+      req.session.projects = projects;
+      res.render('homepage', {projects: projects});
+    });
+  }
 });
 
 router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){

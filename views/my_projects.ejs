@@ -6,7 +6,7 @@
 </div>
 <div class="white-subheader">
   <div class="text-subheader">
-    Welcome! Manage your projects:
+    Welcome <%= req.session.user.attributes.field_lf_first_name  %>! Manage your projects:
   </div>
   <div class="add-project-button">
     <a href="/create_project"> <span class="icon icon-circle-with-plus"></span> </a>
@@ -50,7 +50,7 @@
 
           <a class="project-logo img-responsive" href="/project/<%= myProject.id %>">
             <br>
-            <img src="/uploads/logos/<%= myProject.logoRef %>" alt=""/>
+            <img src="/uploads/<%= myProject.logoRef %>" alt=""/>
           </a>
           <span class="card-title"><%= myProject.name %><br><br></span>
           <div class="card-content">

@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<form method="post" action="/add_member" enctype="multipart/form-data" onsubmit="arrangeContacts()">
+<form method="post" action="/create_member" enctype="multipart/form-data" onsubmit="arrangeContacts()">
   <% if(locals.projectId) { %>
     <input type="hidden" name="project_id" value="<%= projectId %>">
   <% } %>
@@ -12,7 +12,7 @@
             <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
             <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" />
           </div>
-          <img id="previewLogo" src="#" alt="LogoRef" style="width: 100%; display: none;">
+          <img id="preview_logo" src="#" alt="LogoRef" style="width: 100%; display: none;">
         </div>
       </div>
       <div class="image-message-project-edit">
@@ -171,7 +171,14 @@
       <div class="col-sm-2"><input type="text" name="board_contact_last_name" class="domain-project-edit" placeholder="Maxwell"></div>
       <div class="col-sm-2"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="lmaxwell@business.com"></div>
       <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_board_headshot" onclick="document.getElementById('board_headshot').click(); return false;"  src="#" alt="" style="height: 50px; display: none;">
+        </a>
+        <a id="board_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('board_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="board_headshot_filename" id="board_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='board_headshot' id="board_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -186,7 +193,14 @@
       <div class="col-sm-2"><input name="technical_contact_last_name" type="text" class="domain-project-edit" placeholder="Armstrong"></div>
       <div class="col-sm-2"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="jarmstrong@business.com"></div>
       <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_technical_headshot" onclick="document.getElementById('technical_headshot').click(); return false;"  src="#" alt="" style="height: 50px; display: none;">
+        </a>
+        <a id="technical_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('technical_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="technical_headshot_filename" id="technical_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='technical_headshot' id="technical_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -201,7 +215,14 @@
       <div class="col-sm-2"><input name="marketing_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-2"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_marketing_headshot" onclick="document.getElementById('marketing_headshot').click(); return false;"  src="#" alt="" style="height: 50px; display: none;">
+        </a>
+        <a id="marketing_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('marketing_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="marketing_headshot_filename" id="marketing_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='marketing_headshot' id="marketing_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -216,7 +237,14 @@
       <div class="col-sm-2"><input name="finance_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-2"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_finance_headshot" onclick="document.getElementById('finance_headshot').click(); return false;"  src="#" alt="" style="height: 50px; display: none;">
+        </a>
+        <a id="finance_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('finance_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="finance_headshot_filename" id="finance_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='finance_headshot' id="finance_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -231,7 +259,14 @@
       <div class="col-sm-2"><input name="other_contact_last_name" type="text" class="domain-project-edit" placeholder="Last name"></div>
       <div class="col-sm-2"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="Email address"></div>
       <div class="col-sm-2"><input name="other_contact_phone" type="text" class="domain-project-edit" placeholder="Phone"></div>
-      <div class="col-sm-1"><img src="" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_other_headshot" onclick="document.getElementById('other_headshot').click(); return false;"  src="#" alt="" style="height: 50px; display: none;">
+        </a>
+        <a id="other_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('other_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="other_headshot_filename" id="other_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='other_headshot' id="other_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -250,27 +285,50 @@
 </form>
 
 <script type="text/javascript">
-  function readImgSrc(input) {
+  function readImgSrc(input, target) {
+    var img_target = "#preview_" + target;
+    var preview_target = "preview_" + target;
     if (input.files && input.files[0]) {
       var reader = new FileReader();
       reader.onload = function (e) {
-        $('#previewLogo').attr('src', e.target.result);
-        document.getElementById('previewLogo').style.display = "block";
+        $(img_target).attr('src', e.target.result);
+        document.getElementById(preview_target).style.display = "block";
+        document.getElementById(target + "_filename").value = input.files[0].name;
       }
       reader.readAsDataURL(input.files[0]);
     }
     else {
-      document.getElementById('previewLogo').style.display = "none";
+      document.getElementById(preview_target).style.display = "none";
     }
   }
   $("#logo").change(function(){
-    readImgSrc(this);
+    readImgSrc(this, "logo");
+  });
+  $("#board_headshot").change(function(){
+    readImgSrc(this, "board_headshot");
+    document.getElementById("board_headshot_add").style.display = "none";
+  });
+  $("#technical_headshot").change(function(){
+    readImgSrc(this, "technical_headshot");
+    document.getElementById("technical_headshot_add").style.display = "none";
+  });
+  $("#marketing_headshot").change(function(){
+    readImgSrc(this, "marketing_headshot");
+    document.getElementById("marketing_headshot_add").style.display = "none";
+  });
+  $("#finance_headshot").change(function(){
+    readImgSrc(this, "finance_headshot");
+    document.getElementById("finance_headshot_add").style.display = "none";
+  });
+  $("#other_headshot").change(function(){
+    readImgSrc(this, "other_headshot");
+    document.getElementById("other_headshot_add").style.display = "none";
   });
 
   function changeMembershipTier(membership_tier){
     document.getElementById("membership_tier").value = membership_tier;
     document.getElementById("membership_tier_label").innerHTML = membership_tier;
-  }
+  };
 
   function arrangeContacts(){
     var newContacts = [];
@@ -280,7 +338,8 @@
       familyName: document.getElementsByName('board_contact_last_name')[0].value,
       bio: document.getElementsByName('board_contact_bio')[0].value,
       email: document.getElementsByName('board_contact_email')[0].value,
-      phone: document.getElementsByName('board_contact_phone')[0].value
+      phone: document.getElementsByName('board_contact_phone')[0].value,
+      headshotRef: document.getElementsByName('board_headshot_filename')[0].value
     };
     newContacts[1] = {
       type: "TECHNICAL",
@@ -288,7 +347,8 @@
       familyName: document.getElementsByName('technical_contact_last_name')[0].value,
       bio: document.getElementsByName('technical_contact_bio')[0].value,
       email: document.getElementsByName('technical_contact_email')[0].value,
-      phone: document.getElementsByName('technical_contact_phone')[0].value
+      phone: document.getElementsByName('technical_contact_phone')[0].value,
+      headshotRef: document.getElementsByName('technical_headshot_filename')[0].value
     };
     newContacts[2] = {
       type: "MARKETING",
@@ -296,7 +356,8 @@
       familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
       bio: document.getElementsByName('marketing_contact_bio')[0].value,
       email: document.getElementsByName('marketing_contact_email')[0].value,
-      phone: document.getElementsByName('marketing_contact_phone')[0].value
+      phone: document.getElementsByName('marketing_contact_phone')[0].value,
+      headshotRef: document.getElementsByName('marketing_headshot_filename')[0].value
     };
     newContacts[3] = {
       type: "FINANCE",
@@ -304,7 +365,8 @@
       familyName: document.getElementsByName('finance_contact_last_name')[0].value,
       bio: document.getElementsByName('finance_contact_bio')[0].value,
       email: document.getElementsByName('finance_contact_email')[0].value,
-      phone: document.getElementsByName('finance_contact_phone')[0].value
+      phone: document.getElementsByName('finance_contact_phone')[0].value,
+      headshotRef: document.getElementsByName('finance_headshot_filename')[0].value
     };
     newContacts[4] = {
       type: document.getElementsByName('other_contact_type')[0].value,
@@ -312,7 +374,8 @@
       familyName: document.getElementsByName('other_contact_last_name')[0].value,
       bio: document.getElementsByName('other_contact_bio')[0].value,
       email: document.getElementsByName('other_contact_email')[0].value,
-      phone: document.getElementsByName('other_contact_phone')[0].value
+      phone: document.getElementsByName('other_contact_phone')[0].value,
+      headshotRef: document.getElementsByName('other_headshot_filename')[0].value
     };
     document.getElementById("newContacts").value = JSON.stringify(newContacts);
   }
