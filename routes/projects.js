@@ -29,16 +29,6 @@ router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/l
   res.render('create_project');
 });
 
-router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getAllProjects(function (err, projects) {
-      req.session.projects = projects;
-      res.render('all_projects', {projects: projects});
-    });
-  }
-});
-
 router.get('/my_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
@@ -84,7 +74,7 @@ router.get('/archive_project/:id', require('connect-ensure-login').ensureLoggedI
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.archiveProject(id, function (err) {
       console.log(err);
-      return res.redirect('/all_projects');
+      return res.redirect('/');
     });
   }
 });
