@@ -95,7 +95,7 @@
     <div class="col-sm-3"><div name="board_contact_email"><%= memberCompany.contacts.board.email %></div></div>
     <div class="col-sm-2"><div name="board_contact_phone"><%= memberCompany.contacts.board.phone %></div></div>
     <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
-    <!-- <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /></div> -->
+    <div class="col-sm-1"><img src="/uploads/<%= memberCompany.contacts.board.headshotRef %>" alt="" style="height:50px;" /></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
@@ -110,7 +110,7 @@
     <div class="col-sm-3"><div name="technical_contact_email"><%= memberCompany.contacts.technical.email %></div></div>
     <div class="col-sm-2"><div name="technical_contact_phone"><%= memberCompany.contacts.technical.phone %></div></div>
     <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-    <!-- <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /></div> -->
+    <div class="col-sm-1"><img src="/uploads/<%= memberCompany.contacts.technical.headshotRef %>" alt="" style="height:50px;" /></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
@@ -125,7 +125,7 @@
     <div class="col-sm-3"><div name="marketing_contact_email"><%= memberCompany.contacts.marketing.email %></div></div>
     <div class="col-sm-2"><div name="marketing_contact_phone"><%= memberCompany.contacts.marketing.phone %></div></div>
     <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><img src="/uploads/<%= memberCompany.contacts.marketing.headshotRef %>" alt="" style="height:50px;" /></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
@@ -140,7 +140,7 @@
     <div class="col-sm-3"><div name="finance_contact_email"><%= memberCompany.contacts.finance.email %></div></div>
     <div class="col-sm-2"><div name="finance_contact_phone"><%= memberCompany.contacts.finance.phone %></div></div>
     <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><img src="/uploads/<%= memberCompany.contacts.finance.headshotRef %>" alt="" style="height:50px;" /></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
@@ -155,7 +155,7 @@
     <div class="col-sm-3"><div name="other_contact_email"><%= memberCompany.contacts.other.email %></div></div>
     <div class="col-sm-2"><div name="other_contact_phone"><%= memberCompany.contacts.other.phone %></div></div>
     <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-    <div class="col-sm-1"></div>
+    <div class="col-sm-1"><img src="/uploads/<%= memberCompany.contacts.other.headshotRef %>" alt="" style="height:50px;" /></div>
   </div>
   <br><br><br>
   <div class="hr-divider-keyline"></div>
