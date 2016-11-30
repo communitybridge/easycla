@@ -4,7 +4,6 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var dummy_data = require('../dummy_db/dummy_data');
 var cinco_api = require("../lib/api");
 
 var router = express.Router();
@@ -17,7 +16,7 @@ var cinco = cinco_api(hostURL);
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/logos')
+    cb(null, 'public/uploads')
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname)
@@ -28,23 +27,6 @@ var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement'
 
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('create_project');
-});
-
-router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  dummy_data.findProjectById(req.query.id, function(err, project_data) {
-    if(project_data) res.render('project', { project_data: project_data });
-    else res.redirect('/');
-  });
-});
-
-router.get('/all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getAllProjects(function (err, projects) {
-      req.session.projects = projects;
-      res.render('all_projects', {projects: projects});
-    });
-  }
 });
 
 router.get('/my_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
@@ -78,7 +60,7 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
             });
           }, function(err) {
             // Member Companies iteration done.
-            return res.render('project-api', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
+            return res.render('project', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
           });
         });
       });
@@ -92,7 +74,7 @@ router.get('/archive_project/:id', require('connect-ensure-login').ensureLoggedI
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.archiveProject(id, function (err) {
       console.log(err);
-      return res.redirect('/all_projects');
+      return res.redirect('/');
     });
   }
 });
@@ -142,17 +124,32 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
   }
 });
 
-router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var id = req.params.id;
+    var projectId = req.params.projectId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProject(id, function (err, project) {
+    projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       project.domain = "";
       if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('http://','').replace('/','');
-      projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-        return res.render('edit_project', {project: project, emailAliases: emailAliases });
+      projManagerClient.getEmailAliases(projectId, function (err, emailAliases) {
+        projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+          async.forEach(memberCompanies, function (eachMember, callback){
+            eachMember.orgName = "";
+            eachMember.orgLogoRef = "";
+            projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
+              if(organization){
+                eachMember.orgName = organization.name;
+                eachMember.orgLogoRef = organization.logoRef;
+              }
+              callback();
+            });
+          }, function(err) {
+            // Member Companies iteration done.
+            return res.render('edit_project', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
+          });
+        });
       });
     });
   }
