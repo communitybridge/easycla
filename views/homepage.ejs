@@ -1,12 +1,13 @@
 <%- include('partials/header') %>
+<!-- All Projects View -->
 <div class="main-header">
   <span class="main-header-title">
-    My Projects
+    All Projects
   </span>
 </div>
 <div class="white-subheader">
   <div class="text-subheader">
-    Welcome! Manage your projects:
+    Welcome <%= req.session.user.attributes.field_lf_first_name  %>! View all projects:
   </div>
   <div class="add-project-button">
     <a href="/create_project"> <span class="icon icon-circle-with-plus"></span> </a>
@@ -34,83 +35,38 @@
         Program Manager | <strong style="color:#373A3C;"> — </strong>  <br>
       </div>
     </div>
-    <div class="card">
-      <a class="project-logo img-responsive" href="/project?id=1KJ73l">
-        <br>
-        <img src="/assets/img/test/1KJ73l.png" alt=""/>
-      </a>
-      <span class="card-title">Zephyr Open Source Project<br><br></span>
-      <div class="card-content">
-        ACTIVE · Published Jul 22, 2016 · 2 Members<br>
-        Project Type | <strong style="color:black;">-</strong> <br>
-        Project Since | <strong style="color:#009900;">Jul 31, 2016 </strong> <br>
-        Program Manager | <strong style="color:#000099;">John Doe</strong> <br>
-      </div>
-    </div>
-    <div class="card">
-      <a class="project-logo img-responsive" href="/project?id=2CO89s">
-        <br>
-        <img src="/assets/img/test/2CO89s.png" alt=""/>
-      </a>
-      <span class="card-title">Longer Project Title Number ...<br><br></span>
-      <div class="card-content">
-        ACTIVE · Published Jul 22, 2016 · 2 Members<br>
-        Project Type | <strong style="color:#474B4D;">Incorporated</strong> <br>
-        Project Since | <strong style="color:#009900;">Aug 10, 2016 </strong> <br>
-        Program Manager | <strong style="color:#000099;">Lane Meyer</strong> <br>
-      </div>
-    </div>
-    <div class="card">
-      <a class="project-logo img-responsive" href="/project?id=3JL67d">
-        <br>
-        <img src="/assets/img/test/3JL67d.png" alt=""/>
-      </a>
-      <span class="card-title">Another Project Title<br><br></span>
-      <div class="card-content">
-        ACTIVE · Published Jul 22, 2016 · 2 Members<br>
-        Project Type | <strong style="color:black;">Direct Fund</strong> <br>
-        Project Since | <strong style="color:#009900;">Jul 28, 2016 </strong> <br>
-        Program Manager | <strong style="color:#000099;">John Doe</strong> <br>
-      </div>
-    </div>
-    <div class="card">
-      <a class="project-logo img-responsive" href="/project?id=4CL35y">
-        <br>
-        <img src="/assets/img/test/4CL35y.png" alt=""/>
-      </a>
-      <span class="card-title">Fifth Published Project<br><br></span>
-      <div class="card-content">
-        ACTIVE · Published Jul 22, 2016 · 2 Members<br>
-        Project Type | <strong style="color:#474B4D;">Incorporated</strong> <br>
-        Project Since | <strong style="color:#009900;">Aug 5, 2016 </strong> <br>
-        Program Manager | <strong style="color:#000099;">Lane Meyer</strong> <br>
-      </div>
-    </div>
-    <div class="card">
-      <a class="project-logo img-responsive" href="/project?id=4CL35y" style="background-color: #eceeef;">
-        <br>
-        <img alt=""/ >
-      </a>
-      <span class="card-title">Project Title<br><br></span>
-      <div class="card-content">
-        ACTIVE · Published Jul 22, 2016 · 2 Members<br>
-        Project Type | <strong style="color:black;">Direct Fund</strong> <br>
-        Project Since | <strong style="color:#009900;">Jul 25, 2016 </strong> <br>
-        Program Manager | <strong style="color:#000099;">John Doe</strong> <br>
-      </div>
-    </div>
+    <% if (req.session.projects){ %>
+      <% projects.forEach(function(project){ %>
+        <div class="card">
+          <div class="card-more-menu">
+            <span class="dropdown-toggle" data-toggle="dropdown">
+              &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+            </span>
+            <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+              <li role="presentation"><a href="/project/<%= project.id %>" role="menuitem" tabindex="-1">View</a></li>
+              <li role="presentation"><a href="/edit_project/<%= project.id %>" role="menuitem" tabindex="-1">Edit</a></li>
+              <li role="presentation"><a href="#delete-project-modal" data-toggle="modal" data-project-name="<%= project.name %>" data-project-id="<%= project.id %>" role="menuitem" tabindex="-1">Delete</a></li>
+            </ul>
+          </div>
 
-    <!-- <div class="statcard p-a-md text-center">
-      <form action="/create_project">
-        <button class="btn btn-lg btn-primary" type="submit" >
-          <span class="icon icon-circle-with-plus"></span>
-          <span>Create New Project</span>
-        </button>
-      </form>
-    </div> -->
-
+          <a class="project-logo img-responsive" href="/project/<%= project.id %>">
+            <br>
+            <img src="/uploads/<%= project.logoRef %>" alt=""/>
+          </a>
+          <span class="card-title"><%= project.name %><br><br></span>
+          <div class="card-content">
+            ACTIVE · 2 Members<br>
+            Project Type | <strong style="color:black;"><%= project.type %></strong> <br>
+            Project Since | <strong style="color:#009900;"><%= project.startDate %></strong> <br>
+            Program Manager | <strong style="color:#000099;"><%= project.pm %></strong> <br>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
   </div>
-
   <hr class="m-t">
 </div>
+
+<%- include('partials/delete_project_modal') %>
+
 <%- include('partials/footer') %>
