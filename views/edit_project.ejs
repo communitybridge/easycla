@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 <form method="post" action="/edit_project/<%= project.id %>" enctype="multipart/form-data">
-  
+
   <input type="hidden" name="creator_pm" class="form-control" id="creator_pm" value="<%= project.pm %>">
   <div class="main-header-project-edit">
     <div class="project-logo-project-edit-main">
@@ -100,18 +100,30 @@
     </div>
     <div class="col-sm-4 content">
       <div class="subtitle-content-project">Member Companies</div>
-      <div class="add-edit-member-companies-label"><a href="/create_member">+ Add/Edit</a></div>
+      <div class="add-edit-member-companies-label"><a href="/create_member/<%= project.id %>">+ Add</a></div>
       <div class="hr-divider-keyline"></div>
       <br>
-      <div class="member-company-project">
-        <div class="col-sm-3 content">
-            <img src="/assets/img/create_member.png" alt="" class="member-logo-project"/>
-        </div>
-        <div class="col-sm-9 content">
-          <div class="member-company-name-label">Company Name</div>
-          <div class="member-company-subheader-label">Active · 1 Contact | <a style="color:#11ABDE" href="/create_member">Add Contacts</a></div>
-        </div>
-      </div>
+      <% if (memberCompanies){ %>
+        <% if (memberCompanies.length > 0){ %>
+          <% memberCompanies.forEach(function(memberCompany){ %>
+            <div class="member-company-project">
+              <div class="col-lg-4 content">
+                <% if (memberCompany.orgLogoRef){ %>
+                  <a href="/member/<%= project.id %>/<%= memberCompany.id %>">
+                    <img src="/uploads/<%= memberCompany.orgLogoRef %>" alt="" class="member-logo-project"/>
+                  </a>
+                <% } %>
+              </div>
+              <div class="col-lg-8 content">
+                <div class="member-company-name-label"><a href="/member/<%= project.id %>/<%= memberCompany.id %>"><%= memberCompany.orgName %></a></div>
+                <div class="member-company-subheader-label">Active · <%= memberCompany.contacts.length %> Contacts | <a href="/member/<%= project.id %>/<%= memberCompany.id %>"><span style="color:#11ABDE">Expand</span></a></div>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+      <% } %>
+      <div class="view-all-member-aliases-label"><a href="/members/<%= project.id %>">View All</a></div>
+      <div class="hr-divider-keyline"></div>
     </div>
   </div>
 
