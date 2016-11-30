@@ -3,7 +3,6 @@ var assert = require('assert');
 var _ = require('underscore');
 var randomstring = require('randomstring');
 
-
 function randomUserName() {
   return randomstring.generate({
     length: 10,
@@ -235,7 +234,6 @@ describe('api', function () {
       });
     });
 
-
     it('GET /organizations', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
         assert.ifError(err);
@@ -335,8 +333,6 @@ describe('api', function () {
           });
         });
       });
-
-
     });
 
     it('GET /projects', function (done) {
