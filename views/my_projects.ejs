@@ -6,7 +6,7 @@
 </div>
 <div class="white-subheader">
   <div class="text-subheader">
-    Welcome! Manage your projects:
+    Welcome <%= req.session.user.attributes.field_lf_first_name  %>! Manage your projects:
   </div>
   <div class="add-project-button">
     <a href="/create_project"> <span class="icon icon-circle-with-plus"></span> </a>
