@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<form method="post" action="/add_member" enctype="multipart/form-data" onsubmit="arrangeContacts()">
+<form method="post" action="/create_member" enctype="multipart/form-data" onsubmit="arrangeContacts()">
   <% if(locals.projectId) { %>
     <input type="hidden" name="project_id" value="<%= projectId %>">
   <% } %>

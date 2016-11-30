@@ -1,144 +1,145 @@
 <%- include('partials/header') %>
 <form method="post" action="/edit_project/<%= project.id %>" enctype="multipart/form-data">
-<input type="hidden" name="creator_pm" class="form-control" id="creator_pm" value="<%= project.pm %>">
-<div class="main-header-project-edit">
-  <div class="project-logo-project-edit-main">
-    <div class="project-logo-project-edit" id="logoRef">
-      <div style="position: relative;">
-        <div class="project-logo-project-edit-inside" style="position: absolute;" >
-          <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
-          <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
-          <input type="hidden" name="old_logoRef" class="form-control" id="old_logoRef" value="<%= project.logoRef %>">
-        </div>
-        <img src="/uploads/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
-      </div>
-    </div>
-    <div class="image-message-project-edit">
-      Add .jpg, .png, or vector image files under 1 mb
-    </div>
-  </div>
-  <div class="main-header-title-project-edit">
-    <span style="color:#11ABDE">| </span>
-    <input class="main-header-title-project-input" type="text" name="project_name" value="<%= project.name %>" placeholder="<%= project.name %>">
-  </div>
-  <div class="last-edited-project-edit">
-    NEW PROJECT -  Last saved 11:35 AM
-  </div>
-</div>
-<div class="hr-divider-keyline"></div>
-<div class="white-subheader">
-  <div class="content-subheader-project">
-    <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">
-      <span class="dropdown-toggle" data-toggle="dropdown">
-        Project Type | <strong style="color:#044D74;"> <span id="project_type_label" >Select</span> </strong> <span class="caret"></span>
-      </span>
-      <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-        <li role="presentation"><a onclick="changeProjectType('DIRECT_FUNDED')" role="menuitem" tabindex="-1">Direct Funded</a></li>
-        <li role="presentation"><a onclick="changeProjectType('INCORPORATED')" role="menuitem" tabindex="-1">Incorporated</a></li>
-      </ul>
-      <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
-    </div>
-    <div class="hr-divider-vertical"></div>
-    <div class="title-subheader-project">
-      Agreement |
-      <!-- <strong style="color:#044D74;"><a>Upload</a></strong> -->
-      <div style="display: inline-block">
-        <input type="file" accept="image/*,application/pdf" name='agreement' id="agreement" style="visibility: block;" />
-        <input type="hidden" name="old_agreementRef" class="form-control" id="old_agreementRef" value="<%= project.agreementRef %>">
-      </div>
-    </div>
-    <div class="hr-divider-vertical"></div>
-  </div>
-  <div >
-  <button class="save-button-project-edit" type="submit">
-      <strong>SAVE</strong>
-  </button>
-  </div>
-</div>
-<div class="hr-divider-keyline"></div>
-
-<div class="col-sm-12 content">
-  <br>
-  <div class="col-sm-3 content">
-    <div class="subtitle-content-project">Email Aliases</div>
-    <div class="hr-divider-keyline"></div>
-    <div class="email-aliases-projects">
-      <% if (emailAliases){ %>
-        <% emailAliases.forEach(function(emailAlias){ %>
-          <div class="col-sm-12 content">
-            <span style="color:#373A3C"><%= emailAlias.address %></span> ·
-            <% if (emailAlias.participants.length == 1){ %>
-            <%= emailAlias.participants.length %> Participant
-            <% } else { %>
-            <%= emailAlias.participants.length %> Participants
-            <% } %>
-            <span class="dropdown-toggle" data-toggle="dropdown">
-              &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
-            </span>
-            <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
-              <% emailAlias.participants.forEach(function(participant){ %>
-                <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
-              <% }) %>
-            </ul>
-            <br>
+  
+  <input type="hidden" name="creator_pm" class="form-control" id="creator_pm" value="<%= project.pm %>">
+  <div class="main-header-project-edit">
+    <div class="project-logo-project-edit-main">
+      <div class="project-logo-project-edit" id="logoRef">
+        <div style="position: relative;">
+          <div class="project-logo-project-edit-inside" style="position: absolute;" >
+            <a href="#" onclick="document.getElementById('logo').click(); return false;" /> UPLOAD LOGO </a>
+            <input type="file" accept="image/*" name='logo' id="logo" style="visibility: hidden;" />
+            <input type="hidden" name="old_logoRef" class="form-control" id="old_logoRef" value="<%= project.logoRef %>">
           </div>
-        <% }) %>
-      <% } %>
-    </div>
-    <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">Edit (<%= emailAliases.length %>)</a></div>
-    <div class="hr-divider-keyline"></div>
-  </div>
-  <div class="col-sm-5 content">
-    <div class="subtitle-content-project">Project Description</div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"><%= project.description %></textarea>
-    <br> <br>
-    <strong style="color: #333333;"></strong>
-  </div>
-  <div class="col-sm-4 content">
-    <div class="subtitle-content-project">Member Companies</div>
-    <div class="add-edit-member-companies-label"><a href="/add_member">+ Add/Edit</a></div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <div class="member-company-project">
-      <div class="col-sm-3 content">
-          <img src="/assets/img/add_member.png" alt="" class="member-logo-project"/>
+          <img src="/uploads/<%= project.logoRef %>" id="previewLogo" src="#" alt="LogoRef" style="width: 100%;">
+        </div>
       </div>
-      <div class="col-sm-9 content">
-        <div class="member-company-name-label">Company Name</div>
-        <div class="member-company-subheader-label">Active · 1 Contact | <a style="color:#11ABDE" href="/add_member">Add Contacts</a></div>
+      <div class="image-message-project-edit">
+        Add .jpg, .png, or vector image files under 1 mb
       </div>
     </div>
-  </div>
-</div>
-
-<div class="col-sm-12 content">
-  <br>
-  <div class="col-sm-3 content"></div>
-  <div class="col-sm-5 content">
-    <div class="subtitle-content-project">Domain URL</div>
-    <div class="hr-divider-keyline"></div>
-    <br>
-    <input type="text" name="url" class="domain-project-edit" placeholder="<%= project.url %>" value="<%= project.url %>">
-    <br> <br>
-    <strong style="color: #333333;"></strong>
-  </div>
-  <div class="col-sm-4 content"></div>
-</div>
-
-<div class="container-fluid">
-  <div class="col-sm-12 content mailing-list-project">
-    <div class="hr-divider-keyline-save"></div>
-    <div class="discard-message-edit-project">x Discard Changes</div>
-    <div class="button-save-changes-edit-project-div">
-      <button type="submit" class="button-save-changes-edit-project" name="button">Save Changes</button>
-      <!-- <input type="submit" value="Create User" class="btn btn-primary"> -->
+    <div class="main-header-title-project-edit">
+      <span style="color:#11ABDE">| </span>
+      <input class="main-header-title-project-input" type="text" name="project_name" value="<%= project.name %>" placeholder="<%= project.name %>">
     </div>
-    <div class="hr-divider-keyline-save"></div>
+    <div class="last-edited-project-edit">
+      NEW PROJECT -  Last saved 11:35 AM
+    </div>
   </div>
-</div>
+  <div class="hr-divider-keyline"></div>
+  <div class="white-subheader">
+    <div class="content-subheader-project">
+      <div class="hr-divider-vertical"></div>
+      <div class="title-subheader-project">
+        <span class="dropdown-toggle" data-toggle="dropdown">
+          Project Type | <strong style="color:#044D74;"> <span id="project_type_label" >Select</span> </strong> <span class="caret"></span>
+        </span>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+          <li role="presentation"><a onclick="changeProjectType('DIRECT_FUNDED')" role="menuitem" tabindex="-1">Direct Funded</a></li>
+          <li role="presentation"><a onclick="changeProjectType('INCORPORATED')" role="menuitem" tabindex="-1">Incorporated</a></li>
+        </ul>
+        <input type="hidden" name="project_type" class="form-control" id="project_type" value="UNSPECIFIED">
+      </div>
+      <div class="hr-divider-vertical"></div>
+      <div class="title-subheader-project">
+        Agreement |
+        <!-- <strong style="color:#044D74;"><a>Upload</a></strong> -->
+        <div style="display: inline-block">
+          <input type="file" accept="image/*,application/pdf" name='agreement' id="agreement" style="visibility: block;" />
+          <input type="hidden" name="old_agreementRef" class="form-control" id="old_agreementRef" value="<%= project.agreementRef %>">
+        </div>
+      </div>
+      <div class="hr-divider-vertical"></div>
+    </div>
+    <div >
+    <button class="save-button-project-edit" type="submit">
+        <strong>SAVE</strong>
+    </button>
+    </div>
+  </div>
+  <div class="hr-divider-keyline"></div>
+
+  <div class="col-sm-12 content">
+    <br>
+    <div class="col-sm-3 content">
+      <div class="subtitle-content-project">Email Aliases</div>
+      <div class="hr-divider-keyline"></div>
+      <div class="email-aliases-projects">
+        <% if (emailAliases){ %>
+          <% emailAliases.forEach(function(emailAlias){ %>
+            <div class="col-sm-12 content">
+              <span style="color:#373A3C"><%= emailAlias.address %></span> ·
+              <% if (emailAlias.participants.length == 1){ %>
+              <%= emailAlias.participants.length %> Participant
+              <% } else { %>
+              <%= emailAlias.participants.length %> Participants
+              <% } %>
+              <span class="dropdown-toggle" data-toggle="dropdown">
+                &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+              </span>
+              <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+                <% emailAlias.participants.forEach(function(participant){ %>
+                  <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
+                <% }) %>
+              </ul>
+              <br>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+      <div class="view-all-member-aliases-label"><a href="/aliases/<%= project.id %>">Edit (<%= emailAliases.length %>)</a></div>
+      <div class="hr-divider-keyline"></div>
+    </div>
+    <div class="col-sm-5 content">
+      <div class="subtitle-content-project">Project Description</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"><%= project.description %></textarea>
+      <br> <br>
+      <strong style="color: #333333;"></strong>
+    </div>
+    <div class="col-sm-4 content">
+      <div class="subtitle-content-project">Member Companies</div>
+      <div class="add-edit-member-companies-label"><a href="/create_member">+ Add/Edit</a></div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <div class="member-company-project">
+        <div class="col-sm-3 content">
+            <img src="/assets/img/create_member.png" alt="" class="member-logo-project"/>
+        </div>
+        <div class="col-sm-9 content">
+          <div class="member-company-name-label">Company Name</div>
+          <div class="member-company-subheader-label">Active · 1 Contact | <a style="color:#11ABDE" href="/create_member">Add Contacts</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 content">
+    <br>
+    <div class="col-sm-3 content"></div>
+    <div class="col-sm-5 content">
+      <div class="subtitle-content-project">Domain URL</div>
+      <div class="hr-divider-keyline"></div>
+      <br>
+      <input type="text" name="url" class="domain-project-edit" placeholder="<%= project.url %>" value="<%= project.url %>">
+      <br> <br>
+      <strong style="color: #333333;"></strong>
+    </div>
+    <div class="col-sm-4 content"></div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="col-sm-12 content mailing-list-project">
+      <div class="hr-divider-keyline-save"></div>
+      <div class="discard-message-edit-project">x Discard Changes</div>
+      <div class="button-save-changes-edit-project-div">
+        <button type="submit" class="button-save-changes-edit-project" name="button">Save Changes</button>
+        <!-- <input type="submit" value="Create User" class="btn btn-primary"> -->
+      </div>
+      <div class="hr-divider-keyline-save"></div>
+    </div>
+  </div>
 
 </form>
 
