@@ -124,17 +124,32 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
   }
 });
 
-router.get('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var id = req.params.id;
+    var projectId = req.params.projectId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProject(id, function (err, project) {
+    projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       project.domain = "";
       if(project.url) project.domain = project.url.replace('http://www.','').replace('https://www.','').replace('http://','').replace('/','');
-      projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-        return res.render('edit_project', {project: project, emailAliases: emailAliases });
+      projManagerClient.getEmailAliases(projectId, function (err, emailAliases) {
+        projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+          async.forEach(memberCompanies, function (eachMember, callback){
+            eachMember.orgName = "";
+            eachMember.orgLogoRef = "";
+            projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
+              if(organization){
+                eachMember.orgName = organization.name;
+                eachMember.orgLogoRef = organization.logoRef;
+              }
+              callback();
+            });
+          }, function(err) {
+            // Member Companies iteration done.
+            return res.render('edit_project', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
+          });
+        });
       });
     });
   }
