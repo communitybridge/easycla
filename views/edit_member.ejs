@@ -13,7 +13,7 @@
             <input type="file" accept="image/*" name='logoCompany' id="logo" style="visibility: hidden;" value="<%= memberCompany.orgLogoRef %>" />
             <input type="hidden" name="old_logoRef" id="old_logoRef" value="<%= memberCompany.orgLogoRef %>">
           </div>
-          <img src="/uploads/<%= memberCompany.orgLogoRef %>" id="previewLogo" alt="LogoRef" style="width: 100%;">
+          <img src="/uploads/<%= memberCompany.orgLogoRef %>" id="preview_logo" alt="LogoRef" style="width: 100%;">
         </div>
       </div>
       <div class="image-message-project-edit">
@@ -175,7 +175,14 @@
       <div class="col-sm-3"><input type="text" name="board_contact_email" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.email %>" value="<%= memberCompany.contacts.board.email %>" ></div>
       <div class="col-sm-2"><input type="text" name="board_contact_phone" class="domain-project-edit" placeholder="<%= memberCompany.contacts.board.phon %>" value="<%= memberCompany.contacts.board.phone %>" ></div>
       <div class="col-sm-1"><input type="text" name="board_contact_email_alias" class="domain-project-edit" placeholder="info@"></div>
-      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_board_headshot"  name="preview_board_headshot" onclick="document.getElementById('board_headshot').click(); return false;"  src="/uploads/<%= memberCompany.contacts.board.headshotRef %>" alt="" style="height: 50px;">
+        </a>
+        <a id="board_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('board_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="board_headshot_filename" id="board_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='board_headshot' id="board_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -192,7 +199,14 @@
       <div class="col-sm-3"><input name="technical_contact_email" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.email %>" value="<%= memberCompany.contacts.technical.email %>" ></div>
       <div class="col-sm-2"><input name="technical_contact_phone" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.technical.phone %>" value="<%= memberCompany.contacts.technical.phone %>" ></div>
       <div class="col-sm-1"><input name="technical_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"><img src="assets/img/headshot.png" alt="" style="width:40px; margin-right:5px;  margin-left:-5px;" /><a><b>Add</b></a></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_technical_headshot" name="preview_technical_headshot" onclick="document.getElementById('technical_headshot').click(); return false;"  src="/uploads/<%= memberCompany.contacts.technical.headshotRef %>" alt="" style="height: 50px;">
+        </a>
+        <a id="technical_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('technical_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="technical_headshot_filename" id="technical_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='technical_headshot' id="technical_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -209,7 +223,14 @@
       <div class="col-sm-3"><input name="marketing_contact_email" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.email %>" value="<%= memberCompany.contacts.marketing.email %>" ></div>
       <div class="col-sm-2"><input name="marketing_contact_phone" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.marketing.phone %>" value="<%= memberCompany.contacts.marketing.phone %>" ></div>
       <div class="col-sm-1"><input name="marketing_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_marketing_headshot" onclick="document.getElementById('marketing_headshot').click(); return false;"  src="/uploads/<%= memberCompany.contacts.marketing.headshotRef %>" alt="" style="height: 50px;">
+        </a>
+        <a id="marketing_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('marketing_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="marketing_headshot_filename" id="marketing_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='marketing_headshot' id="marketing_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -226,7 +247,14 @@
       <div class="col-sm-3"><input name="finance_contact_email" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.email %>" value="<%= memberCompany.contacts.finance.email %>" ></div>
       <div class="col-sm-2"><input name="finance_contact_phone" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.finance.phone %>" value="<%= memberCompany.contacts.finance.phone %>" ></div>
       <div class="col-sm-1"><input name="finance_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_finance_headshot" onclick="document.getElementById('finance_headshot').click(); return false;"  src="/uploads/<%= memberCompany.contacts.finance.headshotRef %>" alt="" style="height: 50px;">
+        </a>
+        <a id="finance_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('finance_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="finance_headshot_filename" id="finance_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='finance_headshot' id="finance_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -243,7 +271,14 @@
       <div class="col-sm-3"><input name="other_contact_email" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.email %>" value="<%= memberCompany.contacts.other.email %>" ></div>
       <div class="col-sm-2"><input name="other_contact_phone" type="text" class="domain-project-edit" placeholder="<%= memberCompany.contacts.other.phone %>" value="<%= memberCompany.contacts.other.phone %>" ></div>
       <div class="col-sm-1"><input name="other_contact_email_alias" type="text" class="domain-project-edit" placeholder="Select"></div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-1">
+        <a href="#">
+          <img id="preview_other_headshot" onclick="document.getElementById('other_headshot').click(); return false;"  src="/uploads/<%= memberCompany.contacts.other.headshotRef %>" alt="" style="height: 50px;">
+        </a>
+        <a id="other_headshot_add" href="#" style="margin-left:15px; display:inline-block;" onclick="document.getElementById('other_headshot').click(); return false;" /> Add </a>
+        <input type="hidden" name="other_headshot_filename" id="other_headshot_filename"  value="">
+        <input type="file" accept="image/*" name='other_headshot' id="other_headshot" style="visibility: hidden;" />
+      </div>
     </div>
     <br><br><br>
     <div class="hr-divider-keyline"></div>
@@ -262,33 +297,77 @@
 </form>
 
 <script type="text/javascript">
-  function readImgSrc(input) {
-    if (input.files && input.files[0]) {
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        $('#previewLogo').attr('src', e.target.result);
-        document.getElementById('previewLogo').style.display = "block";
-      }
-      reader.readAsDataURL(input.files[0]);
-    }
-    else {
-      document.getElementById('previewLogo').style.display = "none";
-    }
-  }
-  $("#logo").change(function(){
-    readImgSrc(this);
-  });
 
   document.getElementById("membership_tier").value = "<%= memberCompany.tier %>" ;
   document.getElementById("membership_tier_label").innerHTML = "<%= memberCompany.tier %>";
 
+  var boardHeadshotRef = "<%= memberCompany.contacts.board.headshotRef %>";
+  var technicalHeadshotRef = "<%= memberCompany.contacts.technical.headshotRef %>";
+  var marketingHeadshotRef = "<%= memberCompany.contacts.marketing.headshotRef %>";
+  var financeHeadshotRef = "<%= memberCompany.contacts.finance.headshotRef %>";
+  var otherHeadshotRef = "<%= memberCompany.contacts.other.headshotRef %>";
+  if(boardHeadshotRef) document.getElementById("board_headshot_add").style.display = "none";
+  if(technicalHeadshotRef) document.getElementById("technical_headshot_add").style.display = "none";
+  if(marketingHeadshotRef) document.getElementById("marketing_headshot_add").style.display = "none";
+  if(financeHeadshotRef) document.getElementById("finance_headshot_add").style.display = "none";
+  if(otherHeadshotRef) document.getElementById("other_headshot_add").style.display = "none";
+
+  function readImgSrc(input, target) {
+    var img_target = "#preview_" + target;
+    var preview_target = "preview_" + target;
+    var add_label_target = target + "_add";
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        $(img_target).attr('src', e.target.result);
+        document.getElementById(preview_target).style.display = "block";
+        document.getElementById(add_label_target).style.display = "none";
+        document.getElementById(target + "_filename").value = input.files[0].name;
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+    else {
+      document.getElementById(preview_target).style.display = "none";
+      document.getElementById(add_label_target).style.display = "block";
+    }
+  }
+  $("#logo").change(function(){
+    readImgSrc(this, "logo");
+  });
+  $("#board_headshot").change(function(){
+    readImgSrc(this, "board_headshot");
+  });
+  $("#technical_headshot").change(function(){
+    readImgSrc(this, "technical_headshot");
+  });
+  $("#marketing_headshot").change(function(){
+    readImgSrc(this, "marketing_headshot");
+  });
+  $("#finance_headshot").change(function(){
+    readImgSrc(this, "finance_headshot");
+  });
+  $("#other_headshot").change(function(){
+    readImgSrc(this, "other_headshot");
+  });
+
   function changeMembershipTier(membership_tier){
     document.getElementById("membership_tier").value = membership_tier;
     document.getElementById("membership_tier_label").innerHTML = membership_tier;
-  }
+  };
 
   function arrangeContacts(){
     var updatedContacts = [];
+    boardHeadshotRef = document.getElementsByName('board_headshot_filename')[0].value;
+    technicalHeadshotRef = document.getElementsByName('technical_headshot_filename')[0].value;
+    marketingHeadshotRef = document.getElementsByName('marketing_headshot_filename')[0].value;
+    financeHeadshotRef = document.getElementsByName('finance_headshot_filename')[0].value;
+    otherHeadshotRef = document.getElementsByName('other_headshot_filename')[0].value;
+    if(boardHeadshotRef == "") boardHeadshotRef = "<%= memberCompany.contacts.board.headshotRef %>";
+    if(technicalHeadshotRef == "") technicalHeadshotRef = "<%= memberCompany.contacts.technical.headshotRef %>";
+    if(marketingHeadshotRef == "") marketingHeadshotRef = "<%= memberCompany.contacts.marketing.headshotRef %>";
+    if(financeHeadshotRef == "") financeHeadshotRef = "<%= memberCompany.contacts.finance.headshotRef %>";
+    if(otherHeadshotRef == "") otherHeadshotRef = "<%= memberCompany.contacts.other.headshotRef %>";
+
     updatedContacts[0] = {
       type: "BOARD MEMBER",
       id: document.getElementsByName('board_contact_id')[0].value,
@@ -296,7 +375,8 @@
       familyName: document.getElementsByName('board_contact_last_name')[0].value,
       bio: document.getElementsByName('board_contact_bio')[0].value,
       email: document.getElementsByName('board_contact_email')[0].value,
-      phone: document.getElementsByName('board_contact_phone')[0].value
+      phone: document.getElementsByName('board_contact_phone')[0].value,
+      headshotRef: boardHeadshotRef
     };
     updatedContacts[1] = {
       type: "TECHNICAL",
@@ -305,7 +385,8 @@
       familyName: document.getElementsByName('technical_contact_last_name')[0].value,
       bio: document.getElementsByName('technical_contact_bio')[0].value,
       email: document.getElementsByName('technical_contact_email')[0].value,
-      phone: document.getElementsByName('technical_contact_phone')[0].value
+      phone: document.getElementsByName('technical_contact_phone')[0].value,
+      headshotRef: technicalHeadshotRef
     };
     updatedContacts[2] = {
       type: "MARKETING",
@@ -314,7 +395,8 @@
       familyName: document.getElementsByName('marketing_contact_last_name')[0].value,
       bio: document.getElementsByName('marketing_contact_bio')[0].value,
       email: document.getElementsByName('marketing_contact_email')[0].value,
-      phone: document.getElementsByName('marketing_contact_phone')[0].value
+      phone: document.getElementsByName('marketing_contact_phone')[0].value,
+      headshotRef: marketingHeadshotRef
     };
     updatedContacts[3] = {
       type: "FINANCE",
@@ -323,7 +405,8 @@
       familyName: document.getElementsByName('finance_contact_last_name')[0].value,
       bio: document.getElementsByName('finance_contact_bio')[0].value,
       email: document.getElementsByName('finance_contact_email')[0].value,
-      phone: document.getElementsByName('finance_contact_phone')[0].value
+      phone: document.getElementsByName('finance_contact_phone')[0].value,
+      headshotRef: financeHeadshotRef
     };
     updatedContacts[4] = {
       type: document.getElementsByName('other_contact_type')[0].value,
@@ -332,7 +415,8 @@
       familyName: document.getElementsByName('other_contact_last_name')[0].value,
       bio: document.getElementsByName('other_contact_bio')[0].value,
       email: document.getElementsByName('other_contact_email')[0].value,
-      phone: document.getElementsByName('other_contact_phone')[0].value
+      phone: document.getElementsByName('other_contact_phone')[0].value,
+      headshotRef: otherHeadshotRef
     };
     document.getElementById("updatedContacts").value = JSON.stringify(updatedContacts);
   }
