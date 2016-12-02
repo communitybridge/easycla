@@ -924,6 +924,32 @@ describe('api', function () {
         });
       });
 
+      it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+        var sampleMailingList = {
+          "name": "Another Sample Mailing List",
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subsribePolicy": "CONFIRM",
+          "archivePolicy": "PRIVATE"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            var participantToBeRemoved = {
+              "address": "participantTBR@test.com"
+            };
+            projManagerClient.addParticipantToMailingList(projectId, mailinglistId, participantToBeRemoved, function (err, created, participantEmail) {
+              projManagerClient.removeParticipantFromMailingList(projectId, mailinglistId, participantEmail, function (err, removed) {
+                assert.ifError(err);
+                assert(removed);
+                done();
+              });
+            });
+          });
+        });
+      });
+
     });
 
   });
