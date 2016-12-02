@@ -818,6 +818,7 @@ describe('api', function () {
     });
 
     describe('Maling Lists Endpoints', function () {
+
       it('POST /projects/{id}/mailinglists', function (done) {
         var sampleMailingList = {
           "name": "Test Mailing List",
@@ -853,6 +854,27 @@ describe('api', function () {
         projManagerClient.getMailingLists("not_a_real_id", function (err, mailingList) {
           assert.equal(err.statusCode, 404);
           done();
+        });
+      });
+
+      it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
+        var mailingListToBeRemoved = {
+          "name": "TBR Mailing List",
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subsribePolicy": "CONFIRM",
+          "archivePolicy": "PRIVATE"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, mailingListToBeRemoved, function (err, created, mailinglistId) {
+            projManagerClient.removeMailingList(projectId, mailinglistId, function (err, removed) {
+              assert.ifError(err);
+              assert(removed);
+              done();
+            });
+          });
         });
       });
 
