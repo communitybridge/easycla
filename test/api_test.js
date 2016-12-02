@@ -890,11 +890,34 @@ describe('api', function () {
           assert.ifError(err);
           var projectId = projects[0].id;
           projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
-            console.log("created: " + created);
-            console.log("mailinglistId: " + mailinglistId);
             projManagerClient.getMailingListFromProject(projectId, mailinglistId, function (err, mailingList) {
               assert.ifError(err);
               assert(mailingList);
+              done();
+            });
+          });
+        });
+      });
+
+      it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+        var sampleMailingList = {
+          "name": "Another Sample Mailing List",
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subsribePolicy": "CONFIRM",
+          "archivePolicy": "PRIVATE"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            var newParticipant = {
+              "address": "participant1@test.com"
+            };
+            projManagerClient.addParticipantToMailingList(projectId, mailinglistId, newParticipant, function (err, created, participantEmail) {
+              assert.ifError(err);
+              assert(created);
+              assert(participantEmail);
               done();
             });
           });
