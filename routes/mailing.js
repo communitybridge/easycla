@@ -35,8 +35,8 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var mailingName = req.body.mailing_name;
     var mailingEmailAdmin = req.body.mailing_email_admin;
     var mailingPassword = req.body.mailing_password;
-    // var mailingSubsribePolicy = req.body.mailing_subsribe_policy;
-    // var mailingArchivePolicy = req.body.mailing_archive_policy;
+    // var mailingSubsribePolicy = req.body.mailing_subsribe_policy; // Membership Access: Public / Approval
+    // var mailingArchivePolicy = req.body.mailing_archive_policy; // List Type
 
     var newMailingList = {
       "name": mailingName,
@@ -52,6 +52,21 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
       return res.redirect('/mailing/' + projectId);
     });
 
+  }
+});
+
+router.post('/addParticipantToMailingList/:projectId/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.params.projectId;
+    var mailinglistId = req.body.mailing_list_id;
+    var participant_email = req.body.participant_email;
+    var newParticipant = {
+      "address": participant_email
+    };
+    projManagerClient.addParticipantToMailingList(projectId, mailinglistId, newParticipant, function (err, created, response) {
+      return res.redirect('/mailing/' + projectId);
+    });
   }
 });
 
