@@ -137,38 +137,7 @@
           </div>
         </div>
         <div class="col-sm-4">
-          <a href="/mailing/<%= project.id %>">
-            <button type="button" name="button" class="mailing-list-button-project">Manage</button>
-          </a>
-        </div>
-      </div>
-    </div>
-    <div class="mailing-list-control">
-      <div class="col-sm-2 mailing-list-title-project">
-        <strong>Mailing List Title #2</strong>
-      </div>
-      <div class="col-sm-6">
-        <div class="mailing-list-hr-divider-vertical-project"></div>
-        <div class="mailing-list-counter-project">
-          &nbsp; 96 Participants
-        </div>
-        <div class="mailing-list-hr-divider-vertical-project"></div>
-        <div class="mailing-list-counter-project">
-          List Type: Private
-        </div>
-        <div class="mailing-list-hr-divider-vertical-project"></div>
-        <div class="mailing-list-counter-project">
-          Membership Access: Public
-        </div>
-      </div>
-      <div class="col-sm-4">
-        <div class="col-sm-8">
-          <div class="mailing-list-last-edited-project">
-            Last updated 08:35 AM August 3, 2016
-          </div>
-        </div>
-        <div class="col-sm-4">
-          <a href="/mailing/<%= project.id %>">
+          <a href="#manage-mailing-list-modal" data-toggle="modal" data-project-id="<%= project.id%>" data-mailing-list-name="Mailing List TEST Name" data-mailing-list-id="INSERT_MAILING_LIST_ID" style="margin-left: 50px;">
             <button type="button" name="button" class="mailing-list-button-project">Manage</button>
           </a>
         </div>
@@ -180,4 +149,6 @@
 </div>
 
 <%- include('partials/mailing_list_modal') %>
+<%- include('partials/manage_mailing_list_modal') %>
+
 <%- include('partials/footer') %>
