@@ -620,7 +620,10 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "PLATINUM",
+            tier: {
+              type: "PLATINUM",
+              qualifier: 1
+            },
             startDate: "2016-10-24T15:16:52.885Z",
             renewalDate: "2017-10-24T00:00:00.000Z"
           };
@@ -641,7 +644,9 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var memberToBeRemoved = {
             orgId: organizationId,
-            tier: "GOLD",
+            tier: {
+              type: "GOLD",
+            },
             startDate: "2016-03-24T15:16:52.885Z",
             renewalDate: "2017-04-24T00:00:00.000Z"
           };
@@ -664,7 +669,9 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "PLATINUM",
+            tier: {
+              type: "GOLD",
+            },
             startDate: "2016-10-24T15:16:52.885Z",
             renewalDate: "2017-10-24T00:00:00.000Z"
           };
@@ -687,12 +694,16 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "PLATINUM",
+            tier: {
+              type: "PLATINUM"
+            },
             startDate: "2016-10-24T15:16:52.885Z",
             renewalDate: "2017-10-24T00:00:00.000Z"
           };
           var updatedProperties = {
-            tier: "GOLD",
+            tier: {
+              type: "GOLD"
+            },
             renewalDate: "2018-10-24T00:00:00.000Z"
           };
           projManagerClient.getMyProjects(function (err, projects) {
@@ -714,7 +725,9 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "GOLD",
+            tier: {
+              type: "GOLD"
+            },
             startDate: new Date().toISOString(),
             renewalDate: "2017-10-24T00:00:00.000Z"
           };
@@ -745,7 +758,9 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "SILVER",
+            tier: {
+              type: "GOLD",
+            },
             startDate: new Date().toISOString(),
             renewalDate: "2017-10-24T00:00:00.000Z"
           };
@@ -778,7 +793,9 @@ describe('api', function () {
           var organizationId = organizations[0].id;
           var sampleMember = {
             orgId: organizationId,
-            tier: "GOLD",
+            tier: {
+              type: "GOLD",
+            },
             startDate: new Date().toISOString(),
             renewalDate: "2019-10-24T00:00:00.000Z"
           };
@@ -951,9 +968,5 @@ describe('api', function () {
       });
 
     });
-
   });
-
-
-
 });
