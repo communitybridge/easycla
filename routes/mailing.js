@@ -52,8 +52,7 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
       "name": mailingName,
       "admin": mailingEmailAdmin,
       "password": mailingPassword,
-      //TODO: fix subsribePolicy typo in API Platform Mailing List Model
-      "subsribePolicy": mailingSubscribePolicy,
+      "subscribePolicy": mailingSubscribePolicy,
       "archivePolicy": mailingArchivePolicy
     };
 

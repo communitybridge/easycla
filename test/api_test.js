@@ -841,7 +841,7 @@ describe('api', function () {
           "name": "Test Mailing List",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
-          "subsribePolicy": "CONFIRM",
+          "subscribePolicy": "CONFIRM",
           "archivePolicy": "PRIVATE"
         };
         projManagerClient.getMyProjects(function (err, projects) {
@@ -879,7 +879,7 @@ describe('api', function () {
           "name": "TBR Mailing List",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
-          "subsribePolicy": "CONFIRM",
+          "subscribePolicy": "CONFIRM",
           "archivePolicy": "PRIVATE"
         };
         projManagerClient.getMyProjects(function (err, projects) {
@@ -900,7 +900,7 @@ describe('api', function () {
           "name": "Another Sample Mailing List",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
-          "subsribePolicy": "CONFIRM",
+          "subscribePolicy": "CONFIRM",
           "archivePolicy": "PRIVATE"
         };
         projManagerClient.getMyProjects(function (err, projects) {
@@ -921,7 +921,7 @@ describe('api', function () {
           "name": "Another Sample Mailing List",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
-          "subsribePolicy": "CONFIRM",
+          "subscribePolicy": "CONFIRM",
           "archivePolicy": "PRIVATE"
         };
         projManagerClient.getMyProjects(function (err, projects) {
@@ -946,7 +946,7 @@ describe('api', function () {
           "name": "Another Sample Mailing List",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
-          "subsribePolicy": "CONFIRM",
+          "subscribePolicy": "CONFIRM",
           "archivePolicy": "PRIVATE"
         };
         projManagerClient.getMyProjects(function (err, projects) {
