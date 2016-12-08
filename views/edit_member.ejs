@@ -37,11 +37,11 @@
           Membership Tier | <strong style="color:#044D74;"> <span id="membership_tier_label" >Select</span> </strong> <span class="caret"></span>
         </span>
         <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-          <% if(memberCompany.tier.type == 'PLATINUM' || memberCompany.tier.type == 'GOLD' || memberCompany.tier.type == 'SILVER' ) { %>
+          <% if(memberCompany.tier.type == 'PLATINUM' || memberCompany.tier.type == 'GOLD' || memberCompany.tier.type == 'SILVER' || memberCompany.tier.type == 'ASSOCIATE') { %>
           <li role="presentation"><a onclick="changeMembershipTier('PLATINUM')" role="menuitem" tabindex="-1">Platinum</a></li>
           <li role="presentation"><a onclick="changeMembershipTier('GOLD')" role="menuitem" tabindex="-1">Gold</a></li>
           <li role="presentation"><a onclick="changeMembershipTier('SILVER')" role="menuitem" tabindex="-1">Silver</a></li>
-          <% } else if(memberCompany.tier.type == 'PREMIER' || memberCompany.tier.type == 'GENERAL' ) { %>
+          <% } if(memberCompany.tier.type == 'PREMIER' || memberCompany.tier.type == 'GENERAL'  || memberCompany.tier.type == 'ASSOCIATE' ) { %>
           <li role="presentation"><a onclick="changeMembershipTier('PREMIER')" role="menuitem" tabindex="-1">Premier</a></li>
           <li role="presentation"><a onclick="changeMembershipTier('GENERAL')" role="menuitem" tabindex="-1">General</a></li>
           <% } %>
