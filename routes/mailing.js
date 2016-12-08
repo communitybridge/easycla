@@ -35,16 +35,30 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var mailingName = req.body.mailing_name;
     var mailingEmailAdmin = req.body.mailing_email_admin;
     var mailingPassword = req.body.mailing_password;
-    // var mailingSubsribePolicy = req.body.mailing_subsribe_policy; // Membership Access: Public / Approval
-    // var mailingArchivePolicy = req.body.mailing_archive_policy; // List Type
+
+    var radioPublicList = req.body.radio_public_list;
+    var radioPrivateList = req.body.radio_private_list;
+
+    var radioPublicMembership = req.body.radio_public_membership;
+    var radioApprovalMembersip = req.body.radio_approval_membership;
+
+    //TODO: Match radioPublicList, radioPrivateList & radioPublicMembership, radioApprovalMembersip
+    // with mailingSubsribePolicy & mailingArchivePolicy
+    // console.log("radioPublicList: ", radioPublicList);
+    // console.log("radioPrivateList: ", radioPrivateList);
+    // console.log("radioPublicMembership: ", radioPublicMembership);
+    // console.log("radioApprovalMembersip: ", radioApprovalMembersip);
+
+    // Default MM2 Values
+    var mailingSubsribePolicy = "CONFIRM"; // Membership Access: Public / Approval
+    var mailingArchivePolicy = "PUBLIC"; // List Type
 
     var newMailingList = {
       "name": mailingName,
       "admin": mailingEmailAdmin,
-      "password": mailingPassword
-      // ,
-      // "subsribePolicy": mailingSubsribePolicy,
-      // "archivePolicy": mailingArchivePolicy
+      "password": mailingPassword,
+      "subsribePolicy": mailingSubsribePolicy,
+      "archivePolicy": mailingArchivePolicy
     };
     projManagerClient.createMailingList(projectId, newMailingList, function (err, created, mailingListId) {
       console.log("mailing list created: " + created);

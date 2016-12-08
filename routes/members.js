@@ -101,7 +101,10 @@ router.post('/create_member', require('connect-ensure-login').ensureLoggedIn('/l
       if(created && projectId){
         var newMember = {
           orgId: organizationId,
-          tier: req.body.membership_tier,
+          tier: {
+            type: req.body.membership_tier,
+            qualifier: 1 // Optional Tier Level
+          },
           startDate: startDate,
           renewalDate: renewalDate
         };
@@ -330,7 +333,10 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
       logoRef : logoCompanyFileName
     }
     var updatedMember = {
-      tier: req.body.membership_tier,
+      tier: {
+        type: req.body.membership_tier,
+        qualifier: 1 // Optional Tier Level
+      },
       startDate: startDate,
       renewalDate: renewalDate
     }
