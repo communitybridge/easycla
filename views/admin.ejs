@@ -39,7 +39,6 @@
         <td>
           <div class="checkbox">
             <span class="pull-left" style="margin-right: 5px;"><%= users[i].lfId %></span>
-            <!-- <button type="button" class="close pull-left" data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"><span aria-hidden="true">&times;</span></button> -->
             <% if( users[i].lfId != req.session.user.user) { %>
               <a href data-toggle="modal" data-target="#delete-user-modal" data-user="<%= users[i].lfId %>"> &times; </a>
             <% } %>
