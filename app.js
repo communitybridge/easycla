@@ -3,8 +3,8 @@ var passport = require('passport');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var bodyParser = require('body-parser');
-var gulp = require('gulp');
-require('./gulpfile');
+// var gulp = require('gulp');
+// require('./gulpfile');
 
 // if (gulp.tasks.styles) {
 //     console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
