@@ -6,10 +6,10 @@ var bodyParser = require('body-parser');
 var gulp = require('gulp');
 require('./gulpfile');
 
-if (gulp.tasks.styles) {
-    console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
-    gulp.start('styles');
-}
+// if (gulp.tasks.styles) {
+//     console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
+//     gulp.start('styles');
+// }
 
 var app = express();
 
