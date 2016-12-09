@@ -26,36 +26,34 @@
 <div class="hr-divider-keyline"></div>
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-    <!-- <div class="table-responsive"> -->
-      <table class="table">
-        <thead>
-          <tr>
-            <th>MEMBER NAME</th>
-            <th>MEMBERSHIP TIER</th>
-            <th>MEMBER SINCE</th>
-            <th>RENEWAL DATE</th>
-            <th>INVOICE DUE</th>
-            <th>INVOICE STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (memberCompanies){ %>
-            <% if (memberCompanies.length > 0){ %>
-              <% memberCompanies.forEach(function(memberCompany){ %>
-                <tr>
-                  <th scope="row"><%= memberCompany.orgName %></th>
-                  <td><%= memberCompany.tier %></td>
-                  <td><%= memberCompany.startDate %></td>
-                  <td><%= memberCompany.renewalDate %></td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>
-              <% }) %>
-            <% } %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>MEMBER NAME</th>
+          <th>MEMBERSHIP TIER</th>
+          <th>MEMBER SINCE</th>
+          <th>RENEWAL DATE</th>
+          <th>INVOICE DUE</th>
+          <th>INVOICE STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (memberCompanies){ %>
+          <% if (memberCompanies.length > 0){ %>
+            <% memberCompanies.forEach(function(memberCompany){ %>
+              <tr>
+                <th scope="row"><%= memberCompany.orgName %></th>
+                <td><%= memberCompany.tier %></td>
+                <td><%= memberCompany.startDate %></td>
+                <td><%= memberCompany.renewalDate %></td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            <% }) %>
           <% } %>
-        </tbody>
-      </table>
-    <!-- </div> -->
+        <% } %>
+      </tbody>
+    </table>
   </div>
 </div>
 
