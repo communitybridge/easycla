@@ -39,8 +39,8 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var mailingMembershipType = req.body.membership_type_radio;
 
     // Default MM2 Values
-    var mailingSubscribePolicy = "CONFIRM"; // Membership Access: Public / Approval
-    var mailingArchivePolicy = "PUBLIC"; // List Type
+    var mailingSubscribePolicy = "CONFIRM";
+    var mailingArchivePolicy = "PUBLIC";
 
     //TODO: Double check this with CORE-IT Team and run mailman tests
     if(mailingListType == 'PUBLIC') mailingArchivePolicy = "PUBLIC";
@@ -61,7 +61,6 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
       console.log("mailingListId: " + mailingListId);
       return res.redirect('/mailing/' + projectId);
     });
-
   }
 });
 
