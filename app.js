@@ -3,13 +3,6 @@ var passport = require('passport');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var bodyParser = require('body-parser');
-// var gulp = require('gulp');
-// require('./gulpfile');
-
-// if (gulp.tasks.styles) {
-//     console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
-//     gulp.start('styles');
-// }
 
 var app = express();
 
@@ -65,7 +58,15 @@ const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
 app.listen(port, function() {});
 
 var serverBaseURL = process.env['CINCO_CONSOLE_URL'];
-if(process.argv[2] == 'dev') serverBaseURL = 'http://localhost:8081';
+if(process.argv[2] == 'dev') {
+  serverBaseURL = 'http://localhost:8081';
+  var gulp = require('gulp');
+  require('./gulpfile');
+  if (gulp.tasks.styles) {
+      console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
+      gulp.start('styles');
+  }
+}
 if(!serverBaseURL.startsWith('http') ) serverBaseURL = 'http://' + serverBaseURL;
 console.log('serverBaseURL: ' + serverBaseURL);
 
