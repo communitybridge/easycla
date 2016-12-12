@@ -66,6 +66,10 @@ if(process.argv[2] == 'dev') {
       console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
       gulp.start('styles');
   }
+  if (gulp.tasks.scripts) {
+      console.log('Concatenating and minifying JS files from /public/assets/src/js to /public/assets/dist');
+      gulp.start('scripts');
+  }
 }
 if(!serverBaseURL.startsWith('http') ) serverBaseURL = 'http://' + serverBaseURL;
 console.log('serverBaseURL: ' + serverBaseURL);
