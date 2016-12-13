@@ -1,3 +1,4 @@
+var newrelic = require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var CasStrategy = require('passport-cas').Strategy;
