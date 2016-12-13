@@ -44,6 +44,7 @@
     "mocha": "^2.4.5",
     "morgan": "^1.7.0",
     "multer": "^1.2.0",
+    "newrelic": "^1.35.1",
     "passport": "^0.3.2",
     "passport-cas": "^0.1.0",
     "passport-local": "^1.0.0",
@@ -62,7 +63,6 @@
     "gulp-minify-css": "^1.2.4",
     "gulp-uglify": "^2.0.0",
     "lite-server": "^2.2.2",
-    "newrelic": "^1.35.1",
     "typescript": "^1.8.10",
     "typings": "^1.0.4"
   }
