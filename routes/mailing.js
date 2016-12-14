@@ -1,4 +1,4 @@
-var newrelic = require('newrelic');
+if(process.argv[2] != 'dev') require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var request = require('request');

@@ -1,4 +1,4 @@
-var newrelic = require('newrelic');
+if(process.argv[2] != 'dev') require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var request = require('request');
@@ -10,6 +10,7 @@ var cinco_api = require("../lib/api");
 var router = express.Router();
 
 var hostURL = process.env['CINCO_SERVER_URL'];
+
 if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
 if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
 
