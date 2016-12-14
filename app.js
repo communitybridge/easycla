@@ -63,14 +63,9 @@ if(process.argv[2] == 'dev') {
   serverBaseURL = 'http://localhost:8081';
   var gulp = require('gulp');
   require('./gulpfile');
-  if (gulp.tasks.styles) {
-      console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
-      gulp.start('styles');
-  }
-  if (gulp.tasks.scripts) {
-      console.log('Concatenating and minifying JS files from /public/assets/src/js to /public/assets/dist');
-      gulp.start('scripts');
-  }
+  if (gulp.tasks.styles) gulp.start('styles');
+  if (gulp.tasks.scripts) gulp.start('scripts');
+  if (gulp.tasks.watch) gulp.start('watch');
 }
 if(!serverBaseURL.startsWith('http') ) serverBaseURL = 'http://' + serverBaseURL;
 console.log('serverBaseURL: ' + serverBaseURL);
