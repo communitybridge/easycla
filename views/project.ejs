@@ -38,7 +38,12 @@
 <div class="col-sm-12 content">
   <br>
   <div class="col-sm-3 content">
-    <div class="subtitle-content-project">Email Aliases</div>
+    <div class="subtitle-content-project">
+      Email Aliases
+      <a href="#configure-email-alias-modal" data-toggle="modal" data-project-id="<%= project.id%>" data-email-alias="Mailing List TEST Name" data-email-alias-id="INSERT_MAILING_LIST_ID" style="margin-left: 5px;">
+        <span class="icon icon-cog"></span>
+      </a>
+    </div>
     <div class="add-edit-member-companies-label"><a href="/aliases/<%= project.id %>">+ Add</a></div>
     <div class="hr-divider-keyline"></div>
     <div class="email-aliases-projects">
@@ -150,5 +155,7 @@
 
 <%- include('partials/mailing_list_modal') %>
 <%- include('partials/manage_mailing_list_modal') %>
+<%- include('partials/configure_mailing_list_modal') %>
+<%- include('partials/configure_email_alias_modal') %>
 
 <%- include('partials/footer') %>
