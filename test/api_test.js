@@ -838,11 +838,13 @@ describe('api', function () {
 
       it('POST /projects/{id}/mailinglists', function (done) {
         var sampleMailingList = {
-          "name": "Test Mailing List",
+          "name": "newlist1",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
-          "archivePolicy": "PRIVATE"
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
         };
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
@@ -876,11 +878,13 @@ describe('api', function () {
 
       it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var mailingListToBeRemoved = {
-          "name": "TBR Mailing List",
+          "name": "newlist2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
-          "archivePolicy": "PRIVATE"
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
         };
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
@@ -897,11 +901,13 @@ describe('api', function () {
 
       it('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var sampleMailingList = {
-          "name": "Another Sample Mailing List",
+          "name": "newlist3",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
-          "archivePolicy": "PRIVATE"
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
         };
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
@@ -918,11 +924,13 @@ describe('api', function () {
 
       it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
-          "name": "Another Sample Mailing List",
+          "name": "newlist4",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
-          "archivePolicy": "PRIVATE"
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
         };
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
@@ -943,11 +951,13 @@ describe('api', function () {
 
       it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
-          "name": "Another Sample Mailing List",
+          "name": "newlist5",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
-          "archivePolicy": "PRIVATE"
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
         };
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
