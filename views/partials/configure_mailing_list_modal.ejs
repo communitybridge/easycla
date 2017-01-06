@@ -23,7 +23,46 @@
         <form class="" action="/addParticipantToMailingList/<%= project.id %>" method="post">
           <div class="col-sm-12 content">
             <div class="col-sm-12 content">
-              <input type="text" name="participant_email" class="modal-email-address-input" placeholder="Add Participant Email Address">
+              <div class="col-sm-12 content">
+                <div class="radio custom-control custom-radio" >
+                  <label>
+                    <input type="radio" value="DEFAULT_MM2" name="alias_provider_radio" checked>
+                    <span class="custom-control-indicator"></span>
+                    Default Mailman 2
+                  </label>
+                </div>
+                <div class="radio-inline custom-control custom-radio" >
+                  <label>
+                    <input type="radio" name="alias_provider_radio" value="CUSTOM_MM2">
+                    <span class="custom-control-indicator"></span>
+                    Custom Mailman 2
+
+                  </label>
+                </div>
+                <input type="text" name="custom_mailman2" style="margin-left: 10px" placeholder="">
+                <div class="radio custom-control custom-radio" >
+                  <label>
+                    <input type="radio" name="alias_provider_radio" value="GOOGLE_GROUPS">
+                    <span class="custom-control-indicator"></span>
+                    Google Groups
+                  </label>
+                </div>
+                <div class="radio custom-control custom-radio" >
+                  <label>
+                    <input type="radio" name="alias_provider_radio" value="MM3">
+                    <span class="custom-control-indicator"></span>
+                    Mailman 3
+                  </label>
+                </div>
+                <div class="radio custom-control custom-radio" >
+                  <label>
+                    <input type="radio" name="alias_provider_radio" value="OTHERS">
+                    <span class="custom-control-indicator"></span>
+                    Others
+                  </label>
+                </div>
+                <input type="hidden" id="alias_id" name="alias_id">
+              </div>
               <input type="hidden" id="mailing_list_id" name="mailing_list_id">
             </div>
           </div>
@@ -46,6 +85,7 @@
     var mailingListId = button.data('mailing-list-id');
     var modal = $(this);
     modal.find('[name=mailing-list-title]').text(mailingListName  + " participants");
+    modal.find('[name=mailing-list-title]').text(" Mailing List Providers");
     $('#mailing_list_id').val(mailingListId);
     // $("#participants_table").remove();
     // $('#participants_div').append(  '<table id="participants_table" class="table" />' );
