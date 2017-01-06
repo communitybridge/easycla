@@ -111,7 +111,12 @@
 
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-    <div class="subtitle-content-project">Mailing Lists</div>
+    <div class="subtitle-content-project">
+      Mailing Lists
+      <a href="#configure-mailing-list-modal" data-toggle="modal" data-project-id="<%= project.id%>" data-email-alias="Mailing List TEST Name" data-email-alias-id="INSERT_MAILING_LIST_ID" style="margin-left: 5px;">
+        <span class="icon icon-cog"></span>
+      </a>
+    </div>
     <a href="#create-mailing-list-modal" data-toggle="modal" data-project-id="<%= project.id %>" style="margin-left: 50px;">
       <div class="add-edit-member-companies-label">+ Create New List</div>
     </a>
