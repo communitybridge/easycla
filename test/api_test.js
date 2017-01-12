@@ -904,32 +904,36 @@ describe('api', function () {
         });
       });
 
-      // it('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
-      //   var sampleMailingList = {
-      //     "name": "newlist3",
-      //     "admin": "admin@domain.org",
-      //     "password": "test_secret_password",
-      //     "subscribePolicy": "CONFIRM",
-      //     "archivePolicy": "PRIVATE",
-      //     "urlhost": "lists.domain.org",
-      //     "emailhost": "lists.domain.org"
-      //   };
-      //   projManagerClient.getMyProjects(function (err, projects) {
-      //     assert.ifError(err);
-      //     var projectId = projects[0].id;
-      //     projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
-      //       projManagerClient.getMailingListFromProject(projectId, mailinglistId, function (err, mailingList) {
-      //         assert.ifError(err);
-      //         assert(mailingList);
-      //         done();
-      //       });
-      //     });
-      //   });
-      // });
+      var sampleMailingListName = randomUserName();
+
+      it('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
+        var sampleMailingList = {
+          "name": sampleMailingListName,
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subscribePolicy": "CONFIRM",
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            projManagerClient.getMailingListFromProject(projectId, sampleMailingListName, function (err, mailingList) {
+              assert.ifError(err);
+              assert(mailingList);
+              done();
+            });
+          });
+        });
+      });
+
+      // var sampleMailingListNameParticipants = randomUserName();
       //
       // it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
       //   var sampleMailingList = {
-      //     "name": "newlist4",
+      //     "name": sampleMailingListNameParticipants,
       //     "admin": "admin@domain.org",
       //     "password": "test_secret_password",
       //     "subscribePolicy": "CONFIRM",
@@ -953,7 +957,7 @@ describe('api', function () {
       //     });
       //   });
       // });
-      //
+
       // it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
       //   var sampleMailingList = {
       //     "name": "newlist5",
