@@ -859,18 +859,18 @@ describe('api', function () {
           });
         });
       });
-      //
-      // it('GET /projects/{id}/mailinglists', function (done) {
-      //   projManagerClient.getMyProjects(function (err, projects) {
-      //     assert.ifError(err);
-      //     var projectId = projects[0].id;
-      //     projManagerClient.getMailingLists(projectId, function (err, mailingList) {
-      //       assert.ifError(err);
-      //       assert(mailingList);
-      //       done();
-      //     });
-      //   })
-      // });
+
+      it('GET /projects/{id}/mailinglists', function (done) {
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.getMailingLists(projectId, function (err, mailingLists) {
+            assert.ifError(err);
+            assert(mailingLists);
+            done();
+          });
+        })
+      });
 
       it('GET /projects/{id}/mailinglists 404', function (done) {
         projManagerClient.getMailingLists("not_a_real_id", function (err, mailingList) {
