@@ -929,34 +929,34 @@ describe('api', function () {
         });
       });
 
-      // var sampleMailingListNameParticipants = randomUserName();
-      //
-      // it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
-      //   var sampleMailingList = {
-      //     "name": sampleMailingListNameParticipants,
-      //     "admin": "admin@domain.org",
-      //     "password": "test_secret_password",
-      //     "subscribePolicy": "CONFIRM",
-      //     "archivePolicy": "PRIVATE",
-      //     "urlhost": "lists.domain.org",
-      //     "emailhost": "lists.domain.org"
-      //   };
-      //   projManagerClient.getMyProjects(function (err, projects) {
-      //     assert.ifError(err);
-      //     var projectId = projects[0].id;
-      //     projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
-      //       var newParticipant = {
-      //         "address": "participant1@test.com"
-      //       };
-      //       projManagerClient.addParticipantToMailingList(projectId, mailinglistId, newParticipant, function (err, created, participantEmail) {
-      //         assert.ifError(err);
-      //         assert(created);
-      //         assert(participantEmail);
-      //         done();
-      //       });
-      //     });
-      //   });
-      // });
+      var sampleParticipantsMailingListName = randomUserName();
+
+      it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+        var sampleMailingList = {
+          "name": sampleParticipantsMailingListName,
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subscribePolicy": "OPEN",
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            var newParticipant = {
+              "address": "participant1@test.com"
+            };
+            projManagerClient.addParticipantToMailingList(projectId, sampleParticipantsMailingListName, newParticipant, function (err, created, participantEmail) {
+              assert.ifError(err);
+              assert(created);
+              assert(participantEmail);
+              done();
+            });
+          });
+        });
+      });
 
       // it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
       //   var sampleMailingList = {
