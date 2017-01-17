@@ -958,33 +958,35 @@ describe('api', function () {
         });
       });
 
-      // it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
-      //   var sampleMailingList = {
-      //     "name": "newlist5",
-      //     "admin": "admin@domain.org",
-      //     "password": "test_secret_password",
-      //     "subscribePolicy": "CONFIRM",
-      //     "archivePolicy": "PRIVATE",
-      //     "urlhost": "lists.domain.org",
-      //     "emailhost": "lists.domain.org"
-      //   };
-      //   projManagerClient.getMyProjects(function (err, projects) {
-      //     assert.ifError(err);
-      //     var projectId = projects[0].id;
-      //     projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
-      //       var participantToBeRemoved = {
-      //         "address": "participantTBR@test.com"
-      //       };
-      //       projManagerClient.addParticipantToMailingList(projectId, mailinglistId, participantToBeRemoved, function (err, created, participantEmail) {
-      //         projManagerClient.removeParticipantFromMailingList(projectId, mailinglistId, participantEmail, function (err, removed) {
-      //           assert.ifError(err);
-      //           assert(removed);
-      //           done();
-      //         });
-      //       });
-      //     });
-      //   });
-      // });
+      var sampleParticipantsMailingListNameTBR = randomUserName();
+
+      it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+        var sampleMailingList = {
+          "name": sampleParticipantsMailingListNameTBR,
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subscribePolicy": "OPEN",
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            var participantToBeRemoved = {
+              "address": "participantTBR@test.com"
+            };
+            projManagerClient.addParticipantToMailingList(projectId, sampleParticipantsMailingListNameTBR, participantToBeRemoved, function (err, created, participantEmail) {
+              projManagerClient.removeParticipantFromMailingList(projectId, sampleParticipantsMailingListNameTBR, participantEmail, function (err, removed) {
+                assert.ifError(err);
+                assert(removed);
+                done();
+              });
+            });
+          });
+        });
+      });
 
     });
   });
