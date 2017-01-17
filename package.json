@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "develop": "tsc && concurrently \"npm run tsc:w\" \"npm run start\" ",
+    "develop": "nodemon --ignore /public/assets/dist app.js dev",
     "lite": "lite-server",
     "postinstall": "./node_modules/.bin/typings install",
     "test": "./node_modules/.bin/mocha",
@@ -45,6 +45,7 @@
     "morgan": "^1.7.0",
     "multer": "^1.2.0",
     "newrelic": "^1.35.1",
+    "nodemon": "^1.11.0",
     "passport": "^0.3.2",
     "passport-cas": "^0.1.0",
     "passport-local": "^1.0.0",

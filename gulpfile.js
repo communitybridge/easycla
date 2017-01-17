@@ -1,7 +1,7 @@
-var gulp = require('gulp');
-var minifyCSS = require('gulp-minify-css');
-var uglify = require('gulp-uglify');
-var concat = require('gulp-concat');
+var gulp = require('gulp'),
+    minifyCSS = require('gulp-minify-css'),
+    uglify = require('gulp-uglify'),
+    concat = require('gulp-concat');
 
 gulp.task('styles', function(){
   console.log('Concatenating and minifying CSS files from /public/assets/src/css to /public/assets/dist');
