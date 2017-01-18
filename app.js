@@ -60,7 +60,6 @@ app.listen(port, function() {});
 
 var serverBaseURL = process.env['CINCO_CONSOLE_URL'];
 if(process.argv[2] == 'dev') {
-  serverBaseURL = 'http://localhost:8081';
   var gulp = require('gulp');
   require('./gulpfile');
   if (gulp.tasks.styles) gulp.start('styles');

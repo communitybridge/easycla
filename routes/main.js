@@ -13,7 +13,6 @@ const integration_user = process.env['CONSOLE_INTEGRATION_USER'];
 const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
 
 var hostURL = process.env['CINCO_SERVER_URL'];
-if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
 if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
 console.log("hostURL: " + hostURL);
 
