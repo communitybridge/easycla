@@ -12,12 +12,12 @@ function randomUserName() {
 
 describe('api', function () {
 
-  var apiObj = api("http://localhost:5000");
+  var apiObj = api(process.env['CINCO_SERVER_URL']);
 
   describe('Properties', function () {
     describe('apiUrlRoot', function () {
       it('The passed in api root parameter should be available on the returned object', function () {
-        assert.equal(apiObj.apiRootUrl, "http://localhost:5000/");
+        assert.equal(apiObj.apiRootUrl, process.env['CINCO_SERVER_URL']);
       });
     });
   });
