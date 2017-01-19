@@ -17,7 +17,7 @@ describe('api', function () {
   describe('Properties', function () {
     describe('apiUrlRoot', function () {
       it('The passed in api root parameter should be available on the returned object', function () {
-        assert.equal(apiObj.apiRootUrl, process.env['CINCO_SERVER_URL']);
+        assert.equal(apiObj.apiRootUrl, process.env['CINCO_SERVER_URL'] + '/');
       });
     });
   });
