@@ -10,8 +10,6 @@ var cinco_api = require("../lib/api");
 var router = express.Router();
 
 var hostURL = process.env['CINCO_SERVER_URL'];
-
-if(process.argv[2] == 'dev') hostURL = 'http://localhost:5000';
 if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
 
 var cinco = cinco_api(hostURL);
