@@ -988,6 +988,41 @@ describe('api', function () {
         });
       });
 
+      var sampleParticipantsMailingListName2 = randomUserName();
+
+      it('GET /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+        var sampleMailingList = {
+          "name": sampleParticipantsMailingListName2,
+          "admin": "admin@domain.org",
+          "password": "test_secret_password",
+          "subscribePolicy": "OPEN",
+          "archivePolicy": "PRIVATE",
+          "urlhost": "lists.domain.org",
+          "emailhost": "lists.domain.org"
+        };
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.createMailingList(projectId, sampleMailingList, function (err, created, mailinglistId) {
+            var newParticipant = {
+              "address": "participant1@test.com"
+            };
+            var newParticipant2 = {
+              "address": "participant2@test.com"
+            };
+            projManagerClient.addParticipantToMailingList(projectId, sampleParticipantsMailingListName2, newParticipant, function (err, created, participantEmail) {
+              projManagerClient.addParticipantToMailingList(projectId, sampleParticipantsMailingListName2, newParticipant2, function (err, created, participantEmail) {
+                projManagerClient.getParticipantsFromMailingList(projectId, sampleParticipantsMailingListName2, function (err, participants) {
+                  assert.ifError(err);
+                  assert(participants);
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+
     });
   });
 });
