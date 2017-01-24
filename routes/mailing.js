@@ -19,9 +19,9 @@ router.get('/mailing/:projectId', require('connect-ensure-login').ensureLoggedIn
     var projectId = req.params.projectId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
-      projManagerClient.getMailingLists(projectId, function (err, mailingList) {
-        console.log(mailingList);
-        res.render('mailing', { mailingList: mailingList, project:project });
+      projManagerClient.getMailingLists(projectId, function (err, mailingLists) {
+        console.log(mailingLists);
+        res.render('mailing', { mailingLists: mailingLists, project:project });
       });
     });
   }
@@ -35,18 +35,8 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var mailingName = req.body.mailing_name;
     var mailingEmailAdmin = req.body.mailing_email_admin;
     var mailingPassword = req.body.mailing_password;
-    var mailingListType = req.body.list_type_radio;
-    var mailingMembershipType = req.body.membership_type_radio;
-
-    // Default MM2 Values
-    var mailingSubscribePolicy = "CONFIRM";
-    var mailingArchivePolicy = "PUBLIC";
-
-    //TODO: Double check this with CORE-IT Team and run mailman tests
-    if(mailingListType == 'PUBLIC') mailingArchivePolicy = "PUBLIC";
-    if(mailingListType == 'PRIVATE') mailingArchivePolicy = "PRIVATE";
-    if(mailingMembershipType == 'PUBLIC') mailingSubscribePolicy = "CONFIRM";
-    if(mailingMembershipType == 'APPROVAL') mailingSubscribePolicy = "APPROVAL";
+    var mailingSubscribePolicy = req.body.subscribe_policy_radio;
+    var mailingArchivePolicy = req.body.archive_policy_radio;
 
     var newMailingList = {
       "name": mailingName,

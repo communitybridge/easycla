@@ -15,37 +15,53 @@
           </div>
         </div>
         <div class="modal-body-mailing">
+          <form class="" action="/mailing/<%= project.id %>" method="post">
           <input type="hidden" name="project_id" id="project_id"  value="">
           <br>
           <div class="">
-            <span style="margin-left: 30px;">List Type:</span>
+            <span style="margin-left: 30px;">Subscribe Policy:</span>
             <div class="radio-inline custom-control custom-radio" >
               <label>
-                <input type="radio" id="radio_public_list" value="PUBLIC" name="list_type_radio">
+                <input type="radio" name="subscribe_policy_radio" value="OPEN" checked>
                 <span class="custom-control-indicator"></span>
-                Public
+                Open
               </label>
             </div>
             <div class="radio-inline custom-control custom-radio" >
               <label>
-                <input type="radio" id="radio_private_list" name="list_type_radio" value="PRIVATE" checked>
+                <input type="radio" name="subscribe_policy_radio" value="CONFIRM">
                 <span class="custom-control-indicator"></span>
-                Private
+                Confirm
               </label>
             </div>
-            <span style="margin-left: 30px;">Membership Access:</span>
-            <div class="radio-inline custom-control custom-radio">
+            <div class="radio-inline custom-control custom-radio" >
               <label>
-                <input type="radio" id="radio_public_membership" value="PUBLIC" name="membership_type_radio">
-                <span class="custom-control-indicator"></span>
-                Public
-              </label>
-            </div>
-            <div class="radio-inline custom-control custom-radio">
-              <label>
-                <input type="radio" id="radio_approval_membership" value="APPROVAL" name="membership_type_radio" checked>
+                <input type="radio" name="subscribe_policy_radio" value="APPROVAL">
                 <span class="custom-control-indicator"></span>
                 Approval
+              </label>
+            </div>
+            <div class="radio-inline custom-control custom-radio" >
+              <label>
+                <input type="radio" name="subscribe_policy_radio" value="CONFIRM_AND_APPROVAL">
+                <span class="custom-control-indicator"></span>
+                Confirm and Approval
+              </label>
+            </div>
+            <br><br>
+            <span style="margin-left: 30px;">Archive Policy:</span>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="archive_policy_radio" value="PUBLIC">
+                <span class="custom-control-indicator"></span>
+                Public
+              </label>
+            </div>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="archive_policy_radio" value="PRIVATE" checked>
+                <span class="custom-control-indicator"></span>
+                Private
               </label>
             </div>
           </div>
@@ -64,6 +80,7 @@
               </div>
             </div>
           </div>
+          </form>
         </div>
       </div>
     </form>
