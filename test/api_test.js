@@ -873,7 +873,7 @@ describe('api', function () {
       });
 
       it('GET /projects/{id}/mailinglists 404', function (done) {
-        projManagerClient.getMailingLists("not_a_real_id", function (err, mailingList) {
+        projManagerClient.getMailingLists("not_a_real_id", function (err, mailingLists) {
           assert.equal(err.statusCode, 404);
           done();
         });
