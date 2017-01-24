@@ -35,7 +35,9 @@
 <div class="hr-divider-keyline"></div>
 <div class="container-fluid">
   <div class="col-sm-12 content mailing-list-project">
-    <div class="mailing-list-control">
+
+    <!-- Mailing list row template -->
+    <!-- <div class="mailing-list-control">
       <div class="col-sm-2 mailing-list-title-project">
         <strong>New Mailing List Title #1</strong>
       </div>
@@ -61,7 +63,54 @@
           <button type="button" name="button" class="mailing-list-button-project">Manage</button>
         </a>
       </div>
-    </div>
+    </div> -->
+
+      <% if (mailingLists){ %>
+        <% mailingLists.forEach(function(mailingList){ %>
+          <div class="mailing-list-control">
+            <div class="col-sm-1 mailing-list-title-project">
+              <strong><%= mailingList.name %></strong>
+            </div>
+            <div class="col-sm-9">
+              <div class="col-sm-12">
+                <div class="col-sm-3">
+                  <div class="mailing-list-hr-divider-vertical-project"></div>
+                  <div class="mailing-list-counter-project">
+                    <div class="">
+                      <% if (mailingList.memberCount == 1){ %>
+                        <%= mailingList.memberCount %> Participant
+                      <% } else { %>
+                        <%= mailingList.memberCount %> Participants
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-5">
+                  <div class="mailing-list-hr-divider-vertical-project"></div>
+                  <div class="mailing-list-counter-project">
+                    Subscribe Policy: <%= mailingList.subscribePolicy %>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="mailing-list-hr-divider-vertical-project"></div>
+                  <div class="mailing-list-counter-project">
+                    Archive Policy: <%= mailingList.archivePolicy %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-2">
+              <div class="mailing-list-last-edited-project">
+                <!-- Last updated - -->
+              </div>
+              <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+              <!--  insert Manage button -->
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+
+
   </div>
 </div>
 
