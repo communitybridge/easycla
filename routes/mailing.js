@@ -19,8 +19,7 @@ router.get('/mailing/:projectId', require('connect-ensure-login').ensureLoggedIn
     var projectId = req.params.projectId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
-      projManagerClient.getMailingLists(projectId, function (err, mailingLists) {
-        console.log(mailingLists);
+      projManagerClient.getMailingListsAndParticipants(projectId, function (err, mailingLists) {
         res.render('mailing', { mailingLists: mailingLists, project:project });
       });
     });

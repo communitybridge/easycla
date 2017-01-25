@@ -47,22 +47,22 @@
     var modal = $(this);
     modal.find('[name=mailing-list-title]').text(mailingListName  + " participants");
     $('#mailing_list_id').val(mailingListId);
-    // $("#participants_table").remove();
-    // $('#participants_div').append(  '<table id="participants_table" class="table" />' );
-    // $('#participants_div table')
-    // .append( '<tr>' +
-    //   '<td><strong>Email</strong></td>'+
-    //   '<td><strong>Remove</strong></td>'+
-    // '</tr>' );
-    // if(participants.length >= 1){
-    //   for(i=0; i<participants.length; i++){
-    //     $('#participants_div table')
-    //     .append( '<tr>'+
-    //       '<td>' + participants[i].address + '</td>' +
-    //       '<td> &nbsp  &nbsp &nbsp <a href="/removeParticipantFromMailingList/<%= project.id %>/' +
-    //       mailingListId + '/' + encodeURI(participants[i].address) + '"> &times; </a> </td>' +
-    //     '</tr>' );
-    //   }
-    // }
+    $("#participants_table").remove();
+    $('#participants_div').append(  '<table id="participants_table" class="table" />' );
+    $('#participants_div table')
+    .append( '<tr>' +
+      '<td><strong>Email</strong></td>'+
+      '<td><strong>Remove</strong></td>'+
+    '</tr>' );
+    if(participants.length >= 1){
+      for(i=0; i<participants.length; i++){
+        $('#participants_div table')
+        .append( '<tr>'+
+          '<td>' + participants[i].address + '</td>' +
+          '<td> &nbsp  &nbsp &nbsp <a href="/removeParticipantFromMailingList/<%= project.id %>/' +
+          mailingListId + '/' + encodeURI(participants[i].address) + '"> &times; </a> </td>' +
+        '</tr>' );
+      }
+    }
   });
 </script>
