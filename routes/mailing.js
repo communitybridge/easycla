@@ -57,12 +57,12 @@ router.post('/addParticipantToMailingList/:projectId/', require('connect-ensure-
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var projectId = req.params.projectId;
-    var mailinglistId = req.body.mailing_list_id;
+    var mailinglistName = req.body.mailing_list_name;
     var participant_email = req.body.participant_email;
     var newParticipant = {
       "address": participant_email
     };
-    projManagerClient.addParticipantToMailingList(projectId, mailinglistId, newParticipant, function (err, created, response) {
+    projManagerClient.addParticipantToMailingList(projectId, mailinglistName, newParticipant, function (err, created, response) {
       return res.redirect('/mailing/' + projectId);
     });
   }
