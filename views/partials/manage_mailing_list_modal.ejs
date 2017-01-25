@@ -25,6 +25,7 @@
             <div class="col-sm-12 content">
               <input type="text" name="participant_email" class="modal-email-address-input" placeholder="Add Participant Email Address">
               <input type="hidden" id="mailing_list_id" name="mailing_list_id">
+              <input type="hidden" id="mailing_list_name" name="mailing_list_name">
             </div>
           </div>
           <div class="col-sm-12 text-center">
@@ -47,6 +48,7 @@
     var modal = $(this);
     modal.find('[name=mailing-list-title]').text(mailingListName  + " participants");
     $('#mailing_list_id').val(mailingListId);
+    $('#mailing_list_name').val(mailingListName);
     $("#participants_table").remove();
     $('#participants_div').append(  '<table id="participants_table" class="table" />' );
     $('#participants_div table')
