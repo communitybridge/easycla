@@ -76,9 +76,24 @@ router.get('/removeParticipantFromMailingList/:projectId/:mailingListName/:parti
     var participantTBR = req.params.participantEmail;
     projManagerClient.removeParticipantFromMailingList(projectId, mailingListName, participantTBR, function (err, removed) {
       if (err) {
-        console.log("Mailing List " + mailingListName + " Error: " + err);
+        console.log("Mailing List [" + mailingListName + "] Error: " + err);
       }
-      console.log("Mailing List " + mailingListName + " Removed: " + removed);
+      console.log("Participant [" + participantEmail + "] removed from mailing list [" + mailingListName + "]: " + removed);
+      return res.redirect('/mailing/' + projectId);
+    });
+  }
+});
+
+router.get('/removeMailingList/:projectId/:mailingListName', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.params.projectId;
+    var mailingListName = req.params.mailingListName;
+    projManagerClient.removeMailingList(projectId, mailingListName, function (err, removed) {
+      if (err) {
+        console.log("Mailing List [" + mailingListName + "] Error: " + err);
+      }
+      console.log("Mailing List [" + mailingListName + "] Removed: " + removed);
       return res.redirect('/mailing/' + projectId);
     });
   }
