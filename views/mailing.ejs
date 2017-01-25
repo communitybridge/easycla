@@ -116,13 +116,13 @@
               <div class="mailing-list-last-edited-project">
                 <!-- Last updated - -->
               </div>
-
+              <% if (mailingList.participants != ''){ %>
               <a href="#manage-mailing-list-modal" data-toggle="modal" data-mailing-list-name="<%= mailingList.name %>" data-mailing-list-id="<%= mailingList.id %>" data-participants="<%= JSON.stringify(mailingList.participants) %>" style="margin-left: 50px;">
+              <% } else { %>
+              <a href="#manage-mailing-list-modal" data-toggle="modal" data-mailing-list-name="<%= mailingList.name %>" data-mailing-list-id="<%= mailingList.id %>" data-participants="" style="margin-left: 50px;">
+              <% } %>
                 <button type="button" name="button" class="mailing-list-button-project">Manage</button>
               </a>
-
-              <!-- <button type="button" name="button" class="mailing-list-button-project">Manage</button> -->
-              <!--  insert Manage button -->
             </div>
           </div>
         <% }) %>

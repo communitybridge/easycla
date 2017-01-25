@@ -60,7 +60,7 @@
         .append( '<tr>'+
           '<td>' + participants[i].address + '</td>' +
           '<td> &nbsp  &nbsp &nbsp <a href="/removeParticipantFromMailingList/<%= project.id %>/' +
-          mailingListId + '/' + encodeURI(participants[i].address) + '"> &times; </a> </td>' +
+          mailingListName + '/' + encodeURI(participants[i].address) + '"> &times; </a> </td>' +
         '</tr>' );
       }
     }
