@@ -1023,6 +1023,19 @@ describe('api', function () {
         });
       });
 
+      it('GET /projects/{id}/mailinglists && participants', function (done) {
+        this.timeout(20000);
+        projManagerClient.getMyProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.getMailingListsAndParticipants(projectId, function (err, mailingLists) {
+            assert.ifError(err);
+            assert(mailingLists);
+            done();
+          });
+        })
+      });
+
     });
   });
 });

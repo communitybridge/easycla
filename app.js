@@ -31,6 +31,8 @@ app.use(require('express-session')({ secret: process.env['SESSION_SECRET'] != nu
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.disable('x-powered-by')
+
 app.use(function (req, res, next) {
   res.locals.req = req;
   next();
