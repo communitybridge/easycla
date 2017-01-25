@@ -66,6 +66,9 @@
     </div> -->
 
       <% if (mailingLists){ %>
+
+        <%= mailingLists.length %> mailing lists
+
         <% mailingLists.forEach(function(mailingList){ %>
           <div class="mailing-list-control">
             <div class="col-sm-1 mailing-list-title-project">
@@ -81,6 +84,16 @@
                         <%= mailingList.memberCount %> Participant
                       <% } else { %>
                         <%= mailingList.memberCount %> Participants
+                      <% } %>
+                      <% if (mailingList.participants != ''){ %>
+                        <span class="dropdown-toggle" data-toggle="dropdown">
+                          &nbsp;  &nbsp; <span class="caret"></span>  &nbsp; &nbsp;
+                        </span>
+                        <ul class="dropdown-menu pull-right" role="menu" aria-labelledby="menu1">
+                          <% mailingList.participants.forEach(function(participant){ %>
+                            <li role="presentation"><a role="menuitem" tabindex="-1"><%= participant.address %></a></li>
+                          <% }) %>
+                        </ul>
                       <% } %>
                     </div>
                   </div>
@@ -103,7 +116,12 @@
               <div class="mailing-list-last-edited-project">
                 <!-- Last updated - -->
               </div>
-              <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+
+              <a href="#manage-mailing-list-modal" data-toggle="modal" data-mailing-list-name="<%= mailingList.name %>" data-mailing-list-id="<%= mailingList.id %>" data-participants="<%= JSON.stringify(mailingList.participants) %>" style="margin-left: 50px;">
+                <button type="button" name="button" class="mailing-list-button-project">Manage</button>
+              </a>
+
+              <!-- <button type="button" name="button" class="mailing-list-button-project">Manage</button> -->
               <!--  insert Manage button -->
             </div>
           </div>
