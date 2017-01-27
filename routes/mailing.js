@@ -78,7 +78,7 @@ router.get('/removeParticipantFromMailingList/:projectId/:mailingListName/:parti
       if (err) {
         console.log("Mailing List [" + mailingListName + "] Error: " + err);
       }
-      console.log("Participant [" + participantEmail + "] removed from mailing list [" + mailingListName + "]: " + removed);
+      console.log("Participant [" + participantTBR + "] removed from mailing list [" + mailingListName + "]: " + removed);
       return res.redirect('/mailing/' + projectId);
     });
   }
