@@ -16,70 +16,100 @@
         </div>
         <div class="modal-body-mailing">
           <form class="" action="/mailing/<%= project.id %>" method="post">
-          <input type="hidden" name="project_id" id="project_id"  value="">
-          <br>
-          <div class="">
-            <span style="margin-left: 30px;">Subscribe Policy:</span>
-            <div class="radio-inline custom-control custom-radio" >
-              <label>
-                <input type="radio" name="subscribe_policy_radio" value="OPEN" checked>
-                <span class="custom-control-indicator"></span>
-                Open
-              </label>
-            </div>
-            <div class="radio-inline custom-control custom-radio" >
-              <label>
-                <input type="radio" name="subscribe_policy_radio" value="CONFIRM">
-                <span class="custom-control-indicator"></span>
-                Confirm
-              </label>
-            </div>
-            <div class="radio-inline custom-control custom-radio" >
-              <label>
-                <input type="radio" name="subscribe_policy_radio" value="APPROVAL">
-                <span class="custom-control-indicator"></span>
-                Approval
-              </label>
-            </div>
-            <div class="radio-inline custom-control custom-radio" >
-              <label>
-                <input type="radio" name="subscribe_policy_radio" value="CONFIRM_AND_APPROVAL">
-                <span class="custom-control-indicator"></span>
-                Confirm and Approval
-              </label>
-            </div>
-            <br><br>
-            <span style="margin-left: 30px;">Archive Policy:</span>
-            <div class="radio-inline custom-control custom-radio">
-              <label>
-                <input type="radio" name="archive_policy_radio" value="PUBLIC">
-                <span class="custom-control-indicator"></span>
-                Public
-              </label>
-            </div>
-            <div class="radio-inline custom-control custom-radio">
-              <label>
-                <input type="radio" name="archive_policy_radio" value="PRIVATE" checked>
-                <span class="custom-control-indicator"></span>
-                Private
-              </label>
-            </div>
-          </div>
-          <div class="modal-body-mailing-list-admin">
+            <% if (mailingLists){ %>
+              <% if (mailingLists.length == 0){ %>
+                <!-- TODO: only show mailing list providers options when there is no mailing lists -->
+              <% } %>
+            <% } %>
+                <br><br>
+                <span style="margin-left: 30px;">Mailing List Provider:</span>
+                <div class="radio-inline custom-control custom-radio">
+                  <label>
+                    <input type="radio" name="mailing_list_type_radio" value="MM2" checked>
+                    <span class="custom-control-indicator"></span>
+                    Mailman 2
+                  </label>
+                </div>
+                <div class="radio-inline custom-control custom-radio">
+                  <label>
+                    <input type="radio" name="mailing_list_type_radio" value="MM3">
+                    <span class="custom-control-indicator"></span>
+                    Mailman 3
+                  </label>
+                </div>
+                <div class="radio-inline custom-control custom-radio">
+                  <label>
+                    <input type="radio" name="mailing_list_type_radio" value="GOOGLE_GROUPS">
+                    <span class="custom-control-indicator"></span>
+                    Google Groups
+                  </label>
+                </div>
+                <br><br>
+
+            <input type="hidden" name="project_id" id="project_id"  value="">
             <br>
-            <span style="margin-left:12px;">Mailing List Admin</span>
-            <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com">
-            <br><br>
-            <span style="margin-left:12px;">Mailing List Password</span>
-            <input type="password" name="mailing_password" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password">
-          </div>
-          <div class="container-fluid">
-            <div class="col-sm-12 content mailing-list-project">
-              <div class="button-save-changes-edit-project-div">
-                <input type="submit" class="button-save-changes-edit-project" value="Save">
+            <div class="">
+              <span style="margin-left: 30px;">Subscribe Policy:</span>
+              <div class="radio-inline custom-control custom-radio" >
+                <label>
+                  <input type="radio" name="subscribe_policy_radio" value="OPEN" checked>
+                  <span class="custom-control-indicator"></span>
+                  Open
+                </label>
+              </div>
+              <div class="radio-inline custom-control custom-radio" >
+                <label>
+                  <input type="radio" name="subscribe_policy_radio" value="CONFIRM">
+                  <span class="custom-control-indicator"></span>
+                  Confirm
+                </label>
+              </div>
+              <div class="radio-inline custom-control custom-radio" >
+                <label>
+                  <input type="radio" name="subscribe_policy_radio" value="APPROVAL">
+                  <span class="custom-control-indicator"></span>
+                  Approval
+                </label>
+              </div>
+              <div class="radio-inline custom-control custom-radio" >
+                <label>
+                  <input type="radio" name="subscribe_policy_radio" value="CONFIRM_AND_APPROVAL">
+                  <span class="custom-control-indicator"></span>
+                  Confirm and Approval
+                </label>
+              </div>
+              <br><br>
+              <span style="margin-left: 30px;">Archive Policy:</span>
+              <div class="radio-inline custom-control custom-radio">
+                <label>
+                  <input type="radio" name="archive_policy_radio" value="PUBLIC">
+                  <span class="custom-control-indicator"></span>
+                  Public
+                </label>
+              </div>
+              <div class="radio-inline custom-control custom-radio">
+                <label>
+                  <input type="radio" name="archive_policy_radio" value="PRIVATE" checked>
+                  <span class="custom-control-indicator"></span>
+                  Private
+                </label>
               </div>
             </div>
-          </div>
+            <div class="modal-body-mailing-list-admin">
+              <br>
+              <span style="margin-left:12px;">Mailing List Admin</span>
+              <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com">
+              <br><br>
+              <span style="margin-left:12px;">Mailing List Password</span>
+              <input type="password" name="mailing_password" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password">
+            </div>
+            <div class="container-fluid">
+              <div class="col-sm-12 content mailing-list-project">
+                <div class="button-save-changes-edit-project-div">
+                  <input type="submit" class="button-save-changes-edit-project" value="Save">
+                </div>
+              </div>
+            </div>
           </form>
         </div>
       </div>

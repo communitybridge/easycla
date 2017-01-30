@@ -32,6 +32,7 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var projectId = req.params.projectId;
 
     var mailingName = req.body.mailing_name;
+    var mailingType = req.body.mailing_list_type_radio;
     var mailingEmailAdmin = req.body.mailing_email_admin;
     var mailingPassword = req.body.mailing_password;
     var mailingSubscribePolicy = req.body.subscribe_policy_radio;
@@ -40,7 +41,7 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var newMailingList = {
       "name": mailingName,
       "admin": mailingEmailAdmin,
-      "type": "MM2",
+      "type": mailingType,
       "password": mailingPassword,
       "subscribePolicy": mailingSubscribePolicy,
       "archivePolicy": mailingArchivePolicy
