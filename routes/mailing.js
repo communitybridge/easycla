@@ -40,6 +40,7 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var newMailingList = {
       "name": mailingName,
       "admin": mailingEmailAdmin,
+      "type": "MM2",
       "password": mailingPassword,
       "subscribePolicy": mailingSubscribePolicy,
       "archivePolicy": mailingArchivePolicy
