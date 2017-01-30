@@ -414,6 +414,9 @@ describe('api', function () {
         pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
+        meta: {
+          mailingListType : "MM2"
+        },
         startDate: new Date().toISOString()
       };
       projManagerClient.createProject(sampleProj, function (err, created, id) {
