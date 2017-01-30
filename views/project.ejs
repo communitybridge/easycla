@@ -122,6 +122,13 @@
     </a>
     <div class="hr-divider-keyline"></div>
     <br>
+    <% if (mailingLists){ %>
+      <% if (mailingLists.length == 1){ %>
+        <%= mailingLists.length %> mailing list
+      <% } else { %>
+        <%= mailingLists.length %> mailing lists
+      <% } %>
+    <% } %>
     <div class="view-all-member-aliases-label"><a href="/mailing/<%= project.id %>">View All</a></div>
     <div class="hr-divider-keyline"></div>
   </div>
