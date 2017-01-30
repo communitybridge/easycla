@@ -47,20 +47,22 @@ router.get('/project/:id', require('connect-ensure-login').ensureLoggedIn('/logi
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.redirect('/');
       projManagerClient.getEmailAliases(projectId, function (err, emailAliases) {
-        projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
-          async.forEach(memberCompanies, function (eachMember, callback){
-            eachMember.orgName = "";
-            eachMember.orgLogoRef = "";
-            projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
-              if(organization){
-                eachMember.orgName = organization.name;
-                eachMember.orgLogoRef = organization.logoRef;
-              }
-              callback();
+        projManagerClient.getMailingListsAndParticipants(projectId, function (err, mailingLists) {
+          projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+            async.forEach(memberCompanies, function (eachMember, callback){
+              eachMember.orgName = "";
+              eachMember.orgLogoRef = "";
+              projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
+                if(organization){
+                  eachMember.orgName = organization.name;
+                  eachMember.orgLogoRef = organization.logoRef;
+                }
+                callback();
+              });
+            }, function(err) {
+              // Member Companies iteration done.
+              return res.render('project', {project: project, emailAliases: emailAliases, mailingLists: mailingLists, memberCompanies:memberCompanies});
             });
-          }, function(err) {
-            // Member Companies iteration done.
-            return res.render('project', {project: project, emailAliases: emailAliases, memberCompanies:memberCompanies});
           });
         });
       });
