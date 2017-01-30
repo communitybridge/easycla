@@ -380,6 +380,9 @@ describe('api', function () {
         pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
+        meta: {
+          mailingListType : "MM2"
+        },
         startDate: '2016-09-26T09:26:36Z'
       };
       projManagerClient.createProject(sampleProj, function (err, created) {
@@ -841,6 +844,7 @@ describe('api', function () {
       it('POST /projects/{id}/mailinglists', function (done) {
         var sampleMailingList = {
           "name": mailingListName,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "OPEN",
@@ -884,6 +888,7 @@ describe('api', function () {
       it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var mailingListToBeRemoved = {
           "name": mailingListNameToBeRemoved,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
@@ -909,6 +914,7 @@ describe('api', function () {
       it('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var sampleMailingList = {
           "name": sampleMailingListName,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "CONFIRM",
@@ -934,6 +940,7 @@ describe('api', function () {
       it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListName,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "OPEN",
@@ -963,6 +970,7 @@ describe('api', function () {
       it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListNameTBR,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "OPEN",
@@ -993,6 +1001,7 @@ describe('api', function () {
       it('GET /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListName2,
+          "type" : "MM2",
           "admin": "admin@domain.org",
           "password": "test_secret_password",
           "subscribePolicy": "OPEN",
