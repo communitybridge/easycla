@@ -45,7 +45,6 @@
                   </label>
                 </div>
                 <br><br>
-
             <input type="hidden" name="project_id" id="project_id"  value="">
             <br>
             <div class="">
@@ -77,6 +76,14 @@
                   <span class="custom-control-indicator"></span>
                   Confirm and Approval
                 </label>
+              </div>
+              <div class="col-sm-12 ">
+                <br>
+                <div class="subscribe_policy_warning statcard statcard-danger p-a-md m-b">
+                  <h6 class="statcard-number">
+                    Choosing this type of Subscribe Policy will not allow you to add participants from this web application.
+                  </h6>
+                </div>
               </div>
               <br><br>
               <span style="margin-left: 30px;">Archive Policy:</span>
@@ -116,3 +123,13 @@
     </form>
   </div>
 </div>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    $(".subscribe_policy_warning").hide();
+    $('input[name="subscribe_policy_radio"]').click(function(){
+      if($(this).attr("value")!="OPEN") $(".subscribe_policy_warning").show();
+      else $(".subscribe_policy_warning").hide();
+    });
+  });
+</script>
