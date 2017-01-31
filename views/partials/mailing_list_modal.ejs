@@ -15,13 +15,16 @@
           </div>
         </div>
         <div class="modal-body-mailing">
+          <div class="col-sm-12 text-left">
           <form class="" action="/mailing/<%= project.id %>" method="post">
             <% if (mailingLists){ %>
               <% if (mailingLists.length == 0){ %>
                 <!-- TODO: only show mailing list providers options when there is no mailing lists -->
               <% } %>
             <% } %>
-                <br><br>
+            <br>
+            <div class="hr-divider-keyline"></div>
+                <br>
                 <span style="margin-left: 30px;">Mailing List Provider:</span>
                 <div class="radio-inline custom-control custom-radio">
                   <label>
@@ -45,6 +48,7 @@
                   </label>
                 </div>
                 <br><br>
+                <div class="hr-divider-keyline"></div>
             <input type="hidden" name="project_id" id="project_id"  value="">
             <br>
             <div class="">
@@ -102,6 +106,8 @@
                 </label>
               </div>
             </div>
+            <br>
+            <div class="hr-divider-keyline"></div>
             <div class="modal-body-mailing-list-admin">
               <br>
               <span style="margin-left:12px;">Mailing List Admin</span>
@@ -118,6 +124,7 @@
               </div>
             </div>
           </form>
+          </div>
         </div>
       </div>
     </form>
