@@ -1,144 +1,131 @@
 <div id="create-mailing-list-wizard-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-
-  <form action="/mailing/<%= project.id %>" method="post">
-
-  <div class="modal-dialog">
-
+  <form id="create-mailing-list-form" action="/mailing/<%= project.id %>" method="post">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="wizard">
-            <ul class="nav nav-wizard">
+          <ul class="nav nav-wizard">
+            <li>
+              <a href="#step1">Mailing List Provider</a>
+            </li>
+            <li>
+              <a href="">Details</a>
+              <ul class="nav nav-wizard">
                 <li>
-                    <a href="#step1">Mailing List Provider</a>
+                  <a href="#step2a">Mailing List Name</a>
                 </li>
                 <li>
-                    <a href="">Details</a>
-                    <ul class="nav nav-wizard">
-                        <li>
-                            <a href="#step2a">Mailing List Name</a>
-                        </li>
-                        <li>
-                            <a href="#step2b">Subscribe Policy</a>
-                        </li>
-                        <li>
-                            <a href="#step2c">Archive Policy</a>
-                        </li>
-                    </ul>
+                  <a href="#step2b">Subscribe Policy</a>
                 </li>
                 <li>
-                    <a href="#step3">Admin Credentials</a>
+                  <a href="#step2c">Archive Policy</a>
                 </li>
-            </ul>
-
-
-
-              <div class="wizard-pane" id="step1">
-                  <h3>Mailing List Provider</h3>
-                  <div class="hr-divider-keyline"></div>
-                  <br>
-                  <div class="radio-inline custom-control custom-radio">
-                    <label>
-                      <input type="radio" name="mailing_list_type_radio" value="MM2" checked>
-                      <span class="custom-control-indicator"></span>
-                      Mailman 2
-                    </label>
-                  </div>
-                  <div class="radio-inline custom-control custom-radio">
-                    <label>
-                      <input type="radio" name="mailing_list_type_radio" value="MM3">
-                      <span class="custom-control-indicator"></span>
-                      Mailman 3
-                    </label>
-                  </div>
-                  <div class="radio-inline custom-control custom-radio">
-                    <label>
-                      <input type="radio" name="mailing_list_type_radio" value="GOOGLE_GROUPS">
-                      <span class="custom-control-indicator"></span>
-                      Google Groups
-                    </label>
-                  </div>
-                  <br><br>
-                  <div class="hr-divider-keyline"></div>
+              </ul>
+            </li>
+            <li>
+            <a href="#step3">Admin Credentials</a>
+            </li>
+          </ul>
+          <div class="wizard-pane" id="step1">
+            <h3>Mailing List Provider</h3>
+            <div class="hr-divider-keyline"></div>
+            <br>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="mailing_list_type_radio" value="MM2" checked>
+                <span class="custom-control-indicator"></span>
+                Mailman 2
+              </label>
+            </div>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+              <input type="radio" name="mailing_list_type_radio" value="MM3">
+              <span class="custom-control-indicator"></span>
+              Mailman 3
+              </label>
+            </div>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="mailing_list_type_radio" value="GOOGLE_GROUPS">
+                <span class="custom-control-indicator"></span>
+                Google Groups
+              </label>
+            </div>
+            <br><br>
+            <div class="hr-divider-keyline"></div>
+          </div>
+          <div class="wizard-pane" id="step2a">
+            <h3>Mailing List Name</h3>
+            <input type="text" name="mailing_name" id="mailing_name" class="domain-project-edit" placeholder="Mailing List Title">
+          </div>
+          <div class="wizard-pane" id="step2b">
+            <h3>Subscribe Policy</h3>
+            <div class="radio custom-control custom-radio" >
+              <label>
+                <input type="radio" name="subscribe_policy_radio" value="OPEN" checked>
+                <span class="custom-control-indicator"></span>
+                Open
+              </label>
+            </div>
+            <div class="radio custom-control custom-radio" >
+              <label>
+                <input type="radio" name="subscribe_policy_radio" value="CONFIRM">
+                <span class="custom-control-indicator"></span>
+                Confirm
+              </label>
+            </div>
+            <div class="radio custom-control custom-radio" >
+              <label>
+                <input type="radio" name="subscribe_policy_radio" value="APPROVAL">
+                <span class="custom-control-indicator"></span>
+                Approval
+              </label>
+            </div>
+            <div class="radio custom-control custom-radio" >
+              <label>
+                <input type="radio" name="subscribe_policy_radio" value="CONFIRM_AND_APPROVAL">
+                <span class="custom-control-indicator"></span>
+                Confirm and Approval
+              </label>
+            </div>
+            <div class="col-sm-12 ">
+              <br>
+              <div class="subscribe_policy_warning statcard statcard-danger p-a-md m-b">
+                <h4 class="statcard-number">
+                  Choosing this type of Subscribe Policy will not allow you to add participants from this web application.
+                </h4>
               </div>
-
-              <div class="wizard-pane" id="step2a">
-                  <h3>Mailing List Name</h3>
-                  <input type="text" name="mailing_name" id="mailing_name" class="domain-project-edit" placeholder="Mailing List Title">
-              </div>
-
-              <div class="wizard-pane" id="step2b">
-                  <h3>Subscribe Policy</h3>
-                  <div class="radio custom-control custom-radio" >
-                    <label>
-                      <input type="radio" name="subscribe_policy_radio" value="OPEN" checked>
-                      <span class="custom-control-indicator"></span>
-                      Open
-                    </label>
-                  </div>
-                  <div class="radio custom-control custom-radio" >
-                    <label>
-                      <input type="radio" name="subscribe_policy_radio" value="CONFIRM">
-                      <span class="custom-control-indicator"></span>
-                      Confirm
-                    </label>
-                  </div>
-                  <div class="radio custom-control custom-radio" >
-                    <label>
-                      <input type="radio" name="subscribe_policy_radio" value="APPROVAL">
-                      <span class="custom-control-indicator"></span>
-                      Approval
-                    </label>
-                  </div>
-                  <div class="radio custom-control custom-radio" >
-                    <label>
-                      <input type="radio" name="subscribe_policy_radio" value="CONFIRM_AND_APPROVAL">
-                      <span class="custom-control-indicator"></span>
-                      Confirm and Approval
-                    </label>
-                  </div>
-                  <div class="col-sm-12 ">
-                    <br>
-                    <div class="subscribe_policy_warning statcard statcard-danger p-a-md m-b">
-                      <h4 class="statcard-number">
-                        Choosing this type of Subscribe Policy will not allow you to add participants from this web application.
-                      </h4>
-                    </div>
-                  </div>
-                  <br><br>
-              </div>
-
-              <div class="wizard-pane" id="step2c">
-                  <h3>Archive Policy</h3>
-                  <div class="radio-inline custom-control custom-radio">
-                    <label>
-                      <input type="radio" name="archive_policy_radio" value="PUBLIC">
-                      <span class="custom-control-indicator"></span>
-                      Public
-                    </label>
-                  </div>
-                  <div class="radio-inline custom-control custom-radio">
-                    <label>
-                      <input type="radio" name="archive_policy_radio" value="PRIVATE" checked>
-                      <span class="custom-control-indicator"></span>
-                      Private
-                    </label>
-                  </div>
-              </div>
-
-              <div class="wizard-pane" id="step3">
-                  <h3>Admin Credentials</h3>
-                  <br>
-                  <span style="margin-left:12px;">Mailing List Admin</span>
-                  <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com">
-                  <br><br>
-                  <span style="margin-left:12px;">Mailing List Password</span>
-                  <input type="password" name="mailing_password" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password">
-              </div>
-
+            </div>
+            <br><br>
+          </div>
+          <div class="wizard-pane" id="step2c">
+            <h3>Archive Policy</h3>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="archive_policy_radio" value="PUBLIC">
+                <span class="custom-control-indicator"></span>
+                Public
+              </label>
+            </div>
+            <div class="radio-inline custom-control custom-radio">
+              <label>
+                <input type="radio" name="archive_policy_radio" value="PRIVATE" checked>
+                <span class="custom-control-indicator"></span>
+                Private
+              </label>
+            </div>
+          </div>
+          <div class="wizard-pane" id="step3">
+            <h3>Admin Credentials</h3>
+            <br>
+            <span style="margin-left:12px;">Mailing List Admin</span>
+            <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com">
+            <br><br>
+            <span style="margin-left:12px;">Mailing List Password</span>
+            <input type="password" name="mailing_password" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password">
+          </div>
         </div>
       </div>
-
-  </div>
-
+    </div>
   </form>
 </div>
 
@@ -151,15 +138,12 @@
       else $(".subscribe_policy_warning").hide();
     });
   });
-
   $(".wizard").bootstrapWizard({
     height: 400,
     progressBar: true
   });
-
-  //
-  // $(".modal").modal({
-  //   backdrop: false,
-  //   keyboard: false,
-  // })
+  $(".wizard").on("submit.bw", function() {
+      var form = document.getElementById('create-mailing-list-form')
+      form.submit();
+  });
 </script>
