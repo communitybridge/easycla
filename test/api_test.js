@@ -380,9 +380,6 @@ describe('api', function () {
         pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
-        meta: {
-          mailingListType : "MM2"
-        },
         startDate: '2016-09-26T09:26:36Z'
       };
       projManagerClient.createProject(sampleProj, function (err, created) {
@@ -414,9 +411,6 @@ describe('api', function () {
         pm: projUserName,
         url: 'http://www.sample.org/',
         type: 'DIRECT_FUNDED',
-        meta: {
-          mailingListType : "MM2"
-        },
         startDate: new Date().toISOString()
       };
       projManagerClient.createProject(sampleProj, function (err, created, id) {
@@ -597,7 +591,7 @@ describe('api', function () {
         });
       });
 
-    });
+    }); // END 'Email Aliases Endpoints' test
 
     describe('Member Companies Endpoints', function () {
       it('GET /projects/{projectId}/members', function (done) {
@@ -838,7 +832,7 @@ describe('api', function () {
         });
       });
 
-    });
+    }); // END 'Member Companies Endpoints' test
 
     describe('Maling Lists Endpoints', function () {
 
@@ -1048,6 +1042,7 @@ describe('api', function () {
         })
       });
 
-    });
+    }); // END 'Mailing List Endpoints' test
+
   });
 });
