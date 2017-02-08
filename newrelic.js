@@ -7,9 +7,9 @@
  * description of configuration variables and their potential values.
  */
 
-var newRelicLicenseKey = process.env['NEW_RELIC_API_KEY'];
-var newRelicAppName = process.env['NEW_RELIC_APP_NAME'];
-var newRelicLabels = process.env['NEW_RELIC_LABELS'];
+var newRelicLicenseKey = process.env['NEWRELIC_LICENSE'];
+var newRelicAppName = process.env['NEWRELIC_APP_NAME'];
+var newRelicLabels = process.env['NEWRELIC_APP_LABELS'];
 
 exports.config = {
   /**
