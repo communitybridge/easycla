@@ -37,17 +37,22 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     var mailingPassword = req.body.mailing_password;
     var mailingSubscribePolicy = req.body.subscribe_policy_radio;
     var mailingArchivePolicy = req.body.archive_policy_radio;
+    var mailingHost = req.body.mailing_host;
 
     var newMailingList = {
       "name": mailingName,
-      "admin": mailingEmailAdmin,
       "type": mailingType,
+      "admin": mailingEmailAdmin,
       "password": mailingPassword,
       "subscribePolicy": mailingSubscribePolicy,
-      "archivePolicy": mailingArchivePolicy
+      "archivePolicy": mailingArchivePolicy,
+      "urlhost": mailingHost,
+      "emailhost": mailingHost
+      // ,"quiet": "TRUE"
     };
 
     projManagerClient.createMailingList(projectId, newMailingList, function (err, created, mailingListId) {
+      if (err) console.log(err);
       console.log("mailing list created: " + created);
       console.log("mailingListId: " + mailingListId);
       return res.redirect('/mailing/' + projectId);

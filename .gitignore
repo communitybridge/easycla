@@ -12,7 +12,7 @@ pids
 lib-cov
 
 # Directory for uploads
-public/uploads/
+# public/uploads/
 
 # Coverage directory used by tools like istanbul
 coverage
