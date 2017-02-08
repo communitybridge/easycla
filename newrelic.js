@@ -8,16 +8,24 @@
  */
 
 var newRelicLicenseKey = process.env['NEW_RELIC_API_KEY'];
+var newRelicAppName = process.env['NEW_RELIC_APP_NAME'];
+var newRelicLabels = process.env['NEW_RELIC_LABELS'];
 
 exports.config = {
   /**
    * Array of application names.
    */
-  app_name: ['CINCO Integration Platform'],
+  app_name: [newRelicAppName],
   /**
    * Your New Relic license key.
    */
   license_key: newRelicLicenseKey,
+  /**
+   * Your New Relic labels.
+   * Specify your labels as objects or a semicolon-delimited string of
+   * colon-separated pairs (for example, Server:One;Data Center:Primary).
+   */
+  labels: newRelicLabels,
   logging: {
     /**
      * Level at which to log. 'trace' is most useful to New Relic when diagnosing
