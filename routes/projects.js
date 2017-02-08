@@ -1,4 +1,4 @@
-if(process.argv[2] != 'dev') require('newrelic');
+if (process.env['NEW_RELIC_API_KEY']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var request = require('request');
