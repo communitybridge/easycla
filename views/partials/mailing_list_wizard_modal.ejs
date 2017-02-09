@@ -136,18 +136,28 @@
 <script src="/assets/dist/bootstrap-wizard.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function(){
+    var url = "<%= project.url %>";
+    var domain = url.replace('http://www.','').replace('https://www.','').replace('http://','').replace('https://','').split(/[/?#]/)[0];
+    var listDomain = "lists." + domain;
+    $('#mailing_host_span').text(listDomain);
+    $('#mailing_host').val(listDomain);
+
     $(".subscribe_policy_warning").hide();
+
     $('input[name="subscribe_policy_radio"]').click(function(){
       if($(this).attr("value")!="OPEN") $(".subscribe_policy_warning").show();
       else $(".subscribe_policy_warning").hide();
     });
   });
+
   $(".wizard").bootstrapWizard({
     height: 400,
     progressBar: true
   });
+
   $(".wizard").on("submit.bw", function() {
       var form = document.getElementById('create-mailing-list-form')
       form.submit();
   });
+
 </script>
