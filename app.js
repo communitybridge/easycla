@@ -38,7 +38,6 @@ app.use(function (req, res, next) {
   next();
 });
 
-
 // Routes
 var mainRouter = require('./routes/main');
 var adminRouter = require('./routes/admin');
