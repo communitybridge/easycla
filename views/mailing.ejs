@@ -65,6 +65,11 @@
       </div>
     </div> -->
 
+      <% if (message) { %>
+        <h4><%= message %></h4>
+        <br><br>
+      <% } %>
+
       <% if (mailingLists){ %>
 
         <%= mailingLists.length %> mailing lists
