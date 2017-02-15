@@ -4,6 +4,7 @@ var passport = require('passport');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var bodyParser = require('body-parser');
+var flash = require('connect-flash');
 
 var app = express();
 
@@ -26,7 +27,13 @@ app.use('/node_modules/rxjs/', express.static(path.join(__dirname, 'node_modules
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('express-session')({ secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 825dwj35 @#kbdwe3 ghdklnj32lj l2303', resave: false, saveUninitialized: false }));
+app.use(require('express-session')({
+  secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 825dwj35 @#kbdwe3 ghdklnj32lj l2303',
+  cookie: { maxAge: 60000 },
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
