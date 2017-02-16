@@ -29,7 +29,7 @@ app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({
   secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 825dwj35 @#kbdwe3 ghdklnj32lj l2303',
-  cookie: { maxAge: 60000 },
+  // cookie: { maxAge: 60000 },
   resave: false,
   saveUninitialized: false
 }));

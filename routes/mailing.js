@@ -52,14 +52,9 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     };
 
     projManagerClient.createMailingList(projectId, newMailingList, function (err, created, mailingListId) {
-      console.log("mailing list created: " + created);
-      console.log("mailingListId: " + mailingListId);
       if (err) {
         console.log(err);
-        if(err.statusCode == 409) { // Mailing List Name already exists.
-          req.flash('info', 'Mailing List Name already exists. Please choose a different name.')
-          return res.redirect('/mailing/' + projectId);
-        }
+        req.flash('info', err.userMessage)
       }
       return res.redirect('/mailing/' + projectId);
     });
