@@ -65,9 +65,12 @@
       </div>
     </div> -->
 
-      <% if (message) { %>
-        <h4><%= message %></h4>
-        <br><br>
+      <% if (message != "") { %>
+        <div class="statcard statcard-danger p-a-md m-b">
+          <h4 class="statcard-number">
+            <%= message %>
+          </h4>
+        </div>
       <% } %>
 
       <% if (mailingLists){ %>
