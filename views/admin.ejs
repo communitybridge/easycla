@@ -13,7 +13,13 @@
 <div class="hr-divider-keyline"></div>
 
 <div class="col-sm-12 content" style="padding:50px;">
-  <%= message %>
+  <% if (message != "") { %>
+    <div class="statcard statcard-info p-a-md m-b">
+      <h4 class="statcard-number">
+        <%= message %>
+      </h4>
+    </div>
+  <% } %>
   <br><br>
   <span>Create new user</span>
   <br><br>
@@ -146,7 +152,7 @@
           <h3 class="modal-title"><strong>Make User Admin</strong></h3>
         </div>
         <div class="modal-form">
-          <form method="post" action="/create_admin_user">
+          <form method="post" action="/designate_admin_user">
             <div class="modal-body">
               <p><span class="username">Are you sure you want to make the user an admin</span>?</p>
               <input type="hidden" name="form_lfid" class="form-control" id="recipient-name">
@@ -169,7 +175,7 @@
           <h3 class="modal-title"><strong>Make User Project Manager</strong></h3>
         </div>
         <div class="modal-form">
-          <form method="post" action="/create_project_manager_user">
+          <form method="post" action="/designate_project_manager_user">
             <div class="modal-body">
               <p><span class="username">Are you sure you want to make the user a project manager</span>?</p>
               <input type="hidden" name="form_lfid" class="form-control" id="recipient-name">
@@ -233,7 +239,7 @@
       modal.find('.modal-title').text('Make user ' + user + ' an Admin');
       modal.find('.username').text('Are you sure you want to make the user ' + user + ' an Admin');
       modal.find('.modal-body input').val(user);
-      modal.find('.modal-form form').attr('action', '/create_admin_user');
+      modal.find('.modal-form form').attr('action', '/designate_admin_user');
       modal.find('.modal-actions input').val('Make Admin');
     }
   });
@@ -255,7 +261,7 @@
       modal.find('.modal-title').text('Make user ' + user + ' a Project Manager');
       modal.find('.username').text('Are you sure you want to make the user ' + user + ' a Project Manager');
       modal.find('.modal-body input').val(user);
-      modal.find('.modal-form form').attr('action', '/create_project_manager_user');
+      modal.find('.modal-form form').attr('action', '/designate_project_manager_user');
       modal.find('.modal-actions input').val('Make Project Manager');
     }
   });

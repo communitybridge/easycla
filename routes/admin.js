@@ -19,7 +19,7 @@ router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), f
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var username = req.body.form_lfid;
     adminClient.getAllUsers(function (err, users, groups) {
-      res.render('admin', { message: "", users: users, groups: groups });
+      res.render('admin', { users: users, groups: groups, message: req.flash('info') });
     });
   }
   else res.redirect('/');
@@ -34,11 +34,10 @@ router.post('/activate_user', require('connect-ensure-login').ensureLoggedIn('/l
       name: 'USER'
     }
     adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {
-      var message = 'User has been activated.';
+      var message = username + ' has been activated.';
       if (err) message = err;
-      adminClient.getAllUsers(function (err, users, groups) {
-        return res.render('admin', { message: message, users: users, groups:groups });
-      });
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
@@ -51,27 +50,20 @@ router.post('/create_user', require('connect-ensure-login').ensureLoggedIn('/log
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
       }
-      if(created) {
-        message = 'User has been created.';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+      else if (created) {
+        message = 'User [' + username + '] has been created.';
       }
       else {
-        message = 'User already exists. ';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+        message = 'User [' + username + '] already exists.';
       }
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
 
-router.post('/create_project_manager_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.post('/designate_project_manager_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var username = req.body.form_lfid;
@@ -83,40 +75,20 @@ router.post('/create_project_manager_user', require('connect-ensure-login').ensu
       groupId: 1,
       name: 'USER'
     }
-    adminClient.createUser(username, function (err, created) {
-      var message = '';
-      if (err) {
-        message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
-      }
-      if(created) {
-        message = 'Project Manager has been created.';
-        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
-        adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
-          if (err) message = err;
-          adminClient.getAllUsers(function (err, users, groups) {
-            return res.render('admin', { message: message, users: users, groups:groups });
-          });
-        });
-      }
-      else {
-        message = 'User already exists.';
-        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
-        adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
-          message = 'User already exists. ' + 'Project Manager has been created.';
-          if (err) message = err;
-          adminClient.getAllUsers(function (err, users, groups) {
-            return res.render('admin', { message: message, users: users, groups:groups });
-          });
-        });
-      }
+    var message = '';
+    adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {
+      if (err) message = err;
+      adminClient.addGroupForUser(username, projectManagerGroup, function(err, isUpdated, user) {
+        if (err) message += err;
+        else message = username + ' has been designated as a Project Manager.';
+        req.flash('info', message);
+        return res.redirect('/admin');
+      });
     });
   }
 });
 
-router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.post('/designate_admin_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
     var adminClient = cinco.client(req.session.user.cinco_keys);
     var username = req.body.form_lfid;
@@ -128,34 +100,15 @@ router.post('/create_admin_user', require('connect-ensure-login').ensureLoggedIn
       groupId: 1,
       name: 'USER'
     }
-    adminClient.createUser(username, function (err, created) {
-      var message = '';
-      if (err) {
-        message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
-      }
-      if(created) {
-        message = 'Admin has been created.';
-        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
-        adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
-          if (err) message = err;
-          adminClient.getAllUsers(function (err, users, groups) {
-            return res.render('admin', { message: message, users: users, groups:groups });
-          });
-        });
-      }
-      else {
-        message = 'User already exists. ' + 'Admin has been created.';
-        adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {});
-        adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
-          if (err) message = err;
-          adminClient.getAllUsers(function (err, users, groups) {
-            return res.render('admin', { message: message, users: users, groups:groups });
-          });
-        });
-      }
+    var message = '';
+    adminClient.addGroupForUser(username, userGroup, function(err, isUpdated, user) {
+      if (err) message = err;
+      adminClient.addGroupForUser(username, adminGroup, function(err, isUpdated, user) {
+        if (err) message += err;
+        else message = username + ' has been designated as an Admin.';
+        req.flash('info', message);
+        return res.redirect('/admin');
+      });
     });
   }
 });
@@ -172,16 +125,12 @@ router.post('/deactivate_user', require('connect-ensure-login').ensureLoggedIn('
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
       }
-      if(removed) {
-        message = 'User has been deactivated.';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+      else if(removed) {
+        message = username + ' has been deactivated.';
       }
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
@@ -198,16 +147,12 @@ router.post('/remove_admin_user', require('connect-ensure-login').ensureLoggedIn
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
       }
-      if(removed) {
-        message = 'Admin has been removed.';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+      else if(removed) {
+        message = 'Admin privileges for [' + username + ']  have been removed.';
       }
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
@@ -224,16 +169,12 @@ router.post('/remove_project_manager_user', require('connect-ensure-login').ensu
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
       }
-      if(removed) {
-        message = 'Project Manager has been removed.';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+      else if(removed) {
+        message = 'Project Manager privileges for [' + username + '] have been removed.';
       }
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
@@ -246,16 +187,12 @@ router.post('/remove_user', require('connect-ensure-login').ensureLoggedIn('/log
       var message = '';
       if (err) {
         message = err;
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
       }
-      if(removed) {
-        message = 'User has been removed.';
-        adminClient.getAllUsers(function (err, users, groups) {
-          return res.render('admin', { message: message, users: users, groups:groups });
-        });
+      else if(removed) {
+        message = 'User [' + username + '] has been removed.';
       }
+      req.flash('info', message);
+      return res.redirect('/admin');
     });
   }
 });
