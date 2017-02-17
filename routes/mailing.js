@@ -54,7 +54,7 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     projManagerClient.createMailingList(projectId, newMailingList, function (err, created, mailingListId) {
       if (err) {
         console.log(err);
-        req.flash('info', err.userMessage)
+        req.flash('info', err.userMessage);
       }
       return res.redirect('/mailing/' + projectId);
     });
