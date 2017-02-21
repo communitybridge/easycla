@@ -10,20 +10,20 @@ function randomUserName() {
   }).toLowerCase();
 }
 
-describe('api', function () {
+suite('api', function () {
 
   var apiObj = api(process.env['CINCO_SERVER_URL']);
 
-  describe('Properties', function () {
-    describe('apiUrlRoot', function () {
-      it('The passed in api root parameter should be available on the returned object', function () {
+  suite('Properties', function () {
+    suite('apiUrlRoot', function () {
+      test('The passed in api root parameter should be available on the returned object', function () {
         assert.equal(apiObj.apiRootUrl, process.env['CINCO_SERVER_URL'] + '/');
       });
     });
   });
 
-  describe('Public Endpoints', function () {
-    it('about/version', function (done) {
+  suite('Public Endpoints', function () {
+    test('about/version', function (done) {
       apiObj.getVersion(function (err, body) {
         assert.equal(body['Application-Name'], 'CINCO');
         done();
@@ -31,9 +31,9 @@ describe('api', function () {
     });
   });
 
-  describe('Trusted Auth Endpoints', function () {
-    describe('keysForLfId', function () {
-      it('Calling keysForLfId with an lfId returns an object with keys', function (done) {
+  suite('Trusted Auth Endpoints', function () {
+    suite('keysForLfId', function () {
+      test('Calling keysForLfId wtesth an lfId returns an object wtesth keys', function (done) {
         apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
           assert.ifError(err);
           assert.equal(keys.keyId.length, 20, "keyId length should be 20");
@@ -45,11 +45,11 @@ describe('api', function () {
     });
   });
 
-  describe('Admin Endpoints', function () {
+  suite('Admin Endpoints', function () {
     var adminClient;
     var sampleUserName = randomUserName();
 
-    before(function (done) {
+    suiteSetup(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = apiObj.client(keys);
         adminClient.createUser(sampleUserName, function (err, created) {
@@ -58,16 +58,16 @@ describe('api', function () {
       });
     });
 
-    it('POST users/', function (done) {
+    test('POST users/', function (done) {
       var username = randomUserName();
       adminClient.createUser(username, function (err, created) {
         assert.ifError(err);
-        assert(created, "New user with username of " + username + " should have been created");
+        assert(created, "New user wtesth username of " + username + " should have been created");
         done();
       });
     });
 
-    it('GET user/{id}', function (done) {
+    test('GET user/{id}', function (done) {
       adminClient.getUser(sampleUserName, function (err, user) {
         assert.ifError(err);
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
@@ -76,7 +76,7 @@ describe('api', function () {
       });
     });
 
-    it('POST user/{id}/group', function (done) {
+    test('POST user/{id}/group', function (done) {
       var adminGroup = {
         groupId: 2,
         name: 'ADMIN'
@@ -84,7 +84,7 @@ describe('api', function () {
       var expected = [{groupId: 1, name: 'USER'}, adminGroup];
       adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
         assert.ifError(err);
-        assert(isUpdated, "User resource should be updated with new group")
+        assert(isUpdated, "User resource should be updated wtesth new group")
         assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
         assert.equal(user.groups.length, 2, 'User must have 2 groups');
         assert(_.some(user.groups, function (g) {
@@ -97,7 +97,7 @@ describe('api', function () {
       });
     });
 
-    it('DELETE users/{id}/group/{groupId}', function (done) {
+    test('DELETE users/{id}/group/{groupId}', function (done) {
       var adminGroup = {
         groupId: 2,
         name: 'ADMIN'
@@ -118,7 +118,7 @@ describe('api', function () {
       });
     });
 
-    it('GET usergroups/', function (done) {
+    test('GET usergroups/', function (done) {
       var expected = [{groupId: 1, name: 'USER'}, {groupId: 2, name: 'ADMIN'},
         {groupId: 3, name: 'PROJECT_MANAGER'}];
 
@@ -135,7 +135,7 @@ describe('api', function () {
       });
     });
 
-    it('GET users/', function (done) {
+    test('GET users/', function (done) {
       adminClient.getAllUsers(function (err, users, groups) {
         assert.ifError(err);
         assert(users.length >= 2);
@@ -150,12 +150,12 @@ describe('api', function () {
     });
   });
 
-  describe('Organizations Endpoints', function () {
+  suite('Organizations Endpoints', function () {
     var projManagerClient;
     var projUserName = randomUserName();
     var adminClient;
 
-    before(function (done) {
+    suiteSetup(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = apiObj.client(keys);
         adminClient.createUser(projUserName, function (err, created) {
@@ -173,7 +173,7 @@ describe('api', function () {
       });
     });
 
-    it('POST /organizations', function (done) {
+    test('POST /organizations', function (done) {
       var sampleOrganization = {
         name: "Company Sample Name",
         addresses: [
@@ -182,7 +182,7 @@ describe('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
-              localityName: "Some City (e.g. Anchorage)",
+              localityName: "Some Ctesty (e.g. Anchorage)",
               postalCode: 99501,
               phone: 800-867-5309,
               thoroughfare: "Some street address"
@@ -193,7 +193,7 @@ describe('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
-              localityName: "Some City (e.g. Anchorage)",
+              localityName: "Some Ctesty (e.g. Anchorage)",
               postalCode: 99501,
               phone: 800-867-5309,
               thoroughfare: "Some street address"
@@ -209,7 +209,7 @@ describe('api', function () {
       });
     });
 
-    it('POST /organizations 403 ', function (done) {
+    test('POST /organizations 403 ', function (done) {
       var username = randomUserName();
       adminClient.createUser(username, function (err) {
         assert.ifError(err);
@@ -224,7 +224,7 @@ describe('api', function () {
       });
     });
 
-    it('POST /organizations 400 on missing name', function (done) {
+    test('POST /organizations 400 on missing name', function (done) {
       var noNameOrg = {
         logoRef: "logoName.jpg"
       };
@@ -234,7 +234,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /organizations', function (done) {
+    test('GET /organizations', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
         assert.ifError(err);
         var sampleOrganization = organizations[0];
@@ -247,7 +247,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /organizations/{id}', function (done) {
+    test('GET /organizations/{id}', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
         assert.ifError(err);
         var id = organizations[0].id;
@@ -259,7 +259,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /organizations/{id} 404', function (done) {
+    test('GET /organizations/{id} 404', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
         projManagerClient.getOrganization("not_a_real_id", function (err, organization) {
           assert.equal(err.statusCode, 404);
@@ -268,7 +268,7 @@ describe('api', function () {
       });
     });
 
-    it('PUT /organizations/{id}', function (done) {
+    test('PUT /organizations/{id}', function (done) {
       projManagerClient.getAllOrganizations(function (err, organizations) {
         assert.ifError(err);
         var organizationId = organizations[0].id;
@@ -281,7 +281,7 @@ describe('api', function () {
               address: {
                 country: "US",
                 administrativeArea: "Some updated Province (e.g. Alaska)",
-                localityName: "Some updated City (e.g. Anchorage)",
+                localityName: "Some updated Ctesty (e.g. Anchorage)",
                 postalCode: 99501,
                 phone: 888-867-5309,
                 thoroughfare: "Some updated street address"
@@ -292,7 +292,7 @@ describe('api', function () {
               address: {
                 country: "US",
                 administrativeArea: "Some updated Province (e.g. Alaska)",
-                localityName: "Some updated City (e.g. Anchorage)",
+                localityName: "Some updated Ctesty (e.g. Anchorage)",
                 postalCode: 99501,
                 phone: 888-867-5309,
                 thoroughfare: "Some updated street address"
@@ -312,12 +312,12 @@ describe('api', function () {
 
   });
 
-  describe('Projects Endpoints', function () {
+  suite('Projects Endpoints', function () {
     var projManagerClient;
     var projUserName = randomUserName();
     var adminClient;
 
-    before(function (done) {
+    suiteSetup(function (done) {
       apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = apiObj.client(keys);
         adminClient.createUser(projUserName, function (err, created) {
@@ -335,7 +335,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /projects', function (done) {
+    test('GET /projects', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var sampleProj = projects[0];
@@ -352,7 +352,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /projects/{id}', function (done) {
+    test('GET /projects/{id}', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var id = projects[0].id;
@@ -364,7 +364,7 @@ describe('api', function () {
       })
     });
 
-    it('GET /projects/{id} 404', function (done) {
+    test('GET /projects/{id} 404', function (done) {
       projManagerClient.getAllProjects(function (err, projects) {
         projManagerClient.getProject("not_a_real_id", function (err, project) {
           assert.equal(err.statusCode, 404);
@@ -373,7 +373,7 @@ describe('api', function () {
       })
     });
 
-    it('POST /projects', function (done) {
+    test('POST /projects', function (done) {
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
@@ -389,7 +389,7 @@ describe('api', function () {
       });
     });
 
-    it('POST /projects 403 ', function (done) {
+    test('POST /projects 403 ', function (done) {
       var username = randomUserName();
       adminClient.createUser(username, function (err) {
         assert.ifError(err);
@@ -404,7 +404,7 @@ describe('api', function () {
       });
     });
 
-    it("POST then GET project", function (done) {
+    test("POST then GET project", function (done) {
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
@@ -428,7 +428,7 @@ describe('api', function () {
       });
     });
 
-    it('DELETE /projects/{id}', function (done) {
+    test('DELETE /projects/{id}', function (done) {
       projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var proj = _.last(projects);
@@ -442,7 +442,7 @@ describe('api', function () {
       });
     });
 
-    it('PATCH /projects/{id}', function (done) {
+    test('PATCH /projects/{id}', function (done) {
       projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var project = _.last(projects);
@@ -472,7 +472,7 @@ describe('api', function () {
       });
     });
 
-    it('GET /project', function (done) {
+    test('GET /project', function (done) {
       projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var sampleProj = projects[0];
@@ -489,8 +489,8 @@ describe('api', function () {
       });
     });
 
-    describe('Email Aliases Endpoints', function () {
-      it('GET /projects/{id}/emailaliases', function (done) {
+    suite('Email Aliases Endpoints', function () {
+      test('GET /projects/{id}/emailaliases', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
           assert.ifError(err);
           var id = projects[0].id;
@@ -502,7 +502,7 @@ describe('api', function () {
         })
       });
 
-      it('GET /projects/{id}/emailaliases 404', function (done) {
+      test('GET /projects/{id}/emailaliases 404', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
           projManagerClient.getEmailAliases("not_a_real_id", function (err, emailAliases) {
             assert.equal(err.statusCode, 404);
@@ -511,7 +511,7 @@ describe('api', function () {
         })
       });
 
-      it('POST /projects/{id}/emailaliases', function (done) {
+      test('POST /projects/{id}/emailaliases', function (done) {
         var sampleAlias = {
           "address": "ab@cd.org",
           "participants": [
@@ -537,7 +537,7 @@ describe('api', function () {
         });
       });
 
-      it('POST /projects/{projectId}/emailaliases/{aliasId}/participants', function (done) {
+      test('POST /projects/{projectId}/emailaliases/{aliasId}/participants', function (done) {
         var newParticipant = {
           "address": "newFoo@bar.com"
         };
@@ -562,7 +562,7 @@ describe('api', function () {
         });
       });
 
-      it('DELETE /projects/{projectId}/emailaliases/{aliasId}/participants/{participantAddress}', function (done) {
+      test('DELETE /projects/{projectId}/emailaliases/{aliasId}/participants/{participantAddress}', function (done) {
         var participantTBR = "participantToBeRemoved@bar.com";
         var newParticipant = {
           "address": participantTBR
@@ -593,8 +593,8 @@ describe('api', function () {
 
     }); // END 'Email Aliases Endpoints' test
 
-    describe('Member Companies Endpoints', function () {
-      it('GET /projects/{projectId}/members', function (done) {
+    suite('Member Companies Endpoints', function () {
+      test('GET /projects/{projectId}/members', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
           assert.ifError(err);
           var projectId = projects[0].id;
@@ -606,7 +606,7 @@ describe('api', function () {
         })
       });
 
-      it('GET /projects/{projectId}/members 404', function (done) {
+      test('GET /projects/{projectId}/members 404', function (done) {
         projManagerClient.getAllProjects(function (err, projects) {
           projManagerClient.getMemberCompanies("not_a_real_id", function (err, memberCompanies) {
             assert.equal(err.statusCode, 404);
@@ -615,7 +615,7 @@ describe('api', function () {
         })
       });
 
-      it('POST /projects/{projectId}/members', function (done) {
+      test('POST /projects/{projectId}/members', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -639,7 +639,7 @@ describe('api', function () {
         });
       });
 
-      it('DELETE /projects/{projectId}/members/{memberId}', function (done) {
+      test('DELETE /projects/{projectId}/members/{memberId}', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var memberToBeRemoved = {
@@ -664,7 +664,7 @@ describe('api', function () {
         });
       });
 
-      it('GET /projects/{projectId}/members/{memberId}', function (done) {
+      test('GET /projects/{projectId}/members/{memberId}', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -689,7 +689,7 @@ describe('api', function () {
         });
       });
 
-      it('PATCH /projects/{projectId}/members/{memberId}', function (done) {
+      test('PATCH /projects/{projectId}/members/{memberId}', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -720,7 +720,7 @@ describe('api', function () {
         });
       });
 
-      it('POST /projects/{projectId}/members/{memberId}/contacts', function (done) {
+      test('POST /projects/{projectId}/members/{memberId}/contacts', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -753,7 +753,7 @@ describe('api', function () {
         });
       });
 
-      it('DELETE /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
+      test('DELETE /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -788,7 +788,7 @@ describe('api', function () {
         });
       });
 
-      it('PUT /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
+      test('PUT /projects/{projectId}/members/{memberId}/contacts/{contactId}', function (done) {
         projManagerClient.getAllOrganizations(function (err, organizations) {
           var organizationId = organizations[0].id;
           var sampleMember = {
@@ -834,11 +834,11 @@ describe('api', function () {
 
     }); // END 'Member Companies Endpoints' test
 
-    describe('Maling Lists Endpoints', function () {
+    suite('Maling Lists Endpoints', function () {
 
       var mailingListName = randomUserName();
 
-      it('POST /projects/{id}/mailinglists', function (done) {
+      test('POST /projects/{id}/mailinglists', function (done) {
         var sampleMailingList = {
           "name": mailingListName,
           "type" : "MM2",
@@ -861,7 +861,7 @@ describe('api', function () {
         });
       });
 
-      it('GET /projects/{id}/mailinglists', function (done) {
+      test('GET /projects/{id}/mailinglists', function (done) {
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
           var projectId = projects[0].id;
@@ -873,7 +873,7 @@ describe('api', function () {
         })
       });
 
-      it('GET /projects/{id}/mailinglists 404', function (done) {
+      test('GET /projects/{id}/mailinglists 404', function (done) {
         projManagerClient.getMailingLists("not_a_real_id", function (err, mailingLists) {
           assert.equal(err.statusCode, 404);
           done();
@@ -882,7 +882,7 @@ describe('api', function () {
 
       var mailingListNameToBeRemoved = randomUserName();
 
-      it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
+      test('DELETE /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var mailingListToBeRemoved = {
           "name": mailingListNameToBeRemoved,
           "type" : "MM2",
@@ -908,7 +908,7 @@ describe('api', function () {
 
       var sampleMailingListName = randomUserName();
 
-      it('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
+      test('GET /projects/{projectId}/mailinglists/{mailinglistId}', function (done) {
         var sampleMailingList = {
           "name": sampleMailingListName,
           "type" : "MM2",
@@ -934,7 +934,7 @@ describe('api', function () {
 
       var sampleParticipantsMailingListName = randomUserName();
 
-      it('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+      test('POST /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListName,
           "type" : "MM2",
@@ -964,7 +964,7 @@ describe('api', function () {
 
       var sampleParticipantsMailingListNameTBR = randomUserName();
 
-      it('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+      test('DELETE /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListNameTBR,
           "type" : "MM2",
@@ -995,7 +995,7 @@ describe('api', function () {
 
       var sampleParticipantsMailingListName2 = randomUserName();
 
-      it('GET /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
+      test('GET /projects/{projectId}/mailinglists/{mailinglistId}/participants', function (done) {
         var sampleMailingList = {
           "name": sampleParticipantsMailingListName2,
           "type" : "MM2",
@@ -1029,7 +1029,7 @@ describe('api', function () {
         });
       });
 
-      it('GET /projects/{id}/mailinglists && participants', function (done) {
+      test('GET /projects/{id}/mailinglists && participants', function (done) {
         this.timeout(20000);
         projManagerClient.getMyProjects(function (err, projects) {
           assert.ifError(err);
