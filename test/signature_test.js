@@ -78,9 +78,9 @@ suite('Signature', function () {
       let headerDate = req.headers['X-Amz-Date'].slice(0, 8);
 
       should(req.headers['Authorization'])
-        .startWith('AWS4-HMAC-SHA256 Credential=test_key/' + headerDate + '/global/cinco/aws4_request, SignedHeaders=content-type;host;signature-version;x-amz-date, ');
+        .startWith('AWS4-HMAC-SHA256 Credential=test_key/' + headerDate + '/internal/cinco/aws4_request, SignedHeaders=content-type;host;signature-version;x-amz-date, ');
 
-      let authSigned = req.headers['Authorization'].slice(135);
+      let authSigned = req.headers['Authorization'].slice(137);
 
       should(authSigned).match(/^Signature=[A-Fa-f0-9]{64}$/);
     });
@@ -108,9 +108,9 @@ suite('Signature', function () {
       let headerDate = req.headers['X-Amz-Date'].slice(0, 8);
 
       should(req.headers['Authorization'])
-        .startWith('AWS4-HMAC-SHA256 Credential=test_key/' + headerDate + '/global/cinco/aws4_request, SignedHeaders=content-length;content-md5;content-type;host;signature-version;x-amz-date, ');
+        .startWith('AWS4-HMAC-SHA256 Credential=test_key/' + headerDate + '/internal/cinco/aws4_request, SignedHeaders=content-length;content-md5;content-type;host;signature-version;x-amz-date, ');
 
-      let authSigned = req.headers['Authorization'].slice(162);
+      let authSigned = req.headers['Authorization'].slice(164);
 
       should(authSigned).match(/^Signature=[A-Fa-f0-9]{64}$/);
     });
