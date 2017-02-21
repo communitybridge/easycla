@@ -583,6 +583,7 @@ suite('api', function () {
             projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
               assert.ifError(err);
               projManagerClient.removeParticipantFromEmailAlias(projectId, aliasId.aliasId, participantTBR, function (err, removed) {
+                assert.ifError(err);
                 assert(removed);
                 done();
               });
