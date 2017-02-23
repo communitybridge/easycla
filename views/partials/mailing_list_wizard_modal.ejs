@@ -55,11 +55,18 @@
           </div>
           <div class="wizard-pane" id="step2a">
             <h3>Mailing List Name</h3>
-            <input type="text" name="mailing_name" id="mailing_name" class="domain-project-edit" placeholder="Mailing List Title">
-            <br><br>
-            <h3>Mailing List Host</h3>
-            <span name="mailing_host_span" id="mailing_host_span"></span>
-            <input type="hidden" name="mailing_host" id="mailing_host" class="domain-project-edit" placeholder="Email and Url Host">
+            <br>
+            <p>
+              <input type="text" name="mailing_name" id="mailing_name" class="domain-project-edit" placeholder="Mailing List Title"
+                data-validation="length alphanumeric"
+                data-validation-length="3-12"
+                data-validation-error-msg="Mailing List title has to be an alphanumeric value and no spaces (3-12 chars)">
+            </p>
+            <p>
+              <h3>Mailing List Host</h3>
+              <span name="mailing_host_span" id="mailing_host_span"></span>
+              <input type="hidden" name="mailing_host" id="mailing_host" class="domain-project-edit" placeholder="Email and Url Host">
+            </p>
           </div>
           <div class="wizard-pane" id="step2b">
             <h3>Subscribe Policy</h3>
@@ -121,11 +128,21 @@
           <div class="wizard-pane" id="step3">
             <h3>Admin Credentials</h3>
             <br>
+            <p>
             <span style="margin-left:12px;">Mailing List Admin</span>
-            <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com">
-            <br><br>
-            <span style="margin-left:12px;">Mailing List Password</span>
-            <input type="password" name="mailing_password" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password">
+            <input type="text" name="mailing_email_admin" id="mailing_email_admin" class="domain-project-edit" placeholder="admin@business.com"
+              data-validation="email">
+            </p>
+            <p>
+              <span style="margin-left:12px;">Mailing List Password</span>
+              <input type="password" name="mailing_password_confirmation" id="mailing_password" class="domain-project-edit" placeholder="a_secret_password"
+                data-validation="strength"
+                data-validation-strength="1">
+            </p>
+            <p>
+              <span style="margin-left:12px;">Repeat password</span>
+              <input type="password" name="mailing_password" id="mailing_password" data-validation="confirmation" class="domain-project-edit" placeholder="Please confirm your password">
+            </p>
           </div>
         </div>
       </div>
@@ -151,7 +168,7 @@
   });
 
   $(".wizard").bootstrapWizard({
-    height: 400,
+    height: 500,
     progressBar: true
   });
 
@@ -160,4 +177,11 @@
       form.submit();
   });
 
+</script>
+
+<script src="/assets/dist/jquery.form-validator.min.js"></script>
+<script>
+  $.validate({
+    modules : 'security'
+  });
 </script>
