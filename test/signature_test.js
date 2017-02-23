@@ -57,10 +57,10 @@ suite('Signature', function () {
 
   });
 
-  suite('Version Two', function () {
+  suite('Version Four', function () {
 
     test('signing requests without a body', function () {
-      let req = sig.signRequestVersionTwo(mockKey, {
+      let req = sig.signRequestVersionFour(mockKey, {
         method: 'GET',
         uri: 'http://localhost:5000/projects'
       });
@@ -72,7 +72,7 @@ suite('Signature', function () {
 
       should(req.headers['Content-Type']).equal('application/json; charset=UTF-8');
       should(req.headers['Host']).equal('localhost:5000');
-      should(req.headers['Signature-Version']).equal('2');
+      should(req.headers['Signature-Version']).equal('4');
       should(req.headers['X-Amz-Date']).match(/^\d{8}T\d{6}Z$/);
 
       let headerDate = req.headers['X-Amz-Date'].slice(0, 8);
@@ -86,7 +86,7 @@ suite('Signature', function () {
     });
 
     test('signing requests including a body', function () {
-      let req = sig.signRequestVersionTwo(mockKey, {
+      let req = sig.signRequestVersionFour(mockKey, {
         method: 'GET',
         uri: 'http://localhost:5000/projects',
         body: JSON.stringify({
@@ -102,7 +102,7 @@ suite('Signature', function () {
       should(req.headers['Content-Length']).equal(43);
       should(req.headers['Content-Type']).equal('application/json; charset=UTF-8');
       should(req.headers['Host']).equal('localhost:5000');
-      should(req.headers['Signature-Version']).equal('2');
+      should(req.headers['Signature-Version']).equal('4');
       should(req.headers['X-Amz-Date']).match(/^\d{8}T\d{6}Z$/);
 
       let headerDate = req.headers['X-Amz-Date'].slice(0, 8);
