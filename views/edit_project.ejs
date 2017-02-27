@@ -20,9 +20,16 @@
     </div>
     <div class="main-header-title-project-edit">
       <span style="color:#11ABDE">| </span>
-      <input class="main-header-title-project-input" type="text" name="project_name" value="<%= project.name %>" placeholder="<%= project.name %>">
+      <input class="main-header-title-project-input" type="text" name="project_name" value="<%= project.name %>" placeholder="<%= project.name %>"
+        maxlength="30"
+        data-validation="length"
+        data-validation="required"
+        data-validation-length="3-30"
+        data-validation-error-msg="The Project Title must be between 3 and 30 chars."
+        data-validation-error-msg-container="#project-title-error-dialog">
     </div>
     <div class="last-edited-project-edit">
+      <div id="project-title-error-dialog"></div>
       NEW PROJECT -  Last saved 11:35 AM
     </div>
   </div>
@@ -94,7 +101,10 @@
       <div class="subtitle-content-project">Project Description</div>
       <div class="hr-divider-keyline"></div>
       <br>
-      <textarea name="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"><%= project.description %></textarea>
+      <div style="text-align: right">
+        (<span id="pres-max-length">2500</span> characters left)
+      </div>
+      <textarea name="project_description" id="project_description" class="description-project-edit" placeholder="Add a brief description  0/2500"><%= project.description %></textarea>
       <br> <br>
       <strong style="color: #333333;"></strong>
     </div>
@@ -134,7 +144,10 @@
       <div class="subtitle-content-project">Domain URL</div>
       <div class="hr-divider-keyline"></div>
       <br>
-      <input type="text" name="url" class="domain-project-edit" placeholder="<%= project.url %>" value="<%= project.url %>">
+      <input type="text" name="url" class="domain-project-edit" placeholder="<%= project.url %>" value="<%= project.url %>"
+        data-validation="url"
+        data-validation="not-required"
+        data-validation-error-msg="Please confirm your domain. Make sure it starts with http:// or https://">
       <br> <br>
       <strong style="color: #333333;"></strong>
     </div>
@@ -183,6 +196,15 @@
     readImgSrc(this);
   });
 
+</script>
+
+<!-- <script src="/assets/dist/jquery.form-validator.min.js"></script> -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
+
+<script>
+  $.validate();
+  // Restrict project_description length
+  $('#project_description').restrictLength( $('#pres-max-length') );
 </script>
 
 <%- include('partials/footer') %>
