@@ -1,6 +1,7 @@
+var _ = require('lodash');
 var api = require("../lib/api");
 var assert = require('assert');
-var _ = require('underscore');
+var config = require('config');
 var randomstring = require('randomstring');
 
 function randomUserName() {
@@ -12,19 +13,17 @@ function randomUserName() {
 
 suite('api', function () {
 
-  var apiObj = api(process.env['CINCO_SERVER_URL']);
-
   suite('Properties', function () {
     suite('apiUrlRoot', function () {
       test('The passed in api root parameter should be available on the returned object', function () {
-        assert.equal(apiObj.apiRootUrl, process.env['CINCO_SERVER_URL'] + '/');
+        assert.equal(api.apiRootUrl, 'http://' + config.get('platform.host') + ':' + config.get('platform.port') + '/');
       });
     });
   });
 
   suite('Public Endpoints', function () {
     test('about/version', function (done) {
-      apiObj.getVersion(function (err, body) {
+      api.getVersion(function (err, body) {
         assert.equal(body['Application-Name'], 'CINCO');
         done();
       });
@@ -34,7 +33,7 @@ suite('api', function () {
   suite('Trusted Auth Endpoints', function () {
     suite('keysForLfId', function () {
       test('Calling keysForLfId wtesth an lfId returns an object wtesth keys', function (done) {
-        apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
+        api.getKeysForLfId("LaneMeyer", function (err, keys) {
           assert.ifError(err);
           assert.equal(keys.keyId.length, 20, "keyId length should be 20");
           assert.equal(keys.secret.length, 40, "secret length should be 40");
@@ -50,8 +49,8 @@ suite('api', function () {
     var sampleUserName = randomUserName();
 
     suiteSetup(function (done) {
-      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
-        adminClient = apiObj.client(keys);
+      api.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = api.client(keys);
         adminClient.createUser(sampleUserName, function (err, created) {
           done();
         });
@@ -156,16 +155,16 @@ suite('api', function () {
     var adminClient;
 
     suiteSetup(function (done) {
-      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
-        adminClient = apiObj.client(keys);
+      api.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = api.client(keys);
         adminClient.createUser(projUserName, function (err, created) {
           var projManagementGroup = {
             groupId: 3,
             name: 'PROJECT_MANAGER'
           };
           adminClient.addGroupForUser(projUserName, projManagementGroup, function (err, updated, user) {
-            apiObj.getKeysForLfId(projUserName, function (err, keys) {
-              projManagerClient = apiObj.client(keys);
+            api.getKeysForLfId(projUserName, function (err, keys) {
+              projManagerClient = api.client(keys);
               done();
             });
           });
@@ -213,9 +212,9 @@ suite('api', function () {
       var username = randomUserName();
       adminClient.createUser(username, function (err) {
         assert.ifError(err);
-        apiObj.getKeysForLfId(username, function (err, keys) {
+        api.getKeysForLfId(username, function (err, keys) {
           assert.ifError(err);
-          var client = apiObj.client(keys);
+          var client = api.client(keys);
           client.createOrganization({}, function (err) {
             assert.equal(err.statusCode, 403);
             done();
@@ -318,16 +317,16 @@ suite('api', function () {
     var adminClient;
 
     suiteSetup(function (done) {
-      apiObj.getKeysForLfId("LaneMeyer", function (err, keys) {
-        adminClient = apiObj.client(keys);
+      api.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = api.client(keys);
         adminClient.createUser(projUserName, function (err, created) {
           var projManagementGroup = {
             groupId: 3,
             name: 'PROJECT_MANAGER'
           };
           adminClient.addGroupForUser(projUserName, projManagementGroup, function (err, updated, user) {
-            apiObj.getKeysForLfId(projUserName, function (err, keys) {
-              projManagerClient = apiObj.client(keys);
+            api.getKeysForLfId(projUserName, function (err, keys) {
+              projManagerClient = api.client(keys);
               done();
             });
           });
@@ -346,7 +345,7 @@ suite('api', function () {
         assert(sampleProj.pm, "pm property should exist");
         assert(sampleProj.url, "url property should exist");
         assert(sampleProj.startDate, "startDate property should exist");
-        assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
             "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
         done();
       });
@@ -393,9 +392,9 @@ suite('api', function () {
       var username = randomUserName();
       adminClient.createUser(username, function (err) {
         assert.ifError(err);
-        apiObj.getKeysForLfId(username, function (err, keys) {
+        api.getKeysForLfId(username, function (err, keys) {
           assert.ifError(err);
-          var client = apiObj.client(keys);
+          var client = api.client(keys);
           client.createProject({}, function (err) {
             assert.equal(err.statusCode, 403);
             done();
@@ -483,7 +482,7 @@ suite('api', function () {
         assert(sampleProj.pm, "pm property should exist");
         assert(sampleProj.url, "url property should exist");
         assert(sampleProj.startDate, "startDate property should exist");
-        assert(_.contains(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
             "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
         done();
       });

@@ -5,14 +5,9 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var cinco_api = require("../lib/api");
+var cinco = require("../lib/api");
 
 var router = express.Router();
-
-var hostURL = process.env['CINCO_SERVER_URL'];
-if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
-
-var cinco = cinco_api(hostURL);
 
 var storageLogoCompany = multer.diskStorage({
   destination: function (req, file, cb) {
