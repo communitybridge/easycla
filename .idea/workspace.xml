@@ -2,51 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4cf450c5-f3f3-480b-83c2-eca26468b277" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/010e95d56891d1cc6d849fcb56ab710f" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/4b57be7f7217e1f6cfd1085e4675ddc4" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/60ae381afe1a6c6c263bfadb49718148" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/9758a2ca93107954fdd3727ca2d28985" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/e4c1ee84f02677d43038dae774f5b0f9" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/ecf69b760a73110eba174ea2568ad244" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/f019f2af65a356e7b25ae575dcc9a377" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/modules/f3b2d5e7c4573f3165595d498bdc03d4" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/.terraform/modules/1c41e21fe101383d8e580c9cbabf3bb6" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/.terraform/modules/6b9b3f6605933d6319b35052a3bb3891" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/.terraform/modules/6fbc9da7fdb9f9ed8af15b0712108e18" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/.terraform/modules/19786798458fd4560ae908e1d0c2ed06" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/.terraform/modules/3e3d7186fffba267912e021b0753fe4d" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/.terraform/modules/6b9b3f6605933d6319b35052a3bb3891" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/terraform.iml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/.terraform/terraform.tfstate" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/ecr.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/.terraform/terraform.tfstate" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/files/cloud-config.sh.tpl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/preprods/terraform.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/security_groups/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/terraform.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/.terraform/terraform.tfstate" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/elk.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/files/cloud-config.sh.tpl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/jenkins.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/mongodb.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/pypi.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/tools/terraform.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/vpn/.terraform/terraform.tfstate" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/engineering/vpn/terraform.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/bastion/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/bastion/user_data.sh" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/dhcp/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/dns/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/ecs-cluster/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/efs/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/elb/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/rds-cluster/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/redis-cluster/main.tf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/modules/vpc/main.tf" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -63,8 +21,8 @@
       <file leaf-file-name="ecr.tf" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/engineering/ecr.tf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="986">
-              <caret line="58" column="0" lean-forward="false" selection-start-line="58" selection-start-column="0" selection-end-line="58" selection-end-column="1" />
+            <state relative-caret-position="731">
+              <caret line="43" column="0" lean-forward="true" selection-start-line="43" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -365,6 +323,7 @@
         <option value="$PROJECT_DIR$/engineering/vpn/terraform.tf" />
         <option value="$PROJECT_DIR$/engineering/preprods/terraform.tf" />
         <option value="$PROJECT_DIR$/engineering/ecr.tf" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -423,46 +382,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="engineering" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="terraform" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="terraform" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="engineering" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vpn" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="terraform" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="terraform" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="engineering" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vpn" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value=".terraform" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -1039,10 +958,10 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="300" y="74" width="2020" height="1190" extended-state="0" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -1072,15 +991,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/engineering/tools/pypi/pypi.tf" />
-    <entry file="file://$PROJECT_DIR$/engineering/ecr.tf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engineering/tools/files/cloud-config.sh.tpl">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="306">
@@ -1635,10 +1545,29 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="0">
+            <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="6" lean-forward="true" selection-start-line="0" selection-start-column="6" selection-end-line="0" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/engineering/ecr.tf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="986">
-          <caret line="58" column="0" lean-forward="false" selection-start-line="58" selection-start-column="0" selection-end-line="58" selection-end-column="1" />
+        <state relative-caret-position="731">
+          <caret line="43" column="0" lean-forward="true" selection-start-line="43" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
           <folding />
         </state>
       </provider>
