@@ -5,18 +5,9 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var cinco_api = require("../lib/api");
+var cinco = require("../lib/api");
 
 var router = express.Router();
-
-const integration_user = process.env['CONSOLE_INTEGRATION_USER'];
-const integration_pass = process.env['CONSOLE_INTEGRATION_PASSWORD'];
-
-var hostURL = process.env['CINCO_SERVER_URL'];
-if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
-console.log("hostURL: " + hostURL);
-
-var cinco = cinco_api(hostURL);
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){

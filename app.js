@@ -1,9 +1,9 @@
 if(process.argv[2] != 'dev') require('newrelic');
 var express = require('express');
 var passport = require('passport');
+var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
-var bodyParser = require('body-parser');
 var flash = require('connect-flash');
 
 var app = express();
@@ -28,7 +28,7 @@ app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({
-  secret: process.env['SESSION_SECRET'] != null ? process.env['SESSION_SECRET'] : 'lhb.sdu3erw lwfe rlfwe oThge3 825dwj35 @#kbdwe3 ghdklnj32lj l2303',
+  secret: config.get('session.secret'),
   // cookie: { maxAge: 60000 },
   resave: false,
   saveUninitialized: false
@@ -64,10 +64,12 @@ app.get('*', function(req, res) {
     res.redirect('/');
 });
 
-const port = process.env['UI_PORT'] != null ? process.env['UI_PORT'] : 8081
+const port = config.get('console.port');
 app.listen(port, function() {});
 
-var serverBaseURL = process.env['CINCO_CONSOLE_URL'];
+var serverBaseURL = 'http://' + config.get('console.host') + ':' + port;
+console.log('serverBaseURL: ' + serverBaseURL);
+
 if(process.argv[2] == 'dev') {
   var gulp = require('gulp');
   require('./gulpfile');
@@ -75,8 +77,6 @@ if(process.argv[2] == 'dev') {
   if (gulp.tasks.scripts) gulp.start('scripts');
   if (gulp.tasks.watch) gulp.start('watch');
 }
-if(!serverBaseURL.startsWith('http') ) serverBaseURL = 'http://' + serverBaseURL;
-console.log('serverBaseURL: ' + serverBaseURL);
 
 passport.use(new CasStrategy({
   version: 'CAS3.0',
