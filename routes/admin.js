@@ -5,19 +5,13 @@ var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
-var cinco_api = require("../lib/api");
+var cinco = require("../lib/api");
 
 var router = express.Router();
-
-var hostURL = process.env['CINCO_SERVER_URL'];
-if(!hostURL.startsWith('http')) hostURL = 'http://' + hostURL;
-
-var cinco = cinco_api(hostURL);
 
 router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin) {
     var adminClient = cinco.client(req.session.user.cinco_keys);
-    var username = req.body.form_lfid;
     adminClient.getAllUsers(function (err, users, groups) {
       res.render('admin', { users: users, groups: groups, message: req.flash('info') });
     });
