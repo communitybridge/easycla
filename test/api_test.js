@@ -16,7 +16,7 @@ suite('api', function () {
   suite('Properties', function () {
     suite('apiUrlRoot', function () {
       test('The passed in api root parameter should be available on the returned object', function () {
-        assert.equal(api.apiRootUrl, 'http://' + config.get('platform.host') + ':' + config.get('platform.port') + '/');
+        assert.equal(api.apiRootUrl, config.get('platform.endpoint'));
       });
     });
   });
