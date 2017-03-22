@@ -65,13 +65,14 @@ app.get('*', function(req, res) {
     res.redirect('/');
 });
 
+// AWS  nginx proxy server uses 8081 by default
+const appPort = 8081;
+app.listen(appPort, function() {});
+console.log("Node App listening port: ", appPort);
+
+// Docker resolves the port mapping to "console.endpoint.port:8081"
 const pmcURL = config.get('console.endpoint');
-const port = url.parse(pmcURL).port || 80;
-
-app.listen(port, function() {});
-console.log("Listening port:", port);
-
-console.log('project-management-console-url: ' + pmcURL);
+console.log('Docker project-management-console-url: ' + pmcURL);
 
 if(process.argv[2] == 'dev') {
   var gulp = require('gulp');
