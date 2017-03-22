@@ -4,12 +4,10 @@
       "user": "CONSOLE_INTEGRATION_USER",
       "pass": "CONSOLE_INTEGRATION_PASSWORD"
     },
-    "host": "CINCO_CONSOLE_HOST",
-    "port": "CINCO_CONSOLE_PORT"
+    "endpoint": "CINCO_CONSOLE_URL"
   },
   "platform": {
-    "host": "CINCO_SERVER_HOST",
-    "port": "CINCO_SERVER_PORT"
+    "endpoint": "CINCO_SERVER_URL"
   },
   "session": {
     "secret": "SESSION_SECRET"

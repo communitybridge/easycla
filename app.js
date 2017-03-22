@@ -5,6 +5,7 @@ var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var flash = require('connect-flash');
+var url = require('url');
 
 var app = express();
 
@@ -64,10 +65,10 @@ app.get('*', function(req, res) {
     res.redirect('/');
 });
 
-const port = config.get('console.port');
+const serverBaseURL = config.get('console.endpoint');
+const port = url.parse(serverBaseURL).port || 80;
 app.listen(port, function() {});
 
-var serverBaseURL = 'http://' + config.get('console.host') + ':' + port;
 console.log('serverBaseURL: ' + serverBaseURL);
 
 if(process.argv[2] == 'dev') {
