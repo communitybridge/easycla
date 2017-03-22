@@ -1,4 +1,4 @@
-if(process.argv[2] != 'dev') require('newrelic');
+if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var config = require('config');
@@ -65,11 +65,13 @@ app.get('*', function(req, res) {
     res.redirect('/');
 });
 
-const serverBaseURL = config.get('console.endpoint');
-const port = url.parse(serverBaseURL).port || 80;
-app.listen(port, function() {});
+const pmcURL = config.get('console.endpoint');
+const port = url.parse(pmcURL).port || 80;
 
-console.log('serverBaseURL: ' + serverBaseURL);
+app.listen(port, function() {});
+console.log("Listening port:", port);
+
+console.log('project-management-console-url: ' + pmcURL);
 
 if(process.argv[2] == 'dev') {
   var gulp = require('gulp');
@@ -83,7 +85,7 @@ passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
   ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
-  serverBaseURL: serverBaseURL
+  serverBaseURL: pmcURL
 }, function(login, done) {
   return done(null, login);
 }));
