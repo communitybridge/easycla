@@ -10,6 +10,6 @@
     "endpoint": "CINCO_SERVER_URL"
   },
   "session": {
-    "secret": "SESSION_SECRET"
+    "secret": "ENCRYPTION_SAUCE"
   }
 }
