@@ -19,10 +19,6 @@ router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), functi
   }
 });
 
-router.get('/angular', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  res.render('angular');
-});
-
 router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   req.session.user = '';
   req.session.destroy();
