@@ -2,6 +2,7 @@
   "name": "project-management-console",
   "version": "0.0.1",
   "description": "Project Management Console",
+  "private": true,
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
