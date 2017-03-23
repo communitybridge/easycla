@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node app.js",
     "develop": "nodemon --ignore /public/assets/dist app.js dev",
-    "test": "mocha -u tdd"
+    "test": "mocha -u tdd",
+    "postinstall": "npm --prefix ./app install ./app"
   },
   "author": "",
   "license": "",
