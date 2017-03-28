@@ -5,8 +5,8 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "develop": "nodemon --ignore /public/assets/dist app.js dev",
+    "start": "nodemon --ignore /public/assets/dist app.js dev",
+    "develop": "node app.js & npm --prefix ./app run ionic:watch ./app",
     "test": "mocha -u tdd",
     "postinstall": "npm --prefix ./app install ./app"
   },
