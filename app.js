@@ -16,6 +16,9 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Static path to Angular/Ionic App [./app/src ]
+app.use(express.static(path.join(__dirname, 'app/www')));
+
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
