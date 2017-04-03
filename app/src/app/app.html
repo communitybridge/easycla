@@ -1,16 +1,22 @@
 <ion-menu [content]="content">
   <ion-header>
-    <ion-toolbar>
-      <ion-title>Menu</ion-title>
-    </ion-toolbar>
+    <img class="app-logo" src="../assets/icon/logo.svg" alt="The Linux Foundation">
   </ion-header>
 
   <ion-content>
-    <ion-list>
-      <button menuClose ion-item *ngFor="let p of pages" (click)="openPage(p)">
-        {{p.title}}
-      </button>
-    </ion-list>
+    <ul class="menu-list">
+      <div *ngFor="let p of pages">
+        <li menuClose ion-item (click)="openPage(p)">
+          {{p.title}}
+        </li>
+        <ul class="menu-list">
+          <li menuClose ion-item>Dashboard</li>
+          <li menuClose ion-item>Project Details</li>
+          <li menuClose ion-item>Brand and Logos</li>
+          <li menuClose ion-item>Member Companies</li>
+        </ul>
+      </div>
+    </ul>
   </ion-content>
 
 </ion-menu>
