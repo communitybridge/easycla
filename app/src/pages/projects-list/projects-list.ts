@@ -2,13 +2,16 @@ import { Component, ViewChild } from '@angular/core';
 
 import { NavController } from 'ionic-angular';
 
+import { AddProjectPage } from '../add-project/add-project';
+
 import { Chart } from 'chart.js';
 
 @Component({
-  selector: 'page-page1',
-  templateUrl: 'page1.html'
+  selector: 'projects-list',
+  templateUrl: 'projects-list.html'
 })
-export class Page1 {
+export class ProjectsListPage {
+  pushAddProjectPage;
   contracts: {
     base: Array<number>,
     additional: Array<number>,
@@ -59,6 +62,9 @@ export class Page1 {
 
 
   constructor(public navCtrl: NavController) {
+
+    this.pushAddProjectPage = AddProjectPage;
+
     this.contracts = {
       base: [2, 5, 3],
       additional: [0, 0, 0],
@@ -221,7 +227,7 @@ export class Page1 {
 
   projectSelected(event, project) {
     // That's right, we're pushing to ourselves!
-    this.navCtrl.push(Page1, {
+    this.navCtrl.push(ProjectsListPage, {
       project: project
     });
   }
