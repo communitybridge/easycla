@@ -13,6 +13,14 @@
 
 <ion-content padding headerspacing>
 
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="left">
+      <button ion-fab [navPush]="pushAddProjectPage"><ion-icon name="md-briefcase"></ion-icon></button>
+      <button ion-fab><ion-icon name="md-contact"></ion-icon></button>
+    </ion-fab-list>
+  </ion-fab>
+
   <header>
     <ion-grid>
       <ion-row>
@@ -64,6 +72,10 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
+
+
+
+
 
     </ion-row>
   </ion-grid>
