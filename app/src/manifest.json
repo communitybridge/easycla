@@ -1,10 +1,10 @@
 {
-  "name": "PMC App",
-  "short_name": "PMC",
+  "name": "pmc-app",
+  "short_name": "pmc-app",
   "start_url": "index.html",
   "display": "standalone",
   "icons": [{
-    "src": "assets/imgs/logo.png",
+    "src": "assets/icon/favicon.png",
     "sizes": "512x512",
     "type": "image/png"
   }],
