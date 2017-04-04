@@ -1,0 +1,64 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Add Project</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <ion-item>
+          <ion-label stacked>Project Name</ion-label>
+          <ion-input type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Type</ion-label>
+          <ion-select [(ngModel)]="project-type">
+            <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
+            <ion-option value="INCORPORATED">Incorporated</ion-option>
+            <ion-option value="UNSPECIFIED">Unspecified</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Budget</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Categories</ion-label>
+          <ion-select [(ngModel)]="project-category">
+            <ion-option value="EMBEDDED_AND_IOT">Embedded and IoT</ion-option>
+            <ion-option value="OTHER">Other</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-6>
+        <ion-item>
+          <ion-label stacked>Domain</ion-label>
+          <ion-input type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12>
+        <ion-item>
+          <ion-label stacked>Description</ion-label>
+          <ion-input type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

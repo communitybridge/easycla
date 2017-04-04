@@ -1,8 +1,8 @@
 import { NgModule, ErrorHandler } from '@angular/core';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
-import { Page1 } from '../pages/page1/page1';
-import { Page2 } from '../pages/page2/page2';
+import { HomePage } from '../pages/home/home';
+import { AddProjectPage } from '../pages/add-project/add-project';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -10,8 +10,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 @NgModule({
   declarations: [
     MyApp,
-    Page1,
-    Page2
+    HomePage,
+    AddProjectPage
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -19,8 +19,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    Page1,
-    Page2
+    HomePage,
+    AddProjectPage
   ],
   providers: [
     StatusBar,
