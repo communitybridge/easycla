@@ -5,10 +5,10 @@ import { NavController } from 'ionic-angular';
 import { Chart } from 'chart.js';
 
 @Component({
-  selector: 'home',
-  templateUrl: 'home.html'
+  selector: 'projects-list',
+  templateUrl: 'projects-list.html'
 })
-export class HomePage {
+export class ProjectsListPage {
   contracts: {
     base: Array<number>,
     additional: Array<number>,
@@ -221,7 +221,7 @@ export class HomePage {
 
   projectSelected(event, project) {
     // That's right, we're pushing to ourselves!
-    this.navCtrl.push(HomePage, {
+    this.navCtrl.push(ProjectsListPage, {
       project: project
     });
   }
