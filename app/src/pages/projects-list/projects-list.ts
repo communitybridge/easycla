@@ -6,6 +6,8 @@ import { AddProjectPage } from '../add-project/add-project';
 
 import { Chart } from 'chart.js';
 
+import { ProjectPage } from '../project/project';
+
 @Component({
   selector: 'projects-list',
   templateUrl: 'projects-list.html'
@@ -226,8 +228,7 @@ export class ProjectsListPage {
   }
 
   projectSelected(event, project) {
-    // That's right, we're pushing to ourselves!
-    this.navCtrl.push(ProjectsListPage, {
+    this.navCtrl.push(ProjectPage, {
       project: project
     });
   }
