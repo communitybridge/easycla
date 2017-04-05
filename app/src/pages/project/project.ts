@@ -11,6 +11,11 @@ export class ProjectPage {
   project: {
     icon: string,
     title: string,
+    description: string,
+    datas: Array<{
+      label: string,
+      value: string,
+    }>,
   };
 
   members: Array<{
@@ -31,6 +36,29 @@ export class ProjectPage {
     this.project = {
       icon: "https://dummyimage.com/600x250/ffffff/000.png&text=zephyr+logo",
       title: "Zephyr",
+      description: "Zephyr Project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
+      datas: [
+        {
+          label: "Budget",
+          value: "$3,000,000",
+        },
+        {
+          label: "Categories",
+          value: "Embedded & IoT",
+        },
+        {
+          label: "Launched",
+          value: "5/1/2016",
+        },
+        {
+          label: "Current",
+          value: "$2,000,000 ($1,000,000)",
+        },
+        {
+          label: "Members",
+          value: "41",
+        },
+      ],
     };
 
     this.members = [
@@ -124,5 +152,13 @@ export class ProjectPage {
       },
     ];
 
+  }
+
+  memberSelected(event, project, member) {
+    alert("check the console!");
+    console.log({project, member});
+    // this.navCtrl.push(MemberPage, {
+    //   project: project
+    // });
   }
 }
