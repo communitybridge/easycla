@@ -4,6 +4,7 @@ import { MyApp } from './app.component';
 import { ProjectsListPage } from '../pages/projects-list/projects-list';
 import { AddProjectPage } from '../pages/add-project/add-project';
 import { MemberPage } from '../pages/member/member';
+import { ProjectPage } from '../pages/project/project';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -13,7 +14,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     MyApp,
     ProjectsListPage,
     AddProjectPage,
-    MemberPage
+    MemberPage,
+    ProjectPage
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -23,7 +25,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     MyApp,
     ProjectsListPage,
     AddProjectPage,
-    MemberPage
+    MemberPage,
+    ProjectPage
   ],
   providers: [
     StatusBar,
