@@ -2,15 +2,18 @@ import { Component, ViewChild } from '@angular/core';
 
 import { NavController } from 'ionic-angular';
 
+import { AddProjectPage } from '../add-project/add-project';
+
 import { Chart } from 'chart.js';
 
 import { ProjectPage } from '../project/project';
 
 @Component({
-  selector: 'page-page1',
-  templateUrl: 'page1.html'
+  selector: 'projects-list',
+  templateUrl: 'projects-list.html'
 })
-export class Page1 {
+export class ProjectsListPage {
+  pushAddProjectPage;
   contracts: {
     base: Array<number>,
     additional: Array<number>,
@@ -61,6 +64,9 @@ export class Page1 {
 
 
   constructor(public navCtrl: NavController) {
+
+    this.pushAddProjectPage = AddProjectPage;
+
     this.contracts = {
       base: [2, 5, 3],
       additional: [0, 0, 0],
