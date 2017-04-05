@@ -3,6 +3,7 @@ import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { ProjectsListPage } from '../pages/projects-list/projects-list';
 import { AddProjectPage } from '../pages/add-project/add-project';
+import { MemberPage } from '../pages/member/member';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -11,7 +12,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
   declarations: [
     MyApp,
     ProjectsListPage,
-    AddProjectPage
+    AddProjectPage,
+    MemberPage
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -20,7 +22,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
   entryComponents: [
     MyApp,
     ProjectsListPage,
-    AddProjectPage
+    AddProjectPage,
+    MemberPage
   ],
   providers: [
     StatusBar,
