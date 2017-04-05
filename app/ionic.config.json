@@ -1,6 +1,6 @@
 {
-  "name": "app",
-  "app_id": "",
+  "name": "pmc-app",
+  "app_id": "b174f5f2",
   "v2": true,
   "typescript": true
 }
