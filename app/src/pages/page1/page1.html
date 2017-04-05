@@ -48,6 +48,7 @@
         <ion-card>
           <img src="{{project.icon}}" alt="{{project.title}} logo"/>
           <ion-card-content>
+            <button (click)="projectSelected($event, project)">View Project</button>
             <ion-card-title>
               {{project.title}}
             </ion-card-title>

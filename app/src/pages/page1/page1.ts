@@ -4,6 +4,8 @@ import { NavController } from 'ionic-angular';
 
 import { Chart } from 'chart.js';
 
+import { ProjectPage } from '../project/project';
+
 @Component({
   selector: 'page-page1',
   templateUrl: 'page1.html'
@@ -220,8 +222,7 @@ export class Page1 {
   }
 
   projectSelected(event, project) {
-    // That's right, we're pushing to ourselves!
-    this.navCtrl.push(Page1, {
+    this.navCtrl.push(ProjectPage, {
       project: project
     });
   }
