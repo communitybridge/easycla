@@ -10,16 +10,25 @@
 <ion-content padding>
 
   <header>
+
     <ion-grid>
-      <ion-col col-12 text-right padding-top>
-          <span color="gray">Last Updated: 3/16/2017</span>
-      </ion-col>
-      <ion-row>
-        <ion-col col-12 col-md-6 col-lg-4 text-center>
-          <p><img src="assets/test/google-logo.png"/></p>
-          <p><ion-icon padding md="md-download"></ion-icon> Logo (.ai or .eps)</p>
+      <ion-row responsive-sm>
+        <ion-col col-12 text-right padding-top>
+            <span color="gray">Last Updated: 3/16/2017</span>
         </ion-col>
-        <ion-col col-12 col-md-6 col-lg-4>
+      </ion-row>
+    </ion-grid>
+
+    <ion-grid>
+      <ion-row responsive-sm>
+        <ion-col width-30 text-center>
+          <p><img src="assets/test/google-logo.png"/></p>
+          <p color="gray">
+            <a href="assets/test/google-logo.png" download><ion-icon name="md-download"></ion-icon></a>
+            <small>Logo (.ai or .eps)</small>
+          </p>
+        </ion-col>
+        <ion-col width-40>
           <ion-item>
             <h1>Google (Alphabet)</h1>
             <h2 margin-top>www.google.com</h2>
@@ -33,7 +42,7 @@
             <p>Board: Yes</p>
           </ion-item>
         </ion-col>
-        <ion-col col-12 col-md-6 col-lg-4>
+        <ion-col width-30>
           <ion-item>
             <p>Zephyr Renewal Date</p>
             <b>3/30/2017</b>
@@ -50,5 +59,162 @@
       </ion-row>
     </ion-grid>
   </header>
+
+  <ion-grid>
+    <ion-row responsive-md>
+      <ion-col width-33>
+        <ion-card>
+          <ion-card-header>
+            <ion-row>
+              <ion-col col-10>
+                CONTRACT
+              </ion-col>
+              <ion-col col-2>
+                <ion-icon md="md-folder" button-large></ion-icon>
+              </ion-col>
+            </ion-row>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-icon name="md-open" item-left large></ion-icon>
+              <h2>DocuSign Status</h2>
+              <p>Documents for your DocuSign Signature</p>
+              <p>Envelope #DSX-0000008</p>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="md-checkmark" item-left large></ion-icon>
+              <h2>Sasha Maxwell, Google</h2>
+              <p>sashamaxwell@google.com</p>
+              <p>Completed on 3/19/2016, 00:09am</p>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="md-square-outline" item-left large></ion-icon>
+              <h2>Lauren Legalesq, Linux Foundation</h2>
+              <p>laura@linuxfoundation.org</p>
+              <p><i>Wating for signature</i></p>
+            </ion-item>
+          </ion-card-content>
+          <br>
+        </ion-card>
+      </ion-col>
+      <ion-col width-33>
+        <ion-card>
+          <ion-card-header>
+            <ion-row>
+              <ion-col col-10>
+                INVOICE
+              </ion-col>
+              <ion-col col-2>
+                <ion-icon md="md-folder" button-large></ion-icon>
+              </ion-col>
+            </ion-row>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <h2>Invoice: Unsent</h2>
+            </ion-item>
+            <ion-item>
+              <h2>Mary Almond</h2>
+              <p>maryalmond@google.com</p>
+            </ion-item>
+            <ion-item>
+              <p>Terms: 30 Day</p>
+              <p>Amount: Gold, $20,000.00</p>
+            </ion-item>
+            <p><br><br></p>
+            <ion-item>
+              <p>
+                <a href="#">
+                  <ion-icon name="cloud-upload"></ion-icon> Preview Invoice
+                </a>
+              </p>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col width-33>
+        <ion-card>
+          <ion-card-header>
+            <ion-row>
+              <ion-col col-10>
+                LF PROJECTS
+              </ion-col>
+              <ion-col col-2>
+                <a href="#">(18)</a>
+              </ion-col>
+            </ion-row>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item no-padding>
+              <ion-row>
+                <ion-col col-12>
+                  <h2 color="primary"><ion-icon name="md-open"></ion-icon> Zephyr</h2>
+                </ion-col>
+              </ion-row>
+              <ion-row responsive-md>
+                <ion-col width-25>
+                  <p>Gold, Active</p>
+                </ion-col>
+                <ion-col width-40>
+                  <p>Joined 3/1/2017</p>
+                </ion-col>
+                <ion-col width-45>
+                  <p>Renewal: 3/30/2017</p>
+                </ion-col>
+              </ion-row>
+              <ion-row>
+                <ion-col col-12>
+                  <h2><ion-icon name="md-open"></ion-icon> OpenOpen</h2>
+                </ion-col>
+              </ion-row>
+              <ion-row responsive-md>
+                <ion-col width-25>
+                  <p>Silver, Active</p>
+                </ion-col>
+                <ion-col width-40>
+                  <p>Joined 3/1/2017</p>
+                </ion-col>
+                <ion-col width-45>
+                  <p>Renewal: 3/30/2017</p>
+                </ion-col>
+              </ion-row>
+              <ion-row>
+                <ion-col col-12>
+                  <h2><ion-icon name="md-open"></ion-icon> MonsterOpen</h2>
+                </ion-col>
+              </ion-row>
+              <ion-row responsive-md>
+                <ion-col width-25>
+                  <p>Silver, Active</p>
+                </ion-col>
+                <ion-col width-40>
+                  <p>Joined 3/1/2017</p>
+                </ion-col>
+                <ion-col width-45>
+                  <p>Renewal: 3/30/2017</p>
+                </ion-col>
+              </ion-row>
+              <ion-row>
+                <ion-col col-12>
+                  <h2><ion-icon name="md-open"></ion-icon> BentoOpen</h2>
+                </ion-col>
+              </ion-row>
+              <ion-row responsive-md>
+                <ion-col width-25>
+                  <p>Gold, Active</p>
+                </ion-col>
+                <ion-col width-40>
+                  <p>Joined 3/1/2017</p>
+                </ion-col>
+                <ion-col width-45>
+                  <p>Renewal: 3/30/2017</p>
+                </ion-col>
+              </ion-row>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
 </ion-content>
