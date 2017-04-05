@@ -1,0 +1,101 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>{{ project.title }}</ion-title>
+    <div class="toolbar-search">
+      <ion-icon name="search"></ion-icon>
+        <ion-input type="text" value=""></ion-input>
+    </div>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+
+  <header>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-9>
+          <ion-row>
+            <ion-col col-12 col-md-4>
+              <img src="{{ project.icon }}" alt="{{ project.title }} logo"/>
+            </ion-col>
+            <ion-col col-12 col-md-8>
+              <h1>{{ project.title }}</h1>
+              <p>{{ project.description }}</p>
+            </ion-col>
+            <ion-col col-12>
+              <ion-row>
+                <ion-col *ngFor="let data of project.datas" col-12 col-md-4>
+                  <span>{{ data.label }}:</span>
+                  <span>{{ data.value }}</span>
+                </ion-col>
+              </ion-row>
+            </ion-col>
+          </ion-row>
+        </ion-col>
+        <ion-col col-12 col-md-3>
+          <ion-item>
+            <ion-icon name="people" item-left large></ion-icon>
+            <p>
+              Board Meetings and Minutes<br>
+              Last upload: 3/1/2017
+            </p>
+          </ion-item>
+          <ion-item>
+            <ion-icon name="mail" item-left large></ion-icon>
+            <p>Email Lists</p>
+          </ion-item>
+          <ion-item>
+            <ion-icon name="information-circle" item-left large></ion-icon>
+            <p>Project Details and Documents</p>
+          </ion-item>
+          <ion-item>
+            <ion-icon name="image" item-left large></ion-icon>
+            <p>Logo and Brand</p>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header>
+
+  <ion-card>
+    <ion-card-content>
+      <ion-card-title>
+        Members
+      </ion-card-title>
+      <div class="table-responsive-vertical">
+        <table id="table" class="table table-hover">
+          <thead>
+            <tr>
+              <th>Alert</th>
+              <th>Company</th>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Annual Dues</th>
+              <th>Renewal Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of members">
+              <td data-title="Alert">
+                <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
+                <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
+                <span *ngIf="member.alert == ''" class="circle-null"></span>
+              </td>
+              <td data-title="Company" (click)="memberSelected($event, project, member)">{{ member.name }}</td>
+              <td data-title="Level">{{ member.level }}</td>
+              <td data-title="Status">{{ member.status }}</td>
+              <td data-title="Annual Dues">{{ member.annual_dues }}</td>
+              <td data-title="Renewal Date">{{ member.renewal_date }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+
+
+</ion-content>

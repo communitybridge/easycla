@@ -50,12 +50,11 @@
 
   <ion-grid class="projects-list">
     <ion-row>
-
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
         <ion-card>
-          <img src="{{project.icon}}" alt="{{project.title}} logo"/>
+          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>
           <ion-card-content>
-            <ion-card-title>
+            <ion-card-title (click)="projectSelected($event, project)">
               {{project.title}}
             </ion-card-title>
             <dl>
