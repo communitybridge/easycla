@@ -33,7 +33,9 @@
     "passport-cas": "^0.1.0",
     "passport-local": "^1.0.0",
     "randomstring": "^1.1.5",
-    "request": "^2.74.0"
+    "request": "^2.74.0",
+    "serve-index": "^1.8.0",
+    "serve-static": "^1.12.1"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
