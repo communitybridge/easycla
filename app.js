@@ -4,10 +4,15 @@ var passport = require('passport');
 var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
+var serveIndex = require('serve-index');
+var serveStatic = require('serve-static');
 var flash = require('connect-flash');
 var url = require('url');
+const util = require('util')
 
 var app = express();
+
+module.exports = app;
 
 // App config
 app.set('view engine', 'ejs');
@@ -16,8 +21,11 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Static path to Angular/Ionic App [./app/src ]
-app.use(express.static(path.join(__dirname, 'app/www')));
+// var authMiddleware = auth.connect(basic);
+// var authMiddleware = require('connect-ensure-login').ensureLoggedIn('/login');
+
+
+
 
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
@@ -55,9 +63,9 @@ app.use(membersRouter);
 app.use(mailingRouter);
 app.use(aliasesRouter);
 
-app.get('*', function(req, res) {
-    res.redirect('/');
-});
+// app.get('*', function(req, res) {
+//     res.redirect('/');
+// });
 
 // AWS  nginx proxy server uses 8081 by default
 const appPort = 8081;
@@ -86,7 +94,10 @@ passport.use(new CasStrategy({
 }));
 
 passport.serializeUser(function(user, callback) {
-  callback(null, user);
+  console.log("serializeUser: " + user.user);
+
+  console.log(util.inspect(user, false, null))
+  callback(null, user.user);
 });
 
 passport.deserializeUser(function(obj, callback) {
