@@ -24,6 +24,7 @@ export class AddProjectPage {
       project_type: this.project_type
     };
     this.cincoService.postProject(this.newProject).subscribe(response => {
+      console.log(response)
       this.navCtrl.push(ProjectPage, {
         projectId: response
       });
