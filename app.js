@@ -6,6 +6,7 @@ var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var flash = require('connect-flash');
 var url = require('url');
+const util = require('util')
 
 var app = express();
 
@@ -15,9 +16,6 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Static path to Angular/Ionic App [./app/src ]
-app.use(express.static(path.join(__dirname, 'app/www')));
 
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
@@ -39,6 +37,12 @@ app.use(function (req, res, next) {
   res.locals.req = req;
   next();
 });
+
+var authMiddleware = function(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  else return res.render('login');
+}
+app.use('/pmc', authMiddleware, express.static(path.join(__dirname, 'app/www')));
 
 // Routes
 var mainRouter = require('./routes/main');
@@ -86,7 +90,8 @@ passport.use(new CasStrategy({
 }));
 
 passport.serializeUser(function(user, callback) {
-  callback(null, user);
+  // console.log(util.inspect(user, false, null))
+  callback(null, user.user);
 });
 
 passport.deserializeUser(function(obj, callback) {
