@@ -237,7 +237,7 @@ router.post('/post_project', require('connect-ensure-login').ensureLoggedIn('/lo
     console.log(newProject);
     projManagerClient.createProject(newProject, function (err, created, projectId) {
       console.log("/post_project success");
-      res.json(projectId)
+      return res.json(projectId);
     });
   }
 });
