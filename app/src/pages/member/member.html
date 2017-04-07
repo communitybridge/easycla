@@ -227,31 +227,40 @@
           <ion-card-content>
             <ion-list>
 
-              <ion-item>
+              <ion-item *ngFor="let contact of contacts" >
                 <ion-row responsive-sm center>
                   <ion-col width-12>
-                    <p>BOARD</p>
+                    <p>
+                      {{contact.role}}
+                      <ion-icon *ngIf="contact.primary" md="md-star"></ion-icon>
+                    </p>
                   </ion-col>
                   <ion-col width-8>
                     <ion-avatar>
-                      <img style="border:solid navy;" src="assets/test/penny.jpeg">
+                      <img style="border:solid navy;" src="{{contact.photo}}">
                     </ion-avatar>
                   </ion-col>
-                  <ion-col width-20>
-                    <h2>Johana Matisss</h2>
-                    <p>VP Design</p>
+                  <ion-col width-20 (click)="contactSelected($event, contact)">
+                    <h2>{{contact.firstname}} {{contact.lastname}}</h2>
+                    <p>{{contact.title}}</p>
                   </ion-col>
                   <ion-col width-10>
-                    <p>EST (+4)</p>
+                    <p>{{contact.timezone}}</p>
                   </ion-col>
                   <ion-col width-25>
-                    <p>board@google.com</p>
+                    <p>{{contact.email}}</p>
                   </ion-col>
                   <ion-col width-10>
-                    <p><ion-icon color="green" md="md-checkmark-circle"></ion-icon> Bio</p>
+                    <p>
+                      <ion-icon *ngIf="contact.bio" color="green" md="md-checkmark-circle"></ion-icon>
+                      Bio
+                    </p>
                   </ion-col>
                   <ion-col width-10>
-                    <p><ion-icon color="green" md="md-checkmark-circle"></ion-icon> Photo</p>
+                    <p>
+                      <ion-icon color="green" md="md-checkmark-circle"></ion-icon>
+                      Photo
+                    </p>
                   </ion-col>
                 </ion-row>
               </ion-item>
