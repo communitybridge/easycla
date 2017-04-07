@@ -13,6 +13,7 @@ import { ProjectPage } from '../project/project';
 })
 export class ProjectsListPage {
   allProjects: any;
+  projectId: String;
   pushAddProjectPage;
   contracts: {
     base: Array<number>,
@@ -64,8 +65,33 @@ export class ProjectsListPage {
 
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
-
     this.pushAddProjectPage = AddProjectPage;
+    this.getDefaults();
+  }
+
+  ngOnInit(){
+    this.getAllProjects();
+  };
+
+  getAllProjects(){
+    this.cincoService.getAllProjects().subscribe(response => {
+      this.allProjects = response;
+    });
+  }
+
+  viewProject(projectId){
+    this.navCtrl.push(ProjectPage, {
+      projectId: projectId
+    });
+  }
+
+  projectSelected(event, project) {
+    this.navCtrl.push(ProjectPage, {
+      project: project
+    });
+  }
+
+  getDefaults(){
 
     this.contracts = {
       base: [2, 5, 3],
@@ -225,23 +251,6 @@ export class ProjectsListPage {
         ],
       },
     ];
-  }
-
-  ngOnInit(){
-    this.getAllProjects();
-  };
-
-  getAllProjects(){
-    this.cincoService.getAllProjects().subscribe(response => {
-      this.allProjects = response;
-    });
-  }
-
-
-  projectSelected(event, project) {
-    this.navCtrl.push(ProjectPage, {
-      project: project
-    });
   }
 
   ionViewDidLoad() {

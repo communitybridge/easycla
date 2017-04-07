@@ -16,4 +16,10 @@ export class CincoService{
     return this.http.get(this.baseUrl + '/get_all_projects')
             .map(res => res.json());
   }
+
+  getProject(projectId){
+    return this.http.get(this.baseUrl + '/get_project/' + projectId)
+            .map(res => res.json());
+  }
+
 }

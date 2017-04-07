@@ -32472,6 +32472,13 @@ page-project .table-hover > tbody > tr:hover > th {
   }
 }
 
+projects-list {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 projects-list ion-card dl {
   display: -webkit-flex;
   display: -ms-flexbox;
