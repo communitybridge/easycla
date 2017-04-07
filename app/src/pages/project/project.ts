@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 
 import { NavController, NavParams } from 'ionic-angular';
 
+import { MemberPage } from '../member/member';
+
 @Component({
   selector: 'page-project',
   templateUrl: 'project.html'
@@ -31,7 +33,7 @@ export class ProjectPage {
     // If we navigated to this page, we will have an item available as a nav param
     this.selectedProject = navParams.get('project');
 
-    // use selectedProject to get data from CINCO and populate this.project
+    // use selectedProject and selectedMember to get data from CINCO and populate this.project
 
     this.project = {
       icon: "https://dummyimage.com/600x250/ffffff/000.png&text=zephyr+logo",
@@ -155,10 +157,10 @@ export class ProjectPage {
   }
 
   memberSelected(event, project, member) {
-    alert("check the console!");
-    console.log({project, member});
-    // this.navCtrl.push(MemberPage, {
-    //   project: project
-    // });
+    this.navCtrl.push(MemberPage, {
+      project: project,
+      member: member,
+    });
   }
+
 }
