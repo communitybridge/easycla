@@ -14,7 +14,8 @@ router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), functi
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getAllProjects(function (err, projects) {
       req.session.projects = projects;
-      res.render('homepage', {projects: projects});
+      // res.render('homepage', {projects: projects});
+      res.redirect('/pmc')
     });
   }
 });
@@ -24,6 +25,10 @@ router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), 
   req.session.destroy();
   req.logout();
   res.redirect('/');
+});
+
+router.get('/login', function(req,res) {
+  res.render('login');
 });
 
 router.get('/login', function(req,res) {

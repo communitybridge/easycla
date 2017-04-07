@@ -14,7 +14,7 @@
       <ion-col col-12>
         <ion-item>
           <ion-label stacked>Project Name</ion-label>
-          <ion-input type="text"></ion-input>
+          <ion-input type="text" name="project_name" [(ngModel)]="project_name"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -22,7 +22,7 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Project Type</ion-label>
-          <ion-select [(ngModel)]="project-type">
+          <ion-select [(ngModel)]="project_type">
             <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
             <ion-option value="INCORPORATED">Incorporated</ion-option>
             <ion-option value="UNSPECIFIED">Unspecified</ion-option>
@@ -66,6 +66,7 @@
     </ion-row>
   </ion-grid>
 
+  <!--
   <ion-item-divider color="white"></ion-item-divider>
 
   <ion-grid>
@@ -108,8 +109,8 @@
     </ion-row>
   </ion-grid>
 
-
   <ion-item-divider color="white"></ion-item-divider>
+  -->
 
   <ion-grid>
     <ion-row margin-top>
@@ -126,5 +127,11 @@
       <button ion-button small outline>Upload Bylaw File</button>
     </ion-row>
   </ion-grid>
+
+  <ion-row margin-left margin-top margin-bottom text-center>
+    <ion-col col-12>
+      <button ion-button (click)="submitNewProject()">Create Project</button>
+    </ion-col>
+  </ion-row>
 
 </ion-content>
