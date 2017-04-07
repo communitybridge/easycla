@@ -3,12 +3,15 @@ import { Nav, Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
+import { CincoService } from './services/cinco.service';
+
 import { ProjectsListPage } from '../pages/projects-list/projects-list';
 import { AddProjectPage } from '../pages/add-project/add-project';
 import { MemberPage } from '../pages/member/member';
 
 @Component({
-  templateUrl: 'app.html'
+  templateUrl: 'app.html',
+  providers: [CincoService]
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
