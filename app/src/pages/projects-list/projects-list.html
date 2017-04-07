@@ -50,6 +50,40 @@
 
   <ion-grid class="projects-list">
     <ion-row>
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title (click)="viewItem(project.id)">
+              {{project.name}}
+            </ion-card-title>
+            <dl>
+              <dt> Type </dt>
+              <dd>{{ project.type }}</dd>
+            </dl>
+            <dl>
+              <dt> Status </dt>
+              <dd>{{ project.status }}</dd>
+            </dl>
+            <dl>
+              <dt> ID </dt>
+              <dd><small>{{ project.id }}</small></dd>
+            </dl>
+            <ion-item>
+              <ion-icon name="calendar" item-left large ></ion-icon>
+              <h2>{{project.name}} Meeting</h2>
+              <p>3/18/2017, 4:00 - 5:00 pst</p>
+            </ion-item>
+            <ion-item>
+              <button ion-button clear item-right (click)="viewItem(project.id)">View</button>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-grid class="projects-list">
+    <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
         <ion-card>
           <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>

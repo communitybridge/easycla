@@ -185,4 +185,15 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
   }
 });
 
+
+router.get('/get_all_projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getAllProjects(function (err, projects) {
+      res.send(projects)
+    });
+  }
+});
+
+
 module.exports = router;
