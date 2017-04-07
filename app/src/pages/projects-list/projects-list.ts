@@ -2,10 +2,9 @@ import { Component, ViewChild } from '@angular/core';
 
 import { NavController } from 'ionic-angular';
 
-import { AddProjectPage } from '../add-project/add-project';
-
+import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
-
+import { AddProjectPage } from '../add-project/add-project';
 import { ProjectPage } from '../project/project';
 
 @Component({
@@ -13,6 +12,7 @@ import { ProjectPage } from '../project/project';
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
+  allProjects: any;
   pushAddProjectPage;
   contracts: {
     base: Array<number>,
@@ -63,7 +63,7 @@ export class ProjectsListPage {
   invoicesChart: any;
 
 
-  constructor(public navCtrl: NavController) {
+  constructor(public navCtrl: NavController, private cincoService: CincoService) {
 
     this.pushAddProjectPage = AddProjectPage;
 
@@ -226,6 +226,17 @@ export class ProjectsListPage {
       },
     ];
   }
+
+  ngOnInit(){
+    this.getAllProjects();
+  };
+
+  getAllProjects(){
+    this.cincoService.getAllProjects().subscribe(response => {
+      this.allProjects = response;
+    });
+  }
+
 
   projectSelected(event, project) {
     this.navCtrl.push(ProjectPage, {
