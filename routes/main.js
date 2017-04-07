@@ -1,63 +1,22 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
-var path = require('path');
-var serveIndex = require('serve-index');
-var serveStatic = require('serve-static');
 var request = require('request');
 var multer  = require('multer');
 var async = require('async');
 
 var cinco = require("../lib/api");
-var app = require('../');
 
 var router = express.Router();
 
-var authMiddleware = function(req, res, next) {
-  console.log("req.isAuthenticated() : " + req.isAuthenticated() );
-
-  if (req.isAuthenticated())
-  {
-    console.log("success!");
-    return next();
-  }
-  else{
-    console.log("not authorized!");
-    return res.render('login');
-  }
-
-}
-
-// Static path to Angular/Ionic App [./app/src ]
-// app.use(express.static(path.join(__dirname, 'app/www')));
-// app.use('/secretplace', authMiddleware, serveIndex(__dirname + '/public/secretplace'));
-app.use('/pmc', authMiddleware, serveIndex(__dirname + 'app/www'));
-app.use('/pmc', serveStatic(__dirname + 'app/www', { 'index': false }));
-
-//
-
-// app.use('/pmc', authMiddleware);
-// app.use('/', authMiddleware, express.static(path.join(__dirname, '/app/www')));
-
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-
-  console.log("req.isAuthenticated() : " + req.isAuthenticated() );
-
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getAllProjects(function (err, projects) {
       req.session.projects = projects;
-      res.render('homepage', {projects: projects});
+      // res.render('homepage', {projects: projects});
+      res.redirect('/pmc')
     });
-  }
-});
-
-router.get('/pmc', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-
-  console.log("req.isAuthenticated() : " + req.isAuthenticated() );
-
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("success!");
   }
 });
 
