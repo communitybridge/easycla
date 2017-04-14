@@ -5,7 +5,7 @@ import { NavController, ModalController, NavParams } from 'ionic-angular';
 import { ContactUpdate } from '../contact-update/contact-update';
 
 @Component({
-  selector: 'member',
+  selector: 'page-member',
   templateUrl: 'member.html'
 })
 export class MemberPage {
@@ -14,14 +14,18 @@ export class MemberPage {
   contacts: Array<{
     firstname: string,
     lastname: string,
-    photo: string,
+    profile_photo: string,
     primary?: boolean,
     role: string,
     title: string,
     timezone?: string,
     email: string,
+    email_groups?: Array<{
+      name: string,
+    }>,
     phone?: string,
     bio?: string,
+    photo?: string,
   }>;
 
   constructor(
@@ -39,35 +43,82 @@ export class MemberPage {
       {
         firstname: "John",
         lastname: "Mathis",
-        photo: "https://api.adorable.io/avatars/136/Johanna",
+        profile_photo: "https://api.adorable.io/avatars/40/Johanna",
         role: "Board",
         title: "VP Design",
         timezone: "EST (+4)",
         email: "board@google.com",
         phone: "123-456-7890",
         bio: "Something something some bio.",
+        photo: "http://example.com",
       },
       {
         firstname: "Carl",
         lastname: "Carlson",
-        photo: "https://api.adorable.io/avatars/136/Carl",
+        profile_photo: "https://api.adorable.io/avatars/40/Carl",
         primary: true,
         role: "Marketing",
         title: "Director, Product Development",
         timezone: "EST (+4)",
         email: "ccarlson@google.com",
+        email_groups: [
+          {
+            name: "marketing@zephyr.com",
+          },
+          {
+            name: "info@zephyr.com",
+          },
+          {
+            name: "leadership@zephyr.com",
+          },
+        ],
         phone: "123-456-7890",
-        bio: "Something something some bio.",
       },
       {
         firstname: "Susan",
         lastname: "Star",
-        photo: "https://api.adorable.io/avatars/136/Carl",
-        primary: true,
-        role: "Marketing",
+        profile_photo: "https://api.adorable.io/avatars/40/Susan",
+        role: "Technical",
         title: "Director, Open Technology",
-        timezone: "EST (+4)",
-        email: "ccarlson@google.com",
+        email: "email@google.com",
+        phone: "123-456-7890",
+      },
+      {
+        firstname: "Name",
+        lastname: "Name",
+        profile_photo: "https://api.adorable.io/avatars/40/Name",
+        role: "Marketing 2",
+        title: "Title",
+        email: "email@google.com",
+        phone: "123-456-7890",
+      },
+      {
+        firstname: "Name",
+        lastname: "Name",
+        profile_photo: "https://api.adorable.io/avatars/40/Name2",
+        role: "Events",
+        title: "Title",
+        email: "email@google.com",
+        phone: "123-456-7890",
+        bio: "something something bio bio.",
+        photo: "http://example.com",
+      },
+      {
+        firstname: "Mary",
+        lastname: "Almond",
+        profile_photo: "https://api.adorable.io/avatars/40/Mary",
+        role: "Billing",
+        title: "Billing Administrator",
+        email: "email@google.com",
+        phone: "123-456-7890",
+      },
+      {
+        firstname: "Sasha",
+        lastname: "Maxwell",
+        profile_photo: "https://api.adorable.io/avatars/40/Sasha",
+        role: "Signatory",
+        title: "Legal Services",
+        email: "email@google.com",
         phone: "123-456-7890",
       },
     ]
