@@ -106,16 +106,7 @@
     <ion-row>
       <ion-col col-12>
         <div class="item item-md">
-          <!-- <div class="image_upload" (click)="upload()">
-            <div class="image_upload-icon_wrapper">
-              <ion-icon name="camera"></ion-icon>
-            </div>
-            <div class="image_upload-text">
-              Upload print-ready photo (300dpi)
-            </div>
-          </div> -->
-          <upload-button [btnCallback]="upload" [callbackContext]="contactUpdate" btnIcon="camera" btnText="Upload print ready photo"></upload-button>
-          <img src="{{ imagePreview }}">
+          <upload-button (notify)='filesNotify($event)' btnIcon="camera" btnText="Upload print ready photo"></upload-button>
         </div>
       </ion-col>
     </ion-row>

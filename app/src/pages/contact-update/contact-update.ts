@@ -87,6 +87,14 @@ export class ContactUpdate {
     context.readFiles(files);
   }
 
+  filesNotify(files) {
+    console.log("files notify");
+    console.log(files);
+    console.log("this");
+    console.log(this.member);
+    this.readFiles(files);
+  }
+
   readFiles(files, index=0){
     // Create the file reader
     let reader = new FileReader();

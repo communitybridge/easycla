@@ -4,15 +4,18 @@
   See https://angular.io/docs/ts/latest/api/core/index/ComponentMetadata-class.html
   for more info on Angular 2 Components.
 -->
-<!-- <div class="image_upload" (click)="upload()">
-  <div class="image_upload-icon_wrapper">
-    <ion-icon name="camera"></ion-icon>
+<div class="image_upload" (click)="callback($event)">
+  <div class="image_upload-display_wrapper">
+    <div *ngIf="!uploadPreview" class="image_upload-icon_wrapper">
+      <ion-icon name="{{btnIcon}}"></ion-icon>
+    </div>
+    <div *ngIf="uploadPreview" class="image_upload-thumbnail">
+      <img src="{{uploadPreview}}">
+    </div>
   </div>
   <div class="image_upload-text">
-    Upload print-ready photo (300dpi)
+    <div class="image_upload-description">{{btnText}}</div>
+    <div *ngIf="uploadTitle">{{uploadTitle}}</div>
   </div>
-</div> -->
-<button (click)="callback($event)" clear>
-  <ion-icon name="{{btnIcon}}"></ion-icon> {{btnText}}
-</button>
+</div>
 <input type="file" (change)="filesAdded($event)" style="display: none" #input />
