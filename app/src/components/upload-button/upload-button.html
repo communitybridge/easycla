@@ -1,0 +1,18 @@
+<!--
+  Generated template for the UploadButton component.
+
+  See https://angular.io/docs/ts/latest/api/core/index/ComponentMetadata-class.html
+  for more info on Angular 2 Components.
+-->
+<!-- <div class="image_upload" (click)="upload()">
+  <div class="image_upload-icon_wrapper">
+    <ion-icon name="camera"></ion-icon>
+  </div>
+  <div class="image_upload-text">
+    Upload print-ready photo (300dpi)
+  </div>
+</div> -->
+<button (click)="callback($event)" clear>
+  <ion-icon name="{{btnIcon}}"></ion-icon> {{btnText}}
+</button>
+<input type="file" (change)="filesAdded($event)" style="display: none" #input />

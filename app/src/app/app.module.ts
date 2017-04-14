@@ -6,9 +6,9 @@ import { AddProjectPage } from '../pages/add-project/add-project';
 import { MemberPage } from '../pages/member/member';
 import { ProjectPage } from '../pages/project/project';
 import { ContactUpdate } from '../pages/contact-update/contact-update';
-
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
+import { UploadButtonComponent } from '../components/upload-button/upload-button';
 
 @NgModule({
   declarations: [
@@ -18,6 +18,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     MemberPage,
     ProjectPage,
     ContactUpdate,
+    UploadButtonComponent,
   ],
   imports: [
     IonicModule.forRoot(MyApp)
