@@ -1,3 +1,27 @@
 upload-button {
+  .image_upload {
+    &-display_wrapper {
+      display: inline-block;
+      margin-right: 1rem;
+    }
+    &-thumbnail {
+      width: 60px;
+    }
+    &-icon_wrapper {
+      font-size: 2rem;
+      color: #fff;
+      padding: 2rem;
+      background-color: #d8d8d8;
+      border-radius: 50%;
+    }
+    &-text {
+      display: inline-block;
 
+    }
+    &-description {
+      color: grey;
+      font-style: italic;
+      margin-bottom: .5rem;
+    }
+  }
 }

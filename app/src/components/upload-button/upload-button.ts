@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild, Renderer, } from '@angular/core';
+import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter } from '@angular/core';
 
 /*
   Generated class for the UploadButton component.
@@ -11,7 +11,10 @@ import { Component, ElementRef, Input, ViewChild, Renderer, } from '@angular/cor
   templateUrl: 'upload-button.html'
 })
 export class UploadButtonComponent {
+  uploadPreview: string;
+  uploadTitle: string;
 
+  private displayableTypes: Array<string>;
   /**
    * The icon used for the button
    */
@@ -24,17 +27,6 @@ export class UploadButtonComponent {
   @Input()
   private btnText: String;
 
-  /**
-  * The callback executed when files are selected, set by parent
-  */
-  @Input()
-  private btnCallback: Function;
-
-  /**
-   * The text used for the upload
-   */
-  @Input()
-  private callbackContext: any;
 
   /**
    * Native upload button (hidden)
@@ -42,8 +34,15 @@ export class UploadButtonComponent {
   @ViewChild('input')
   private nativeInputBtn: ElementRef;
 
+  @Output() notify: EventEmitter<FileList> = new EventEmitter<FileList>();
+
   constructor(private renderer: Renderer) {
     console.log ("upload button loaded");
+    this.displayableTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/gif',
+    ];
   }
 
   /**
@@ -55,7 +54,8 @@ export class UploadButtonComponent {
     // trigger click event of hidden input
     let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
     this.renderer.invokeElementMethod(
-        this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]);
+      this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+    );
   }
 
   /**
@@ -64,7 +64,30 @@ export class UploadButtonComponent {
   */
   public filesAdded(event: Event): void {
     let files: FileList = this.nativeInputBtn.nativeElement.files;
-    this.btnCallback(files, this.callbackContext);
+    this.displayFile(files[0]);
+    console.log("filesAdded:");
+    console.log(files);
+    this.notify.emit(files);
+  }
+
+  displayFile(file: File) {
+    this.uploadTitle = file.name;
+    let reader = new FileReader();
+    if (this.displayableTypes.indexOf(file.type)!=-1) {
+      this.readFile(file, reader, (result) =>{
+        this.uploadPreview = result;
+      });
+    }
+    else {
+      this.uploadPreview = '';
+    }
+  }
+
+  readFile(file, reader, callback){
+    reader.onload = () => {
+      callback(reader.result);
+    }
+    reader.readAsDataURL(file);
   }
 
 }
