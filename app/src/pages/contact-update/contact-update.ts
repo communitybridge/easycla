@@ -13,8 +13,6 @@ export class ContactUpdate {
   project: any;
   member: any;
   contact: any;
-  imagePreview: any;
-  contactUpdate: any = this;
 
   constructor(
     public navCtrl: NavController,
@@ -28,6 +26,7 @@ export class ContactUpdate {
     this.contact=this.navParams.get('contact');
   }
 
+  // ContactUpdate modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -75,47 +74,48 @@ export class ContactUpdate {
     this.contact.email_groups.splice(index, 1);
   }
 
-  SaveContact(contact) {
-
+  SaveContact() {
+    console.log("save contact");
+    console.log(this.contact);
   }
 
   RemoveContact(contact) {
 
   }
 
-  upload(files, context) {
-    context.readFiles(files);
-  }
+  // upload(files, context) {
+  //   context.readFiles(files);
+  // }
 
   filesNotify(files) {
     console.log("files notify");
     console.log(files);
     console.log("this");
-    console.log(this.member);
-    this.readFiles(files);
+    console.log(this.contact);
+    // this.readFiles(files);
   }
 
-  readFiles(files, index=0){
-    // Create the file reader
-    let reader = new FileReader();
-    // If there is a file
-    if(index in files){
-      // Start reading this file
-      this.readFile(files[index], reader, (result) =>{
-        this.imagePreview = result;
-      });
-    }else{
-      // When all files are done This forces a change detection
-      this.changeDetectorRef.detectChanges();
-    }
-  }
+  // readFiles(files, index=0){
+  //   // Create the file reader
+  //   let reader = new FileReader();
+  //   // If there is a file
+  //   if(index in files){
+  //     // Start reading this file
+  //     this.readFile(files[index], reader, (result) =>{
+  //       this.imagePreview = result;
+  //     });
+  //   }else{
+  //     // When all files are done This forces a change detection
+  //     this.changeDetectorRef.detectChanges();
+  //   }
+  // }
 
-  readFile(file, reader, callback){
-    reader.onload = () => {
-      callback(reader.result);
-    }
-
-    reader.readAsDataURL(file);
-  }
+  // readFile(file, reader, callback){
+  //   reader.onload = () => {
+  //     callback(reader.result);
+  //   }
+  //
+  //   reader.readAsDataURL(file);
+  // }
 
 }

@@ -25,7 +25,7 @@ export class MemberPage {
     }>,
     phone?: string,
     bio?: string,
-    photo?: string,
+    photos?: Array<{}>,
   }>;
 
   constructor(
@@ -50,7 +50,14 @@ export class MemberPage {
         email: "board@google.com",
         phone: "123-456-7890",
         bio: "Something something some bio.",
-        photo: "http://example.com",
+        photos: [
+          {
+            name: "alreadysaved.png",
+          },
+          {
+            name: "existing.tif",
+          }
+        ],
       },
       {
         firstname: "Carl",
@@ -101,7 +108,14 @@ export class MemberPage {
         email: "email@google.com",
         phone: "123-456-7890",
         bio: "something something bio bio.",
-        photo: "http://example.com",
+        photos: [
+          {
+            name: "alreadysaved.png",
+          },
+          {
+            name: "existing.tif",
+          }
+        ],
       },
       {
         firstname: "Mary",
