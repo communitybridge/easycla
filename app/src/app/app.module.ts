@@ -8,7 +8,7 @@ import { ProjectPage } from '../pages/project/project';
 import { ContactUpdate } from '../pages/contact-update/contact-update';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { UploadButtonComponent } from '../components/upload-button/upload-button';
+import { UploadButtonComponent, PopoverPage } from '../components/upload-button/upload-button';
 
 @NgModule({
   declarations: [
@@ -19,6 +19,7 @@ import { UploadButtonComponent } from '../components/upload-button/upload-button
     ProjectPage,
     ContactUpdate,
     UploadButtonComponent,
+    PopoverPage,
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -31,6 +32,7 @@ import { UploadButtonComponent } from '../components/upload-button/upload-button
     MemberPage,
     ProjectPage,
     ContactUpdate,
+    PopoverPage,
   ],
   providers: [
     StatusBar,

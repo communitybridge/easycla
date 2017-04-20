@@ -106,7 +106,7 @@
     <ion-row>
       <ion-col col-12>
         <div class="item item-md">
-          <upload-button (notify)='filesNotify($event)' btnIcon="camera" btnText="Upload print ready photo"></upload-button>
+          <upload-button (notify)='filesNotify($event)' [files]="contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
         </div>
       </ion-col>
     </ion-row>
@@ -133,7 +133,7 @@
       <button ion-button clear icon-right color="primary" (click)="dismiss()">
         Cancel
       </button>
-      <button ion-button clear icon-right color="primary">
+      <button ion-button clear icon-right color="primary" (click)="SaveContact()">
         Save
       </button>
     </ion-buttons>
