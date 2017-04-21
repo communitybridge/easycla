@@ -90,7 +90,7 @@
                     <span class="list_input-text">
                       {{group.name}}
                     </span>
-                    <span class="list_input-remove" (click)="RemoveEmailGroup(index)">
+                    <span class="list_input-remove" (click)="removeEmailGroup(index)">
                       <ion-icon name="close" ></ion-icon>
                     </span>
                   </div>
@@ -105,9 +105,7 @@
 
     <ion-row>
       <ion-col col-12>
-        <div class="item item-md">
-          <upload-button (notify)='filesNotify($event)' [files]="contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
-        </div>
+        <upload-button (notify)='filesNotify($event)' [files]="contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
       </ion-col>
     </ion-row>
 
@@ -125,15 +123,15 @@
 <ion-footer class="footer-seamless">
   <ion-toolbar>
     <ion-buttons>
-      <button ion-button clear icon-right color="primary">
-        Remove Member
+      <button ion-button clear icon-right color="primary" (click)="removeContact()">
+        Remove Contact
       </button>
     </ion-buttons>
     <ion-buttons end>
       <button ion-button clear icon-right color="primary" (click)="dismiss()">
         Cancel
       </button>
-      <button ion-button clear icon-right color="primary" (click)="SaveContact()">
+      <button ion-button clear icon-right color="primary" (click)="saveContact()">
         Save
       </button>
     </ion-buttons>

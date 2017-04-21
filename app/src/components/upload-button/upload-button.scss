@@ -45,7 +45,7 @@
     // width: 100%;
     @extend ion-input;
   }
-  &-list_input {
+  &-file_list {
     @extend .text-input;
     margin: 8px 8px 0 0;
     width: calc(100% - 8px);
