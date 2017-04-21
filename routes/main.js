@@ -63,18 +63,18 @@ router.get('/login_cas', function(req, res, next) {
           var adminClient = cinco.client(keys);
           adminClient.getUser(lfid, function(err, user) {
             if(user){
-              req.session.user.cinco_groups = JSON.stringify(user.groups);
+              req.session.user.cinco_groups = JSON.stringify(user.roles);
               req.session.user.isAdmin = false;
               req.session.user.isUser = false;
               req.session.user.isProjectManager = false;
-              if(user.groups)
+              if(user.roles)
               {
-                if(user.groups.length > 0){
-                  for(var i = 0; i < user.groups.length; i ++)
+                if(user.roles.length > 0){
+                  for(var i = 0; i < user.roles.length; i ++)
                   {
-                    if(user.groups[i].name == "ADMIN") req.session.user.isAdmin = true;
-                    if(user.groups[i].name == "USER") req.session.user.isUser = true;
-                    if(user.groups[i].name == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
+                    if(user.roles[i] == "ADMIN") req.session.user.isAdmin = true;
+                    if(user.roles[i] == "USER") req.session.user.isUser = true;
+                    if(user.roles[i] == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
                   }
                 }
               }
@@ -115,7 +115,7 @@ router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'),
   var lfid = req.session.user.user;
   adminClient.getUser(lfid, function(err, user) {
     if(user){
-      req.session.user.cinco_groups = JSON.stringify(user.groups);
+      req.session.user.cinco_groups = JSON.stringify(user.roles);
       res.render('profile');
     }
     else {
