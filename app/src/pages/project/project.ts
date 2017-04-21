@@ -4,6 +4,8 @@ import { NavController, NavParams } from 'ionic-angular';
 
 import { CincoService } from '../../app/services/cinco.service'
 
+import { MemberPage } from '../member/member';
+
 @Component({
   selector: 'page-project',
   templateUrl: 'project.html'
@@ -18,7 +20,7 @@ export class ProjectPage {
     datas: Array<{
       label: string,
       value: string,
-    }>
+    }>,
   };
 
   members: Array<{
@@ -37,11 +39,11 @@ export class ProjectPage {
     this.getDefaults();
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getProject(this.projectId);
   };
 
-  getProject(projectId){
+  getProject(projectId) {
     this.cincoService.getProject(projectId).subscribe(response => {
       if(response) {
         this.project.name = response.name;
@@ -63,18 +65,17 @@ export class ProjectPage {
   }
 
   memberSelected(event, project, member) {
-    alert("check the console!");
-    console.log({project, member});
-    // this.navCtrl.push(MemberPage, {
-    //   project: project
-    // });
+    this.navCtrl.push(MemberPage, {
+      project: project,
+      member: member,
+    });
   }
 
-  getDefaults(){
+  getDefaults() {
 
     this.project = {
-      icon: "",
-      name: "",
+      icon: "https://dummyimage.com/600x250/ffffff/000.png&text=project+logo",
+      name: "Project",
       description: "This project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
       datas: [
         {
@@ -96,8 +97,8 @@ export class ProjectPage {
         {
           label: "Members",
           value: "41",
-        }
-      ]
+        },
+      ],
     };
 
     this.members = [
@@ -191,5 +192,4 @@ export class ProjectPage {
       },
     ];
   }
-
 }
