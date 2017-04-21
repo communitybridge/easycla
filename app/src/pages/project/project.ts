@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 
 import { NavController, NavParams } from 'ionic-angular';
 
+import { CincoService } from '../../app/services/cinco.service'
+
 import { MemberPage } from '../member/member';
 
 @Component({
@@ -10,9 +12,10 @@ import { MemberPage } from '../member/member';
 })
 export class ProjectPage {
   selectedProject: any;
+  projectId: String;
   project: {
     icon: string,
-    title: string,
+    name: string,
     description: string,
     datas: Array<{
       label: string,
@@ -29,16 +32,51 @@ export class ProjectPage {
     renewal_date: string,
   }>;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
     // If we navigated to this page, we will have an item available as a nav param
     this.selectedProject = navParams.get('project');
+    this.projectId = navParams.get('projectId');
+    this.getDefaults();
+  }
 
-    // use selectedProject and selectedMember to get data from CINCO and populate this.project
+  ngOnInit() {
+    this.getProject(this.projectId);
+  };
+
+  getProject(projectId) {
+    this.cincoService.getProject(projectId).subscribe(response => {
+      if(response) {
+        this.project.name = response.name;
+        this.project.icon = response.name;
+        this.project.datas.push({
+            label: "Status",
+            value: response.status
+        });
+        this.project.datas.push({
+            label: "Type",
+            value: response.type
+        });
+        this.project.datas.push({
+            label: "ID",
+            value: response.id
+        });
+      }
+    });
+  }
+
+  memberSelected(event, project, member) {
+    this.navCtrl.push(MemberPage, {
+      project: project,
+      member: member,
+    });
+  }
+
+  getDefaults() {
 
     this.project = {
-      icon: "https://dummyimage.com/600x250/ffffff/000.png&text=zephyr+logo",
-      title: "Zephyr",
-      description: "Zephyr Project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
+      icon: "https://dummyimage.com/600x250/ffffff/000.png&text=project+logo",
+      name: "Project",
+      description: "This project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
       datas: [
         {
           label: "Budget",
@@ -153,14 +191,5 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
     ];
-
   }
-
-  memberSelected(event, project, member) {
-    this.navCtrl.push(MemberPage, {
-      project: project,
-      member: member,
-    });
-  }
-
 }
