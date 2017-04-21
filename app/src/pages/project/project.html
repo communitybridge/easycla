@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>{{ project.title }}</ion-title>
+    <ion-title>{{ project.name }}</ion-title>
     <div class="toolbar-search">
       <ion-icon name="search"></ion-icon>
         <ion-input type="text" value=""></ion-input>
@@ -19,7 +19,7 @@
         <ion-col col-12 col-md-9>
           <ion-row>
             <ion-col col-12 col-md-4>
-              <img src="{{ project.icon }}" alt="{{ project.title }} logo"/>
+              <img src="{{ project.icon }}" alt="{{ project.name }} logo"/>
             </ion-col>
             <ion-col col-12 col-md-8>
               <h1>{{ project.title }}</h1>
