@@ -60,42 +60,47 @@
     </ion-grid>
   </header>
 
-  <ion-card>
-    <ion-card-content>
-      <ion-card-title>
-        Members
-      </ion-card-title>
-      <div class="table-responsive-vertical">
-        <table id="table" class="table table-hover">
-          <thead>
-            <tr>
-              <th>Alert</th>
-              <th>Company</th>
-              <th>Level</th>
-              <th>Status</th>
-              <th>Annual Dues</th>
-              <th>Renewal Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let member of members">
-              <td data-title="Alert">
-                <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
-                <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
-                <span *ngIf="member.alert == ''" class="circle-null"></span>
-              </td>
-              <td data-title="Company" (click)="memberSelected($event, project, member)">{{ member.name }}</td>
-              <td data-title="Level">{{ member.level }}</td>
-              <td data-title="Status">{{ member.status }}</td>
-              <td data-title="Annual Dues">{{ member.annual_dues }}</td>
-              <td data-title="Renewal Date">{{ member.renewal_date }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </ion-card-content>
-  </ion-card>
-
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+              Members
+            </ion-card-title>
+            <div class="table-responsive-vertical">
+              <table id="table" class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Alert</th>
+                    <th>Company</th>
+                    <th>Level</th>
+                    <th>Status</th>
+                    <th>Annual Dues</th>
+                    <th>Renewal Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let member of members">
+                    <td data-title="Alert">
+                      <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
+                      <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
+                      <span *ngIf="member.alert == ''" class="circle-null"></span>
+                    </td>
+                    <td data-title="Company" (click)="memberSelected($event, project, member)">{{ member.name }}</td>
+                    <td data-title="Level">{{ member.level }}</td>
+                    <td data-title="Status">{{ member.status }}</td>
+                    <td data-title="Annual Dues">{{ member.annual_dues }}</td>
+                    <td data-title="Renewal Date">{{ member.renewal_date }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
 
 </ion-content>

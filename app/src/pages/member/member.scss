@@ -1,6 +1,18 @@
-.member {
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
+page-member {
+  .member {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  #contacts-table thead{
+    display: none;
+  }
+  
+  .profile-photo {
+    display: inline;
+    max-width: 40px;
+    border-radius: 50%;
+  }
 }
