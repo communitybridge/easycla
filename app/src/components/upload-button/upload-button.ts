@@ -1,10 +1,7 @@
-import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter } from '@angular/core';
+import { PopoverController, ToastController } from 'ionic-angular';
+import { ActionPopover } from '../action-popover/action-popover';
 
-import { PopoverController, NavParams } from 'ionic-angular';
-
-import {ViewController} from 'ionic-angular';
-
-import { ToastController } from 'ionic-angular';
 /*
   Generated class for the UploadButton component.
 
@@ -16,8 +13,6 @@ import { ToastController } from 'ionic-angular';
   templateUrl: 'upload-button.html'
 })
 export class UploadButtonComponent {
-
-  // @TODO: Need to be able to use this with existing files as well.
 
   /**
    * The fileList maintained as files are added and removed
@@ -62,12 +57,9 @@ export class UploadButtonComponent {
   @Output() notify: EventEmitter<Array<any>> = new EventEmitter<Array<any>>();
 
   constructor(private renderer: Renderer, private popoverCtrl: PopoverController, public toastCtrl: ToastController) {
-    console.log ("upload button loaded");
   }
 
   ngOnInit() {
-    console.log("this files");
-    console.log(this.files);
     this.fileList = this.files;
 
     if (typeof this.multiple == 'undefined') {
@@ -98,11 +90,8 @@ export class UploadButtonComponent {
   */
   filesAdded(event: Event): void {
     let addedFiles: FileList = this.nativeInputBtn.nativeElement.files;
-    console.log("fileList");
-    console.log(this.fileList);
 
     for(let i=0; i< addedFiles.length; i++) {
-      console.log("index in addedFiles:");
       let file = addedFiles.item(i);
       let valid = this.validateFile(file);
       if(valid) {
@@ -139,32 +128,12 @@ export class UploadButtonComponent {
   uploadError(message) {
     let toast = this.toastCtrl.create({
       message: message,
+      showCloseButton: true,
+      closeButtonText: 'Dismiss',
       duration: 3000
     });
     toast.present();
   }
-  // displayFile(file: File) {
-  //   // this.uploadTitle = file.name;
-  //   let reader = new FileReader();
-  //   if (this.displayableTypes.indexOf(file.type)!=-1) {
-  //     this.readFile(file, reader, (result) =>{
-  //       this.uploadPreview = result;
-  //     });
-  //   }
-  //   else {
-  //     this.uploadPreview = '';
-  //   }
-  // }
-  //
-
-
-
-  // readFile(file, reader, callback){
-  //   reader.onload = () => {
-  //     callback(reader.result);
-  //   }
-  //   reader.readAsDataURL(file);
-  // }
 
   presentPopover(ev, index) {
     let popoverData = {
@@ -187,7 +156,7 @@ export class UploadButtonComponent {
     };
 
     let popover = this.popoverCtrl.create(
-      PopoverPage,
+      ActionPopover,
       popoverData,
     );
 
@@ -209,10 +178,6 @@ export class UploadButtonComponent {
    * @param  {object} popoverData should contain .callback and .callbackData
    */
   popoverResponse(popoverData) {
-    console.log('popoverResonse:');
-    console.log(popoverData);
-    console.log('this fileList:');
-    console.log(this.fileList);
     let callback = popoverData.callback;
     if(this[callback]) {
       this[callback](popoverData.callbackData);
@@ -220,9 +185,6 @@ export class UploadButtonComponent {
   }
 
   fileDelete(data) {
-    console.log('File delete:');
-    console.log(data.index);
-    console.log(this.fileList);
     this.fileList.splice(data.index, 1);
     this.notify.emit(this.fileList);
   }
@@ -232,49 +194,5 @@ export class UploadButtonComponent {
     console.log(data.index);
     console.log(this.fileList);
   }
-
-
-
-
-}
-
-
-@Component({
-  template: `
-    <ion-list>
-      <button ion-item *ngFor="let item of popoverItems; let index = index;" (click)='popoverAction(index)'>
-        {{ item.label }}
-      </button>
-    </ion-list>
-  `
-})
-export class PopoverPage {
-
-  popoverItems: any;
-
-  @Output() popoverNotice: EventEmitter<{}> = new EventEmitter<{}>();
-
-  constructor(private navParams: NavParams, private viewCtrl: ViewController) {
-
-  }
-
-  ngOnInit() {
-    if (this.navParams.data) {
-      this.popoverItems = this.navParams.data.items
-    }
-  }
-
-  popoverAction(index) {
-    let callback = this.popoverItems[index].callback;
-    let callbackData = this.popoverItems[index].callbackData;
-    console.log("popoverAction");
-    console.log(callback);
-    console.log(callbackData);
-    this.viewCtrl.dismiss({
-      callback: callback,
-      callbackData: callbackData
-    });
-  }
-
 
 }
