@@ -1,9 +1,5 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-
-import { NavController, NavParams, ViewController } from 'ionic-angular';
-
-import { AlertController } from 'ionic-angular';
-
+import { NavController, NavParams, ViewController, AlertController } from 'ionic-angular';
 
 @Component({
   selector: 'contact-update',
@@ -51,7 +47,7 @@ export class ContactUpdate {
         {
           text: 'Save',
           handler: data => {
-            this.AddEmailGroup(data.email);
+            this.addEmailGroup(data.email);
           }
         }
       ]
@@ -59,7 +55,7 @@ export class ContactUpdate {
     prompt.present();
   }
 
-  AddEmailGroup(groupName) {
+  addEmailGroup(groupName) {
     if(!this.contact.email_groups) {
       this.contact.email_groups = [];
     }
@@ -70,52 +66,22 @@ export class ContactUpdate {
     );
   }
 
-  RemoveEmailGroup(index) {
+  removeEmailGroup(index) {
     this.contact.email_groups.splice(index, 1);
   }
 
-  SaveContact() {
+  saveContact() {
     console.log("save contact");
     console.log(this.contact);
   }
 
-  RemoveContact(contact) {
-
+  removeContact(contact) {
+    console.log("remove contact");
+    console.log(this.contact);
   }
-
-  // upload(files, context) {
-  //   context.readFiles(files);
-  // }
 
   filesNotify(files) {
-    console.log("files notify");
-    console.log(files);
-    console.log("this");
-    console.log(this.contact);
-    // this.readFiles(files);
+    this.contact.photos = files;
   }
-
-  // readFiles(files, index=0){
-  //   // Create the file reader
-  //   let reader = new FileReader();
-  //   // If there is a file
-  //   if(index in files){
-  //     // Start reading this file
-  //     this.readFile(files[index], reader, (result) =>{
-  //       this.imagePreview = result;
-  //     });
-  //   }else{
-  //     // When all files are done This forces a change detection
-  //     this.changeDetectorRef.detectChanges();
-  //   }
-  // }
-
-  // readFile(file, reader, callback){
-  //   reader.onload = () => {
-  //     callback(reader.result);
-  //   }
-  //
-  //   reader.readAsDataURL(file);
-  // }
 
 }

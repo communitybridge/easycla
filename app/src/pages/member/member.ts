@@ -1,7 +1,5 @@
 import { Component } from '@angular/core';
-
 import { NavController, ModalController, NavParams } from 'ionic-angular';
-
 import { ContactUpdate } from '../contact-update/contact-update';
 
 @Component({
