@@ -53,16 +53,6 @@ resource "aws_security_group" "preprods" {
   }
 }
 
-resource "aws_security_group_rule" "allow_ssh" {
-  type = "ingress"
-  from_port = 22
-  to_port = 22
-  protocol = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.engineering.sg_internal_ssh}"
-
-  security_group_id = "${aws_security_group.preprods.id}"
-}
-
 resource "aws_security_group_rule" "allow_elb" {
   type = "ingress"
   from_port = 0
@@ -89,13 +79,12 @@ module "engineering-preprods-ecs-cluster" {
   team                 = "Engineering"
   name                 = "engineering-preprods"
   vpc_id               = "${data.terraform_remote_state.engineering.vpc_id}"
-  image_id             = "ami-022b9262"
   subnet_ids           = "${data.terraform_remote_state.engineering.external_subnets}"
   key_name             = "engineering-preprods"
   iam_instance_profile = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
   region               = "${data.terraform_remote_state.engineering.region}"
   availability_zones   = "${data.terraform_remote_state.engineering.availability_zones}"
-  instance_type        = "t2.large"
+  instance_type        = "t2.medium"
   security_group       = "${aws_security_group.preprods.id}"
   instance_ebs_optimized = false
   desired_capacity     = "3"

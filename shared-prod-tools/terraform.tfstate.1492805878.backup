@@ -1,0 +1,3001 @@
+{
+    "version": 3,
+    "terraform_version": "0.9.2",
+    "serial": 75,
+    "lineage": "91a49dd5-a51c-4a8d-aff4-b450721b1070",
+    "modules": [
+        {
+            "path": [
+                "root"
+            ],
+            "outputs": {
+                "availability_zones": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "us-west-2a",
+                        "us-west-2b",
+                        "us-west-2c"
+                    ]
+                },
+                "cidr": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "10.50.0.0/16"
+                },
+                "domain_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "prod.engineering.internal"
+                },
+                "external_route_tables": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "rtb-32925154"
+                },
+                "external_subnets": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "subnet-78028e31",
+                        "subnet-a7d9b3c0",
+                        "subnet-76688d2d"
+                    ]
+                },
+                "internal_route_tables": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "rtb-da9754bc,rtb-ea90538c,rtb-c59350a3"
+                },
+                "internal_subnets": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "subnet-ad1c90e4",
+                        "subnet-b3dcb6d4",
+                        "subnet-a8688df3"
+                    ]
+                },
+                "region": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "us-west-2"
+                },
+                "sg_internal_elb": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-601ad41b"
+                },
+                "sg_internal_ssh": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-1718d66c"
+                },
+                "sg_vpn": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-b739eacc"
+                },
+                "vpc_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "vpc-e2f2ad85"
+                },
+                "vpc_security_group": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-5118d62a"
+                },
+                "vpx_to_engineering": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "pcx-1da92074"
+                },
+                "zone_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "Z2LGKA6SQQWJ1F"
+                }
+            },
+            "resources": {
+                "aws_autoscaling_attachment.consul-slaves": {
+                    "type": "aws_autoscaling_attachment",
+                    "depends_on": [
+                        "aws_elb.consul-master",
+                        "module.shared-production-tools-ecs-cluster"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-ecs-instances-008737e03c8173fdf263b99d21",
+                        "attributes": {
+                            "autoscaling_group_name": "shared-production-tools-ecs-instances",
+                            "elb": "consul-master",
+                            "id": "shared-production-tools-ecs-instances-008737e03c8173fdf263b99d21"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_autoscaling_attachment.pypi": {
+                    "type": "aws_autoscaling_attachment",
+                    "depends_on": [
+                        "aws_elb.pypi",
+                        "module.shared-production-tools-ecs-cluster"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-ecs-instances-007cc23d675a9ec9011168cd10",
+                        "attributes": {
+                            "autoscaling_group_name": "shared-production-tools-ecs-instances",
+                            "elb": "pypi",
+                            "id": "shared-production-tools-ecs-instances-007cc23d675a9ec9011168cd10"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_log_group.tools": {
+                    "type": "aws_cloudwatch_log_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "shared-production-infra",
+                        "attributes": {
+                            "arn": "arn:aws:logs:us-west-2:433610389961:log-group:shared-production-infra:*",
+                            "id": "shared-production-infra",
+                            "name": "shared-production-infra",
+                            "retention_in_days": "0",
+                            "tags.%": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_ecs_service.consul": {
+                    "type": "aws_ecs_service",
+                    "depends_on": [
+                        "aws_ecs_task_definition.consul-masters",
+                        "module.shared-production-tools-ecs-cluster"
+                    ],
+                    "primary": {
+                        "id": "arn:aws:ecs:us-west-2:433610389961:service/consul",
+                        "attributes": {
+                            "cluster": "shared-production-tools",
+                            "deployment_maximum_percent": "200",
+                            "deployment_minimum_healthy_percent": "100",
+                            "desired_count": "3",
+                            "id": "arn:aws:ecs:us-west-2:433610389961:service/consul",
+                            "name": "consul",
+                            "placement_constraints.#": "0",
+                            "placement_strategy.#": "0",
+                            "task_definition": "arn:aws:ecs:us-west-2:433610389961:task-definition/consul-server:1"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_ecs_service.pypi": {
+                    "type": "aws_ecs_service",
+                    "depends_on": [
+                        "aws_ecs_task_definition.pypi",
+                        "module.shared-production-tools-ecs-cluster"
+                    ],
+                    "primary": {
+                        "id": "arn:aws:ecs:us-west-2:433610389961:service/pypi-repository",
+                        "attributes": {
+                            "cluster": "shared-production-tools",
+                            "deployment_maximum_percent": "200",
+                            "deployment_minimum_healthy_percent": "100",
+                            "desired_count": "3",
+                            "id": "arn:aws:ecs:us-west-2:433610389961:service/pypi-repository",
+                            "name": "pypi-repository",
+                            "placement_constraints.#": "0",
+                            "placement_strategy.#": "0",
+                            "task_definition": "arn:aws:ecs:us-west-2:433610389961:task-definition/pypi-repo:4"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_ecs_task_definition.consul-masters": {
+                    "type": "aws_ecs_task_definition",
+                    "depends_on": [
+                        "data.template_file.consul_slaves_ecs_task"
+                    ],
+                    "primary": {
+                        "id": "consul-server",
+                        "attributes": {
+                            "arn": "arn:aws:ecs:us-west-2:433610389961:task-definition/consul-server:1",
+                            "container_definitions": "7c0db2ed6c24e8966c136ca40113d5d29d8e0d82",
+                            "family": "consul-server",
+                            "id": "consul-server",
+                            "network_mode": "host",
+                            "placement_constraints.#": "0",
+                            "revision": "1",
+                            "task_role_arn": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_ecs_task_definition.pypi": {
+                    "type": "aws_ecs_task_definition",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "pypi-repo",
+                        "attributes": {
+                            "arn": "arn:aws:ecs:us-west-2:433610389961:task-definition/pypi-repo:4",
+                            "container_definitions": "4b98a305ce5b42c2fbb0b876c8790db595089d9e",
+                            "family": "pypi-repo",
+                            "id": "pypi-repo",
+                            "network_mode": "",
+                            "placement_constraints.#": "0",
+                            "revision": "4",
+                            "task_role_arn": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_eip.pritunl": {
+                    "type": "aws_eip",
+                    "depends_on": [
+                        "aws_instance.pritunl"
+                    ],
+                    "primary": {
+                        "id": "eipalloc-9d63f4a7",
+                        "attributes": {
+                            "association_id": "eipassoc-b05ecd8a",
+                            "domain": "vpc",
+                            "id": "eipalloc-9d63f4a7",
+                            "instance": "i-0ef967daf92c3d567",
+                            "network_interface": "eni-cde396f7",
+                            "private_ip": "10.50.33.52",
+                            "public_ip": "35.163.201.61",
+                            "vpc": "true"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_elb.consul-master": {
+                    "type": "aws_elb",
+                    "depends_on": [
+                        "module.security_groups",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "consul-master",
+                        "attributes": {
+                            "access_logs.#": "0",
+                            "availability_zones.#": "3",
+                            "availability_zones.2050015877": "us-west-2c",
+                            "availability_zones.221770259": "us-west-2b",
+                            "availability_zones.2487133097": "us-west-2a",
+                            "connection_draining": "true",
+                            "connection_draining_timeout": "400",
+                            "cross_zone_load_balancing": "true",
+                            "dns_name": "internal-consul-master-426718769.us-west-2.elb.amazonaws.com",
+                            "health_check.#": "1",
+                            "health_check.0.healthy_threshold": "2",
+                            "health_check.0.interval": "30",
+                            "health_check.0.target": "HTTP:8500/v1/status/leader",
+                            "health_check.0.timeout": "5",
+                            "health_check.0.unhealthy_threshold": "2",
+                            "id": "consul-master",
+                            "idle_timeout": "400",
+                            "instances.#": "0",
+                            "internal": "true",
+                            "listener.#": "6",
+                            "listener.1053189378.instance_port": "8500",
+                            "listener.1053189378.instance_protocol": "http",
+                            "listener.1053189378.lb_port": "8500",
+                            "listener.1053189378.lb_protocol": "http",
+                            "listener.1053189378.ssl_certificate_id": "",
+                            "listener.206307251.instance_port": "8301",
+                            "listener.206307251.instance_protocol": "tcp",
+                            "listener.206307251.lb_port": "8301",
+                            "listener.206307251.lb_protocol": "tcp",
+                            "listener.206307251.ssl_certificate_id": "",
+                            "listener.2166030907.instance_port": "8400",
+                            "listener.2166030907.instance_protocol": "tcp",
+                            "listener.2166030907.lb_port": "8400",
+                            "listener.2166030907.lb_protocol": "tcp",
+                            "listener.2166030907.ssl_certificate_id": "",
+                            "listener.2855878974.instance_port": "8600",
+                            "listener.2855878974.instance_protocol": "tcp",
+                            "listener.2855878974.lb_port": "8600",
+                            "listener.2855878974.lb_protocol": "tcp",
+                            "listener.2855878974.ssl_certificate_id": "",
+                            "listener.342577628.instance_port": "8302",
+                            "listener.342577628.instance_protocol": "tcp",
+                            "listener.342577628.lb_port": "8302",
+                            "listener.342577628.lb_protocol": "tcp",
+                            "listener.342577628.ssl_certificate_id": "",
+                            "listener.72639894.instance_port": "8300",
+                            "listener.72639894.instance_protocol": "tcp",
+                            "listener.72639894.lb_port": "8300",
+                            "listener.72639894.lb_protocol": "tcp",
+                            "listener.72639894.ssl_certificate_id": "",
+                            "name": "consul-master",
+                            "security_groups.#": "1",
+                            "security_groups.1051762784": "sg-601ad41b",
+                            "source_security_group": "433610389961/engineering-internal_elb",
+                            "source_security_group_id": "sg-601ad41b",
+                            "subnets.#": "3",
+                            "subnets.1310190815": "subnet-ad1c90e4",
+                            "subnets.2066964497": "subnet-b3dcb6d4",
+                            "subnets.2665776663": "subnet-a8688df3",
+                            "tags.%": "1",
+                            "tags.Name": "Consul Cluster",
+                            "zone_id": "Z1H1FL5HABSF5"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_elb.pypi": {
+                    "type": "aws_elb",
+                    "depends_on": [
+                        "module.security_groups",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "pypi",
+                        "attributes": {
+                            "access_logs.#": "0",
+                            "availability_zones.#": "3",
+                            "availability_zones.2050015877": "us-west-2c",
+                            "availability_zones.221770259": "us-west-2b",
+                            "availability_zones.2487133097": "us-west-2a",
+                            "connection_draining": "true",
+                            "connection_draining_timeout": "400",
+                            "cross_zone_load_balancing": "true",
+                            "dns_name": "internal-pypi-437823123.us-west-2.elb.amazonaws.com",
+                            "health_check.#": "1",
+                            "health_check.0.healthy_threshold": "2",
+                            "health_check.0.interval": "30",
+                            "health_check.0.target": "TCP:8080",
+                            "health_check.0.timeout": "3",
+                            "health_check.0.unhealthy_threshold": "2",
+                            "id": "pypi",
+                            "idle_timeout": "400",
+                            "instances.#": "3",
+                            "instances.1074273587": "i-08a49e01cec0e7a7d",
+                            "instances.1759904454": "i-09a180f350969b606",
+                            "instances.3095813616": "i-0860ad9e8b81a240d",
+                            "internal": "true",
+                            "listener.#": "1",
+                            "listener.3931999347.instance_port": "8080",
+                            "listener.3931999347.instance_protocol": "http",
+                            "listener.3931999347.lb_port": "80",
+                            "listener.3931999347.lb_protocol": "http",
+                            "listener.3931999347.ssl_certificate_id": "",
+                            "name": "pypi",
+                            "security_groups.#": "1",
+                            "security_groups.1051762784": "sg-601ad41b",
+                            "source_security_group": "433610389961/engineering-internal_elb",
+                            "source_security_group_id": "sg-601ad41b",
+                            "subnets.#": "3",
+                            "subnets.1310190815": "subnet-ad1c90e4",
+                            "subnets.2066964497": "subnet-b3dcb6d4",
+                            "subnets.2665776663": "subnet-a8688df3",
+                            "tags.%": "1",
+                            "tags.Name": "pypi",
+                            "zone_id": "Z1H1FL5HABSF5"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_instance.pritunl": {
+                    "type": "aws_instance",
+                    "depends_on": [
+                        "module.security_groups",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "i-0ef967daf92c3d567",
+                        "attributes": {
+                            "ami": "ami-12f27672",
+                            "associate_public_ip_address": "true",
+                            "availability_zone": "us-west-2a",
+                            "disable_api_termination": "false",
+                            "ebs_block_device.#": "0",
+                            "ebs_optimized": "false",
+                            "ephemeral_block_device.#": "0",
+                            "iam_instance_profile": "",
+                            "id": "i-0ef967daf92c3d567",
+                            "instance_state": "running",
+                            "instance_type": "t2.micro",
+                            "ipv6_address_count": "0",
+                            "ipv6_addresses.#": "0",
+                            "key_name": "production-shared-tools",
+                            "monitoring": "true",
+                            "network_interface_id": "eni-cde396f7",
+                            "private_dns": "ip-10-50-33-52.us-west-2.compute.internal",
+                            "private_ip": "10.50.33.52",
+                            "public_dns": "ec2-35-163-201-61.us-west-2.compute.amazonaws.com",
+                            "public_ip": "35.163.201.61",
+                            "root_block_device.#": "1",
+                            "root_block_device.0.delete_on_termination": "true",
+                            "root_block_device.0.iops": "100",
+                            "root_block_device.0.volume_size": "8",
+                            "root_block_device.0.volume_type": "gp2",
+                            "security_groups.#": "0",
+                            "source_dest_check": "false",
+                            "subnet_id": "subnet-78028e31",
+                            "tags.%": "2",
+                            "tags.EBS-Backup": "true",
+                            "tags.Name": "Pritunl - OpenVPN Master",
+                            "tenancy": "default",
+                            "vpc_security_group_ids.#": "1",
+                            "vpc_security_group_ids.1116848813": "sg-b739eacc"
+                        },
+                        "meta": {
+                            "schema_version": "1"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.coreit_vpx.0": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-da9754bc3935727793",
+                        "attributes": {
+                            "destination_cidr_block": "172.17.0.0/18",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-da9754bc3935727793",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-da9754bc",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-79ac2510"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.coreit_vpx.1": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-ea90538c3935727793",
+                        "attributes": {
+                            "destination_cidr_block": "172.17.0.0/18",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-ea90538c3935727793",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-ea90538c",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-79ac2510"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.coreit_vpx.2": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-c59350a33935727793",
+                        "attributes": {
+                            "destination_cidr_block": "172.17.0.0/18",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-c59350a33935727793",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-c59350a3",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-79ac2510"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.coreit_vpx_external": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-329251543935727793",
+                        "attributes": {
+                            "destination_cidr_block": "172.17.0.0/18",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-329251543935727793",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-32925154",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-79ac2510"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.engineering_sandbox_vpx.0": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_vpc_peering_connection.engineering_sandbox",
+                        "data.terraform_remote_state.engineering",
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-da9754bc1415821702",
+                        "attributes": {
+                            "destination_cidr_block": "10.40.0.0/16",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-da9754bc1415821702",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-da9754bc",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-1da92074"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.engineering_sandbox_vpx.1": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_vpc_peering_connection.engineering_sandbox",
+                        "data.terraform_remote_state.engineering",
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-ea90538c1415821702",
+                        "attributes": {
+                            "destination_cidr_block": "10.40.0.0/16",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-ea90538c1415821702",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-ea90538c",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-1da92074"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.engineering_sandbox_vpx.2": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_vpc_peering_connection.engineering_sandbox",
+                        "data.terraform_remote_state.engineering",
+                        "module.vpc",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-c59350a31415821702",
+                        "attributes": {
+                            "destination_cidr_block": "10.40.0.0/16",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-c59350a31415821702",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-c59350a3",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-1da92074"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.engineering_sandbox_vpx_external": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_vpc_peering_connection.engineering_sandbox",
+                        "data.terraform_remote_state.engineering",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-329251541415821702",
+                        "attributes": {
+                            "destination_cidr_block": "10.40.0.0/16",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-329251541415821702",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-32925154",
+                            "state": "active",
+                            "vpc_peering_connection_id": "pcx-1da92074"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route53_record.consul": {
+                    "type": "aws_route53_record",
+                    "depends_on": [
+                        "aws_elb.consul-master",
+                        "aws_elb.consul-master",
+                        "module.dns"
+                    ],
+                    "primary": {
+                        "id": "Z2LGKA6SQQWJ1F_consul.prod.engineering.internal_A",
+                        "attributes": {
+                            "alias.#": "1",
+                            "alias.955031283.evaluate_target_health": "true",
+                            "alias.955031283.name": "internal-consul-master-426718769.us-west-2.elb.amazonaws.com",
+                            "alias.955031283.zone_id": "Z1H1FL5HABSF5",
+                            "fqdn": "consul.prod.engineering.internal",
+                            "health_check_id": "",
+                            "id": "Z2LGKA6SQQWJ1F_consul.prod.engineering.internal_A",
+                            "name": "consul.prod.engineering.internal",
+                            "records.#": "0",
+                            "set_identifier": "",
+                            "ttl": "0",
+                            "type": "A",
+                            "zone_id": "Z2LGKA6SQQWJ1F"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route53_record.pritunl": {
+                    "type": "aws_route53_record",
+                    "depends_on": [
+                        "aws_eip.pritunl"
+                    ],
+                    "primary": {
+                        "id": "Z2MDT77FL23F9B_openvpn.engineering.tux.rocks._A",
+                        "attributes": {
+                            "fqdn": "openvpn.engineering.tux.rocks",
+                            "health_check_id": "",
+                            "id": "Z2MDT77FL23F9B_openvpn.engineering.tux.rocks._A",
+                            "name": "openvpn.engineering.tux.rocks",
+                            "records.#": "1",
+                            "records.3915915238": "35.163.201.61",
+                            "set_identifier": "",
+                            "ttl": "300",
+                            "type": "A",
+                            "zone_id": "Z2MDT77FL23F9B"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route53_record.pritunl_internal": {
+                    "type": "aws_route53_record",
+                    "depends_on": [
+                        "aws_instance.pritunl",
+                        "module.dns"
+                    ],
+                    "primary": {
+                        "id": "Z2LGKA6SQQWJ1F_vpn.prod.engineering.internal._A",
+                        "attributes": {
+                            "fqdn": "vpn.prod.engineering.internal",
+                            "health_check_id": "",
+                            "id": "Z2LGKA6SQQWJ1F_vpn.prod.engineering.internal._A",
+                            "name": "vpn.prod.engineering.internal",
+                            "records.#": "1",
+                            "records.2757824497": "10.50.33.52",
+                            "set_identifier": "",
+                            "ttl": "300",
+                            "type": "A",
+                            "zone_id": "Z2LGKA6SQQWJ1F"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route53_record.pypi": {
+                    "type": "aws_route53_record",
+                    "depends_on": [
+                        "aws_elb.pypi",
+                        "aws_elb.pypi",
+                        "module.dns"
+                    ],
+                    "primary": {
+                        "id": "Z2LGKA6SQQWJ1F_pypi.prod.engineering.internal._A",
+                        "attributes": {
+                            "alias.#": "1",
+                            "alias.3477474154.evaluate_target_health": "true",
+                            "alias.3477474154.name": "internal-pypi-437823123.us-west-2.elb.amazonaws.com",
+                            "alias.3477474154.zone_id": "Z1H1FL5HABSF5",
+                            "fqdn": "pypi.prod.engineering.internal",
+                            "health_check_id": "",
+                            "id": "Z2LGKA6SQQWJ1F_pypi.prod.engineering.internal._A",
+                            "name": "pypi.prod.engineering.internal",
+                            "records.#": "0",
+                            "set_identifier": "",
+                            "ttl": "0",
+                            "type": "A",
+                            "zone_id": "Z2LGKA6SQQWJ1F"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_s3_bucket.pypi_repo": {
+                    "type": "aws_s3_bucket",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "lf-engineering-pypi-repository",
+                        "attributes": {
+                            "acceleration_status": "",
+                            "acl": "private",
+                            "arn": "arn:aws:s3:::lf-engineering-pypi-repository",
+                            "bucket": "lf-engineering-pypi-repository",
+                            "bucket_domain_name": "lf-engineering-pypi-repository.s3.amazonaws.com",
+                            "force_destroy": "false",
+                            "hosted_zone_id": "Z3BJ6K6RIION7M",
+                            "id": "lf-engineering-pypi-repository",
+                            "region": "us-west-2",
+                            "request_payer": "BucketOwner",
+                            "tags.%": "2",
+                            "tags.Environment": "Production",
+                            "tags.Name": "Pypi Repository",
+                            "versioning.#": "1",
+                            "versioning.0.enabled": "false",
+                            "versioning.0.mfa_delete": "false",
+                            "website.#": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_vpc_peering_connection.engineering_sandbox": {
+                    "type": "aws_vpc_peering_connection",
+                    "depends_on": [
+                        "data.terraform_remote_state.engineering",
+                        "module.vpc"
+                    ],
+                    "primary": {
+                        "id": "pcx-1da92074",
+                        "attributes": {
+                            "accept_status": "active",
+                            "accepter.#": "1",
+                            "accepter.1102046665.allow_classic_link_to_remote_vpc": "false",
+                            "accepter.1102046665.allow_remote_vpc_dns_resolution": "true",
+                            "accepter.1102046665.allow_vpc_to_remote_classic_link": "false",
+                            "auto_accept": "true",
+                            "id": "pcx-1da92074",
+                            "peer_owner_id": "433610389961",
+                            "peer_vpc_id": "vpc-21254546",
+                            "requester.#": "1",
+                            "requester.1102046665.allow_classic_link_to_remote_vpc": "false",
+                            "requester.1102046665.allow_remote_vpc_dns_resolution": "true",
+                            "requester.1102046665.allow_vpc_to_remote_classic_link": "false",
+                            "tags.%": "0",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.aws_ami.amazon-linux": {
+                    "type": "aws_ami",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "ami-4836a428",
+                        "attributes": {
+                            "architecture": "x86_64",
+                            "block_device_mappings.#": "1",
+                            "block_device_mappings.340275815.device_name": "/dev/xvda",
+                            "block_device_mappings.340275815.ebs.%": "6",
+                            "block_device_mappings.340275815.ebs.delete_on_termination": "true",
+                            "block_device_mappings.340275815.ebs.encrypted": "false",
+                            "block_device_mappings.340275815.ebs.iops": "0",
+                            "block_device_mappings.340275815.ebs.snapshot_id": "snap-0ce5f75735518cbdd",
+                            "block_device_mappings.340275815.ebs.volume_size": "8",
+                            "block_device_mappings.340275815.ebs.volume_type": "gp2",
+                            "block_device_mappings.340275815.no_device": "",
+                            "block_device_mappings.340275815.virtual_name": "",
+                            "creation_date": "2017-04-17T08:14:47.000Z",
+                            "description": "Amazon Linux AMI 2017.03.0.20170417 x86_64 HVM GP2",
+                            "filter.#": "3",
+                            "filter.2041323087.name": "name",
+                            "filter.2041323087.values.#": "1",
+                            "filter.2041323087.values.0": "amzn-ami-*-x86_64-gp2",
+                            "filter.490168357.name": "virtualization-type",
+                            "filter.490168357.values.#": "1",
+                            "filter.490168357.values.0": "hvm",
+                            "filter.574890044.name": "owner-alias",
+                            "filter.574890044.values.#": "1",
+                            "filter.574890044.values.0": "amazon",
+                            "hypervisor": "xen",
+                            "id": "ami-4836a428",
+                            "image_id": "ami-4836a428",
+                            "image_location": "amazon/amzn-ami-hvm-2017.03.0.20170417-x86_64-gp2",
+                            "image_owner_alias": "amazon",
+                            "image_type": "machine",
+                            "most_recent": "true",
+                            "name": "amzn-ami-hvm-2017.03.0.20170417-x86_64-gp2",
+                            "owner_id": "137112412989",
+                            "product_codes.#": "0",
+                            "public": "true",
+                            "root_device_name": "/dev/xvda",
+                            "root_device_type": "ebs",
+                            "sriov_net_support": "simple",
+                            "state": "available",
+                            "state_reason.%": "2",
+                            "state_reason.code": "UNSET",
+                            "state_reason.message": "UNSET",
+                            "tags.#": "0",
+                            "virtualization_type": "hvm"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.template_file.consul_slaves_ecs_task": {
+                    "type": "template_file",
+                    "depends_on": [
+                        "module.shared-production-tools-ecs-cluster"
+                    ],
+                    "primary": {
+                        "id": "7c04a9d99e49cfc3ab7859b98c63e1ec5253a524d6f2d3b3a342e088c22f5e7e",
+                        "attributes": {
+                            "id": "7c04a9d99e49cfc3ab7859b98c63e1ec5253a524d6f2d3b3a342e088c22f5e7e",
+                            "rendered": "[\n  {\n    \"essential\": true,\n    \"memory\": 256,\n    \"image\": \"433610389961.dkr.ecr.us-west-2.amazonaws.com/consul/master:latest\",\n    \"name\": \"consul-server\",\n    \"portMappings\": [\n      {\n        \"containerPort\": 8300,\n        \"hostPort\": 8300,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8301,\n        \"hostPort\": 8301,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8301,\n        \"hostPort\": 8301,\n        \"protocol\": \"udp\"\n      },\n      {\n        \"containerPort\": 8302,\n        \"hostPort\": 8302,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8400,\n        \"hostPort\": 8400,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8500,\n        \"hostPort\": 8500,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8600,\n        \"hostPort\": 8600,\n        \"protocol\": \"udp\"\n      }\n    ],\n    \"dnsServers\": [\n      \"172.17.0.1\",\n      \"8.8.8.8\"\n    ],\n    \"environment\": [\n      {\n        \"name\": \"EC2_NAME_TAG\",\n        \"value\": \"shared-production-tools\"\n      },\n      {\n        \"name\": \"CONSUL_CLUSTER_MIN_SIZE\",\n        \"value\": \"3\"\n      },\n      {\n        \"name\": \"CONSUL_ENCRYPTION_KEY\",\n        \"value\": \"kNjj4yLEimIH6GvasrhSIg==\"\n      },\n      {\n        \"name\": \"CONSUL_DATACENTER\",\n        \"value\": \"AWS\"\n      }\n    ],\n    \"dnsSearchDomains\": [\"service.consul\"],\n    \"logConfiguration\": {\n      \"logDriver\": \"awslogs\",\n      \"options\": {\n        \"awslogs-group\": \"shared-production-infra\",\n        \"awslogs-region\": \"us-west-2\",\n        \"awslogs-stream-prefix\": \"consul-slave\"\n      }\n    }\n  }\n]",
+                            "template": "[\n  {\n    \"essential\": true,\n    \"memory\": 256,\n    \"image\": \"433610389961.dkr.ecr.us-west-2.amazonaws.com/consul/master:latest\",\n    \"name\": \"consul-server\",\n    \"portMappings\": [\n      {\n        \"containerPort\": 8300,\n        \"hostPort\": 8300,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8301,\n        \"hostPort\": 8301,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8301,\n        \"hostPort\": 8301,\n        \"protocol\": \"udp\"\n      },\n      {\n        \"containerPort\": 8302,\n        \"hostPort\": 8302,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8400,\n        \"hostPort\": 8400,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8500,\n        \"hostPort\": 8500,\n        \"protocol\": \"tcp\"\n      },\n      {\n        \"containerPort\": 8600,\n        \"hostPort\": 8600,\n        \"protocol\": \"udp\"\n      }\n    ],\n    \"dnsServers\": [\n      \"172.17.0.1\",\n      \"8.8.8.8\"\n    ],\n    \"environment\": [\n      {\n        \"name\": \"EC2_NAME_TAG\",\n        \"value\": \"${EC2_NAME_TAG}\"\n      },\n      {\n        \"name\": \"CONSUL_CLUSTER_MIN_SIZE\",\n        \"value\": \"${CONSUL_CLUSTER_MIN_SIZE}\"\n      },\n      {\n        \"name\": \"CONSUL_ENCRYPTION_KEY\",\n        \"value\": \"${CONSUL_ENCRYPTION_KEY}\"\n      },\n      {\n        \"name\": \"CONSUL_DATACENTER\",\n        \"value\": \"${CONSUL_DATACENTER}\"\n      }\n    ],\n    \"dnsSearchDomains\": [\"service.consul\"],\n    \"logConfiguration\": {\n      \"logDriver\": \"awslogs\",\n      \"options\": {\n        \"awslogs-group\": \"shared-production-infra\",\n        \"awslogs-region\": \"us-west-2\",\n        \"awslogs-stream-prefix\": \"consul-slave\"\n      }\n    }\n  }\n]",
+                            "vars.%": "4",
+                            "vars.CONSUL_CLUSTER_MIN_SIZE": "3",
+                            "vars.CONSUL_DATACENTER": "AWS",
+                            "vars.CONSUL_ENCRYPTION_KEY": "kNjj4yLEimIH6GvasrhSIg==",
+                            "vars.EC2_NAME_TAG": "shared-production-tools"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.template_file.ecs_cloud_config": {
+                    "type": "template_file",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "360ffd6fa3af46a21fe0181532eec11f54409b8e46219ab222af8133071a7d97",
+                        "attributes": {
+                            "id": "360ffd6fa3af46a21fe0181532eec11f54409b8e46219ab222af8133071a7d97",
+                            "rendered": "#!/bin/bash\n\n# Join the default ECS cluster\necho ECS_CLUSTER=shared-production-tools \u003e\u003e /etc/ecs/ecs.config\n\nPATH=$PATH:/usr/local/bin\n\n# Instance should be added to an security group that allows HTTP outbound\nyum update -y\n\n# Install packages\nyum -y install jq nfs-utils python27 python27-pip\n\nEC2_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`\n\n# NewRelic Infrastructure Agent\necho \"license_key: bc34e4b264df582c2db0b453bd43ee438043757c\" | sudo tee -a /etc/newrelic-infra.yml\nprintf \"[newrelic-infra]\\nname=New Relic Infrastructure\\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\\nenable=1\\ngpgcheck=0\" | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo\nyum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'\nsudo yum install newrelic-infra -y\n\n# Using a different CIDR for Docker (not to conflict with coreIT VPC CIDR)\nsed -i '$ d' /etc/sysconfig/docker\necho 'OPTIONS=\"--default-ulimit nofile=1024:4096 --bip=192.168.5.1/24\"' \u003e\u003e /etc/sysconfig/docker\nservice docker stop\nip link set docker0 down\nip link delete docker0\nservice docker start\n\n# Restarting ECS\nstart ecs\n",
+                            "template": "#!/bin/bash\n\n# Join the default ECS cluster\necho ECS_CLUSTER=${ecs_cluster_name} \u003e\u003e /etc/ecs/ecs.config\n\nPATH=$PATH:/usr/local/bin\n\n# Instance should be added to an security group that allows HTTP outbound\nyum update -y\n\n# Install packages\nyum -y install jq nfs-utils python27 python27-pip\n\nEC2_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`\n\n# NewRelic Infrastructure Agent\necho \"license_key: ${newrelic_key}\" | sudo tee -a /etc/newrelic-infra.yml\nprintf \"[newrelic-infra]\\nname=New Relic Infrastructure\\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\\nenable=1\\ngpgcheck=0\" | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo\nyum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'\nsudo yum install newrelic-infra -y\n\n# Using a different CIDR for Docker (not to conflict with coreIT VPC CIDR)\nsed -i '$ d' /etc/sysconfig/docker\necho 'OPTIONS=\"--default-ulimit nofile=1024:4096 --bip=192.168.5.1/24\"' \u003e\u003e /etc/sysconfig/docker\nservice docker stop\nip link set docker0 down\nip link delete docker0\nservice docker start\n\n# Restarting ECS\nstart ecs\n",
+                            "vars.%": "2",
+                            "vars.ecs_cluster_name": "shared-production-tools",
+                            "vars.newrelic_key": "bc34e4b264df582c2db0b453bd43ee438043757c"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.template_file.pypi_ecs_task": {
+                    "type": "template_file",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "29f449b52d0bb03dac90debf5e0cc9f321049fb4256f2a98f026758d2e539edc",
+                        "attributes": {
+                            "id": "29f449b52d0bb03dac90debf5e0cc9f321049fb4256f2a98f026758d2e539edc",
+                            "rendered": "[\n  {\n    \"essential\": true,\n    \"image\": \"433610389961.dkr.ecr.us-west-2.amazonaws.com/tools/pypi:latest\",\n    \"memoryReservation\": 258,\n    \"name\": \"pypi\",\n    \"portMappings\": [{\n      \"containerPort\": 8080,\n      \"hostPort\": 8080\n    }],\n    \"environment\": [\n      {\n        \"name\": \"AWS_ACCESS_KEY_ID\",\n        \"value\": \"AKIAJCTDBIHCUUPJEAQA\"\n      },\n      {\n        \"name\": \"AWS_SECRET_ACCESS_KEY\",\n        \"value\": \"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\"\n      }\n    ],\n    \"logConfiguration\": {\n      \"logDriver\": \"awslogs\",\n      \"options\": {\n        \"awslogs-group\": \"shared-production-infra\",\n        \"awslogs-region\": \"us-west-2\",\n        \"awslogs-stream-prefix\": \"pypi\"\n      }\n    }\n  }\n]",
+                            "template": "[\n  {\n    \"essential\": true,\n    \"image\": \"433610389961.dkr.ecr.us-west-2.amazonaws.com/tools/pypi:latest\",\n    \"memoryReservation\": 258,\n    \"name\": \"pypi\",\n    \"portMappings\": [{\n      \"containerPort\": 8080,\n      \"hostPort\": 8080\n    }],\n    \"environment\": [\n      {\n        \"name\": \"AWS_ACCESS_KEY_ID\",\n        \"value\": \"${AWS_ACCESS_KEY_ID}\"\n      },\n      {\n        \"name\": \"AWS_SECRET_ACCESS_KEY\",\n        \"value\": \"${AWS_SECRET_ACCESS_KEY}\"\n      }\n    ],\n    \"logConfiguration\": {\n      \"logDriver\": \"awslogs\",\n      \"options\": {\n        \"awslogs-group\": \"shared-production-infra\",\n        \"awslogs-region\": \"us-west-2\",\n        \"awslogs-stream-prefix\": \"pypi\"\n      }\n    }\n  }\n]",
+                            "vars.%": "2",
+                            "vars.AWS_ACCESS_KEY_ID": "AKIAJCTDBIHCUUPJEAQA",
+                            "vars.AWS_SECRET_ACCESS_KEY": "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"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.terraform_remote_state.engineering": {
+                    "type": "terraform_remote_state",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "2017-04-21 17:57:17.634855006 +0000 UTC",
+                        "attributes": {
+                            "availability_zones.#": "3",
+                            "availability_zones.0": "us-west-2a",
+                            "availability_zones.1": "us-west-2b",
+                            "availability_zones.2": "us-west-2c",
+                            "backend": "s3",
+                            "cidr": "10.40.0.0/16",
+                            "config.%": "5",
+                            "config.access_key": "AKIAJZSPEM5HOEMPP67Q",
+                            "config.bucket": "lfe-terraform-states",
+                            "config.key": "general/terraform.tfstate",
+                            "config.region": "us-west-2",
+                            "config.secret_key": "VtFYzpbv+TC9RGxEHVEDAneRMGAfVUaW+GswaruV",
+                            "domain_name": "engineering.local",
+                            "environment": "default",
+                            "external_route_tables": "rtb-24b9bf43",
+                            "external_subnets.#": "3",
+                            "external_subnets.0": "subnet-56fe231f",
+                            "external_subnets.1": "subnet-d973c8be",
+                            "external_subnets.2": "subnet-192b1441",
+                            "id": "2017-04-21 17:57:17.634855006 +0000 UTC",
+                            "internal_route_tables": "rtb-27b9bf40,rtb-25b9bf42,rtb-23b9bf44",
+                            "internal_subnets.#": "3",
+                            "internal_subnets.0": "subnet-57fe231e",
+                            "internal_subnets.1": "subnet-da73c8bd",
+                            "internal_subnets.2": "subnet-1a2b1442",
+                            "region": "us-west-2",
+                            "sg_external_elb": "sg-4a044a32",
+                            "sg_external_ssh": "sg-6dcc8c15",
+                            "sg_internal_elb": "sg-49044a31",
+                            "sg_internal_ssh": "sg-5dcc8c25",
+                            "sg_vpn": "sg-3307494b",
+                            "vpc_id": "vpc-21254546",
+                            "vpc_security_group": "sg-7ccc8c04",
+                            "zone_id": "Z1TA0POP3MZIJ5"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "ami"
+            ],
+            "outputs": {
+                "ami_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "ami-9516adf5"
+                }
+            },
+            "resources": {},
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "dhcp"
+            ],
+            "outputs": {},
+            "resources": {
+                "aws_vpc_dhcp_options.dns_resolver": {
+                    "type": "aws_vpc_dhcp_options",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "dopt-12992375",
+                        "attributes": {
+                            "domain_name": "prod.engineering.internal",
+                            "domain_name_servers.#": "1",
+                            "domain_name_servers.0": "10.50.0.2",
+                            "id": "dopt-12992375",
+                            "tags.%": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_vpc_dhcp_options_association.dns_resolver": {
+                    "type": "aws_vpc_dhcp_options_association",
+                    "depends_on": [
+                        "aws_vpc_dhcp_options.dns_resolver"
+                    ],
+                    "primary": {
+                        "id": "dopt-12992375-vpc-e2f2ad85",
+                        "attributes": {
+                            "dhcp_options_id": "dopt-12992375",
+                            "id": "dopt-12992375-vpc-e2f2ad85",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "dns"
+            ],
+            "outputs": {
+                "name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "prod.engineering.internal"
+                },
+                "name_servers": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "ns-0.awsdns-00.com.,ns-1024.awsdns-00.org.,ns-1536.awsdns-00.co.uk.,ns-512.awsdns-00.net."
+                },
+                "zone_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "Z2LGKA6SQQWJ1F"
+                }
+            },
+            "resources": {
+                "aws_route53_zone.main": {
+                    "type": "aws_route53_zone",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "Z2LGKA6SQQWJ1F",
+                        "attributes": {
+                            "force_destroy": "false",
+                            "id": "Z2LGKA6SQQWJ1F",
+                            "name": "prod.engineering.internal",
+                            "name_servers.#": "4",
+                            "name_servers.0": "ns-0.awsdns-00.com.",
+                            "name_servers.1": "ns-1024.awsdns-00.org.",
+                            "name_servers.2": "ns-1536.awsdns-00.co.uk.",
+                            "name_servers.3": "ns-512.awsdns-00.net.",
+                            "tags.%": "0",
+                            "vpc_id": "vpc-e2f2ad85",
+                            "vpc_region": "us-west-2",
+                            "zone_id": "Z2LGKA6SQQWJ1F"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "ebs_bckup"
+            ],
+            "outputs": {
+                "aws_iam_role_arn": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "arn:aws:iam::433610389961:role/ebs_bckup-role-lambdarole-v1"
+                },
+                "lambda_function_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "ebs_bckup_lambda_v1"
+                }
+            },
+            "resources": {
+                "aws_cloudwatch_event_rule.ebs_bckup_timer": {
+                    "type": "aws_cloudwatch_event_rule",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "ebs_bckup_ebs_bckup_event_v1",
+                        "attributes": {
+                            "arn": "arn:aws:events:us-west-2:433610389961:rule/ebs_bckup_ebs_bckup_event_v1",
+                            "description": "Cronlike scheduled Cloudwatch Event for creating and deleting EBS Snapshots",
+                            "id": "ebs_bckup_ebs_bckup_event_v1",
+                            "is_enabled": "true",
+                            "name": "ebs_bckup_ebs_bckup_event_v1",
+                            "role_arn": "",
+                            "schedule_expression": "cron(22 1 * * ? *)"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_event_target.run_ebs_bckup_lambda": {
+                    "type": "aws_cloudwatch_event_target",
+                    "depends_on": [
+                        "aws_cloudwatch_event_rule.ebs_bckup_timer",
+                        "aws_lambda_function.ebs_bckup_lambda",
+                        "aws_lambda_function.ebs_bckup_lambda"
+                    ],
+                    "primary": {
+                        "id": "ebs_bckup_ebs_bckup_event_v1-ebs_bckup_lambda_v1",
+                        "attributes": {
+                            "arn": "arn:aws:lambda:us-west-2:433610389961:function:ebs_bckup_lambda_v1",
+                            "id": "ebs_bckup_ebs_bckup_event_v1-ebs_bckup_lambda_v1",
+                            "input": "",
+                            "input_path": "",
+                            "rule": "ebs_bckup_ebs_bckup_event_v1",
+                            "target_id": "ebs_bckup_lambda_v1"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_iam_role.ebs_bckup-role-lambdarole": {
+                    "type": "aws_iam_role",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "ebs_bckup-role-lambdarole-v1",
+                        "attributes": {
+                            "arn": "arn:aws:iam::433610389961:role/ebs_bckup-role-lambdarole-v1",
+                            "assume_role_policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+                            "create_date": "2017-04-20T21:43:18Z",
+                            "id": "ebs_bckup-role-lambdarole-v1",
+                            "name": "ebs_bckup-role-lambdarole-v1",
+                            "path": "/",
+                            "unique_id": "AROAJBHTF76NRHSB4AW4W"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_iam_role_policy.ebs_bckup-role-lambdapolicy": {
+                    "type": "aws_iam_role_policy",
+                    "depends_on": [
+                        "aws_iam_role.ebs_bckup-role-lambdarole"
+                    ],
+                    "primary": {
+                        "id": "ebs_bckup-role-lambdarole-v1:ebs_bckup-role-lambdapolicy-v1",
+                        "attributes": {
+                            "id": "ebs_bckup-role-lambdarole-v1:ebs_bckup-role-lambdapolicy-v1",
+                            "name": "ebs_bckup-role-lambdapolicy-v1",
+                            "policy": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"logs:*\"\n            ],\n            \"Resource\": \"arn:aws:logs:*:*:*\"\n        },\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"ec2:Describe*\",\n            \"Resource\": \"*\"\n        },\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"ec2:CreateSnapshot\",\n                \"ec2:DeleteSnapshot\",\n                \"ec2:CreateTags\",\n                \"ec2:ModifySnapshotAttribute\",\n                \"ec2:ResetSnapshotAttribute\"\n            ],\n            \"Resource\": [\n                \"*\"\n            ]\n        }\n    ]\n}\n",
+                            "role": "ebs_bckup-role-lambdarole-v1"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_lambda_function.ebs_bckup_lambda": {
+                    "type": "aws_lambda_function",
+                    "depends_on": [
+                        "aws_iam_role.ebs_bckup-role-lambdarole",
+                        "data.archive_file.lambda_zip",
+                        "null_resource.buildlambdazip"
+                    ],
+                    "primary": {
+                        "id": "ebs_bckup_lambda_v1",
+                        "attributes": {
+                            "arn": "arn:aws:lambda:us-west-2:433610389961:function:ebs_bckup_lambda_v1",
+                            "dead_letter_config.#": "0",
+                            "description": "",
+                            "environment.#": "0",
+                            "filename": "/Volumes/Projects/lf/terraform/shared-prod-tools/.terraform/modules/244b09330763b632ea4efb5b68eaaa5f/modules/tf_ebs_bckup/lambda/ebs_bckup-v1.zip",
+                            "function_name": "ebs_bckup_lambda_v1",
+                            "handler": "ebs_bckup.lambda_handler",
+                            "id": "ebs_bckup_lambda_v1",
+                            "kms_key_arn": "",
+                            "last_modified": "2017-04-20T21:43:36.976+0000",
+                            "memory_size": "128",
+                            "publish": "true",
+                            "qualified_arn": "arn:aws:lambda:us-west-2:433610389961:function:ebs_bckup_lambda_v1:1",
+                            "role": "arn:aws:iam::433610389961:role/ebs_bckup-role-lambdarole-v1",
+                            "runtime": "python2.7",
+                            "source_code_hash": "gzKcoiThnW2GV78eD9Ud1Hu1/ELuaUD41YLYREEAdps=",
+                            "timeout": "60",
+                            "version": "1",
+                            "vpc_config.#": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_lambda_permission.allow_cloudwatch_to_call": {
+                    "type": "aws_lambda_permission",
+                    "depends_on": [
+                        "aws_cloudwatch_event_rule.ebs_bckup_timer",
+                        "aws_lambda_function.ebs_bckup_lambda"
+                    ],
+                    "primary": {
+                        "id": "ebs_bckup_AllowExecutionFromCloudWatch_v1",
+                        "attributes": {
+                            "action": "lambda:InvokeFunction",
+                            "function_name": "ebs_bckup_lambda_v1",
+                            "id": "ebs_bckup_AllowExecutionFromCloudWatch_v1",
+                            "principal": "events.amazonaws.com",
+                            "qualifier": "",
+                            "source_arn": "arn:aws:events:us-west-2:433610389961:rule/ebs_bckup_ebs_bckup_event_v1",
+                            "statement_id": "ebs_bckup_AllowExecutionFromCloudWatch_v1"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.archive_file.lambda_zip": {
+                    "type": "archive_file",
+                    "depends_on": [
+                        "null_resource.buildlambdazip"
+                    ],
+                    "primary": {
+                        "id": "526d31de202c4fd2f6078b651cb1bef14b0c48c4",
+                        "attributes": {
+                            "id": "526d31de202c4fd2f6078b651cb1bef14b0c48c4",
+                            "output_base64sha256": "gzKcoiThnW2GV78eD9Ud1Hu1/ELuaUD41YLYREEAdps=",
+                            "output_md5": "cbaa06dcdb82addbfa8014c023ca9652",
+                            "output_path": "/Volumes/Projects/lf/terraform/shared-prod-tools/.terraform/modules/244b09330763b632ea4efb5b68eaaa5f/modules/tf_ebs_bckup/lambda/ebs_bckup-v1.zip",
+                            "output_sha": "526d31de202c4fd2f6078b651cb1bef14b0c48c4",
+                            "output_size": "1319",
+                            "source.#": "0",
+                            "source_dir": "/Volumes/Projects/lf/terraform/shared-prod-tools/.terraform/modules/244b09330763b632ea4efb5b68eaaa5f/modules/tf_ebs_bckup/tmp",
+                            "type": "zip"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.template_file.vars": {
+                    "type": "template_file",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "94225676ba91cb87f4048b7c7d02a3410c1b325a391298d77afa0363a15c1842",
+                        "attributes": {
+                            "id": "94225676ba91cb87f4048b7c7d02a3410c1b325a391298d77afa0363a15c1842",
+                            "rendered": "[main]\nEC2_INSTANCE_TAG = EBS-Backup\nRETENTION_DAYS   = 30\n[regions]\nregionList = us-west-2\n",
+                            "template": "[main]\nEC2_INSTANCE_TAG = ${EC2_INSTANCE_TAG}\nRETENTION_DAYS   = ${RETENTION_DAYS}\n[regions]\nregionList = ${REGIONS}\n",
+                            "vars.%": "3",
+                            "vars.EC2_INSTANCE_TAG": "EBS-Backup",
+                            "vars.REGIONS": "us-west-2",
+                            "vars.RETENTION_DAYS": "30"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "null_resource.buildlambdazip": {
+                    "type": "null_resource",
+                    "depends_on": [
+                        "data.template_file.vars"
+                    ],
+                    "primary": {
+                        "id": "3651204252853267350",
+                        "attributes": {
+                            "id": "3651204252853267350",
+                            "triggers.%": "1",
+                            "triggers.key": "7c504d47-484a-06b5-d105-58f0c125a9cf"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "engineering-preprods-ecs-cluster"
+            ],
+            "outputs": {
+                "asg_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "shared-production-tools-ecs-instances"
+                },
+                "name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "shared-production-tools"
+                },
+                "security_group_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-941ad4ef"
+                }
+            },
+            "resources": {},
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "security_groups"
+            ],
+            "outputs": {
+                "consul-master": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-c122ecba"
+                },
+                "internal_elb": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-601ad41b"
+                },
+                "internal_ssh": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-1718d66c"
+                },
+                "tools-ecs-cluster": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-941ad4ef"
+                },
+                "vpn": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-b739eacc"
+                }
+            },
+            "resources": {
+                "aws_security_group.consul-master": {
+                    "type": "aws_security_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "sg-c122ecba",
+                        "attributes": {
+                            "description": "Allows Consul Access from the ECS Cluster.",
+                            "egress.#": "1",
+                            "egress.482069346.cidr_blocks.#": "1",
+                            "egress.482069346.cidr_blocks.0": "0.0.0.0/0",
+                            "egress.482069346.from_port": "0",
+                            "egress.482069346.ipv6_cidr_blocks.#": "0",
+                            "egress.482069346.prefix_list_ids.#": "0",
+                            "egress.482069346.protocol": "-1",
+                            "egress.482069346.security_groups.#": "0",
+                            "egress.482069346.self": "false",
+                            "egress.482069346.to_port": "0",
+                            "id": "sg-c122ecba",
+                            "ingress.#": "1",
+                            "ingress.482069346.cidr_blocks.#": "1",
+                            "ingress.482069346.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.482069346.from_port": "0",
+                            "ingress.482069346.ipv6_cidr_blocks.#": "0",
+                            "ingress.482069346.protocol": "-1",
+                            "ingress.482069346.security_groups.#": "0",
+                            "ingress.482069346.self": "false",
+                            "ingress.482069346.to_port": "0",
+                            "name": "engineering-consul-master",
+                            "owner_id": "433610389961",
+                            "tags.%": "1",
+                            "tags.Name": "Consul Master",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group.internal_elb": {
+                    "type": "aws_security_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "sg-601ad41b",
+                        "attributes": {
+                            "description": "Allows ELB Access Access",
+                            "egress.#": "1",
+                            "egress.1407289853.cidr_blocks.#": "1",
+                            "egress.1407289853.cidr_blocks.0": "10.50.0.0/16",
+                            "egress.1407289853.from_port": "0",
+                            "egress.1407289853.ipv6_cidr_blocks.#": "0",
+                            "egress.1407289853.prefix_list_ids.#": "0",
+                            "egress.1407289853.protocol": "-1",
+                            "egress.1407289853.security_groups.#": "0",
+                            "egress.1407289853.self": "false",
+                            "egress.1407289853.to_port": "0",
+                            "id": "sg-601ad41b",
+                            "ingress.#": "1",
+                            "ingress.1407289853.cidr_blocks.#": "1",
+                            "ingress.1407289853.cidr_blocks.0": "10.50.0.0/16",
+                            "ingress.1407289853.from_port": "0",
+                            "ingress.1407289853.ipv6_cidr_blocks.#": "0",
+                            "ingress.1407289853.protocol": "-1",
+                            "ingress.1407289853.security_groups.#": "0",
+                            "ingress.1407289853.self": "false",
+                            "ingress.1407289853.to_port": "0",
+                            "name": "engineering-internal_elb",
+                            "owner_id": "433610389961",
+                            "tags.%": "1",
+                            "tags.Name": "engineering internal elb",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group.internal_ssh": {
+                    "type": "aws_security_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "sg-1718d66c",
+                        "attributes": {
+                            "description": "Allows ssh from inside the VPN/VPC",
+                            "egress.#": "1",
+                            "egress.2898440063.cidr_blocks.#": "1",
+                            "egress.2898440063.cidr_blocks.0": "10.50.0.0/16",
+                            "egress.2898440063.from_port": "0",
+                            "egress.2898440063.ipv6_cidr_blocks.#": "0",
+                            "egress.2898440063.prefix_list_ids.#": "0",
+                            "egress.2898440063.protocol": "tcp",
+                            "egress.2898440063.security_groups.#": "0",
+                            "egress.2898440063.self": "false",
+                            "egress.2898440063.to_port": "0",
+                            "id": "sg-1718d66c",
+                            "ingress.#": "1",
+                            "ingress.2541437006.cidr_blocks.#": "1",
+                            "ingress.2541437006.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.2541437006.from_port": "22",
+                            "ingress.2541437006.ipv6_cidr_blocks.#": "0",
+                            "ingress.2541437006.protocol": "tcp",
+                            "ingress.2541437006.security_groups.#": "0",
+                            "ingress.2541437006.self": "false",
+                            "ingress.2541437006.to_port": "22",
+                            "name": "engineering-internal-ssh",
+                            "owner_id": "433610389961",
+                            "tags.%": "1",
+                            "tags.Name": "engineering internal ssh",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group.tools": {
+                    "type": "aws_security_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "sg-941ad4ef",
+                        "attributes": {
+                            "description": "Centralized SG for the Shared Production Tools ECS Cluster",
+                            "egress.#": "1",
+                            "egress.482069346.cidr_blocks.#": "1",
+                            "egress.482069346.cidr_blocks.0": "0.0.0.0/0",
+                            "egress.482069346.from_port": "0",
+                            "egress.482069346.ipv6_cidr_blocks.#": "0",
+                            "egress.482069346.prefix_list_ids.#": "0",
+                            "egress.482069346.protocol": "-1",
+                            "egress.482069346.security_groups.#": "0",
+                            "egress.482069346.self": "false",
+                            "egress.482069346.to_port": "0",
+                            "id": "sg-941ad4ef",
+                            "ingress.#": "4",
+                            "ingress.1404918823.cidr_blocks.#": "0",
+                            "ingress.1404918823.from_port": "0",
+                            "ingress.1404918823.ipv6_cidr_blocks.#": "0",
+                            "ingress.1404918823.protocol": "-1",
+                            "ingress.1404918823.security_groups.#": "2",
+                            "ingress.1404918823.security_groups.1051762784": "sg-601ad41b",
+                            "ingress.1404918823.security_groups.2784399806": "sg-c122ecba",
+                            "ingress.1404918823.self": "true",
+                            "ingress.1404918823.to_port": "0",
+                            "ingress.1967300435.cidr_blocks.#": "1",
+                            "ingress.1967300435.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.1967300435.from_port": "8201",
+                            "ingress.1967300435.ipv6_cidr_blocks.#": "0",
+                            "ingress.1967300435.protocol": "tcp",
+                            "ingress.1967300435.security_groups.#": "0",
+                            "ingress.1967300435.self": "false",
+                            "ingress.1967300435.to_port": "8201",
+                            "ingress.216457426.cidr_blocks.#": "1",
+                            "ingress.216457426.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.216457426.from_port": "8200",
+                            "ingress.216457426.ipv6_cidr_blocks.#": "0",
+                            "ingress.216457426.protocol": "tcp",
+                            "ingress.216457426.security_groups.#": "0",
+                            "ingress.216457426.self": "false",
+                            "ingress.216457426.to_port": "8200",
+                            "ingress.2541437006.cidr_blocks.#": "1",
+                            "ingress.2541437006.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.2541437006.from_port": "22",
+                            "ingress.2541437006.ipv6_cidr_blocks.#": "0",
+                            "ingress.2541437006.protocol": "tcp",
+                            "ingress.2541437006.security_groups.#": "0",
+                            "ingress.2541437006.self": "false",
+                            "ingress.2541437006.to_port": "22",
+                            "name": "engineering-tools",
+                            "owner_id": "433610389961",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group.vpn": {
+                    "type": "aws_security_group",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "sg-b739eacc",
+                        "attributes": {
+                            "description": "Pritunl OpenVPN Server",
+                            "egress.#": "1",
+                            "egress.482069346.cidr_blocks.#": "1",
+                            "egress.482069346.cidr_blocks.0": "0.0.0.0/0",
+                            "egress.482069346.from_port": "0",
+                            "egress.482069346.ipv6_cidr_blocks.#": "0",
+                            "egress.482069346.prefix_list_ids.#": "0",
+                            "egress.482069346.protocol": "-1",
+                            "egress.482069346.security_groups.#": "0",
+                            "egress.482069346.self": "false",
+                            "egress.482069346.to_port": "0",
+                            "id": "sg-b739eacc",
+                            "ingress.#": "2",
+                            "ingress.2617001939.cidr_blocks.#": "1",
+                            "ingress.2617001939.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.2617001939.from_port": "443",
+                            "ingress.2617001939.ipv6_cidr_blocks.#": "0",
+                            "ingress.2617001939.protocol": "tcp",
+                            "ingress.2617001939.security_groups.#": "0",
+                            "ingress.2617001939.self": "false",
+                            "ingress.2617001939.to_port": "443",
+                            "ingress.3132682223.cidr_blocks.#": "1",
+                            "ingress.3132682223.cidr_blocks.0": "0.0.0.0/0",
+                            "ingress.3132682223.from_port": "10000",
+                            "ingress.3132682223.ipv6_cidr_blocks.#": "0",
+                            "ingress.3132682223.protocol": "udp",
+                            "ingress.3132682223.security_groups.#": "0",
+                            "ingress.3132682223.self": "false",
+                            "ingress.3132682223.to_port": "20000",
+                            "name": "engineering-vpn",
+                            "owner_id": "433610389961",
+                            "tags.%": "1",
+                            "tags.Name": "Pritunl OpenVPN Server",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group_rule.allow_elb": {
+                    "type": "aws_security_group_rule",
+                    "depends_on": [
+                        "aws_security_group.internal_elb",
+                        "aws_security_group.tools"
+                    ],
+                    "primary": {
+                        "id": "sgrule-4215952124",
+                        "attributes": {
+                            "cidr_blocks.#": "0",
+                            "from_port": "0",
+                            "id": "sgrule-4215952124",
+                            "ipv6_cidr_blocks.#": "0",
+                            "prefix_list_ids.#": "0",
+                            "protocol": "-1",
+                            "security_group_id": "sg-941ad4ef",
+                            "self": "false",
+                            "source_security_group_id": "sg-601ad41b",
+                            "to_port": "0",
+                            "type": "ingress"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_security_group_rule.allow_out": {
+                    "type": "aws_security_group_rule",
+                    "depends_on": [
+                        "aws_security_group.tools"
+                    ],
+                    "primary": {
+                        "id": "sgrule-2893547086",
+                        "attributes": {
+                            "cidr_blocks.#": "1",
+                            "cidr_blocks.0": "0.0.0.0/0",
+                            "from_port": "-1",
+                            "id": "sgrule-2893547086",
+                            "ipv6_cidr_blocks.#": "0",
+                            "prefix_list_ids.#": "0",
+                            "protocol": "-1",
+                            "security_group_id": "sg-941ad4ef",
+                            "self": "false",
+                            "to_port": "-1",
+                            "type": "egress"
+                        },
+                        "meta": {
+                            "schema_version": "2"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "shared-production-tools-ecs-cluster"
+            ],
+            "outputs": {
+                "asg_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "shared-production-tools-ecs-instances"
+                },
+                "name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "shared-production-tools"
+                },
+                "security_group_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-941ad4ef"
+                }
+            },
+            "resources": {
+                "aws_autoscaling_group.main": {
+                    "type": "aws_autoscaling_group",
+                    "depends_on": [
+                        "aws_launch_configuration.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-ecs-instances",
+                        "attributes": {
+                            "arn": "arn:aws:autoscaling:us-west-2:433610389961:autoScalingGroup:379d594c-d17e-43f4-85de-083206a8955d:autoScalingGroupName/shared-production-tools-ecs-instances",
+                            "availability_zones.#": "3",
+                            "availability_zones.2050015877": "us-west-2c",
+                            "availability_zones.221770259": "us-west-2b",
+                            "availability_zones.2487133097": "us-west-2a",
+                            "default_cooldown": "300",
+                            "desired_capacity": "3",
+                            "force_delete": "false",
+                            "health_check_grace_period": "300",
+                            "health_check_type": "EC2",
+                            "id": "shared-production-tools-ecs-instances",
+                            "launch_configuration": "shared-production-tools-ecs-00638d252b247dddec63ee49fc",
+                            "load_balancers.#": "2",
+                            "load_balancers.168463445": "pypi",
+                            "load_balancers.3109631295": "consul-slaves",
+                            "max_size": "100",
+                            "metrics_granularity": "1Minute",
+                            "min_size": "3",
+                            "name": "shared-production-tools-ecs-instances",
+                            "placement_group": "",
+                            "protect_from_scale_in": "false",
+                            "suspended_processes.#": "0",
+                            "tag.#": "4",
+                            "tag.1039535141.key": "Environment",
+                            "tag.1039535141.propagate_at_launch": "true",
+                            "tag.1039535141.value": "Production",
+                            "tag.3157549926.key": "Cluster",
+                            "tag.3157549926.propagate_at_launch": "true",
+                            "tag.3157549926.value": "shared-production-tools",
+                            "tag.4146022801.key": "Name",
+                            "tag.4146022801.propagate_at_launch": "true",
+                            "tag.4146022801.value": "shared-production-tools",
+                            "tag.534765253.key": "Team",
+                            "tag.534765253.propagate_at_launch": "true",
+                            "tag.534765253.value": "Engineering",
+                            "target_group_arns.#": "0",
+                            "termination_policies.#": "2",
+                            "termination_policies.0": "OldestLaunchConfiguration",
+                            "termination_policies.1": "Default",
+                            "vpc_zone_identifier.#": "3",
+                            "vpc_zone_identifier.1310190815": "subnet-ad1c90e4",
+                            "vpc_zone_identifier.2066964497": "subnet-b3dcb6d4",
+                            "vpc_zone_identifier.2665776663": "subnet-a8688df3",
+                            "wait_for_capacity_timeout": "10m"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_autoscaling_policy.scale_down": {
+                    "type": "aws_autoscaling_policy",
+                    "depends_on": [
+                        "aws_autoscaling_group.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-scaledown",
+                        "attributes": {
+                            "adjustment_type": "ChangeInCapacity",
+                            "arn": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:5fdada30-5fcd-4639-aa2e-6106ee3231f1:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaledown",
+                            "autoscaling_group_name": "shared-production-tools-ecs-instances",
+                            "cooldown": "300",
+                            "estimated_instance_warmup": "0",
+                            "id": "shared-production-tools-scaledown",
+                            "metric_aggregation_type": "",
+                            "min_adjustment_step": "0",
+                            "name": "shared-production-tools-scaledown",
+                            "policy_type": "SimpleScaling",
+                            "scaling_adjustment": "-1",
+                            "step_adjustment.#": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_autoscaling_policy.scale_up": {
+                    "type": "aws_autoscaling_policy",
+                    "depends_on": [
+                        "aws_autoscaling_group.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-scaleup",
+                        "attributes": {
+                            "adjustment_type": "ChangeInCapacity",
+                            "arn": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:09692578-e9e5-4616-84d7-affe2893cdfc:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaleup",
+                            "autoscaling_group_name": "shared-production-tools-ecs-instances",
+                            "cooldown": "300",
+                            "estimated_instance_warmup": "0",
+                            "id": "shared-production-tools-scaleup",
+                            "metric_aggregation_type": "",
+                            "min_adjustment_step": "0",
+                            "name": "shared-production-tools-scaleup",
+                            "policy_type": "SimpleScaling",
+                            "scaling_adjustment": "1",
+                            "step_adjustment.#": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_metric_alarm.cpu_high": {
+                    "type": "aws_cloudwatch_metric_alarm",
+                    "depends_on": [
+                        "aws_autoscaling_policy.scale_up",
+                        "aws_ecs_cluster.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-cpureservation-high",
+                        "attributes": {
+                            "actions_enabled": "true",
+                            "alarm_actions.#": "1",
+                            "alarm_actions.4206858932": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:09692578-e9e5-4616-84d7-affe2893cdfc:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaleup",
+                            "alarm_description": "Scale up if the cpu reservation is above 90% for 10 minutes",
+                            "alarm_name": "shared-production-tools-cpureservation-high",
+                            "comparison_operator": "GreaterThanOrEqualToThreshold",
+                            "dimensions.%": "1",
+                            "dimensions.ClusterName": "shared-production-tools",
+                            "evaluation_periods": "2",
+                            "extended_statistic": "",
+                            "id": "shared-production-tools-cpureservation-high",
+                            "insufficient_data_actions.#": "0",
+                            "metric_name": "CPUReservation",
+                            "namespace": "AWS/ECS",
+                            "ok_actions.#": "0",
+                            "period": "300",
+                            "statistic": "Maximum",
+                            "threshold": "90",
+                            "unit": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_metric_alarm.cpu_low": {
+                    "type": "aws_cloudwatch_metric_alarm",
+                    "depends_on": [
+                        "aws_autoscaling_policy.scale_down",
+                        "aws_cloudwatch_metric_alarm.memory_high",
+                        "aws_ecs_cluster.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-cpureservation-low",
+                        "attributes": {
+                            "actions_enabled": "true",
+                            "alarm_actions.#": "1",
+                            "alarm_actions.1467209550": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:5fdada30-5fcd-4639-aa2e-6106ee3231f1:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaledown",
+                            "alarm_description": "Scale down if the cpu reservation is below 10% for 10 minutes",
+                            "alarm_name": "shared-production-tools-cpureservation-low",
+                            "comparison_operator": "LessThanOrEqualToThreshold",
+                            "dimensions.%": "1",
+                            "dimensions.ClusterName": "shared-production-tools",
+                            "evaluation_periods": "2",
+                            "extended_statistic": "",
+                            "id": "shared-production-tools-cpureservation-low",
+                            "insufficient_data_actions.#": "0",
+                            "metric_name": "CPUReservation",
+                            "namespace": "AWS/ECS",
+                            "ok_actions.#": "0",
+                            "period": "300",
+                            "statistic": "Maximum",
+                            "threshold": "10",
+                            "unit": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_metric_alarm.memory_high": {
+                    "type": "aws_cloudwatch_metric_alarm",
+                    "depends_on": [
+                        "aws_autoscaling_policy.scale_up",
+                        "aws_cloudwatch_metric_alarm.cpu_high",
+                        "aws_ecs_cluster.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-memoryreservation-high",
+                        "attributes": {
+                            "actions_enabled": "true",
+                            "alarm_actions.#": "1",
+                            "alarm_actions.4206858932": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:09692578-e9e5-4616-84d7-affe2893cdfc:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaleup",
+                            "alarm_description": "Scale up if the memory reservation is above 90% for 10 minutes",
+                            "alarm_name": "shared-production-tools-memoryreservation-high",
+                            "comparison_operator": "GreaterThanOrEqualToThreshold",
+                            "dimensions.%": "1",
+                            "dimensions.ClusterName": "shared-production-tools",
+                            "evaluation_periods": "2",
+                            "extended_statistic": "",
+                            "id": "shared-production-tools-memoryreservation-high",
+                            "insufficient_data_actions.#": "0",
+                            "metric_name": "MemoryReservation",
+                            "namespace": "AWS/ECS",
+                            "ok_actions.#": "0",
+                            "period": "300",
+                            "statistic": "Maximum",
+                            "threshold": "90",
+                            "unit": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_cloudwatch_metric_alarm.memory_low": {
+                    "type": "aws_cloudwatch_metric_alarm",
+                    "depends_on": [
+                        "aws_autoscaling_policy.scale_down",
+                        "aws_cloudwatch_metric_alarm.cpu_low",
+                        "aws_ecs_cluster.main"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-memoryreservation-low",
+                        "attributes": {
+                            "actions_enabled": "true",
+                            "alarm_actions.#": "1",
+                            "alarm_actions.1467209550": "arn:aws:autoscaling:us-west-2:433610389961:scalingPolicy:5fdada30-5fcd-4639-aa2e-6106ee3231f1:autoScalingGroupName/shared-production-tools-ecs-instances:policyName/shared-production-tools-scaledown",
+                            "alarm_description": "Scale down if the memory reservation is below 10% for 10 minutes",
+                            "alarm_name": "shared-production-tools-memoryreservation-low",
+                            "comparison_operator": "LessThanOrEqualToThreshold",
+                            "dimensions.%": "1",
+                            "dimensions.ClusterName": "shared-production-tools",
+                            "evaluation_periods": "2",
+                            "extended_statistic": "",
+                            "id": "shared-production-tools-memoryreservation-low",
+                            "insufficient_data_actions.#": "0",
+                            "metric_name": "MemoryReservation",
+                            "namespace": "AWS/ECS",
+                            "ok_actions.#": "0",
+                            "period": "300",
+                            "statistic": "Maximum",
+                            "threshold": "10",
+                            "unit": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_ecs_cluster.main": {
+                    "type": "aws_ecs_cluster",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "arn:aws:ecs:us-west-2:433610389961:cluster/shared-production-tools",
+                        "attributes": {
+                            "id": "arn:aws:ecs:us-west-2:433610389961:cluster/shared-production-tools",
+                            "name": "shared-production-tools"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_launch_configuration.main": {
+                    "type": "aws_launch_configuration",
+                    "depends_on": [
+                        "data.aws_ami.amazon-linux-ecs-optimized",
+                        "data.template_cloudinit_config.cloud_config"
+                    ],
+                    "primary": {
+                        "id": "shared-production-tools-ecs-00638d252b247dddec63ee49fc",
+                        "attributes": {
+                            "associate_public_ip_address": "false",
+                            "ebs_block_device.#": "1",
+                            "ebs_block_device.504524833.delete_on_termination": "true",
+                            "ebs_block_device.504524833.device_name": "/dev/xvdcz",
+                            "ebs_block_device.504524833.encrypted": "false",
+                            "ebs_block_device.504524833.iops": "0",
+                            "ebs_block_device.504524833.snapshot_id": "",
+                            "ebs_block_device.504524833.volume_size": "25",
+                            "ebs_block_device.504524833.volume_type": "gp2",
+                            "ebs_optimized": "false",
+                            "enable_monitoring": "true",
+                            "ephemeral_block_device.#": "0",
+                            "iam_instance_profile": "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole",
+                            "id": "shared-production-tools-ecs-00638d252b247dddec63ee49fc",
+                            "image_id": "ami-62d35c02",
+                            "instance_type": "t2.micro",
+                            "key_name": "production-shared-tools",
+                            "name": "shared-production-tools-ecs-00638d252b247dddec63ee49fc",
+                            "name_prefix": "shared-production-tools-ecs-",
+                            "root_block_device.#": "1",
+                            "root_block_device.0.delete_on_termination": "true",
+                            "root_block_device.0.iops": "0",
+                            "root_block_device.0.volume_size": "25",
+                            "root_block_device.0.volume_type": "gp2",
+                            "security_groups.#": "1",
+                            "security_groups.3395668630": "sg-941ad4ef",
+                            "spot_price": "",
+                            "user_data": "72e38cdb068c520e71d2b11081080b064a2e1288",
+                            "vpc_classic_link_id": "",
+                            "vpc_classic_link_security_groups.#": "0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.aws_ami.amazon-linux-ecs-optimized": {
+                    "type": "aws_ami",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "ami-62d35c02",
+                        "attributes": {
+                            "architecture": "x86_64",
+                            "block_device_mappings.#": "2",
+                            "block_device_mappings.2538004115.device_name": "/dev/xvdcz",
+                            "block_device_mappings.2538004115.ebs.%": "5",
+                            "block_device_mappings.2538004115.ebs.delete_on_termination": "true",
+                            "block_device_mappings.2538004115.ebs.encrypted": "false",
+                            "block_device_mappings.2538004115.ebs.iops": "0",
+                            "block_device_mappings.2538004115.ebs.volume_size": "22",
+                            "block_device_mappings.2538004115.ebs.volume_type": "gp2",
+                            "block_device_mappings.2538004115.no_device": "",
+                            "block_device_mappings.2538004115.virtual_name": "",
+                            "block_device_mappings.340275815.device_name": "/dev/xvda",
+                            "block_device_mappings.340275815.ebs.%": "6",
+                            "block_device_mappings.340275815.ebs.delete_on_termination": "true",
+                            "block_device_mappings.340275815.ebs.encrypted": "false",
+                            "block_device_mappings.340275815.ebs.iops": "0",
+                            "block_device_mappings.340275815.ebs.snapshot_id": "snap-0f45a35e0d0ed1887",
+                            "block_device_mappings.340275815.ebs.volume_size": "8",
+                            "block_device_mappings.340275815.ebs.volume_type": "gp2",
+                            "block_device_mappings.340275815.no_device": "",
+                            "block_device_mappings.340275815.virtual_name": "",
+                            "creation_date": "2017-03-08T22:54:43.000Z",
+                            "description": "Amazon Linux AMI 2016.09.g x86_64 ECS HVM GP2",
+                            "filter.#": "3",
+                            "filter.3350713981.name": "name",
+                            "filter.3350713981.values.#": "1",
+                            "filter.3350713981.values.0": "amzn-ami-*-amazon-ecs-optimized",
+                            "filter.490168357.name": "virtualization-type",
+                            "filter.490168357.values.#": "1",
+                            "filter.490168357.values.0": "hvm",
+                            "filter.574890044.name": "owner-alias",
+                            "filter.574890044.values.#": "1",
+                            "filter.574890044.values.0": "amazon",
+                            "hypervisor": "xen",
+                            "id": "ami-62d35c02",
+                            "image_id": "ami-62d35c02",
+                            "image_location": "amazon/amzn-ami-2016.09.g-amazon-ecs-optimized",
+                            "image_owner_alias": "amazon",
+                            "image_type": "machine",
+                            "most_recent": "true",
+                            "name": "amzn-ami-2016.09.g-amazon-ecs-optimized",
+                            "owner_id": "591542846629",
+                            "product_codes.#": "0",
+                            "public": "true",
+                            "root_device_name": "/dev/xvda",
+                            "root_device_type": "ebs",
+                            "sriov_net_support": "simple",
+                            "state": "available",
+                            "state_reason.%": "2",
+                            "state_reason.code": "UNSET",
+                            "state_reason.message": "UNSET",
+                            "tags.#": "0",
+                            "virtualization_type": "hvm"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "data.template_cloudinit_config.cloud_config": {
+                    "type": "template_cloudinit_config",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "658257138",
+                        "attributes": {
+                            "base64_encode": "true",
+                            "gzip": "false",
+                            "id": "658257138",
+                            "part.#": "1",
+                            "part.0.content": "#!/bin/bash\n\n# Join the default ECS cluster\necho ECS_CLUSTER=shared-production-tools \u003e\u003e /etc/ecs/ecs.config\n\nPATH=$PATH:/usr/local/bin\n\n# Instance should be added to an security group that allows HTTP outbound\nyum update -y\n\n# Install packages\nyum -y install jq nfs-utils python27 python27-pip\n\nEC2_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`\n\n# NewRelic Infrastructure Agent\necho \"license_key: bc34e4b264df582c2db0b453bd43ee438043757c\" | sudo tee -a /etc/newrelic-infra.yml\nprintf \"[newrelic-infra]\\nname=New Relic Infrastructure\\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\\nenable=1\\ngpgcheck=0\" | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo\nyum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'\nsudo yum install newrelic-infra -y\n\n# Using a different CIDR for Docker (not to conflict with coreIT VPC CIDR)\nsed -i '$ d' /etc/sysconfig/docker\necho 'OPTIONS=\"--default-ulimit nofile=1024:4096 --bip=192.168.5.1/24\"' \u003e\u003e /etc/sysconfig/docker\nservice docker stop\nip link set docker0 down\nip link delete docker0\nservice docker start\n\n# Restarting ECS\nstart ecs\n",
+                            "part.0.content_type": "",
+                            "part.0.filename": "",
+                            "part.0.merge_type": "",
+                            "rendered": "Q29udGVudC1UeXBlOiBtdWx0aXBhcnQvbWl4ZWQ7IGJvdW5kYXJ5PSJNSU1FQk9VTkRBUlkiCk1JTUUtVmVyc2lvbjogMS4wDQotLU1JTUVCT1VOREFSWQ0KQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogN2JpdA0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQpNaW1lLVZlcnNpb246IDEuMA0KDQojIS9iaW4vYmFzaAoKIyBKb2luIHRoZSBkZWZhdWx0IEVDUyBjbHVzdGVyCmVjaG8gRUNTX0NMVVNURVI9c2hhcmVkLXByb2R1Y3Rpb24tdG9vbHMgPj4gL2V0Yy9lY3MvZWNzLmNvbmZpZwoKUEFUSD0kUEFUSDovdXNyL2xvY2FsL2JpbgoKIyBJbnN0YW5jZSBzaG91bGQgYmUgYWRkZWQgdG8gYW4gc2VjdXJpdHkgZ3JvdXAgdGhhdCBhbGxvd3MgSFRUUCBvdXRib3VuZAp5dW0gdXBkYXRlIC15CgojIEluc3RhbGwgcGFja2FnZXMKeXVtIC15IGluc3RhbGwganEgbmZzLXV0aWxzIHB5dGhvbjI3IHB5dGhvbjI3LXBpcAoKRUMyX0lOU1RBTkNFX0lEPWBjdXJsIC1zIGh0dHA6Ly8xNjkuMjU0LjE2OS4yNTQvbGF0ZXN0L21ldGEtZGF0YS9pbnN0YW5jZS1pZGAKCiMgTmV3UmVsaWMgSW5mcmFzdHJ1Y3R1cmUgQWdlbnQKZWNobyAibGljZW5zZV9rZXk6IGJjMzRlNGIyNjRkZjU4MmMyZGIwYjQ1M2JkNDNlZTQzODA0Mzc1N2MiIHwgc3VkbyB0ZWUgLWEgL2V0Yy9uZXdyZWxpYy1pbmZyYS55bWwKcHJpbnRmICJbbmV3cmVsaWMtaW5mcmFdXG5uYW1lPU5ldyBSZWxpYyBJbmZyYXN0cnVjdHVyZVxuYmFzZXVybD1odHRwOi8vZG93bmxvYWQubmV3cmVsaWMuY29tL2luZnJhc3RydWN0dXJlX2FnZW50L2xpbnV4L3l1bS9lbC82L3g4Nl82NFxuZW5hYmxlPTFcbmdwZ2NoZWNrPTAiIHwgc3VkbyB0ZWUgLWEgL2V0Yy95dW0ucmVwb3MuZC9uZXdyZWxpYy1pbmZyYS5yZXBvCnl1bSAtcSBtYWtlY2FjaGUgLXkgLS1kaXNhYmxlcmVwbz0nKicgLS1lbmFibGVyZXBvPSduZXdyZWxpYy1pbmZyYScKc3VkbyB5dW0gaW5zdGFsbCBuZXdyZWxpYy1pbmZyYSAteQoKIyBVc2luZyBhIGRpZmZlcmVudCBDSURSIGZvciBEb2NrZXIgKG5vdCB0byBjb25mbGljdCB3aXRoIGNvcmVJVCBWUEMgQ0lEUikKc2VkIC1pICckIGQnIC9ldGMvc3lzY29uZmlnL2RvY2tlcgplY2hvICdPUFRJT05TPSItLWRlZmF1bHQtdWxpbWl0IG5vZmlsZT0xMDI0OjQwOTYgLS1iaXA9MTkyLjE2OC41LjEvMjQiJyA+PiAvZXRjL3N5c2NvbmZpZy9kb2NrZXIKc2VydmljZSBkb2NrZXIgc3RvcAppcCBsaW5rIHNldCBkb2NrZXIwIGRvd24KaXAgbGluayBkZWxldGUgZG9ja2VyMApzZXJ2aWNlIGRvY2tlciBzdGFydAoKIyBSZXN0YXJ0aW5nIEVDUwpzdGFydCBlY3MKDQotLU1JTUVCT1VOREFSWS0tDQo="
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "vpc"
+            ],
+            "outputs": {
+                "availability_zones": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "us-west-2a",
+                        "us-west-2b",
+                        "us-west-2c"
+                    ]
+                },
+                "external_rtb_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "rtb-32925154"
+                },
+                "external_subnets": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "subnet-78028e31",
+                        "subnet-a7d9b3c0",
+                        "subnet-76688d2d"
+                    ]
+                },
+                "id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "vpc-e2f2ad85"
+                },
+                "internal_nat_ips": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "35.160.159.94",
+                        "52.89.169.49",
+                        "52.27.234.237"
+                    ]
+                },
+                "internal_rtb_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "rtb-da9754bc,rtb-ea90538c,rtb-c59350a3"
+                },
+                "internal_subnets": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "subnet-ad1c90e4",
+                        "subnet-b3dcb6d4",
+                        "subnet-a8688df3"
+                    ]
+                },
+                "raw_route_tables_id": {
+                    "sensitive": false,
+                    "type": "list",
+                    "value": [
+                        "rtb-da9754bc",
+                        "rtb-ea90538c",
+                        "rtb-c59350a3"
+                    ]
+                },
+                "security_group": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "sg-5118d62a"
+                }
+            },
+            "resources": {
+                "aws_eip.nat.0": {
+                    "type": "aws_eip",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "eipalloc-1818df7e",
+                        "attributes": {
+                            "association_id": "eipassoc-ea75a597",
+                            "domain": "vpc",
+                            "id": "eipalloc-1818df7e",
+                            "instance": "",
+                            "network_interface": "eni-cbf16cf1",
+                            "private_ip": "10.50.46.182",
+                            "public_ip": "35.160.159.94",
+                            "vpc": "true"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_eip.nat.1": {
+                    "type": "aws_eip",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "eipalloc-2026e146",
+                        "attributes": {
+                            "association_id": "eipassoc-1974a464",
+                            "domain": "vpc",
+                            "id": "eipalloc-2026e146",
+                            "instance": "",
+                            "network_interface": "eni-24acdf0c",
+                            "private_ip": "10.50.106.24",
+                            "public_ip": "52.89.169.49",
+                            "vpc": "true"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_eip.nat.2": {
+                    "type": "aws_eip",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "eipalloc-5027e036",
+                        "attributes": {
+                            "association_id": "eipassoc-2d76a650",
+                            "domain": "vpc",
+                            "id": "eipalloc-5027e036",
+                            "instance": "",
+                            "network_interface": "eni-eac874e6",
+                            "private_ip": "10.50.175.113",
+                            "public_ip": "52.27.234.237",
+                            "vpc": "true"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_internet_gateway.main": {
+                    "type": "aws_internet_gateway",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "igw-37bda353",
+                        "attributes": {
+                            "id": "igw-37bda353",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_nat_gateway.main.0": {
+                    "type": "aws_nat_gateway",
+                    "depends_on": [
+                        "aws_eip.nat.*",
+                        "aws_internet_gateway.main",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "nat-0d75e13777bbf96ab",
+                        "attributes": {
+                            "allocation_id": "eipalloc-1818df7e",
+                            "id": "nat-0d75e13777bbf96ab",
+                            "network_interface_id": "eni-cbf16cf1",
+                            "private_ip": "10.50.46.182",
+                            "public_ip": "35.160.159.94",
+                            "subnet_id": "subnet-78028e31"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_nat_gateway.main.1": {
+                    "type": "aws_nat_gateway",
+                    "depends_on": [
+                        "aws_eip.nat.*",
+                        "aws_internet_gateway.main",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "nat-03a101a30b93bcfad",
+                        "attributes": {
+                            "allocation_id": "eipalloc-2026e146",
+                            "id": "nat-03a101a30b93bcfad",
+                            "network_interface_id": "eni-24acdf0c",
+                            "private_ip": "10.50.106.24",
+                            "public_ip": "52.89.169.49",
+                            "subnet_id": "subnet-a7d9b3c0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_nat_gateway.main.2": {
+                    "type": "aws_nat_gateway",
+                    "depends_on": [
+                        "aws_eip.nat.*",
+                        "aws_internet_gateway.main",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "nat-071ab85273bcf43eb",
+                        "attributes": {
+                            "allocation_id": "eipalloc-5027e036",
+                            "id": "nat-071ab85273bcf43eb",
+                            "network_interface_id": "eni-eac874e6",
+                            "private_ip": "10.50.175.113",
+                            "public_ip": "52.27.234.237",
+                            "subnet_id": "subnet-76688d2d"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.external": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_internet_gateway.main",
+                        "aws_route_table.external"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-329251541080289494",
+                        "attributes": {
+                            "destination_cidr_block": "0.0.0.0/0",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "igw-37bda353",
+                            "id": "r-rtb-329251541080289494",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-32925154",
+                            "state": "active",
+                            "vpc_peering_connection_id": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.internal.0": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_nat_gateway.main.*",
+                        "aws_route_table.internal.*"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-da9754bc1080289494",
+                        "attributes": {
+                            "destination_cidr_block": "0.0.0.0/0",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-da9754bc1080289494",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "nat-0d75e13777bbf96ab",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-da9754bc",
+                            "state": "active",
+                            "vpc_peering_connection_id": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.internal.1": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_nat_gateway.main.*",
+                        "aws_route_table.internal.*"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-ea90538c1080289494",
+                        "attributes": {
+                            "destination_cidr_block": "0.0.0.0/0",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-ea90538c1080289494",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "nat-03a101a30b93bcfad",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-ea90538c",
+                            "state": "active",
+                            "vpc_peering_connection_id": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route.internal.2": {
+                    "type": "aws_route",
+                    "depends_on": [
+                        "aws_nat_gateway.main.*",
+                        "aws_route_table.internal.*"
+                    ],
+                    "primary": {
+                        "id": "r-rtb-c59350a31080289494",
+                        "attributes": {
+                            "destination_cidr_block": "0.0.0.0/0",
+                            "destination_prefix_list_id": "",
+                            "egress_only_gateway_id": "",
+                            "gateway_id": "",
+                            "id": "r-rtb-c59350a31080289494",
+                            "instance_id": "",
+                            "instance_owner_id": "",
+                            "nat_gateway_id": "nat-071ab85273bcf43eb",
+                            "network_interface_id": "",
+                            "origin": "CreateRoute",
+                            "route_table_id": "rtb-c59350a3",
+                            "state": "active",
+                            "vpc_peering_connection_id": ""
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table.external": {
+                    "type": "aws_route_table",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "rtb-32925154",
+                        "attributes": {
+                            "id": "rtb-32925154",
+                            "propagating_vgws.#": "0",
+                            "route.#": "3",
+                            "route.1454321247.cidr_block": "10.40.0.0/16",
+                            "route.1454321247.egress_only_gateway_id": "",
+                            "route.1454321247.gateway_id": "",
+                            "route.1454321247.instance_id": "",
+                            "route.1454321247.ipv6_cidr_block": "",
+                            "route.1454321247.nat_gateway_id": "",
+                            "route.1454321247.network_interface_id": "",
+                            "route.1454321247.vpc_peering_connection_id": "pcx-1da92074",
+                            "route.1861732464.cidr_block": "0.0.0.0/0",
+                            "route.1861732464.egress_only_gateway_id": "",
+                            "route.1861732464.gateway_id": "igw-37bda353",
+                            "route.1861732464.instance_id": "",
+                            "route.1861732464.ipv6_cidr_block": "",
+                            "route.1861732464.nat_gateway_id": "",
+                            "route.1861732464.network_interface_id": "",
+                            "route.1861732464.vpc_peering_connection_id": "",
+                            "route.585038522.cidr_block": "172.17.0.0/18",
+                            "route.585038522.egress_only_gateway_id": "",
+                            "route.585038522.gateway_id": "",
+                            "route.585038522.instance_id": "",
+                            "route.585038522.ipv6_cidr_block": "",
+                            "route.585038522.nat_gateway_id": "",
+                            "route.585038522.network_interface_id": "",
+                            "route.585038522.vpc_peering_connection_id": "pcx-79ac2510",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-external-001",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table.internal.0": {
+                    "type": "aws_route_table",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "rtb-da9754bc",
+                        "attributes": {
+                            "id": "rtb-da9754bc",
+                            "propagating_vgws.#": "0",
+                            "route.#": "3",
+                            "route.1454321247.cidr_block": "10.40.0.0/16",
+                            "route.1454321247.egress_only_gateway_id": "",
+                            "route.1454321247.gateway_id": "",
+                            "route.1454321247.instance_id": "",
+                            "route.1454321247.ipv6_cidr_block": "",
+                            "route.1454321247.nat_gateway_id": "",
+                            "route.1454321247.network_interface_id": "",
+                            "route.1454321247.vpc_peering_connection_id": "pcx-1da92074",
+                            "route.3249006304.cidr_block": "0.0.0.0/0",
+                            "route.3249006304.egress_only_gateway_id": "",
+                            "route.3249006304.gateway_id": "",
+                            "route.3249006304.instance_id": "",
+                            "route.3249006304.ipv6_cidr_block": "",
+                            "route.3249006304.nat_gateway_id": "nat-0d75e13777bbf96ab",
+                            "route.3249006304.network_interface_id": "",
+                            "route.3249006304.vpc_peering_connection_id": "",
+                            "route.585038522.cidr_block": "172.17.0.0/18",
+                            "route.585038522.egress_only_gateway_id": "",
+                            "route.585038522.gateway_id": "",
+                            "route.585038522.instance_id": "",
+                            "route.585038522.ipv6_cidr_block": "",
+                            "route.585038522.nat_gateway_id": "",
+                            "route.585038522.network_interface_id": "",
+                            "route.585038522.vpc_peering_connection_id": "pcx-79ac2510",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-001",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table.internal.1": {
+                    "type": "aws_route_table",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "rtb-ea90538c",
+                        "attributes": {
+                            "id": "rtb-ea90538c",
+                            "propagating_vgws.#": "0",
+                            "route.#": "3",
+                            "route.1454321247.cidr_block": "10.40.0.0/16",
+                            "route.1454321247.egress_only_gateway_id": "",
+                            "route.1454321247.gateway_id": "",
+                            "route.1454321247.instance_id": "",
+                            "route.1454321247.ipv6_cidr_block": "",
+                            "route.1454321247.nat_gateway_id": "",
+                            "route.1454321247.network_interface_id": "",
+                            "route.1454321247.vpc_peering_connection_id": "pcx-1da92074",
+                            "route.4227015204.cidr_block": "0.0.0.0/0",
+                            "route.4227015204.egress_only_gateway_id": "",
+                            "route.4227015204.gateway_id": "",
+                            "route.4227015204.instance_id": "",
+                            "route.4227015204.ipv6_cidr_block": "",
+                            "route.4227015204.nat_gateway_id": "nat-03a101a30b93bcfad",
+                            "route.4227015204.network_interface_id": "",
+                            "route.4227015204.vpc_peering_connection_id": "",
+                            "route.585038522.cidr_block": "172.17.0.0/18",
+                            "route.585038522.egress_only_gateway_id": "",
+                            "route.585038522.gateway_id": "",
+                            "route.585038522.instance_id": "",
+                            "route.585038522.ipv6_cidr_block": "",
+                            "route.585038522.nat_gateway_id": "",
+                            "route.585038522.network_interface_id": "",
+                            "route.585038522.vpc_peering_connection_id": "pcx-79ac2510",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-002",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table.internal.2": {
+                    "type": "aws_route_table",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "rtb-c59350a3",
+                        "attributes": {
+                            "id": "rtb-c59350a3",
+                            "propagating_vgws.#": "0",
+                            "route.#": "3",
+                            "route.109508197.cidr_block": "0.0.0.0/0",
+                            "route.109508197.egress_only_gateway_id": "",
+                            "route.109508197.gateway_id": "",
+                            "route.109508197.instance_id": "",
+                            "route.109508197.ipv6_cidr_block": "",
+                            "route.109508197.nat_gateway_id": "nat-071ab85273bcf43eb",
+                            "route.109508197.network_interface_id": "",
+                            "route.109508197.vpc_peering_connection_id": "",
+                            "route.1454321247.cidr_block": "10.40.0.0/16",
+                            "route.1454321247.egress_only_gateway_id": "",
+                            "route.1454321247.gateway_id": "",
+                            "route.1454321247.instance_id": "",
+                            "route.1454321247.ipv6_cidr_block": "",
+                            "route.1454321247.nat_gateway_id": "",
+                            "route.1454321247.network_interface_id": "",
+                            "route.1454321247.vpc_peering_connection_id": "pcx-1da92074",
+                            "route.585038522.cidr_block": "172.17.0.0/18",
+                            "route.585038522.egress_only_gateway_id": "",
+                            "route.585038522.gateway_id": "",
+                            "route.585038522.instance_id": "",
+                            "route.585038522.ipv6_cidr_block": "",
+                            "route.585038522.nat_gateway_id": "",
+                            "route.585038522.network_interface_id": "",
+                            "route.585038522.vpc_peering_connection_id": "pcx-79ac2510",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-003",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.external.0": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.external",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-16e4126f",
+                        "attributes": {
+                            "id": "rtbassoc-16e4126f",
+                            "route_table_id": "rtb-32925154",
+                            "subnet_id": "subnet-78028e31"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.external.1": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.external",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-d4e214ad",
+                        "attributes": {
+                            "id": "rtbassoc-d4e214ad",
+                            "route_table_id": "rtb-32925154",
+                            "subnet_id": "subnet-a7d9b3c0"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.external.2": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.external",
+                        "aws_subnet.external.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-88e513f1",
+                        "attributes": {
+                            "id": "rtbassoc-88e513f1",
+                            "route_table_id": "rtb-32925154",
+                            "subnet_id": "subnet-76688d2d"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.internal.0": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.internal.*",
+                        "aws_subnet.internal.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-39e11740",
+                        "attributes": {
+                            "id": "rtbassoc-39e11740",
+                            "route_table_id": "rtb-da9754bc",
+                            "subnet_id": "subnet-ad1c90e4"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.internal.1": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.internal.*",
+                        "aws_subnet.internal.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-7ee31507",
+                        "attributes": {
+                            "id": "rtbassoc-7ee31507",
+                            "route_table_id": "rtb-ea90538c",
+                            "subnet_id": "subnet-b3dcb6d4"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_route_table_association.internal.2": {
+                    "type": "aws_route_table_association",
+                    "depends_on": [
+                        "aws_route_table.internal.*",
+                        "aws_subnet.internal.*"
+                    ],
+                    "primary": {
+                        "id": "rtbassoc-a2e412db",
+                        "attributes": {
+                            "id": "rtbassoc-a2e412db",
+                            "route_table_id": "rtb-c59350a3",
+                            "subnet_id": "subnet-a8688df3"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.external.0": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-78028e31",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2a",
+                            "cidr_block": "10.50.32.0/20",
+                            "id": "subnet-78028e31",
+                            "map_public_ip_on_launch": "true",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-external-001",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.external.1": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-a7d9b3c0",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2b",
+                            "cidr_block": "10.50.96.0/20",
+                            "id": "subnet-a7d9b3c0",
+                            "map_public_ip_on_launch": "true",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-external-002",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.external.2": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-76688d2d",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2c",
+                            "cidr_block": "10.50.160.0/20",
+                            "id": "subnet-76688d2d",
+                            "map_public_ip_on_launch": "true",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-external-003",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.internal.0": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-ad1c90e4",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2a",
+                            "cidr_block": "10.50.0.0/19",
+                            "id": "subnet-ad1c90e4",
+                            "map_public_ip_on_launch": "false",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-001",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.internal.1": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-b3dcb6d4",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2b",
+                            "cidr_block": "10.50.64.0/19",
+                            "id": "subnet-b3dcb6d4",
+                            "map_public_ip_on_launch": "false",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-002",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_subnet.internal.2": {
+                    "type": "aws_subnet",
+                    "depends_on": [
+                        "aws_vpc.main"
+                    ],
+                    "primary": {
+                        "id": "subnet-a8688df3",
+                        "attributes": {
+                            "assign_ipv6_address_on_creation": "false",
+                            "availability_zone": "us-west-2c",
+                            "cidr_block": "10.50.128.0/19",
+                            "id": "subnet-a8688df3",
+                            "map_public_ip_on_launch": "false",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools-internal-003",
+                            "vpc_id": "vpc-e2f2ad85"
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                },
+                "aws_vpc.main": {
+                    "type": "aws_vpc",
+                    "depends_on": [],
+                    "primary": {
+                        "id": "vpc-e2f2ad85",
+                        "attributes": {
+                            "assign_generated_ipv6_cidr_block": "false",
+                            "cidr_block": "10.50.0.0/16",
+                            "default_network_acl_id": "acl-10677177",
+                            "default_route_table_id": "rtb-67925101",
+                            "default_security_group_id": "sg-5118d62a",
+                            "dhcp_options_id": "dopt-12992375",
+                            "enable_classiclink": "false",
+                            "enable_dns_hostnames": "true",
+                            "enable_dns_support": "true",
+                            "id": "vpc-e2f2ad85",
+                            "instance_tenancy": "default",
+                            "main_route_table_id": "rtb-67925101",
+                            "tags.%": "1",
+                            "tags.Name": "Shared Production Tools"
+                        },
+                        "meta": {
+                            "schema_version": "1"
+                        },
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }
+            },
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "ami",
+                "ami"
+            ],
+            "outputs": {
+                "ami_id": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "ami-9516adf5"
+                }
+            },
+            "resources": {},
+            "depends_on": []
+        },
+        {
+            "path": [
+                "root",
+                "ami",
+                "virttype"
+            ],
+            "outputs": {
+                "prefer_hvm": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "hvm"
+                },
+                "prefer_pv": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "hvm"
+                }
+            },
+            "resources": {},
+            "depends_on": []
+        }
+    ]
+}

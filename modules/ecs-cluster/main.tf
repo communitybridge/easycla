@@ -13,7 +13,6 @@
  *        environment          = "prod"
  *        name                 = "cdn"
  *        vpc_id               = "vpc-id"
- *        image_id             = "ami-id"
  *        subnet_ids           = ["1" ,"2"]
  *        key_name             = "ssh-key"
  *        security_groups      = "1,2"
@@ -39,10 +38,6 @@ variable "team" {
 
 variable "vpc_id" {
   description = "VPC ID"
-}
-
-variable "image_id" {
-  description = "AMI Image ID"
 }
 
 variable "subnet_ids" {
@@ -130,6 +125,25 @@ variable "cloud_config_content" {
   default     = ""
 }
 
+data "aws_ami" "amazon-linux-ecs-optimized" {
+  most_recent = true
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-*-amazon-ecs-optimized"]
+  }
+
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "${var.name}"
 
@@ -150,7 +164,7 @@ data "template_cloudinit_config" "cloud_config" {
 resource "aws_launch_configuration" "main" {
   name_prefix = "${format("%s-ecs-", var.name)}"
 
-  image_id                    = "${var.image_id}"
+  image_id                    = "${data.aws_ami.amazon-linux-ecs-optimized.id}"
   instance_type               = "${var.instance_type}"
   ebs_optimized               = "${var.instance_ebs_optimized}"
   iam_instance_profile        = "${var.iam_instance_profile}"

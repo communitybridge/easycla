@@ -114,7 +114,6 @@ module "engineering-tools-ecs-cluster" {
   team                 = "Engineering"
   name                 = "engineering-tools"
   vpc_id               = "${data.terraform_remote_state.engineering.vpc_id}"
-  image_id             = "ami-022b9262"
   subnet_ids           = "${data.terraform_remote_state.engineering.internal_subnets}"
   key_name             = "engineering-tools"
   iam_instance_profile = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"

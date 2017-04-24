@@ -14,10 +14,6 @@ variable "vpc_id" {
   description = "The VPC ID to use"
 }
 
-variable "zone_id" {
-  description = "The Route53 Zone ID where the DNS record will be created"
-}
-
 variable "security_groups" {
   description = "A list of security group IDs"
   type = "list"
@@ -30,7 +26,7 @@ variable "subnet_ids" {
 
 variable "instance_type" {
   description = "The type of instances that the Redis cluster will be running on"
-  default     = "cache.t2.small"
+  default     = "cache.t2.micro"
 }
 
 variable "instance_count" {
@@ -51,11 +47,6 @@ variable "preferred_maintenance_window" {
 variable "publicly_accessible" {
   description = "When set to true the RDS cluster can be reached from outside the VPC"
   default     = false
-}
-
-variable "dns_name" {
-  description = "Route53 record name for the Redis Cluster, defaults to the database name if not set"
-  default     = ""
 }
 
 variable "port" {

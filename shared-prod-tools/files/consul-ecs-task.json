@@ -1,0 +1,76 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "433610389961.dkr.ecr.us-west-2.amazonaws.com/consul/master:latest",
+    "name": "consul-server",
+    "portMappings": [
+      {
+        "containerPort": 8300,
+        "hostPort": 8300,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8301,
+        "hostPort": 8301,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8301,
+        "hostPort": 8301,
+        "protocol": "udp"
+      },
+      {
+        "containerPort": 8302,
+        "hostPort": 8302,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8400,
+        "hostPort": 8400,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8500,
+        "hostPort": 8500,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8600,
+        "hostPort": 8600,
+        "protocol": "udp"
+      }
+    ],
+    "dnsServers": [
+      "172.17.0.1",
+      "8.8.8.8"
+    ],
+    "environment": [
+      {
+        "name": "EC2_NAME_TAG",
+        "value": "${EC2_NAME_TAG}"
+      },
+      {
+        "name": "CONSUL_CLUSTER_MIN_SIZE",
+        "value": "${CONSUL_CLUSTER_MIN_SIZE}"
+      },
+      {
+        "name": "CONSUL_ENCRYPTION_KEY",
+        "value": "${CONSUL_ENCRYPTION_KEY}"
+      },
+      {
+        "name": "CONSUL_DATACENTER",
+        "value": "${CONSUL_DATACENTER}"
+      }
+    ],
+    "dnsSearchDomains": ["service.consul"],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "shared-production-infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "consul-slave"
+      }
+    }
+  }
+]
