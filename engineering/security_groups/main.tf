@@ -170,7 +170,7 @@ resource "aws_security_group" "internal_ssh" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = ["${aws_security_group.external_ssh.id}", "${aws_security_group.vpn.id}"]
+    cidr_blocks     = ["0.0.0.0/0"]
   }
 
   egress {

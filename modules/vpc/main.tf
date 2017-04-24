@@ -180,3 +180,7 @@ output "external_rtb_id" {
 output "internal_nat_ips" {
   value = ["${aws_eip.nat.*.public_ip}"]
 }
+
+output "raw_route_tables_id" {
+  value = ["${aws_route_table.internal.*.id}"]
+}

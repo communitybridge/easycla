@@ -171,6 +171,13 @@ resource "aws_security_group" "jenkins-slave" {
     security_groups = ["${module.engineering-tools-ecs-cluster.security_group_id}"]
   }
 
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
