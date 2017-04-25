@@ -1,14 +1,20 @@
 import { Component } from '@angular/core';
-import { NavController, ModalController, NavParams } from 'ionic-angular';
+import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
+import { CincoService } from '../../app/services/cinco.service'
 import { ContactUpdate } from '../contact-update/contact-update';
 
+
+@IonicPage({
+  segment: 'project-page/:project/member-page/:member'
+})
 @Component({
   selector: 'page-member',
   templateUrl: 'member.html'
 })
 export class MemberPage {
-  selectedProject: any;
-  selectedMember: any;
+  projectId: any;
+  memberId: any;
+  member: any;
   contacts: Array<{
     firstname: string,
     lastname: string,
@@ -29,14 +35,49 @@ export class MemberPage {
   constructor(
     public navCtrl: NavController,
     public modalCtrl: ModalController,
-    public navParams: NavParams
+    public navParams: NavParams,
+    private cincoService: CincoService
   ) {
     // If we navigated to this page, we will have an item available as a nav param
-    this.selectedProject = navParams.get('project');
-    this.selectedMember = navParams.get('member');
+    this.projectId = navParams.get('projectId');
+    this.memberId = navParams.get('memberId');
 
+    this.getDefaults();
+  }
+
+  ngOnInit() {
     // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
+    // this.getMember(this.projectId, this.memberId);
+  };
 
+  getMember(projectId, memberId) {
+    // this.cincoService.getMember(projectId, memberId).subscribe(response => {
+    //   if(response) {
+    //     // Merge response data into local data
+    //   }
+    // });
+  }
+
+  contactSelected(event, contact) {
+    let modal = this.modalCtrl.create(ContactUpdate, {
+      projectId: this.projectId,
+      member: this.member,
+      contact: contact,
+    });
+    modal.present();
+  }
+
+  getDefaults() {
+    this.member = {
+      id: this.memberId,
+      alert: '',
+      name: 'Google',
+      level: 'Gold',
+      status: 'Renewal < 60',
+      annual_dues: '$30,000',
+      renewal_date: '10/1/2017',
+    };
+    console.log(this.member);
     this.contacts = [
       {
         firstname: "John",
@@ -133,17 +174,7 @@ export class MemberPage {
         email: "email@google.com",
         phone: "123-456-7890",
       },
-    ]
-
-  }
-
-  contactSelected(event, contact) {
-    let modal = this.modalCtrl.create(ContactUpdate, {
-      project: this.selectedProject,
-      member: this.selectedMember,
-      contact: contact,
-    });
-    modal.present();
+    ];
   }
 
 }
