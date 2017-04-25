@@ -1,18 +1,17 @@
 import { Component } from '@angular/core';
-
-import { NavController, NavParams } from 'ionic-angular';
-
+import { NavController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 
-import { MemberPage } from '../member/member';
-
+@IonicPage({
+  segment: 'project-page/:projectId'
+})
 @Component({
   selector: 'page-project',
   templateUrl: 'project.html'
 })
 export class ProjectPage {
   selectedProject: any;
-  projectId: String;
+  projectId: string;
   project: {
     icon: string,
     name: string,
@@ -24,6 +23,7 @@ export class ProjectPage {
   };
 
   members: Array<{
+    id: string,
     alert?: string,
     name: string,
     level: string,
@@ -32,7 +32,11 @@ export class ProjectPage {
     renewal_date: string,
   }>;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
+  constructor(
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    private cincoService: CincoService
+  ) {
     // If we navigated to this page, we will have an item available as a nav param
     this.selectedProject = navParams.get('project');
     this.projectId = navParams.get('projectId');
@@ -64,10 +68,10 @@ export class ProjectPage {
     });
   }
 
-  memberSelected(event, project, member) {
-    this.navCtrl.push(MemberPage, {
-      project: project,
-      member: member,
+  memberSelected(event, projectId, memberId) {
+    this.navCtrl.push('MemberPage', {
+      project: projectId,
+      member: memberId,
     });
   }
 
@@ -103,6 +107,7 @@ export class ProjectPage {
 
     this.members = [
       {
+        id: 'm00000000001',
         alert: '',
         name: 'Abbie',
         level: 'Gold',
@@ -111,6 +116,7 @@ export class ProjectPage {
         renewal_date: '3/1/2017',
       },
       {
+        id: 'm00000000002',
         alert: 'alert',
         name: 'Acrombie',
         level: 'Gold',
@@ -119,6 +125,7 @@ export class ProjectPage {
         renewal_date: '3/2/2017',
       },
       {
+        id: 'm00000000003',
         alert: 'notice',
         name: 'Adobe',
         level: 'Gold',
@@ -127,6 +134,7 @@ export class ProjectPage {
         renewal_date: '4/1/2017',
       },
       {
+        id: 'm00000000004',
         alert: '',
         name: 'ADP',
         level: 'Gold',
@@ -135,6 +143,7 @@ export class ProjectPage {
         renewal_date: '4/1/2017',
       },
       {
+        id: 'm00000000005',
         alert: '',
         name: 'BlackRock',
         level: 'Bronze',
@@ -143,6 +152,7 @@ export class ProjectPage {
         renewal_date: '6/1/2017',
       },
       {
+        id: 'm00000000006',
         alert: '',
         name: 'Fox',
         level: 'Bronze',
@@ -151,6 +161,7 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
       {
+        id: 'm00000000007',
         alert: '',
         name: 'Google',
         level: 'Gold',
@@ -159,6 +170,7 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
       {
+        id: 'm00000000008',
         alert: '',
         name: 'Joyent',
         level: 'Gold',
@@ -167,6 +179,7 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
       {
+        id: 'm00000000009',
         alert: '',
         name: 'KrVolk',
         level: 'Gold',
@@ -175,6 +188,7 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
       {
+        id: 'm00000000010',
         alert: '',
         name: 'Netflix',
         level: 'Gold',
@@ -183,6 +197,7 @@ export class ProjectPage {
         renewal_date: '10/1/2017',
       },
       {
+        id: 'm00000000011',
         alert: '',
         name: 'Company Name',
         level: 'Silver',
