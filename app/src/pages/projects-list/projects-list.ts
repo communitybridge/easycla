@@ -1,19 +1,19 @@
 import { Component, ViewChild } from '@angular/core';
-
-import { NavController } from 'ionic-angular';
-
+import { NavController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
-import { AddProjectPage } from '../add-project/add-project';
-import { ProjectPage } from '../project/project';
+// import { ProjectPage } from '../project/project';
 
+@IonicPage({
+  segment: 'projects-list'
+})
 @Component({
   selector: 'projects-list',
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
   allProjects: any;
-  projectId: String;
+  // projectId: String;
   pushAddProjectPage;
   contracts: {
     base: Array<number>,
@@ -65,7 +65,7 @@ export class ProjectsListPage {
 
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
-    this.pushAddProjectPage = AddProjectPage;
+    this.pushAddProjectPage = 'AddProjectPage';
     this.getDefaults();
   }
 
@@ -80,13 +80,13 @@ export class ProjectsListPage {
   }
 
   viewProject(projectId){
-    this.navCtrl.push(ProjectPage, {
+    this.navCtrl.push('ProjectPage', {
       projectId: projectId
     });
   }
 
   projectSelected(event, project) {
-    this.navCtrl.push(ProjectPage, {
+    this.navCtrl.push('ProjectPage', {
       project: project
     });
   }

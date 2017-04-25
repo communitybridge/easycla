@@ -5,9 +5,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from './services/cinco.service';
 
-import { ProjectsListPage } from '../pages/projects-list/projects-list';
-import { AddProjectPage } from '../pages/add-project/add-project';
-import { MemberPage } from '../pages/member/member';
+// import { ProjectsListPage } from '../pages/projects-list/projects-list';
+// import { MemberPage } from '../pages/member/member';
 
 @Component({
   templateUrl: 'app.html',
@@ -16,7 +15,7 @@ import { MemberPage } from '../pages/member/member';
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = ProjectsListPage;
+  rootPage: any = 'ProjectsListPage';
 
   pages: Array<{title: string, component: any}>;
 
@@ -25,9 +24,9 @@ export class MyApp {
 
     // used for an example of ngFor and navigation
     this.pages = [
-      { title: 'All Projects', component: ProjectsListPage },
-      { title: 'Add Project', component: AddProjectPage },
-      { title: 'Member', component: MemberPage }
+      { title: 'All Projects', component: 'ProjectsListPage' },
+      { title: 'Add Project', component: 'AddProjectPage' },
+      { title: 'Member', component: 'MemberPage' }
     ];
 
   }

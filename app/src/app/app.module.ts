@@ -1,10 +1,11 @@
+import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
+import { HttpModule } from '@angular/http';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
-import { ProjectsListPage } from '../pages/projects-list/projects-list';
-import { AddProjectPage } from '../pages/add-project/add-project';
-import { MemberPage } from '../pages/member/member';
-import { ProjectPage } from '../pages/project/project';
+// import { ProjectsListPage } from '../pages/projects-list/projects-list';
+// import { MemberPage } from '../pages/member/member';
+// import { ProjectPage } from '../pages/project/project';
 import { ContactUpdate } from '../pages/contact-update/contact-update';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -14,24 +15,24 @@ import { ActionPopover } from '../components/action-popover/action-popover';
 @NgModule({
   declarations: [
     MyApp,
-    ProjectsListPage,
-    AddProjectPage,
-    MemberPage,
-    ProjectPage,
+    // ProjectsListPage,
+    // MemberPage,
+    // ProjectPage,
     ContactUpdate,
     UploadButtonComponent,
     ActionPopover,
   ],
   imports: [
-    IonicModule.forRoot(MyApp)
+    BrowserModule,
+    HttpModule,
+    IonicModule.forRoot(MyApp),
   ],
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    ProjectsListPage,
-    AddProjectPage,
-    MemberPage,
-    ProjectPage,
+    // ProjectsListPage,
+    // MemberPage,
+    // ProjectPage,
     ContactUpdate,
     ActionPopover,
   ],
