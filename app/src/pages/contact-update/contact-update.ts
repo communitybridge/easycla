@@ -6,6 +6,8 @@ import { NavController, NavParams, ViewController, AlertController } from 'ionic
   templateUrl: 'contact-update.html'
 })
 export class ContactUpdate {
+  projectId: string;
+  memberId: string;
   project: any;
   member: any;
   contact: any;
@@ -17,9 +19,9 @@ export class ContactUpdate {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
   ) {
-    this.project=this.navParams.get('project');
-    this.member=this.navParams.get('member');
-    this.contact=this.navParams.get('contact');
+    this.projectId = this.navParams.get('projectId');
+    this.member = this.navParams.get('member');
+    this.contact = this.navParams.get('contact');
   }
 
   // ContactUpdate modal dismiss

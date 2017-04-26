@@ -87,7 +87,7 @@
                       <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
                       <span *ngIf="member.alert == ''" class="circle-null"></span>
                     </td>
-                    <td data-title="Company" (click)="memberSelected($event, project, member)">{{ member.name }}</td>
+                    <td data-title="Company" (click)="memberSelected($event, projectId, member.id)">{{ member.name }}</td>
                     <td data-title="Level">{{ member.level }}</td>
                     <td data-title="Status">{{ member.status }}</td>
                     <td data-title="Annual Dues">{{ member.annual_dues }}</td>
