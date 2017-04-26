@@ -19,7 +19,7 @@ out/
 lib-cov
 
 # Directory for uploads
-public/uploads/
+src/public/uploads/
 
 # Coverage directory used by tools like istanbul
 coverage
@@ -31,7 +31,7 @@ coverage
 .lock-wscript
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
-build/Release
+src/build/Release
 
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
@@ -57,4 +57,4 @@ docker-compose.yml
 ._*
 
 # Ionic Build Files
-app/www/build/*
+src/app/www/build/*
