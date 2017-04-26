@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
 
-import { NavController } from 'ionic-angular';
+import { NavController, IonicPage } from 'ionic-angular';
 
 import { CincoService } from '../../app/services/cinco.service'
 import { ProjectPage } from '../project/project';
 
+
+@IonicPage({
+  segment: 'project-add'
+})
 @Component({
   selector: 'add-project',
   templateUrl: 'add-project.html'
