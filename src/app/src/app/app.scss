@@ -33,16 +33,16 @@
   .toolbar-content {
     display: flex;
   }
-  .toolbar-search {
-    background-color: color($colors, secondary);
-    display: flex;
-    flex-grow: 2;
-    align-items: center;
-     ion-icon {
-       font-size: 2.5rem;
-       margin-left: 3rem;
-     }
-  }
+  // .toolbar-search {
+  //   background-color: color($colors, secondary);
+  //   display: flex;
+  //   flex-grow: 2;
+  //   align-items: center;
+  //    ion-icon {
+  //      font-size: 2.5rem;
+  //      margin-left: 3rem;
+  //    }
+  // }
 }
 
 .content {
