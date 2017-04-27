@@ -35,8 +35,8 @@ src/build/Release
 
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
-node_modules/*
-!node_modules/passport-cas
+src/node_modules/*
+src/!node_modules/passport-cas
 
 # Optional npm cache directory
 .npm
@@ -55,6 +55,8 @@ logs/
 .data/
 docker-compose.yml
 ._*
+.lfinstance
+__pycache__
 
 # Ionic Build Files
 src/app/www/build/*
