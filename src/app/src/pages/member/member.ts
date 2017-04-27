@@ -77,7 +77,6 @@ export class MemberPage {
       annual_dues: '$30,000',
       renewal_date: '10/1/2017',
     };
-    console.log(this.member);
     this.contacts = [
       {
         firstname: "John",

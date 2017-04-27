@@ -73,13 +73,13 @@ export class ContactUpdate {
   }
 
   saveContact() {
-    console.log("save contact");
-    console.log(this.contact);
+    // console.log("save contact");
+    // console.log(this.contact);
   }
 
   removeContact(contact) {
-    console.log("remove contact");
-    console.log(this.contact);
+    // console.log("remove contact");
+    // console.log(this.contact);
   }
 
   filesNotify(files) {
