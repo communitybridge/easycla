@@ -23,7 +23,8 @@ export class MyApp {
     this.pages = [
       { title: 'All Projects', component: 'ProjectsListPage' },
       { title: 'Add Project', component: 'AddProjectPage' },
-      { title: 'Member', component: 'MemberPage' }
+      { title: 'Member', component: 'MemberPage' },
+      { title: 'All Invoices Status', component: 'AllInvoicesPage' }
     ];
 
   }
