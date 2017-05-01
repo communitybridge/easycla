@@ -1,0 +1,22 @@
+# List of all the containers that needs to be spun up.
+# The workspace container will be added and configured automatically.
+# The Syntax for each container should mimic the docker-compose format.
+containers:
+  workspace:
+    ports: ['%:8081']
+
+# Environment Variables to be injected in the container.
+environment:
+  workspace:
+    console_integration_user: 'cinco'
+    console_integration_password: 'cinco'
+    encryption_sauce: 'WqNGjk@%ym7eRsXGAZYskF'
+
+sequences:
+
+  install:
+    Installing Dependencies: "cd /srv/app/src && npm install --quiet"
+
+  start:
+    _detach: True
+    Launching Console: "cd /srv/app/src && npm run develop"
