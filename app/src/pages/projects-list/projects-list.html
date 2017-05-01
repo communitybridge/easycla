@@ -11,7 +11,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
+<ion-content padding headerspacing overflow-scroll="true" [ngClass]="{'loading': loading}">
 
   <ion-fab right bottom>
     <button ion-fab mini><ion-icon name="add"></ion-icon></button>
@@ -21,7 +21,7 @@
     </ion-fab-list>
   </ion-fab>
 
-  <header>
+  <header class="loadable">
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-6 col-lg-4>
@@ -50,7 +50,7 @@
 
   <ion-grid class="projects-list">
     <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 class="loadable" *ngFor="let project of allProjects">
         <ion-card >
           <ion-card-content>
             <ion-card-title (click)="viewProject(project.id)">
@@ -83,15 +83,13 @@
   </ion-grid>
 
   <!-- This will be ported and removed once CINCO API has the ability to return the full payload with all the information required -->
-  <ion-grid class="projects-list">
+  <!-- <ion-grid class="projects-list">
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
         <ion-card>
-          <!-- <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/> -->
-          <img src="{{project.icon}}" alt="{{project.title}} logo"/>
+          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>
           <ion-card-content>
-            <!-- <ion-card-title (click)="projectSelected($event, project)"> -->
-            <ion-card-title>
+            <ion-card-title (click)="projectSelected($event, project)">
               {{project.title}}
             </ion-card-title>
             <dl>
@@ -109,6 +107,6 @@
         </ion-card>
       </ion-col>
     </ion-row>
-  </ion-grid>
+  </ion-grid> -->
 
 </ion-content>

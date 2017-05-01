@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>Member Company</ion-title>
+    <ion-title>{{ member.org.name }}</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -20,30 +20,30 @@
     <ion-grid>
       <ion-row responsive-sm>
         <ion-col width-30 text-center>
-          <p><img src="assets/test/google-logo.png"/></p>
+          <p><img src="{{ member.org.logoRef }}"/></p>
           <p color="gray">
-            <a href="assets/test/google-logo.png" download><ion-icon name="md-download"></ion-icon></a>
+            <a href="{{ member.org.logoRef }}" download><ion-icon name="md-download"></ion-icon></a>
             <small>Logo (.ai or .eps)</small>
           </p>
         </ion-col>
         <ion-col width-40>
           <ion-item>
-            <h1>Google (Alphabet)</h1>
-            <h2 margin-top>www.google.com</h2>
-            <p>1600 Amphitheatre Parkway</p>
-            <p>Mountain View, CA 94043</p>
-            <p>United States</p>
+            <h1>{{ member.org.name }}</h1>
+            <h2 margin-top>{{ member.org.url }}</h2>
+            <p>Replace</p>
+            <p>with</p>
+            <p>member.org.addresses</p>
           </ion-item>
           <ion-item>
             <p>Status: ACTIVE</p>
-            <p>Membership: Gold ($20,000.000)</p>
+            <p>Membership: {{ member.tier.type }} ($20,000.000)</p>
             <p>Board: Yes</p>
           </ion-item>
         </ion-col>
         <ion-col width-30>
           <ion-item>
             <p>Zephyr Renewal Date</p>
-            <b>3/30/2017</b>
+            <b>{{ member.renewalDate }}</b>
             <br><br><br>
             <p>LF Membership: #123456</p>
             <p>Expires 7/7/2018</p>
@@ -238,7 +238,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let contact of contacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
+                  <tr *ngFor="let contact of member.contacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
                     <td data-title="Primary">
                       <p *ngIf="contact.primary">
                         <ion-icon md="md-star"></ion-icon>
@@ -248,18 +248,18 @@
                       </p>
                     </td>
                     <td data-title="Role">
-                      {{contact.role}}
+                      <!-- TODO: replace with contact.role -->
                     </td>
                     <td data-title="Profile Photo">
                       <img class="profile-photo" src="{{contact.profile_photo}}">
                     </td>
                     <td data-title="Name / Title" (click)="contactSelected($event, contact)">
-                      <h2>{{contact.firstname}} {{contact.lastname}}</h2>
-                      <p>{{contact.title}}</p>
+                      <h2>{{ contact.givenName }} {{ contact.familyName }}</h2>
+                      <p>Replace w/ title</p>
                     </td>
                     <td data-title="Timezone">
                       <p *ngIf="contact.timezone">
-                        {{contact.timezone}}
+                        <!-- Replace with {{contact.timezone}} -->
                       </p>
                       <p *ngIf="!contact.timezone">
                         &nbsp;
@@ -287,7 +287,7 @@
                         <ion-icon color="green" md="md-checkmark-circle"></ion-icon>
                         Photo
                       </p>
-                      <p *ngIf="!contact.photo">
+                      <p *ngIf="!contact.headshotRef">
                         &nbsp;
                       </p>
                     </td>

@@ -1,15 +1,18 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController } from 'ionic-angular';
+import { CincoService } from '../../app/services/cinco.service'
 
 @Component({
   selector: 'contact-update',
-  templateUrl: 'contact-update.html'
+  templateUrl: 'contact-update.html',
+  providers: [CincoService]
 })
 export class ContactUpdate {
   projectId: string;
   memberId: string;
   project: any;
   member: any;
+  originalContact: any;
   contact: any;
 
   constructor(
@@ -18,10 +21,16 @@ export class ContactUpdate {
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
+    private cincoService: CincoService
   ) {
     this.projectId = this.navParams.get('projectId');
     this.member = this.navParams.get('member');
-    this.contact = this.navParams.get('contact');
+    console.log("contact member:");
+    console.log(this.member);
+    this.originalContact = this.navParams.get('contact');
+    this.contact = Object.assign({}, this.originalContact);
+    console.log("contact contact:");
+    console.log(this.contact);
   }
 
   // ContactUpdate modal dismiss
@@ -74,7 +83,15 @@ export class ContactUpdate {
 
   saveContact() {
     console.log("save contact");
+    console.log(this.projectId);
+    console.log(this.member);
     console.log(this.contact);
+    this.cincoService.updateMemberContact(this.projectId, this.member.id, this.contact.id, this.contact).subscribe(response => {
+      if(response) {
+        console.log("updateMemberContact response:");
+        console.log(response);
+      }
+    });
   }
 
   removeContact(contact) {

@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <img class="profile-photo" src="{{contact.profile_photo}}" alt="{{contact.lastname}}, {{contact.firstname}}">
+    <img class="profile-photo" src="" alt="{{contact.givenName}} {{contact.familyName}}">
     <ion-title>
-      {{contact.lastname}}, {{contact.firstname}}: <span class="member-company">{{ member.name }}</span>
+      {{contact.givenName}} {{contact.familyName}}: <span class="member-company">{{ member.org.name }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -52,7 +52,7 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Company</ion-label>
-          <ion-input type="text" value="{{ member.name }}" disabled></ion-input>
+          <ion-input type="text" value="{{ member.org.name }}" disabled></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-6>
@@ -67,13 +67,13 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Email</ion-label>
-          <ion-input type="text" value=""></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.email"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Phone</ion-label>
-          <ion-input type="text" value=""></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.phone"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -112,7 +112,7 @@
     <ion-row>
       <ion-col col-12>
         <ion-item>
-          <ion-textarea placeholder="Bio"></ion-textarea>
+          <ion-textarea placeholder="Bio">{{ contact.bio }}</ion-textarea>
         </ion-item>
       </ion-col>
     </ion-row>
