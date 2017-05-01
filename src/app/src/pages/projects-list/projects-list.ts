@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
-// import { ProjectPage } from '../project/project';
 
 @IonicPage({
   segment: 'projects-list'
@@ -15,44 +14,17 @@ export class ProjectsListPage {
   allProjects: any;
   // projectId: String;
   pushAddProjectPage;
-  contracts: {
-    base: Array<number>,
-    additional: Array<number>,
-    alert: Array<number>,
-  };
-  invoices: {
-    base: Array<number>,
-    additional: Array<number>,
-    alert: Array<number>,
-  };
-  contractChartColors : {
-    base: {
-      background: string,
-      hoverBackground: string,
-    },
-    additional: {
-      background: string,
-      hoverBackground: string,
-    },
-    alert: {
-      background: string,
-      hoverBackground: string,
-    },
-  };
-  chartColors: {
-    base: {
-      background: string,
-      hoverBackground: string,
-    },
-    additional: {
-      background: string,
-      hoverBackground: string,
-    },
-    alert: {
-      background: string,
-      hoverBackground: string,
-    },
-  };
+  numberOfContracts: {
+    new: number,
+    renewal: number,
+  }
+  numberOfInvoices: {
+    fewerThan60Days: number,
+    fewerThan30Days: number,
+    sent: number,
+    late: number,
+    paidLast30Days: number,
+  }
   meetings: Array<{
     label: string,
     value: string
@@ -76,7 +48,6 @@ export class ProjectsListPage {
 
   @ViewChild('invoicesCanvas') invoicesCanvas;
   invoicesChart: any;
-
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
     this.pushAddProjectPage = 'AddProjectPage';
@@ -105,47 +76,112 @@ export class ProjectsListPage {
     });
   }
 
+  ionViewDidLoad() {
+    let barOptions = this.getBarOptions();
+    this.contractsChart = new Chart(this.contractsCanvas.nativeElement, {
+      type: 'bar',
+      data: {
+        labels: ["NEW", "RENEWAL"],
+        datasets: [{
+             label: '# of Contracts',
+             data: [this.numberOfContracts.new, this.numberOfContracts.renewal],
+             backgroundColor: [
+                 'rgba(163,131,107,1)',
+                 'rgba(225,170,128,1)',
+             ]
+         }]
+      },
+      options: barOptions
+    });
+
+    this.invoicesChart = new Chart(this.invoicesCanvas.nativeElement, {
+      type: 'bar',
+      data: {
+        labels: ["<60 Days", "<30 Days", "SENT", "LATE", "PAID"],
+        datasets: [{
+             label: '# of Invoices',
+             data: [
+               this.numberOfInvoices.fewerThan60Days,
+               this.numberOfInvoices.fewerThan30Days,
+               this.numberOfInvoices.sent,
+               this.numberOfInvoices.late,
+               this.numberOfInvoices.paidLast30Days],
+             backgroundColor: [
+                 'rgba(196,221,140,1)',
+                 'rgba(171,206,92,1)',
+                 'rgba(136,186,22,1)',
+                 'rgba(245,166,35,1)',
+                 'rgba(65,117,5,1)',
+             ]
+         }]
+      },
+      options: barOptions
+    });
+
+  }
+
+  getBarOptions(){
+    return {
+      layout:{
+        padding: 20
+      },
+      responsive: true,
+      tooltips: {
+          enabled: true
+      },
+      hover :{
+          animationDuration:0
+      },
+      scales: {
+          xAxes: [{
+              ticks: {
+                  beginAtZero:true,
+                  fontSize:11
+              },
+              scaleLabel:{
+                  display:false
+              },
+              gridLines: {
+                display:false,
+              },
+              stacked: true
+          }],
+          yAxes: [{
+              gridLines: {
+                  display:false,
+                  color: "#fff",
+                  zeroLineColor: "#fff",
+                  zeroLineWidth: 0
+              },
+              ticks: {
+                  beginAtZero: true,
+                  fontSize:11
+              },
+              stacked: true,
+              display: false,
+              barThickness: 300,
+          }]
+      },
+      legend:{
+          display: false
+      }
+    }
+  }
+
   getDefaults(){
+    this.numberOfContracts = {
+      new: 15,
+      renewal: 50
+    };
+    
+    this.numberOfInvoices = {
+      fewerThan60Days: 50,
+      fewerThan30Days: 50,
+      sent: 60,
+      late: 15,
+      paidLast30Days: 15,
+    };
 
-    this.contracts = {
-      base: [2, 0],
-      additional: [0, 5],
-      alert: [0, 0],
-    };
-    this.invoices = {
-      base: [2, 4, 3],
-      additional: [1, 0, 0],
-      alert: [0, 2, 0],
-    };
-
-    this.contractChartColors = {
-      base: {
-        background: "rgba(163,131,107,1)",
-        hoverBackground: "rgba(193,141,107,1)",
-      },
-      additional: {
-        background: "rgba(225,170,128,1)",
-        hoverBackground: "rgba(225,190,158,1)",
-      },
-      alert: {
-        background: "rgb(235,119,28)",
-        hoverBackground: "rgb(213,107,24)",
-      },
-    };
-    this.chartColors = {
-      base: {
-        background: "rgba(63,103,126,1)",
-        hoverBackground: "rgba(50,90,100,1)",
-      },
-      additional: {
-        background: "rgba(23,83,106,1)",
-        hoverBackground: "rgba(20,60,80,1)",
-      },
-      alert: {
-        background: "rgb(235,119,28)",
-        hoverBackground: "rgb(213,107,24)",
-      },
-    };
     this.meetings = [
       {
         label: "TODO",
@@ -279,106 +315,6 @@ export class ProjectsListPage {
         ],
       },
     ];
-  }
-
-  ionViewDidLoad() {
-    var barOptions_stacked = {
-      tooltips: {
-          enabled: true
-      },
-      hover :{
-          animationDuration:0
-      },
-      scales: {
-          xAxes: [{
-              ticks: {
-                  beginAtZero:true,
-                  fontSize:11
-              },
-              scaleLabel:{
-                  display:false
-              },
-              gridLines: {
-              },
-              stacked: true
-          }],
-          yAxes: [{
-              gridLines: {
-                  display:false,
-                  color: "#fff",
-                  zeroLineColor: "#fff",
-                  zeroLineWidth: 0
-              },
-              ticks: {
-                  fontSize:11
-              },
-              stacked: true
-          }]
-      },
-      legend:{
-          display: false
-      },
-    };
-
-    this.contractsChart = new Chart(this.contractsCanvas.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: ["NEW", "RENEWAL"],
-        // Base
-        datasets: [{
-          data: this.contracts.base,
-          backgroundColor: this.contractChartColors.base.background,
-          hoverBackgroundColor: this.contractChartColors.base.hoverBackground
-        },
-        // Additional
-        {
-          data: this.contracts.additional,
-          backgroundColor: this.contractChartColors.additional.hoverBackground,
-          hoverBackgroundColor: this.contractChartColors.additional.background
-        },
-        // Alert
-        {
-          data: this.contracts.alert,
-          backgroundColor: this.contractChartColors.alert.background,
-          hoverBackgroundColor: this.contractChartColors.alert.hoverBackground
-        },
-      ]
-      },
-
-      options: barOptions_stacked,
-    });
-
-    this.invoicesChart = new Chart(this.invoicesCanvas.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: ["Upcoming", "Delivered", "Paid"],
-        // Base
-        datasets: [{
-          label: 'Base',
-          data: this.invoices.base,
-          backgroundColor: this.chartColors.base.background,
-          hoverBackgroundColor: this.chartColors.base.hoverBackground
-        },
-        // Additional
-        {
-          label: 'Additional',
-          data: this.invoices.additional,
-          backgroundColor: this.chartColors.additional.hoverBackground,
-          hoverBackgroundColor: this.chartColors.additional.background
-        },
-        // Alert
-        {
-          label: 'Alert',
-          data: this.invoices.alert,
-          backgroundColor: this.chartColors.alert.background,
-          hoverBackgroundColor: this.chartColors.alert.hoverBackground
-        },
-      ]
-      },
-
-      options: barOptions_stacked,
-    });
-
   }
 
 }
