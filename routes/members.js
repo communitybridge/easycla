@@ -126,25 +126,10 @@ router.get('/members/:id', require('connect-ensure-login').ensureLoggedIn('/logi
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProject(projectId, function (err, project) {
+    projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
       // TODO: Create 404 page for when project doesn't exist
-      if (err) return res.redirect('/');
-      projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
-        async.forEach(memberCompanies, function (eachMember, callback){
-          eachMember.orgName = "";
-          eachMember.orgLogoRef = "";
-          projManagerClient.getOrganization(eachMember.orgId, function (err, organization) {
-            if(organization){
-              eachMember.orgName = organization.name;
-              eachMember.orgLogoRef = organization.logoRef;
-            }
-            callback();
-          });
-        }, function(err) {
-          // Member Companies iteration done.
-          return res.render('members', {project: project, memberCompanies:memberCompanies});
-        });
-      });
+      if (err) return res.send('');
+      res.send(memberCompanies);
     });
   }
 });
@@ -154,50 +139,37 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
     var projectId = req.params.project_id;
     var memberId = req.params.member_id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProject(projectId, function (err, project) {
+    projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
       // TODO: Create 404 page for when project doesn't exist
-      if (err) return res.redirect('/');
-      projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
-        if(memberCompany){
-          memberCompany.orgName = "";
-          memberCompany.orgLogoRef = "";
-          memberCompany.addresses = [];
-          memberCompany.addresses.main = [];
-          memberCompany.addresses.billing = [];
-          memberCompany.contacts.board = [];
-          memberCompany.contacts.technical = [];
-          memberCompany.contacts.marketing = [];
-          memberCompany.contacts.finance = [];
-          memberCompany.contacts.other = [];
-        }
-        projManagerClient.getOrganization(memberCompany.orgId, function (err, organization) {
-          if(organization){
-            memberCompany.orgName = organization.name;
-            memberCompany.orgLogoRef = organization.logoRef;
-            memberCompany.addresses = organization.addresses;
-            for (var j = 0; j < organization.addresses.length; j++){
-              if (organization.addresses[j].type == 'MAIN') memberCompany.addresses.main = organization.addresses[j];
-              else if (organization.addresses[j].type == 'BILLING') memberCompany.addresses.billing = organization.addresses[j];
-            }
-            var mainAddresses = memberCompany.addresses.main.address.thoroughfare.split(' /// ');
-            memberCompany.addresses.main.address.thoroughfareLine1 = mainAddresses[0];
-            memberCompany.addresses.main.address.thoroughfareLine2 = mainAddresses[1];
+      if (err) return res.send('');
+      res.send(memberCompany);
+    });
+  }
+});
 
-            var billingAddresses = memberCompany.addresses.billing.address.thoroughfare.split(' /// ');
-            memberCompany.addresses.billing.address.thoroughfareLine1 = billingAddresses[0];
-            memberCompany.addresses.billing.address.thoroughfareLine2 = billingAddresses[1];
-
-            for (var j = 0; j < memberCompany.contacts.length; j++){
-            	if (memberCompany.contacts[j].type == 'BOARD MEMBER') memberCompany.contacts.board = memberCompany.contacts[j];
-              else if (memberCompany.contacts[j].type == 'TECHNICAL') memberCompany.contacts.technical = memberCompany.contacts[j];
-              else if (memberCompany.contacts[j].type == 'MARKETING') memberCompany.contacts.marketing = memberCompany.contacts[j];
-              else if (memberCompany.contacts[j].type == 'FINANCE') memberCompany.contacts.finance = memberCompany.contacts[j];
-              else memberCompany.contacts.other = memberCompany.contacts[j];
-            }
-          }
-          return res.render('member', {project: project, memberCompany:memberCompany});
-        });
-      });
+router.post('/update_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("/update_member_contact");
+    console.log("req.body");
+    console.log(req.body);
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.body.projectId;
+    var memberId = req.body.memberId;
+    var contactId = req.body.contactId;
+    console.log("nodejs reloaded!");
+    var updatedContact = {
+    //   type: contact.type,
+    //   givenName: contact.givenName,
+    //   familyName: contact.familyName,
+      bio: req.body.contactBio,
+      email: req.body.contactEmail,
+      phone: req.body.contactPhone,
+    //   headshotRef: contact.headshotRef,
+    };
+    console.log(updatedContact);
+    projManagerClient.updateContactFromMember(projectId, memberId, contactId, updatedContact, function (err, created, contact) {
+      console.log("/post_project success");
+      return res.json(contact);
     });
   }
 });
