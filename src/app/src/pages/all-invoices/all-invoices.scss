@@ -1,3 +1,13 @@
 all-invoices {
-  
+  h1{
+    color: #8c8c8c
+  }
+  table {
+    border-collapse: collapse;
+  }
+  tr {
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-width: 0px 0;
+  }
 }
