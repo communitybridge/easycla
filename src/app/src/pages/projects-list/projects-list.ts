@@ -25,6 +25,20 @@ export class ProjectsListPage {
     additional: Array<number>,
     alert: Array<number>,
   };
+  contractChartColors : {
+    base: {
+      background: string,
+      hoverBackground: string,
+    },
+    additional: {
+      background: string,
+      hoverBackground: string,
+    },
+    alert: {
+      background: string,
+      hoverBackground: string,
+    },
+  };
   chartColors: {
     base: {
       background: string,
@@ -94,9 +108,9 @@ export class ProjectsListPage {
   getDefaults(){
 
     this.contracts = {
-      base: [2, 5, 3],
-      additional: [0, 0, 0],
-      alert: [0, 0, 0],
+      base: [2, 0],
+      additional: [0, 5],
+      alert: [0, 0],
     };
     this.invoices = {
       base: [2, 4, 3],
@@ -104,6 +118,20 @@ export class ProjectsListPage {
       alert: [0, 2, 0],
     };
 
+    this.contractChartColors = {
+      base: {
+        background: "rgba(163,131,107,1)",
+        hoverBackground: "rgba(193,141,107,1)",
+      },
+      additional: {
+        background: "rgba(225,170,128,1)",
+        hoverBackground: "rgba(225,190,158,1)",
+      },
+      alert: {
+        background: "rgb(235,119,28)",
+        hoverBackground: "rgb(213,107,24)",
+      },
+    };
     this.chartColors = {
       base: {
         background: "rgba(63,103,126,1)",
@@ -135,7 +163,7 @@ export class ProjectsListPage {
 
     this.projects = [
       {
-        icon: "https://dummyimage.com/600x250/ffffff/000.png&text=zephyr+logo",
+        icon: "assets/test/zephyr-logo.png",
         title: "Zephyr",
         datas: [
           {
@@ -164,7 +192,7 @@ export class ProjectsListPage {
         ],
       },
       {
-        icon: "https://dummyimage.com/600x250/ffffff/000.png&text=todo+logo",
+        icon: "assets/test/todo-logo.png",
         title: "TODO",
         datas: [
           {
@@ -193,7 +221,7 @@ export class ProjectsListPage {
         ],
       },
       {
-        icon: "https://dummyimage.com/600x250/ffffff/000.png&text=openswitch+logo",
+        icon: "assets/test/openswitch-logo.png",
         title: "OpenSwitch",
         datas: [
           {
@@ -222,7 +250,7 @@ export class ProjectsListPage {
         ],
       },
       {
-        icon: "https://dummyimage.com/600x250/ffffff/000.png&text=openchain+logo",
+        icon: "assets/test/openchain-logo.png",
         title: "OpenChain",
         datas: [
           {
@@ -295,24 +323,24 @@ export class ProjectsListPage {
     this.contractsChart = new Chart(this.contractsCanvas.nativeElement, {
       type: 'bar',
       data: {
-        labels: ["Pending", "Member", "LF CoSign"],
+        labels: ["NEW", "RENEWAL"],
         // Base
         datasets: [{
           data: this.contracts.base,
-          backgroundColor: this.chartColors.base.background,
-          hoverBackgroundColor: this.chartColors.base.hoverBackground
+          backgroundColor: this.contractChartColors.base.background,
+          hoverBackgroundColor: this.contractChartColors.base.hoverBackground
         },
         // Additional
         {
           data: this.contracts.additional,
-          backgroundColor: this.chartColors.additional.hoverBackground,
-          hoverBackgroundColor: this.chartColors.additional.background
+          backgroundColor: this.contractChartColors.additional.hoverBackground,
+          hoverBackgroundColor: this.contractChartColors.additional.background
         },
         // Alert
         {
           data: this.contracts.alert,
-          backgroundColor: this.chartColors.alert.background,
-          hoverBackgroundColor: this.chartColors.alert.hoverBackground
+          backgroundColor: this.contractChartColors.alert.background,
+          hoverBackgroundColor: this.contractChartColors.alert.hoverBackground
         },
       ]
       },

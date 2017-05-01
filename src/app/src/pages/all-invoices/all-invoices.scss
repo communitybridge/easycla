@@ -4,10 +4,12 @@ all-invoices {
   }
   table {
     border-collapse: collapse;
+    border-style:hidden;
   }
   tr {
     background-color: #fafafa;
     border: 1px solid #ddd;
-    border-width: 0px 0;
+    border-width: 1px;
+    border-style: inset;
   }
 }
