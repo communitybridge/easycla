@@ -4,12 +4,6 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Linux Foundation Console</ion-title>
-    <!--
-    <div class="toolbar-search">
-      <ion-icon name="search"></ion-icon>
-      <ion-input type="text" value=""></ion-input>
-    </div>
-    -->
   </ion-navbar>
 </ion-header>
 
@@ -89,13 +83,11 @@
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
         <ion-card>
-          <!-- <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/> -->
-          <img src="{{project.icon}}" alt="{{project.title}} logo"/>
+          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo" />
+          <!-- <img src="{{project.icon}}" alt="{{project.title}} logo"/> -->
           <ion-card-content>
-            <!-- <ion-card-title (click)="projectSelected($event, project)"> -->
-            <ion-card-title>
-              {{project.title}}
-            </ion-card-title>
+            <ion-card-title (click)="projectSelected($event, project)">{{ project.title }}</ion-card-title>
+            <!-- <ion-card-title> {{project.title}} </ion-card-title> -->
             <dl>
               <ng-container *ngFor="let data of project.datas">
                 <dt>{{data.label}}</dt>
