@@ -5,9 +5,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from './services/cinco.service';
 
-// import { ProjectsListPage } from '../pages/projects-list/projects-list';
-// import { MemberPage } from '../pages/member/member';
-
 @Component({
   templateUrl: 'app.html',
   providers: [CincoService]
@@ -26,7 +23,8 @@ export class MyApp {
     this.pages = [
       { title: 'All Projects', component: 'ProjectsListPage' },
       { title: 'Add Project', component: 'AddProjectPage' },
-      { title: 'Member', component: 'MemberPage' }
+      { title: 'Member', component: 'MemberPage' },
+      { title: 'All Invoices Status', component: 'AllInvoicesPage' }
     ];
 
   }
@@ -35,8 +33,8 @@ export class MyApp {
     this.platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
-      this.statusBar.styleDefault();
-      this.splashScreen.hide();
+      // this.statusBar.styleDefault();
+      // this.splashScreen.hide();
     });
   }
 

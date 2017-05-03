@@ -5,10 +5,10 @@
 
   <ion-content>
     <ul class="menu-list">
-      <li *ngFor="let p of pages" menuClose ion-item (click)="openPage(p)">
+      <li *ngFor="let p of pages" menuClose ion-item (click)="openPage(p)" style="background-color: #fafafa">
         {{p.title}}
       </li>
-      <li menuClose ion-item>
+      <li menuClose ion-item style="background-color: #fafafa">
         <a href="/logout">Logout</a>
       </li>
     </ul>
