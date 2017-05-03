@@ -8,7 +8,7 @@ export class CincoService{
   http: any;
   baseUrl: String;
 
-  constructor(http: Http){
+  constructor(http: Http) {
     this.http = http;
     this.baseUrl = '';
   }
@@ -33,7 +33,7 @@ export class CincoService{
   }
 
   getMember(projectId, memberId) {
-    
+
   }
 
 }
