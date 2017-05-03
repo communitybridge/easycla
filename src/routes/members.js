@@ -168,7 +168,48 @@ router.post('/update_member_contact', require('connect-ensure-login').ensureLogg
     };
     console.log(updatedContact);
     projManagerClient.updateContactFromMember(projectId, memberId, contactId, updatedContact, function (err, created, contact) {
-      console.log("/post_project success");
+      console.log("/update_member_contact success");
+      return res.json(contact);
+    });
+  }
+});
+
+router.post('/add_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("/add_member_contact");
+    console.log("req.body");
+    console.log(req.body);
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.body.projectId;
+    var memberId = req.body.memberId;
+    var newContact = {
+    //   type: contact.type,
+    //   givenName: contact.givenName,
+    //   familyName: contact.familyName,
+      bio: req.body.contactBio,
+      email: req.body.contactEmail,
+      phone: req.body.contactPhone,
+    //   headshotRef: contact.headshotRef,
+    };
+    console.log(newContact);
+    projManagerClient.addContactToMember(projectId, memberId, newContact, function (err, created, contact) {
+      console.log("/add_member_contact success");
+      return res.json(contact);
+    });
+  }
+});
+
+router.post('/remove_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("/update_member_contact");
+    console.log("req.body");
+    console.log(req.body);
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    var projectId = req.body.projectId;
+    var memberId = req.body.memberId;
+    var contactId = req.body.contactId;
+    projManagerClient.removeContactFromMember(projectId, memberId, contactId, function (err, created, contact) {
+      console.log("/remove_member_contact success");
       return res.json(contact);
     });
   }

@@ -47,8 +47,8 @@ export class MemberPage {
 
   ngOnInit() {
     // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
-    this.getMember(this.projectId, this.memberId);
-  };
+    // this.getMember(this.projectId, this.memberId);
+  }
 
   getMember(projectId, memberId) {
     this.cincoService.getMember(projectId, memberId).subscribe(response => {
@@ -56,6 +56,14 @@ export class MemberPage {
         this.member = response;
       }
     });
+  }
+
+  addMemberContact() {
+    let modal = this.modalCtrl.create(ContactUpdate, {
+      projectId: this.projectId,
+      member: this.member,
+    });
+    modal.present();
   }
 
   contactSelected(event, contact) {

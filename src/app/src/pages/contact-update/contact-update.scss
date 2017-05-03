@@ -6,6 +6,11 @@ contact-update {
     background-color: #f5f5f5;
     color: black;
   }
+  .field-notice {
+    font-size: 1.2rem;
+    color: #999;
+    text-align: right;
+  }
   .footer-seamless {
     background-color: transparent;
     border-color: transparent;
@@ -36,8 +41,16 @@ contact-update {
     margin: -5px;
   }
 
-  .contact-primary {
-    margin-top: 17px;
+  .contact-primary,
+  .contact-board {
+    ion-icon {
+      position: relative;
+      top: 12px;
+      opacity: .3;
+      &[item-left] + .item-inner {
+        margin-left: 0;
+      }
+    }
   }
 
   .list_input {

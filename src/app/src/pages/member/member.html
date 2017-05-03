@@ -8,7 +8,12 @@
 </ion-header>
 
 <ion-content padding class="member" overflow-scroll="true">
-
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="left">
+      <button ion-fab (click)="addMemberContact()"><ion-icon name="person-add"></ion-icon></button>
+    </ion-fab-list>
+  </ion-fab>
   <header padding-bottom>
     <ion-grid>
       <ion-row responsive-sm>

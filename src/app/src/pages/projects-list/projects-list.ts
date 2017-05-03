@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { NavController, IonicPage, LoadingController } from 'ionic-angular';
+import { NavController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
 // import { ProjectPage } from '../project/project';
@@ -12,7 +12,6 @@ import { Chart } from 'chart.js';
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
-  loader: any;
   loading: boolean;
   allProjects: any;
   // projectId: String;
@@ -66,18 +65,10 @@ export class ProjectsListPage {
   invoicesChart: any;
 
 
-  constructor(public navCtrl: NavController, private cincoService: CincoService, public loadingCtrl: LoadingController) {
+  constructor(public navCtrl: NavController, private cincoService: CincoService) {
     this.pushAddProjectPage = 'AddProjectPage';
     this.getDefaults();
-
-    this.loader = this.loadingCtrl.create({
-      content: 'Please wait...'
-    });
-    this.loader.present();
     this.loading = true;
-    this.loader.onDidDismiss(() => {
-      this.loading = false;
-    });
   }
 
   ngOnInit(){
@@ -86,8 +77,10 @@ export class ProjectsListPage {
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
+      console.log("getAllProjects");
+      console.log(response);
       this.allProjects = response;
-      this.loader.dismiss();
+      this.loading = false;
     });
   }
 
