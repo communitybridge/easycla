@@ -1,7 +1,6 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { NavParams, ViewController } from 'ionic-angular';
 
-
 @Component({
   template: `
     <ion-list class="action-popover">
@@ -35,6 +34,5 @@ export class ActionPopover {
       callbackData: callbackData
     });
   }
-
 
 }

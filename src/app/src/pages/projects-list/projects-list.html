@@ -4,10 +4,6 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Linux Foundation Console</ion-title>
-    <div class="toolbar-search">
-      <ion-icon name="search"></ion-icon>
-      <ion-input type="text" value=""></ion-input>
-    </div>
   </ion-navbar>
 </ion-header>
 
@@ -21,22 +17,22 @@
     </ion-fab-list>
   </ion-fab>
 
-  <header class="loadable">
+  <header>
     <ion-grid>
       <ion-row>
-        <ion-col col-12 col-md-6 col-lg-4>
+        <ion-col col-12 col-md-3>
           <h2>Contracts</h2>
           <div>
-            <canvas #contractsCanvas></canvas>
+            <canvas height="250" #contractsCanvas></canvas>
           </div>
         </ion-col>
-        <ion-col col-12 col-md-6 col-lg-4>
+        <ion-col col-12 col-md-5>
           <h2>Invoices</h2>
           <div>
             <canvas #invoicesCanvas></canvas>
           </div>
         </ion-col>
-        <ion-col col-12 col-md-6 col-lg-4>
+        <ion-col col-12 col-md-4>
           <h2>Board Meeting</h2>
           <ion-item *ngFor="let meeting of meetings">
             <ion-icon name="calendar" item-left large></ion-icon>
@@ -50,7 +46,7 @@
 
   <ion-grid class="projects-list">
     <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 class="loadable" *ngFor="let project of allProjects">
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
         <ion-card >
           <ion-card-content>
             <ion-card-title (click)="viewProject(project.id)">
