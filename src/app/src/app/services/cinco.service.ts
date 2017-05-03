@@ -38,7 +38,7 @@ export class CincoService{
   }
 
   getMember(projectId, memberId) {
-    console.log("getMember called");
+    console.log('getMember called');
     var response = this.http.get(this.baseUrl + '/member/' + projectId + '/' + memberId)
             .map(res => res.json());
     console.log(response);
@@ -46,7 +46,7 @@ export class CincoService{
   }
 
   updateMemberContact(projectId, memberId, contactId, contact) {
-    console.log("updateMemberContact called");
+    console.log('updateMemberContact called');
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let body = new FormData();
     body.append('projectId', projectId);
@@ -54,9 +54,35 @@ export class CincoService{
     body.append('contactId', contactId);
     body.append('contactEmail', contact.email);
     body.append('contactBio', contact.bio);
-    body.append('contactPhone', contact.phone);   
+    body.append('contactPhone', contact.phone);
     console.log(body);
     return this.http.post('/update_member_contact', body, headers)
+                .map((res) => res.json());
+  }
+
+  addMemberContact(projectId, memberId, contact) {
+    console.log('updateMemberContact called');
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('projectId', projectId);
+    body.append('memberId', memberId);
+    body.append('contactEmail', contact.email);
+    body.append('contactBio', contact.bio);
+    body.append('contactPhone', contact.phone);
+    console.log(body);
+    return this.http.post('/add_member_contact', body, headers)
+                .map((res) => res.json());
+  }
+
+  removeMemberContact(projectId, memberId, contactId) {
+    console.log('updateMemberContact called');
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('projectId', projectId);
+    body.append('memberId', memberId);
+    body.append('contactId', contactId);
+    console.log(body);
+    return this.http.post('/remove_member_contact', body, headers)
                 .map((res) => res.json());
   }
 
