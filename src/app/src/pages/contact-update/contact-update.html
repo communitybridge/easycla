@@ -1,8 +1,9 @@
 <ion-header>
   <ion-toolbar>
-    <img class="profile-photo" src="{{contact.profile_photo}}" alt="{{contact.lastname}}, {{contact.firstname}}">
     <ion-title>
-      {{contact.lastname}}, {{contact.firstname}}: <span class="member-company">{{ member.name }}</span>
+      <span *ngIf="contact.id">Update Contact</span>
+      <span *ngIf="!contact.id">Add Contact</span>
+      : <span class="member-company">{{ member.org.name }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -14,12 +15,64 @@
 
 <ion-content>
   <ion-grid>
+    <ion-row>
+      <ion-col col-12 class="field-notice">
+        <span>* Changes update SalesForce record</span>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Email *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.email"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Company *</ion-label>
+          <ion-input type="text" value="{{ member.org.name }}" disabled></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Name *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.name"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Phone *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.phone"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Title *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.title"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Time Zone</ion-label>
+          <ion-select [(ngModel)]="contact.timezone">
+            <ion-option value="America/Los_Angeles">America/Los_Angeles</ion-option>
+            <ion-option value="America/New_York">America/New_York</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
 
     <ion-row>
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Role</ion-label>
-          <ion-select>
+          <ion-select [(ngModel)]="contact.role">
             <ion-option value="1">Marketing</ion-option>
             <ion-option value="2">Board</ion-option>
             <ion-option value="3">Option 3</ion-option>
@@ -28,53 +81,28 @@
       </ion-col>
       <ion-col col-12 col-md-6>
         <ion-row>
-          <ion-col col-12 col-md-8>
+          <ion-col col-12 col-md-6>
             <ion-item class="contact-primary">
-              <ion-label>Primary Contact on Project</ion-label>
-              <ion-checkbox color="primary" checked="true"></ion-checkbox>
+              <ion-label stacked>Primary</ion-label>
+              <ion-icon *ngIf="contact.primary=='yes'" name="star" item-left></ion-icon>
+              <ion-icon *ngIf="contact.primary!='yes'" name="star-outline" item-left></ion-icon>
+              <ion-select [(ngModel)]="contact.primary" (ngModelChange)="primarySelectChanged($event)">
+                <ion-option value="yes">Yes</ion-option>
+                <ion-option value="no">No</ion-option>
+              </ion-select>
             </ion-item>
           </ion-col>
-          <ion-col col-12 col-md-4>
-            <ion-item>
-              <ion-label stacked>Time Zone</ion-label>
-              <ion-select>
-                <ion-option value="1">EST +4</ion-option>
-                <ion-option value="2">EST +5</ion-option>
-                <ion-option value="3">EST +3</ion-option>
+          <ion-col col-12 col-md-6>
+            <ion-item class="contact-board">
+              <ion-label stacked>Board</ion-label>
+              <ion-icon name="contact" item-left></ion-icon>
+              <ion-select [(ngModel)]="contact.board" (ngModelChange)="boardSelectChanged($event)">
+                <ion-option value="yes">Yes</ion-option>
+                <ion-option value="no">No</ion-option>
               </ion-select>
             </ion-item>
           </ion-col>
         </ion-row>
-      </ion-col>
-    </ion-row>
-
-    <ion-row>
-      <ion-col col-12 col-md-6>
-        <ion-item>
-          <ion-label stacked>Company</ion-label>
-          <ion-input type="text" value="{{ member.name }}" disabled></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-12 col-md-6>
-        <ion-item>
-          <ion-label stacked>Title</ion-label>
-          <ion-input type="text"></ion-input>
-        </ion-item>
-      </ion-col>
-    </ion-row>
-
-    <ion-row>
-      <ion-col col-12 col-md-6>
-        <ion-item>
-          <ion-label stacked>Email</ion-label>
-          <ion-input type="text" value=""></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-12 col-md-6>
-        <ion-item>
-          <ion-label stacked>Phone</ion-label>
-          <ion-input type="text" value=""></ion-input>
-        </ion-item>
       </ion-col>
     </ion-row>
 
@@ -86,7 +114,7 @@
               <ion-label class="list_input-label" stacked>Email Groups</ion-label>
               <div class="list_input-input">
                 <div class="list_input-list_input">
-                  <div class="list_input-input_item" icon-right *ngFor="let group of contact.email_groups; let index = index;">
+                  <div class="list_input-input_item" icon-right *ngFor="let group of contact.emailGroups; let index = index;">
                     <span class="list_input-text">
                       {{group.name}}
                     </span>
@@ -112,7 +140,7 @@
     <ion-row>
       <ion-col col-12>
         <ion-item>
-          <ion-textarea placeholder="Bio"></ion-textarea>
+          <ion-textarea [(ngModel)]="contact.bio" placeholder="Bio"></ion-textarea>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -123,16 +151,19 @@
 <ion-footer class="footer-seamless">
   <ion-toolbar>
     <ion-buttons>
-      <button ion-button clear icon-right color="primary" (click)="removeContact()">
+      <button *ngIf="contact.id" ion-button clear icon-right color="primary" (click)="removeContactPrompt()">
         Remove Contact
       </button>
     </ion-buttons>
     <ion-buttons end>
-      <button ion-button clear icon-right color="primary" (click)="dismiss()">
+      <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
       </button>
-      <button ion-button clear icon-right color="primary" (click)="saveContact()">
+      <button *ngIf="contact.id" ion-button icon-right color="primary" (click)="saveContact()">
         Save
+      </button>
+      <button *ngIf="!contact.id" ion-button icon-right color="primary" (click)="saveContact()">
+        Add Contact
       </button>
     </ion-buttons>
   </ion-toolbar>

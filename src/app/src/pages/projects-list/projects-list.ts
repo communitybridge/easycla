@@ -11,6 +11,7 @@ import { Chart } from 'chart.js';
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
+  loading: boolean;
   allProjects: any;
   // projectId: String;
   pushAddProjectPage;
@@ -52,6 +53,7 @@ export class ProjectsListPage {
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
     this.pushAddProjectPage = 'AddProjectPage';
     this.getDefaults();
+    this.loading = true;
   }
 
   ngOnInit(){
@@ -60,7 +62,10 @@ export class ProjectsListPage {
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
+      console.log("getAllProjects");
+      console.log(response);
       this.allProjects = response;
+      this.loading = false;
     });
   }
 
