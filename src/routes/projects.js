@@ -98,7 +98,7 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
       startDate: now,
       logoRef: logoFileName,
       agreementRef: agreementFileName,
-      type: req.body.project_type
+      category: req.body.project_type
     };
     projManagerClient.createProject(newProject, function (err, created, projectId) {
       var isNewAlias = req.body.isNewAlias;
@@ -176,7 +176,7 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       // startDate: now,
       logoRef: logoFileName,
       agreementRef: agreementFileName,
-      type: req.body.project_type
+      category: req.body.project_type
     };
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
       console.log(err);
@@ -232,7 +232,7 @@ router.post('/post_project', require('connect-ensure-login').ensureLoggedIn('/lo
       startDate: now,
       logoRef: logoFileName,
       agreementRef: agreementFileName,
-      type: req.body.project_type
+      category: req.body.project_type
     };
     console.log(newProject);
     projManagerClient.createProject(newProject, function (err, created, projectId) {
