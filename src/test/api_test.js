@@ -347,8 +347,8 @@ suite('api', function () {
         // assert(sampleProj.pm, "pm property should exist");
         // assert(sampleProj.url, "url property should exist");
         // assert(sampleProj.startDate, "startDate property should exist");
-        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
-            "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
+            "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
         done();
       });
     });
@@ -493,8 +493,8 @@ suite('api', function () {
         assert(sampleProj.pm, "pm property should exist");
         assert(sampleProj.url, "url property should exist");
         assert(sampleProj.startDate, "startDate property should exist");
-        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.type),
-            "type should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.type);
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
+            "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
         done();
       });
     });
