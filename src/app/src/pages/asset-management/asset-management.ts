@@ -19,6 +19,11 @@ export class AssetManagementModal {
   uploadTypes: string;
 
   /**
+   * Maximum number of bytes for upload size
+   */
+  uploadSizeMax: number;
+
+  /**
    * Native upload button (hidden)
    */
   @ViewChild('input')
@@ -35,6 +40,7 @@ export class AssetManagementModal {
   ) {
     this.selectedFiles = [];
     this.uploadTypes = 'jpg,jpeg,png,gif,tif,psd,ai,docx,pptx,pdf';
+    this.uploadSizeMax = 50000000; // 50MB
     this.getDefaults();
   }
 
@@ -104,7 +110,6 @@ export class AssetManagementModal {
     event.stopPropagation();
 
     if (event.ctrlKey) {
-      console.log("ctrl pressed");
       if (file.selected) {
         this.deselectFiles([file]);
       }
@@ -231,23 +236,46 @@ export class AssetManagementModal {
   }
 
   validateFile(file) {
-    if(typeof this.uploadTypes == 'undefined') {
-      return true;
-    }
-    // Validate extension by checking extension in filename against uploadTypes
-    var validTypes = this.uploadTypes.split(',');
     var extensionValid = false;
-    for (var i = 0; i < validTypes.length; i++) {
-        var currentType = validTypes[i];
-        if (file.name.substr(file.name.length - currentType.length, currentType.length).toLowerCase() == currentType.toLowerCase()) {
-            extensionValid = true;
-            return extensionValid;
-        }
+    if(typeof this.uploadTypes == 'undefined') {
+      extensionValid = true;
     }
+    else {
+      // Validate extension by checking extension in filename against uploadTypes
+      var validTypes = this.uploadTypes.split(',');
+
+      for (var i = 0; i < validTypes.length; i++) {
+          var currentType = validTypes[i];
+          if (file.name.substr(file.name.length - currentType.length, currentType.length).toLowerCase() == currentType.toLowerCase()) {
+              extensionValid = true;
+          }
+      }
+    }
+
     if (!extensionValid) {
       this.uploadError("Sorry, " + file.name + " is invalid, allowed extensions are: " + validTypes.join(", "));
       return false;
     }
+
+    var sizeValid = false;
+    if (typeof this.uploadSizeMax == 'undefined') {
+      sizeValid = true;
+    }
+    else {
+      if (file.size < this.uploadSizeMax) {
+        sizeValid = true;
+      }
+    }
+
+    if (!sizeValid) {
+      let maxSize = this.uploadSizeMax + 'bytes';
+      this.uploadError("Sorry, " + file.name + " is too big, max size is: " + maxSize);
+      return false;
+    }
+
+    // All individual checks/returns should have happened by now
+    return true;
+
   }
 
   uploadError(message) {
