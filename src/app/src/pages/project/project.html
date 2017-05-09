@@ -32,12 +32,9 @@
           </ion-row>
         </ion-col>
         <ion-col col-12 col-md-3>
-          <ion-item>
-            <ion-icon name="people" item-left large></ion-icon>
-            <p>
-              Board Meetings and Minutes<br>
-              Last upload: 3/1/2017
-            </p>
+          <ion-item (click)="openAssetManagementModal()">
+            <ion-icon name="folder" item-left large></ion-icon>
+            <p>Project Files</p>
           </ion-item>
           <ion-item>
             <ion-icon name="mail" item-left large></ion-icon>
@@ -45,11 +42,7 @@
           </ion-item>
           <ion-item>
             <ion-icon name="information-circle" item-left large></ion-icon>
-            <p>Project Details and Documents</p>
-          </ion-item>
-          <ion-item>
-            <ion-icon name="image" item-left large></ion-icon>
-            <p>Logo and Brand</p>
+            <p>Project Details</p>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -97,5 +90,5 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-  
+
 </ion-content>
