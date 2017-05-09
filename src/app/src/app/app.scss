@@ -15,6 +15,14 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
+ion-icon{
+  color: color($colors, gray);
+}
+
+ion-icon[name=menu] {
+  color: color($colors, white);
+}
+
 .toolbar {
   background-color: color($colors, primary);
   color: color($colors, light);
@@ -227,6 +235,17 @@ $table-border-color:            #e0e0e0;
 // by vertical table-cell display. Only applies <768px. Everything above that will display normally.
 // For correct display you must add 'data-title' to each 'td'
 .table-responsive-vertical {
+
+  table {
+    border-collapse: collapse;
+    border-style:hidden;
+  }
+  tr {
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-width: 1px;
+    border-style: inset;
+  }
 
   @media screen and (max-width: 768px) {
 

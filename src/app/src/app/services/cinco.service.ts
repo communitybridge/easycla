@@ -32,6 +32,15 @@ export class CincoService{
                 .map((res) => res.json());
   }
 
+  editProject(editProject) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('project_name', editProject.project_name);
+    // body.append('project_type', newProject.project_type);
+    return this.http.post('/edit_project', body, headers)
+                .map((res) => res.json());
+  }
+
   getProjectMembers(projectId) {
     return this.http.get(this.baseUrl + '/members/' + projectId)
             .map(res => res.json());
