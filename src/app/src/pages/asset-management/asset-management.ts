@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Renderer, ElementRef, ViewChild, } from '@angular/core';
+import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController  } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 
@@ -31,6 +31,7 @@ export class AssetManagementModal {
     private cincoService: CincoService,
     public toastCtrl: ToastController,
     private renderer: Renderer,
+    public alertCtrl: AlertController,
   ) {
     this.selectedFiles = [];
     this.uploadTypes = 'jpg,jpeg,png,gif,tif,psd,ai,docx,pptx,pdf';
@@ -132,7 +133,35 @@ export class AssetManagementModal {
 
   deleteSelected(event) {
     event.stopPropagation();
-
+    let prompt_title = '';
+    if(this.selectedFiles.length > 1) {
+      prompt_title = 'Delete files?';
+    }
+    else {
+      prompt_title = 'Delete file?';
+    }
+    let prompt_message = this.selectedFiles.map(function(file){
+      return file.name;
+    }).join(',<br>');
+    let prompt = this.alertCtrl.create({
+      title: prompt_title,
+      message: prompt_message,
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: data => {
+            // Do nothing
+          }
+        },
+        {
+          text: 'Delete',
+          handler: data => {
+            // TODO: Make cinco calls to delete files
+          }
+        }
+      ]
+    });
+    prompt.present();
   }
 
   /*
