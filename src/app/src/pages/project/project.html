@@ -7,7 +7,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing>
+<ion-content padding headerspacing class="page-project">
 
   <header>
     <ion-grid>
@@ -31,20 +31,20 @@
               <ion-row>
                 <ion-col col-12 col-md-4>
                   <ion-label>
-                    <strong>Budget: </strong>
+                    <strong>Budget: </strong> N/A
                   </ion-label>
                   <ion-label>
-                    Current:
-                  </ion-label>
-                </ion-col>
-                <ion-col col-12 col-md-4>
-                  <ion-label>
-                    Categories: {{ project.projectCategory }}
+                    Current: N/A
                   </ion-label>
                 </ion-col>
                 <ion-col col-12 col-md-4>
                   <ion-label>
-                    Launched: {{ project.startDate }}
+                    Categories: {{ project.sector }} <span *ngIf="!project.sector">N/A</span>
+                  </ion-label>
+                </ion-col>
+                <ion-col col-12 col-md-4>
+                  <ion-label>
+                    Launched: {{ project.startDate }} <span *ngIf="!project.startDate">N/A</span>
                   </ion-label>
                   <ion-label>
                     Members: {{ membersCount }}
@@ -72,7 +72,7 @@
           <ion-item>
             <ion-icon name="md-create" item-left large></ion-icon>
             <p>
-              <a href="/#/project-details">Project Details</a>
+              <a href="/#/project-details/{{project.id}}">Project Details</a>
             </p>
           </ion-item>
         </ion-col>
@@ -104,8 +104,8 @@
                 </td>
                 <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
                 <td data-title="Level">{{ member.tier.type }}</td>
-                <td data-title="Status">Status</td>
-                <td data-title="Annual Dues">Annual Dues</td>
+                <td data-title="Status">{{ member.invoices[0].status }}</td>
+                <td data-title="Annual Dues">N/A</td>
                 <td data-title="Renewal Date">{{ member.renewalDate }}</td>
               </tr>
             </tbody>
