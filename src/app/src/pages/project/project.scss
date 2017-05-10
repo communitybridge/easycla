@@ -1,6 +1,10 @@
 /* -- Material Design Table style -------------- */
-page-project {
+.page-project {
 
+  a {
+    text-decoration:none;
+  }
+  
   .circle-alert,
   .circle-notice,
   .circle-null {

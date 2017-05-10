@@ -3,10 +3,10 @@ import { NavController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 
 @IonicPage({
-  segment: 'project-page/:projectId'
+  segment: 'project/:projectId'
 })
 @Component({
-  selector: 'page-project',
+  selector: 'project',
   templateUrl: 'project.html'
 })
 export class ProjectPage {
@@ -19,14 +19,16 @@ export class ProjectPage {
     name: string,
     description: string,
     managers: string,
-    projectStatus: string,
-    projectCategory: string,
+    status: string,
+    category: string,
+    sector: string,
     url: string,
     startDate: string,
     logoRef: string,
     agreementRef: string,
     mailingListType: string,
-    emailAliasType: string
+    emailAliasType: string,
+    address: string
   };
 
   members: any;
@@ -54,17 +56,20 @@ export class ProjectPage {
         this.project.name = response.name;
         this.project.description = response.description;
         this.project.managers = response.managers;
-        this.project.projectStatus = response.projectStatus;
-        this.project.projectCategory = response.projectCategory;
+        this.project.status = response.status;
+        this.project.category = response.category;
+        this.project.sector = response.sector;
         this.project.url = response.url;
         this.project.startDate = response.startDate;
         this.project.logoRef = response.logoRef;
         this.project.agreementRef = response.agreementRef;
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
+        this.project.address = response.address;
       }
     });
   }
+
 
   getProjectMembers(projectId) {
     this.cincoService.getProjectMembers(projectId).subscribe(response => {
@@ -89,14 +94,16 @@ export class ProjectPage {
       name: "Project",
       description: "This project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
       managers: "",
-      projectStatus: "",
-      projectCategory: "",
+      status: "",
+      category: "",
+      sector: "",
       url: "",
       startDate: "",
       logoRef: "https://dummyimage.com/600x250/ffffff/000.png&text=project+logo",
       agreementRef: "",
       mailingListType: "",
-      emailAliasType: ""
+      emailAliasType: "",
+      address: ""
     };
   }
 }
