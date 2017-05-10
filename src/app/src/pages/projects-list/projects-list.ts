@@ -4,16 +4,15 @@ import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
 
 @IonicPage({
-  segment: 'projects-list'
+  segment: 'projects'
 })
 @Component({
-  selector: 'projects-list',
+  selector: 'projects',
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
   loading: boolean;
   allProjects: any;
-  // projectId: String;
   pushAddProjectPage;
   numberOfContracts: {
     new: number,
@@ -62,8 +61,6 @@ export class ProjectsListPage {
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
-      console.log("getAllProjects");
-      console.log(response);
       this.allProjects = response;
       this.loading = false;
     });
@@ -178,7 +175,7 @@ export class ProjectsListPage {
       new: 15,
       renewal: 50
     };
-    
+
     this.numberOfInvoices = {
       fewerThan60Days: 50,
       fewerThan30Days: 50,
