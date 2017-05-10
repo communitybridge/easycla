@@ -1,0 +1,159 @@
+<ion-header name="edit-project-header">
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Edit {{ project.name }} Project Details</ion-title>
+  </ion-navbar>
+  <ion-row margin-left margin-top margin-bottom >
+    <ion-col col-12>
+      <button ion-button (click)="submitEditProject()" color="secondary">SAVE AND FINISH</button>
+      <button ion-button (click)="canelEditProject()" color="gray">CANCEL</button>
+    </ion-col>
+  </ion-row>
+</ion-header>
+
+<ion-content padding class="project-details">
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <div *ngIf="!project.logoRef" text-center>
+          <ion-icon name="image"></ion-icon>
+          <ion-label>CHANGE</ion-label>
+        </div>
+        <div *ngIf="project.logoRef">
+          <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+          <ion-label>CHANGE</ion-label>
+        </div>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-8>
+        <ion-item>
+          <ion-label stacked>Project Title</ion-label>
+          <ion-input type="text" name="project_name" [(ngModel)]="project.name"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Date Launched</ion-label>
+          <ion-input type="text" name="project_start_date" [(ngModel)]="project.startDate"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Membership Status</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Type</ion-label>
+          <ion-select [(ngModel)]="project.sector">
+            <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
+            <ion-option value="INCORPORATED">Incorporated</ion-option>
+            <ion-option value="UNSPECIFIED">Unspecified</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Categories</ion-label>
+          <ion-select [(ngModel)]="project-category">
+            <ion-option value="EMBEDDED_AND_IOT">Embedded and IoT</ion-option>
+            <ion-option value="OTHER">Other</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Budget</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Domain</ion-label>
+          <ion-input type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-8>
+        <ion-item>
+          <ion-label stacked>Billing Address</ion-label>
+          <ion-input type="text" name="project_address" [(ngModel)]="project.address"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Country</ion-label>
+          <ion-select [(ngModel)]="project.sector">
+            <ion-option value="US">United States</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Zip Code</ion-label>
+          <ion-input type="text" name="project_address" [(ngModel)]="project.address"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12>
+        <ion-item>
+          <ion-label stacked>Description</ion-label>
+          <ion-textarea></ion-textarea>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+
+  <ion-item-divider color="white"></ion-item-divider>
+
+  <ion-grid>
+    <ion-row margin-top>
+      <ion-col col-12>
+        <h3>MEMBERSHIP TIERS</h3>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Tier One</ion-label>
+          <ion-input type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-3>
+        <ion-item>
+          <ion-label stacked>Annual Cost</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-3>
+        <ion-item>
+          <ion-label stacked>Maximun Granted</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-2>
+        <ion-item>
+          <ion-label stacked>Board Seat</ion-label>
+          <ion-select [(ngModel)]="board-seat">
+            <ion-option value="YES">Yes</ion-option>
+            <ion-option value="NO">No</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+</ion-content>
