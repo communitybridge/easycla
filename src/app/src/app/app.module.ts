@@ -7,6 +7,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { MyApp } from './app.component';
 import { ContactUpdate } from '../pages/contact-update/contact-update';
+import { AssetManagementModal } from '../pages/asset-management/asset-management';
 import { UploadButtonComponent } from '../components/upload-button/upload-button';
 import { ActionPopover } from '../components/action-popover/action-popover';
 
@@ -14,6 +15,7 @@ import { ActionPopover } from '../components/action-popover/action-popover';
   declarations: [
     MyApp,
     ContactUpdate,
+    AssetManagementModal,
     UploadButtonComponent,
     ActionPopover,
   ],
@@ -26,6 +28,7 @@ import { ActionPopover } from '../components/action-popover/action-popover';
   entryComponents: [
     MyApp,
     ContactUpdate,
+    AssetManagementModal,
     ActionPopover,
   ],
   providers: [

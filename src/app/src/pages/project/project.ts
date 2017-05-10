@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
+import { CincoService } from '../../app/services/cinco.service';
+import { AssetManagementModal } from '../asset-management/asset-management';
 
 @IonicPage({
   segment: 'project/:projectId'
@@ -37,7 +38,8 @@ export class ProjectPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    public modalCtrl: ModalController,
   ) {
     this.selectedProject = navParams.get('project');
     this.projectId = navParams.get('projectId');
@@ -70,7 +72,6 @@ export class ProjectPage {
     });
   }
 
-
   getProjectMembers(projectId) {
     this.cincoService.getProjectMembers(projectId).subscribe(response => {
       if(response) {
@@ -87,8 +88,14 @@ export class ProjectPage {
     });
   }
 
-  getDefaults() {
+  openAssetManagementModal() {
+    let modal = this.modalCtrl.create(AssetManagementModal, {
+      projectId: this.projectId,
+    });
+    modal.present();
+  }
 
+  getDefaults() {
     this.project = {
       id: "",
       name: "Project",
@@ -106,4 +113,5 @@ export class ProjectPage {
       address: ""
     };
   }
+
 }
