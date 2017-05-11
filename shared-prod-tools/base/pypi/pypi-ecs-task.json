@@ -1,0 +1,58 @@
+[
+  {
+    "essential": true,
+    "image": "433610389961.dkr.ecr.us-west-2.amazonaws.com/pypicloud:latest",
+    "memoryReservation": 258,
+    "name": "pypi",
+    "portMappings": [{
+      "containerPort": 8080,
+      "hostPort": 8080
+    }],
+    "dnsServers": [
+      "dns.prod.engineering.internal",
+      "8.8.8.8"
+    ],
+    "environment": [
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "value": "${AWS_ACCESS_KEY_ID}"
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "value": "${AWS_SECRET_ACCESS_KEY}"
+      },
+      {
+        "name": "S3_BUCKET",
+        "value": "${S3_BUCKET}"
+      },
+      {
+        "name": "REDIS_HOST",
+        "value": "${REDIS_HOST}"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "pypi"
+      },
+      {
+        "name": "SERVICE_TAGS",
+        "value": "${TAG_REGION},${TAG_VPC_ID}"
+      },
+      {
+        "name": "SERVICE_8080_CHECK_HTTP",
+        "value": "/"
+      },
+      {
+        "name": "SERVICE_8080_CHECK_INTERVAL",
+        "value": "1s"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "shared-production-infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "pypi"
+      }
+    }
+  }
+]

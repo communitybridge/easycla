@@ -23,6 +23,7 @@ variable "vpc_id" {
 }
 
 resource "aws_route53_zone" "main" {
+  provider = "aws.local"
   name    = "${var.name}"
   vpc_id  = "${var.vpc_id}"
   comment = ""

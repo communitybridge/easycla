@@ -27,6 +27,7 @@ variable "name" {
  */
 
 resource "aws_vpc" "main" {
+  provider             = "aws.local"
   cidr_block           = "${var.cidr}"
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -41,7 +42,8 @@ resource "aws_vpc" "main" {
  */
 
 resource "aws_internet_gateway" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  provider      = "aws.local"
+  vpc_id        = "${aws_vpc.main.id}"
 
   tags {
     Name        = "${var.name}"
@@ -49,6 +51,7 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_nat_gateway" "main" {
+  provider      = "aws.local"
   count         = "${length(var.internal_subnets)}"
   allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
   subnet_id     = "${element(aws_subnet.external.*.id, count.index)}"
@@ -56,8 +59,9 @@ resource "aws_nat_gateway" "main" {
 }
 
 resource "aws_eip" "nat" {
-  count = "${length(var.internal_subnets)}"
-  vpc   = true
+  provider = "aws.local"
+  count    = "${length(var.internal_subnets)}"
+  vpc      = true
 }
 
 /**
@@ -65,6 +69,7 @@ resource "aws_eip" "nat" {
  */
 
 resource "aws_subnet" "internal" {
+  provider          = "aws.local"
   vpc_id            = "${aws_vpc.main.id}"
   cidr_block        = "${element(var.internal_subnets, count.index)}"
   availability_zone = "${element(var.availability_zones, count.index)}"
@@ -76,6 +81,7 @@ resource "aws_subnet" "internal" {
 }
 
 resource "aws_subnet" "external" {
+  provider                = "aws.local"
   vpc_id                  = "${aws_vpc.main.id}"
   cidr_block              = "${element(var.external_subnets, count.index)}"
   availability_zone       = "${element(var.availability_zones, count.index)}"
@@ -92,6 +98,7 @@ resource "aws_subnet" "external" {
  */
 
 resource "aws_route_table" "external" {
+  provider = "aws.local"
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
@@ -100,12 +107,14 @@ resource "aws_route_table" "external" {
 }
 
 resource "aws_route" "external" {
+  provider               = "aws.local"
   route_table_id         = "${aws_route_table.external.id}"
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = "${aws_internet_gateway.main.id}"
 }
 
 resource "aws_route_table" "internal" {
+  provider = "aws.local"
   count  = "${length(var.internal_subnets)}"
   vpc_id = "${aws_vpc.main.id}"
 
@@ -115,6 +124,7 @@ resource "aws_route_table" "internal" {
 }
 
 resource "aws_route" "internal" {
+  provider               = "aws.local"
   count                  = "${length(compact(var.internal_subnets))}"
   route_table_id         = "${element(aws_route_table.internal.*.id, count.index)}"
   destination_cidr_block = "0.0.0.0/0"
@@ -126,12 +136,14 @@ resource "aws_route" "internal" {
  */
 
 resource "aws_route_table_association" "internal" {
+  provider       = "aws.local"
   count          = "${length(var.internal_subnets)}"
   subnet_id      = "${element(aws_subnet.internal.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.internal.*.id, count.index)}"
 }
 
 resource "aws_route_table_association" "external" {
+  provider       = "aws.local"
   count          = "${length(var.external_subnets)}"
   subnet_id      = "${element(aws_subnet.external.*.id, count.index)}"
   route_table_id = "${aws_route_table.external.id}"
