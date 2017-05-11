@@ -66,8 +66,7 @@ module "rds-cluster" {
 
 module "redis-cluster" {
   source               = "../../modules/redis-cluster"
-  name                 = "engineering-sandboxes"
-  availability_zones   = "${var.availability_zones}"
+  name                 = "sandboxes"
   vpc_id               = "${var.vpc_id}"
   subnet_ids           = "${var.internal_subnets}"
   environment          = "Preprod"
