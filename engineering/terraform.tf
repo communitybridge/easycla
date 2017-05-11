@@ -1,133 +1,152 @@
-//variable "access_key" {
-//  description = "Your AWS Access Key"
-//}
-//
-//variable "secret_key" {
-//  description = "Your AWS Secret Key"
-//}
+variable "access_key" {
+  description = "Your AWS Access Key"
+}
+
+variable "secret_key" {
+  description = "Your AWS Secret Key"
+}
 
 provider "aws" {
-  region = "us-west-2"
-  access_key = "AKIAJZSPEM5HOEMPP67Q"
-  secret_key = "VtFYzpbv+TC9RGxEHVEDAneRMGAfVUaW+GswaruV"
+  region     = "us-west-2"
+  alias      = "local"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
 }
 
 terraform {
   backend "s3" {
     bucket = "lfe-terraform-states"
-    access_key = "AKIAJZSPEM5HOEMPP67Q"
-    secret_key = "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"
+    access_key = "AKIAJQ7437CC6PYAZAXQ"
+    secret_key = "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"
     region = "us-west-2"
-    key = "general/terraform.tfstate"
+    key = "engineering/terraform.tfstate"
   }
 }
 
-module "vpc" "engineering_vpc" {
+module "vpc" {
   source             = "../modules/vpc"
   name               = "Engineering"
-  cidr               = "10.40.0.0/16"
-  internal_subnets   = ["10.40.0.0/19" ,"10.40.64.0/19", "10.40.128.0/19"]
-  external_subnets   = ["10.40.32.0/20", "10.40.96.0/20", "10.40.160.0/20"]
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-}
-
-module "dns" {
-  source = "../modules/dns"
-  name   = "engineering.local"
-  vpc_id = "${module.vpc.id}"
+  cidr               = "10.32.2.0/24"
+  internal_subnets   = ["10.32.2.128/27", "10.32.2.160/27", "10.32.2.192/27"]
+  external_subnets   = ["10.32.2.0/27",   "10.32.2.32/27",  "10.32.2.64/27"]
+  availability_zones = ["us-west-2a",     "us-west-2b",     "us-west-2c"]
 }
 
 module "dhcp" {
   source  = "../modules/dhcp"
-  name    = "${module.dns.name}"
+  name    = "engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "${cidrhost("10.40.0.0/16", 2)}"
+  servers = "${cidrhost("10.32.2.0/24", 2)}"
 }
 
 module "security_groups" {
   source  = "./security_groups"
-  cidr    = "10.40.0.0/16"
+  cidr    = "10.32.2.0/24"
   vpc_id  = "${module.vpc.id}"
-  name    = "engineering"
+  name    = "Engineering"
 }
 
-// The region in which the infra lives.
-output "region" {
-  value = "us-west-2"
+module "redis-cluster" "pypi-storage" {
+  source = "../modules/redis-cluster"
+
+  environment = "Production"
+  name = "pypi-storage"
+  team = "Engineering"
+  security_groups = ["${module.security_groups.pypi_redis}"]
+  subnet_ids = "${module.vpc.internal_subnets}"
+  publicly_accessible = false
+  vpc_id = "${module.vpc.id}"
 }
 
-// The internal route53 zone ID.
-output "zone_id" {
-  value = "${module.dns.zone_id}"
+module "pritunl" {
+  source                 = "./pritunl"
+
+  external_subnets       = "${module.vpc.external_subnets}"
+  vpn_sg                 = "${module.security_groups.vpn}"
+  region_identifier      = "engineering.west"
 }
 
-// The VPC's CIDR
-output "cidr" {
-  value = "10.40.0.0/16"
+module "jenkins" {
+  source                 = "./jenkins"
+
+  internal_subnets       = "${module.vpc.internal_subnets}"
+  vpc_id                 = "${module.vpc.id}"
+  sg_jenkins             = "${module.security_groups.jenkins_master}"
+  sg_jenkins_efs         = "${module.security_groups.jenkins_master_efs}"
 }
 
-// Comma separated list of internal subnet IDs.
+module "sandboxes" {
+  source                   = "./sandbox_cluster"
+
+  region                   = "us-west-2"
+  vpc_id                   = "${module.vpc.id}"
+  internal_subnets         = "${module.vpc.internal_subnets}"
+  external_subnets         = "${module.vpc.external_subnets}"
+  availability_zones       = "${module.vpc.availability_zones}"
+  sg_engineering_sandboxes = "${module.security_groups.engineering_sandboxes}"
+  redis_sg                 = "${module.security_groups.engineering_sandboxes_redis}"
+}
+
+resource "aws_vpc_peering_connection" "peer" {
+  provider      = "aws.local"
+
+  peer_owner_id = "961082193871"
+  peer_vpc_id   = "vpc-10c9f477"
+  vpc_id        = "${module.vpc.id}"
+
+  accepter {
+    allow_remote_vpc_dns_resolution = true
+  }
+}
+
+resource "aws_route" "peer_internal_1" {
+  provider                  = "aws.local"
+  route_table_id            = "${module.vpc.raw_route_tables_id[0]}"
+  destination_cidr_block    = "10.31.0.0/23"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+}
+
+resource "aws_route" "peer_internal_2" {
+  provider                  = "aws.local"
+  route_table_id            = "${module.vpc.raw_route_tables_id[1]}"
+  destination_cidr_block    = "10.31.0.0/23"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+}
+
+resource "aws_route" "peer_internal_3" {
+  provider                  = "aws.local"
+  route_table_id            = "${module.vpc.raw_route_tables_id[2]}"
+  destination_cidr_block    = "10.31.0.0/23"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+}
+
+resource "aws_route" "peer_external" {
+  provider                  = "aws.local"
+  route_table_id            = "${module.vpc.external_rtb_id}"
+  destination_cidr_block    = "10.31.0.0/23"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+}
+
 output "internal_subnets" {
   value = "${module.vpc.internal_subnets}"
 }
 
-// Comma separated list of external subnet IDs.
 output "external_subnets" {
   value = "${module.vpc.external_subnets}"
 }
 
-// The internal domain name, e.g "stack.local".
-output "domain_name" {
-  value = "${module.dns.name}"
+output "raw_route_tables_id" {
+  value = "${module.vpc.raw_route_tables_id}"
 }
 
-// The VPC availability zones.
-output "availability_zones" {
-  value = "${module.vpc.availability_zones}"
+output "sg_external_elb" {
+  value = "${module.security_groups.engineering_sandboxes_elb}"
 }
 
-// The VPC security group ID.
-output "vpc_security_group" {
-  value = "${module.vpc.security_group}"
+output "cidr" {
+  value = "10.32.2.0/24"
 }
 
-// The VPC ID.
 output "vpc_id" {
   value = "${module.vpc.id}"
 }
-
-// Comma separated list of internal route table IDs.
-output "internal_route_tables" {
-  value = "${module.vpc.internal_rtb_id}"
-}
-
-// The external route table ID.
-output "external_route_tables" {
-  value = "${module.vpc.external_rtb_id}"
-}
-
-// External SSH allows ssh connections on port 22 from the world.
-output "sg_external_ssh" {
-  value = "${module.security_groups.external_ssh}"
-}
-
-// Internal SSH allows ssh connections from the external ssh security group.
-output "sg_internal_ssh" {
-  value = "${module.security_groups.internal_ssh}"
-}
-
-// External ELB allows traffic from the world.
-output "sg_external_elb" {
-  value = "${module.security_groups.external_elb}"
-}
-
-// External ELB allows traffic from the world.
-output "sg_internal_elb" {
-  value = "${module.security_groups.internal_elb}"
-}
-
-// External ELB allows traffic from the world.
-output "sg_vpn" {
-  value = "${module.security_groups.vpn}"
-}
-

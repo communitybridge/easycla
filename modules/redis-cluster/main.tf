@@ -69,38 +69,15 @@ variable "az_mode" {
   default     = "single-az"
 }
 
-resource "aws_security_group" "main" {
-  name        = "${var.name}-redis-node"
-  description = "Allows traffic to redis from other security groups"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port       = "${var.port}"
-    to_port         = "${var.port}"
-    protocol        = "TCP"
-    security_groups = ["${var.security_groups}"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Name        = "Redis node (${var.name})"
-    Environment = "${var.environment}"
-  }
-}
-
 resource "aws_elasticache_subnet_group" "main" {
+  provider    = "aws.local"
   name        = "${var.name}"
   description = "Redis subnet group"
   subnet_ids  = ["${var.subnet_ids}"]
 }
 
 resource "aws_elasticache_cluster" "main" {
+  provider                = "aws.local"
   cluster_id              = "${var.name}"
   engine                  = "redis"
   engine_version          = "${var.version}"
@@ -110,7 +87,7 @@ resource "aws_elasticache_cluster" "main" {
   parameter_group_name    = "${var.parameter_group_name}"
   maintenance_window      = "${var.preferred_maintenance_window}"
   az_mode                 = "${var.az_mode}"
-  security_group_ids      = ["${aws_security_group.main.id}"]
+  security_group_ids      = ["${var.security_groups}"]
   subnet_group_name       = "${aws_elasticache_subnet_group.main.name}"
 
   tags {

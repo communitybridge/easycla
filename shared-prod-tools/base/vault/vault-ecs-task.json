@@ -1,0 +1,43 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "433610389961.dkr.ecr.us-west-2.amazonaws.com/vault:latest",
+    "name": "vault-server",
+    "privileged": true,
+    "portMappings": [
+      {
+        "containerPort": 8200,
+        "hostPort": 8200,
+        "protocol": "tcp"
+      },
+      {
+        "containerPort": 8201,
+        "hostPort": 8201,
+        "protocol": "tcp"
+      }
+    ],
+    "dnsServers": [
+      "dns.prod.engineering.internal",
+      "8.8.8.8"
+    ],
+    "environment": [
+      {
+        "name": "CONSUL_MASTER_IP",
+        "value": "${CONSUL_MASTER_IP}"
+      },
+      {
+        "name": "SERVICE_IGNORE",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "shared-production-infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "vault"
+      }
+    }
+  }
+]

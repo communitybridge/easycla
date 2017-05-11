@@ -1,0 +1,27 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "gliderlabs/registrator:latest",
+    "name": "registrator",
+    "command": ["-cleanup", "consul://localhost:8500"],
+    "mountPoints": [
+      {
+        "sourceVolume": "docker-sock",
+        "containerPath": "/tmp/docker.sock"
+      }
+    ],
+    "dnsServers": [
+      "dns.prod.engineering.internal",
+      "8.8.8.8"
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "shared-production-infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "registrator"
+      }
+    }
+  }
+]

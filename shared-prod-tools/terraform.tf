@@ -1,162 +1,167 @@
-//variable "access_key" {
-//  description = "Your AWS Access Key"
-//}
-//
-//variable "secret_key" {
-//  description = "Your AWS Secret Key"
-//}
+variable "access_key" {
+  description = "Your AWS Access Key"
+}
 
-provider "aws" {
-  region = "us-west-2"
-  access_key = "AKIAJZSPEM5HOEMPP67Q"
-  secret_key = "VtFYzpbv+TC9RGxEHVEDAneRMGAfVUaW+GswaruV"
+variable "secret_key" {
+  description = "Your AWS Secret Key"
 }
 
 terraform {
   backend "s3" {
     bucket = "lfe-terraform-states"
-    access_key = "AKIAJZSPEM5HOEMPP67Q"
-    secret_key = "VtFYzpbv+TC9RGxEHVEDAneRMGAfVUaW+GswaruV"
+    access_key = "AKIAJQ7437CC6PYAZAXQ"
+    secret_key = "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"
     region = "us-west-2"
-    key = "shared-prod-tools/terraform.tfstate"
+    key = "production-tools/terraform.tfstate"
   }
 }
 
-module "ebs_bckup" {
-  source = "github.com/kgorskowski/terraform/modules//tf_ebs_bckup"
-  EC2_INSTANCE_TAG = "EBS-Backup"
-  RETENTION_DAYS   = 30
-  regions          = ["us-west-2"]
-  cron_expression  = "22 1 * * ? *"
+provider "aws" {
+  region = "us-west-2"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
 }
 
-data "template_file" "ecs_cloud_config" {
-  template = "${file("${path.module}/files/cloud-config.sh.tpl")}"
-
-  vars {
-    ecs_cluster_name = "shared-production-tools"
-    newrelic_key     = "bc34e4b264df582c2db0b453bd43ee438043757c"
-  }
+provider "aws" {
+  region     = "us-west-2"
+  alias      = "western"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
 }
 
-module "vpc" "engineering_vpc" {
-  source             = "../modules/vpc"
-  name               = "Shared Production Tools"
-  cidr               = "10.50.0.0/16"
-  internal_subnets   = ["10.50.0.0/19" ,"10.50.64.0/19", "10.50.128.0/19"]
-  external_subnets   = ["10.50.32.0/20", "10.50.96.0/20", "10.50.160.0/20"]
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+provider "aws" {
+  region     = "us-east-2"
+  alias      = "eastern"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
 }
 
-module "dns" {
-  source = "../modules/dns"
-  name   = "prod.engineering.internal"
-  vpc_id = "${module.vpc.id}"
+# Creating combined zone for prod
+resource "aws_route53_zone" "prod" {
+  name = "prod.engineering.internal."
+  vpc_id = "vpc-e2f2ad85"
+  vpc_region = "us-west-2"
 }
 
-module "dhcp" {
-  source  = "../modules/dhcp"
-  name    = "${module.dns.name}"
-  vpc_id  = "${module.vpc.id}"
-  servers = "${cidrhost("10.50.0.0/16", 2)}"
+# Creating our many required S3 Buckets
+module "s3_buckets" {
+  source             = "./s3"
+  access_key         = "${var.access_key}"
+  secret_key         = "${var.secret_key}"
 }
 
-module "security_groups" {
-  source  = "./security_groups"
-  cidr    = "10.50.0.0/16"
-  vpc_id  = "${module.vpc.id}"
-  name    = "engineering"
+# First VPC
+module "vpc_west" {
+  source             = "./base"
+  access_key         = "${var.access_key}"
+  secret_key         = "${var.secret_key}"
+  region             = "us-west-2"
+  region_identitier  = "west"
+  dns_server         = "10.32.0.2"
+  r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
+
+  name               = "Western Production Tools"
+  cidr               = "10.32.0.0/24"
+  internal_subnets   = ["10.32.0.128/27", "10.32.0.160/27", "10.32.0.192/27"]
+  external_subnets   = ["10.32.0.0/27",   "10.32.0.32/27",  "10.32.0.64/27"]
+  availability_zones = ["us-west-2a",     "us-west-2b",     "us-west-2c"]
+
+  newrelic_key       = "bc34e4b264df582c2db0b453bd43ee438043757c"
+  key_name           = "production-shared-tools"
+
+  # Pypi Server
+  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
+  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
+
+  # Consul
+  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
+
+  # Peering for GHE
+  ghe_peering       = true
 }
 
-resource "aws_cloudwatch_log_group" "tools" {
-  name = "shared-production-infra"
+# Second VPC
+module "vpc_east" {
+  source             = "./base"
+  access_key         = "${var.access_key}"
+  secret_key         = "${var.secret_key}"
+  region             = "us-east-2"
+  region_identitier  = "east"
+  dns_server         = "10.32.1.2"
+  r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
+
+  name               = "Eastern Production Tools"
+  cidr               = "10.32.1.0/24"
+  internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
+  external_subnets   = ["10.32.1.0/27",   "10.32.1.32/27",  "10.32.1.64/27"]
+  availability_zones = ["us-east-2a",     "us-east-2b",     "us-east-2c"]
+
+  newrelic_key       = "bc34e4b264df582c2db0b453bd43ee438043757c"
+  key_name           = "eastern-production-tools"
+
+  # Pypi Server
+  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
+  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
+
+  # Consul
+  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
+
+  # Peering for GHE
+  ghe_peering       = false
 }
 
-module "shared-production-tools-ecs-cluster" {
-  source               = "../modules/ecs-cluster"
-  environment          = "Production"
-  team                 = "Engineering"
-  name                 = "shared-production-tools"
-  vpc_id               = "${module.vpc.id}"
-  subnet_ids           = "${module.vpc.internal_subnets}"
-  key_name             = "production-shared-tools"
-  iam_instance_profile = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
-  region               = "us-west-2"
-  availability_zones   = "${module.vpc.availability_zones}"
-  instance_type        = "t2.micro"
-  security_group       = "${module.security_groups.tools-ecs-cluster}"
-  instance_ebs_optimized = false
-  desired_capacity     = "3"
-  min_size             = "3"
-  cloud_config_content = "${data.template_file.ecs_cloud_config.rendered}"
+# Consul DNS Region-Balancing (FO/HA)
+module "consul_dns_failover" {
+  source = "./region_failover_dns"
+
+  # General
+  dns_name = "consul"
+  dns_zone = "${aws_route53_zone.prod.zone_id}"
+
+  # West
+  west_elb_dnsname = "${module.vpc_west.consul_elb_cname}"
+  west_elb_name = "${module.vpc_west.consul_elb_name}"
+  west_elb_zoneid = "${module.vpc_west.consul_elb_zoneid}"
+
+  # East
+  east_elb_dnsname = "${module.vpc_east.consul_elb_cname}"
+  east_elb_name = "${module.vpc_east.consul_elb_name}"
+  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
 }
 
-// The region in which the infra lives.
-output "region" {
-  value = "us-west-2"
+# PyPi Server DNS Region-Balancing (FO/HA)
+module "pypi_dns_failover" {
+  source = "./region_failover_dns"
+
+  # General
+  dns_name = "pypi"
+  dns_zone = "${aws_route53_zone.prod.zone_id}"
+
+  # West
+  west_elb_dnsname = "${module.vpc_west.pypi_elb_cname}"
+  west_elb_name = "${module.vpc_west.pypi_elb_name}"
+  west_elb_zoneid = "${module.vpc_west.pypi_elb_zoneid}"
+
+  # East
+  east_elb_dnsname = "${module.vpc_east.pypi_elb_cname}"
+  east_elb_name = "${module.vpc_east.pypi_elb_name}"
+  east_elb_zoneid = "${module.vpc_east.pypi_elb_zoneid}"
 }
 
-// The internal route53 zone ID.
-output "zone_id" {
-  value = "${module.dns.zone_id}"
-}
+# Consul DNS Region-Balancing (FO/HA)
+module "consul_dns_servers_failover" {
+  source = "./consul_dns_servers_fo_ha"
 
-// The VPC's CIDR
-output "cidr" {
-  value = "10.50.0.0/16"
-}
+  # General
+  dns_zone = "${aws_route53_zone.prod.zone_id}"
 
-// Comma separated list of internal subnet IDs.
-output "internal_subnets" {
-  value = "${module.vpc.internal_subnets}"
-}
+  # West
+  west_ec2_machines = ["10.32.0.219", "10.32.0.134", "10.32.0.183"]
+  west_ecs_cluster_name = "${module.vpc_west.tools_ecs_name}"
+  west_ecs_service_name = "${module.vpc_west.consul_service_name}"
 
-// Comma separated list of external subnet IDs.
-output "external_subnets" {
-  value = "${module.vpc.external_subnets}"
-}
-
-// The internal domain name, e.g "stack.local".
-output "domain_name" {
-  value = "${module.dns.name}"
-}
-
-// The VPC availability zones.
-output "availability_zones" {
-  value = "${module.vpc.availability_zones}"
-}
-
-// The VPC security group ID.
-output "vpc_security_group" {
-  value = "${module.vpc.security_group}"
-}
-
-// The VPC ID.
-output "vpc_id" {
-  value = "${module.vpc.id}"
-}
-
-// Comma separated list of internal route table IDs.
-output "internal_route_tables" {
-  value = "${module.vpc.internal_rtb_id}"
-}
-
-// The external route table ID.
-output "external_route_tables" {
-  value = "${module.vpc.external_rtb_id}"
-}
-
-// Internal SSH allows ssh connections from the external ssh security group.
-output "sg_internal_ssh" {
-  value = "${module.security_groups.internal_ssh}"
-}
-
-// External ELB allows traffic from the world.
-output "sg_internal_elb" {
-  value = "${module.security_groups.internal_elb}"
-}
-
-// External ELB allows traffic from the world.
-output "sg_vpn" {
-  value = "${module.security_groups.vpn}"
+  # East
+  east_ec2_machines = ["10.32.1.178", "10.32.1.133", "10.32.1.206"]
+  east_ecs_cluster_name = "${module.vpc_east.tools_ecs_name}"
+  east_ecs_service_name = "${module.vpc_west.consul_service_name}"
 }

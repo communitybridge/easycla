@@ -14,10 +14,6 @@ variable "vpc_id" {
   description = "The VPC ID to use"
 }
 
-variable "zone_id" {
-  description = "The Route53 Zone ID where the DNS record will be created"
-}
-
 variable "security_groups" {
   description = "A list of security group IDs"
   type = "list"
@@ -71,11 +67,6 @@ variable "publicly_accessible" {
   default     = false
 }
 
-variable "dns_name" {
-  description = "Route53 record name for the RDS database, defaults to the database name if not set"
-  default     = ""
-}
-
 variable "port" {
   description = "The port at which the database listens for incoming connections"
   default     = 3306
@@ -107,6 +98,7 @@ variable "allocated_storage" {
 }
 
 resource "aws_security_group" "main" {
+  provider    = "aws.local"
   name        = "${var.name}-rds-cluster"
   description = "Allows traffic to rds from other security groups"
   vpc_id      = "${var.vpc_id}"
@@ -132,12 +124,14 @@ resource "aws_security_group" "main" {
 }
 
 resource "aws_db_subnet_group" "main" {
+  provider    = "aws.local"
   name        = "${var.name}"
   description = "RDS cluster subnet group"
   subnet_ids  = ["${var.subnet_ids}"]
 }
 
 resource "aws_db_instance" "main" {
+  provider                = "aws.local"
   allocated_storage       = "${var.allocated_storage}"
   engine                  = "${var.engine}"
   engine_version          = "${var.engine_version}"
