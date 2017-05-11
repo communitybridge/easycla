@@ -213,7 +213,6 @@ module "vault" "vault-master" {
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
   consul_endpoint        = "${module.consul.consul_elb_cname}"
-  dns_server             = "${var.dns_server}"
 }
 
 module "logstash" {
