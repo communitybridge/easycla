@@ -243,7 +243,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let contact of member.contacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
+                  <tr *ngFor="let contact of memberContacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
                     <td data-title="Primary">
                       <p *ngIf="contact.primary">
                         <ion-icon md="md-star"></ion-icon>

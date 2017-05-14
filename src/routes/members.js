@@ -40,96 +40,32 @@ router.get('/create_member/:project_id', require('connect-ensure-login').ensureL
   }
 });
 
-router.post('/create_member', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+/*
+  Projects - Members:
+  Resources for getting details about project members
+ */
+
+router.get('/projects/:projectId/members', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.projectId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var projectId = req.body.project_id;
-    var startDate = "";
-    var renewalDate = "";
-    if (req.body.start_date) startDate = new Date(req.body.start_date).toISOString();
-    if (req.body.renewal_date) renewalDate = new Date(req.body.renewal_date).toISOString();
-    var logoCompanyFileName = "";
-    if(req.files){
-      if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
-    }
-    //country code must be exactly 2 Alphabetic characters or null
-    var headquartersCountry = req.body.headquarters_country;
-    if(headquartersCountry == "") headquartersCountry = null;
-
-    var billingCountry = req.body.billing_country;
-    if(billingCountry == "") billingCountry = null;
-
-    var mainThoroughfare = req.body.headquarters_address_line_1 + " /// " + req.body.headquarters_address_line_2;
-    var billingThoroughfare = req.body.billing_address_line_1 + " /// " + req.body.billing_address_line_2;
-
-    var newOrganization = {
-      name: req.body.company_name,
-      addresses: [
-        {
-          type: "MAIN",
-          address: {
-            country: headquartersCountry,
-            administrativeArea: req.body.headquarters_state,
-            localityName: req.body.headquarters_city,
-            postalCode: req.body.headquarters_zip_code,
-            phone: req.body.headquarters_phone,
-            thoroughfare: mainThoroughfare
-          }
-        },
-        {
-          type: "BILLING",
-          address: {
-            country: billingCountry,
-            administrativeArea: req.body.billing_state,
-            localityName: req.body.billing_city,
-            postalCode: req.body.billing_zip_code,
-            phone: req.body.billing_phone,
-            thoroughfare: billingThoroughfare
-          }
-        }
-      ],
-      logoRef : logoCompanyFileName
-    }
-
-    projManagerClient.createOrganization(newOrganization, function (err, created, organizationId) {
-      console.log(err);
-      if(created && projectId){
-        var newMember = {
-          orgId: organizationId,
-          tier: {
-            type: req.body.membership_tier,
-            qualifier: 1 // Optional Tier Level
-          },
-          startDate: startDate,
-          renewalDate: renewalDate
-        };
-        projManagerClient.addMemberToProject(projectId, newMember, function (err, created, memberId) {
-          var newContacts = JSON.parse(req.body.newContacts);
-          async.forEach(newContacts, function (eachContact, callback){
-            projManagerClient.addContactToMember(projectId, memberId, eachContact, function (err, created, contactId) {
-              callback();
-            });
-          }, function(err) {
-            // Contacts iteration done.
-            return res.redirect('/project/' + projectId);
-          });
-        });
-      }
-      else{
-        return res.redirect('/');
-      }
+    projManagerClient.getProjectMembers(projectId, function (err, memberCompanies) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.send('');
+      res.send(memberCompanies);
     });
   }
 });
 
-router.get('/members/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.get('/projects/:projectId/members/:memberId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projectId = req.params.id;
+    var projectId = req.params.projectId;
+    var memberId = req.params.memberId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
+    projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
       // TODO: Create 404 page for when project doesn't exist
       if (err) return res.send('');
-      res.send(memberCompanies);
+      res.send(memberCompany);
     });
   }
 });
@@ -169,31 +105,6 @@ router.post('/update_member_contact', require('connect-ensure-login').ensureLogg
     console.log(updatedContact);
     projManagerClient.updateContactFromMember(projectId, memberId, contactId, updatedContact, function (err, created, contact) {
       console.log("/update_member_contact success");
-      return res.json(contact);
-    });
-  }
-});
-
-router.post('/add_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("/add_member_contact");
-    console.log("req.body");
-    console.log(req.body);
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var projectId = req.body.projectId;
-    var memberId = req.body.memberId;
-    var newContact = {
-    //   type: contact.type,
-    //   givenName: contact.givenName,
-    //   familyName: contact.familyName,
-      bio: req.body.contactBio,
-      email: req.body.contactEmail,
-      phone: req.body.contactPhone,
-    //   headshotRef: contact.headshotRef,
-    };
-    console.log(newContact);
-    projManagerClient.addContactToMember(projectId, memberId, newContact, function (err, created, contact) {
-      console.log("/add_member_contact success");
       return res.json(contact);
     });
   }
@@ -361,6 +272,50 @@ router.post('/edit_member/:project_id/:organization_id/:member_id', require('con
           return res.redirect('/member/' + projectId + '/' + memberId);
         });
       });
+    });
+  }
+});
+
+/*
+  Projects - Members - Contacts:
+  Resources for getting and manipulating contacts of project members
+ */
+
+router.get('/project/members/contacts/types', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getMemberContactRoles(function (err, roles) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.send('');
+      res.send(roles);
+    });
+  }
+});
+
+router.get('/projects/:projectId/members/:memberId/contacts', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.projectId;
+    var memberId = req.params.memberId;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getMemberContacts(projectId, memberId, function (err, contacts) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.send('');
+      res.send(contacts);
+    });
+  }
+});
+
+router.post('/projects/:projectId/members/:memberId/contacts/:contactId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.projectId;
+    var memberId = req.params.memberId;
+    var contactId = req.params.contactId;
+    console.log(req.body);
+    var contact = req.body;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.addMemberContact(projectId, memberId, contactId, contact, function (err, created, obj) {
+      console.log("addMemberContact success");
+      return res.json(obj);
     });
   }
 });

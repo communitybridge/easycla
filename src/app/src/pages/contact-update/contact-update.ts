@@ -1,7 +1,10 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { CincoService } from '../../app/services/cinco.service';
 
+@IonicPage({
+  segment: 'contact-update'
+})
 @Component({
   selector: 'contact-update',
   templateUrl: 'contact-update.html',
@@ -10,9 +13,13 @@ import { CincoService } from '../../app/services/cinco.service'
 export class ContactUpdate {
   projectId: string; // Always Needed
   memberId: string; // Always Needed
-  member: any; // Use if passed, otherwise generate from memberId
-  contactId: string; // Needed for Updating.
+  org: any;
   contact: any; // Should be used when Updating
+  contactId: string;
+  roleId: string;
+  memberContactRoles: any;
+  orgContactRoles: any;
+
 
   constructor(
     public navCtrl: NavController,
@@ -25,9 +32,17 @@ export class ContactUpdate {
     this.getDefaults();
     this.projectId = this.navParams.get('projectId');
     this.memberId = this.navParams.get('memberId');
-    this.member = this.navParams.get('member');
-    this.contactId = this.navParams.get('contactId');
+    this.org = this.navParams.get('org');
     let originalContact = this.navParams.get('contact');
+
+    if (originalContact.id) {
+      this.contactId = originalContact.id;
+    }
+
+    if (originalContact.role) {
+      this.roleId = originalContact.role;
+    }
+
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
     console.log('contact contact:');
@@ -35,12 +50,13 @@ export class ContactUpdate {
   }
 
   ngOnInit() {
-
+    this.getMemberContactRoles();
+    this.getOrgContactRoles();
   }
 
   getDefaults() {
     // Instantiate member data
-    this.member = {
+    this.org = {
       name: '',
     }
     // Instantiate contact data
@@ -59,6 +75,78 @@ export class ContactUpdate {
     }
   }
 
+  getOrgContactRoles() {
+    // TODO: replace with call to cinco
+    this.orgContactRoles = [
+      {
+        key: 'NONE',
+        pretty_value: '',
+      },
+      {
+        key: 'IT',
+        pretty_value: 'IT',
+      },
+      {
+        key: 'DIRECTOR',
+        pretty_value: 'Director',
+      },
+      {
+        key: 'EXECUTIVE',
+        pretty_value: 'Executive',
+      },
+      {
+        key: 'FINANCE',
+        pretty_value: 'Finance',
+      },
+      {
+        key: 'MANAGER_NO_SUBS',
+        pretty_value: 'Manager (without subordinates)',
+      },
+      {
+        key: 'MANAGER_WITH_SUBS',
+        pretty_value: 'Manager (with subordinates)',
+      },
+      {
+        key: 'OPERATIONS',
+        pretty_value: 'Operations',
+      },
+      {
+        key: 'OWNER_PARTNER',
+        pretty_value: 'Owner/Partner',
+      }
+    ];
+  }
+
+  getMemberContactRoles() {
+    // TODO: replace with call to cinco
+    this.memberContactRoles = [
+      {
+        key: 'BILLING_CONTACT',
+        pretty_value: 'Billing Contact',
+      },
+      {
+        key: 'LEGAL_CONTACT',
+        pretty_value: 'Legal Contact',
+      },
+      {
+        key: 'PRESS_CONTACT',
+        pretty_value: 'Press Contact',
+      },
+      {
+        key: 'MARKETING_CONTACT',
+        pretty_value: 'Marketing Contact',
+      },
+      {
+        key: 'TECHNICAL_CONTACT',
+        pretty_value: 'Technical Contact',
+      },
+      {
+        key: 'REP_VOTING_CONTACT',
+        pretty_value: 'Representative/Voting Contact',
+      }
+    ];
+  }
+
   // ContactUpdate modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
@@ -73,13 +161,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.primary = 'no';
+              this.contact.primaryContact = 'no';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.primary = 'yes';
+              this.contact.primaryContact = 'yes';
             }
           }
         ]
@@ -97,13 +185,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.board = 'no';
+              this.contact.boardMember = 'no';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.board = 'yes';
+              this.contact.boardMember = 'yes';
             }
           }
         ]
@@ -181,23 +269,58 @@ export class ContactUpdate {
   saveContact() {
     console.log('save contact');
     console.log(this.projectId);
-    console.log(this.member);
+    console.log(this.memberId);
     console.log(this.contact);
-    if(this.contact.id) {
-      this.cincoService.updateMemberContact(this.projectId, this.member.id, this.contact.id, this.contact).subscribe(response => {
-        if(response) {
-          console.log('updateMemberContact response:');
-          console.log(response);
-        }
-      });
+    if (this.contact.primaryContact === 'yes') {
+      this.contact.primaryContact = true;
     }
     else {
-      this.cincoService.addMemberContact(this.projectId, this.member.id, this.contact).subscribe(response => {
-        if(response) {
-          console.log('addMemberContact response:');
+      this.contact.primaryContact = false;
+    }
+
+    if (this.contact.boardMember === 'yes') {
+      this.contact.boardMember = true;
+    }
+    else {
+      this.contact.boardMember = false;
+    }
+
+    if (this.contact.id) {
+      // TODO: fix up roleId logic so it is based off the contact when first recieved and determines if it has been attached to a member.
+      // if (this.roleId) {
+      if (false) {
+        this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
+          if(response) {
+            console.log('updateMemberContact response:');
+            console.log(response);
+          }
+        });
+      }
+      else {
+        this.cincoService.addMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
+          if (response) {
+            console.log('addMemberContact response:');
+            console.log(response);
+          }
+        });
+      }
+    }
+    else {
+      // Add new contact to organization
+      this.cincoService.createOrganizationContact(this.org.id, this.contact).subscribe(response => {
+        if (response) {
+          console.log('createOrganizationContact response:');
           console.log(response);
+          this.contact.id = response;
+          // add to member
+          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
+            if (response) {
+              console.log('addMemberContact response:');
+              console.log(response);
+            }
+          });
         }
-      });
+      });  
     }
 
   }
@@ -205,7 +328,7 @@ export class ContactUpdate {
   removeContact() {
     console.log('remove contact');
     console.log(this.contact);
-    this.cincoService.removeMemberContact(this.projectId, this.member.id, this.contact.id).subscribe(response => {
+    this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contact.id).subscribe(response => {
       if(response) {
         console.log('removeMemberContact response:');
         console.log(response);
