@@ -51,17 +51,33 @@
         "value": "${CONSUL_ENCRYPTION_KEY}"
       },
       {
+        "name": "EC2_REGION",
+        "value": "${EC2_REGION}"
+      },
+      {
+        "name": "EC2_TAG_KEY",
+        "value": "${EC2_TAG_KEY}"
+      },
+      {
+        "name": "EC2_TAG_VALUE",
+        "value": "${EC2_TAG_VALUE}"
+      },
+      {
         "name": "SERVICE_IGNORE",
         "value": "true"
       }
     ],
     "logConfiguration": {
-      "logDriver": "awslogs",
+      "logDriver": "gelf",
       "options": {
-        "awslogs-group": "shared-production-infra",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream-prefix": "new-consul-slave"
+        "gelf-address": "udp://logstash.service.consul:12201",
+        "labels": "app_name,app_env,app_region"
       }
+    },
+    "dockerLabels": {
+      "app_name": "consul",
+      "app_env": "production",
+      "app_region": "${EC2_REGION}"
     }
   }
 ]

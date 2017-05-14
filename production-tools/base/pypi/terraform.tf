@@ -23,6 +23,10 @@ variable "region" {}
 
 variable "vpc_id" {}
 
+variable "dns_servers" {
+  type = "list"
+}
+
 data "template_file" "pypi_ecs_task" {
   template = "${file("${path.module}/pypi-ecs-task.json")}"
 
@@ -32,6 +36,11 @@ data "template_file" "pypi_ecs_task" {
     AWS_SECRET_ACCESS_KEY = "eZ8MKaJXa9vKsof4+bnqGHC58Q6VW58rnYzVAy6y"
     S3_BUCKET             = "${var.s3_bucket}"
     REDIS_HOST            = "${var.redis_host}"
+
+    # DNS Servers for Container Resolution
+    DNS_SERVER_1          = "${var.dns_servers[0]}"
+    DNS_SERVER_2          = "${var.dns_servers[1]}"
+    DNS_SERVER_3          = "${var.dns_servers[2]}"
 
     # Tags for Registrator
     TAG_REGION            = "${var.region}"

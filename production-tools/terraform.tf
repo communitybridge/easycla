@@ -147,21 +147,3 @@ module "pypi_dns_failover" {
   east_elb_name = "${module.vpc_east.pypi_elb_name}"
   east_elb_zoneid = "${module.vpc_east.pypi_elb_zoneid}"
 }
-
-# Consul DNS Region-Balancing (FO/HA)
-module "consul_dns_servers_failover" {
-  source = "./consul_dns_servers_fo_ha"
-
-  # General
-  dns_zone = "${aws_route53_zone.prod.zone_id}"
-
-  # West
-  west_ec2_machines = ["10.32.0.219", "10.32.0.134", "10.32.0.183"]
-  west_ecs_cluster_name = "${module.vpc_west.tools_ecs_name}"
-  west_ecs_service_name = "${module.vpc_west.consul_service_name}"
-
-  # East
-  east_ec2_machines = ["10.32.1.178", "10.32.1.133", "10.32.1.206"]
-  east_ecs_cluster_name = "${module.vpc_east.tools_ecs_name}"
-  east_ecs_service_name = "${module.vpc_west.consul_service_name}"
-}

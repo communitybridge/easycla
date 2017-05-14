@@ -19,11 +19,25 @@ variable "consul_endpoint" {
   description = "Endpoint to hit in order to connect to Consul"
 }
 
+variable "dns_servers" {
+  type = "list"
+}
+
+variable "region" {}
+
 data "template_file" "vault_ecs_task" {
   template = "${file("${path.module}/vault-ecs-task.json")}"
 
   vars {
     CONSUL_MASTER_IP = "${var.consul_endpoint}"
+
+    # DNS Servers for Container Resolution
+    DNS_SERVER_1     = "${var.dns_servers[0]}"
+    DNS_SERVER_2     = "${var.dns_servers[1]}"
+    DNS_SERVER_3     = "${var.dns_servers[2]}"
+
+    # Used for Docker Tags
+    AWS_REGION      = "${var.region}"
   }
 }
 

@@ -19,6 +19,10 @@ variable "region" {}
 
 variable "vpc_id" {}
 
+variable "dns_servers" {
+  type = "list"
+}
+
 data "template_file" "logstash_ecs_task" {
   template = "${file("${path.module}/logstash-ecs-task.json")}"
 
@@ -32,15 +36,23 @@ data "template_file" "logstash_ecs_task" {
     ES_HOST_URL           = "https://c99ea3c2e8e8a90dd2fed3e9564a4c1e.us-west-2.aws.found.io:9243"
     PIPELINE_NAME         = "production_tools"
 
+    # DNS Servers for Container Resolution
+    DNS_SERVER_1          = "${var.dns_servers[0]}"
+    DNS_SERVER_2          = "${var.dns_servers[1]}"
+    DNS_SERVER_3          = "${var.dns_servers[2]}"
+
     # Tags for Registrator
     TAG_REGION            = "${var.region}"
     TAG_VPC_ID            = "${var.vpc_id}"
   }
 }
 
+#1514
+
 resource "aws_ecs_task_definition" "logstash" {
   provider = "aws.local"
   family = "logstash"
+  network_mode = "host"
 
   lifecycle {
     ignore_changes        = ["image"]
@@ -62,4 +74,48 @@ resource "aws_ecs_service" "logstash" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+# Create a new load balancer
+resource "aws_elb" "logstash" {
+  provider = "aws.local"
+  name = "logstash"
+  subnets = ["${var.internal_subnets}"]
+  security_groups = ["${var.internal_elb_sg}"]
+  internal = true
+
+  listener {
+    instance_port = 1514
+    instance_protocol = "tcp"
+    lb_port = 1514
+    lb_protocol = "tcp"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "TCP:9600"
+    interval = 30
+  }
+
+  cross_zone_load_balancing = true
+  idle_timeout = 400
+  connection_draining = true
+  connection_draining_timeout = 400
+
+  tags {
+    Name = "logstash-pipelines"
+  }
+}
+
+# Create a new load balancer attachment
+resource "aws_autoscaling_attachment" "logstash" {
+  provider = "aws.local"
+  autoscaling_group_name = "${var.ecs_asg_name}"
+  elb                    = "${aws_elb.logstash.id}"
+}
+
+output "logstash_elb" {
+  value = "${aws_elb.logstash.dns_name}"
 }

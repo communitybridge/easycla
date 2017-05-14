@@ -27,12 +27,18 @@ variable "r53_zone_id" {}
 
 variable "region_identifier" {}
 
+variable "region" {}
+
 data "template_file" "consul_slaves_ecs_task" {
   template = "${file("${path.module}/consul-ecs-task.json")}"
 
   vars {
     CONSUL_ENCRYPTION_KEY   = "${var.consul_encryption_key}"
     CONSUL_DATACENTER       = "AWS"
+
+    EC2_REGION              = "${var.region}"
+    EC2_TAG_KEY             = "Name"
+    EC2_TAG_VALUE           = "production-tools"
   }
 }
 

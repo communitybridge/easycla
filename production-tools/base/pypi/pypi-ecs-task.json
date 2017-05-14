@@ -9,8 +9,9 @@
       "hostPort": 8080
     }],
     "dnsServers": [
-      "dns.prod.engineering.internal",
-      "8.8.8.8"
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
     ],
     "environment": [
       {
@@ -43,16 +44,20 @@
       },
       {
         "name": "SERVICE_8080_CHECK_INTERVAL",
-        "value": "1s"
+        "value": "300s"
       }
     ],
     "logConfiguration": {
-      "logDriver": "awslogs",
+      "logDriver": "gelf",
       "options": {
-        "awslogs-group": "shared-production-infra",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream-prefix": "pypi"
+        "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
+        "labels": "app_name,app_env,app_region"
       }
+    },
+    "dockerLabels": {
+      "app_name": "pypi",
+      "app_env": "production",
+      "app_region": "${TAG_REGION}"
     }
   }
 ]

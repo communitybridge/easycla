@@ -167,6 +167,17 @@ resource "aws_security_group_rule" "allow_itself" {
   security_group_id = "${aws_security_group.tools.id}"
 }
 
+resource "aws_security_group_rule" "allow_bind" {
+  provider    = "aws.local"
+  type = "ingress"
+  from_port = 0
+  to_port = 0
+  protocol = "-1"
+  source_security_group_id = "${aws_security_group.bind.id}"
+
+  security_group_id = "${aws_security_group.tools.id}"
+}
+
 resource "aws_security_group_rule" "allow_out" {
   provider    = "aws.local"
   type = "egress"
@@ -200,6 +211,49 @@ resource "aws_security_group" "efs" {
   }
 }
 
+resource "aws_security_group" "bind" {
+  provider    = "aws.local"
+  name        = "${format("%s-bind-servers", var.name)}"
+  description = "Allows Access to DNS Servers"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = ["${aws_security_group.vpn.id}"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags {
+    Name        = "${format("%s bind servers", var.name)}"
+  }
+}
+
 // Internal SSH allows ssh connections from the external ssh security group.
 output "internal_ssh" {
   value = "${aws_security_group.internal_ssh.id}"
@@ -220,4 +274,8 @@ output "vpn" {
 
 output "efs" {
   value = "${aws_security_group.efs.id}"
+}
+
+output "bind" {
+  value = "${aws_security_group.bind.id}"
 }
