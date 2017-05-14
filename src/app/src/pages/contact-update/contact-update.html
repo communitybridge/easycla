@@ -3,7 +3,7 @@
     <ion-title>
       <span *ngIf="contact.id">Update Contact</span>
       <span *ngIf="!contact.id">Add Contact</span>
-      : <span class="member-company">{{ member.org.name }}</span>
+      : <span class="member-company">{{ org.name }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -30,16 +30,22 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Company *</ion-label>
-          <ion-input type="text" value="{{ member.org.name }}" disabled></ion-input>
+          <ion-input type="text" value="{{ org.name }}" disabled></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
 
     <ion-row>
-      <ion-col col-12 col-md-6>
+      <ion-col col-12 col-md-3>
         <ion-item>
-          <ion-label stacked>Name *</ion-label>
-          <ion-input type="text" [(ngModel)]="contact.name"></ion-input>
+          <ion-label stacked>Given Name *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.givenName"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-12 col-md-3>
+        <ion-item>
+          <ion-label stacked>Family Name *</ion-label>
+          <ion-input type="text" [(ngModel)]="contact.familyName"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-6>
@@ -67,15 +73,22 @@
         </ion-item>
       </ion-col>
     </ion-row>
-
+    <ion-row>
+      <ion-col col-12 col-md-6>
+        <ion-item>
+          <ion-label stacked>Type *</ion-label>
+          <ion-select [(ngModel)]="contact.type">
+            <ion-option *ngFor="let role of orgContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
     <ion-row>
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Role</ion-label>
           <ion-select [(ngModel)]="contact.role">
-            <ion-option value="1">Marketing</ion-option>
-            <ion-option value="2">Board</ion-option>
-            <ion-option value="3">Option 3</ion-option>
+            <ion-option *ngFor="let role of memberContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
           </ion-select>
         </ion-item>
       </ion-col>
@@ -84,9 +97,9 @@
           <ion-col col-12 col-md-6>
             <ion-item class="contact-primary">
               <ion-label stacked>Primary</ion-label>
-              <ion-icon *ngIf="contact.primary=='yes'" name="star" item-left></ion-icon>
-              <ion-icon *ngIf="contact.primary!='yes'" name="star-outline" item-left></ion-icon>
-              <ion-select [(ngModel)]="contact.primary" (ngModelChange)="primarySelectChanged($event)">
+              <ion-icon *ngIf="contact.primaryContact=='yes'" name="star" item-left></ion-icon>
+              <ion-icon *ngIf="contact.primaryContact!='yes'" name="star-outline" item-left></ion-icon>
+              <ion-select [(ngModel)]="contact.primaryContact" (ngModelChange)="primarySelectChanged($event)">
                 <ion-option value="yes">Yes</ion-option>
                 <ion-option value="no">No</ion-option>
               </ion-select>
@@ -96,7 +109,7 @@
             <ion-item class="contact-board">
               <ion-label stacked>Board</ion-label>
               <ion-icon name="contact" item-left></ion-icon>
-              <ion-select [(ngModel)]="contact.board" (ngModelChange)="boardSelectChanged($event)">
+              <ion-select [(ngModel)]="contact.boardMember" (ngModelChange)="boardSelectChanged($event)">
                 <ion-option value="yes">Yes</ion-option>
                 <ion-option value="no">No</ion-option>
               </ion-select>
@@ -106,7 +119,7 @@
       </ion-col>
     </ion-row>
 
-    <ion-row>
+    <!-- <ion-row>
       <ion-col col-12>
         <div class="item item-md item-label-stacked item-input list_input">
           <div class="list_input-item_inner">
@@ -129,7 +142,7 @@
           </div>
         </div>
       </ion-col>
-    </ion-row>
+    </ion-row> -->
 
     <ion-row>
       <ion-col col-12>
