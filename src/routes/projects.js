@@ -20,6 +20,41 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }]);
 
+/*
+  Projects:
+  Resources to expose and manipulate details of projects
+ */
+
+ router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+     projManagerClient.getAllProjects(function (err, projects) {
+       res.send(projects)
+     });
+   }
+ });
+
+router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getAllProjects(function (err, projects) {
+      res.send(projects)
+    });
+  }
+});
+
+router.get('/projects/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(projectId, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.send('');
+      res.send(project);
+    });
+  }
+});
+
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('create_project');
 });

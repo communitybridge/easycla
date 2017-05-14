@@ -47,6 +47,7 @@ app.use('/pmc', authMiddleware, express.static(path.join(__dirname, 'app/www')))
 // Routes
 var mainRouter = require('./routes/main');
 var adminRouter = require('./routes/admin');
+var organizations = require('./routes/organizations');
 var projectsRouter = require('./routes/projects');
 var membersRouter = require('./routes/members');
 var mailingRouter = require('./routes/mailing');
@@ -54,6 +55,7 @@ var aliasesRouter = require('./routes/aliases');
 
 app.use(mainRouter);
 app.use(adminRouter);
+app.use(organizations);
 app.use(projectsRouter);
 app.use(membersRouter);
 app.use(mailingRouter);

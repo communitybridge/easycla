@@ -1,0 +1,39 @@
+search-add-contact {
+  .toolbar {
+    padding: 1rem 1rem 1rem 2rem;
+  }
+  .toolbar {
+    background-color: #f5f5f5;
+    color: black;
+  }
+  .field-notice {
+    font-size: 1.2rem;
+    color: #999;
+    text-align: right;
+  }
+  .footer-seamless {
+    background-color: transparent;
+    border-color: transparent;
+    &:before {
+      display: none;
+    }
+    .toolbar {
+      background-color: inherit;
+    }
+    .toolbar-background {
+      border-color: inherit;
+    }
+  }
+  .toolbar-title .member-company {
+    font-weight: normal;
+  }
+  .content {
+    background-color: #fff;
+  }
+
+  .input-forward-button {
+    margin-top: 2.6rem;
+  }
+
+
+}
