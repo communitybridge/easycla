@@ -11,16 +11,22 @@
       },
       {
         "containerPort": 12201,
-        "hostPort": 12201
+        "hostPort": 12201,
+        "protocol": "udp"
       },
       {
         "containerPort": 9600,
         "hostPort": 9600
+      },
+      {
+        "containerPort": 1514,
+        "hostPort": 1514
       }
     ],
     "dnsServers": [
-      "dns.prod.engineering.internal",
-      "8.8.8.8"
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
     ],
     "environment": [
       {
@@ -52,20 +58,32 @@
         "value": "${ES_HOST_URL}"
       },
       {
-        "name": "SERVICE_NAME",
+        "name": "SERVICE_9600_NAME",
         "value": "logstash"
       },
       {
-        "name": "SERVICE_TAGS",
+        "name": "SERVICE_9600_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
       },
       {
-        "name": "SERVICE_5044_CHECK_TCP",
+        "name": "SERVICE_9600_CHECK_TCP",
         "value": "true"
       },
       {
-        "name": "SERVICE_5044_CHECK_INTERVAL",
-        "value": "1s"
+        "name": "SERVICE_9600_CHECK_INTERVAL",
+        "value": "5s"
+      },
+      {
+        "name": "SERVICE_12201_IGNORE",
+        "value": "true"
+      },
+      {
+        "name": "SERVICE_5044_IGNORE",
+        "value": "true"
+      },
+      {
+        "name": "SERVICE_1514_IGNORE",
+        "value": "true"
       }
     ],
     "logConfiguration": {

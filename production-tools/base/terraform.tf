@@ -85,7 +85,7 @@ module "dhcp" {
   source  = "../../modules/dhcp"
   name    = "prod.engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "${cidrhost(var.cidr, 2)}"
+  servers = "${replace(var.cidr, ".0/24", ".150")},${replace(var.cidr, ".0/24", ".180")},${replace(var.cidr, ".0/24", ".200")},${cidrhost(var.cidr, 2)}"
 }
 
 module "security_groups" {
@@ -150,8 +150,10 @@ data "template_file" "ecs_instance_cloudinit_tools" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    ecs_cluster_name = "production-tools"
-    newrelic_key     = "${var.newrelic_key}"
+    ecs_cluster_name  = "production-tools"
+    region            = "${var.region}"
+    region_identifier = "${var.region_identitier}"
+    newrelic_key      = "${var.newrelic_key}"
   }
 }
 
@@ -185,24 +187,23 @@ module "consul" "consul-master" {
   consul_encryption_key  = "${var.consul_encryption_key}"
   r53_zone_id            = "${var.r53_zone_id}"
   region_identifier      = "${var.region_identitier}"
+  region                 = "${var.region}"
 }
 
-module "nginx" {
-  source                 = "./nginx"
+module "bind" {
+  source                 = "./bind"
 
-  vpc_id                 = "${module.vpc.id}"
-  region                 = "${var.region}"
-
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
+  bind_sg                = "${module.security_groups.bind}"
+  cidr                   = "${var.cidr}"
 }
 
 module "registrator" {
   source = "./registrator"
 
-  ecs_cluster_name = "${module.tools-ecs-cluster.name}"
+  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
+  dns_servers            = "${module.bind.bind_dns_servers}"
+  region                 = "${var.region}"
 }
 
 module "vault" "vault-master" {
@@ -212,7 +213,9 @@ module "vault" "vault-master" {
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
-  consul_endpoint        = "${module.consul.consul_elb_cname}"
+  consul_endpoint        = "${module.consul.consul_elb_cname}:8500"
+  dns_servers            = "${module.bind.bind_dns_servers}"
+  region                 = "${var.region}"
 }
 
 module "logstash" {
@@ -222,6 +225,7 @@ module "logstash" {
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
+  dns_servers            = "${module.bind.bind_dns_servers}"
 
   vpc_id                 = "${module.vpc.id}"
   region                 = "${var.region}"
@@ -234,6 +238,7 @@ module "pypi" "pypi-master" {
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
+  dns_servers            = "${module.bind.bind_dns_servers}"
 
   s3_bucket              = "${var.pypi_bucket}"
   redis_host             = "${var.pypi_redis_host}"
@@ -353,4 +358,8 @@ output "pypi_elb_name" {
 
 output "pypi_elb_zoneid" {
   value = "${module.pypi.pypi_elb_zoneid}"
+}
+
+output "bind_dns_servers" {
+  value = "${module.bind.bind_dns_servers}"
 }

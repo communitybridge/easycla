@@ -257,7 +257,7 @@ resource "aws_security_group" "engineering-sandboxes-redis" {
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
-    security_groups = ["${var.cidr}"]
+    cidr_blocks     = ["${var.cidr}"]
   }
 
   egress {

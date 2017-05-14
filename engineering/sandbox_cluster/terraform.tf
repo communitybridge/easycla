@@ -61,7 +61,7 @@ module "rds-cluster" {
   engine               = "mariadb"
   engine_version       = "10.1.19"
   parameter_group_name = "engineering"
-  instance_type        = "db.r3.medium"
+  instance_type        = "db.t2.medium"
 }
 
 module "redis-cluster" {

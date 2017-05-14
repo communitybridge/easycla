@@ -2,8 +2,24 @@ variable "ecs_cluster_name" {
   description = "The name of the ECS Cluster"
 }
 
+variable "dns_servers" {
+  type = "list"
+}
+
+variable "region" {}
+
 data "template_file" "registrator_ecs_task" {
   template = "${file("${path.module}/registrator-ecs-task.json")}"
+
+  vars {
+    # DNS Servers for Container Resolution
+    DNS_SERVER_1  = "${var.dns_servers[0]}"
+    DNS_SERVER_2  = "${var.dns_servers[1]}"
+    DNS_SERVER_3  = "${var.dns_servers[2]}"
+
+    # For Logging
+    AWS_REGION    = "${var.region}"
+  }
 }
 
 resource "aws_ecs_task_definition" "registrator" {
