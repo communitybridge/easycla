@@ -73,10 +73,10 @@ tags: ["system"]
 fields:
   sys_name: engineering-sandboxes
   sys_env: sandbox
-  sys_region: us-west-2
+  sys_region: ${aws_region}
 
 #================================ Outputs =====================================
 output.logstash:
-  hosts: ["us-west-2.logstash.service.consul:5044"]
+  hosts: ["${aws_region}.logstash.service.consul:5044"]
 EOF
 service filebeat start
