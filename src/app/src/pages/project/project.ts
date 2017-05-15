@@ -88,6 +88,12 @@ export class ProjectPage {
     });
   }
 
+  viewProjectDetails(projectId){
+    this.navCtrl.push('ProjectDetailsPage', {
+      projectId: projectId
+    });
+  }
+
   openAssetManagementModal() {
     let modal = this.modalCtrl.create(AssetManagementModal, {
       projectId: this.projectId,
