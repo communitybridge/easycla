@@ -44,3 +44,39 @@ sleep 230
 mount -a
 service jenkins start
 chkconfig jenkins on
+
+# Install FileBeat Agent
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.4.0-x86_64.rpm
+sudo rpm -vi filebeat-5.4.0-x86_64.rpm
+cat > '/etc/filebeat/filebeat.yml' <<-EOF
+filebeat.prospectors:
+
+- input_type: log
+
+  paths:
+    - /var/log/cloud-init*.log
+    - /var/log/ecs/*.log
+    - /var/log/messages
+    - /var/log/secure
+    - /var/log/yum.log
+    - /var/log/cron
+    - /var/log/maillog
+    - /var/log/docker
+    - /var/log/lastlog
+    - /var/log/audit/*.log
+    - /var/log/jenkins/*.log
+
+#================================ General =====================================
+
+name: production-tools
+tags: ["system"]
+fields:
+  sys_name: engineering-sandboxes
+  sys_env: sandbox
+  sys_region: us-west-2
+
+#================================ Outputs =====================================
+output.logstash:
+  hosts: ["us-west-2.logstash.service.consul:5044"]
+EOF
+service filebeat start
