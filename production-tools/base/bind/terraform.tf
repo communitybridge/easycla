@@ -9,12 +9,15 @@ variable "bind_sg" {
 
 variable "cidr" {}
 
+variable "region" {}
+
 data "template_file" "bind-installation-bash" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
     newrelic_key = "bc34e4b264df582c2db0b453bd43ee438043757c"
     CIDR_PREFIX  = "${replace(var.cidr, ".0/24", ".")}"
+    AWS_REGION   = "${var.region}"
   }
 }
 

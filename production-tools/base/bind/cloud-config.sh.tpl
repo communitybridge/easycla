@@ -5,6 +5,38 @@ echo "license_key: ${newrelic_key}" | sudo tee -a /etc/newrelic-infra.yml
 printf "[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\nenable=1\ngpgcheck=0" | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo
 yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
 
+# Install FileBeat Agent
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.4.0-x86_64.rpm
+sudo rpm -vi filebeat-5.4.0-x86_64.rpm
+cat > '/etc/filebeat/filebeat.yml' <<-EOF
+filebeat.prospectors:
+
+- input_type: log
+
+  paths:
+    - /var/log/cloud-init*.log
+    - /var/log/messages
+    - /var/log/secure
+    - /var/log/yum.log
+    - /var/log/cron
+    - /var/log/maillog
+    - /var/log/lastlog
+
+#================================ General =====================================
+
+name: production-tools
+tags: ["system"]
+fields:
+  sys_name: bind
+  sys_env: production
+  sys_region: ${AWS_REGION}
+
+#================================ Outputs =====================================
+output.logstash:
+  hosts: ["${AWS_REGION}.logstash.service.consul:5044"]
+EOF
+service filebeat start
+
 # Install Bind & NewRelic Infrastructure
 yum install bind bind-utils newrelic-infra -y
 

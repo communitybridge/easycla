@@ -25,6 +25,7 @@ data "template_file" "ecs_cloud_config" {
   vars {
     ecs_cluster_name = "engineering-sandboxes"
     newrelic_key     = "bc34e4b264df582c2db0b453bd43ee438043757c"
+    aws_region       = "${var.region}"
   }
 }
 

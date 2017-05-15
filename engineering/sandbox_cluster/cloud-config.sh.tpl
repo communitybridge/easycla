@@ -23,3 +23,38 @@ service docker start
 
 # Restarting ECS
 start ecs
+
+# Install FileBeat Agent
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.4.0-x86_64.rpm
+sudo rpm -vi filebeat-5.4.0-x86_64.rpm
+cat > '/etc/filebeat/filebeat.yml' <<-EOF
+filebeat.prospectors:
+
+- input_type: log
+
+  paths:
+    - /var/log/cloud-init*.log
+    - /var/log/ecs/*.log
+    - /var/log/messages
+    - /var/log/secure
+    - /var/log/yum.log
+    - /var/log/cron
+    - /var/log/maillog
+    - /var/log/docker
+    - /var/log/lastlog
+    - /var/log/audit/*.log
+
+#================================ General =====================================
+
+name: production-tools
+tags: ["system"]
+fields:
+  sys_name: engineering-sandboxes
+  sys_env: sandbox
+  sys_region: ${aws_region}
+
+#================================ Outputs =====================================
+output.logstash:
+  hosts: ["${aws_region}.logstash.service.consul:5044"]
+EOF
+service filebeat start
