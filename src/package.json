@@ -8,7 +8,8 @@
     "start": "nodemon --ignore /public/assets/dist app.js dev",
     "develop": "node app.js & npm --prefix ./app run ionic:watch ./app",
     "test": "mocha -u tdd",
-    "postinstall": "npm --prefix ./app install ./app"
+    "postinstall": "npm --prefix ./app install ./app",
+    "build": "npm --prefix ./app run ionic:build ./app"
   },
   "author": "",
   "license": "",
