@@ -196,6 +196,7 @@ module "bind" {
   internal_subnets       = "${module.vpc.internal_subnets}"
   bind_sg                = "${module.security_groups.bind}"
   cidr                   = "${var.cidr}"
+  region                 = "${var.region}"
 }
 
 module "registrator" {
