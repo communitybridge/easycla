@@ -3,7 +3,7 @@
 # The Syntax for each container should mimic the docker-compose format.
 containers:
   redis:
-    image: '961082193871.dkr.ecr.us-west-2.amazonaws.com/engineering/redis:latest'
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/redis:latest'
     volumes: ['./logs/redis:/var/log/redis']
   workspace:
     ports: ['%:8081']
