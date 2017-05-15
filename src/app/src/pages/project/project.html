@@ -7,7 +7,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing class="page-project">
+<ion-content padding headerspacing>
 
   <header>
     <ion-grid>
@@ -17,7 +17,7 @@
             <ion-col col-12 col-md-4>
               <div *ngIf="!project.logoRef" text-center>
                 <ion-icon name="image"></ion-icon>
-                <ion-label>Change logo in <a href="/#/project-details/{{project.id}}">Project Details</a></ion-label>
+                <ion-label>Change logo in <a (click)="viewProjectDetails(project.id)">Project Details</a></ion-label>
               </div>
               <div *ngIf="project.logoRef">
                 <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
@@ -72,7 +72,7 @@
           <ion-item>
             <ion-icon name="md-create" item-left large></ion-icon>
             <p>
-              <a href="/#/project-details/{{project.id}}">Project Details</a>
+              <a (click)="viewProjectDetails(project.id)">Project Details</a>
             </p>
           </ion-item>
         </ion-col>

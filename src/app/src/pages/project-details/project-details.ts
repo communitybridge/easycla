@@ -36,10 +36,12 @@ export class ProjectDetailsPage {
     address: string
   };
 
+  memberships: any;
+  membershipsCount: number;
+
   constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
     this.editProject = {};
     this.projectId = navParams.get('projectId');
-    console.log(this.projectId)
     this.getDefaults();
   }
 
@@ -97,6 +99,20 @@ export class ProjectDetailsPage {
       emailAliasType: "",
       address: ""
     };
+
+    this.memberships = [
+      {
+        tier: "Gold",
+        numberOfMembers: "2",
+        annualCost: "$200,000",
+        boardSeat: "Yes"
+      },{
+        tier: "Platinum",
+        numberOfMembers: "8",
+        annualCost: "$600,000",
+        boardSeat: "No"
+      }
+    ];
   }
 
 }

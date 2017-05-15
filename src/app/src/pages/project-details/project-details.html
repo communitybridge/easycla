@@ -126,32 +126,31 @@
       </ion-col>
     </ion-row>
     <ion-row>
-      <ion-col col-4>
-        <ion-item>
-          <ion-label stacked>Tier One</ion-label>
-          <ion-input type="text"></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-3>
-        <ion-item>
-          <ion-label stacked>Annual Cost</ion-label>
-          <ion-input type="number"></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-3>
-        <ion-item>
-          <ion-label stacked>Maximun Granted</ion-label>
-          <ion-input type="number"></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-2>
-        <ion-item>
-          <ion-label stacked>Board Seat</ion-label>
-          <ion-select [(ngModel)]="board-seat">
-            <ion-option value="YES">Yes</ion-option>
-            <ion-option value="NO">No</ion-option>
-          </ion-select>
-        </ion-item>
+      <ion-col col-12>
+        <ion-card >
+          <ion-card-content>
+            <div class="table-responsive-vertical">
+              <table id="table" class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Tier</th>
+                    <th># of Members</th>
+                    <th>Annual Cost</th>
+                    <th>Board Seat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let membership of memberships">
+                    <td data-title="Tier">{{ membership.tier }}</td>
+                    <td data-title="# of Members">{{ membership.numberOfMembers }}</td>
+                    <td data-title="Annual Cost">{{ membership.annualCost }}</td>
+                    <td data-title="Board Seat">{{ membership.boardSeat }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
