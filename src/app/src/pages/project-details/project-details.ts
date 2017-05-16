@@ -71,29 +71,41 @@ export class ProjectDetailsPage {
   }
 
   submitEditProject() {
+    // TODO: WIP
     this.editProject = {
       project_name: this.project_name,
       project_type: this.project_type
     };
     this.cincoService.editProject(this.editProject).subscribe(response => {
       this.navCtrl.push('ProjectPage', {
-        projectId: response
+        projectId: this.projectId
       });
     });
+  }
+
+  cancelEditProject() {
+    this.navCtrl.push('ProjectPage', {
+      projectId: this.projectId
+    });
+  }
+
+  changeLogo(){
+    // TODO: WIP
+    alert("Change Logo");
   }
 
   getDefaults() {
     this.project = {
       id: "",
       name: "",
-      description: "This project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
+      description: "",
       managers: "",
       status: "",
       category: "",
       sector: "",
       url: "",
       startDate: "",
-      logoRef: "https://dummyimage.com/600x250/ffffff/000.png&text=project+logo",
+      logoRef: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",

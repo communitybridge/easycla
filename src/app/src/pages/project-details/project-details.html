@@ -1,29 +1,33 @@
-<ion-header name="edit-project-header">
+<ion-header name="project-details-header">
   <ion-navbar>
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>Edit {{ project.name }} Project Details</ion-title>
+    <ion-title>Edit {{ project.name }} Details</ion-title>
   </ion-navbar>
   <ion-row margin-left margin-top margin-bottom >
     <ion-col col-12>
       <button ion-button (click)="submitEditProject()" color="secondary">SAVE AND FINISH</button>
-      <button ion-button (click)="canelEditProject()" color="gray">CANCEL</button>
+      <button ion-button (click)="cancelEditProject()" color="gray">CANCEL</button>
     </ion-col>
   </ion-row>
 </ion-header>
 
-<ion-content padding class="project-details">
+<ion-content padding name="project-details-content">
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-        <div *ngIf="!project.logoRef" text-center>
+        <div *ngIf="!project.logoRef" name="logo-placeholder" text-center>
           <ion-icon name="image"></ion-icon>
-          <ion-label>CHANGE</ion-label>
+          <div name="change-placeholder">
+            <ion-label (click)="changeLogo()">CHANGE</ion-label>
+          </div>
         </div>
-        <div *ngIf="project.logoRef">
+        <div *ngIf="project.logoRef" name="logo-placeholder" text-center>
           <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
-          <ion-label>CHANGE</ion-label>
+          <div name="change-placeholder">
+            <ion-label (click)="changeLogo()">CHANGE</ion-label>
+          </div>
         </div>
       </ion-col>
     </ion-row>
@@ -115,10 +119,7 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-
-
-  <ion-item-divider color="white"></ion-item-divider>
-
+  <br><br>
   <ion-grid>
     <ion-row margin-top>
       <ion-col col-12>
