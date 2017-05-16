@@ -1,4 +1,4 @@
-if (process.env['NEWRELIC_LICENSE']) require('../../infra/newrelic/newrelic');
+if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var request = require('request');
