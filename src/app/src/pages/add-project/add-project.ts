@@ -5,7 +5,7 @@ import { NavController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 
 @IonicPage({
-  segment: 'project-add'
+  segment: 'add-project'
 })
 @Component({
   selector: 'add-project',
