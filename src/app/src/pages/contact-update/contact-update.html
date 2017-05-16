@@ -17,14 +17,14 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12 class="field-notice">
-        <span>* Changes update SalesForce record</span>
+        <span>* Changes update global record</span>
       </ion-col>
     </ion-row>
     <ion-row>
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Email *</ion-label>
-          <ion-input type="text" [(ngModel)]="contact.email"></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.contact.email"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-6>
@@ -39,19 +39,19 @@
       <ion-col col-12 col-md-3>
         <ion-item>
           <ion-label stacked>Given Name *</ion-label>
-          <ion-input type="text" [(ngModel)]="contact.givenName"></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.contact.givenName"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-3>
         <ion-item>
           <ion-label stacked>Family Name *</ion-label>
-          <ion-input type="text" [(ngModel)]="contact.familyName"></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.contact.familyName"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Phone *</ion-label>
-          <ion-input type="text" [(ngModel)]="contact.phone"></ion-input>
+          <ion-input type="text" [(ngModel)]="contact.contact.phone"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -66,7 +66,7 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Time Zone</ion-label>
-          <ion-select [(ngModel)]="contact.timezone">
+          <ion-select [(ngModel)]="contact.contact.timezone">
             <ion-option value="America/Los_Angeles">America/Los_Angeles</ion-option>
             <ion-option value="America/New_York">America/New_York</ion-option>
           </ion-select>
@@ -77,7 +77,7 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Type *</ion-label>
-          <ion-select [(ngModel)]="contact.type">
+          <ion-select [(ngModel)]="contact.contact.type">
             <ion-option *ngFor="let role of orgContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
           </ion-select>
         </ion-item>
@@ -87,7 +87,7 @@
       <ion-col col-12 col-md-6>
         <ion-item>
           <ion-label stacked>Role</ion-label>
-          <ion-select [(ngModel)]="contact.role">
+          <ion-select [(ngModel)]="contact.type">
             <ion-option *ngFor="let role of memberContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
           </ion-select>
         </ion-item>
@@ -146,14 +146,15 @@
 
     <ion-row>
       <ion-col col-12>
-        <upload-button (notify)='filesNotify($event)' [files]="contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
+        <upload-button (notify)='filesNotify($event)' [files]="contact.contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
       </ion-col>
     </ion-row>
 
     <ion-row>
       <ion-col col-12>
         <ion-item>
-          <ion-textarea [(ngModel)]="contact.bio" placeholder="Bio"></ion-textarea>
+          <ion-label stacked>Bio *</ion-label>
+          <ion-textarea [(ngModel)]="contact.contact.bio"></ion-textarea>
         </ion-item>
       </ion-col>
     </ion-row>

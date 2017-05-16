@@ -14,7 +14,22 @@ export class ContactUpdate {
   projectId: string; // Always Needed
   memberId: string; // Always Needed
   org: any;
-  contact: any; // Should be used when Updating
+  contact: any;
+  /*
+  {
+    id, (roleId)
+    type, (memberContactRole)
+    primaryContact,
+    boardMember,
+    contact: {
+      id, (org contactId)
+      givenName,
+      familyName,
+      email,
+      phone,
+    }
+  }
+   */
   contactId: string;
   roleId: string;
   memberContactRoles: any;
@@ -36,12 +51,16 @@ export class ContactUpdate {
     let originalContact = this.navParams.get('contact');
 
     if (originalContact.id) {
-      this.contactId = originalContact.id;
+      this.roleId = originalContact.id;
     }
 
-    if (originalContact.role) {
-      this.roleId = originalContact.role;
+    if (originalContact.contact.id) {
+      this.contactId = originalContact.contact.id;
     }
+
+    console.log("roleId, contactId");
+    console.log(this.roleId);
+    console.log(this.contactId);
 
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
@@ -58,21 +77,23 @@ export class ContactUpdate {
     // Instantiate member data
     this.org = {
       name: '',
-    }
+    };
     // Instantiate contact data
     this.contact = {
-      email: '',
-      company: '',
-      name: '',
-      phone: '',
-      title: '',
-      timezone: '',
-      role: '',
-      primary: 'no',
-      board: 'no',
-      emailGroups: [],
-      photos: [],
-    }
+      title:"",
+      type:"",
+      primaryContact:false,
+      boardMember:false,
+      contact:{
+        email:"",
+        givenName:"",
+        familyName:"",
+        phone:"",
+        type:"",
+        bio:"",
+      },
+    };
+
   }
 
   getOrgContactRoles() {
@@ -285,42 +306,63 @@ export class ContactUpdate {
       this.contact.boardMember = false;
     }
 
-    if (this.contact.id) {
-      // TODO: fix up roleId logic so it is based off the contact when first recieved and determines if it has been attached to a member.
-      // if (this.roleId) {
-      if (false) {
-        this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
-          if(response) {
-            console.log('updateMemberContact response:');
+    if (this.contactId) {
+      if (this.roleId) {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
+          if (response) {
+            console.log('createOrganizationContact response:');
             console.log(response);
+            // update org contact with response from update
+            // should be the same as what was sent, but we will just be sure
+            this.contact.contact = response;
+            // add as a member contact
+            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.contact).subscribe(response => {
+              if(response) {
+                console.log('updateMemberContact response:');
+                console.log(response);
+              }
+            });
           }
         });
       }
       else {
-        this.cincoService.addMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
           if (response) {
-            console.log('addMemberContact response:');
+            console.log('createOrganizationContact response:');
             console.log(response);
+            // update org contact with response from update
+            // should be the same as what was sent, but we will just be sure
+            this.contact.contact = response;
+            // add as a member contact
+            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
+              if (response) {
+                console.log('addMemberContact response:');
+                console.log(response);
+              }
+            });
           }
         });
       }
     }
     else {
       // Add new contact to organization
-      this.cincoService.createOrganizationContact(this.org.id, this.contact).subscribe(response => {
+      console.log("ts file call to createOrganizationContact");
+      console.log(this.contact);
+      this.cincoService.createOrganizationContact(this.org.id, this.contact.contact).subscribe(response => {
         if (response) {
           console.log('createOrganizationContact response:');
           console.log(response);
-          this.contact.id = response;
+          this.contactId = response;
+          this.contact.contact.id = this.contactId;
           // add to member
-          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contact.id, this.contact).subscribe(response => {
+          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
             if (response) {
               console.log('addMemberContact response:');
               console.log(response);
             }
           });
         }
-      });  
+      });
     }
 
   }
@@ -328,7 +370,7 @@ export class ContactUpdate {
   removeContact() {
     console.log('remove contact');
     console.log(this.contact);
-    this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contact.id).subscribe(response => {
+    this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
       if(response) {
         console.log('removeMemberContact response:');
         console.log(response);
@@ -337,7 +379,7 @@ export class ContactUpdate {
   }
 
   filesNotify(files) {
-    this.contact.photos = files;
+    this.contact.contact.photos = files;
   }
 
 }

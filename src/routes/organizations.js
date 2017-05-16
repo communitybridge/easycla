@@ -7,7 +7,27 @@ var async = require('async');
 
 var cinco = require("../lib/api");
 
+var upload = multer(); // for parsing multipart/form-data
+
 var router = express.Router();
+
+var storageLogoCompany = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+});
+var uploadLogoCompany = multer({ storage: storageLogoCompany });
+var cpUploadLogoCompany = uploadLogoCompany.fields([
+  {name: 'logoCompany', maxCount: 1},
+  {name: 'board_headshot', maxCount: 1 },
+  {name: 'technical_headshot', maxCount: 1 },
+  {name: 'marketing_headshot', maxCount: 1 },
+  {name: 'finance_headshot', maxCount: 1 },
+  {name: 'other_headshot', maxCount: 1 }
+]);
 
 /*
   Organizations:
@@ -61,8 +81,11 @@ router.get('/organizations/:organizationId/contacts', require('connect-ensure-lo
   }
 });
 
-router.post('/organizations/:organizationId/contacts', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.post('/organizations/:organizationId/contacts', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("routes createOrganizationContact call:");
+    console.log("request");
+    console.log(req.body);
     var organizationId = req.params.organizationId;
     var contact = {
       type: req.body.type,
@@ -72,8 +95,12 @@ router.post('/organizations/:organizationId/contacts', require('connect-ensure-l
       email: req.body.email,
       phone: req.body.phone,
     }
+
+    console.log(contact);
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.createOrganizationContact(organizationId, contact, function (err, created, contactId) {
+      console.log("routes createOrganizationContact response:");
+      console.log(contactId);
       return res.json(contactId);
     });
   }
@@ -87,6 +114,31 @@ router.get('/organizations/:organizationId/contacts/:contactId', require('connec
     projManagerClient.getOrganizationContact(organizationId, contactId, function (err, contact) {
       if (err) return res.send('');
       res.send(contact);
+    });
+  }
+});
+
+router.put('/organizations/:organizationId/contacts/:contactId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    console.log("routes createOrganizationContact call:");
+    console.log("request");
+    console.log(req.body);
+    var organizationId = req.params.organizationId;
+    var contactId = req.params.contactId;
+    var contact = {
+      type: req.body.type,
+      givenName: req.body.givenName,
+      familyName: req.body.familyName,
+      bio: req.body.bio,
+      email: req.body.email,
+      phone: req.body.phone,
+    }
+    console.log(contact);
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.updateOrganizationContact(organizationId, contactId, contact, function (err, created, contact) {
+      console.log("routes createOrganizationContact response:");
+      console.log(contact);
+      return res.json(contact);
     });
   }
 });
