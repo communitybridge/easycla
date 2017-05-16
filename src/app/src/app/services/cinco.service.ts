@@ -22,31 +22,6 @@ export class CincoService{
                 .map((res) => res.json());
   }
 
-  updateMemberContact(projectId, memberId, contactId, contact) {
-    console.log('updateMemberContact called');
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('projectId', projectId);
-    body.append('memberId', memberId);
-    body.append('contactId', contactId);
-    body.append('contactEmail', contact.email);
-    body.append('contactBio', contact.bio);
-    body.append('contactPhone', contact.phone);
-    console.log(body);
-    return this.http.post('/update_member_contact', body, headers)
-                .map((res) => res.json());
-  }
-
-  removeMemberContact(projectId, memberId, contactId) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('projectId', projectId);
-    body.append('memberId', memberId);
-    body.append('contactId', contactId);
-    return this.http.post('/remove_member_contact', body, headers)
-                .map((res) => res.json());
-  }
-
   /*
     Projects:
     Resources to expose and manipulate details of projects
@@ -90,7 +65,7 @@ export class CincoService{
   }
 
   getMemberContacts(projectId, memberId) {
-    var response = this.http.get(this.baseUrl + 'projects/' + projectId + '/members/' + memberId + '/contacts')
+    var response = this.http.get(this.baseUrl + '/projects/' + projectId + '/members/' + memberId + '/contacts')
             .map(res => res.json());
     return response;
   }
@@ -98,18 +73,49 @@ export class CincoService{
   addMemberContact(projectId, memberId, contactId, contact) {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let body = new FormData();
-    body.append('boardMember', contact.boardMember);
-    body.append('memberId', memberId);
-    body.append('type', contact.role);
     body.append('id', contact.id);
+    body.append('memberId', memberId);
+    body.append('type', contact.type);
+    body.append('boardMember', contact.boardMember);
     body.append('primaryContact', contact.primaryContact);
-    // body.append('contact', );
+    body.append('contactId', contact.contact.id);
+    body.append('contactGivenName', contact.contact.givenName);
+    body.append('contactFamilyName', contact.contact.familyName);
+    body.append('contactBio', contact.contact.bio);
+    body.append('contactEmail', contact.contact.email);
+    body.append('contactPhone', contact.contact.phone);
+    body.append('contactHeadshotRef', contact.contact.headshotRef);
+    body.append('contactType', contact.contact.type);
     return this.http.post('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId, body, headers)
                 .map((res) => res.json());
   }
 
-  // TODO: DELETE projects/{projectId}/members/{memberId}/contacts/{contactId}/roles/{roleId}
-  // TODO: PUT projects/{projectId}/members/{memberId}/contacts/{contactId}/roles/{roleId}
+  removeMemberContact(projectId, memberId, contactId, roleId) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    return this.http.delete('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, body, headers)
+                .map((res) => res.json());
+  }
+
+  updateMemberContact(projectId, memberId, contactId, roleId, contact) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('id', contact.id);
+    body.append('memberId', memberId);
+    body.append('type', contact.type);
+    body.append('boardMember', contact.boardMember);
+    body.append('primaryContact', contact.primaryContact);
+    body.append('contactId', contact.contact.id);
+    body.append('contactGivenName', contact.contact.givenName);
+    body.append('contactFamilyName', contact.contact.familyName);
+    body.append('contactBio', contact.contact.bio);
+    body.append('contactEmail', contact.contact.email);
+    body.append('contactPhone', contact.contact.phone);
+    body.append('contactHeadshotRef', contact.contact.headshotRef);
+    body.append('contactType', contact.contact.type);
+    return this.http.put('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, body, headers)
+                .map((res) => res.json());
+  }
 
   /*
     Organizations - Contacts:
@@ -145,5 +151,18 @@ export class CincoService{
     var response = this.http.get(this.baseUrl + '/organizations/' + organizationId + '/contacts/' + contactId)
             .map(res => res.json());
     return response;
+  }
+
+  updateOrganizationContact(organizationId, contactId, contact) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('type', contact.type);
+    body.append('givenName', contact.givenName);
+    body.append('familyName', contact.familyName);
+    body.append('bio', contact.bio);
+    body.append('email', contact.email);
+    body.append('phone', contact.phone);
+    return this.http.put('/organizations/' + organizationId + '/contacts/' + contactId, body, headers)
+                .map((res) => res.json());
   }
 }

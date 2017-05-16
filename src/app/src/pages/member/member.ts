@@ -47,6 +47,7 @@ export class MemberPage {
   getMemberContacts(projectId, memberId) {
     this.cincoService.getMemberContacts(projectId, memberId).subscribe(response => {
       if(response) {
+        console.log(response);
         this.memberContacts = response;
       }
     });

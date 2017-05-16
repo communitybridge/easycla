@@ -21,7 +21,7 @@
         </ion-item>
       </ion-col>
       <ion-col col-2>
-        <button type="submit" ion-button class="input-forward-button" (click)="addContact({'email':enteredEmail})">
+        <button type="submit" ion-button class="input-forward-button" (click)="addContact({'contact':{'email':enteredEmail}})">
           <ion-icon name="arrow-forward" large></ion-icon>
         </button>
       </ion-col>
@@ -39,7 +39,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let contact of organizationContacts">
-          <td data-title="Name" (click)="addContact(contact)">
+          <td data-title="Name" (click)="addContact({'contact':contact})">
             {{ contact.givenName }} {{ contact.familyName }}
           </td>
           <td data-title="Email">{{ contact.email }}</td>

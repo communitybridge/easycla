@@ -83,49 +83,6 @@ router.get('/member/:project_id/:member_id', require('connect-ensure-login').ens
   }
 });
 
-router.post('/update_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("/update_member_contact");
-    console.log("req.body");
-    console.log(req.body);
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var projectId = req.body.projectId;
-    var memberId = req.body.memberId;
-    var contactId = req.body.contactId;
-    console.log("nodejs reloaded!");
-    var updatedContact = {
-    //   type: contact.type,
-    //   givenName: contact.givenName,
-    //   familyName: contact.familyName,
-      bio: req.body.contactBio,
-      email: req.body.contactEmail,
-      phone: req.body.contactPhone,
-    //   headshotRef: contact.headshotRef,
-    };
-    console.log(updatedContact);
-    projManagerClient.updateContactFromMember(projectId, memberId, contactId, updatedContact, function (err, created, contact) {
-      console.log("/update_member_contact success");
-      return res.json(contact);
-    });
-  }
-});
-
-router.post('/remove_member_contact', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("/update_member_contact");
-    console.log("req.body");
-    console.log(req.body);
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var projectId = req.body.projectId;
-    var memberId = req.body.memberId;
-    var contactId = req.body.contactId;
-    projManagerClient.removeContactFromMember(projectId, memberId, contactId, function (err, created, contact) {
-      console.log("/remove_member_contact success");
-      return res.json(contact);
-    });
-  }
-});
-
 router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.project_id;
@@ -197,85 +154,6 @@ router.get('/edit_member/:project_id/:member_id', require('connect-ensure-login'
   }
 });
 
-router.post('/edit_member/:project_id/:organization_id/:member_id', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projectId = req.params.project_id;
-    var organizationId = req.params.organization_id;
-    var memberId = req.params.member_id;
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    var startDate = "";
-    var renewalDate = "";
-    if (req.body.start_date) startDate = new Date(req.body.start_date).toISOString();
-    if (req.body.renewal_date) renewalDate = new Date(req.body.renewal_date).toISOString();
-    var logoCompanyFileName = "";
-    if(req.files){
-      if(req.files.logoCompany) logoCompanyFileName = req.files.logoCompany[0].originalname;
-      else logoCompanyFileName = req.body.old_logoRef;
-    }
-    //country code must be exactly 2 Alphabetic characters or null
-    var headquartersCountry = req.body.headquarters_country;
-    if(headquartersCountry == "") headquartersCountry = null;
-
-    var billingCountry = req.body.billing_country;
-    if(billingCountry == "") billingCountry = null;
-
-    var mainThoroughfare = req.body.headquarters_address_line_1 + " /// " + req.body.headquarters_address_line_2;
-    var billingThoroughfare = req.body.billing_address_line_1 + " /// " + req.body.billing_address_line_2;
-
-    var updatedOrganization = {
-      id: organizationId,
-      name: req.body.company_name,
-      addresses: [
-        {
-          type: "MAIN",
-          address: {
-            country: headquartersCountry,
-            administrativeArea: req.body.headquarters_state,
-            localityName: req.body.headquarters_city,
-            postalCode: req.body.headquarters_zip_code,
-            phone: req.body.headquarters_phone,
-            thoroughfare: mainThoroughfare
-          }
-        },
-        {
-          type: "BILLING",
-          address: {
-            country: billingCountry,
-            administrativeArea: req.body.billing_state,
-            localityName: req.body.billing_city,
-            postalCode: req.body.billing_zip_code,
-            phone: req.body.billing_phone,
-            thoroughfare: billingThoroughfare
-          }
-        }
-      ],
-      logoRef : logoCompanyFileName
-    }
-    var updatedMember = {
-      tier: {
-        type: req.body.membership_tier,
-        qualifier: 1 // Optional Tier Level
-      },
-      startDate: startDate,
-      renewalDate: renewalDate
-    }
-    projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
-      projManagerClient.updateMember(projectId, memberId, updatedMember, function (err, updated, updatedMember) {
-        var updatedContacts = JSON.parse(req.body.updatedContacts);
-        async.forEach(updatedContacts, function (eachUpdatedContact, callback){
-          // pass each contactId
-          projManagerClient.updateContactFromMember(projectId, memberId, eachUpdatedContact.id, eachUpdatedContact, function (err, udpated, contactId) {
-            callback();
-          });
-        }, function(err) {
-          // Contacts iteration done.
-          return res.redirect('/member/' + projectId + '/' + memberId);
-        });
-      });
-    });
-  }
-});
-
 /*
   Projects - Members - Contacts:
   Resources for getting and manipulating contacts of project members
@@ -311,11 +189,75 @@ router.post('/projects/:projectId/members/:memberId/contacts/:contactId', requir
     var memberId = req.params.memberId;
     var contactId = req.params.contactId;
     console.log(req.body);
-    var contact = req.body;
+    var memberContact = {
+      id: req.body.id,
+      memberId: req.body.memberId,
+      type: req.body.type,
+      primaryContact: req.body.primaryContact,
+      boardMember: req.body.boardMember,
+      contact: {
+        id: req.body.contactId,
+        email: req.body.contactEmail,
+        givenName: req.body.contactGivenName,
+        familyName: req.body.contactFamilyName,
+        // title: req.body.contactTitle,
+        phone: req.body.contactPhone,
+        type: req.body.contactType,
+        bio: req.body.contactBio,
+      },
+    };
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.addMemberContact(projectId, memberId, contactId, contact, function (err, created, obj) {
+    projManagerClient.addMemberContact(projectId, memberId, contactId, memberContact, function (err, created, obj) {
       console.log("addMemberContact success");
       return res.json(obj);
+    });
+  }
+});
+
+router.delete('/projects/:projectId/members/:memberId/contacts/:contactId/roles/:roleId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.projectId;
+    var memberId = req.params.memberId;
+    var contactId = req.params.contactId;
+    var roleId = req.params.roleId;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.removeContactFromMember(projectId, memberId, contactId, roleId, function (err, removed) {
+      console.log("remove contact from member");
+      console.log(removed);
+      return res.json(removed);
+    });
+  }
+});
+
+router.put('/projects/:projectId/members/:memberId/contacts/:contactId/roles/:roleId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+
+    var projectId = req.params.projectId;
+    var memberId = req.params.memberId;
+    var contactId = req.params.contactId;
+    var roleId = req.params.roleId;
+    var memberContact = {
+      id: req.body.id,
+      memberId: req.body.memberId,
+      type: req.body.type,
+      primaryContact: req.body.primaryContact,
+      boardMember: req.body.boardMember,
+      contact: {
+        id: req.body.contactId,
+        email: req.body.contactEmail,
+        givenName: req.body.contactGivenName,
+        familyName: req.body.contactFamilyName,
+        // title: req.body.contactTitle,
+        phone: req.body.contactPhone,
+        type: req.body.contactType,
+        bio: req.body.contactBio,
+      },
+    };
+    console.log(memberContact);
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.updateMemberContact(projectId, memberId, contactId, roleId, memberContact, function (err, created, contact) {
+      console.log("/update_member_contact success");
+      return res.json(contact);
     });
   }
 });
