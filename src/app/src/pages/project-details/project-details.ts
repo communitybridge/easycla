@@ -65,7 +65,7 @@ export class ProjectDetailsPage {
         this.project.agreementRef = response.agreementRef;
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address;
+        this.project.address = response.address.address;
       }
     });
   }
