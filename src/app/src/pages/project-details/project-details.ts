@@ -24,6 +24,7 @@ export class ProjectDetailsPage {
     name: string,
     description: string,
     managers: string,
+    members: any,
     status: string,
     category: string,
     sector: string,
@@ -50,12 +51,14 @@ export class ProjectDetailsPage {
   };
 
   getProject(projectId) {
-    this.cincoService.getProject(projectId).subscribe(response => {
+    let getMembers = true;
+    this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
         this.project.id = response.id;
         this.project.name = response.name;
         this.project.description = response.description;
         this.project.managers = response.managers;
+        this.project.members = response.members
         this.project.status = response.status;
         this.project.category = response.category;
         this.project.sector = response.sector;
@@ -100,6 +103,7 @@ export class ProjectDetailsPage {
       name: "",
       description: "",
       managers: "",
+      members: "",
       status: "",
       category: "",
       sector: "",
