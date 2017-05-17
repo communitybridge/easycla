@@ -4,16 +4,15 @@ import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
 
 @IonicPage({
-  segment: 'projects-list'
+  segment: 'projects'
 })
 @Component({
-  selector: 'projects-list',
+  selector: 'projects',
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
   loading: boolean;
   allProjects: any;
-  // projectId: String;
   pushAddProjectPage;
   numberOfContracts: {
     new: number,

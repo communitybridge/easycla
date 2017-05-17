@@ -7,7 +7,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing>
+<ion-content padding headerspacing class="page-project">
 
   <header>
     <ion-grid>
@@ -15,23 +15,52 @@
         <ion-col col-12 col-md-9>
           <ion-row>
             <ion-col col-12 col-md-4>
-              <img src="{{ project.icon }}" alt="{{ project.name }} logo"/>
+              <div *ngIf="!project.logoRef" text-center>
+                <ion-icon name="image"></ion-icon>
+                <ion-label>Change logo in <a href="/#/project-details/{{project.id}}">Project Details</a></ion-label>
+              </div>
+              <div *ngIf="project.logoRef">
+                <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+              </div>
             </ion-col>
             <ion-col col-12 col-md-8>
-              <h1>{{ project.title }}</h1>
+              <h1>{{ project.name }}</h1>
               <p>{{ project.description }}</p>
             </ion-col>
             <ion-col col-12>
               <ion-row>
-                <ion-col *ngFor="let data of project.datas" col-12 col-md-4>
-                  <span>{{ data.label }}:</span>
-                  <span>{{ data.value }}</span>
+                <ion-col col-12 col-md-4>
+                  <ion-label>
+                    <strong>Budget: </strong> N/A
+                  </ion-label>
+                  <ion-label>
+                    Current: N/A
+                  </ion-label>
+                </ion-col>
+                <ion-col col-12 col-md-4>
+                  <ion-label>
+                    Categories: {{ project.sector }} <span *ngIf="!project.sector">N/A</span>
+                  </ion-label>
+                </ion-col>
+                <ion-col col-12 col-md-4>
+                  <ion-label>
+                    Launched: {{ project.startDate }} <span *ngIf="!project.startDate">N/A</span>
+                  </ion-label>
+                  <ion-label>
+                    Members: {{ membersCount }}
+                  </ion-label>
                 </ion-col>
               </ion-row>
             </ion-col>
           </ion-row>
         </ion-col>
         <ion-col col-12 col-md-3>
+          <ion-item>
+            <ion-icon name="people" item-left large></ion-icon>
+            <p>
+              LF Users
+            </p>
+          </ion-item>
           <ion-item (click)="openAssetManagementModal()">
             <ion-icon name="folder" item-left large></ion-icon>
             <p>Project Files</p>
@@ -41,8 +70,10 @@
             <p>Email Lists</p>
           </ion-item>
           <ion-item>
-            <ion-icon name="information-circle" item-left large></ion-icon>
-            <p>Project Details</p>
+            <ion-icon name="md-create" item-left large></ion-icon>
+            <p>
+              <a href="/#/project-details/{{project.id}}">Project Details</a>
+            </p>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -52,41 +83,34 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title>
-              Members
-            </ion-card-title>
-            <div class="table-responsive-vertical">
-              <table id="table" class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Alert</th>
-                    <th>Company</th>
-                    <th>Level</th>
-                    <th>Status</th>
-                    <th>Annual Dues</th>
-                    <th>Renewal Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let member of members">
-                    <td data-title="Alert">
-                      <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
-                      <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
-                      <span *ngIf="member.alert == ''" class="circle-null"></span>
-                    </td>
-                    <td data-title="Company" (click)="memberSelected($event, member.id)">{{ member.org.name }}</td>
-                    <td data-title="Level">{{ member.tier.type }}</td>
-                    <td data-title="Status">Status</td>
-                    <td data-title="Annual Dues">Annual Dues</td>
-                    <td data-title="Renewal Date">{{ member.renewalDate }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </ion-card-content>
-        </ion-card>
+        <div class="table-responsive-vertical">
+          <table id="table" class="table table-hover">
+            <thead>
+              <tr>
+                <th>Alert</th>
+                <th>Company</th>
+                <th>Level</th>
+                <th>Invoices Status</th>
+                <th>Annual Dues</th>
+                <th>Renewal Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let member of members">
+                <td data-title="Alert">
+                  <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
+                  <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
+                  <span *ngIf="member.alert == ''" class="circle-null"></span>
+                </td>
+                <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
+                <td data-title="Level">{{ member.tier.type }}</td>
+                <td data-title="Status">{{ member.invoices[0].status }}</td>
+                <td data-title="Annual Dues">N/A</td>
+                <td data-title="Renewal Date">{{ member.renewalDate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </ion-col>
     </ion-row>
   </ion-grid>

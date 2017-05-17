@@ -1,9 +1,10 @@
 /* -- Material Design Table style -------------- */
+.page-project {
 
-
-
-page-project {
-
+  a {
+    text-decoration:none;
+  }
+  
   .circle-alert,
   .circle-notice,
   .circle-null {
@@ -27,4 +28,7 @@ page-project {
     background-color: null;
   }
 
+  ion-icon{
+    font-size: 90px;
+  }
 }
