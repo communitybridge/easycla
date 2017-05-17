@@ -60,7 +60,6 @@ export class ContactUpdate {
     };
     // Instantiate contact data
     this.contact = {
-      title:"",
       type:"",
       primaryContact:false,
       boardMember:false,
@@ -68,6 +67,7 @@ export class ContactUpdate {
         email:"",
         givenName:"",
         familyName:"",
+        title:"",
         phone:"",
         type:"",
         bio:"",
