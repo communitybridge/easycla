@@ -16,6 +16,7 @@ export class SearchAddContact {
   org: any;
   enteredEmail: string;
   organizationContacts: any;
+  orgContactRoles: any;
 
   constructor(
     public navCtrl: NavController,
@@ -34,17 +35,26 @@ export class SearchAddContact {
 
   ngOnInit() {
     let orgId = this.org.id;
+    this.getOrgContactRoles();
     this.getOrganizationContacts(orgId);
   }
 
   getDefaults() {
-
+    this.orgContactRoles = {};
   }
 
   getOrganizationContacts(orgId) {
     this.cincoService.getOrganizationContacts(orgId).subscribe(response => {
       if(response) {
         this.organizationContacts = response;
+      }
+    });
+  }
+
+  getOrgContactRoles() {
+    this.cincoService.getOrganizationContactTypes().subscribe(response => {
+      if(response) {
+        this.orgContactRoles = response;
       }
     });
   }

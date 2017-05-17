@@ -529,7 +529,7 @@ module.exports = {
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
             next(err, false);
-          } else if (res.statusCode == 201) {
+          } else if (res.statusCode == 200) {
             var obj = JSON.parse(body);
             next(null, true, obj);
           } else {
