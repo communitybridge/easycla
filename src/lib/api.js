@@ -245,10 +245,6 @@ module.exports = {
         });
       },
 
-      // TODO: GET project/categories
-
-      // TODO: GET project/sectors
-
       getAllProjects: function (next) {
         var opts = {
           method: 'GET',
@@ -335,12 +331,6 @@ module.exports = {
           }
         });
       },
-
-      // TODO: GET projects/{projectId}/config
-
-      // TODO: PUT projects/{projectId}/managers
-
-      // TODO: POST projects/{projectId}/logo
 
       /*
         Email Aliases:
@@ -489,8 +479,6 @@ module.exports = {
             next(err, false);
           } else if (res.statusCode == 200) {
             var contacts = JSON.parse(body);
-            console.log("getMemberContacts");
-            console.log(contacts);
             next(null, contacts);
           } else {
             next(errors.fromResponse(res, 'Unable to get contacts from member with id of [' + memberId + '] from Project [' + projectId + ']'), false);
@@ -505,10 +493,6 @@ module.exports = {
           body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
-          console.log("Add member contact response");
-          console.log(err);
-          console.log(res);
-          console.log(body);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 201) {
@@ -520,15 +504,12 @@ module.exports = {
         });
       },
 
-      removeContactFromMember: function (projectId, memberId, contactId, roleId, next) {
+      removeMemberContact: function (projectId, memberId, contactId, roleId, next) {
         var opts = {
           method: 'DELETE',
           path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId,
         };
         makeSignedRequest(opts, function (err, res) {
-          console.log("cinco api removeContactFromMember:");
-          console.log(err);
-          console.log(res);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 204) {
@@ -641,7 +622,7 @@ module.exports = {
       getOrganizationContactTypes: function (next) {
         var opts = {
           method: 'GET',
-          path: 'organizations/contacts/types/'
+          path: 'organizations/contacts/types'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -665,8 +646,6 @@ module.exports = {
             next(err);
           } else if (res.statusCode == 200) {
             var contacts = JSON.parse(body);
-            console.log("org contacts:");
-            console.log(contacts);
             next(null, contacts);
           } else {
             next(errors.fromResponse(res, 'Unable to get contacts from organization with id of.[' + organizationId + ']'));
@@ -675,18 +654,12 @@ module.exports = {
       },
 
       createOrganizationContact: function (organizationId, contact, next) {
-        console.log("api createOrganizationContact:");
-        console.log(contact);
         var opts = {
           method: 'POST',
           path: 'organizations/' + organizationId + '/contacts/',
           body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
-          console.log("api createOrganizationContact response:");
-          console.log(err);
-          console.log(res);
-          console.log(body);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 201) {
@@ -716,18 +689,12 @@ module.exports = {
       },
 
       updateOrganizationContact: function (organizationId, contactId, contact, next) {
-        console.log("api createOrganizationContact:");
-        console.log(contact);
         var opts = {
           method: 'PUT',
           path: 'organizations/' + organizationId + '/contacts/' + contactId,
           body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
-          console.log("api updateOrganizationContact response:");
-          console.log(err);
-          console.log(res);
-          console.log(body);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 200) {

@@ -78,7 +78,7 @@
         <ion-item>
           <ion-label stacked>Type *</ion-label>
           <ion-select [(ngModel)]="contact.contact.type">
-            <ion-option *ngFor="let role of orgContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
+            <ion-option *ngFor="let role of keysGetter(orgContactRoles)" value="{{ role }}">{{ orgContactRoles[role] }}</ion-option>
           </ion-select>
         </ion-item>
       </ion-col>
@@ -88,7 +88,7 @@
         <ion-item>
           <ion-label stacked>Role</ion-label>
           <ion-select [(ngModel)]="contact.type">
-            <ion-option *ngFor="let role of memberContactRoles" value="{{ role.key }}">{{ role.pretty_value }}</ion-option>
+            <ion-option *ngFor="let role of keysGetter(memberContactRoles)" value="{{ role }}">{{ memberContactRoles[role] }}</ion-option>
           </ion-select>
         </ion-item>
       </ion-col>
@@ -97,11 +97,11 @@
           <ion-col col-12 col-md-6>
             <ion-item class="contact-primary">
               <ion-label stacked>Primary</ion-label>
-              <ion-icon *ngIf="contact.primaryContact=='yes'" name="star" item-left></ion-icon>
-              <ion-icon *ngIf="contact.primaryContact!='yes'" name="star-outline" item-left></ion-icon>
+              <ion-icon *ngIf="contact.primaryContact=='true'" name="star" item-left></ion-icon>
+              <ion-icon *ngIf="contact.primaryContact!='true'" name="star-outline" item-left></ion-icon>
               <ion-select [(ngModel)]="contact.primaryContact" (ngModelChange)="primarySelectChanged($event)">
-                <ion-option value="yes">Yes</ion-option>
-                <ion-option value="no">No</ion-option>
+                <ion-option value="true">Yes</ion-option>
+                <ion-option value="false">No</ion-option>
               </ion-select>
             </ion-item>
           </ion-col>
@@ -110,8 +110,8 @@
               <ion-label stacked>Board</ion-label>
               <ion-icon name="contact" item-left></ion-icon>
               <ion-select [(ngModel)]="contact.boardMember" (ngModelChange)="boardSelectChanged($event)">
-                <ion-option value="yes">Yes</ion-option>
-                <ion-option value="no">No</ion-option>
+                <ion-option value="true">Yes</ion-option>
+                <ion-option value="false">No</ion-option>
               </ion-select>
             </ion-item>
           </ion-col>

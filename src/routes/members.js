@@ -188,7 +188,6 @@ router.post('/projects/:projectId/members/:memberId/contacts/:contactId', requir
     var projectId = req.params.projectId;
     var memberId = req.params.memberId;
     var contactId = req.params.contactId;
-    console.log(req.body);
     var memberContact = {
       id: req.body.id,
       memberId: req.body.memberId,
@@ -208,7 +207,6 @@ router.post('/projects/:projectId/members/:memberId/contacts/:contactId', requir
     };
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.addMemberContact(projectId, memberId, contactId, memberContact, function (err, created, obj) {
-      console.log("addMemberContact success");
       return res.json(obj);
     });
   }
@@ -221,9 +219,7 @@ router.delete('/projects/:projectId/members/:memberId/contacts/:contactId/roles/
     var contactId = req.params.contactId;
     var roleId = req.params.roleId;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.removeContactFromMember(projectId, memberId, contactId, roleId, function (err, removed) {
-      console.log("remove contact from member");
-      console.log(removed);
+    projManagerClient.removeMemberContact(projectId, memberId, contactId, roleId, function (err, removed) {
       return res.json(removed);
     });
   }
@@ -231,7 +227,6 @@ router.delete('/projects/:projectId/members/:memberId/contacts/:contactId/roles/
 
 router.put('/projects/:projectId/members/:memberId/contacts/:contactId/roles/:roleId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-
     var projectId = req.params.projectId;
     var memberId = req.params.memberId;
     var contactId = req.params.contactId;
@@ -253,10 +248,8 @@ router.put('/projects/:projectId/members/:memberId/contacts/:contactId/roles/:ro
         bio: req.body.contactBio,
       },
     };
-    console.log(memberContact);
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.updateMemberContact(projectId, memberId, contactId, roleId, memberContact, function (err, created, contact) {
-      console.log("/update_member_contact success");
       return res.json(contact);
     });
   }

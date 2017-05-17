@@ -55,13 +55,16 @@ export class SearchAddContact {
   }
 
   addContact(contact) {
-    console.log("addContact");
-    console.log(contact);
     let modal = this.modalCtrl.create('ContactUpdate', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.org,
       contact: contact,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      let orgId = this.org.id;
+      this.getOrganizationContacts(orgId);
     });
     modal.present();
   }

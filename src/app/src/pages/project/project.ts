@@ -73,10 +73,8 @@ export class ProjectPage {
   }
 
   getProjectMembers(projectId) {
-    console.log("getProjectMembers:");
     this.cincoService.getProjectMembers(projectId).subscribe(response => {
       if(response) {
-        console.log(response);
         this.members = response;
       }
     });
