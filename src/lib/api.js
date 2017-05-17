@@ -226,7 +226,7 @@ module.exports = {
       getProject: function (projectId, next) {
         var opts = {
           method: 'GET',
-          path: 'projects/' + projectId + '/'
+          path: 'projects/' + projectId
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {

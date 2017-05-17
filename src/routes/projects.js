@@ -198,6 +198,7 @@ router.get('/get_all_projects', require('connect-ensure-login').ensureLoggedIn('
 router.get('/get_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.id;
+    if(req.query.members) { projectId = projectId + '?members=' + req.query.members }
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist

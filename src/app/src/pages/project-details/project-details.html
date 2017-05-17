@@ -104,18 +104,30 @@
           <ion-input type="text" [(ngModel)]="project.address.thoroughfare"></ion-input>
         </ion-item>
       </ion-col>
-    </ion-row>
-    <ion-row>
-      <ion-col col-4>
-        <ion-item>
-          <ion-label stacked>Country</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.country"></ion-input>
-        </ion-item>
-      </ion-col>
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Zip Code</ion-label>
           <ion-input type="text" [(ngModel)]="project.address.postalCode"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>City</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.localityName"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>State</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.administrativeArea"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Country</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.country"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -143,18 +155,18 @@
               <table id="table" class="table table-hover">
                 <thead>
                   <tr>
+                    <th>Company</th>
                     <th>Tier</th>
-                    <th># of Members</th>
-                    <th>Annual Cost</th>
-                    <th>Board Seat</th>
+                    <th>Product</th>
+                    <th>Annual Dues</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let membership of memberships">
-                    <td data-title="Tier">{{ membership.tier }}</td>
-                    <td data-title="# of Members">{{ membership.numberOfMembers }}</td>
-                    <td data-title="Annual Cost">{{ membership.annualCost }}</td>
-                    <td data-title="Board Seat">{{ membership.boardSeat }}</td>
+                  <tr *ngFor="let member of project.members">
+                    <td data-title="Company">{{ member.org.name }}</td>
+                    <td data-title="Tier">{{ member.tier }}</td>
+                    <td data-title="Product">{{ member.product }}</td>
+                    <td data-title="Annual Dues">{{ member.annualDues }}</td>
                   </tr>
                 </tbody>
               </table>
