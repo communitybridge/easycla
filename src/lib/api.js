@@ -206,6 +206,45 @@ module.exports = {
         });
       },
 
+      /*
+        Projects:
+        Resources to expose and manipulate details of projects
+       */
+
+      getMyProjects: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'project/'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var projects = JSON.parse(body);
+            next(null, projects);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get projects managed by logged in user.'));
+          }
+        });
+      },
+
+      getProjectStatuses: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'project/status'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var statuses = JSON.parse(body);
+            next(null, statuses);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get map of valid project status values.'));
+          }
+        });
+      },
+
       getAllProjects: function (next) {
         var opts = {
           method: 'GET',
@@ -219,23 +258,6 @@ module.exports = {
             next(null, projects);
           } else {
             next(errors.fromResponse(res, 'Unable to get all projects.'));
-          }
-        });
-      },
-
-      getProject: function (projectId, next) {
-        var opts = {
-          method: 'GET',
-          path: 'projects/' + projectId
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var proj = JSON.parse(body);
-            next(null, proj);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get project with id of [' + projectId + ']'));
           }
         });
       },
@@ -274,6 +296,23 @@ module.exports = {
         });
       },
 
+      getProject: function (projectId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'projects/' + projectId + '/'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var proj = JSON.parse(body);
+            next(null, proj);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get project with id of [' + projectId + ']'));
+          }
+        });
+      },
+
       updateProject: function (updatedProperties, next) {
         var body = JSON.stringify(updatedProperties);
         var opts = {
@@ -293,22 +332,10 @@ module.exports = {
         });
       },
 
-      getMyProjects: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'project/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var projects = JSON.parse(body);
-            next(null, projects);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get projects managed by logged in user.'));
-          }
-        });
-      },
+      /*
+        Email Aliases:
+        Resources for working with email aliases of projects
+       */
 
       getEmailAliases: function (projectId, next) {
         var opts = {
@@ -381,56 +408,27 @@ module.exports = {
         });
       },
 
-      getMemberCompanies: function (projectId, next) {
-        var opts = {
-          method: 'GET',
-          path: 'projects/' + projectId + '/members'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var memberCompanies = JSON.parse(body);
-            next(null, memberCompanies);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get member companies from project with id of [' + projectId + ']'));
-          }
-        });
-      },
+      /*
+        Projects - Members:
+        Resources for getting details about project members
+       */
 
-      addMemberToProject: function (projectId, newMember , next) {
-        var opts = {
-          method: 'POST',
-          path: 'projects/' + projectId + '/members/',
-          body: JSON.stringify(newMember)
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 201) {
-            var obj = JSON.parse(body);
-            next(null, true, obj.id);
-          } else {
-            next(errors.fromResponse(res, 'Unable to add member to project with id of [' + projectId + ']'), false);
-          }
-        });
-      },
-
-      removeMemberFromProject: function (projectId, memberId, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'projects/' + projectId + '/members/' + memberId,
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 204) {
-            next(null, true);
-          } else {
-            next(errors.fromResponse(res, 'Unable to remove member [' + memberId + '] for project with id of [' + projectId + ']'), false);
-          }
-        });
-      },
+       getProjectMembers: function (projectId, next) {
+         var opts = {
+           method: 'GET',
+           path: 'projects/' + projectId + '/members/'
+         };
+         makeSignedRequest(opts, function (err, res, body) {
+           if (err) {
+             next(err);
+           } else if (res.statusCode == 200) {
+             var memberCompanies = JSON.parse(body);
+             next(null, memberCompanies);
+           } else {
+             next(errors.fromResponse(res, 'Unable to get member companies from project with id of [' + projectId + ']'));
+           }
+         });
+       },
 
       getMemberFromProject: function (projectId, memberId, next) {
         var opts = {
@@ -449,46 +447,67 @@ module.exports = {
         });
       },
 
-      updateMember: function (projectId, memberId, updatedProperties , next) {
+      /*
+        Projects - Members - Contacts:
+        Resources for getting and manipulating contacts of project members
+       */
+
+      getMemberContactRoles: function (next) {
         var opts = {
-          method: 'PATCH',
-          path: 'projects/' + projectId + '/members/' + memberId,
-          body: JSON.stringify(updatedProperties)
+          method: 'GET',
+          path: 'project/members/contacts/types'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var roles = JSON.parse(body);
+            next(null, roles);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get member contact roles.'));
+          }
+        });
+      },
+
+      getMemberContacts: function (projectId, memberId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/',
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
             next(err, false);
           } else if (res.statusCode == 200) {
-            var updatedMember = JSON.parse(body);
-            next(null, true, updatedMember);
+            var contacts = JSON.parse(body);
+            next(null, contacts);
           } else {
-            next(errors.fromResponse(res, 'Unable to update member company with id of [' + memberId + '] from project with id of [' + projectId + ']'), false);
+            next(errors.fromResponse(res, 'Unable to get contacts from member with id of [' + memberId + '] from Project [' + projectId + ']'), false);
           }
         });
       },
 
-      addContactToMember: function (projectId, memberId, newContact , next) {
+      addMemberContact: function (projectId, memberId, contactId, contact, next) {
         var opts = {
           method: 'POST',
-          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/',
-          body: JSON.stringify(newContact)
+          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId,
+          body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
             next(err, false);
           } else if (res.statusCode == 201) {
             var obj = JSON.parse(body);
-            next(null, true, obj.id);
+            next(null, true, obj);
           } else {
-            next(errors.fromResponse(res, 'Unable to add contact to member with id of [' + memberId + '] from Project [' + projectId + ']'), false);
+            next(errors.fromResponse(res, 'Unable to add contact with id of [' + contactId + '] to member with id of [' + memberId + '] from Project [' + projectId + ']'), false);
           }
         });
       },
 
-      removeContactFromMember: function (projectId, memberId, contactId, next) {
+      removeMemberContact: function (projectId, memberId, contactId, roleId, next) {
         var opts = {
           method: 'DELETE',
-          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId,
+          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId,
         };
         makeSignedRequest(opts, function (err, res) {
           if (err) {
@@ -496,26 +515,47 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, true);
           } else {
-            next(errors.fromResponse(res, 'Unable to remove contact [' + contactId + '] from member with id of [' + memberId + '] for project with id of [' + projectId + ']'), false);
+            next(errors.fromResponse(res, 'Unable to remove contact [' + contactId + '] with role [' + roleId + '] from member with id of [' + memberId + '] for project with id of [' + projectId + ']'), false);
           }
         });
       },
 
-      updateContactFromMember: function (projectId, memberId, contactId, updatedContact, next) {
-        var body = JSON.stringify(updatedContact);
+      updateMemberContact: function (projectId, memberId, contactId, roleId, contact, next) {
         var opts = {
           method: 'PUT',
-          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId,
-          body: body
+          path: 'projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId,
+          body: JSON.stringify(contact)
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 200) {
+            var obj = JSON.parse(body);
+            next(null, true, obj);
+          } else {
+            next(errors.fromResponse(res, 'Unable to add contact with id of [' + contactId + '] to member with id of [' + memberId + '] from Project [' + projectId + ']'), false);
+          }
+        });
+      },
+
+      /*
+        Organizations:
+        Resources to expose and manipulate organizations
+       */
+
+      getAllOrganizations: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'organizations/'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
             next(err);
           } else if (res.statusCode == 200) {
-            var contact = JSON.parse(body);
-            next(null, true, contact);
+            var organizations = JSON.parse(body);
+            next(null, organizations);
           } else {
-            next(errors.fromResponse(res, "Unable to Update Contact with properties: " + body), false);
+            next(errors.fromResponse(res, 'Unable to get all organizations.'));
           }
         });
       },
@@ -534,23 +574,6 @@ module.exports = {
             next(null, true, obj.id);
           } else {
             next(errors.fromResponse(res, 'Organization not created'), false);
-          }
-        });
-      },
-
-      getAllOrganizations: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'organizations/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var organizations = JSON.parse(body);
-            next(null, organizations);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get all organizations.'));
           }
         });
       },
@@ -590,6 +613,103 @@ module.exports = {
           }
         });
       },
+
+      /*
+        Organizations - Contacts:
+        Resources for getting and manipulating contacts of organizations
+       */
+
+      getOrganizationContactTypes: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'organizations/contacts/types'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var contactTypes = JSON.parse(body);
+            next(null, contactTypes);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get organization contact types.'));
+          }
+        });
+      },
+
+      getOrganizationContacts: function (organizationId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'organizations/' + organizationId + '/contacts/'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var contacts = JSON.parse(body);
+            next(null, contacts);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get contacts from organization with id of.[' + organizationId + ']'));
+          }
+        });
+      },
+
+      createOrganizationContact: function (organizationId, contact, next) {
+        var opts = {
+          method: 'POST',
+          path: 'organizations/' + organizationId + '/contacts/',
+          body: JSON.stringify(contact)
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 201) {
+            var obj = JSON.parse(body);
+            next(null, true, obj.id);
+          } else {
+            next(errors.fromResponse(res, 'Organization not created'), false);
+          }
+        });
+      },
+
+      getOrganizationContact: function (organizationId, contactId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'organizations/' + organizationId + '/contacts/' + contactId
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var contact = JSON.parse(body);
+            next(null, contact);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get contacts from organization with id of.[' + organizationId + ']'));
+          }
+        });
+      },
+
+      updateOrganizationContact: function (organizationId, contactId, contact, next) {
+        var opts = {
+          method: 'PUT',
+          path: 'organizations/' + organizationId + '/contacts/' + contactId,
+          body: JSON.stringify(contact)
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 200) {
+            var contact = JSON.parse(body);
+            next(null, true, contact);
+          } else {
+            next(errors.fromResponse(res, 'Organization not created'), false);
+          }
+        });
+      },
+
+      /*
+        Mailing Lists:
+        Resources for working with mailing lists of projects
+       */
 
       getMailingLists: function (projectId, next) {
         var opts = {
