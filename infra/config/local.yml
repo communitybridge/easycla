@@ -2,6 +2,9 @@
 # The workspace container will be added and configured automatically.
 # The Syntax for each container should mimic the docker-compose format.
 containers:
+  redis:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/redis:latest'
+    volumes: ['./logs/redis:/var/log/redis']
   workspace:
     ports: ['%:8081']
 
@@ -11,6 +14,8 @@ environment:
     console_integration_user: 'cinco'
     console_integration_password: 'cinco'
     encryption_sauce: 'WqNGjk@%ym7eRsXGAZYskF'
+    redis_host: 'redis'
+    redis_port: '6379'
 
 sequences:
 

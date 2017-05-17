@@ -28,11 +28,11 @@ def local_instance_create_execute(procedure):
 @gossip.register('preprod_instance_task_build', tags=['pmc'])
 def preprod_instance_task_build(containers, instance_config, dependencies, domains, envs):
     if len(dependencies) >= 1:
-        platform = dependencies.get('cinco-platform')
+        platform = dependencies.get('cinco')
 
         envs.append({
             'name': 'CINCO_SERVER_URL',
-            'value': 'https://' + platform.domains['primary'] + '/'
+            'value': 'https://' + platform.domain + '/'
         })
         envs.append({
             'name': 'CINCO_CONSOLE_URL',
