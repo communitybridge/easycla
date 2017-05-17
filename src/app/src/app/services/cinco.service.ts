@@ -90,6 +90,7 @@ export class CincoService{
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
+    body.append('contactTitle', contact.contact.title);
     body.append('contactBio', contact.contact.bio);
     body.append('contactEmail', contact.contact.email);
     body.append('contactPhone', contact.contact.phone);
@@ -117,6 +118,7 @@ export class CincoService{
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
+    body.append('contactTitle', contact.contact.title);
     body.append('contactBio', contact.contact.bio);
     body.append('contactEmail', contact.contact.email);
     body.append('contactPhone', contact.contact.phone);
@@ -149,6 +151,7 @@ export class CincoService{
     body.append('type', contact.type);
     body.append('givenName', contact.givenName);
     body.append('familyName', contact.familyName);
+    body.append('title', contact.title);
     body.append('bio', contact.bio);
     body.append('email', contact.email);
     body.append('phone', contact.phone);
@@ -168,6 +171,7 @@ export class CincoService{
     body.append('type', contact.type);
     body.append('givenName', contact.givenName);
     body.append('familyName', contact.familyName);
+    body.append('title', contact.title);
     body.append('bio', contact.bio);
     body.append('email', contact.email);
     body.append('phone', contact.phone);

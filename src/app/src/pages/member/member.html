@@ -265,7 +265,7 @@
                       <!-- <img class="profile-photo" src="{{contact.profile_photo}}"> -->
                     </td>
                     <td data-title="Name / Title" (click)="contactSelected($event, contact)">
-                      {{ contact.contact.givenName }} {{ contact.contact.familyName }}, <!-- Replace w/ title -->
+                      {{ contact.contact.givenName }} {{ contact.contact.familyName }}, {{ contact.contact.title }}
                     </td>
                     <!--td data-title="Timezone">
                       <p *ngIf="contact.contact.timezone">
