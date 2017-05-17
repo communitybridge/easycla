@@ -1,7 +1,10 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { CincoService } from '../../app/services/cinco.service';
 
+@IonicPage({
+  segment: 'contact-update'
+})
 @Component({
   selector: 'contact-update',
   templateUrl: 'contact-update.html',
@@ -10,9 +13,13 @@ import { CincoService } from '../../app/services/cinco.service'
 export class ContactUpdate {
   projectId: string; // Always Needed
   memberId: string; // Always Needed
-  member: any; // Use if passed, otherwise generate from memberId
-  contactId: string; // Needed for Updating.
-  contact: any; // Should be used when Updating
+  org: any;
+  contact: any;
+  contactId: string;
+  roleId: string;
+  memberContactRoles: any;
+  orgContactRoles: any;
+  keysGetter;
 
   constructor(
     public navCtrl: NavController,
@@ -23,40 +30,69 @@ export class ContactUpdate {
     private cincoService: CincoService
   ) {
     this.getDefaults();
+    this.keysGetter = Object.keys;
     this.projectId = this.navParams.get('projectId');
     this.memberId = this.navParams.get('memberId');
-    this.member = this.navParams.get('member');
-    this.contactId = this.navParams.get('contactId');
+    this.org = this.navParams.get('org');
     let originalContact = this.navParams.get('contact');
+
+    if (originalContact.id) {
+      this.roleId = originalContact.id;
+    }
+
+    if (originalContact.contact.id) {
+      this.contactId = originalContact.contact.id;
+    }
+
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
-    console.log('contact contact:');
-    console.log(this.contact);
   }
 
   ngOnInit() {
-
+    this.getMemberContactRoles();
+    this.getOrgContactRoles();
   }
 
   getDefaults() {
     // Instantiate member data
-    this.member = {
+    this.org = {
       name: '',
-    }
+    };
     // Instantiate contact data
     this.contact = {
-      email: '',
-      company: '',
-      name: '',
-      phone: '',
-      title: '',
-      timezone: '',
-      role: '',
-      primary: 'no',
-      board: 'no',
-      emailGroups: [],
-      photos: [],
-    }
+      type:"",
+      primaryContact:false,
+      boardMember:false,
+      contact:{
+        email:"",
+        givenName:"",
+        familyName:"",
+        title:"",
+        phone:"",
+        type:"",
+        bio:"",
+      },
+    };
+
+    this.memberContactRoles = {};
+    this.orgContactRoles = {};
+
+  }
+
+  getOrgContactRoles() {
+    this.cincoService.getOrganizationContactTypes().subscribe(response => {
+      if(response) {
+        this.orgContactRoles = response;
+      }
+    });
+  }
+
+  getMemberContactRoles() {
+    this.cincoService.getMemberContactRoles().subscribe(response => {
+      if(response) {
+        this.memberContactRoles = response;
+      }
+    });
   }
 
   // ContactUpdate modal dismiss
@@ -65,7 +101,7 @@ export class ContactUpdate {
   }
 
   primarySelectChanged(event) {
-    if (event == 'yes') {
+    if (event == 'true') {
       let prompt = this.alertCtrl.create({
         title: 'Assign as Primary?',
         message: 'This will replace the exising primary contact on this project.',
@@ -73,13 +109,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.primary = 'no';
+              this.contact.primaryContact = 'false';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.primary = 'yes';
+              this.contact.primaryContact = 'true';
             }
           }
         ]
@@ -89,7 +125,7 @@ export class ContactUpdate {
   }
 
   boardSelectChanged(event) {
-    if (event == 'yes') {
+    if (event == 'true') {
       let prompt = this.alertCtrl.create({
         title: 'Assign to Board?',
         message: 'This will replace the exising member company Board member on this project.',
@@ -97,13 +133,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.board = 'no';
+              this.contact.boardMember = 'false';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.board = 'yes';
+              this.contact.boardMember = 'true';
             }
           }
         ]
@@ -179,23 +215,50 @@ export class ContactUpdate {
   }
 
   saveContact() {
-    console.log('save contact');
-    console.log(this.projectId);
-    console.log(this.member);
-    console.log(this.contact);
-    if(this.contact.id) {
-      this.cincoService.updateMemberContact(this.projectId, this.member.id, this.contact.id, this.contact).subscribe(response => {
-        if(response) {
-          console.log('updateMemberContact response:');
-          console.log(response);
-        }
-      });
+    if (this.contactId) {
+      if (this.roleId) {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
+          if (response) {
+            // update org contact with response from update
+            // should be the same as what was sent, but we will just be sure
+            this.contact.contact = response;
+            // add as a member contact
+            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.contact).subscribe(response => {
+              if(response) {
+                this.dismiss();
+              }
+            });
+          }
+        });
+      }
+      else {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
+          if (response) {
+            // update org contact with response from update
+            // should be the same as what was sent, but we will just be sure
+            this.contact.contact = response;
+            // add as a member contact
+            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
+              if (response) {
+                this.dismiss();
+              }
+            });
+          }
+        });
+      }
     }
     else {
-      this.cincoService.addMemberContact(this.projectId, this.member.id, this.contact).subscribe(response => {
-        if(response) {
-          console.log('addMemberContact response:');
-          console.log(response);
+      // Add new contact to organization
+      this.cincoService.createOrganizationContact(this.org.id, this.contact.contact).subscribe(response => {
+        if (response) {
+          this.contactId = response;
+          this.contact.contact.id = this.contactId;
+          // add to member
+          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
+            if (response) {
+              this.dismiss();
+            }
+          });
         }
       });
     }
@@ -203,18 +266,15 @@ export class ContactUpdate {
   }
 
   removeContact() {
-    console.log('remove contact');
-    console.log(this.contact);
-    this.cincoService.removeMemberContact(this.projectId, this.member.id, this.contact.id).subscribe(response => {
+    this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
       if(response) {
-        console.log('removeMemberContact response:');
-        console.log(response);
+        this.dismiss();
       }
     });
   }
 
   filesNotify(files) {
-    this.contact.photos = files;
+    this.contact.contact.photos = files;
   }
 
 }

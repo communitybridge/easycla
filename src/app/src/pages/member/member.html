@@ -232,67 +232,72 @@
               <table id="contacts-table" class="table table-hover">
                 <thead>
                   <tr>
-                    <th>Primary</th>
+                    <th></th>
                     <th>Role</th>
-                    <th>Profile Photo</th>
+                    <th></th>
                     <th>Name / Title</th>
-                    <th>Timezone</th>
+                    <!--th>Timezone</th-->
                     <th>Email</th>
-                    <th>Bio</th>
-                    <th>Photo</th>
+                    <th></th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let contact of member.contacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
-                    <td data-title="Primary">
-                      <p *ngIf="contact.primary">
-                        <ion-icon md="md-star"></ion-icon>
-                      </p>
-                      <p *ngIf="!contact.primary">
+                  <tr *ngFor="let contact of memberContacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
+                    <td data-title="Primary/Board">
+                      <span *ngIf="contact.primaryContact">
+                        <ion-icon md="star"></ion-icon>
+                      </span>
+                      <span *ngIf="!contact.primaryContact">
                         &nbsp;
-                      </p>
+                      </span>
+                      <span *ngIf="contact.boardMember">
+                        <ion-icon md="contact"></ion-icon>
+                      </span>
+                      <span *ngIf="!contact.boardMember">
+                        &nbsp;
+                      </span>
                     </td>
                     <td data-title="Role">
-                      <!-- TODO: replace with contact.role -->
+                      {{ memberContactRoles[contact.type] }}
                     </td>
                     <td data-title="Profile Photo">
-                      <img class="profile-photo" src="{{contact.profile_photo}}">
+                      <!-- <img class="profile-photo" src="{{contact.profile_photo}}"> -->
                     </td>
                     <td data-title="Name / Title" (click)="contactSelected($event, contact)">
-                      <h2>{{ contact.givenName }} {{ contact.familyName }}</h2>
-                      <p>Replace w/ title</p>
+                      {{ contact.contact.givenName }} {{ contact.contact.familyName }}, {{ contact.contact.title }}
                     </td>
-                    <td data-title="Timezone">
-                      <p *ngIf="contact.timezone">
-                        <!-- Replace with {{contact.timezone}} -->
+                    <!--td data-title="Timezone">
+                      <p *ngIf="contact.contact.timezone">
+                        Replace with {{ contact.contact.timezone }}
                       </p>
-                      <p *ngIf="!contact.timezone">
+                      <p *ngIf="!contact.contact.timezone">
                         &nbsp;
                       </p>
-                    </td>
+                    </td-->
                     <td data-title="Email">
-                      <p *ngIf="contact.email">
-                        {{contact.email}}
+                      <p *ngIf="contact.contact.email">
+                        {{contact.contact.email}}
                       </p>
-                      <p *ngIf="!contact.email">
+                      <p *ngIf="!contact.contact.email">
                         &nbsp;
                       </p>
                     </td>
                     <td data-title="Bio">
-                      <p *ngIf="contact.bio">
+                      <p *ngIf="contact.contact.bio">
                         <ion-icon color="green" md="md-checkmark-circle"></ion-icon>
                         Bio
                       </p>
-                      <p *ngIf="!contact.bio">
+                      <p *ngIf="!contact.contact.bio">
                         &nbsp;
                       </p>
                     </td>
                     <td data-title="Photo">
-                      <p *ngIf="contact.photo">
+                      <p *ngIf="contact.contact.headshotRef">
                         <ion-icon color="green" md="md-checkmark-circle"></ion-icon>
                         Photo
                       </p>
-                      <p *ngIf="!contact.headshotRef">
+                      <p *ngIf="!contact.contact.headshotRef">
                         &nbsp;
                       </p>
                     </td>
