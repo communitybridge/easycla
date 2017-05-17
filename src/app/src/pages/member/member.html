@@ -232,14 +232,14 @@
               <table id="contacts-table" class="table table-hover">
                 <thead>
                   <tr>
-                    <th>Primary/Board</th>
+                    <th></th>
                     <th>Role</th>
-                    <th>Profile Photo</th>
+                    <th></th>
                     <th>Name / Title</th>
                     <th>Timezone</th>
                     <th>Email</th>
-                    <th>Bio</th>
-                    <th>Photo</th>
+                    <th></th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,10 +259,10 @@
                       </span>
                     </td>
                     <td data-title="Role">
-                      {{ contact.type }}
+                      {{ memberContactRoles[contact.type] }}
                     </td>
                     <td data-title="Profile Photo">
-                      <img class="profile-photo" src="{{contact.profile_photo}}">
+                      <!-- <img class="profile-photo" src="{{contact.profile_photo}}"> -->
                     </td>
                     <td data-title="Name / Title" (click)="contactSelected($event, contact)">
                       {{ contact.contact.givenName }} {{ contact.contact.familyName }}, <!-- Replace w/ title -->

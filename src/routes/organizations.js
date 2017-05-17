@@ -83,9 +83,6 @@ router.get('/organizations/:organizationId/contacts', require('connect-ensure-lo
 
 router.post('/organizations/:organizationId/contacts', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("routes createOrganizationContact call:");
-    console.log("request");
-    console.log(req.body);
     var organizationId = req.params.organizationId;
     var contact = {
       type: req.body.type,
@@ -96,11 +93,8 @@ router.post('/organizations/:organizationId/contacts', require('connect-ensure-l
       phone: req.body.phone,
     }
 
-    console.log(contact);
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.createOrganizationContact(organizationId, contact, function (err, created, contactId) {
-      console.log("routes createOrganizationContact response:");
-      console.log(contactId);
       return res.json(contactId);
     });
   }
@@ -120,9 +114,6 @@ router.get('/organizations/:organizationId/contacts/:contactId', require('connec
 
 router.put('/organizations/:organizationId/contacts/:contactId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUploadLogoCompany, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("routes createOrganizationContact call:");
-    console.log("request");
-    console.log(req.body);
     var organizationId = req.params.organizationId;
     var contactId = req.params.contactId;
     var contact = {
@@ -133,11 +124,8 @@ router.put('/organizations/:organizationId/contacts/:contactId', require('connec
       email: req.body.email,
       phone: req.body.phone,
     }
-    console.log(contact);
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.updateOrganizationContact(organizationId, contactId, contact, function (err, created, contact) {
-      console.log("routes createOrganizationContact response:");
-      console.log(contact);
       return res.json(contact);
     });
   }
