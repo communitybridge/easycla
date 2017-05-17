@@ -14,6 +14,10 @@ RUN pip install awscli
 
 COPY . /srv/app/
 
-RUN cd /srv/app && npm install
+RUN cd /srv/app/src && npm install
+
+RUN cd /srv/app/src && npm run build
 
 WORKDIR '/srv/app/src'
+
+CMD ["npm", "start"]
