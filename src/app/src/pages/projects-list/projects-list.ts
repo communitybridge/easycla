@@ -62,8 +62,6 @@ export class ProjectsListPage {
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
-      console.log("getAllProjects");
-      console.log(response);
       this.allProjects = response;
       this.loading = false;
     });
@@ -178,7 +176,7 @@ export class ProjectsListPage {
       new: 15,
       renewal: 50
     };
-    
+
     this.numberOfInvoices = {
       fewerThan60Days: 50,
       fewerThan30Days: 50,

@@ -16,6 +16,7 @@ export class MemberPage {
   memberId: any;
   member: any;
   memberContacts: any;
+  memberContactRoles: any;
 
   constructor(
     public navCtrl: NavController,
@@ -32,6 +33,7 @@ export class MemberPage {
 
   ngOnInit() {
     // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
+    this.getMemberContactRoles();
     this.getMember(this.projectId, this.memberId);
     this.getMemberContacts(this.projectId, this.memberId);
   }
@@ -47,7 +49,6 @@ export class MemberPage {
   getMemberContacts(projectId, memberId) {
     this.cincoService.getMemberContacts(projectId, memberId).subscribe(response => {
       if(response) {
-        console.log(response);
         this.memberContacts = response;
       }
     });
@@ -59,6 +60,10 @@ export class MemberPage {
       memberId: this.memberId,
       org: this.member.org,
     });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getMemberContacts(this.projectId, this.memberId);
+    });
     modal.present();
   }
 
@@ -68,6 +73,10 @@ export class MemberPage {
       memberId: this.member.id,
       org: this.member.org,
       contact: contact,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getMemberContacts(this.projectId, this.memberId);
     });
     modal.present();
   }
@@ -104,7 +113,15 @@ export class MemberPage {
         type: "",
       }
     };
+    this.memberContactRoles = {};
+  }
 
+  getMemberContactRoles() {
+    this.cincoService.getMemberContactRoles().subscribe(response => {
+      if(response) {
+        this.memberContactRoles = response;
+      }
+    });
   }
 
 }
