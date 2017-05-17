@@ -236,7 +236,7 @@
                     <th>Role</th>
                     <th></th>
                     <th>Name / Title</th>
-                    <th>Timezone</th>
+                    <!--th>Timezone</th-->
                     <th>Email</th>
                     <th></th>
                     <th></th>
@@ -267,14 +267,14 @@
                     <td data-title="Name / Title" (click)="contactSelected($event, contact)">
                       {{ contact.contact.givenName }} {{ contact.contact.familyName }}, <!-- Replace w/ title -->
                     </td>
-                    <td data-title="Timezone">
+                    <!--td data-title="Timezone">
                       <p *ngIf="contact.contact.timezone">
-                        <!-- Replace with {{ contact.contact.timezone }} -->
+                        Replace with {{ contact.contact.timezone }}
                       </p>
                       <p *ngIf="!contact.contact.timezone">
                         &nbsp;
                       </p>
-                    </td>
+                    </td-->
                     <td data-title="Email">
                       <p *ngIf="contact.contact.email">
                         {{contact.contact.email}}

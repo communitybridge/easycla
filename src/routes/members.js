@@ -249,7 +249,7 @@ router.put('/projects/:projectId/members/:memberId/contacts/:contactId/roles/:ro
       },
     };
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.updateMemberContact(projectId, memberId, contactId, roleId, memberContact, function (err, created, contact) {
+    projManagerClient.updateMemberContact(projectId, memberId, contactId, roleId, memberContact, function (err, updated, contact) {
       return res.json(contact);
     });
   }
