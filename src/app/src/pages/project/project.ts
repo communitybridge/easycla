@@ -20,6 +20,7 @@ export class ProjectPage {
     name: string,
     description: string,
     managers: string,
+    members: any,
     status: string,
     category: string,
     sector: string,
@@ -32,7 +33,6 @@ export class ProjectPage {
     address: string
   };
 
-  members: any;
   membersCount: number;
 
   constructor(
@@ -48,11 +48,11 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
-    this.getProjectMembers(this.projectId);
   };
 
   getProject(projectId) {
-    this.cincoService.getProject(projectId).subscribe(response => {
+    let getMembers = true;
+    this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
         this.project.id = response.id;
         this.project.name = response.name;
@@ -68,15 +68,8 @@ export class ProjectPage {
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
         this.project.address = response.address;
-      }
-    });
-  }
-
-  getProjectMembers(projectId) {
-    this.cincoService.getProjectMembers(projectId).subscribe(response => {
-      if(response) {
-        this.members = response;
-        this.membersCount = this.members.length;
+        this.project.members = response.members;
+        this.membersCount = this.project.members.length;
       }
     });
   }
@@ -105,14 +98,15 @@ export class ProjectPage {
     this.project = {
       id: "",
       name: "Project",
-      description: "This project is a small, scalable, real-time operating system for use on resource-constraned systems supporting multiple architectures...",
+      description: "Description",
       managers: "",
+      members: "",
       status: "",
       category: "",
       sector: "",
       url: "",
       startDate: "",
-      logoRef: "https://dummyimage.com/600x250/ffffff/000.png&text=project+logo",
+      logoRef: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
