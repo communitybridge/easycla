@@ -20,6 +20,41 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }]);
 
+/*
+  Projects:
+  Resources to expose and manipulate details of projects
+ */
+
+ router.get('/project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+     projManagerClient.getAllProjects(function (err, projects) {
+       res.send(projects)
+     });
+   }
+ });
+
+router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getAllProjects(function (err, projects) {
+      res.send(projects)
+    });
+  }
+});
+
+router.get('/projects/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projectId = req.params.id;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getProject(projectId, function (err, project) {
+      // TODO: Create 404 page for when project doesn't exist
+      if (err) return res.send('');
+      res.send(project);
+    });
+  }
+});
+
 router.get('/create_project', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   res.render('create_project');
 });
@@ -70,7 +105,6 @@ router.get('/archive_project/:id', require('connect-ensure-login').ensureLoggedI
     var id = req.params.id;
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.archiveProject(id, function (err) {
-      console.log(err);
       return res.redirect('/');
     });
   }
@@ -179,7 +213,6 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       category: req.body.project_type
     };
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
-      console.log(err);
       return res.redirect('/project/' + id);
     });
   }
@@ -209,9 +242,6 @@ router.get('/get_project/:id', require('connect-ensure-login').ensureLoggedIn('/
 
 router.post('/post_project', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    console.log("/post_project");
-    console.log("req.body");
-    console.log(req.body);
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     var now = new Date().toISOString();
     var url = req.body.url;
@@ -234,9 +264,7 @@ router.post('/post_project', require('connect-ensure-login').ensureLoggedIn('/lo
       agreementRef: agreementFileName,
       category: req.body.project_type
     };
-    console.log(newProject);
     projManagerClient.createProject(newProject, function (err, created, projectId) {
-      console.log("/post_project success");
       return res.json(projectId);
     });
   }
