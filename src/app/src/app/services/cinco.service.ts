@@ -13,24 +13,6 @@ export class CincoService{
     this.baseUrl = '';
   }
 
-  postProject(newProject) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('project_name', newProject.project_name);
-    // body.append('project_type', newProject.project_type);
-    return this.http.post('/post_project', body, headers)
-                .map((res) => res.json());
-  }
-
-  editProject(editProject) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('project_name', editProject.project_name);
-    // body.append('project_type', newProject.project_type);
-    return this.http.post('/edit_project', body, headers)
-                .map((res) => res.json());
-  }
-
   /*
     Projects:
     Resources to expose and manipulate details of projects
@@ -45,6 +27,33 @@ export class CincoService{
      if (getMembers) { projectId = projectId + '?members=true' ; }
      return this.http.get(this.baseUrl + '/get_project/' + projectId)
              .map(res => res.json());
+   }
+
+   postProject(newProject) {
+     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let body = new FormData();
+     body.append('project_name', newProject.project_name);
+     // body.append('project_type', newProject.project_type);
+     return this.http.post('/post_project', body, headers)
+                 .map((res) => res.json());
+   }
+
+   editProject(projectId, editProject) {
+     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let body = new FormData();
+     body.append('project_name', editProject.project_name);
+     body.append('project_description', editProject.project_description);
+     body.append('project_url', editProject.project_url);
+     // body.append('project_sector', editProject.project_sector);
+     // TODO: WIP
+     // Based on PMC-70 criteria
+     // categories, now sector
+     // domain
+     // billing address (free text)
+     // country (picklist)
+     // zip code (optional / don't do this if it's hard: validate based on country)
+     return this.http.post('/edit_project/' + projectId, body, headers)
+                 .map((res) => res.json());
    }
 
   /*
