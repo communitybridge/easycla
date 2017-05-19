@@ -190,9 +190,9 @@ export class UploadButtonComponent {
   }
 
   fileDownload(data) {
-    console.log('File download:');
-    console.log(data.index);
-    console.log(this.fileList);
+    // File download:
+    // data.index
+    // this.fileList
   }
 
 }

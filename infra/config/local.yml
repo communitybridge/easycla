@@ -19,6 +19,9 @@ environment:
 
 sequences:
 
+  jenkins:
+    Doing Nothing: 'echo \"Skipping Installation Procedures\"'
+
   install:
     Installing Dependencies: "cd /srv/app/src && npm install --quiet"
 
