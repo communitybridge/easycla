@@ -12,9 +12,6 @@ import { CincoService } from '../../app/services/cinco.service'
   templateUrl: 'project-details.html'
 })
 export class ProjectDetailsPage {
-  editProject;
-  project_name: String;
-  project_type: String;
 
   projectId: string;
 
@@ -37,8 +34,9 @@ export class ProjectDetailsPage {
     address: string
   };
 
-  memberships: any;
   membershipsCount: number;
+
+  editProject: any;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
     this.editProject = {};
@@ -74,12 +72,19 @@ export class ProjectDetailsPage {
   }
 
   submitEditProject() {
-    // TODO: WIP
     this.editProject = {
-      project_name: this.project_name,
-      project_type: this.project_type
+      project_name: this.project.name,
+      project_description: this.project.description,
+      project_url: this.project.url
+      // TODO: WIP
+      // Based on PMC-70 criteria
+      // categories, now sector
+      // domain
+      // billing address (free text)
+      // country (picklist)
+      // zip code (optional / don't do this if it's hard: validate based on country)
     };
-    this.cincoService.editProject(this.editProject).subscribe(response => {
+    this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
       this.navCtrl.push('ProjectPage', {
         projectId: this.projectId
       });
@@ -115,20 +120,6 @@ export class ProjectDetailsPage {
       emailAliasType: "",
       address: ""
     };
-
-    this.memberships = [
-      {
-        tier: "Gold",
-        numberOfMembers: "2",
-        annualCost: "$200,000",
-        boardSeat: "Yes"
-      },{
-        tier: "Platinum",
-        numberOfMembers: "8",
-        annualCost: "$600,000",
-        boardSeat: "No"
-      }
-    ];
   }
 
 }
