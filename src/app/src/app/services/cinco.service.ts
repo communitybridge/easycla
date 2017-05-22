@@ -39,12 +39,16 @@ export class CincoService{
    }
 
    editProject(projectId, editProject) {
-     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let headers = new Headers({
+       'Content-Type': 'application/json',
+       json: true
+     });
      let body = new FormData();
      body.append('project_name', editProject.project_name);
      body.append('project_description', editProject.project_description);
      body.append('project_url', editProject.project_url);
-     // body.append('project_sector', editProject.project_sector);
+     body.append('project_sector', editProject.project_sector);
+     body.append('project_address', JSON.stringify(editProject.project_address).replace(/'/g, "\\'"));
      // TODO: WIP
      // Based on PMC-70 criteria
      // categories, now sector
