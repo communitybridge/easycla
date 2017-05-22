@@ -63,13 +63,6 @@ export class CincoService{
      body.append('project_url', editProject.project_url);
      body.append('project_sector', editProject.project_sector);
      body.append('project_address', JSON.stringify(editProject.project_address).replace(/'/g, "\\'"));
-     // TODO: WIP
-     // Based on PMC-70 criteria
-     // categories, now sector
-     // domain
-     // billing address (free text)
-     // country (picklist)
-     // zip code (optional / don't do this if it's hard: validate based on country)
      return this.http.post('/edit_project/' + projectId, body, headers)
                  .map((res) => res.json());
    }
