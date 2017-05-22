@@ -209,15 +209,15 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       id: id,
       name: req.body.project_name,
       description: req.body.project_description,
-      url: req.body.project_url
+      url: req.body.project_url,
+      sector: req.body.project_sector,
+      address: req.body.project_address
       // pm: req.body.creator_pm,
-      // sector: req.body.project_sector
       // startDate: now,
       // logoRef: logoFileName,
       // agreementRef: agreementFileName,
       // category: req.body.project_type
     };
-
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
       return res.json(updatedProject);

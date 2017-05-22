@@ -51,7 +51,7 @@ export class ProjectDetailsPage {
   getProject(projectId) {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
-      if(response) {
+      if (response) {
         this.project.id = response.id;
         this.project.name = response.name;
         this.project.description = response.description;
@@ -75,7 +75,19 @@ export class ProjectDetailsPage {
     this.editProject = {
       project_name: this.project.name,
       project_description: this.project.description,
-      project_url: this.project.url
+      project_url: this.project.url,
+      project_sector: this.project.sector,
+      // project_address: JSON.stringify(this.project.address)
+      project_address: {
+        address: {
+          administrativeArea: "California",
+          country: "US",
+          localityName: "Polloville",
+          postalCode: "90210",
+          thoroughfare: "123 Lucky Lane"
+        },
+        type: "BILLING"
+      }
       // TODO: WIP
       // Based on PMC-70 criteria
       // categories, now sector
@@ -97,7 +109,7 @@ export class ProjectDetailsPage {
     });
   }
 
-  changeLogo(){
+  changeLogo() {
     // TODO: WIP
     alert("Change Logo");
   }
