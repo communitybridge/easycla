@@ -245,6 +245,40 @@ module.exports = {
         });
       },
 
+      getProjectCategories: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'project/categories'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var categories = JSON.parse(body);
+            next(null, categories);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get map of valid project category values.'));
+          }
+        });
+      },
+
+      getProjectSectors: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'project/sectors'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var sectors = JSON.parse(body);
+            next(null, sectors);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get map of valid project sector values.'));
+          }
+        });
+      },
+
       getAllProjects: function (next) {
         var opts = {
           method: 'GET',

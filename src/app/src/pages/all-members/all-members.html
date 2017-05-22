@@ -4,18 +4,17 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Project Members</ion-title>
+    <div class="toolbar-select">
+      <ion-label>Projects:</ion-label>
+      <ion-select [(ngModel)]="selectedProject" (ionChange)="projectSelectChanged()">
+        <ion-option value="all">All</ion-option>
+        <ion-option *ngFor="let project of allProjects" [value]="project">{{ project.name }}</ion-option>
+      </ion-select>
+    </div>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding overflow-scroll="true">
-  <ion-item>
-    <ion-label>Projects</ion-label>
-<!-- [(ngModel)]="selectedProject"  (ngModelChange)=""-->
-    <ion-select [(ngModel)]="selectedProject" (ionChange)="projectSelectChanged()">
-      <ion-option value="all">All</ion-option>
-      <ion-option *ngFor="let project of allProjects" [value]="project">{{ project.name }}</ion-option>
-    </ion-select>
-  </ion-item>
   <ion-grid>
     <ion-row>
       <ion-col col-12>
@@ -33,13 +32,13 @@
               </thead>
               <tbody>
                 <ng-container *ngFor="let project of keysGetter(membersSelected)">
-                  <tr *ngFor="let member of membersSelected[project]">
+                  <tr *ngFor="let member of membersSelected[project]" (click)="memberSelected(member)">
                     <td data-title="Company">{{ member.name }}</td>
                     <td data-title="Project">{{ member.projectName }}</td>
                     <td data-title="Level">{{ member.level }}</td>
                     <td data-title="Invoice Status">{{ member.invoiceStatus }}</td>
                     <td data-title="Renewal Date">{{ member.renewalDate }}</td>
-                    <td data-title="Category">{{ member.projectCategory }}</td>
+                    <td data-title="Category">{{ projectSectors[member.projectCategory] }}</td>
                   </tr>
                 </ng-container>
               </tbody>
