@@ -17,6 +17,20 @@ export class CincoService{
     Projects:
     Resources to expose and manipulate details of projects
    */
+   getProjectStatuses() {
+     return this.http.get(this.baseUrl + '/project/statuses')
+             .map(res => res.json());
+   }
+
+   getProjectCategories() {
+     return this.http.get(this.baseUrl + '/project/categories')
+             .map(res => res.json());
+   }
+
+   getProjectSectors() {
+     return this.http.get(this.baseUrl + '/project/sectors')
+             .map(res => res.json());
+   }
 
    getAllProjects() {
      return this.http.get(this.baseUrl + '/projects')
