@@ -101,13 +101,13 @@
       <ion-col col-8>
         <ion-item>
           <ion-label stacked>Billing Address</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.thoroughfare"></ion-input>
+          <ion-input type="text" [(ngModel)]="project.address.address.thoroughfare"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Zip Code</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.postalCode"></ion-input>
+          <ion-input type="text" [(ngModel)]="project.address.address.postalCode"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
@@ -115,19 +115,19 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>City</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.localityName"></ion-input>
+          <ion-input type="text" [(ngModel)]="project.address.address.localityName"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>State</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.administrativeArea"></ion-input>
+          <ion-input type="text" [(ngModel)]="project.address.address.administrativeArea"></ion-input>
         </ion-item>
       </ion-col>
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Country</ion-label>
-          <ion-input type="text" [(ngModel)]="project.address.country"></ion-input>
+          <ion-input type="text" [(ngModel)]="project.address.address.country"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
