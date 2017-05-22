@@ -29,7 +29,34 @@ var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement'
    if(req.session.user.isAdmin || req.session.user.isProjectManager){
      var projManagerClient = cinco.client(req.session.user.cinco_keys);
      projManagerClient.getAllProjects(function (err, projects) {
-       res.send(projects)
+       res.send(projects);
+     });
+   }
+ });
+
+ router.get('/project/status', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+     projManagerClient.getProjectStatuses(function (err, statuses) {
+       res.send(statuses);
+     });
+   }
+ });
+
+ router.get('/project/categories', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+     projManagerClient.getProjectCategories(function (err, categories) {
+       res.send(categories);
+     });
+   }
+ });
+
+ router.get('/project/sectors', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+     projManagerClient.getProjectSectors(function (err, sectors) {
+       res.send(sectors);
      });
    }
  });
@@ -38,7 +65,7 @@ router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login')
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getAllProjects(function (err, projects) {
-      res.send(projects)
+      res.send(projects);
     });
   }
 });
