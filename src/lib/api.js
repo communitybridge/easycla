@@ -316,7 +316,7 @@ module.exports = {
       updateProject: function (updatedProperties, next) {
         var body = JSON.stringify(updatedProperties);
         var opts = {
-          method: 'PATCH',
+          method: 'PUT',
           path: 'projects/' + updatedProperties.id + '/',
           body: body
         };
