@@ -31,7 +31,16 @@ export class ProjectDetailsPage {
     agreementRef: string,
     mailingListType: string,
     emailAliasType: string,
-    address: string
+    address: {
+      address: {
+        administrativeArea: string,
+        country: string,
+        localityName: string,
+        postalCode: string,
+        thoroughfare: string
+      },
+      type: string
+    }
   };
 
   membershipsCount: number;
@@ -66,7 +75,7 @@ export class ProjectDetailsPage {
         this.project.agreementRef = response.agreementRef;
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address.address;
+        this.project.address = response.address;
       }
     });
   }
@@ -77,24 +86,7 @@ export class ProjectDetailsPage {
       project_description: this.project.description,
       project_url: this.project.url,
       project_sector: this.project.sector,
-      // project_address: JSON.stringify(this.project.address)
-      project_address: {
-        address: {
-          administrativeArea: "California",
-          country: "US",
-          localityName: "Polloville",
-          postalCode: "90210",
-          thoroughfare: "123 Lucky Lane"
-        },
-        type: "BILLING"
-      }
-      // TODO: WIP
-      // Based on PMC-70 criteria
-      // categories, now sector
-      // domain
-      // billing address (free text)
-      // country (picklist)
-      // zip code (optional / don't do this if it's hard: validate based on country)
+      project_address: this.project.address
     };
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
       this.navCtrl.push('ProjectPage', {
@@ -130,7 +122,16 @@ export class ProjectDetailsPage {
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
-      address: ""
+      address: {
+        address: {
+          administrativeArea: "",
+          country: "",
+          localityName: "",
+          postalCode: "",
+          thoroughfare: ""
+        },
+        type: ""
+      }
     };
   }
 

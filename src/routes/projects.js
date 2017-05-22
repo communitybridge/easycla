@@ -238,7 +238,7 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       description: req.body.project_description,
       url: req.body.project_url,
       sector: req.body.project_sector,
-      address: req.body.project_address
+      address: JSON.parse(req.body.project_address)
       // pm: req.body.creator_pm,
       // startDate: now,
       // logoRef: logoFileName,
