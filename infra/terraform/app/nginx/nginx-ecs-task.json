@@ -1,0 +1,48 @@
+[
+  {
+    "essential": true,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${BUILD_NUMBER}",
+    "memoryReservation": 258,
+    "name": "nginx",
+    "portMappings": [{
+      "containerPort": 80
+    }],
+    "dnsServers": [
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
+    ],
+    "environment": [
+      {
+        "name": "APP_DOMAINS",
+        "value": "${APP_DOMAINS}"
+      },
+      {
+        "name": "CONSUL_SERVICE",
+        "value": "${CONSUL_SERVICE}"
+      },
+      {
+        "name": "SERVICE_80_NAME",
+        "value": "nginx"
+      },
+      {
+        "name": "SERVICE_80_TAGS",
+        "value": "${TAG_REGION},${TAG_VPC_ID}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "gelf",
+      "options": {
+        "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
+        "labels": "app_name,app_env,app_region,app_build,tags"
+      }
+    },
+    "dockerLabels": {
+      "app_name": "pmc_nginx",
+      "app_build": "${BUILD_NUMBER}",
+      "app_env": "production",
+      "app_region": "${TAG_REGION}",
+      "tags": "application, pmc, nginx"
+    }
+  }
+]
