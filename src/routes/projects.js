@@ -238,12 +238,13 @@ router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn(
       description: req.body.project_description,
       url: req.body.project_url,
       sector: req.body.project_sector,
-      address: JSON.parse(req.body.project_address)
+      address: JSON.parse(req.body.project_address),
+      status: req.body.project_status,
+      category: req.body.project_category,
+      startDate: req.body.project_start_date
       // pm: req.body.creator_pm,
-      // startDate: now,
       // logoRef: logoFileName,
       // agreementRef: agreementFileName,
-      // category: req.body.project_type
     };
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
