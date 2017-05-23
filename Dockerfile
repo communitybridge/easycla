@@ -12,16 +12,22 @@ RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash -
 
 RUN pip install awscli
 
-USER www-data
+COPY infra/docker-prod-entrypoint.sh /srv/entrypoint.sh
 
 COPY . /srv/app/
 
 RUN chown -R www-data:www-data /srv/app
 
+USER www-data
+
 RUN cd /srv/app/src && npm install
 
 RUN cd /srv/app/src && npm run build
 
+RUN rm -rf /srv/app/src/config/default.json; rm -rf /srv/app/src/newrelic.js
+
 WORKDIR '/srv/app/src'
 
-CMD ["npm", "start"]
+ENTRYPOINT ["/srv/entrypoint.sh"]
+
+CMD ["start"]
