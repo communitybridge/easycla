@@ -1,0 +1,35 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/consul-agent:latest",
+    "name": "consul-agent",
+    "dnsServers": [
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
+    ],
+    "environment": [
+      {
+        "name": "CONSUL_ENCRYPT",
+        "value": "${ENCRYPTION}"
+      },
+      {
+        "name": "CONSUL_DATACENTER",
+        "value": "${DATACENTER}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "gelf",
+      "options": {
+        "gelf-address": "udp://us-west-2.logstash.service.consul:12201",
+        "labels": "app_name,app_env,app_region"
+      }
+    },
+    "dockerLabels": {
+      "app_name": "consul-agent",
+      "app_env": "production",
+      "app_region": "${AWS_REGION}"
+    }
+  }
+]
