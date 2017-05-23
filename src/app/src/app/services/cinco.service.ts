@@ -13,24 +13,6 @@ export class CincoService{
     this.baseUrl = '';
   }
 
-  postProject(newProject) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('project_name', newProject.project_name);
-    // body.append('project_type', newProject.project_type);
-    return this.http.post('/post_project', body, headers)
-                .map((res) => res.json());
-  }
-
-  editProject(editProject) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('project_name', editProject.project_name);
-    // body.append('project_type', newProject.project_type);
-    return this.http.post('/edit_project', body, headers)
-                .map((res) => res.json());
-  }
-
   /*
     Projects:
     Resources to expose and manipulate details of projects
@@ -55,9 +37,37 @@ export class CincoService{
              .map(res => res.json());
    }
 
-   getProject(projectId) {
-     return this.http.get(this.baseUrl + '/projects/' + projectId)
+   getProject(projectId, getMembers) {
+     if (getMembers) { projectId = projectId + '?members=true' ; }
+     return this.http.get(this.baseUrl + '/get_project/' + projectId)
              .map(res => res.json());
+   }
+
+   postProject(newProject) {
+     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let body = new FormData();
+     body.append('project_name', newProject.project_name);
+     // body.append('project_type', newProject.project_type);
+     return this.http.post('/post_project', body, headers)
+                 .map((res) => res.json());
+   }
+
+   editProject(projectId, editProject) {
+     let headers = new Headers({
+       'Content-Type': 'application/json',
+       json: true
+     });
+     let body = new FormData();
+     body.append('project_name', editProject.project_name);
+     body.append('project_description', editProject.project_description);
+     body.append('project_url', editProject.project_url);
+     body.append('project_sector', editProject.project_sector);
+     body.append('project_address', JSON.stringify(editProject.project_address).replace(/'/g, "\\'"));
+     body.append('project_status', editProject.project_status);
+     body.append('project_category', editProject.project_category);
+     body.append('project_start_date', editProject.project_start_date);
+     return this.http.post('/edit_project/' + projectId, body, headers)
+                 .map((res) => res.json());
    }
 
   /*
