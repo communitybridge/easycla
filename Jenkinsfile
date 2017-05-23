@@ -21,8 +21,12 @@ node {
 
   try {
 
+    stage ("Launching CINCO Instance") {
+      sh "lf i create --project=cinco --branch=develop --name='${instancePath}_cinco' -y -d"
+    }
+
     stage ("Launching PMC Instance") {
-      sh "lf i create --project=pmc --branch=${env.BRANCH_NAME} --name='${instancePath}' --sequence=jenkins -y -d --no-autorun"
+      sh "lf i create --project=pmc --branch=${env.BRANCH_NAME} --name='${instancePath}' --dep-map='cinc:${instancePath}_cinco' --sequence=jenkins -y -d --no-autorun"
     }
 
     def workspaceID = sh (script: "cd ${instancePath}; lf i workspace", returnStdout: true).trim()
@@ -49,8 +53,9 @@ node {
 //      }
 //    }
 
-    stage("Destroying Instance") {
+    stage("Destroying Instances") {
       sh "lf i rm ${instancePath}/ -y"
+      sh "lf i rm ${instancePath}_cinco/ -y"
     }
 
     if (env.BRANCH_NAME == 'develop') {
@@ -63,8 +68,9 @@ node {
     buildStatus = 1
 
     // Making sure we always destroy the instance after each build
-    stage("Destroying Instance") {
+    stage("Destroying Instances") {
       sh "lf i rm ${instancePath}/ -y"
+      sh "lf i rm ${instancePath}_cinco/ -y"
     }
 
     throw err
