@@ -86,7 +86,10 @@ export class ProjectDetailsPage {
       project_description: this.project.description,
       project_url: this.project.url,
       project_sector: this.project.sector,
-      project_address: this.project.address
+      project_address: this.project.address,
+      project_status: this.project.status,
+      project_category: this.project.category,
+      project_start_date: this.project.startDate
     };
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
       this.navCtrl.push('ProjectPage', {

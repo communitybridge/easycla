@@ -63,6 +63,9 @@ export class CincoService{
      body.append('project_url', editProject.project_url);
      body.append('project_sector', editProject.project_sector);
      body.append('project_address', JSON.stringify(editProject.project_address).replace(/'/g, "\\'"));
+     body.append('project_status', editProject.project_status);
+     body.append('project_category', editProject.project_category);
+     body.append('project_start_date', editProject.project_start_date);
      return this.http.post('/edit_project/' + projectId, body, headers)
                  .map((res) => res.json());
    }
