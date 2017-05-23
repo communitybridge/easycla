@@ -31,13 +31,13 @@ node {
 
     stage ("NPM Installation") {
       dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app && ./gradlew dependencyUpdates -Drevision=release -DoutputFormatter=json,xml,plain\""
+        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm install\""
       }
     }
 
     stage ("Ionic Installation") {
       dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app && ./gradlew dependencyUpdates -Drevision=release -DoutputFormatter=json,xml,plain\""
+        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm run build\""
       }
     }
 
