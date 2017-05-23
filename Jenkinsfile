@@ -10,8 +10,6 @@ node {
     git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "${env.BRANCH_NAME}"
   }
 
-  sh "env"
-
   def project = "pmc"
   def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
   def shortCommit = gitCommit.take(7)
@@ -26,7 +24,7 @@ node {
     }
 
     stage ("Launching PMC Instance") {
-      sh "lf i create --project=pmc --branch=${env.BRANCH_NAME} --name='${instancePath}' --dep-map='cinc:${instancePath}_cinco' --sequence=jenkins -y -d --no-autorun"
+      sh "lf i create --project=pmc --branch=${env.BRANCH_NAME} --name='${instancePath}' --dep-map='cinco:${instancePath}_cinco' --sequence=jenkins -y -d --no-autorun"
     }
 
     def workspaceID = sh (script: "cd ${instancePath}; lf i workspace", returnStdout: true).trim()
