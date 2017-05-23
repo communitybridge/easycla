@@ -1,55 +1,21 @@
 node {
-  properties([pipelineTriggers([pollSCM('* * * * *')]),disableConcurrentBuilds()])
+  properties([disableConcurrentBuilds(), parameters([string(defaultValue: '', description: 'The git sha you wish to build', name: 'SHA')]), pipelineTriggers([])])
 
   // Wipe the workspace so we are building completely clean
   sh "sudo rm -rf *"
-  sh "docker network prune -f"
-  sh "docker container prune -f"
-  sh "docker image prune -f"
 
   stage ("Checkout") {
-    git pool: true, url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "develop"
+    git credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "develop"
+    sh "git checkout ${params.SHA}"
   }
-
-  def project = "cinco"
-  def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-  def shortCommit = gitCommit.take(6)
-  def instancePath = "${project}_dev_${env.BUILD_NUMBER}_${shortCommit}"
 
   try {
 
-    stage ("Launching CINCO Instance") {
-      sh "lf i create --project=cinco --branch=develop --name='${instancePath}_cinco' -y -d"
-    }
-
-    stage ("Launching Project Management Console") {
-      sh "lf i create --project=pmc --branch=develop --name='${instancePath}' --dep-map=cinco:${instancePath}_cinco --sequence=jenkins -y -d --no-autorun"
-    }
-
-    def workspaceID = sh (script: "cd ${instancePath}; lf i workspace", returnStdout: true).trim()
-
-    stage ("NPM Install") {
-      dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm install\""
-      }
-    }
-
-    stage ("Ionic Install") {
-      dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm run build\""
-      }
-    }
-
-    stage("Destroying Instances") {
-      sh "lf i rm ${instancePath}_cinco/ -y"
-      sh "lf i rm ${instancePath}/ -y"
-    }
-
     stage ("Generating Docker Build Artifact") {
       docker.withRegistry("https://433610389961.dkr.ecr.us-west-2.amazonaws.com", "ecr:us-west-2:jenkins-aws-user") {
-        def build = docker.build('pmc/sandbox')
-        build.push(env.BUILD_NUMBER)
-        build.push(shortCommit)
+        sh "docker build -t pmc/sandbox/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} ."
+        sh "docker tag pmc/sandbox/${params.SHA} 433610389961.dkr.ecr.us-west-2.amazonaws.com/pmc/sandbox:${env.BUILD_NUMBER}"
+        sh "docker push 433610389961.dkr.ecr.us-west-2.amazonaws.com/pmc/sandbox:${env.BUILD_NUMBER}"
       }
     }
 
@@ -57,15 +23,16 @@ node {
       sh "lf s update --project=pmc --name=sandbox --newrelic -d -y"
     }
 
+    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
+          \"color\": \"#008000\",\
+          \"message\": \"PMC Sandbox has been updated to `${params.SHA}`\",\
+          \"channel\": \"#integration\"}'"
   } catch(err) {
-    // Making sure we always destroy the instance after each build
-    stage("Destroying Instance") {
-      sh "lf i rm ${instancePath}_cinco/ -y"
-      sh "lf i rm ${instancePath}/ -y"
-    }
-
+    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
+          \"color\": \"#cc0000\",\
+          \"message\": \"PMC Sandbox has fail to update. <${env.BUILD_URL}>\",\
+          \"channel\": \"#integration\"}'"
     throw err
-
   }
 
 }

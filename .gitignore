@@ -60,3 +60,8 @@ __pycache__
 
 # Ionic Build Files
 src/app/www/build/*
+
+# Terraform
+terraform.tfstate.backup
+.terraform
+terraform.tfstate
