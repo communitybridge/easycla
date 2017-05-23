@@ -14,8 +14,7 @@ def local_instance_build_dockerfile(containers, instance_config, dependencies, e
                 envs['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0] + '/'
                 core.logger.info('Setting CINCO_SERVER_URL to ' + envs['CINCO_SERVER_URL'])
 
-    port = containers['workspace']['ports'][0].split(':')
-    envs['CINCO_CONSOLE_URL'] = 'http://' + core.config.local['hostname'] + ':' + port[0] + '/'
+    envs['CINCO_CONSOLE_URL'] = 'http://' + core.config.local['hostname'] + ':8081/'
     core.logger.info('Setting CINCO_CONSOLE_URL to ' + envs['CINCO_CONSOLE_URL'])
 
 

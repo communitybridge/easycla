@@ -2,22 +2,31 @@ FROM 433610389961.dkr.ecr.us-west-2.amazonaws.com/base:latest
 
 MAINTAINER Linux Foundation <webmaster@linuxfoundation.org>
 
-RUN useradd www-data
+RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash - && yum install -y nodejs gcc-c++ make
 
-RUN usermod -u 1000 --shell /bin/bash www-data
+ADD https://releases.hashicorp.com/consul-template/0.18.3/consul-template_0.18.3_linux_amd64.tgz /srv/
+RUN tar -xvf /srv/consul-template_0.18.3_linux_amd64.tgz -C /usr/bin/ && \
+    rm -f /srv/consul-template_0.18.3_linux_amd64.tgz
 
-RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash -
+RUN useradd www-data && \
+    usermod -u 1000 --shell /bin/bash www-data
 
-RUN yum install wget nodejs git gettext python python-pip -y
-
-RUN pip install awscli
+COPY infra/docker-prod-entrypoint.sh /srv/entrypoint.sh
 
 COPY . /srv/app/
 
-RUN cd /srv/app/src && npm install
+RUN chown -R www-data:www-data /srv/app
 
-RUN cd /srv/app/src && npm run build
+USER www-data
 
 WORKDIR '/srv/app/src'
 
-CMD ["npm", "start"]
+RUN npm install && \
+    npm rebuild node-sass && \
+    npm run build && \
+    rm -rf /srv/app/src/config/default.json && \
+    rm -rf /srv/app/src/newrelic.js
+
+ENTRYPOINT ["/srv/entrypoint.sh"]
+
+CMD ["start"]
