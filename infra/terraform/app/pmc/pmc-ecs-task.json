@@ -5,7 +5,7 @@
     "memoryReservation": 512,
     "name": "pmc",
     "portMappings": [{
-      "containerPort": 8080
+      "containerPort": 8081
     }],
     "dnsServers": [
       "${DNS_SERVER_1}",
@@ -20,6 +20,10 @@
       {
         "name": "SERVICE_8080_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
+      },
+      {
+        "name": "NEWRELIC_LICENSE",
+        "value": "true"
       }
     ],
     "logConfiguration": {
