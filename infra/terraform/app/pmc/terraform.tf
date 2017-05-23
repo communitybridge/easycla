@@ -36,10 +36,6 @@ variable "route53_zone_id" {
   description = "The Route53 Zone ID we need to add an entry to for the ALB/ELB."
 }
 
-variable "iam_role" {
-  description = "IAM role to give the container additional privileges inside the AWS Environment."
-}
-
 data "template_file" "pmc_ecs_task" {
   template = "${file("${path.module}/pmc-ecs-task.json")}"
 
@@ -61,7 +57,6 @@ data "template_file" "pmc_ecs_task" {
 resource "aws_ecs_task_definition" "pmc" {
   provider                = "aws.local"
   family                  = "pmc"
-  task_role_arn           = "${var.iam_role}"
 
   lifecycle {
     ignore_changes        = ["image"]
@@ -84,7 +79,7 @@ resource "aws_ecs_service" "pmc" {
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.pmc.arn}"
     container_name     = "pmc"
-    container_port     = 8080
+    container_port     = 8081
   }
 
   lifecycle {
@@ -94,8 +89,8 @@ resource "aws_ecs_service" "pmc" {
 
 resource "aws_alb_target_group" "pmc" {
   provider             = "aws.local"
-  name                 = "pmc-5001"
-  port                 = 8080
+  name                 = "pmc-8081"
+  port                 = 8081
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30

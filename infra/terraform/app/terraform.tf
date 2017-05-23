@@ -103,7 +103,6 @@ module "pmc" {
   # Application Information
   build_number      = "${var.build_number}"
   route53_zone_id   = "${data.terraform_remote_state.pmc-env.route53_zone_id}"
-  iam_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsCincoTask}"
 
   # ECS Information
   internal_elb_sg   = "${data.terraform_remote_state.pmc-env.sg_internal_elb}"
