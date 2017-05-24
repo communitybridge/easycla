@@ -14,11 +14,11 @@
     ],
     "environment": [
       {
-        "name": "SERVICE_8080_NAME",
+        "name": "SERVICE_8081_NAME",
         "value": "PMC_${BUILD_NUMBER}"
       },
       {
-        "name": "SERVICE_8080_TAGS",
+        "name": "SERVICE_8081_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
       },
       {

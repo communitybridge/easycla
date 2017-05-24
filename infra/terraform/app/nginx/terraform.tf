@@ -133,7 +133,7 @@ resource "aws_alb_listener" "nginx_443" {
   load_balancer_arn  = "${aws_alb.nginx.id}"
   port               = "443"
   protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/16db8afa-932a-4bc9-8da4-52c76f00952c"
+  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/bfd6e237-3606-454f-ac4d-e57bf636b2f2"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.nginx.id}"
