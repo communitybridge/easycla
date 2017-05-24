@@ -4,7 +4,9 @@
       "user": "CONSOLE_INTEGRATION_USER",
       "pass": "CONSOLE_INTEGRATION_PASSWORD"
     },
-    "endpoint": "CINCO_CONSOLE_URL"
+    "endpoint": "CINCO_CONSOLE_URL",
+    "redisHost": "REDIS_HOST",
+    "redisPort": "REDIS_PORT"
   },
   "platform": {
     "endpoint": "CINCO_SERVER_URL"
