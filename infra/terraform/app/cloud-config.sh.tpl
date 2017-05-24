@@ -19,6 +19,8 @@ EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availa
 EC2_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
 EC2_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 EC2_PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+SUBNET_ID=$(curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/${INTERFACE}/subnet-id)
+VPC_ID=$(curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/${INTERFACE}/vpc-id)
 
 # Add the consul dns server
 sed -i "1s/^/nameserver $EC2_PRIVATE_IP\n/" /etc/resolv.conf
@@ -54,13 +56,15 @@ filebeat.prospectors:
 
 #================================ General =====================================
 
-name: cinco-ecs-cluster
-tags: ["system", "production"]
+name: pmc-ecs-cluster
+tags: ["system", "production", "ecs"]
 fields:
-  sys_name: cinco-ecs-cluster
+  sys_name: pmc-ecs-cluster
   sys_env: production-${env}
   sys_region: ${region}
-  sys_build: ${build}
+  sys_vpc: ${VPC_ID}
+  sys_subnet: ${SUBNET_ID}
+  sys_ip: ${EC2_PRIVATE_IP}
 
 #================================ Outputs =====================================
 output.logstash:
