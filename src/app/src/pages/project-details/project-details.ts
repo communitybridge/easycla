@@ -60,6 +60,7 @@ export class ProjectDetailsPage {
   getProject(projectId) {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
+      console.log(response);
       if (response) {
         this.project.id = response.id;
         this.project.name = response.name;
