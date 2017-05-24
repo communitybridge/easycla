@@ -95,7 +95,7 @@ resource "aws_ecs_service" "nginx" {
 
 resource "aws_alb_target_group" "nginx" {
   provider             = "aws.local"
-  name                 = "nginx-80"
+  name                 = "pmc-nginx-80"
   port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
@@ -110,7 +110,7 @@ resource "aws_alb_target_group" "nginx" {
 
 resource "aws_alb" "nginx" {
   provider           = "aws.local"
-  name               = "nginx"
+  name               = "pmc-nginx"
   subnets            = ["${var.external_subnets}"]
   security_groups    = ["${var.external_elb_sg}"]
   internal           = false

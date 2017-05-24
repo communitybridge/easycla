@@ -49,7 +49,7 @@ data "template_file" "user_data_pmc" {
 }
 
 # ECS Cluster
-module "tools-ecs-cluster" {
+module "pmc-ecs-cluster" {
   source                 = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/ecs-cluster"
   environment            = "${terraform.env}-pmc"
   team                   = "Engineering"
@@ -76,7 +76,7 @@ module "registrator" {
   build_number      = "${var.build_number}"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
-  ecs_cluster_name = "${module.tools-ecs-cluster.name}"
+  ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
   dns_servers      = "${data.terraform_remote_state.pmc-env.dns_servers}"
 }
 
@@ -92,7 +92,7 @@ module "consul" {
   build_number     = "${var.build_number}"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
-  ecs_cluster_name = "${module.tools-ecs-cluster.name}"
+  ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
   dns_servers      = "${data.terraform_remote_state.pmc-env.dns_servers}"
 }
 
@@ -109,7 +109,7 @@ module "pmc" {
   internal_subnets  = "${data.terraform_remote_state.pmc-env.internal_subnets}"
   region            = "${data.terraform_remote_state.pmc-env.region}"
   vpc_id            = "${data.terraform_remote_state.pmc-env.vpc_id}"
-  ecs_cluster_name  = "${module.tools-ecs-cluster.name}"
+  ecs_cluster_name  = "${module.pmc-ecs-cluster.name}"
   dns_servers       = "${data.terraform_remote_state.pmc-env.dns_servers}"
   ecs_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsService}"
 }
@@ -127,7 +127,7 @@ module "nginx" {
   external_subnets  = "${data.terraform_remote_state.pmc-env.external_subnets}"
   region            = "${data.terraform_remote_state.pmc-env.region}"
   vpc_id            = "${data.terraform_remote_state.pmc-env.vpc_id}"
-  ecs_cluster_name  = "${module.tools-ecs-cluster.name}"
+  ecs_cluster_name  = "${module.pmc-ecs-cluster.name}"
   dns_servers       = "${data.terraform_remote_state.pmc-env.dns_servers}"
   ecs_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsService}"
 }

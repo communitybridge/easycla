@@ -113,8 +113,7 @@ resource "aws_alb_listener" "pmc" {
   provider           = "aws.local"
   load_balancer_arn  = "${aws_alb.pmc.id}"
   port               = "443"
-  protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/16db8afa-932a-4bc9-8da4-52c76f00952c"
+  protocol           = "HTTP"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.pmc.id}"

@@ -30,15 +30,16 @@
       "logDriver": "gelf",
       "options": {
         "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
-        "labels": "app_name,app_env,app_region,app_build,tags"
+        "labels": "app_name,app_env,app_region,app_build,tags,service"
       }
     },
     "dockerLabels": {
+      "service": "application",
       "app_name": "pmc",
       "app_build": "${BUILD_NUMBER}",
       "app_env": "production",
       "app_region": "${TAG_REGION}",
-      "tags": "application, pmc, nodejs"
+      "tags": "application, pmc, nodejs, production"
     }
   }
 ]

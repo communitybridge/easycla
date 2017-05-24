@@ -7,9 +7,9 @@
  * description of configuration variables and their potential values.
  */
 
-var newRelicLicenseKey = "{{ key 'applications/pmc/newrelic/license_key' }}";
-var newRelicAppName = "{{ key 'applications/pmc/newrelic/app_name' }}";
-var newRelicLabels = "{{ key 'applications/pmc/newrelic/labels' }}";
+var newRelicLicenseKey = "{{ key "applications/pmc/newrelic/license_key" }}";
+var newRelicAppName = "{{ key "applications/pmc/newrelic/app_name" }}";
+var newRelicLabels = "{{ key "applications/pmc/newrelic/labels" }}";
 
 exports.config = {
   /**
