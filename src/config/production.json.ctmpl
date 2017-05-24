@@ -1,15 +1,15 @@
 {
   "console": {
     "auth": {
-      "user": "{{ key 'applications/cinco/consoleUsername' }}",
-      "pass": "{{ key 'applications/cinco/consolePassword' }}"
+      "user": "{{ key "applications/cinco/consoleUsername" }}",
+      "pass": "{{ key "applications/cinco/consolePassword" }}"
     },
-    "endpoint": "{{ key 'applications/pmc/endpoint' }}"
+    "endpoint": "{{ key "applications/pmc/endpoint" }}"
   },
   "platform": {
-    "endpoint": "{{ key 'applications/pmc/cincoEndpoint' }}"
+    "endpoint": "{{ key "applications/pmc/cincoEndpoint" }}"
   },
   "session": {
-    "secret": "{{ key 'applications/pmc/sessionSecret' }}"
+    "secret": "{{ key "applications/pmc/sessionSecret" }}"
   }
 }
