@@ -23,7 +23,7 @@
       },
       {
         "name": "SERVICE_80_NAME",
-        "value": "nginx"
+        "value": "PMC_NGINX_${BUILD_NUMBER}"
       },
       {
         "name": "SERVICE_80_TAGS",
