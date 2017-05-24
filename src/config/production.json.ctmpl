@@ -4,7 +4,9 @@
       "user": "{{ key "applications/cinco/consoleUsername" }}",
       "pass": "{{ key "applications/cinco/consolePassword" }}"
     },
-    "endpoint": "{{ key "applications/pmc/endpoint" }}"
+    "endpoint": "{{ key "applications/pmc/endpoint" }}",
+    "redisHost": "{{ key "applications/pmc/redisHost" }}",
+    "redisPort": "{{ key "applications/pmc/redisPort" }}"
   },
   "platform": {
     "endpoint": "{{ key "applications/pmc/cincoEndpoint" }}"
