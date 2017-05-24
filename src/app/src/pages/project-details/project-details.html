@@ -1,0 +1,180 @@
+<ion-header name="project-details-header">
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Edit {{ project.name }} Details</ion-title>
+  </ion-navbar>
+  <ion-row margin-left margin-top margin-bottom >
+    <ion-col col-12>
+      <button ion-button (click)="submitEditProject()" color="secondary">SAVE AND FINISH</button>
+      <button ion-button (click)="cancelEditProject()" color="gray">CANCEL</button>
+    </ion-col>
+  </ion-row>
+</ion-header>
+
+<ion-content padding name="project-details-content">
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <div *ngIf="!project.logoRef" name="logo-placeholder" text-center>
+          <ion-icon name="image"></ion-icon>
+          <div name="change-placeholder">
+            <ion-label (click)="changeLogo()">CHANGE</ion-label>
+          </div>
+        </div>
+        <div *ngIf="project.logoRef" name="logo-placeholder" text-center>
+          <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+          <div name="change-placeholder">
+            <ion-label (click)="changeLogo()">CHANGE</ion-label>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-8>
+        <ion-item>
+          <ion-label stacked>Project Title</ion-label>
+          <ion-input type="text" [(ngModel)]="project.name"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Date Launched</ion-label>
+          <ion-input type="text" [(ngModel)]="project.startDate"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Membership Status</ion-label>
+          <ion-select [(ngModel)]="project.status">
+            <ion-option value="ACTIVE">Active</ion-option>
+            <ion-option value="PLANNED">Planned</ion-option>
+            <ion-option value="COMPLETE">Complete</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Type</ion-label>
+          <ion-select [(ngModel)]="project.category">
+            <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
+            <ion-option value="INCORPORATED">Incorporated</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Sector</ion-label>
+          <ion-select [(ngModel)]="project.sector">
+            <ion-option value="APP_PLATFORMS">Application Platforms</ion-option>
+            <ion-option value="BLOCKCHAIN">Blockchain</ion-option>
+            <ion-option value="CLOUD_AND_VIRTUAL">Cloud & Virtualization</ion-option>
+            <ion-option value="CORE_AND_OS">Core & Operating Systems</ion-option>
+            <ion-option value="DATA_AND_ANALYTICS">Data & Analytics</ion-option>
+            <ion-option value="EMBED_AND_IOT">Embedded and IoT</ion-option>
+            <ion-option value="NETWORKING_AND_COMM">Networking and Communications Infrastructure</ion-option>
+            <ion-option value="OS_COMPLIANCE_AND_BP">Open Source Compliance & Best Practices</ion-option>
+            <ion-option value="SECURITY">Security</ion-option>
+            <ion-option value="STORAGE">Storage</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Budget</ion-label>
+          <ion-input type="number"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Domain</ion-label>
+          <ion-input [(ngModel)]="project.url" type="text"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-8>
+        <ion-item>
+          <ion-label stacked>Billing Address</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.thoroughfare"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Zip Code</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.postalCode"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>City</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.localityName"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>State</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.administrativeArea"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Country</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.country"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12>
+        <ion-item>
+          <ion-label stacked>Description</ion-label>
+          <ion-textarea [(ngModel)]="project.description"></ion-textarea>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <br><br>
+  <ion-grid>
+    <ion-row margin-top>
+      <ion-col col-12>
+        <h3>MEMBERSHIP TIERS</h3>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12>
+        <ion-card >
+          <ion-card-content>
+            <div class="table-responsive-vertical">
+              <table id="table" class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Tier</th>
+                    <th>Product</th>
+                    <th>Annual Dues</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let member of project.members">
+                    <td data-title="Company">{{ member.org.name }}</td>
+                    <td data-title="Tier">{{ member.tier }}</td>
+                    <td data-title="Product">{{ member.product }}</td>
+                    <td data-title="Annual Dues">{{ member.annualDues }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+</ion-content>

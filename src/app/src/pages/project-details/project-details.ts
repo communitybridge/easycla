@@ -1,17 +1,18 @@
 import { Component } from '@angular/core';
-import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
-import { AssetManagementModal } from '../asset-management/asset-management';
+
+import { NavController, NavParams, IonicPage } from 'ionic-angular';
+
+import { CincoService } from '../../app/services/cinco.service'
 
 @IonicPage({
-  segment: 'project/:projectId'
+  segment: 'project-details/:projectId'
 })
 @Component({
-  selector: 'project',
-  templateUrl: 'project.html'
+  selector: 'project-details',
+  templateUrl: 'project-details.html'
 })
-export class ProjectPage {
-  selectedProject: any;
+export class ProjectDetailsPage {
+
   projectId: string;
 
   // This project definition is based on CINCO project class
@@ -30,18 +31,24 @@ export class ProjectPage {
     agreementRef: string,
     mailingListType: string,
     emailAliasType: string,
-    address: string
+    address: {
+      address: {
+        administrativeArea: string,
+        country: string,
+        localityName: string,
+        postalCode: string,
+        thoroughfare: string
+      },
+      type: string
+    }
   };
 
-  membersCount: number;
+  membershipsCount: number;
 
-  constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
-    private cincoService: CincoService,
-    public modalCtrl: ModalController,
-  ) {
-    this.selectedProject = navParams.get('project');
+  editProject: any;
+
+  constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
+    this.editProject = {};
     this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
@@ -53,11 +60,12 @@ export class ProjectPage {
   getProject(projectId) {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
-      if(response) {
+      if (response) {
         this.project.id = response.id;
         this.project.name = response.name;
         this.project.description = response.description;
         this.project.managers = response.managers;
+        this.project.members = response.members
         this.project.status = response.status;
         this.project.category = response.category;
         this.project.sector = response.sector;
@@ -68,37 +76,44 @@ export class ProjectPage {
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
         this.project.address = response.address;
-        this.project.members = response.members;
-        this.membersCount = this.project.members.length;
       }
     });
   }
 
-  memberSelected(event, memberId) {
-    this.navCtrl.push('MemberPage', {
-      projectId: this.projectId,
-      memberId: memberId,
+  submitEditProject() {
+    this.editProject = {
+      project_name: this.project.name,
+      project_description: this.project.description,
+      project_url: this.project.url,
+      project_sector: this.project.sector,
+      project_address: this.project.address,
+      project_status: this.project.status,
+      project_category: this.project.category,
+      project_start_date: this.project.startDate
+    };
+    this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
+      this.navCtrl.push('ProjectPage', {
+        projectId: this.projectId
+      });
     });
   }
 
-  viewProjectDetails(projectId){
-    this.navCtrl.push('ProjectDetailsPage', {
-      projectId: projectId
+  cancelEditProject() {
+    this.navCtrl.push('ProjectPage', {
+      projectId: this.projectId
     });
   }
 
-  openAssetManagementModal() {
-    let modal = this.modalCtrl.create(AssetManagementModal, {
-      projectId: this.projectId,
-    });
-    modal.present();
+  changeLogo() {
+    // TODO: WIP
+    alert("Change Logo");
   }
 
   getDefaults() {
     this.project = {
       id: "",
-      name: "Project",
-      description: "Description",
+      name: "",
+      description: "",
       managers: "",
       members: "",
       status: "",
@@ -110,7 +125,16 @@ export class ProjectPage {
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
-      address: ""
+      address: {
+        address: {
+          administrativeArea: "",
+          country: "",
+          localityName: "",
+          postalCode: "",
+          thoroughfare: ""
+        },
+        type: ""
+      }
     };
   }
 
