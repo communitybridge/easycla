@@ -4,7 +4,9 @@
       "user": "default_user",
       "pass": "default_pass"
     },
-    "endpoint": "http://localhost:8081"
+    "endpoint": "http://localhost:8081",
+    "redisHost": "http://localhost",
+    "redisPort": "3535"
   },
   "platform": {
     "endpoint": "http://localhost:5000"

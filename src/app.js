@@ -6,6 +6,8 @@ var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
 var flash = require('connect-flash');
 var url = require('url');
+var session = require('express-session');
+var RedisStore = require('connect-redis')(session);
 const util = require('util')
 
 var app = express();
@@ -20,9 +22,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('express-session')({
+app.use(session({
+  store: new RedisStore({
+    host: config.get('console.redisHost'),
+    port: config.get('console.redisPort')
+  }),
   secret: config.get('session.secret'),
-  // cookie: { maxAge: 60000 },
   resave: false,
   saveUninitialized: false
 }));
