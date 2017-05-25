@@ -192,4 +192,15 @@ export class CincoService{
     return this.http.put('/organizations/' + organizationId + '/contacts/' + contactId, body, headers)
                 .map((res) => res.json());
   }
+
+  /*
+    Organizations - Projects:
+    Resources for getting details about an organizations project membership
+   */
+
+  getOrganizationProjectMemberships(organizationId) {
+    var response = this.http.get(this.baseUrl + '/organizations/' + organizationId + '/projects_member')
+            .map(res => res.json());
+    return response;
+  }
 }

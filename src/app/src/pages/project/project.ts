@@ -8,7 +8,8 @@ import { AssetManagementModal } from '../asset-management/asset-management';
 })
 @Component({
   selector: 'project',
-  templateUrl: 'project.html'
+  templateUrl: 'project.html',
+  providers: [CincoService]
 })
 export class ProjectPage {
   selectedProject: any;
