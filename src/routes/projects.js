@@ -184,7 +184,9 @@ router.post('/create_project', require('connect-ensure-login').ensureLoggedIn('/
 
 router.get('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+
     var projectId = req.params.projectId;
+
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist
@@ -210,37 +212,43 @@ router.get('/edit_project/:projectId', require('connect-ensure-login').ensureLog
         });
       });
     });
+
   }
 });
 
 router.post('/edit_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+
     var id = req.params.id;
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    // var now = new Date().toISOString();
-    var logoFileName = "";
-    var agreementFileName = "";
-    var url = req.body.url;
-    if(url){
-      if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-    }
-    if(req.files.logo) logoFileName = req.files.logo[0].originalname;
-    else logoFileName = req.body.old_logoRef;
-    if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
-    else agreementFileName = req.body.old_agreementRef;
+
+    // var logoFileName = "";
+    // var agreementFileName = "";
+    // var url = req.body.url;
+    // if(url){
+      // if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    // }
+    // if(req.files.logo) logoFileName = req.files.logo[0].originalname;
+    // else logoFileName = req.body.old_logoRef;
+    // if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
+    // else agreementFileName = req.body.old_agreementRef;
+
     var updatedProps = {
       id: id,
       name: req.body.project_name,
       description: req.body.project_description,
-      pm: req.body.creator_pm,
-      url: url,
-      // startDate: now,
-      logoRef: logoFileName,
-      agreementRef: agreementFileName,
-      category: req.body.project_type
+      url: req.body.project_url,
+      sector: req.body.project_sector,
+      address: JSON.parse(req.body.project_address),
+      status: req.body.project_status,
+      category: req.body.project_category,
+      startDate: req.body.project_start_date
+      // pm: req.body.creator_pm,
+      // logoRef: logoFileName,
+      // agreementRef: agreementFileName,
     };
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
-      return res.redirect('/project/' + id);
+      return res.json(updatedProject);
     });
   }
 });
@@ -258,6 +266,7 @@ router.get('/get_all_projects', require('connect-ensure-login').ensureLoggedIn('
 router.get('/get_project/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
     var projectId = req.params.id;
+    if(req.query.members) { projectId = projectId + '?members=' + req.query.members }
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
       // TODO: Create 404 page for when project doesn't exist

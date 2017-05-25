@@ -1,0 +1,45 @@
+[
+  {
+    "essential": true,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${BUILD_NUMBER}",
+    "memoryReservation": 512,
+    "name": "pmc",
+    "portMappings": [{
+      "containerPort": 8081
+    }],
+    "dnsServers": [
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
+    ],
+    "environment": [
+      {
+        "name": "SERVICE_8081_NAME",
+        "value": "PMC_${BUILD_NUMBER}"
+      },
+      {
+        "name": "SERVICE_8081_TAGS",
+        "value": "${TAG_REGION},${TAG_VPC_ID}"
+      },
+      {
+        "name": "NEWRELIC_LICENSE",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "gelf",
+      "options": {
+        "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
+        "labels": "app_name,app_env,app_region,app_build,tags,service"
+      }
+    },
+    "dockerLabels": {
+      "service": "application",
+      "app_name": "pmc",
+      "app_build": "${BUILD_NUMBER}",
+      "app_env": "production",
+      "app_region": "${TAG_REGION}",
+      "tags": "application, pmc, nodejs, production"
+    }
+  }
+]

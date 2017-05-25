@@ -7,7 +7,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing class="page-project">
+<ion-content padding headerspacing>
 
   <header>
     <ion-grid>
@@ -17,7 +17,7 @@
             <ion-col col-12 col-md-4>
               <div *ngIf="!project.logoRef" text-center>
                 <ion-icon name="image"></ion-icon>
-                <ion-label>Change logo in <a href="/#/project-details/{{project.id}}">Project Details</a></ion-label>
+                <ion-label>Change logo in <a (click)="viewProjectDetails(project.id)">Project Details</a></ion-label>
               </div>
               <div *ngIf="project.logoRef">
                 <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
@@ -72,7 +72,7 @@
           <ion-item>
             <ion-icon name="md-create" item-left large></ion-icon>
             <p>
-              <a href="/#/project-details/{{project.id}}">Project Details</a>
+              <a (click)="viewProjectDetails(project.id)">Project Details</a>
             </p>
           </ion-item>
         </ion-col>
@@ -89,23 +89,25 @@
               <tr>
                 <th>Alert</th>
                 <th>Company</th>
-                <th>Level</th>
+                <th>Tier</th>
+                <th>Product</th>
                 <th>Invoices Status</th>
                 <th>Annual Dues</th>
                 <th>Renewal Date</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let member of members">
+              <tr *ngFor="let member of project.members">
                 <td data-title="Alert">
                   <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
                   <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
                   <span *ngIf="member.alert == ''" class="circle-null"></span>
                 </td>
                 <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
-                <td data-title="Level">{{ member.tier.type }}</td>
+                <td data-title="Tier">{{ member.tier }}</td>
+                <td data-title="Product">{{ member.product }}</td>
                 <td data-title="Status">{{ member.invoices[0].status }}</td>
-                <td data-title="Annual Dues">N/A</td>
+                <td data-title="Annual Dues">{{ member.annualDues }}</td>
                 <td data-title="Renewal Date">{{ member.renewalDate }}</td>
               </tr>
             </tbody>
