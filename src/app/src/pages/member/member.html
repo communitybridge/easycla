@@ -142,29 +142,34 @@
               <ion-col col-10>
                 LF PROJECTS
               </ion-col>
-              <ion-col col-2>
-                <a href="#">(18)</a>
+              <ion-col col-2 (click)="openMembershipsModal()">
+                (
+                  <span *ngIf="orgProjectMemberships; else loadingMemberships">{{ orgProjectMemberships.length }}</span>
+                  <ng-template #loadingMemberships>...</ng-template>
+                )
               </ion-col>
             </ion-row>
           </ion-card-header>
           <ion-card-content>
-            <ion-item no-padding>
+            <ion-item no-padding *ngFor="let member of orgProjectMembershipsFiltered" (click)="openProjectPage(member.projectId)">
               <ion-row>
                 <ion-col col-12>
-                  <h2 color="primary"><ion-icon name="md-open"></ion-icon> Zephyr</h2>
+                  <h2 color="primary"><ion-icon name="md-open"></ion-icon> {{ member.projectName }} {{ member.projectId }}</h2>
                 </ion-col>
               </ion-row>
               <ion-row responsive-md>
                 <ion-col width-25>
-                  <p>Gold, Active</p>
+                  <p>{{ member.product }}, Active</p>
                 </ion-col>
                 <ion-col width-40>
-                  <p>Joined 3/1/2017</p>
+                  <p>Joined: {{ member.startDate }}</p>
                 </ion-col>
                 <ion-col width-45>
-                  <p>Renewal: 3/30/2017</p>
+                  <p>Renewal: {{ member.renewalDate }}</p>
                 </ion-col>
               </ion-row>
+            </ion-item>
+            <!-- <ion-item no-padding>
               <ion-row>
                 <ion-col col-12>
                   <h2><ion-icon name="md-open"></ion-icon> OpenOpen</h2>
@@ -181,6 +186,8 @@
                   <p>Renewal: 3/30/2017</p>
                 </ion-col>
               </ion-row>
+            </ion-item>
+            <ion-item no-padding>
               <ion-row>
                 <ion-col col-12>
                   <h2><ion-icon name="md-open"></ion-icon> MonsterOpen</h2>
@@ -197,6 +204,8 @@
                   <p>Renewal: 3/30/2017</p>
                 </ion-col>
               </ion-row>
+            </ion-item>
+            <ion-item no-padding>
               <ion-row>
                 <ion-col col-12>
                   <h2><ion-icon name="md-open"></ion-icon> BentoOpen</h2>
@@ -213,7 +222,7 @@
                   <p>Renewal: 3/30/2017</p>
                 </ion-col>
               </ion-row>
-            </ion-item>
+            </ion-item> -->
           </ion-card-content>
         </ion-card>
       </ion-col>
