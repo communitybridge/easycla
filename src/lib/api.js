@@ -333,7 +333,7 @@ module.exports = {
       getProject: function (projectId, next) {
         var opts = {
           method: 'GET',
-          path: 'projects/' + projectId + '/'
+          path: 'projects/' + projectId
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -350,7 +350,7 @@ module.exports = {
       updateProject: function (updatedProperties, next) {
         var body = JSON.stringify(updatedProperties);
         var opts = {
-          method: 'PATCH',
+          method: 'PUT',
           path: 'projects/' + updatedProperties.id + '/',
           body: body
         };
