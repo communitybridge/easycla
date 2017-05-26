@@ -741,6 +741,28 @@ module.exports = {
       },
 
       /*
+        Organizations - Projects:
+        Resources for getting details about an organizations project membership
+       */
+
+       getOrganizationProjectMemberships: function (organizationId, next) {
+         var opts = {
+           method: 'GET',
+           path: 'organizations/' + organizationId + '/projects_member'
+         };
+         makeSignedRequest(opts, function (err, res, body) {
+           if (err) {
+             next(err);
+           } else if (res.statusCode == 200) {
+             var memberships = JSON.parse(body);
+             next(null, memberships);
+           } else {
+             next(errors.fromResponse(res, 'Unable to get project memberships from organization with id of.[' + organizationId + ']'));
+           }
+         });
+       },
+
+      /*
         Mailing Lists:
         Resources for working with mailing lists of projects
        */

@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <span class="member-company">{{ orgName }}</span>
+      : <span class="project-name">All Projects</span>
+    </ion-title>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <table id="contacts-table" class="table table-hover">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Class</th>
+        <th>Status</th>
+        <th>Renewal Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let membership of memberships; let odd=odd;" [ngClass]="{ 'item-md-light':odd }" (click)="openProjectPage(membership.projectId)">
+        <td data-title="Project">
+          {{ membership.projectName }}
+        </td>
+        <td data-title="Class">
+          {{ membership.product }}
+        </td>
+        <td data-title="Status">
+          {{ membership.invoices[0].status }}
+        </td>
+        <td data-title="Renewal Date">
+          {{ membership.renewalDate }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</ion-content>
+
+<ion-footer class="footer-seamless">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="light" (click)="dismiss()">
+        Close
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

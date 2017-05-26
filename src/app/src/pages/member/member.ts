@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service';
-// import { ContactUpdate } from '../contact-update/contact-update';
 
 
 @IonicPage({
@@ -9,7 +8,8 @@ import { CincoService } from '../../app/services/cinco.service';
 })
 @Component({
   selector: 'page-member',
-  templateUrl: 'member.html'
+  templateUrl: 'member.html',
+  providers: [CincoService],
 })
 export class MemberPage {
   projectId: any;
@@ -17,6 +17,8 @@ export class MemberPage {
   member: any;
   memberContacts: any;
   memberContactRoles: any;
+  orgProjectMemberships: any;
+  orgProjectMembershipsFiltered: any;
 
   constructor(
     public navCtrl: NavController,
@@ -42,6 +44,7 @@ export class MemberPage {
     this.cincoService.getMember(projectId, memberId).subscribe(response => {
       if(response) {
         this.member = response;
+        this.getOrganizationProjectMemberships(this.member.org.id);
       }
     });
   }
@@ -121,6 +124,31 @@ export class MemberPage {
       if(response) {
         this.memberContactRoles = response;
       }
+    });
+  }
+
+  getOrganizationProjectMemberships(organizationId) {
+    console.log("getOrganizationProjectMemberships called");
+    this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
+      if(response) {
+        this.orgProjectMemberships = response;
+        this.orgProjectMembershipsFiltered = this.orgProjectMemberships.filter((item, index) => index < 4 );
+        console.log(this.orgProjectMembershipsFiltered);
+      }
+    });
+  }
+
+  openMembershipsModal() {
+    let modal = this.modalCtrl.create('MembershipsModal', {
+      orgName: this.member.org.name,
+      memberships: this.orgProjectMemberships,
+    });
+    modal.present();
+  }
+
+  openProjectPage(projectId) {
+    this.navCtrl.push('ProjectPage', {
+      projectId: projectId,
     });
   }
 
