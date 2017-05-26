@@ -15,8 +15,17 @@ export class ProjectModel {
   agreementRef: string;
   mailingListType: string;
   emailAliasType: string;
-  address: string;
-  
+  address: {
+    address: {
+      administrativeArea: string,
+      country: string,
+      localityName: string,
+      postalCode: string,
+      thoroughfare: string
+    },
+    type: string
+  }
+
   constructor() {
   }
 
