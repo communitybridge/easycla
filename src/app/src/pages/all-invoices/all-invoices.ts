@@ -20,17 +20,10 @@ export class AllInvoicesPage {
 
   project = new ProjectModel();
 
+  allProjectsWithMembers: any[] = [];
+
   membersCount: any;
 
-  members: Array<{
-    id: string,
-    project: string,
-    name: string,
-    level: string,
-    status: string,
-    annual_dues: string,
-    renewal_date: string,
-  }>;
   upcomingInvoices: {
     base: Array<number>,
     additional: Array<number>,
@@ -66,15 +59,18 @@ export class AllInvoicesPage {
     this.getDefaults();
   }
 
-  ngOnInit(){
+  async ngOnInit(){
     this.getAllProjects();
   }
 
-  getAllProjects(){
+  getAllProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
-      console.log(response);
-      this.allProjects = response;
-      // this.getProject(this.projectId);
+      if(response) {
+        this.allProjects = response;
+        for(let eachProject of this.allProjects) {
+          this.getProject(eachProject.id);
+        }
+      }
     });
   }
 
@@ -82,22 +78,7 @@ export class AllInvoicesPage {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
-        this.project.id = response.id;
-        this.project.name = response.name;
-        this.project.description = response.description;
-        this.project.managers = response.managers;
-        this.project.status = response.status;
-        this.project.category = response.category;
-        this.project.sector = response.sector;
-        this.project.url = response.url;
-        this.project.startDate = response.startDate;
-        this.project.logoRef = response.logoRef;
-        this.project.agreementRef = response.agreementRef;
-        this.project.mailingListType = response.mailingListType;
-        this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address;
-        this.project.members = response.members;
-        this.membersCount = this.project.members.length;
+        this.allProjectsWithMembers.push(response);
       }
     });
   }
@@ -226,36 +207,6 @@ export class AllInvoicesPage {
         hoverBackground: "rgb(213,107,24)",
       },
     };
-
-    this.members = [
-      {
-        id: 'm00000000001',
-        project: 'Zephyr',
-        name: 'Abbie',
-        level: 'Gold',
-        status: 'Invoice Paid',
-        annual_dues: '$30,000',
-        renewal_date: '3/1/2017',
-      },
-      {
-        id: 'm00000000002',
-        project: 'Zephyr',
-        name: 'Acrombie',
-        level: 'Gold',
-        status: 'Invoice Sent (Late)',
-        annual_dues: '$30,000',
-        renewal_date: '3/2/2017',
-      },
-      {
-        id: 'm00000000003',
-        project: 'Zephyr',
-        name: 'Adobe',
-        level: 'Gold',
-        status: 'Contract: Pending',
-        annual_dues: '$30,000',
-        renewal_date: '4/1/2017',
-      }
-    ];
   }
 
 }
