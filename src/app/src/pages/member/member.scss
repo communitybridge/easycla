@@ -34,4 +34,19 @@ page-member {
       100% {background: grey;}
     }
   }
+
+  .project-memberships {
+    h2 {
+      font-weight: bold;
+      padding-left: 5px;
+    }
+    .project-info {
+      ion-col {
+        padding-top: 0;
+      }
+      p {
+        font-size: 1.3rem;
+      }
+    }
+  }
 }
