@@ -95,7 +95,16 @@ export class ProjectPage {
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
-      address: ""
+      address: {
+        address: {
+          administrativeArea: "",
+          country: "",
+          localityName: "",
+          postalCode: "",
+          thoroughfare: ""
+        },
+        type: ""
+      }
     };
   }
 
