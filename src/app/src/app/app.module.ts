@@ -6,17 +6,11 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { MyApp } from './app.component';
-// import { ContactUpdate } from '../pages/contact-update/contact-update';
-import { AssetManagementModal } from '../pages/asset-management/asset-management';
-// import { UploadButtonComponent } from '../components/upload-button/upload-button';
 import { ActionPopover } from '../components/action-popover/action-popover';
 
 @NgModule({
   declarations: [
     MyApp,
-    // ContactUpdate,
-    AssetManagementModal,
-    // UploadButtonComponent,
     ActionPopover,
   ],
   imports: [
@@ -27,8 +21,6 @@ import { ActionPopover } from '../components/action-popover/action-popover';
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    // ContactUpdate,
-    AssetManagementModal,
     ActionPopover,
   ],
   providers: [

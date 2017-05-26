@@ -1,8 +1,8 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <!-- <span class="member-company">{{ org.name }}</span>
-      : <span class="project-name">{{ project.name }}</span> -->
+      <span class="member-company">{{ orgName }}</span>
+      : <span class="project-name">All Projects</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -45,12 +45,6 @@
 
 <ion-footer class="footer-seamless">
   <ion-toolbar>
-    <ion-buttons>
-      <button ion-button clear icon-left color="primary" (click)="openMemberPage()">
-        <ion-icon name="open"></ion-icon>
-        Open Member
-      </button>
-    </ion-buttons>
     <ion-buttons end>
       <button ion-button icon-right color="light" (click)="dismiss()">
         Close

@@ -151,15 +151,11 @@
             </ion-row>
           </ion-card-header>
           <ion-card-content>
-            <ion-item no-padding *ngFor="let member of orgProjectMembershipsFiltered" (click)="openProjectPage(member.projectId)">
-              <ion-row>
-                <ion-col col-12>
-                  <h2 color="primary"><ion-icon name="md-open"></ion-icon> {{ member.projectName }} {{ member.projectId }}</h2>
-                </ion-col>
-              </ion-row>
-              <ion-row responsive-md>
+            <div no-padding class="project-memberships" *ngFor="let member of orgProjectMembershipsFiltered" (click)="openProjectPage(member.projectId)">
+              <h2>{{ member.projectName }}</h2>
+              <ion-row responsive-md class="project-info">
                 <ion-col width-25>
-                  <p>{{ member.product }}, Active</p>
+                  <p>{{ member.product }}, {{ member.invoices[0].status }}</p>
                 </ion-col>
                 <ion-col width-40>
                   <p>Joined: {{ member.startDate }}</p>
@@ -168,61 +164,7 @@
                   <p>Renewal: {{ member.renewalDate }}</p>
                 </ion-col>
               </ion-row>
-            </ion-item>
-            <!-- <ion-item no-padding>
-              <ion-row>
-                <ion-col col-12>
-                  <h2><ion-icon name="md-open"></ion-icon> OpenOpen</h2>
-                </ion-col>
-              </ion-row>
-              <ion-row responsive-md>
-                <ion-col width-25>
-                  <p>Silver, Active</p>
-                </ion-col>
-                <ion-col width-40>
-                  <p>Joined 3/1/2017</p>
-                </ion-col>
-                <ion-col width-45>
-                  <p>Renewal: 3/30/2017</p>
-                </ion-col>
-              </ion-row>
-            </ion-item>
-            <ion-item no-padding>
-              <ion-row>
-                <ion-col col-12>
-                  <h2><ion-icon name="md-open"></ion-icon> MonsterOpen</h2>
-                </ion-col>
-              </ion-row>
-              <ion-row responsive-md>
-                <ion-col width-25>
-                  <p>Silver, Active</p>
-                </ion-col>
-                <ion-col width-40>
-                  <p>Joined 3/1/2017</p>
-                </ion-col>
-                <ion-col width-45>
-                  <p>Renewal: 3/30/2017</p>
-                </ion-col>
-              </ion-row>
-            </ion-item>
-            <ion-item no-padding>
-              <ion-row>
-                <ion-col col-12>
-                  <h2><ion-icon name="md-open"></ion-icon> BentoOpen</h2>
-                </ion-col>
-              </ion-row>
-              <ion-row responsive-md>
-                <ion-col width-25>
-                  <p>Gold, Active</p>
-                </ion-col>
-                <ion-col width-40>
-                  <p>Joined 3/1/2017</p>
-                </ion-col>
-                <ion-col width-45>
-                  <p>Renewal: 3/30/2017</p>
-                </ion-col>
-              </ion-row>
-            </ion-item> -->
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -238,7 +180,7 @@
               Contacts
             </ion-card-title>
             <div class="table-responsive-vertical">
-              <table id="contacts-table" class="table table-hover">
+              <table class="table table-hover">
                 <thead>
                   <tr>
                     <th></th>

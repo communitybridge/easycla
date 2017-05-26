@@ -8,7 +8,8 @@ import { CincoService } from '../../app/services/cinco.service';
 })
 @Component({
   selector: 'page-member',
-  templateUrl: 'member.html'
+  templateUrl: 'member.html',
+  providers: [CincoService],
 })
 export class MemberPage {
   projectId: any;
@@ -139,6 +140,7 @@ export class MemberPage {
 
   openMembershipsModal() {
     let modal = this.modalCtrl.create('MembershipsModal', {
+      orgName: this.member.org.name,
       memberships: this.orgProjectMemberships,
     });
     modal.present();

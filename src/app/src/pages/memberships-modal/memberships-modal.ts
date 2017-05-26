@@ -9,6 +9,7 @@ import { NavController, NavParams, ViewController, AlertController, IonicPage } 
   templateUrl: 'memberships-modal.html',
 })
 export class MembershipsModal {
+  orgName: string;
   memberships: any;
 
   constructor(
@@ -18,6 +19,7 @@ export class MembershipsModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
   ) {
+    this.orgName = navParams.get('orgName');
     this.memberships = navParams.get('memberships');
     console.log(this.memberships);
     this.getDefaults();
