@@ -1,7 +1,10 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, ToastController  } from 'ionic-angular';
+import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 
+@IonicPage({
+  segment: 'asset-management'
+})
 @Component({
   selector: 'asset-management',
   templateUrl: 'asset-management.html',

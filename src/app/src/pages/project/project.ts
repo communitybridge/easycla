@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service';
-import { AssetManagementModal } from '../asset-management/asset-management';
 
 @IonicPage({
   segment: 'project/:projectId'
@@ -89,7 +88,7 @@ export class ProjectPage {
   }
 
   openAssetManagementModal() {
-    let modal = this.modalCtrl.create(AssetManagementModal, {
+    let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
     });
     modal.present();
