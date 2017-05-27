@@ -2,7 +2,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { HttpModule } from '@angular/http';
 import { CurrencyPipe } from '@angular/common';
-import { DatePipe } from '@angular/common';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -13,7 +12,7 @@ import { ActionPopover } from '../components/action-popover/action-popover';
 @NgModule({
   declarations: [
     MyApp,
-    ActionPopover,
+    ActionPopover
   ],
   imports: [
     BrowserModule,
@@ -29,7 +28,6 @@ import { ActionPopover } from '../components/action-popover/action-popover';
     StatusBar,
     SplashScreen,
     CurrencyPipe,
-    DatePipe,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })

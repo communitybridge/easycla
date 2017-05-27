@@ -54,7 +54,9 @@
                       <td data-title="Product">{{ member.product }}</td>
                       <td data-title="Invoice Status">{{ member.invoices[0].status }}</td>
                       <td data-title="Annual Dues">{{ member.annualDues | currency:'USD':true:'4.2-2' }}</td>
-                      <td data-title="Renewal Date">{{ member.renewalDate | date }}</td>
+                      <td data-title="Renewal Date">
+                        <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
+                      </td>
                     </tr>
                   </ng-container>
                   <ng-container *ngIf="project.members.length == 0">
