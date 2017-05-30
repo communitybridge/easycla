@@ -1,5 +1,6 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service';
 
 @IonicPage({
@@ -21,13 +22,18 @@ export class ContactUpdate {
   orgContactRoles: any;
   keysGetter;
 
+  contactUpdateForm: FormGroup;
+  submitAttempt: boolean = false;
+  @ViewChild(Content) content: Content;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    public formBuilder: FormBuilder
   ) {
     this.getDefaults();
     this.keysGetter = Object.keys;
@@ -46,6 +52,17 @@ export class ContactUpdate {
 
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
+
+    this.contactUpdateForm = formBuilder.group({
+      email:[''],
+      givenName:[''],
+      familyName:[''],
+      phone:[''],
+      title:[''],
+      type:[''],
+      role:[''],
+    });
+
   }
 
   ngOnInit() {
@@ -215,6 +232,12 @@ export class ContactUpdate {
   }
 
   saveContact() {
+    this.submitAttempt = true;
+    if (!this.contactUpdateForm.valid){
+      this.content.scrollToTop();
+      // prevent submit
+      return;
+    }
     if (this.contactId) {
       if (this.roleId) {
         this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
