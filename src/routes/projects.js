@@ -278,28 +278,32 @@ router.get('/get_project/:id', require('connect-ensure-login').ensureLoggedIn('/
 
 router.post('/post_project', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+
     var now = new Date().toISOString();
-    var url = req.body.url;
-    if(url){
-      if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-    }
-    var logoFileName = "";
-    var agreementFileName = "";
-    if(req.files){
-      if(req.files.logo) logoFileName = req.files.logo[0].originalname;
-      if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
-    }
+    // var url = req.body.url;
+    // if(url){
+    //   if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+    // }
+    // var logoFileName = "";
+    // var agreementFileName = "";
+    // if(req.files){
+    //   if(req.files.logo) logoFileName = req.files.logo[0].originalname;
+    //   if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
+    // }
+
     var newProject = {
       name: req.body.project_name,
       description: req.body.project_description,
-      pm: req.session.user.user,
-      url: url,
-      startDate: now,
-      logoRef: logoFileName,
-      agreementRef: agreementFileName,
-      category: req.body.project_type
+      managers: [req.session.user.user],
+      url: req.body.project_url,
+      sector: req.body.project_sector,
+      address: JSON.parse(req.body.project_address),
+      status: req.body.project_status,
+      category: req.body.project_category,
+      startDate: req.body.project_start_date?req.body.project_start_date:now
     };
+
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.createProject(newProject, function (err, created, projectId) {
       return res.json(projectId);
     });
