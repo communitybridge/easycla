@@ -11,23 +11,67 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
+        <div class="logo-placeholder" text-center>
+          <ion-icon class="image-icon" name="image"></ion-icon>
+          <div class="change-placeholder">
+            <ion-label (click)="changeLogo()">ADD</ion-label>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-8>
         <ion-item>
-          <ion-label stacked>Project Name</ion-label>
-          <ion-input type="text" name="project_name" [(ngModel)]="project_name"></ion-input>
+          <ion-label stacked>Project Title</ion-label>
+          <ion-input type="text" [(ngModel)]="project.name"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Date Launched</ion-label>
+          <ion-datetime displayFormat="MM/DD/YYYY" [(ngModel)]="project.startDate" ></ion-datetime>
         </ion-item>
       </ion-col>
     </ion-row>
     <ion-row>
       <ion-col col-4>
         <ion-item>
-          <ion-label stacked>Project Type</ion-label>
-          <ion-select [(ngModel)]="project_type">
-            <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
-            <ion-option value="INCORPORATED">Incorporated</ion-option>
-            <ion-option value="UNSPECIFIED">Unspecified</ion-option>
+          <ion-label stacked>Membership Status</ion-label>
+          <ion-select [(ngModel)]="project.status">
+            <ion-option value="ACTIVE">Active</ion-option>
+            <ion-option value="PLANNED">Planned</ion-option>
+            <ion-option value="COMPLETE">Complete</ion-option>
           </ion-select>
         </ion-item>
       </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Type</ion-label>
+          <ion-select [(ngModel)]="project.category">
+            <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
+            <ion-option value="INCORPORATED">Incorporated</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Project Sector</ion-label>
+          <ion-select [(ngModel)]="project.sector">
+            <ion-option value="APP_PLATFORMS">Application Platforms</ion-option>
+            <ion-option value="BLOCKCHAIN">Blockchain</ion-option>
+            <ion-option value="CLOUD_AND_VIRTUAL">Cloud & Virtualization</ion-option>
+            <ion-option value="CORE_AND_OS">Core & Operating Systems</ion-option>
+            <ion-option value="DATA_AND_ANALYTICS">Data & Analytics</ion-option>
+            <ion-option value="EMBED_AND_IOT">Embedded and IoT</ion-option>
+            <ion-option value="NETWORKING_AND_COMM">Networking and Communications Infrastructure</ion-option>
+            <ion-option value="OS_COMPLIANCE_AND_BP">Open Source Compliance & Best Practices</ion-option>
+            <ion-option value="SECURITY">Security</ion-option>
+            <ion-option value="STORAGE">Storage</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Budget</ion-label>
@@ -36,30 +80,50 @@
       </ion-col>
       <ion-col col-4>
         <ion-item>
-          <ion-label stacked>Categories</ion-label>
-          <ion-select [(ngModel)]="project-category">
-            <ion-option value="EMBEDDED_AND_IOT">Embedded and IoT</ion-option>
-            <ion-option value="OTHER">Other</ion-option>
-          </ion-select>
+          <ion-label stacked>Domain</ion-label>
+          <ion-input [(ngModel)]="project.url" type="text"></ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
     <ion-row>
-      <ion-col col-6>
+      <ion-col col-8>
         <ion-item>
-          <ion-label stacked>Domain</ion-label>
-          <ion-input type="text"></ion-input>
+          <ion-label stacked>Billing Address</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.thoroughfare"></ion-input>
         </ion-item>
       </ion-col>
-      <ion-col col-6 padding-top margin-bottom margin-top>
-        <ion-icon name="ios-open-outline"></ion-icon> WHOIS Lookup
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Zip Code</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.postalCode"></ion-input>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>City</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.localityName"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>State</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.administrativeArea"></ion-input>
+        </ion-item>
+      </ion-col>
+      <ion-col col-4>
+        <ion-item>
+          <ion-label stacked>Country</ion-label>
+          <ion-input type="text" [(ngModel)]="project.address.address.country"></ion-input>
+        </ion-item>
       </ion-col>
     </ion-row>
     <ion-row>
       <ion-col col-12>
         <ion-item>
           <ion-label stacked>Description</ion-label>
-          <ion-textarea></ion-textarea>
+          <ion-textarea [(ngModel)]="project.description"></ion-textarea>
         </ion-item>
       </ion-col>
     </ion-row>
