@@ -4,6 +4,8 @@ import { NavController, IonicPage } from 'ionic-angular';
 
 import { CincoService } from '../../app/services/cinco.service'
 
+import { ProjectModel } from '../../models/project-model';
+
 @IonicPage({
   segment: 'add-project'
 })
@@ -12,24 +14,54 @@ import { CincoService } from '../../app/services/cinco.service'
   templateUrl: 'add-project.html'
 })
 export class AddProjectPage {
-  newProject;
-  project_name: String;
-  project_type: String;
+
+  project = new ProjectModel();
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
-    this.newProject = {};
+    this.getDefaults();
   }
 
   submitNewProject() {
-    this.newProject = {
-      project_name: this.project_name,
-      project_type: this.project_type
-    };
-    this.cincoService.postProject(this.newProject).subscribe(response => {
+    this.project.startDate = new Date(this.project.startDate).toISOString();
+    this.cincoService.postProject(this.project).subscribe(response => {
       this.navCtrl.push('ProjectPage', {
         projectId: response
       });
     });
+  }
+
+  changeLogo() {
+    // TODO: WIP
+    alert("Change Logo");
+  }
+
+  getDefaults() {
+    this.project = {
+      id: "",
+      name: "",
+      description: "",
+      managers: "",
+      members: "",
+      status: "",
+      category: "",
+      sector: "",
+      url: "",
+      startDate: "",
+      logoRef: "",
+      agreementRef: "",
+      mailingListType: "",
+      emailAliasType: "",
+      address: {
+        address: {
+          administrativeArea: "",
+          country: "",
+          localityName: "",
+          postalCode: "",
+          thoroughfare: ""
+        },
+        type: "BILLING"
+      }
+    };
   }
 
 }
