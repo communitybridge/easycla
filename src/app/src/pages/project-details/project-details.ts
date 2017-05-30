@@ -4,6 +4,8 @@ import { NavController, NavParams, IonicPage } from 'ionic-angular';
 
 import { CincoService } from '../../app/services/cinco.service'
 
+import { ProjectModel } from '../../models/project-model';
+
 @IonicPage({
   segment: 'project-details/:projectId'
 })
@@ -15,33 +17,7 @@ export class ProjectDetailsPage {
 
   projectId: string;
 
-  // This project definition is based on CINCO project class
-  project: {
-    id: string,
-    name: string,
-    description: string,
-    managers: string,
-    members: any,
-    status: string,
-    category: string,
-    sector: string,
-    url: string,
-    startDate: string,
-    logoRef: string,
-    agreementRef: string,
-    mailingListType: string,
-    emailAliasType: string,
-    address: {
-      address: {
-        administrativeArea: string,
-        country: string,
-        localityName: string,
-        postalCode: string,
-        thoroughfare: string
-      },
-      type: string
-    }
-  };
+  project = new ProjectModel();
 
   membershipsCount: number;
 
