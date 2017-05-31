@@ -55,3 +55,11 @@ resource "aws_route" "peer_internal_3" {
   destination_cidr_block    = "${var.tools_cidr}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }
+
+resource "aws_route" "peer_external" {
+  provider                  = "aws.local"
+  route_table_id            = "${var.tools_external_rtb_id}"
+  destination_cidr_block    = "${var.tools_cidr}"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+}
+
