@@ -13,8 +13,8 @@ variable "build_number" {
 # We are saving the state for this infra in Consul
 terraform {
   backend "consul" {
-    address = "10.32.0.167:8500"
-    path    = "terraform/state/production/pmc/application"
+    address = "consul.service.consul:8500"
+    path    = "terraform/applications/pmc/app"
   }
 }
 
@@ -22,8 +22,8 @@ terraform {
 data "terraform_remote_state" "pmc-env" {
   backend = "consul"
   config {
-    address = "10.32.0.167:8500"
-    path    = "terraform/state/production/pmc/environment"
+    address = "consul.service.consul:8500"
+    path    = "terraform/applications/pmc/environment"
   }
 }
 
