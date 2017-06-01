@@ -12,9 +12,9 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
-<form [formGroup]="contactUpdateForm">
-  <ion-content>
-    <p *ngIf="submitAttempt" class="form-message">Please fill out all details accurately.</p>
+<ion-content>
+  <form [formGroup]="contactUpdateForm">
+    <p *ngIf="submitAttempt" class="form-message">Please check the fields below for errors.</p>
     <ion-grid>
       <ion-row>
         <ion-col col-12 class="field-notice">
@@ -25,7 +25,7 @@
         <ion-col col-12 col-md-6>
           <ion-item>
             <ion-label stacked>Email *</ion-label>
-            <ion-input type="text" formControlName="email" [(ngModel)]="contact.contact.email"></ion-input>
+            <ion-input type="text" formControlName="email"></ion-input>
           </ion-item>
         </ion-col>
         <ion-col col-12 col-md-6>
@@ -40,19 +40,19 @@
         <ion-col col-12 col-md-3>
           <ion-item>
             <ion-label stacked>Given Name *</ion-label>
-            <ion-input type="text" formControlName="givenName" [(ngModel)]="contact.contact.givenName"></ion-input>
+            <ion-input type="text" formControlName="givenName"></ion-input>
           </ion-item>
         </ion-col>
         <ion-col col-12 col-md-3>
           <ion-item>
             <ion-label stacked>Family Name *</ion-label>
-            <ion-input type="text" formControlName="familyName" [(ngModel)]="contact.contact.familyName"></ion-input>
+            <ion-input type="text" formControlName="familyName"></ion-input>
           </ion-item>
         </ion-col>
         <ion-col col-12 col-md-6>
           <ion-item>
             <ion-label stacked>Phone *</ion-label>
-            <ion-input type="text" formControlName="phone" [(ngModel)]="contact.contact.phone"></ion-input>
+            <ion-input type="text" formControlName="phone"></ion-input>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -61,13 +61,13 @@
         <ion-col col-12 col-md-6>
           <ion-item>
             <ion-label stacked>Title *</ion-label>
-            <ion-input type="text" formControlName="title" [(ngModel)]="contact.contact.title"></ion-input>
+            <ion-input type="text" formControlName="title"></ion-input>
           </ion-item>
         </ion-col>
         <ion-col col-12 col-md-6>
           <ion-item>
             <ion-label stacked>Type *</ion-label>
-            <ion-select formControlName="type" [(ngModel)]="contact.contact.type">
+            <ion-select formControlName="type">
               <ion-option *ngFor="let role of keysGetter(orgContactRoles)" value="{{ role }}">{{ orgContactRoles[role] }}</ion-option>
             </ion-select>
           </ion-item>
@@ -86,7 +86,7 @@
         <ion-col col-12 col-md-6>
           <ion-item>
             <ion-label stacked>Role</ion-label>
-            <ion-select formControlName="role" [(ngModel)]="contact.type">
+            <ion-select formControlName="role">
               <ion-option *ngFor="let role of keysGetter(memberContactRoles)" value="{{ role }}">{{ memberContactRoles[role] }}</ion-option>
             </ion-select>
           </ion-item>
@@ -96,11 +96,12 @@
             <ion-col col-12 col-md-6>
               <ion-item class="contact-primary">
                 <ion-label stacked>Primary</ion-label>
-                <ion-icon *ngIf="contact.primaryContact=='true'" name="star" item-left></ion-icon>
-                <ion-icon *ngIf="contact.primaryContact!='true'" name="star-outline" item-left></ion-icon>
-                <ion-select [(ngModel)]="contact.primaryContact" (ngModelChange)="primarySelectChanged($event)">
-                  <ion-option value="true">Yes</ion-option>
-                  <ion-option value="false">No</ion-option>
+                <ion-icon *ngIf="contactUpdateForm.value.primaryContact=='true'; else notPrimaryContact" name="star" item-left></ion-icon>
+                <ng-template #notPrimaryContact>
+                  <ion-icon name="star-outline" item-left></ion-icon>
+                </ng-template>
+                <ion-select formControlName="primaryContact" (ionChange)="primarySelectChanged($event)">
+                  <ion-option *ngFor="let option of primaryContactOptions" value="{{ option.value }}">{{ option.name }}</ion-option>
                 </ion-select>
               </ion-item>
             </ion-col>
@@ -108,9 +109,8 @@
               <ion-item class="contact-board">
                 <ion-label stacked>Board</ion-label>
                 <ion-icon name="contact" item-left></ion-icon>
-                <ion-select [(ngModel)]="contact.boardMember" (ngModelChange)="boardSelectChanged($event)">
-                  <ion-option value="true">Yes</ion-option>
-                  <ion-option value="false">No</ion-option>
+                <ion-select formControlName="boardMember" (ionChange)="boardSelectChanged($event)">
+                  <ion-option *ngFor="let option of boardMemberOptions" value="{{ option.value }}">{{ option.name }}</ion-option>
                 </ion-select>
               </ion-item>
             </ion-col>
@@ -153,32 +153,32 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Bio *</ion-label>
-            <ion-textarea formControlName="bio" [(ngModel)]="contact.contact.bio"></ion-textarea>
+            <ion-textarea formControlName="bio"></ion-textarea>
           </ion-item>
         </ion-col>
       </ion-row>
 
     </ion-grid>
-  </ion-content>
+  </form>
+</ion-content>
 
-  <ion-footer class="footer-seamless">
-    <ion-toolbar>
-      <ion-buttons>
-        <button *ngIf="contact.id" ion-button clear icon-right color="primary" (click)="removeContactPrompt()">
-          Remove Contact
-        </button>
-      </ion-buttons>
-      <ion-buttons end>
-        <button ion-button icon-right color="light" (click)="dismiss()">
-          Cancel
-        </button>
-        <button *ngIf="contact.id" ion-button icon-right color="primary" (click)="saveContact()">
-          Save
-        </button>
-        <button *ngIf="!contact.id" ion-button icon-right color="primary" (click)="saveContact()">
-          Add Contact
-        </button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-footer>
-</form>
+<ion-footer class="footer-seamless">
+  <ion-toolbar>
+    <ion-buttons>
+      <button *ngIf="contact.id" ion-button clear icon-right color="primary" (click)="removeContactPrompt()">
+        Remove Contact
+      </button>
+    </ion-buttons>
+    <ion-buttons end>
+      <button ion-button icon-right color="light" (click)="dismiss()">
+        Cancel
+      </button>
+      <button *ngIf="contact.id" ion-button icon-right color="primary" (click)="saveContact()">
+        Save
+      </button>
+      <button *ngIf="!contact.id" ion-button icon-right color="primary" (click)="saveContact()">
+        Add Contact
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
