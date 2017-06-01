@@ -561,6 +561,12 @@ module.exports = {
           body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
+          console.log("err");
+          console.log(err);
+          console.log("res");
+          console.log(res);
+          console.log("body");
+          console.log(body);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 200) {
@@ -729,6 +735,13 @@ module.exports = {
           body: JSON.stringify(contact)
         };
         makeSignedRequest(opts, function (err, res, body) {
+          console.log("update org contact");
+          console.log("err");
+          console.log(err);
+          console.log("res");
+          console.log(res);
+          console.log("body");
+          console.log(body);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 200) {
