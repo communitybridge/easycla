@@ -6,7 +6,7 @@ variable "secret_key" {
   description = "Your AWS Secret Key"
 }
 
-variable "build_number" {
+variable "build_hash" {
   description = "The Build Number we are to deploy."
 }
 
@@ -41,7 +41,7 @@ data "template_file" "user_data_pmc" {
 
   vars {
     env               = "${terraform.env}"
-    build             = "${var.build_number}"
+    build             = "${var.build_hash}"
     ecs_cluster_name  = "${terraform.env}-pmc"
     region            = "${data.terraform_remote_state.pmc-env.region}"
     newrelic_key      = "${data.terraform_remote_state.pmc-env.newrelic_key}"
@@ -73,7 +73,7 @@ module "registrator" {
   source           = "./registrator"
 
   # Application Information
-  build_number      = "${var.build_number}"
+  build_hash      = "${var.build_hash}"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
@@ -89,7 +89,7 @@ module "consul" {
   datacenter       = "AWS"
 
   # Application Information
-  build_number     = "${var.build_number}"
+  build_hash     = "${var.build_hash}"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
@@ -101,7 +101,7 @@ module "pmc" {
   source            = "./pmc"
 
   # Application Information
-  build_number      = "${var.build_number}"
+  build_hash      = "${var.build_hash}"
   route53_zone_id   = "${data.terraform_remote_state.pmc-env.route53_zone_id}"
 
   # ECS Information
@@ -119,7 +119,7 @@ module "nginx" {
   source            = "./nginx"
 
   # Application Information
-  build_number      = "${var.build_number}"
+  build_hash      = "${var.build_hash}"
   route53_zone_id   = "${data.terraform_remote_state.pmc-env.route53_zone_id}"
 
   # ECS Information
