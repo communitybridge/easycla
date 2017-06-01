@@ -24,7 +24,7 @@ variable "dns_servers" {
   type = "list"
 }
 
-variable "build_number" {
+variable "build_hash" {
   description = "The Build Number we are to deploy."
 }
 
@@ -41,13 +41,13 @@ data "template_file" "nginx_ecs_task" {
 
   vars {
     # Information for Consul-Template
-    CONSUL_SERVICE            = "PMC_${var.build_number}"
+    CONSUL_SERVICE            = "PMC_${var.build_hash}"
 
     # NGINX Domains
     APP_DOMAINS               = "projectconsole.linuxfoundation.org www.projectconsole.linuxfoundation.org"
 
     # Build Information
-    BUILD_NUMBER              = "${var.build_number}"
+    build_hash              = "${var.build_hash}"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
@@ -86,10 +86,6 @@ resource "aws_ecs_service" "nginx" {
     target_group_arn   = "${aws_alb_target_group.nginx.arn}"
     container_name     = "nginx"
     container_port     = 80
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }
 
