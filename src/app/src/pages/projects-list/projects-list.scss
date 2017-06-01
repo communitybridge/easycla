@@ -1,8 +1,21 @@
 projects-list {
+
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+
+  .main-headers {
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 24px;
+    font-family: "Roboto" !important;
+    src: url("../assets/fonts/roboto-light.ttf");
+  }
+
+  .project-name {
+    cursor:pointer;
+  }
+
   ion-card {
     dl {
       display: flex;
@@ -29,4 +42,5 @@ projects-list {
       display: block;
     }
   }
+
 }
