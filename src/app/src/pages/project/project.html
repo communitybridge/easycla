@@ -44,7 +44,13 @@
                 </ion-col>
                 <ion-col col-12 col-md-4>
                   <ion-label>
-                    Launched: {{ project.startDate }} <span *ngIf="!project.startDate">N/A</span>
+                    <ion-row>
+                      <span margin-right>Launched: </span>
+                      <span>
+                        <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="project.startDate" ></ion-datetime>
+                      </span>
+                      <span *ngIf="!project.startDate">N/A</span>
+                    </ion-row>
                   </ion-label>
                   <ion-label>
                     Members: {{ membersCount }}
