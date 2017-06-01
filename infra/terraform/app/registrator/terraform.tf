@@ -11,7 +11,7 @@ variable "region" {
   default = "us-west-2"
 }
 
-variable "build_number" {
+variable "build_hash" {
   description = "The Build Number we are to deploy."
 }
 
@@ -46,11 +46,16 @@ resource "aws_ecs_service" "registrator" {
   name                               = "registrator"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.registrator.arn}"
-  desired_count                      = "3"
+  desired_count                      = "6"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
 
-  lifecycle {
-    create_before_destroy = true
+  placement_strategy {
+    type = "spread"
+    field = "instanceId"
+  }
+
+  placement_constraints {
+    type = "distinctInstance"
   }
 }
