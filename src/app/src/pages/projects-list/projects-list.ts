@@ -7,7 +7,7 @@ import { Chart } from 'chart.js';
   segment: 'projects'
 })
 @Component({
-  selector: 'projects',
+  selector: 'projects-list',
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
