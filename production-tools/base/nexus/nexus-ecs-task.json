@@ -1,12 +1,12 @@
 [
   {
     "essential": true,
-    "image": "433610389961.dkr.ecr.us-west-2.amazonaws.com/pypicloud:latest",
-    "memoryReservation": 258,
-    "name": "pypi",
+    "image": "sonatype/nexus3",
+    "memoryReservation": 1024,
+    "name": "nexus",
     "portMappings": [{
-      "containerPort": 8080,
-      "hostPort": 8080
+      "containerPort": 8081,
+      "hostPort": 8081
     }],
     "dnsServers": [
       "${DNS_SERVER_1}",
@@ -15,36 +15,26 @@
     ],
     "environment": [
       {
-        "name": "AWS_ACCESS_KEY_ID",
-        "value": "${AWS_ACCESS_KEY_ID}"
-      },
-      {
-        "name": "AWS_SECRET_ACCESS_KEY",
-        "value": "${AWS_SECRET_ACCESS_KEY}"
-      },
-      {
-        "name": "S3_BUCKET",
-        "value": "${S3_BUCKET}"
-      },
-      {
-        "name": "REDIS_HOST",
-        "value": "${REDIS_HOST}"
-      },
-      {
         "name": "SERVICE_NAME",
-        "value": "pypi"
+        "value": "nexus"
       },
       {
         "name": "SERVICE_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
       },
       {
-        "name": "SERVICE_8080_CHECK_HTTP",
+        "name": "SERVICE_8081_CHECK_HTTP",
         "value": "/"
       },
       {
-        "name": "SERVICE_8080_CHECK_INTERVAL",
+        "name": "SERVICE_8081_CHECK_INTERVAL",
         "value": "300s"
+      }
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "nexus-storage",
+        "containerPath": "/nexus-data"
       }
     ],
     "logConfiguration": {
@@ -55,7 +45,7 @@
       }
     },
     "dockerLabels": {
-      "app_name": "pypi",
+      "app_name": "nexus",
       "app_env": "production",
       "app_region": "${TAG_REGION}"
     }

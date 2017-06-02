@@ -4,7 +4,7 @@
     "memory": 256,
     "image": "gliderlabs/registrator:latest",
     "name": "registrator",
-    "command": ["-cleanup", "consul://localhost:8500"],
+    "command": ["-cleanup", "consul://127.0.0.1:8500"],
     "mountPoints": [
       {
         "sourceVolume": "docker-sock",
@@ -17,12 +17,17 @@
       "${DNS_SERVER_3}"
     ],
     "logConfiguration": {
-      "logDriver": "awslogs",
+      "logDriver": "gelf",
       "options": {
-        "awslogs-group": "shared-production-infra",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream-prefix": "registrator"
+        "gelf-address": "udp://logstash.service.consul:12201",
+        "labels": "realm,application,environment,tags"
       }
+    },
+    "dockerLabels": {
+      "realm": "cinco",
+      "application": "registrator",
+      "environment": "production",
+      "tags": "service, registrator"
     }
   }
 ]

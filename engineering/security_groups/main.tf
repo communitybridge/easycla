@@ -70,22 +70,11 @@ resource "aws_security_group" "vpn" {
     cidr_blocks = ["10.32.0.0/12"]
   }
 
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = ["${aws_security_group.jenkins-master.id}"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 
   tags {
@@ -138,6 +127,20 @@ resource "aws_security_group" "jenkins-master" {
     security_groups = ["${aws_security_group.jenkins-slaves.id}"]
   }
 
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${aws_security_group.vpn.id}"]
+  }
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${aws_security_group.jenkins-elb.id}"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -167,6 +170,42 @@ resource "aws_security_group" "jenkins-master-efs" {
     from_port   = 2049
     to_port     = 2049
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags {
+    Name        = "Jenkins Master Instance EFS"
+  }
+}
+
+resource "aws_security_group" "jenkins-elb" {
+  provider    = "aws.local"
+  name        = "jenkins-master-elb"
+  description = "Allows ELB Access to Jenkins Master"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    cidr_blocks     = ["10.32.0.0/12"]
+  }
+
+  ingress {
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    cidr_blocks     = ["10.32.0.0/12"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -235,6 +274,13 @@ resource "aws_security_group" "engineering-sandboxes" {
     security_groups = ["${aws_security_group.engineering-sandboxes-redis.id}"]
   }
 
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${aws_security_group.vpn.id}"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -290,6 +336,10 @@ output "jenkins_master" {
 
 output "jenkins_master_efs" {
   value = "${aws_security_group.jenkins-master-efs.id}"
+}
+
+output "jenkins_master_elb" {
+  value = "${aws_security_group.jenkins-elb.id}"
 }
 
 output "engineering_sandboxes" {

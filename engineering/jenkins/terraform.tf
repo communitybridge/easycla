@@ -9,12 +9,17 @@ variable "sg_jenkins" {}
 
 variable "sg_jenkins_efs" {}
 
+variable "sg_internal_elb" {}
+
+variable "region" {}
+
 data "template_file" "ecs_cloud_config" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    efs_id           = "${aws_efs_file_system.jenkins-home.id}"
+    efs_id               = "${aws_efs_file_system.jenkins-home.id}"
     newrelic_license     = "951db34ebed364ea663002571b63db5d3f827758"
+    aws_region           = "${var.region}"
   }
 }
 
@@ -92,11 +97,70 @@ resource "aws_instance" "jenkins" {
   }
 }
 
+# Create a new load balancer
+resource "aws_elb" "jenkins" {
+  provider = "aws.local"
+  name = "jenkins-master"
+  subnets = ["${var.internal_subnets}"]
+  security_groups = ["${var.sg_internal_elb}"]
+  internal = true
+
+  listener {
+    instance_port = 8080
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  listener {
+    instance_port = 8080
+    instance_protocol = "http"
+    lb_port = 443
+    lb_protocol = "https"
+    ssl_certificate_id = "arn:aws:acm:us-west-2:433610389961:certificate/bb946be4-a4f4-4f91-a786-60eddbd055b6"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "TCP:8080"
+    interval = 30
+  }
+
+  cross_zone_load_balancing = true
+  idle_timeout = 400
+  connection_draining = true
+  connection_draining_timeout = 400
+
+  tags {
+    Name = "jenkins-master"
+  }
+}
+
+# Create a new load balancer attachment
+resource "aws_elb_attachment" "jenkins" {
+  provider = "aws.local"
+  instance = "${aws_instance.jenkins.id}"
+  elb      = "${aws_elb.jenkins.id}"
+}
+
 resource "aws_route53_record" "jenkins" {
   provider = "aws.local"
   zone_id = "Z2MDT77FL23F9B"
   name    = "jenkins"
   type    = "A"
-  ttl     = "300"
-  records = ["${aws_instance.jenkins.private_ip}"]
+
+  alias {
+    name                   = "${aws_elb.jenkins.dns_name}"
+    zone_id                = "${aws_elb.jenkins.zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+module "iam" {
+  source = "./iam-role"
+
+  name = "jenkins"
+  environment = "slave"
 }
