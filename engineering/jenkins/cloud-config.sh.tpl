@@ -66,15 +66,18 @@ filebeat.prospectors:
 
 #================================ General =====================================
 
-name: production-tools
+name: jenkins-master
 tags: ["system"]
 fields:
-  sys_name: engineering-sandboxes
-  sys_env: sandbox
+  sys_name: jenkins
+  sys_env: master
   sys_region: ${aws_region}
 
 #================================ Outputs =====================================
 output.logstash:
   hosts: ["${aws_region}.logstash.service.consul:5044"]
 EOF
+
 service filebeat start
+
+initctl restart newrelic-infra

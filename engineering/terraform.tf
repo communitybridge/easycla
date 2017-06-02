@@ -14,12 +14,9 @@ provider "aws" {
 }
 
 terraform {
-  backend "s3" {
-    bucket = "lfe-terraform-states"
-    access_key = "AKIAJQ7437CC6PYAZAXQ"
-    secret_key = "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"
-    region = "us-west-2"
-    key = "engineering/terraform.tfstate"
+  backend "consul" {
+    address = "consul.service.consul:8500"
+    path    = "terraform/engineering"
   }
 }
 
@@ -36,7 +33,7 @@ module "dhcp" {
   source  = "../modules/dhcp"
   name    = "engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "${cidrhost("10.32.2.0/24", 2)}"
+  servers = "10.32.0.140, 10.32.0.180, 10.32.0.220;"
 }
 
 module "security_groups" {
@@ -73,6 +70,8 @@ module "jenkins" {
   vpc_id                 = "${module.vpc.id}"
   sg_jenkins             = "${module.security_groups.jenkins_master}"
   sg_jenkins_efs         = "${module.security_groups.jenkins_master_efs}"
+  sg_internal_elb        = "${module.security_groups.jenkins_master_elb}"
+  region                 = "us-west-2"
 }
 
 module "sandboxes" {

@@ -57,4 +57,7 @@ fields:
 output.logstash:
   hosts: ["${aws_region}.logstash.service.consul:5044"]
 EOF
+
 service filebeat start
+
+initctl restart newrelic-infra

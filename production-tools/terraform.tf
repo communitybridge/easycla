@@ -6,13 +6,14 @@ variable "secret_key" {
   description = "Your AWS Secret Key"
 }
 
+variable "newrelic_key" {
+  default = "bc34e4b264df582c2db0b453bd43ee438043757c"
+}
+
 terraform {
-  backend "s3" {
-    bucket = "lfe-terraform-states"
-    access_key = "AKIAJQ7437CC6PYAZAXQ"
-    secret_key = "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"
-    region = "us-west-2"
-    key = "production-tools/terraform.tfstate"
+  backend "consul" {
+    address = "consul.service.consul:8500"
+    path    = "terraform/production-tools"
   }
 }
 
@@ -66,7 +67,7 @@ module "vpc_west" {
   external_subnets   = ["10.32.0.0/27",   "10.32.0.32/27",  "10.32.0.64/27"]
   availability_zones = ["us-west-2a",     "us-west-2b",     "us-west-2c"]
 
-  newrelic_key       = "bc34e4b264df582c2db0b453bd43ee438043757c"
+  newrelic_key       = "${var.newrelic_key}"
   key_name           = "production-shared-tools"
 
   # Pypi Server
@@ -78,72 +79,130 @@ module "vpc_west" {
 
   # Peering for GHE
   ghe_peering       = true
+
+  # Nexus Repository
+  nexus             = true
 }
 
 # Second VPC
-module "vpc_east" {
-  source             = "./base"
-  access_key         = "${var.access_key}"
-  secret_key         = "${var.secret_key}"
-  region             = "us-east-2"
-  region_identitier  = "east"
-  dns_server         = "10.32.1.2"
-  r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
-
-  name               = "Eastern Production Tools"
-  cidr               = "10.32.1.0/24"
-  internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
-  external_subnets   = ["10.32.1.0/27",   "10.32.1.32/27",  "10.32.1.64/27"]
-  availability_zones = ["us-east-2a",     "us-east-2b",     "us-east-2c"]
-
-  newrelic_key       = "bc34e4b264df582c2db0b453bd43ee438043757c"
-  key_name           = "eastern-production-tools"
-
-  # Pypi Server
-  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
-  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
-
-  # Consul
-  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
-
-  # Peering for GHE
-  ghe_peering       = false
-}
+//module "vpc_east" {
+//  source             = "./base"
+//  access_key         = "${var.access_key}"
+//  secret_key         = "${var.secret_key}"
+//  region             = "us-east-2"
+//  region_identitier  = "east"
+//  dns_server         = "10.32.1.2"
+//  r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
+//
+//  name               = "Eastern Production Tools"
+//  cidr               = "10.32.1.0/24"
+//  internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
+//  external_subnets   = ["10.32.1.0/27",   "10.32.1.32/27",  "10.32.1.64/27"]
+//  availability_zones = ["us-east-2a",     "us-east-2b",     "us-east-2c"]
+//
+//  newrelic_key       = "${var.newrelic_key}"
+//  key_name           = "eastern-production-tools"
+//
+//  # Pypi Server
+//  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
+//  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
+//
+//  # Consul
+//  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
+//
+//  # Peering for GHE
+//  ghe_peering       = false
+//
+//  # Nexus Repository
+//  nexus             = false
+//}
 
 # Consul DNS Region-Balancing (FO/HA)
-module "consul_dns_failover" {
-  source = "./region_failover_dns"
+//module "consul_dns_failover" {
+//  source = "./region_failover_dns"
+//
+//  # General
+//  dns_name = "consul"
+//  dns_zone = "${aws_route53_zone.prod.zone_id}"
+//
+//  # West
+//  west_elb_dnsname = "${module.vpc_west.consul_elb_cname}"
+//  west_elb_name = "${module.vpc_west.consul_elb_name}"
+//  west_elb_zoneid = "${module.vpc_west.consul_elb_zoneid}"
+//
+//  # East
+//  east_elb_dnsname = "${module.vpc_east.consul_elb_cname}"
+//  east_elb_name = "${module.vpc_east.consul_elb_name}"
+//  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
+//}
+//
+//# PyPi Server DNS Region-Balancing (FO/HA)
+//module "pypi_dns_failover" {
+//  source = "./region_failover_dns"
+//
+//  # General
+//  dns_name = "pypi"
+//  dns_zone = "${aws_route53_zone.prod.zone_id}"
+//
+//  # West
+//  west_elb_dnsname = "${module.vpc_west.pypi_elb_cname}"
+//  west_elb_name = "${module.vpc_west.pypi_elb_name}"
+//  west_elb_zoneid = "${module.vpc_west.pypi_elb_zoneid}"
+//
+//  # East
+//  east_elb_dnsname = "${module.vpc_east.pypi_elb_cname}"
+//  east_elb_name = "${module.vpc_east.pypi_elb_name}"
+//  east_elb_zoneid = "${module.vpc_east.pypi_elb_zoneid}"
+//}
 
-  # General
-  dns_name = "consul"
-  dns_zone = "${aws_route53_zone.prod.zone_id}"
+//# Peering Request with CINCO Production
+//module "project_cinco" {
+//  source = "./project_peering"
+//
+//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+//  project_cidr = "10.32.3.0/24"
+//  peering_id = "pcx-41831228"
+//}
+//
+//# Peering Request with PMC Production
+//module "project_pmc" {
+//  source = "./project_peering"
+//
+//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+//  project_cidr = "10.32.4.0/24"
+//  peering_id = "pcx-12d0477b"
+//}
 
-  # West
-  west_elb_dnsname = "${module.vpc_west.consul_elb_cname}"
-  west_elb_name = "${module.vpc_west.consul_elb_name}"
-  west_elb_zoneid = "${module.vpc_west.consul_elb_zoneid}"
-
-  # East
-  east_elb_dnsname = "${module.vpc_east.consul_elb_cname}"
-  east_elb_name = "${module.vpc_east.consul_elb_name}"
-  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
+output "account_number" {
+  value = "433610389961"
 }
 
-# PyPi Server DNS Region-Balancing (FO/HA)
-module "pypi_dns_failover" {
-  source = "./region_failover_dns"
+output "west_vpc_id" {
+  value = "${module.vpc_west.vpc_id}"
+}
 
-  # General
-  dns_name = "pypi"
-  dns_zone = "${aws_route53_zone.prod.zone_id}"
+output "west_dns_servers" {
+  value = "${module.vpc_west.dns_servers}"
+}
 
-  # West
-  west_elb_dnsname = "${module.vpc_west.pypi_elb_cname}"
-  west_elb_name = "${module.vpc_west.pypi_elb_name}"
-  west_elb_zoneid = "${module.vpc_west.pypi_elb_zoneid}"
+output "west_cidr" {
+  value = "${module.vpc_west.cidr}"
+}
 
-  # East
-  east_elb_dnsname = "${module.vpc_east.pypi_elb_cname}"
-  east_elb_name = "${module.vpc_east.pypi_elb_name}"
-  east_elb_zoneid = "${module.vpc_east.pypi_elb_zoneid}"
+//output "east_vpc_id" {
+//  value = "${module.vpc_east.vpc_id}"
+//}
+//
+//output "east_dns_servers" {
+//  value = "${module.vpc_east.bind_dns_servers}"
+//}
+//
+//output "east_cidr" {
+//  value = "${module.vpc_east.cidr}"
+//}
+
+output "newrelic_key" {
+  value = "${var.newrelic_key}"
 }

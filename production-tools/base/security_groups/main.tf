@@ -189,26 +189,26 @@ resource "aws_security_group_rule" "allow_out" {
   security_group_id = "${aws_security_group.tools.id}"
 }
 
-resource "aws_security_group" "efs" {
+resource "aws_security_group_rule" "allow_cinco_prod" {
   provider    = "aws.local"
-  name        = "${format("%s-efs", var.name)}"
-  description = "Allows efs from inside the VPN/VPC"
-  vpc_id      = "${var.vpc_id}"
+  type = "ingress"
+  from_port = 0
+  to_port = 0
+  protocol = "-1"
+  source_security_group_id = "643009352547/sg-ffcc8d84"
 
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = ["${aws_security_group.tools.id}"]
-  }
+  security_group_id = "${aws_security_group.tools.id}"
+}
 
-  lifecycle {
-    create_before_destroy = true
-  }
+resource "aws_security_group_rule" "allow_pmc_prod" {
+  provider    = "aws.local"
+  type = "ingress"
+  from_port = -1
+  to_port = -1
+  protocol = "-1"
+  source_security_group_id = "643009352547/sg-a64c08dd"
 
-  tags {
-    Name        = "${format("%s internal efs", var.name)}"
-  }
+  security_group_id = "${aws_security_group.tools.id}"
 }
 
 resource "aws_security_group" "bind" {
@@ -232,10 +232,24 @@ resource "aws_security_group" "bind" {
   }
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     security_groups = ["${aws_security_group.vpn.id}"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
   }
 
   egress {
@@ -251,6 +265,74 @@ resource "aws_security_group" "bind" {
 
   tags {
     Name        = "${format("%s bind servers", var.name)}"
+  }
+}
+
+resource "aws_security_group" "production-tools-efs" {
+  provider    = "aws.local"
+  name        = "production-tools-efs"
+  description = "Allows Internal EFS use from Production Tools"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = ["${aws_security_group.tools.id}"]
+  }
+
+  egress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags {
+    Name        = "Production Tools EFS"
+  }
+}
+
+resource "aws_security_group" "vpn-link" {
+  provider    = "aws.local"
+  name        = "${format("%s-vpn-link", var.name)}"
+  description = "Pritunl OpenVPN Link"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port   = 4500
+    to_port     = 4500
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 500
+    to_port     = 500
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "Pritunl Link"
   }
 }
 
@@ -272,10 +354,14 @@ output "vpn" {
   value = "${aws_security_group.vpn.id}"
 }
 
-output "efs" {
-  value = "${aws_security_group.efs.id}"
+output "vpn_link" {
+  value = "${aws_security_group.vpn-link.id}"
 }
 
 output "bind" {
   value = "${aws_security_group.bind.id}"
+}
+
+output "efs" {
+  value = "${aws_security_group.production-tools-efs.id}"
 }

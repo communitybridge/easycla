@@ -15,10 +15,6 @@ variable "internal_elb_sg" {
   description = "Security Group for the internal ELB"
 }
 
-variable "s3_bucket" {}
-
-variable "redis_host" {}
-
 variable "region" {}
 
 variable "vpc_id" {}
@@ -27,16 +23,13 @@ variable "dns_servers" {
   type = "list"
 }
 
-data "template_file" "pypi_ecs_task" {
-  template = "${file("${path.module}/pypi-ecs-task.json")}"
+variable "building" {}
+
+data "template_file" "nexus_ecs_task" {
+  count    = "${var.building}"
+  template = "${file("${path.module}/nexus-ecs-task.json")}"
 
   vars {
-    # Those are coming from the pypi-user on AWS, needs Read/Write on above S3 Bucket
-    AWS_ACCESS_KEY_ID     = "AKIAIB6UWB7QG5QQYPWQ"
-    AWS_SECRET_ACCESS_KEY = "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"
-    S3_BUCKET             = "${var.s3_bucket}"
-    REDIS_HOST            = "${var.redis_host}"
-
     # DNS Servers for Container Resolution
     DNS_SERVER_1          = "${var.dns_servers[0]}"
     DNS_SERVER_2          = "${var.dns_servers[1]}"
@@ -48,24 +41,31 @@ data "template_file" "pypi_ecs_task" {
   }
 }
 
-resource "aws_ecs_task_definition" "pypi" {
+resource "aws_ecs_task_definition" "nexus" {
   provider = "aws.local"
-  family = "pypicloud"
+  count    = "${var.building}"
+  family   = "nexus"
 
   lifecycle {
     ignore_changes        = ["image"]
     create_before_destroy = true
   }
 
-  container_definitions = "${data.template_file.pypi_ecs_task.rendered}"
+  container_definitions = "${data.template_file.nexus_ecs_task.rendered}"
+
+  volume {
+    name      = "nexus-storage"
+    host_path = "/mnt/storage/nexus"
+  }
 }
 
-resource "aws_ecs_service" "pypi" {
+resource "aws_ecs_service" "nexus" {
+  count    = "${var.building}"
   provider                           = "aws.local"
-  name                               = "pypicloud-repository"
+  name                               = "nexus-repository"
   cluster                            = "${var.ecs_cluster_name}"
-  task_definition                    = "${aws_ecs_task_definition.pypi.arn}"
-  desired_count                      = "3"
+  task_definition                    = "${aws_ecs_task_definition.nexus.arn}"
+  desired_count                      = "1"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
 
@@ -75,25 +75,34 @@ resource "aws_ecs_service" "pypi" {
 }
 
 # Create a new load balancer
-resource "aws_elb" "pypi" {
+resource "aws_elb" "nexus" {
+  count    = "${var.building}"
   provider = "aws.local"
-  name = "pypicloud-cluster"
+  name = "nexus"
   subnets = ["${var.internal_subnets}"]
   security_groups = ["${var.internal_elb_sg}"]
   internal = true
 
   listener {
-    instance_port = 8080
+    instance_port = 8081
     instance_protocol = "http"
     lb_port = 80
     lb_protocol = "http"
+  }
+
+  listener {
+    instance_port = 8081
+    instance_protocol = "http"
+    lb_port = 443
+    lb_protocol = "https"
+    ssl_certificate_id = "arn:aws:acm:us-west-2:433610389961:certificate/bb946be4-a4f4-4f91-a786-60eddbd055b6"
   }
 
   health_check {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 3
-    target = "TCP:8080"
+    target = "TCP:8081"
     interval = 30
   }
 
@@ -103,26 +112,27 @@ resource "aws_elb" "pypi" {
   connection_draining_timeout = 400
 
   tags {
-    Name = "pypicloud-cluster"
+    Name = "nexus-cluster"
   }
 }
 
 # Create a new load balancer attachment
-resource "aws_autoscaling_attachment" "pypi" {
+resource "aws_autoscaling_attachment" "nexus" {
+  count    = "${var.building}"
   provider = "aws.local"
   autoscaling_group_name = "${var.ecs_asg_name}"
-  elb                    = "${aws_elb.pypi.id}"
+  elb                    = "${aws_elb.nexus.id}"
 }
 
-output "pypi_elb_cname" {
-  value = "${aws_elb.pypi.dns_name}"
-}
+resource "aws_route53_record" "consul" {
+  count    = "${var.building}"
+  zone_id = "Z2MDT77FL23F9B"
+  name    = "nexus"
+  type    = "A"
 
-output "pypi_elb_name" {
-  value = "${aws_elb.pypi.name}"
+  alias {
+    name                   = "${aws_elb.nexus.dns_name}"
+    zone_id                = "${aws_elb.nexus.zone_id}"
+    evaluate_target_health = true
+  }
 }
-
-output "pypi_elb_zoneid" {
-  value = "${aws_elb.pypi.zone_id}"
-}
-

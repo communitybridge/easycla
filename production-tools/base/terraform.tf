@@ -65,6 +65,8 @@ variable "r53_zone_id" {}
 
 variable "ghe_peering" {}
 
+variable "nexus" {}
+
 provider "aws" {
   region     = "${var.region}"
   alias      = "local"
@@ -85,7 +87,7 @@ module "dhcp" {
   source  = "../../modules/dhcp"
   name    = "prod.engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "${replace(var.cidr, ".0/24", ".150")},${replace(var.cidr, ".0/24", ".180")},${replace(var.cidr, ".0/24", ".200")},${cidrhost(var.cidr, 2)}"
+  servers = "${replace(var.cidr, ".0/24", ".140")},${replace(var.cidr, ".0/24", ".180")},${replace(var.cidr, ".0/24", ".220")},${cidrhost(var.cidr, 2)}"
 }
 
 module "security_groups" {
@@ -146,6 +148,37 @@ resource "aws_route" "peer_external" {
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }
 
+# Creating EFS for Tools Storage
+resource "aws_efs_file_system" "production-tools-storage" {
+  provider = "aws.local"
+  creation_token = "production-tools-storage"
+
+  tags {
+    Name = "Enginnering - Production Tools Storage"
+  }
+}
+
+resource "aws_efs_mount_target" "efs_mount_1" {
+  provider        = "aws.local"
+  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
+  subnet_id       = "${module.vpc.internal_subnets[0]}"
+  security_groups = ["${module.security_groups.efs}"]
+}
+
+resource "aws_efs_mount_target" "efs_mount_2" {
+  provider        = "aws.local"
+  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
+  subnet_id       = "${module.vpc.internal_subnets[1]}"
+  security_groups = ["${module.security_groups.efs}"]
+}
+
+resource "aws_efs_mount_target" "efs_mount_3" {
+  provider        = "aws.local"
+  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
+  subnet_id       = "${module.vpc.internal_subnets[2]}"
+  security_groups = ["${module.security_groups.efs}"]
+}
+
 data "template_file" "ecs_instance_cloudinit_tools" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
@@ -154,6 +187,7 @@ data "template_file" "ecs_instance_cloudinit_tools" {
     region            = "${var.region}"
     region_identifier = "${var.region_identitier}"
     newrelic_key      = "${var.newrelic_key}"
+    efs_id            = "${aws_efs_file_system.production-tools-storage.id}"
   }
 }
 
@@ -176,35 +210,31 @@ module "tools-ecs-cluster" {
   cloud_config_content   = "${data.template_file.ecs_instance_cloudinit_tools.rendered}"
 }
 
-module "consul" "consul-master" {
-  source                 = "./consul"
-
-  vpc_id                 = "${module.vpc.id}"
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
-  consul_encryption_key  = "${var.consul_encryption_key}"
-  r53_zone_id            = "${var.r53_zone_id}"
-  region_identifier      = "${var.region_identitier}"
-  region                 = "${var.region}"
-}
-
-module "bind" {
-  source                 = "./bind"
+module "consul-bind" {
+  source                 = "./consul_bind"
 
   internal_subnets       = "${module.vpc.internal_subnets}"
   bind_sg                = "${module.security_groups.bind}"
   cidr                   = "${var.cidr}"
   region                 = "${var.region}"
+  internal_elb_sg        = "${module.security_groups.internal_elb}"
 }
 
 module "registrator" {
   source = "./registrator"
 
   ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  dns_servers            = "${module.bind.bind_dns_servers}"
+  dns_servers            = "${module.consul-bind.dns_servers}"
   region                 = "${var.region}"
+}
+
+module "consul-agent" {
+  source = "./consul-agent"
+
+  encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
+  datacenter = "aws"
+  ecs_cluster_name = "${module.tools-ecs-cluster.name}"
+  dns_servers = "${module.consul-bind.dns_servers}"
 }
 
 module "vault" "vault-master" {
@@ -214,8 +244,8 @@ module "vault" "vault-master" {
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
-  consul_endpoint        = "${module.consul.consul_elb_cname}:8500"
-  dns_servers            = "${module.bind.bind_dns_servers}"
+  consul_endpoint        = "127.0.0.1:8500"
+  dns_servers            = "${module.consul-bind.dns_servers}"
   region                 = "${var.region}"
 }
 
@@ -226,23 +256,21 @@ module "logstash" {
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
-  dns_servers            = "${module.bind.bind_dns_servers}"
+  dns_servers            = "${module.consul-bind.dns_servers}"
 
   vpc_id                 = "${module.vpc.id}"
   region                 = "${var.region}"
 }
 
-module "pypi" "pypi-master" {
-  source                 = "./pypi"
+module "nexus" "nexus-master" {
+  source                 = "./nexus"
 
+  building               = "${var.nexus}"
   ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
-  dns_servers            = "${module.bind.bind_dns_servers}"
-
-  s3_bucket              = "${var.pypi_bucket}"
-  redis_host             = "${var.pypi_redis_host}"
+  dns_servers            = "${module.consul-bind.dns_servers}"
 
   vpc_id                 = "${module.vpc.id}"
   region                 = "${var.region}"
@@ -253,6 +281,14 @@ module "pritunl" {
 
   external_subnets       = "${module.vpc.external_subnets}"
   vpn_sg                 = "${module.security_groups.vpn}"
+  region_identifier      = "${var.region_identitier}"
+}
+
+module "pritunl-link" {
+  source                 = "./pritunl-link"
+
+  external_subnets       = "${module.vpc.external_subnets}"
+  vpn_sg                 = "${module.security_groups.vpn_link}"
   region_identifier      = "${var.region_identitier}"
 }
 
@@ -333,34 +369,22 @@ output "tools_ecs_sg" {
   value = "${module.tools-ecs-cluster.security_group_id}"
 }
 
-output "consul_elb_cname" {
-  value = "${module.consul.consul_elb_cname}"
-}
+//output "consul_elb_cname" {
+//  value = "${module.consul.consul_elb_cname}"
+//}
+//
+//output "consul_elb_name" {
+//  value = "${module.consul.consul_elb_name}"
+//}
+//
+//output "consul_service_name" {
+//  value = "${module.consul.consul_service_name}"
+//}
+//
+//output "consul_elb_zoneid" {
+//  value = "${module.consul.consul_elb_zoneid}"
+//}
 
-output "consul_elb_name" {
-  value = "${module.consul.consul_elb_name}"
-}
-
-output "consul_service_name" {
-  value = "${module.consul.consul_service_name}"
-}
-
-output "consul_elb_zoneid" {
-  value = "${module.consul.consul_elb_zoneid}"
-}
-
-output "pypi_elb_cname" {
-  value = "${module.pypi.pypi_elb_cname}"
-}
-
-output "pypi_elb_name" {
-  value = "${module.pypi.pypi_elb_name}"
-}
-
-output "pypi_elb_zoneid" {
-  value = "${module.pypi.pypi_elb_zoneid}"
-}
-
-output "bind_dns_servers" {
-  value = "${module.bind.bind_dns_servers}"
+output "dns_servers" {
+  value = "${module.consul-bind.dns_servers}"
 }
