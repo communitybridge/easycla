@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 
 import { NavController, IonicPage } from 'ionic-angular';
 
@@ -16,8 +17,22 @@ import { ProjectModel } from '../../models/project-model';
 export class AddProjectPage {
 
   project = new ProjectModel();
-
-  constructor(public navCtrl: NavController, private cincoService: CincoService) {
+  public projectForm: any;
+  constructor(public navCtrl: NavController, private cincoService: CincoService, public _form: FormBuilder,) {
+    this.projectForm = this._form.group({
+      "name": ["", Validators.required],
+      "startDate": ["", Validators.required],
+      "status": ["", Validators.required],
+      "category": ["", Validators.required],
+      "sector": ["", Validators.required],
+      "url": ["", Validators.required],
+      "thoroughfare": ["", Validators.required],
+      "postalCode": ["", Validators.required],
+      "localityName": ["", Validators.required],
+      "administrativeArea": ["", Validators.required],
+      "country": ["", Validators.required],
+      "description": ["", Validators.required]
+    });
     this.getDefaults();
   }
 
