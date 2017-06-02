@@ -40,9 +40,9 @@ data "template_file" "user_data_pmc" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    env               = "${terraform.env}"
+    env               = "${terraform.env == "default" ? "production" : terraform.env}"
     build             = "${var.build_hash}"
-    ecs_cluster_name  = "${terraform.env}-pmc"
+    ecs_cluster_name  = "${terraform.env == "default" ? "production" : terraform.env}-pmc"
     region            = "${data.terraform_remote_state.pmc-env.region}"
     newrelic_key      = "${data.terraform_remote_state.pmc-env.newrelic_key}"
   }
@@ -51,9 +51,9 @@ data "template_file" "user_data_pmc" {
 # ECS Cluster
 module "pmc-ecs-cluster" {
   source                 = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/ecs-cluster"
-  environment            = "${terraform.env}-pmc"
+  environment            = "${terraform.env == "default" ? "production" : terraform.env}-pmc"
   team                   = "Engineering"
-  name                   = "${terraform.env}-pmc"
+  name                   = "${terraform.env == "default" ? "production" : terraform.env}-pmc"
   vpc_id                 = "${data.terraform_remote_state.pmc-env.vpc_id}"
   subnet_ids             = "${data.terraform_remote_state.pmc-env.internal_subnets}"
   key_name               = "production-pmc"
@@ -70,7 +70,7 @@ module "pmc-ecs-cluster" {
 
 # Registrator
 module "registrator" {
-  source           = "./registrator"
+  source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
 
   # Application Information
   build_hash      = "${var.build_hash}"
@@ -82,7 +82,7 @@ module "registrator" {
 
 # Consul Agent
 module "consul" {
-  source           = "./consul-agent"
+  source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-consul-agent"
 
   # Consul
   encryption_key   = "9F2n4KWdxSj2Z4MMVqbHqg=="
