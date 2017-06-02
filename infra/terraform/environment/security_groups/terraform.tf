@@ -35,6 +35,13 @@ resource "aws_security_group" "ecs" {
     self        = true
   }
 
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -151,6 +158,45 @@ resource "aws_security_group" "internal_ssh" {
   }
 }
 
+resource "aws_security_group" "vpn-link" {
+  provider    = "aws.local"
+  name        = "${format("%s-vpn-link", var.name)}"
+  description = "Pritunl OpenVPN Link"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port   = 4500
+    to_port     = 4500
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 500
+    to_port     = 500
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "PMC - Pritunl Link"
+  }
+}
+
 output "internal_ssh" {
   value = "${aws_security_group.internal_ssh.id}"
 }
@@ -165,4 +211,8 @@ output "internal_elb" {
 
 output "ecs-cluster" {
   value = "${aws_security_group.ecs.id}"
+}
+
+output "vpn-link" {
+  value = "${aws_security_group.vpn-link.id}"
 }

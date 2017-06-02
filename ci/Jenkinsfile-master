@@ -26,8 +26,8 @@ node {
       stage("Docker Artifact: PMC") {
         try {
           sh "docker build -t pmc/production/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-          sh "docker tag pmc/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${env.BUILD_NUMBER}"
-          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${env.BUILD_NUMBER}"
+          sh "docker tag pmc/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${params.SHA}"
+          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${params.SHA}"
         } catch (err) {
           echo "Caught Exception: ${err}"
           statusDockerPMC = 1
@@ -39,8 +39,8 @@ node {
         try {
           dir("infra/nginx/production") {
             sh "docker build -t pmc/nginx/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-            sh "docker tag pmc/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${env.BUILD_NUMBER}"
-            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${env.BUILD_NUMBER}"
+            sh "docker tag pmc/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
+            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
           }
         } catch (err) {
           echo "Caught Exception: ${err}"
@@ -61,7 +61,7 @@ node {
         sh "terraform init -force-copy"
 
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'production-terraform', usernameVariable: 'AWS_ACCESS_KEY', passwordVariable: 'AWS_SECRET_KEY']]) {
-          sh "set +e; terraform plan -var access_key=${env.AWS_ACCESS_KEY} -var secret_key=${env.AWS_SECRET_KEY} -var build_number=${env.BUILD_NUMBER} -out=plan.out -detailed-exitcode; echo \$? > status"
+          sh "set +e; terraform plan -var access_key=${env.AWS_ACCESS_KEY} -var secret_key=${env.AWS_SECRET_KEY} -var build_hash=${params.SHA} -out=plan.out -detailed-exitcode; echo \$? > status"
         }
 
         statusTerraformPlan = readFile('status').trim()
