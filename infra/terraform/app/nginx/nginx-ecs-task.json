@@ -1,7 +1,7 @@
 [
   {
     "essential": true,
-    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${BUILD_NUMBER}",
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${build_hash}",
     "memoryReservation": 258,
     "name": "nginx",
     "portMappings": [{
@@ -23,7 +23,7 @@
       },
       {
         "name": "SERVICE_80_NAME",
-        "value": "PMC_NGINX_${BUILD_NUMBER}"
+        "value": "PMC_NGINX_${build_hash}"
       },
       {
         "name": "SERVICE_80_TAGS",
@@ -34,16 +34,16 @@
       "logDriver": "gelf",
       "options": {
         "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
-        "labels": "app_name,app_env,app_region,app_build,tags,service"
+        "labels": "realm,application,version,environment,region,tags"
       }
     },
     "dockerLabels": {
-      "service": "nginx",
-      "app_name": "pmc",
-      "app_build": "${BUILD_NUMBER}",
-      "app_env": "production",
-      "app_region": "${TAG_REGION}",
-      "tags": "application, pmc, nginx"
+      "realm": "pmc",
+      "application": "nginx",
+      "version": "${build_hash}",
+      "environment": "production",
+      "region": "${TAG_REGION}",
+      "tags": "application, nginx, proxy"
     }
   }
 ]

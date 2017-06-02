@@ -24,7 +24,7 @@ variable "dns_servers" {
   type = "list"
 }
 
-variable "build_number" {
+variable "build_hash" {
   description = "The Build Number we are to deploy."
 }
 
@@ -41,7 +41,7 @@ data "template_file" "pmc_ecs_task" {
 
   vars {
     # Build Information
-    BUILD_NUMBER              = "${var.build_number}"
+    build_hash              = "${var.build_hash}"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"

@@ -17,8 +17,8 @@ COPY entrypoint.sh /srv/
 ENTRYPOINT ["/srv/entrypoint.sh"]
 
 CMD [ "-log-level", "debug", \
-      "-consul-addr", "us-west-2.logstash.service.consul:8500", \
+      "-consul-addr", "consul.service.consul:8500", \
       "-template", "/etc/nginx/conf.d/production.conf.ctmpl:/etc/nginx/conf.d/production.conf", \
       "-retry", "5s", \
-      "-exec", "/usr/sbin/nginx -g 'daemon off;'" \
+      "-exec", "/usr/sbin/nginx" \
 ]
