@@ -197,6 +197,31 @@ resource "aws_security_group" "vpn-link" {
   }
 }
 
+resource "aws_security_group" "redis" {
+  provider    = "aws.local"
+  name        = "${format("%s-redis", var.name)}"
+  description = "PMC Redis Instance"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = ["${aws_security_group.ecs.id}"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "PMC - Redis Server"
+  }
+}
+
 output "internal_ssh" {
   value = "${aws_security_group.internal_ssh.id}"
 }
@@ -215,4 +240,8 @@ output "ecs-cluster" {
 
 output "vpn-link" {
   value = "${aws_security_group.vpn-link.id}"
+}
+
+output "redis" {
+  value = "${aws_security_group.redis.id}"
 }
