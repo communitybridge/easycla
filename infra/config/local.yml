@@ -6,6 +6,7 @@ containers:
     image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/redis:latest'
     volumes: ['./logs/redis:/var/log/redis']
   workspace:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/workspace/node:latest'
     ports: ['%:8081']
 
 # Environment Variables to be injected in the container.
