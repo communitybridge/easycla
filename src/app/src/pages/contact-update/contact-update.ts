@@ -1,6 +1,8 @@
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
+import { PhoneNumberValidator } from  '../../validators/phonenumber';
+import { EmailValidator } from  '../../validators/email';
 import { CincoService } from '../../app/services/cinco.service';
 
 @IonicPage({
@@ -26,6 +28,7 @@ export class ContactUpdate {
 
   contactUpdateForm: FormGroup;
   submitAttempt: boolean = false;
+  currentlySubmitting: boolean = false;
   @ViewChild(Content) content: Content;
 
   constructor(
@@ -79,11 +82,15 @@ export class ContactUpdate {
       ? 'true'
       : 'false';
 
+    this.contact.boardMember = (this.contact.boardMember)
+      ? 'true'
+      : 'false';
+
     this.contactUpdateForm = formBuilder.group({
-      email:[this.contact.contact.email, Validators.required],
+      email:[this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
       givenName:[this.contact.contact.givenName, Validators.required],
       familyName:[this.contact.contact.familyName, Validators.required],
-      phone:[this.contact.contact.phone, Validators.required],
+      phone:[this.contact.contact.phone, Validators.compose([Validators.required, PhoneNumberValidator.isValid])],
       title:[this.contact.contact.title, Validators.required],
       type:[this.contact.contact.type, Validators.required],
       role:[this.contact.type, Validators.required],
@@ -91,6 +98,7 @@ export class ContactUpdate {
       boardMember:[this.contact.boardMember, Validators.required],
       bio:[this.contact.contact.bio, Validators.required],
     });
+
 
 
   }
@@ -265,8 +273,10 @@ export class ContactUpdate {
 
   saveContact() {
     this.submitAttempt = true;
+    this.currentlySubmitting = true;
     if (!this.contactUpdateForm.valid){
       this.content.scrollToTop();
+      this.currentlySubmitting = false;
       // prevent submit
       return;
     }
@@ -295,7 +305,6 @@ export class ContactUpdate {
         bio: this.contactUpdateForm.value.bio,
       },
     };
-    console.log(memberContact);
     if (this.contactId) {
       if (this.roleId) {
         this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
@@ -347,6 +356,7 @@ export class ContactUpdate {
   }
 
   removeContact() {
+    this.currentlySubmitting = true;
     this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
       if(response) {
         this.dismiss();
