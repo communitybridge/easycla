@@ -366,6 +366,42 @@ module.exports = {
         });
       },
 
+      getProjectConfig: function (projectId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'projects/' + projectId + '/config'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var config = JSON.parse(body);
+            next(null, config);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get config from project with id of [' + projectId + ']'));
+          }
+        });
+      },
+
+      updateProjectManagers: function (projectId, managers, next) {
+        var body = JSON.stringify(managers);
+        var opts = {
+          method: 'PUT',
+          path: 'projects/' + projectId + '/managers',
+          body: body,
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var updatedManagers = JSON.parse(body);
+            next(null, updatedManagers);
+          } else {
+            next(errors.fromResponse(res, "Unable to Update Project Managers with data: " + body));
+          }
+        });
+      },
+
       /*
         Email Aliases:
         Resources for working with email aliases of projects
