@@ -13,7 +13,7 @@ import { Chart } from 'chart.js';
 export class ProjectsListPage {
   loading: boolean;
   allProjects: any;
-  pushAddProjectPage;
+
   numberOfContracts: {
     new: number,
     renewal: number,
@@ -50,7 +50,6 @@ export class ProjectsListPage {
   invoicesChart: any;
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
-    this.pushAddProjectPage = 'AddProjectPage';
     this.getDefaults();
     this.loading = true;
   }
