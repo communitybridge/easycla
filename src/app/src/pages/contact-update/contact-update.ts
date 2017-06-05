@@ -322,13 +322,13 @@ export class ContactUpdate {
         });
       }
       else {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
           if (response) {
             // update org contact with response from update
             // should be the same as what was sent, but we will just be sure
-            this.contact.contact = response;
+            memberContact.contact = response;
             // add as a member contact
-            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
+            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
               if (response) {
                 this.dismiss();
               }
@@ -339,12 +339,12 @@ export class ContactUpdate {
     }
     else {
       // Add new contact to organization
-      this.cincoService.createOrganizationContact(this.org.id, this.contact.contact).subscribe(response => {
+      this.cincoService.createOrganizationContact(this.org.id, memberContact.contact).subscribe(response => {
         if (response) {
           this.contactId = response;
-          this.contact.contact.id = this.contactId;
+          memberContact.contact.id = this.contactId;
           // add to member
-          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.contact).subscribe(response => {
+          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
             if (response) {
               this.dismiss();
             }
