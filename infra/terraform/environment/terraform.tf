@@ -64,16 +64,6 @@ module "security_groups" {
   name    = "pmc"
 }
 
-// Pritunl Link to allow VPN Access to this Infra
-module "pritunl_link" {
-  source = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/pritunl-link"
-
-  vpn_sg = "${module.security_groups.vpn-link}"
-  external_subnets = "${module.vpc.external_subnets}"
-  project = "pmc"
-  pritunl_link = "pritunl://592f0fbfb8181a0a1cf5b91d:lZdDrSLfcQTRwxpj9lMGvQ0KQNWaQcJ0@vpn.engineering.tux.rocks"
-}
-
 // IAM Profiles, Roles & Policies for ECS
 module "ecs-iam-profile" {
   source                    = "./iam-role"
@@ -93,6 +83,19 @@ module "redis-cluster" {
   subnet_ids = "${module.vpc.internal_subnets}"
   publicly_accessible = false
   vpc_id = "${module.vpc.id}"
+}
+
+// Peering to Production Tools
+module "peering" {
+  source                    = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.production-tools.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.production-tools.west_cidr}"
+  tools_vpc_id              = "${data.terraform_remote_state.production-tools.west_vpc_id}"
 }
 
 // The region in which the infra lives.
