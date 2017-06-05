@@ -67,7 +67,7 @@ export class ProjectsListPage {
   }
 
   viewProject(projectId){
-    this.navCtrl.push('ProjectPage', {
+    this.navCtrl.setRoot('ProjectPage', {
       projectId: projectId
     });
   }
