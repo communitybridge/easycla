@@ -281,15 +281,17 @@ module "pritunl" {
 
   external_subnets       = "${module.vpc.external_subnets}"
   vpn_sg                 = "${module.security_groups.vpn}"
-  region_identifier      = "${var.region_identitier}"
 }
 
 module "pritunl-link" {
-  source                 = "./pritunl-link"
+  source                 = "../../modules/pritunl-link"
 
+  key_pair               = "production-shared-tools"
+  vpc_cidr               = "${var.cidr}"
   external_subnets       = "${module.vpc.external_subnets}"
   vpn_sg                 = "${module.security_groups.vpn_link}"
-  region_identifier      = "${var.region_identitier}"
+  project                = "ProdTools"
+  pritunl_link           = "pritunl://592efd0ab8181a0a1cf5525c:IBXCgflFd3ACWi2H1YQ6JfUr5i8u1quj@vpn.engineering.tux.rocks"
 }
 
 /**

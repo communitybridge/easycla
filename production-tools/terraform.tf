@@ -135,25 +135,6 @@ module "vpc_west" {
 //  east_elb_name = "${module.vpc_east.consul_elb_name}"
 //  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
 //}
-//
-//# PyPi Server DNS Region-Balancing (FO/HA)
-//module "pypi_dns_failover" {
-//  source = "./region_failover_dns"
-//
-//  # General
-//  dns_name = "pypi"
-//  dns_zone = "${aws_route53_zone.prod.zone_id}"
-//
-//  # West
-//  west_elb_dnsname = "${module.vpc_west.pypi_elb_cname}"
-//  west_elb_name = "${module.vpc_west.pypi_elb_name}"
-//  west_elb_zoneid = "${module.vpc_west.pypi_elb_zoneid}"
-//
-//  # East
-//  east_elb_dnsname = "${module.vpc_east.pypi_elb_cname}"
-//  east_elb_name = "${module.vpc_east.pypi_elb_name}"
-//  east_elb_zoneid = "${module.vpc_east.pypi_elb_zoneid}"
-//}
 
 //# Peering Request with CINCO Production
 //module "project_cinco" {
@@ -175,6 +156,16 @@ module "vpc_west" {
 //  peering_id = "pcx-12d0477b"
 //}
 
+# Peering Request with Engineering VPC
+module "project_engineering" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.2.0/24"
+  peering_id = "pcx-6beb7b02"
+}
+
 output "account_number" {
   value = "433610389961"
 }
@@ -189,6 +180,14 @@ output "west_dns_servers" {
 
 output "west_cidr" {
   value = "${module.vpc_west.cidr}"
+}
+
+output "west_external_rtb_id" {
+  value = "${module.vpc_west.external_rtb_id}"
+}
+
+output "west_raw_route_tables_id" {
+  value = "${module.vpc_west.raw_route_tables_id}"
 }
 
 //output "east_vpc_id" {

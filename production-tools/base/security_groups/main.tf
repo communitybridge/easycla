@@ -189,27 +189,27 @@ resource "aws_security_group_rule" "allow_out" {
   security_group_id = "${aws_security_group.tools.id}"
 }
 
-resource "aws_security_group_rule" "allow_cinco_prod" {
-  provider    = "aws.local"
-  type = "ingress"
-  from_port = 0
-  to_port = 0
-  protocol = "-1"
-  source_security_group_id = "643009352547/sg-ffcc8d84"
-
-  security_group_id = "${aws_security_group.tools.id}"
-}
-
-resource "aws_security_group_rule" "allow_pmc_prod" {
-  provider    = "aws.local"
-  type = "ingress"
-  from_port = -1
-  to_port = -1
-  protocol = "-1"
-  source_security_group_id = "643009352547/sg-a64c08dd"
-
-  security_group_id = "${aws_security_group.tools.id}"
-}
+//resource "aws_security_group_rule" "allow_cinco_prod" {
+//  provider    = "aws.local"
+//  type = "ingress"
+//  from_port = 0
+//  to_port = 0
+//  protocol = "-1"
+//  source_security_group_id = "643009352547/sg-ffcc8d84"
+//
+//  security_group_id = "${aws_security_group.tools.id}"
+//}
+//
+//resource "aws_security_group_rule" "allow_pmc_prod" {
+//  provider    = "aws.local"
+//  type = "ingress"
+//  from_port = -1
+//  to_port = -1
+//  protocol = "-1"
+//  source_security_group_id = "643009352547/sg-a64c08dd"
+//
+//  security_group_id = "${aws_security_group.tools.id}"
+//}
 
 resource "aws_security_group" "bind" {
   provider    = "aws.local"

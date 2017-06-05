@@ -6,12 +6,12 @@ variable "tools_vpc_id" {
   description = "The VPC ID on the other side of the Request, the VPC we want to peer to."
 }
 
-variable "tools_raw_route_tables_id" {
+variable "raw_route_tables_id" {
   type = "list"
   description = "The list of the route tables id of the Internal Subnets."
 }
 
-variable "tools_external_rtb_id" {
+variable "external_rtb_id" {
   description = "The Route Table ID of the External Route Table."
 }
 
@@ -37,28 +37,28 @@ resource "aws_vpc_peering_connection" "peer" {
 
 resource "aws_route" "peer_internal_1" {
   provider                  = "aws.local"
-  route_table_id            = "${var.tools_raw_route_tables_id[0]}"
+  route_table_id            = "${var.raw_route_tables_id[0]}"
   destination_cidr_block    = "${var.tools_cidr}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }
 
 resource "aws_route" "peer_internal_2" {
   provider                  = "aws.local"
-  route_table_id            = "${var.tools_raw_route_tables_id[1]}"
+  route_table_id            = "${var.raw_route_tables_id[1]}"
   destination_cidr_block    = "${var.tools_cidr}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }
 
 resource "aws_route" "peer_internal_3" {
   provider                  = "aws.local"
-  route_table_id            = "${var.tools_raw_route_tables_id[2]}"
+  route_table_id            = "${var.raw_route_tables_id[2]}"
   destination_cidr_block    = "${var.tools_cidr}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }
 
 resource "aws_route" "peer_external" {
   provider                  = "aws.local"
-  route_table_id            = "${var.tools_external_rtb_id}"
+  route_table_id            = "${var.external_rtb_id}"
   destination_cidr_block    = "${var.tools_cidr}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
 }

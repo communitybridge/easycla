@@ -6,6 +6,10 @@ variable "secret_key" {
   description = "Your AWS Secret Key"
 }
 
+variable "cidr" {
+  default = "10.32.2.0/24"
+}
+
 provider "aws" {
   region     = "us-west-2"
   alias      = "local"
@@ -20,10 +24,19 @@ terraform {
   }
 }
 
+// This allows me to pull the state of another environment, in this case production-tools and grab data from it.
+data "terraform_remote_state" "production-tools" {
+  backend = "consul"
+  config {
+    address = "consul.service.consul:8500"
+    path    = "terraform/production-tools"
+  }
+}
+
 module "vpc" {
   source             = "../modules/vpc"
   name               = "Engineering"
-  cidr               = "10.32.2.0/24"
+  cidr               = "${var.cidr}"
   internal_subnets   = ["10.32.2.128/27", "10.32.2.160/27", "10.32.2.192/27"]
   external_subnets   = ["10.32.2.0/27",   "10.32.2.32/27",  "10.32.2.64/27"]
   availability_zones = ["us-west-2a",     "us-west-2b",     "us-west-2c"]
@@ -33,12 +46,12 @@ module "dhcp" {
   source  = "../modules/dhcp"
   name    = "engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "10.32.0.140, 10.32.0.180, 10.32.0.220;"
+  servers = "10.32.0.140, 10.32.0.180, 10.32.0.220"
 }
 
 module "security_groups" {
   source  = "./security_groups"
-  cidr    = "10.32.2.0/24"
+  cidr    = "${var.cidr}"
   vpc_id  = "${module.vpc.id}"
   name    = "Engineering"
 }
@@ -56,11 +69,14 @@ module "redis-cluster" "pypi-storage" {
 }
 
 module "pritunl" {
-  source                 = "./pritunl"
+  source                 = "../modules/pritunl-link"
 
+  key_pair               = "production-shared-tools"
+  vpc_cidr               = "${var.cidr}"
   external_subnets       = "${module.vpc.external_subnets}"
   vpn_sg                 = "${module.security_groups.vpn}"
-  region_identifier      = "engineering.west"
+  pritunl_link           = "pritunl://592ef6a7b8181a0a1cf53601:K4q0MCLtyLeM7DkJ50uPB5bjcvDK5z5a@vpn.engineering.tux.rocks"
+  project                = "ENG"
 }
 
 module "jenkins" {
@@ -84,6 +100,17 @@ module "sandboxes" {
   availability_zones       = "${module.vpc.availability_zones}"
   sg_engineering_sandboxes = "${module.security_groups.engineering_sandboxes}"
   redis_sg                 = "${module.security_groups.engineering_sandboxes_redis}"
+}
+
+module "peering" {
+  source                    = "../modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  tools_account_number      = "${data.terraform_remote_state.production-tools.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.production-tools.west_cidr}"
+  tools_external_rtb_id     = "${data.terraform_remote_state.production-tools.west_external_rtb_id}"
+  tools_raw_route_tables_id = "${data.terraform_remote_state.production-tools.west_raw_route_tables_id}"
+  tools_vpc_id              = "${data.terraform_remote_state.production-tools.west_vpc_id}"
 }
 
 resource "aws_vpc_peering_connection" "peer" {
@@ -143,7 +170,7 @@ output "sg_external_elb" {
 }
 
 output "cidr" {
-  value = "10.32.2.0/24"
+  value = "${var.cidr}"
 }
 
 output "vpc_id" {

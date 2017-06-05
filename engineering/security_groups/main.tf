@@ -46,20 +46,20 @@ resource "aws_security_group" "pypi_redis" {
 resource "aws_security_group" "vpn" {
   provider    = "aws.local"
   name        = "${format("%s-vpn", var.name)}"
-  description = "Pritunl OpenVPN Server"
+  description = "Pritunl OpenVPN Link"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
-    from_port   = 10000
-    to_port     = 20000
+    from_port   = 4500
+    to_port     = 4500
     protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
+    from_port   = 500
+    to_port     = 500
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -78,7 +78,7 @@ resource "aws_security_group" "vpn" {
   }
 
   tags {
-    Name        = "Pritunl OpenVPN Server"
+    Name        = "Pritunl Link"
   }
 }
 
