@@ -1,5 +1,8 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
+import { PhoneNumberValidator } from  '../../validators/phonenumber';
+import { EmailValidator } from  '../../validators/email';
 import { CincoService } from '../../app/services/cinco.service';
 
 @IonicPage({
@@ -20,6 +23,13 @@ export class ContactUpdate {
   memberContactRoles: any;
   orgContactRoles: any;
   keysGetter;
+  primaryContactOptions: any;
+  boardMemberOptions: any;
+
+  contactUpdateForm: FormGroup;
+  submitAttempt: boolean = false;
+  currentlySubmitting: boolean = false;
+  @ViewChild(Content) content: Content;
 
   constructor(
     public navCtrl: NavController,
@@ -27,8 +37,29 @@ export class ContactUpdate {
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    public formBuilder: FormBuilder
   ) {
+    this.primaryContactOptions = [
+      {
+        value: true,
+        name: 'Yes',
+      },
+      {
+        value: false,
+        name: 'No',
+      }
+    ];
+    this.boardMemberOptions = [
+      {
+        value: true,
+        name: 'Yes',
+      },
+      {
+        value: false,
+        name: 'No',
+      }
+    ];
     this.getDefaults();
     this.keysGetter = Object.keys;
     this.projectId = this.navParams.get('projectId');
@@ -46,6 +77,30 @@ export class ContactUpdate {
 
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
+    // convert from bool to string
+    this.contact.primaryContact = (this.contact.primaryContact)
+      ? 'true'
+      : 'false';
+
+    this.contact.boardMember = (this.contact.boardMember)
+      ? 'true'
+      : 'false';
+
+    this.contactUpdateForm = formBuilder.group({
+      email:[this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
+      givenName:[this.contact.contact.givenName, Validators.required],
+      familyName:[this.contact.contact.familyName, Validators.required],
+      phone:[this.contact.contact.phone, Validators.compose([Validators.required, PhoneNumberValidator.isValid])],
+      title:[this.contact.contact.title, Validators.required],
+      type:[this.contact.contact.type, Validators.required],
+      role:[this.contact.type, Validators.required],
+      primaryContact:[this.contact.primaryContact, Validators.required],
+      boardMember:[this.contact.boardMember, Validators.required],
+      bio:[this.contact.contact.bio, Validators.required],
+    });
+
+
+
   }
 
   ngOnInit() {
@@ -100,8 +155,9 @@ export class ContactUpdate {
     this.viewCtrl.dismiss();
   }
 
-  primarySelectChanged(event) {
-    if (event == 'true') {
+  primarySelectChanged(value) {
+    // normalize the value from string to bool
+    if (value == 'true') {
       let prompt = this.alertCtrl.create({
         title: 'Assign as Primary?',
         message: 'This will replace the exising primary contact on this project.',
@@ -109,13 +165,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.primaryContact = 'false';
+              this.contactUpdateForm.value.primaryContact = 'false';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.primaryContact = 'true';
+              this.contactUpdateForm.value.primaryContact = 'true';
             }
           }
         ]
@@ -124,8 +180,9 @@ export class ContactUpdate {
     }
   }
 
-  boardSelectChanged(event) {
-    if (event == 'true') {
+  boardSelectChanged(value) {
+    // normalize the value from string to bool
+    if (value == 'true') {
       let prompt = this.alertCtrl.create({
         title: 'Assign to Board?',
         message: 'This will replace the exising member company Board member on this project.',
@@ -133,13 +190,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contact.boardMember = 'false';
+              this.contactUpdateForm.value.boardMember = 'false';
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contact.boardMember = 'true';
+              this.contactUpdateForm.value.boardMember = 'true';
             }
           }
         ]
@@ -215,15 +272,48 @@ export class ContactUpdate {
   }
 
   saveContact() {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    if (!this.contactUpdateForm.valid){
+      this.content.scrollToTop();
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    let primaryContact = this.contactUpdateForm.value.primaryContact;
+    primaryContact = (primaryContact === true || primaryContact === 'true')
+          ? true
+          : false;
+    let boardMember = this.contactUpdateForm.value.boardMember;
+    boardMember = (boardMember === true || boardMember === 'true')
+          ? true
+          : false;
+    var memberContact = {
+      id: this.contact.id,
+      memberId: this.contact.memberId,
+      type: this.contactUpdateForm.value.role,
+      primaryContact: primaryContact,
+      boardMember: boardMember,
+      contact: {
+        id: this.contact.contact.id,
+        email: this.contactUpdateForm.value.email,
+        givenName: this.contactUpdateForm.value.givenName,
+        familyName: this.contactUpdateForm.value.familyName,
+        title: this.contactUpdateForm.value.title,
+        phone: this.contactUpdateForm.value.phone,
+        type: this.contactUpdateForm.value.type,
+        bio: this.contactUpdateForm.value.bio,
+      },
+    };
     if (this.contactId) {
       if (this.roleId) {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.contact.contact).subscribe(response => {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
           if (response) {
             // update org contact with response from update
             // should be the same as what was sent, but we will just be sure
-            this.contact.contact = response;
+            memberContact.contact = response;
             // add as a member contact
-            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.contact).subscribe(response => {
+            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, memberContact).subscribe(response => {
               if(response) {
                 this.dismiss();
               }
@@ -266,6 +356,7 @@ export class ContactUpdate {
   }
 
   removeContact() {
+    this.currentlySubmitting = true;
     this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
       if(response) {
         this.dismiss();
