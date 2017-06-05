@@ -73,7 +73,7 @@
                 CONTRACT
               </ion-col>
               <ion-col col-2>
-                <ion-icon md="md-folder" button-large></ion-icon>
+                <ion-icon name="folder" button-large></ion-icon>
               </ion-col>
             </ion-row>
           </ion-card-header>
@@ -108,7 +108,7 @@
                 INVOICE
               </ion-col>
               <ion-col col-2>
-                <ion-icon md="md-folder" button-large></ion-icon>
+                <ion-icon name="folder" button-large></ion-icon>
               </ion-col>
             </ion-row>
           </ion-card-header>
@@ -195,18 +195,12 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let contact of memberContacts; let odd=odd;" [ngClass]="{ 'item-md-light':odd }">
-                    <td data-title="Primary/Board">
-                      <span *ngIf="contact.primaryContact">
-                        <ion-icon md="star"></ion-icon>
+                    <td data-title="Primary/Board" class="primary-board">
+                      <span *ngIf="contact.primaryContact==true">
+                        <ion-icon name="star"></ion-icon>
                       </span>
-                      <span *ngIf="!contact.primaryContact">
-                        &nbsp;
-                      </span>
-                      <span *ngIf="contact.boardMember">
-                        <ion-icon md="contact"></ion-icon>
-                      </span>
-                      <span *ngIf="!contact.boardMember">
-                        &nbsp;
+                      <span *ngIf="contact.boardMember==true">
+                        <ion-icon name="contact"></ion-icon>
                       </span>
                     </td>
                     <td data-title="Role">
