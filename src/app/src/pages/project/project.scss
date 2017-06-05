@@ -4,6 +4,12 @@ project {
     text-decoration:none;
   }
 
+  ion-datetime {
+    color:#000 !important;
+    background: none !important;
+    opacity: 1 !important;
+  }
+
   .circle-alert,
   .circle-notice,
   .circle-null {

@@ -7,13 +7,13 @@ import { Chart } from 'chart.js';
   segment: 'projects'
 })
 @Component({
-  selector: 'projects',
+  selector: 'projects-list',
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
   loading: boolean;
   allProjects: any;
-  pushAddProjectPage;
+
   numberOfContracts: {
     new: number,
     renewal: number,
@@ -50,7 +50,6 @@ export class ProjectsListPage {
   invoicesChart: any;
 
   constructor(public navCtrl: NavController, private cincoService: CincoService) {
-    this.pushAddProjectPage = 'AddProjectPage';
     this.getDefaults();
     this.loading = true;
   }
@@ -67,7 +66,7 @@ export class ProjectsListPage {
   }
 
   viewProject(projectId){
-    this.navCtrl.push('ProjectPage', {
+    this.navCtrl.setRoot('ProjectPage', {
       projectId: projectId
     });
   }

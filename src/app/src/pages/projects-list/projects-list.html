@@ -9,31 +9,23 @@
 
 <ion-content padding headerspacing overflow-scroll="true" [ngClass]="{'loading': loading}">
 
-  <ion-fab right bottom>
-    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
-    <ion-fab-list side="left">
-      <button ion-fab [navPush]="pushAddProjectPage"><ion-icon name="md-briefcase"></ion-icon></button>
-      <button ion-fab><ion-icon name="md-contact"></ion-icon></button>
-    </ion-fab-list>
-  </ion-fab>
-
   <header>
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-3>
-          <h2>Contracts</h2>
+          <span class="main-headers">CONTRACTS</span>
           <div>
             <canvas height="250" #contractsCanvas></canvas>
           </div>
         </ion-col>
         <ion-col col-12 col-md-5>
-          <h2>Invoices</h2>
+          <span class="main-headers">INVOICES</span>
           <div>
             <canvas #invoicesCanvas></canvas>
           </div>
         </ion-col>
         <ion-col col-12 col-md-4>
-          <h2>Board Meeting</h2>
+          <span class="main-headers">BOARD MEETING</span>
           <ion-item *ngFor="let meeting of meetings">
             <ion-icon name="calendar" item-left large></ion-icon>
             <h2>{{meeting.label}}</h2>
@@ -50,7 +42,7 @@
         <ion-card >
           <ion-card-content>
             <ion-card-title (click)="viewProject(project.id)">
-              {{ project.name }}
+              <span class="project-name">{{ project.name }}</span>
             </ion-card-title>
             <dl>
               <dt> Type </dt>
