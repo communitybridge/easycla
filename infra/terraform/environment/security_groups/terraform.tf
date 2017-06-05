@@ -25,7 +25,7 @@ resource "aws_security_group" "ecs" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    security_groups = ["${aws_security_group.external_elb.id}", "${aws_security_group.internal_ssh.id}"]
+    security_groups = ["${aws_security_group.external_elb.id}"]
   }
 
   ingress {
@@ -128,75 +128,6 @@ resource "aws_security_group" "internal_elb" {
   }
 }
 
-# Allow internal SSH Access from within the Engineering Pool.
-resource "aws_security_group" "internal_ssh" {
-  provider    = "aws.local"
-  name        = "${var.name}-internal-ssh"
-  description = "Allows ssh from the VPN"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    cidr_blocks     = ["10.32.0.0/12"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "tcp"
-    cidr_blocks = ["${var.cidr}"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags {
-    Name        = "PMC - VPN SSH Access"
-  }
-}
-
-resource "aws_security_group" "vpn-link" {
-  provider    = "aws.local"
-  name        = "${format("%s-vpn-link", var.name)}"
-  description = "Pritunl OpenVPN Link"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port   = 4500
-    to_port     = 4500
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 500
-    to_port     = 500
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.32.0.0/12"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Name        = "PMC - Pritunl Link"
-  }
-}
-
 resource "aws_security_group" "redis" {
   provider    = "aws.local"
   name        = "${format("%s-redis", var.name)}"
@@ -222,10 +153,6 @@ resource "aws_security_group" "redis" {
   }
 }
 
-output "internal_ssh" {
-  value = "${aws_security_group.internal_ssh.id}"
-}
-
 output "external_elb" {
   value = "${aws_security_group.external_elb.id}"
 }
@@ -236,10 +163,6 @@ output "internal_elb" {
 
 output "ecs-cluster" {
   value = "${aws_security_group.ecs.id}"
-}
-
-output "vpn-link" {
-  value = "${aws_security_group.vpn-link.id}"
 }
 
 output "redis" {
