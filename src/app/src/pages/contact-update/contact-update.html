@@ -15,7 +15,7 @@
 <ion-content>
   <form [formGroup]="contactUpdateForm" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
-      <ion-row *ngIf="submitAttempt">
+      <ion-row *ngIf="submitAttempt && !contactUpdateForm.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>
