@@ -118,8 +118,8 @@ export class CincoService{
     body.append('id', contact.id);
     body.append('memberId', memberId);
     body.append('type', contact.type);
-    // body.append('boardMember', contact.boardMember);
-    // body.append('primaryContact', contact.primaryContact);
+    body.append('boardMember', contact.boardMember);
+    body.append('primaryContact', contact.primaryContact);
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
@@ -146,8 +146,8 @@ export class CincoService{
     body.append('id', contact.id);
     body.append('memberId', memberId);
     body.append('type', contact.type);
-    // body.append('boardMember', contact.boardMember);
-    // body.append('primaryContact', contact.primaryContact);
+    body.append('boardMember', contact.boardMember);
+    body.append('primaryContact', contact.primaryContact);
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
