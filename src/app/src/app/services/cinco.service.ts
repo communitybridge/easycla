@@ -44,10 +44,19 @@ export class CincoService{
    }
 
    postProject(newProject) {
-     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let headers = new Headers({
+       'Content-Type': 'application/json',
+       json: true
+     });
      let body = new FormData();
-     body.append('project_name', newProject.project_name);
-     // body.append('project_type', newProject.project_type);
+     body.append('project_name', newProject.name);
+     body.append('project_description', newProject.description);
+     body.append('project_url', newProject.url);
+     body.append('project_sector', newProject.sector);
+     body.append('project_address', JSON.stringify(newProject.address).replace(/'/g, "\\'"));
+     body.append('project_status', newProject.status);
+     body.append('project_category', newProject.category);
+     body.append('project_start_date', newProject.startDate);
      return this.http.post('/post_project', body, headers)
                  .map((res) => res.json());
    }
