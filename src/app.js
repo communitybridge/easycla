@@ -81,14 +81,6 @@ console.log("Node App listening port: ", appPort);
 const pmcURL = config.get('console.endpoint');
 console.log('Docker project-management-console-url: ' + pmcURL);
 
-if(process.argv[2] == 'dev') {
-  var gulp = require('gulp');
-  require('./gulpfile');
-  if (gulp.tasks.styles) gulp.start('styles');
-  if (gulp.tasks.scripts) gulp.start('scripts');
-  if (gulp.tasks.watch) gulp.start('watch');
-}
-
 passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
