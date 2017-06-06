@@ -57,6 +57,7 @@ var projectsRouter = require('./routes/projects');
 var membersRouter = require('./routes/members');
 var mailingRouter = require('./routes/mailing');
 var aliasesRouter = require('./routes/aliases');
+var usersRouter = require('./routes/users');
 
 app.use(mainRouter);
 app.use(adminRouter);
@@ -65,6 +66,7 @@ app.use(projectsRouter);
 app.use(membersRouter);
 app.use(mailingRouter);
 app.use(aliasesRouter);
+app.use(usersRouter);
 
 app.get('*', function(req, res) {
     res.redirect('/');
