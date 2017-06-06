@@ -70,6 +70,19 @@ export class CincoService{
                  .map((res) => res.json());
    }
 
+   getProjectConfig(projectId) {
+     return this.http.get(this.baseUrl + '/projects/' + projectId + '/config')
+             .map(res => res.json());
+   }
+
+   updateProjectManagers(projectId, managers) {
+     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let body = new FormData();
+     body.append('managers', JSON.stringify(managers));
+     return this.http.put('/projects/' + projectId + '/managers', body, headers)
+                 .map((res) => res.json());
+   }
+
   /*
     Projects - Members:
     Resources for getting details about project members
