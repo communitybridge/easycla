@@ -9,15 +9,15 @@ var cinco = require("../lib/api");
 
 var router = express.Router();
 
-router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin) {
-    var adminClient = cinco.client(req.session.user.cinco_keys);
-    adminClient.getAllUsers(function (err, users, groups) {
-      res.render('admin', { users: users, groups: groups, message: req.flash('info') });
-    });
-  }
-  else res.redirect('/');
-});
+// router.get('/admin', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+//   if(req.session.user.isAdmin) {
+//     var adminClient = cinco.client(req.session.user.cinco_keys);
+//     adminClient.getAllUsers(function (err, users, groups) {
+//       res.render('admin', { users: users, groups: groups, message: req.flash('info') });
+//     });
+//   }
+//   else res.redirect('/');
+// });
 
 router.post('/activate_user', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin){
