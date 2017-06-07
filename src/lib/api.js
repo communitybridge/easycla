@@ -118,24 +118,7 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, false, null);
           } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have role added'));
-          }
-        });
-      },
-
-      getAllGroups: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'usergroups/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var groups = JSON.parse(body);
-            next(null, groups);
-          } else {
-            next(errors.fromResponse(res, 'Unable to look up usergroups. '));
+            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have role [' + role + ']  added'));
           }
         });
       },
@@ -151,8 +134,25 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, true);
           } else {
-            next(errors.fromResponse(res, 'Unable to delete group with id of [' + groupId + '] from user with id of [' +
+            next(errors.fromResponse(res, 'Unable to delete role [' + role + '] from user with id of [' +
                 userId + '].'));
+          }
+        });
+      },
+
+      getAllRoles: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/roles'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var roles = JSON.parse(body);
+            next(null, roles);
+          } else {
+            next(errors.fromResponse(res, 'Unable to look up user roles. '));
           }
         });
       },
