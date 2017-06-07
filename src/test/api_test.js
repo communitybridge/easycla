@@ -248,48 +248,42 @@ suite('api', function () {
       });
     });
 
-  //   test('PUT /organizations/{id}', function (done) {
-  //     this.timeout(3000);
-  //     projManagerClient.getAllOrganizations(function (err, organizations) {
-  //       assert.ifError(err);
-  //       var organizationId = organizations[0].id;
-  //       var updatedOrganization = {
-  //         id: organizationId,
-  //         name: "Company Updated Name",
-  //         addresses: [
-  //           {
-  //             type: "MAIN",
-  //             address: {
-  //               country: "US",
-  //               administrativeArea: "Some updated Province (e.g. Alaska)",
-  //               localityName: "Some updated Ctesty (e.g. Anchorage)",
-  //               postalCode: 99501,
-  //               // phone: 888-867-5309,
-  //               thoroughfare: "Some updated street address"
-  //             }
-  //           },
-  //           {
-  //             type: "BILLING",
-  //             address: {
-  //               country: "US",
-  //               administrativeArea: "Some updated Province (e.g. Alaska)",
-  //               localityName: "Some updated Ctesty (e.g. Anchorage)",
-  //               postalCode: 99501,
-  //               // phone: 888-867-5309,
-  //               thoroughfare: "Some updated street address"
-  //             }
-  //           }
-  //         ],
-  //         logoRef: "logoUpdatedName.jpg"
-  //       }
-  //       projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
-  //         assert.ifError(err);
-  //         assert(updated);
-  //         assert(organization);
-  //         done();
-  //       });
-  //     });
-  //   });
+    test('PUT /organizations/{id}', function (done) {
+      this.timeout(3500);
+      var updatedOrganization = {
+        id: projOrganizationId,
+        name: "Company Updated Name",
+        addresses: [
+          {
+            type: "MAIN",
+            address: {
+              country: "US",
+              administrativeArea: "Some updated Province (e.g. Alaska)",
+              localityName: "Some updated Ctesty (e.g. Anchorage)",
+              postalCode: 99501,
+              thoroughfare: "Some updated street address"
+            }
+          },
+          {
+            type: "BILLING",
+            address: {
+              country: "US",
+              administrativeArea: "Some updated Province (e.g. Alaska)",
+              localityName: "Some updated Ctesty (e.g. Anchorage)",
+              postalCode: 99501,
+              thoroughfare: "Some updated street address"
+            }
+          }
+        ],
+        logoRef: "logoUpdatedName.jpg"
+      }
+      projManagerClient.updateOrganization(updatedOrganization, function (err, updated, organization) {
+        assert.ifError(err);
+        assert(updated);
+        assert(organization);
+        done();
+      });
+    });
 
   });
   //
