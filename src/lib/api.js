@@ -89,7 +89,7 @@ module.exports = {
       getUser: function (id, next) {
         var opts = {
           method: 'GET',
-          path: 'users/' + id + '/'
+          path: 'users/' + id
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
