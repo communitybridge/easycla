@@ -230,19 +230,6 @@ suite('api', function () {
       });
     });
 
-  //   test('GET /organizations', function (done) {
-  //     projManagerClient.getAllOrganizations(function (err, organizations) {
-  //       assert.ifError(err);
-  //       var sampleOrganization = organizations[0];
-  //       assert(sampleOrganization, "A single organization should exist in the returned response array");
-  //       assert(sampleOrganization.id, "id property should exist");
-  //       assert(sampleOrganization.name, "name property should exist");
-  //       assert(sampleOrganization.addresses, "addresses array should exist");
-  //       // assert(sampleOrganization.logoRef, "logoRef property should exist");
-  //       done();
-  //     });
-  //   });
-  //
   //   test('GET /organizations/{id}', function (done) {
   //     projManagerClient.getAllOrganizations(function (err, organizations) {
   //       assert.ifError(err);

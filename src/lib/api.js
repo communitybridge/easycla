@@ -580,23 +580,6 @@ module.exports = {
         Resources to expose and manipulate organizations
        */
 
-      getAllOrganizations: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'organizations/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var organizations = JSON.parse(body);
-            next(null, organizations);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get all organizations.'));
-          }
-        });
-      },
-
       createOrganization: function (organization, next) {
         var opts = {
           method: 'POST',
