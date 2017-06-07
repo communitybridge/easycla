@@ -34,4 +34,14 @@ router.get('/users', require('connect-ensure-login').ensureLoggedIn('/login'), f
   }
 });
 
+router.get('/users/:userId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var userId = req.params.userId;
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getUser(userId, function (err, user) {
+      res.send(user);
+    });
+  }
+});
+
 module.exports = router;
