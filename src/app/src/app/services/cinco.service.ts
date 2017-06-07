@@ -18,7 +18,7 @@ export class CincoService{
     Resources to expose and manipulate details of projects
    */
    getProjectStatuses() {
-     return this.http.get(this.baseUrl + '/project/statuses')
+     return this.http.get(this.baseUrl + '/project/status')
              .map(res => res.json());
    }
 
