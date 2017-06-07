@@ -140,10 +140,10 @@ module.exports = {
         });
       },
 
-      removeGroupFromUser: function (userId, groupId, next) {
+      removeRoleFromUser: function (userId, role, next) {
         var opts = {
           method: 'DELETE',
-          path: 'users/' + userId + '/group/' + groupId + '/'
+          path: 'users/' + userId + '/role/' + role
         };
         makeSignedRequest(opts, function (err, res) {
           if (err) {

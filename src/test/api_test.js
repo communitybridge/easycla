@@ -94,26 +94,23 @@ suite('api', function () {
       });
     });
 
-    // test('DELETE users/{id}/group/{groupId}', function (done) {
-    //   var adminGroup = {
-    //     groupId: 2,
-    //     name: 'ADMIN'
-    //   };
-    //   adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
-    //     assert.ifError(err);
-    //     adminClient.removeGroupFromUser(sampleUserName, adminGroup.groupId, function (err, isUpdated) {
-    //       assert.ifError(err);
-    //       assert(isUpdated);
-    //       adminClient.getUser(sampleUserName, function (err, user) {
-    //         assert.ifError(err);
-    //         assert(!_.some(user.groups, function (g) {
-    //           return g.groupId == adminGroup.groupId;
-    //         }));
-    //         done();
-    //       });
-    //     });
-    //   });
-    // });
+    test('DELETE users/{id}/role/{role}', function (done) {
+      var role = 'PROGRAM_MANAGER';
+      adminClient.addRoleToUser(sampleUserName, role, function (err, isUpdated, user) {
+        assert.ifError(err);
+        adminClient.removeRoleFromUser(sampleUserName, role, function (err, isUpdated) {
+          assert.ifError(err);
+          assert(isUpdated);
+          adminClient.getUser(sampleUserName, function (err, user) {
+            assert.ifError(err);
+            assert(!_.some(user.roles, function (r) {
+              return r == role;
+            }));
+            done();
+          });
+        });
+      });
+    });
     //
     // test('GET usergroups/', function (done) {
     //   var expected = [{groupId: 1, name: 'USER'}, {groupId: 2, name: 'ADMIN'},
