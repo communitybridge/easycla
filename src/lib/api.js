@@ -63,13 +63,14 @@ module.exports = {
     }
 
     return {
-      createUser: function (lfId, next) {
+      createUser: function (lfId, email, next) {
         var body = {
-          "lfId": lfId
+          "lfId": lfId,
+          "email": email
         };
         var opts = {
           method: 'POST',
-          path: 'users/',
+          path: 'users',
           body: JSON.stringify(body)
         };
         makeSignedRequest(opts, function (err, res) {
