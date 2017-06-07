@@ -68,15 +68,15 @@ suite('api', function () {
       });
     });
 
-    // test('GET user/{id}', function (done) {
-    //   adminClient.getUser(sampleUserName, function (err, user) {
-    //     assert.ifError(err);
-    //     assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
-    //     assert(user.userId, 'userId property should exist');
-    //     done();
-    //   });
-    // });
-    //
+    test('GET user/{id}', function (done) {
+      adminClient.getUser(sampleUserName, function (err, user) {
+        assert.ifError(err);
+        assert.equal(user.userId, sampleUserName, 'Username is not the same as requested');
+        assert(user.userId, 'userId property should exist');
+        done();
+      });
+    });
+
     // test('POST user/{id}/group', function (done) {
     //   var adminGroup = {
     //     groupId: 2,
@@ -443,7 +443,6 @@ suite('api', function () {
   //     projManagerClient.createProject(sampleProj, function (err, created, projectId) {
   //       assert.ifError(err);
   //       assert(created);
-  //       console.log("projectId:" + projectId);
   //         projManagerClient.archiveProject(projectId, function (err) {
   //           assert.ifError(err);
   //           projManagerClient.getProject(projectId, function (err) {
