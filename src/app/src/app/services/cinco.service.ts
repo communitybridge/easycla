@@ -226,4 +226,20 @@ export class CincoService{
             .map(res => res.json());
     return response;
   }
+
+  /*
+    Users:
+    Resources to manage internal LF users and roles
+   */
+
+  getAllUsers() {
+    return this.http.get(this.baseUrl + '/users')
+            .map(res => res.json());
+  }
+
+  getUser(userId) {
+    return this.http.get(this.baseUrl + '/users/' + userId)
+            .map(res => res.json());
+  }
+
 }
