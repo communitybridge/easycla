@@ -600,7 +600,7 @@ module.exports = {
       createOrganization: function (organization, next) {
         var opts = {
           method: 'POST',
-          path: 'organizations/',
+          path: 'organizations',
           body: JSON.stringify(organization)
         };
         makeSignedRequest(opts, function (err, res, body) {
