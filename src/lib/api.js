@@ -103,11 +103,11 @@ module.exports = {
         });
       },
 
-      addGroupForUser: function (id, group, next) {
+      addRoleToUser: function (id, role, next) {
         var opts = {
           method: 'POST',
-          path: 'users/' + id + '/group/',
-          body: JSON.stringify(group)
+          path: 'users/' + id + '/role',
+          body: JSON.stringify(role)
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -118,7 +118,7 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, false, null);
           } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have group added'));
+            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have role added'));
           }
         });
       },
