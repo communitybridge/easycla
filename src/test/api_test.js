@@ -149,10 +149,12 @@ suite('api', function () {
   });
 
   suite('Organizations Endpoints', function () {
-    var projManagerClient;
+
     var projUserName = randomUserName();
     var projUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
+    var projManagerClient;
     var adminClient;
+    var projOrganizationId;
 
     suiteSetup(function (done) {
       api.getKeysForLfId("LaneMeyer", function (err, keys) {
@@ -200,6 +202,7 @@ suite('api', function () {
       projManagerClient.createOrganization(sampleOrganization, function (err, created, organizationId) {
         assert.ifError(err);
         assert(created);
+        projOrganizationId = organizationId;
         done();
       });
     });
@@ -230,27 +233,21 @@ suite('api', function () {
       });
     });
 
-  //   test('GET /organizations/{id}', function (done) {
-  //     projManagerClient.getAllOrganizations(function (err, organizations) {
-  //       assert.ifError(err);
-  //       var id = organizations[0].id;
-  //       projManagerClient.getOrganization(id, function (err, organization) {
-  //         assert.ifError(err);
-  //         assert(organization);
-  //         done();
-  //       });
-  //     });
-  //   });
-  //
-  //   test('GET /organizations/{id} 404', function (done) {
-  //     projManagerClient.getAllOrganizations(function (err, organizations) {
-  //       projManagerClient.getOrganization("not_a_real_id", function (err, organization) {
-  //         assert.equal(err.statusCode, 404);
-  //         done();
-  //       });
-  //     });
-  //   });
-  //
+    test('GET /organizations/{id}', function (done) {
+      projManagerClient.getOrganization(projOrganizationId, function (err, organization) {
+        assert.ifError(err);
+        assert(organization);
+        done();
+      });
+    });
+
+    test('GET /organizations/{id} 404', function (done) {
+      projManagerClient.getOrganization("lol_Unreal_ID_jAjA", function (err, organization) {
+        assert.equal(err.statusCode, 404);
+        done();
+      });
+    });
+
   //   test('PUT /organizations/{id}', function (done) {
   //     this.timeout(3000);
   //     projManagerClient.getAllOrganizations(function (err, organizations) {
