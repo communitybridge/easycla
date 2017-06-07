@@ -137,10 +137,10 @@ suite('api', function () {
         assert.ifError(err);
         assert(users.length >= 2);
         assert(_.some(users, function (u) {
-          return u.lfId == 'fvega';
+          return u.userId == 'fvega';
         }));
         assert(_.some(users, function (u) {
-          return u.lfId == 'LaneMeyer';
+          return u.userId == 'LaneMeyer';
         }));
         done();
       });
