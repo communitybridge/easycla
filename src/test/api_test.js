@@ -132,19 +132,20 @@ suite('api', function () {
       });
     });
 
-    // test('GET users/', function (done) {
-    //   adminClient.getAllUsers(function (err, users, groups) {
-    //     assert.ifError(err);
-    //     assert(users.length >= 2);
-    //     assert(_.some(users, function (u) {
-    //       return u.lfId == 'fvega';
-    //     }));
-    //     assert(_.some(users, function (u) {
-    //       return u.lfId == 'LaneMeyer';
-    //     }));
-    //     done();
-    //   });
-    // });
+    test('GET users/', function (done) {
+      adminClient.getAllUsers(function (err, users) {
+        assert.ifError(err);
+        assert(users.length >= 2);
+        assert(_.some(users, function (u) {
+          return u.lfId == 'fvega';
+        }));
+        assert(_.some(users, function (u) {
+          return u.lfId == 'LaneMeyer';
+        }));
+        done();
+      });
+    });
+
   });
 
   // suite('Organizations Endpoints', function () {
