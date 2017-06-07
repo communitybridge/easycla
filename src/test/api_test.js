@@ -77,27 +77,23 @@ suite('api', function () {
       });
     });
 
-    // test('POST user/{id}/group', function (done) {
-    //   var adminGroup = {
-    //     groupId: 2,
-    //     name: 'ADMIN'
-    //   };
-    //   var expected = [{groupId: 1, name: 'USER'}, adminGroup];
-    //   adminClient.addGroupForUser(sampleUserName, adminGroup, function (err, isUpdated, user) {
-    //     assert.ifError(err);
-    //     assert(isUpdated, "User resource should be updated wtesth new group")
-    //     assert.equal(user.lfId, sampleUserName, 'Username is not the same as requested');
-    //     assert.equal(user.groups.length, 2, 'User must have 2 groups');
-    //     assert(_.some(user.groups, function (g) {
-    //       return (g.groupId === adminGroup.groupId) && (g.name === adminGroup.name);
-    //     }));
-    //     assert(_.some(user.groups, function (g) {
-    //       return (g.groupId === 1) && (g.name === 'USER');
-    //     }));
-    //     done();
-    //   });
-    // });
-    //
+    test('POST user/{id}/group', function (done) {
+      var adminRole = 'ADMIN';
+      adminClient.addRoleToUser(sampleUserName, adminRole, function (err, isUpdated, user) {
+        assert.ifError(err);
+        assert(isUpdated, "User resource should be updated wtesth new role")
+        assert.equal(user.userId, sampleUserName, 'Username is not the same as requested');
+        assert.equal(user.roles.length, 2, 'User must have 2 roles');
+        assert(_.some(user.roles, function (r) {
+          return ( r === adminRole);
+        }));
+        assert(_.some(user.roles, function (r) {
+          return (r === 'USER');
+        }));
+        done();
+      });
+    });
+
     // test('DELETE users/{id}/group/{groupId}', function (done) {
     //   var adminGroup = {
     //     groupId: 2,
