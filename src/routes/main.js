@@ -73,7 +73,7 @@ router.get('/login_cas', function(req, res, next) {
                   {
                     if(user.roles[i] == "ADMIN") req.session.user.isAdmin = true;
                     if(user.roles[i] == "USER") req.session.user.isUser = true;
-                    if(user.roles[i] == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
+                    if(user.roles[i] == "PROGRAM_MANAGER") req.session.user.isProjectManager = true;
                   }
                 }
               }
