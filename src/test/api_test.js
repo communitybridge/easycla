@@ -111,24 +111,27 @@ suite('api', function () {
         });
       });
     });
-    //
-    // test('GET usergroups/', function (done) {
-    //   var expected = [{groupId: 1, name: 'USER'}, {groupId: 2, name: 'ADMIN'},
-    //     {groupId: 3, name: 'PROJECT_MANAGER'}];
-    //
-    //   adminClient.getAllGroups(function (err, groups) {
-    //     assert.ifError(err);
-    //
-    //     _.each(expected, function (eg) {
-    //       var found = _.find(groups, function (g) {
-    //         return (eg.groupId === g.groupId) && (eg.name === g.name);
-    //       });
-    //       assert(found, "Expected group [" + eg + "] not found in returned groups");
-    //     });
-    //     done();
-    //   });
-    // });
-    //
+
+    test('GET users/roles', function (done) {
+      var expected = {
+        USER: 'Project Console User',
+        PROGRAM_MANAGER_ADMIN: 'Project Manager Admin',
+        ADMIN: 'Administrator',
+        PRIMARY_CONTACT: 'Primary Contact',
+        PROGRAM_MANAGER: 'Program Manager'
+      }
+      adminClient.getAllRoles(function (err, roles) {
+        assert.ifError(err);
+        _.each(expected, function (er) {
+          var found = _.find(roles, function (r) {
+            return (er === r);
+          });
+          assert(found, "Expected role [" + er + "] not found in returned roles");
+        });
+        done();
+      });
+    });
+
     // test('GET users/', function (done) {
     //   adminClient.getAllUsers(function (err, users, groups) {
     //     assert.ifError(err);
