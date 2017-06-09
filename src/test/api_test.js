@@ -234,6 +234,7 @@ suite('api', function () {
     });
 
     test('GET /organizations/{id}', function (done) {
+      this.timeout(4000);
       projManagerClient.getOrganization(projOrganizationId, function (err, organization) {
         assert.ifError(err);
         assert(organization);
@@ -242,6 +243,7 @@ suite('api', function () {
     });
 
     test('GET /organizations/{id} 404', function (done) {
+      this.timeout(4000);
       projManagerClient.getOrganization("lol_Unreal_ID_jAjA", function (err, organization) {
         assert.equal(err.statusCode, 404);
         done();
@@ -286,192 +288,193 @@ suite('api', function () {
     });
 
   });
-  //
-  // suite('Projects Endpoints', function () {
-  //   var projManagerClient;
-  //   var projUserName = randomUserName();
-  //   var adminClient;
-  //
-  //   suiteSetup(function (done) {
-  //     api.getKeysForLfId("LaneMeyer", function (err, keys) {
-  //       adminClient = api.client(keys);
-  //       adminClient.createUser(projUserName, function (err, created) {
-  //         var projManagementGroup = {
-  //           groupId: 3,
-  //           name: 'PROJECT_MANAGER'
-  //         };
-  //         adminClient.addGroupForUser(projUserName, projManagementGroup, function (err, updated, user) {
-  //           api.getKeysForLfId(projUserName, function (err, keys) {
-  //             projManagerClient = api.client(keys);
-  //             done();
-  //           });
-  //         });
-  //       });
-  //     });
-  //   });
-  //
-  //   test('GET /projects', function (done) {
-  //     projManagerClient.getAllProjects(function (err, projects) {
-  //       assert.ifError(err);
-  //       var sampleProj = projects[0];
-  //       assert(sampleProj, "A single project should exist in the returned response array");
-  //       assert(sampleProj.id, "id property should exist");
-  //       assert(sampleProj.name, "name property should exist");
-  //       // assert(sampleProj.description, "description property should exist");
-  //       // assert(sampleProj.pm, "pm property should exist");
-  //       // assert(sampleProj.url, "url property should exist");
-  //       // assert(sampleProj.startDate, "startDate property should exist");
-  //       assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
-  //           "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
-  //       done();
-  //     });
-  //   });
-  //
-  //   test('GET /projects/{id}', function (done) {
-  //     projManagerClient.getAllProjects(function (err, projects) {
-  //       assert.ifError(err);
-  //       var id = projects[0].id;
-  //       projManagerClient.getProject(id, function (err, project) {
-  //         assert.ifError(err);
-  //         assert(project);
-  //         done();
-  //       });
-  //     })
-  //   });
-  //
-  //   test('GET /projects/{id} 404', function (done) {
-  //     projManagerClient.getAllProjects(function (err, projects) {
-  //       projManagerClient.getProject("not_a_real_id", function (err, project) {
-  //         assert.equal(err.statusCode, 404);
-  //         done();
-  //       });
-  //     })
-  //   });
-  //
-  //   test('POST /projects', function (done) {
-  //     var sampleProj = {
-  //       name: 'Sample Project',
-  //       description: 'Sample Project Description',
-  //       pm: projUserName,
-  //       url: 'http://www.sample.org/',
-  //       type: 'DIRECT_FUNDED',
-  //       startDate: '2016-09-26T09:26:36Z'
-  //     };
-  //     projManagerClient.createProject(sampleProj, function (err, created) {
-  //       assert.ifError(err);
-  //       assert(created);
-  //       done();
-  //     });
-  //   });
-  //
-  //   test('POST /projects 403 ', function (done) {
-  //     var username = randomUserName();
-  //     adminClient.createUser(username, function (err) {
-  //       assert.ifError(err);
-  //       api.getKeysForLfId(username, function (err, keys) {
-  //         assert.ifError(err);
-  //         var client = api.client(keys);
-  //         client.createProject({}, function (err) {
-  //           assert.equal(err.statusCode, 403);
-  //           done();
-  //         });
-  //       });
-  //     });
-  //   });
-  //
-  //   test("POST then GET project", function (done) {
-  //     var sampleProj = {
-  //       name: 'Sample Project',
-  //       // description: 'Sample Project Description',
-  //       // pm: projUserName,
-  //       // url: 'http://www.sample.org/',
-  //       type: 'DIRECT_FUNDED',
-  //       // startDate: new Date().toISOString()
-  //     };
-  //     projManagerClient.createProject(sampleProj, function (err, created, id) {
-  //       assert.ifError(err);
-  //       projManagerClient.getProject(id, function (err, returnedProject) {
-  //         assert.ifError(err);
-  //         assert(returnedProject, "A single project should exist in the returned response array");
-  //         assert.equal(returnedProject.name, sampleProj.name);
-  //         // assert.equal(returnedProject.description, sampleProj.description);
-  //         // assert.equal(returnedProject.pm, sampleProj.pm);
-  //         // assert.equal(returnedProject.url, sampleProj.url);
-  //         // assert.equal(returnedProject.startDate, sampleProj.startDate);
-  //         done();
-  //       });
-  //     });
-  //   });
-  //
-  //   test('DELETE /projects/{id}', function (done) {
-  //     var sampleProj = {
-  //       name: 'Sample Project',
-  //       // description: 'Sample Project Description',
-  //       // pm: projUserName,
-  //       // url: 'http://www.sample.org/',
-  //       type: 'DIRECT_FUNDED',
-  //       // startDate: '2016-09-26T09:26:36Z'
-  //     };
-  //     projManagerClient.createProject(sampleProj, function (err, created, projectId) {
-  //       assert.ifError(err);
-  //       assert(created);
-  //         projManagerClient.archiveProject(projectId, function (err) {
-  //           assert.ifError(err);
-  //           projManagerClient.getProject(projectId, function (err) {
-  //             assert.equal(err.statusCode, 404);
-  //             done();
-  //           });
-  //         });
-  //     });
-  //   });
-  //
-  //   test('PATCH /projects/{id}', function (done) {
-  //     projManagerClient.getMyProjects(function (err, projects) {
-  //       assert.ifError(err);
-  //       var project = _.last(projects);
-  //       var updatedProps = {
-  //         id: project.id,
-  //         pm: projUserName,
-  //         name: randomstring.generate({
-  //           length: 20,
-  //           charset: 'alphabetic'
-  //         }),
-  //         description: randomstring.generate({
-  //           length: 200,
-  //           charset: 'alphabetic'
-  //         })
-  //       };
-  //       projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
-  //         assert.ifError(err);
-  //
-  //         assert.equal(updatedProject.id, project.id);
-  //         assert.equal(updatedProject.url, project.url);
-  //
-  //         assert.equal(updatedProject.name, updatedProps.name);
-  //         assert.equal(updatedProject.description, updatedProps.description);
-  //
-  //         done();
-  //       });
-  //     });
-  //   });
-  //
-  //   test('GET /project', function (done) {
-  //     projManagerClient.getMyProjects(function (err, projects) {
-  //       assert.ifError(err);
-  //       var sampleProj = projects[0];
-  //       assert(sampleProj, "A single project should exist in the returned response array");
-  //       assert(sampleProj.id, "id property should exist");
-  //       assert(sampleProj.name, "name property should exist");
-  //       assert(sampleProj.description, "description property should exist");
-  //       assert(sampleProj.pm, "pm property should exist");
-  //       assert(sampleProj.url, "url property should exist");
-  //       assert(sampleProj.startDate, "startDate property should exist");
-  //       assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
-  //           "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
-  //       done();
-  //     });
-  //   });
-  //
+
+  suite('Projects Endpoints', function () {
+
+    var projUserName = randomUserName();
+    var projUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
+    var adminClient;
+    var projManagerClient;
+
+    suiteSetup(function (done) {
+      api.getKeysForLfId("LaneMeyer", function (err, keys) {
+        adminClient = api.client(keys);
+        adminClient.createUser(projUserName, projUserEmail, function (err, created) {
+          var projectManagerRole = 'PROGRAM_MANAGER';
+          adminClient.addRoleToUser(projUserName, projectManagerRole, function (err, isUpdated, user) {
+            api.getKeysForLfId(projUserName, function (err, keys) {
+              projManagerClient = api.client(keys);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+
+    test('GET /projects', function (done) {
+      this.timeout(4000);
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var sampleProj = projects[0];
+        assert(sampleProj, "A single project should exist in the returned response array");
+        assert(sampleProj.id, "id property should exist");
+        assert(sampleProj.name, "name property should exist");
+        assert(sampleProj.description, "description property should exist");
+        // assert(sampleProj.pm, "pm property should exist");
+        // assert(sampleProj.url, "url property should exist");
+        assert(sampleProj.startDate, "startDate property should exist");
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
+            "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
+        done();
+      });
+    });
+
+    test('GET /projects/{id}', function (done) {
+      this.timeout(4000);
+      projManagerClient.getAllProjects(function (err, projects) {
+        assert.ifError(err);
+        var id = projects[0].id;
+        projManagerClient.getProject(id, function (err, project) {
+          assert.ifError(err);
+          assert(project);
+          done();
+        });
+      })
+    });
+
+    test('GET /projects/{id} 404', function (done) {
+      projManagerClient.getAllProjects(function (err, projects) {
+        projManagerClient.getProject("not_a_real_id", function (err, project) {
+          assert.equal(err.statusCode, 404);
+          done();
+        });
+      })
+    });
+
+    test('POST /projects', function (done) {
+      var sampleProj = {
+        name: 'Sample Project',
+        description: 'Sample Project Description',
+        managers: [
+          projUserName
+        ],
+        url: 'http://www.sample.org/',
+        status: 'ACTIVE',
+        category: "DIRECT_FUNDED",
+        sector: "APP_PLATFORMS",
+        startDate: '2016-09-26T09:26:36Z'
+      };
+      projManagerClient.createProject(sampleProj, function (err, created) {
+        assert.ifError(err);
+        assert(created);
+        done();
+      });
+    });
+
+    test('POST /projects 403 ', function (done) {
+      var username = randomUserName();
+      var useremail = randomUserName() + "@" +  randomUserName() + ".com";
+      adminClient.createUser(username, useremail, function (err) {
+        assert.ifError(err);
+        api.getKeysForLfId(username, function (err, keys) {
+          assert.ifError(err);
+          var client = api.client(keys);
+          client.createProject({}, function (err) {
+            assert.equal(err.statusCode, 403);
+            done();
+          });
+        });
+      });
+    });
+
+    test("POST then GET project", function (done) {
+      this.timeout(4000);
+      var sampleProj = {
+        name: 'Sample Project 3',
+        // description: 'Sample Project Description',
+        managers: [ projUserName ],
+        // url: 'http://www.sample.org/',
+        status: 'ACTIVE'
+        // startDate: new Date().toISOString()
+      };
+      projManagerClient.createProject(sampleProj, function (err, created, id) {
+        assert.ifError(err);
+        projManagerClient.getProject(id, function (err, returnedProject) {
+          assert.ifError(err);
+          assert(returnedProject, "A single project should exist in the returned response array");
+          assert.equal(returnedProject.name, sampleProj.name);
+          // assert.equal(returnedProject.description, sampleProj.description);
+          // assert.equal(returnedProject.pm, sampleProj.pm);
+          // assert.equal(returnedProject.url, sampleProj.url);
+          // assert.equal(returnedProject.startDate, sampleProj.startDate);
+          done();
+        });
+      });
+    });
+
+    // test('DELETE /projects/{id}', function (done) {
+    //   this.timeout(4000);
+    //   var sampleProj = {
+    //     name: 'Sample Project',
+    //     // description: 'Sample Project Description',
+    //     managers: [ projUserName ],
+    //     // url: 'http://www.sample.org/',
+    //     status: 'ACTIVE'
+    //     // startDate: '2016-09-26T09:26:36Z'
+    //   };
+    //   projManagerClient.createProject(sampleProj, function (err, created, projectId) {
+    //     assert.ifError(err);
+    //     assert(created);
+    //       projManagerClient.archiveProject(projectId, function (err) {
+    //         assert.ifError(err);
+    //         projManagerClient.getProject(projectId, function (err) {
+    //           assert.equal(err.statusCode, 404);
+    //           done();
+    //         });
+    //       });
+    //   });
+    // });
+
+    test('PATCH /projects/{id}', function (done) {
+      this.timeout(4000);
+      projManagerClient.getMyProjects(function (err, projects) {
+        assert.ifError(err);
+        var project = _.last(projects);
+        var updatedProps = {
+          id: project.id,
+          name: randomstring.generate({
+            length: 20,
+            charset: 'alphabetic'
+          }),
+          description: randomstring.generate({
+            length: 200,
+            charset: 'alphabetic'
+          })
+        };
+        projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
+          assert.ifError(err);
+          assert.equal(updatedProject.id, project.id);
+          assert.equal(updatedProject.name, updatedProps.name);
+          assert.equal(updatedProject.description, updatedProps.description);
+          done();
+        });
+      });
+    });
+
+    test('GET /project', function (done) {
+      projManagerClient.getMyProjects(function (err, projects) {
+        assert.ifError(err);
+        var sampleProj = projects[0];
+        assert(sampleProj, "A single project should exist in the returned response array");
+        assert(sampleProj.id, "id property should exist");
+        assert(sampleProj.name, "name property should exist");
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED'], sampleProj.category),
+            "category should be one of: ['DIRECT_FUNDED','INCORPORATED']. was: " + sampleProj.category);
+        done();
+      });
+    });
+
   //   suite('Email Aliases Endpoints', function () {
   //     test('GET /projects/{id}/emailaliases', function (done) {
   //       projManagerClient.getAllProjects(function (err, projects) {
@@ -1028,5 +1031,5 @@ suite('api', function () {
   //
   //   }); // END 'Mailing List Endpoints' test
 
-  // });
+  });
 });

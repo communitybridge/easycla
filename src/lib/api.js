@@ -284,7 +284,7 @@ module.exports = {
       archiveProject: function (id, next) {
         var opts = {
           method: 'DELETE',
-          path: 'projects/' + id + '/'
+          path: 'projects/' + id
         };
         makeSignedRequest(opts, function (err, res) {
           if (err) {
