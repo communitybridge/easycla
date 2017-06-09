@@ -1,5 +1,5 @@
 <ion-header name="project-details-header">
-  <ion-navbar>
+  <ion-navbar hideBackButton>
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
@@ -49,7 +49,7 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Membership Status</ion-label>
-          <ion-select [(ngModel)]="project.status">
+          <ion-select [(ngModel)]="project.status" interface="popover">
             <ion-option value="ACTIVE">Active</ion-option>
             <ion-option value="PLANNED">Planned</ion-option>
             <ion-option value="COMPLETE">Complete</ion-option>
@@ -59,7 +59,7 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Project Type</ion-label>
-          <ion-select [(ngModel)]="project.category">
+          <ion-select [(ngModel)]="project.category" interface="popover">
             <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
             <ion-option value="INCORPORATED">Incorporated</ion-option>
           </ion-select>
@@ -68,7 +68,7 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Project Sector</ion-label>
-          <ion-select [(ngModel)]="project.sector">
+          <ion-select [(ngModel)]="project.sector" interface="popover">
             <ion-option value="APP_PLATFORMS">Application Platforms</ion-option>
             <ion-option value="BLOCKCHAIN">Blockchain</ion-option>
             <ion-option value="CLOUD_AND_VIRTUAL">Cloud & Virtualization</ion-option>

@@ -64,37 +64,38 @@ module "security_groups" {
   name    = "pmc"
 }
 
-// Applies Routing Rules for Peering Connection. All Production VPC provided in the WEST region are
-// linked to the Western Production Tools VPC by a Peering Connection. This is it.
-//module "peering_to_tools" {
-//  source = "./peering"
-//
-//  // Western Production Tools Infrastructure
-//  tools_account_number = "${data.terraform_remote_state.production-tools.account_number}"
-//  tools_external_rtb_id = "${module.vpc.external_rtb_id}"
-//  tools_raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
-//  tools_cidr = "${data.terraform_remote_state.production-tools.west_cidr}"
-//  tools_vpc_id = "${data.terraform_remote_state.production-tools.west_vpc_id}"
-//
-//  // Local Project Infrastructure
-//  vpc_id = "${module.vpc.id}"
-//}
-
-// Pritunl Link to allow VPN Access to this Infra
-module "pritunl_link" {
-  source = "./pritunl-link"
-
-  vpn_sg = "${module.security_groups.vpn-link}"
-  external_subnets = "${module.vpc.external_subnets}"
-  project = "pmc"
-}
-
 // IAM Profiles, Roles & Policies for ECS
 module "ecs-iam-profile" {
   source                    = "./iam-role"
 
   name                      = "pmc"
   environment               = "production"
+}
+
+// Redis Cluster
+module "redis-cluster" {
+  source  = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/redis-cluster"
+
+  environment = "Production"
+  name = "pmc"
+  team = "Engineering"
+  security_groups = ["${module.security_groups.redis}"]
+  subnet_ids = "${module.vpc.internal_subnets}"
+  publicly_accessible = false
+  vpc_id = "${module.vpc.id}"
+}
+
+// Peering to Production Tools
+module "peering" {
+  source                    = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.production-tools.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.production-tools.west_cidr}"
+  tools_vpc_id              = "${data.terraform_remote_state.production-tools.west_vpc_id}"
 }
 
 // The region in which the infra lives.

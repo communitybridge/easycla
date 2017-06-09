@@ -44,10 +44,19 @@ export class CincoService{
    }
 
    postProject(newProject) {
-     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let headers = new Headers({
+       'Content-Type': 'application/json',
+       json: true
+     });
      let body = new FormData();
-     body.append('project_name', newProject.project_name);
-     // body.append('project_type', newProject.project_type);
+     body.append('project_name', newProject.name);
+     body.append('project_description', newProject.description);
+     body.append('project_url', newProject.url);
+     body.append('project_sector', newProject.sector);
+     body.append('project_address', JSON.stringify(newProject.address).replace(/'/g, "\\'"));
+     body.append('project_status', newProject.status);
+     body.append('project_category', newProject.category);
+     body.append('project_start_date', newProject.startDate);
      return this.http.post('/post_project', body, headers)
                  .map((res) => res.json());
    }
@@ -67,6 +76,19 @@ export class CincoService{
      body.append('project_category', editProject.project_category);
      body.append('project_start_date', editProject.project_start_date);
      return this.http.post('/edit_project/' + projectId, body, headers)
+                 .map((res) => res.json());
+   }
+
+   getProjectConfig(projectId) {
+     return this.http.get(this.baseUrl + '/projects/' + projectId + '/config')
+             .map(res => res.json());
+   }
+
+   updateProjectManagers(projectId, managers) {
+     let headers = new Headers({ 'Content-Type': 'application/json' });
+     let body = new FormData();
+     body.append('managers', JSON.stringify(managers));
+     return this.http.put('/projects/' + projectId + '/managers', body, headers)
                  .map((res) => res.json());
    }
 
@@ -109,8 +131,8 @@ export class CincoService{
     body.append('id', contact.id);
     body.append('memberId', memberId);
     body.append('type', contact.type);
-    // body.append('boardMember', contact.boardMember);
-    // body.append('primaryContact', contact.primaryContact);
+    body.append('boardMember', contact.boardMember);
+    body.append('primaryContact', contact.primaryContact);
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
@@ -137,8 +159,8 @@ export class CincoService{
     body.append('id', contact.id);
     body.append('memberId', memberId);
     body.append('type', contact.type);
-    // body.append('boardMember', contact.boardMember);
-    // body.append('primaryContact', contact.primaryContact);
+    body.append('boardMember', contact.boardMember);
+    body.append('primaryContact', contact.primaryContact);
     body.append('contactId', contact.contact.id);
     body.append('contactGivenName', contact.contact.givenName);
     body.append('contactFamilyName', contact.contact.familyName);
@@ -213,4 +235,20 @@ export class CincoService{
             .map(res => res.json());
     return response;
   }
+
+  /*
+    Users:
+    Resources to manage internal LF users and roles
+   */
+
+  getAllUsers() {
+    return this.http.get(this.baseUrl + '/users')
+            .map(res => res.json());
+  }
+
+  getUser(userId) {
+    return this.http.get(this.baseUrl + '/users/' + userId)
+            .map(res => res.json());
+  }
+
 }
