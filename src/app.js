@@ -81,6 +81,8 @@ console.log("Node App listening port: ", appPort);
 const pmcURL = config.get('console.endpoint');
 console.log('Docker project-management-console-url: ' + pmcURL);
 
+displayBanner();
+
 passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
@@ -98,3 +100,15 @@ passport.serializeUser(function(user, callback) {
 passport.deserializeUser(function(obj, callback) {
   callback(null, obj);
 });
+
+function displayBanner() {
+  let fs = require('fs')
+  let max = 4;
+  let min = 1;
+  let version = Math.floor (Math.random() * (max - min + 1) ) + min;
+  let banner = 'banners/' + version + '.txt';
+  fs.readFile(banner, 'utf8', function(err, data) {
+    if (err) throw err;
+    console.log(data)
+  });
+};
