@@ -49,4 +49,12 @@ page-member {
       }
     }
   }
+
+  .table td.primary-board {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    ion-icon {
+      font-size: 2.5rem;
+    }
+  }
 }

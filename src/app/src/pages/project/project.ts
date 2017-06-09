@@ -72,6 +72,14 @@ export class ProjectPage {
     });
   }
 
+  openProjectUserManagementModal() {
+    let modal = this.modalCtrl.create('ProjectUserManagementModal', {
+      projectId: this.projectId,
+      projectName: this.project.name,
+    });
+    modal.present();
+  }
+
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,

@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-navbar>
+  <ion-navbar hideBackButton>
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
@@ -44,7 +44,13 @@
                 </ion-col>
                 <ion-col col-12 col-md-4>
                   <ion-label>
-                    Launched: {{ project.startDate }} <span *ngIf="!project.startDate">N/A</span>
+                    <ion-row>
+                      <span margin-right>Launched: </span>
+                      <span>
+                        <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="project.startDate" ></ion-datetime>
+                      </span>
+                      <span *ngIf="!project.startDate">N/A</span>
+                    </ion-row>
                   </ion-label>
                   <ion-label>
                     Members: {{ membersCount }}
@@ -55,7 +61,7 @@
           </ion-row>
         </ion-col>
         <ion-col col-12 col-md-3>
-          <ion-item>
+          <ion-item (click)="openProjectUserManagementModal()">
             <ion-icon name="people" item-left large></ion-icon>
             <p>
               LF Users

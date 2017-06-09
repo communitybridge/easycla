@@ -172,40 +172,6 @@ module.exports = {
         });
       },
 
-      getAllUsers: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'users/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var groups = new Array();
-            var users = JSON.parse(body);
-            for (var i = 0; i < users.length; i++) {
-              groups[i] = {
-                lfId: '',
-                isUser: false,
-                isAdmin: false,
-                isProjectManager: false
-              };
-            }
-            for (var i = 0; i < users.length; i++) {
-              groups[i].lfId = users[i].lfId;
-              for (var j = 0; j < users[i].groups.length; j++) {
-                if (users[i].groups[j].name == 'USER') groups[i].isUser = true;
-                if (users[i].groups[j].name == 'ADMIN') groups[i].isAdmin = true;
-                if (users[i].groups[j].name == 'PROJECT_MANAGER') groups[i].isProjectManager = true;
-              }
-            }
-            next(null, users, groups);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get all users.'));
-          }
-        });
-      },
-
       /*
         Projects:
         Resources to expose and manipulate details of projects
@@ -362,6 +328,42 @@ module.exports = {
             next(null, updatedProject);
           } else {
             next(errors.fromResponse(res, "Unable to Update Project with properties: " + body));
+          }
+        });
+      },
+
+      getProjectConfig: function (projectId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'projects/' + projectId + '/config'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var config = JSON.parse(body);
+            next(null, config);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get config from project with id of [' + projectId + ']'));
+          }
+        });
+      },
+
+      updateProjectManagers: function (projectId, managers, next) {
+        var body = JSON.stringify(managers);
+        var opts = {
+          method: 'PUT',
+          path: 'projects/' + projectId + '/managers',
+          body: body,
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var projectConfig = JSON.parse(body);
+            next(null, projectConfig);
+          } else {
+            next(errors.fromResponse(res, "Unable to Update Project Managers with data: " + body));
           }
         });
       },
@@ -930,7 +932,46 @@ module.exports = {
             next(errors.fromResponse(res, 'Unable to get mailing lists & participants from project with id of [' + projectId + ']'));
           }
         });
-      }
+      },
+
+      /*
+        Users:
+        Resources to manage internal LF users and roles
+       */
+
+      getAllUsers: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var users = JSON.parse(body);
+            next(null, users);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get all users.'));
+          }
+        });
+      },
+
+      getUser: function (userId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/' + userId,
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var user = JSON.parse(body);
+            next(null, user);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get user with id [' + userId + '].'));
+          }
+        });
+      },
 
     };
   }
