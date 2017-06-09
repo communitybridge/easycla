@@ -940,6 +940,23 @@ module.exports = {
         });
       },
 
+      getUser: function (userId, next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/' + userId,
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var user = JSON.parse(body);
+            next(null, user);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get user with id [' + userId + '].'));
+          }
+        });
+      },
+
     };
   }
 }

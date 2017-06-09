@@ -75,6 +75,7 @@ export class ProjectPage {
   openProjectUserManagementModal() {
     let modal = this.modalCtrl.create('ProjectUserManagementModal', {
       projectId: this.projectId,
+      projectName: this.project.name,
     });
     modal.present();
   }
