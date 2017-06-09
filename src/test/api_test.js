@@ -234,7 +234,7 @@ suite('api', function () {
     });
 
     test('GET /organizations/{id}', function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       projManagerClient.getOrganization(projOrganizationId, function (err, organization) {
         assert.ifError(err);
         assert(organization);
@@ -243,7 +243,7 @@ suite('api', function () {
     });
 
     test('GET /organizations/{id} 404', function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       projManagerClient.getOrganization("lol_Unreal_ID_jAjA", function (err, organization) {
         assert.equal(err.statusCode, 404);
         done();
@@ -295,6 +295,7 @@ suite('api', function () {
     var projUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
     var adminClient;
     var projManagerClient;
+    var projOrganizationId;
 
     suiteSetup(function (done) {
       api.getKeysForLfId("LaneMeyer", function (err, keys) {
@@ -304,7 +305,36 @@ suite('api', function () {
           adminClient.addRoleToUser(projUserName, projectManagerRole, function (err, isUpdated, user) {
             api.getKeysForLfId(projUserName, function (err, keys) {
               projManagerClient = api.client(keys);
-              done();
+              var sampleOrganization = {
+                name: "Company Sample Name 2",
+                addresses: [
+                  {
+                    type: "MAIN",
+                    address: {
+                      country: "US",
+                      administrativeArea: "Some Province (e.g. Alaska)",
+                      localityName: "Some Ctesty (e.g. Anchorage)",
+                      postalCode: 99501,
+                      thoroughfare: "Some street address"
+                    }
+                  },
+                  {
+                    type: "BILLING",
+                    address: {
+                      country: "US",
+                      administrativeArea: "Some Province (e.g. Alaska)",
+                      localityName: "Some Ctesty (e.g. Anchorage)",
+                      postalCode: 99501,
+                      thoroughfare: "Some street address"
+                    }
+                  }
+                ],
+                logoRef: "logoName.jpg"
+              }
+              projManagerClient.createOrganization(sampleOrganization, function (err, created, organizationId) {
+                projOrganizationId = organizationId;
+                done();
+              });
             });
           });
         });
@@ -313,7 +343,7 @@ suite('api', function () {
 
 
     test('GET /projects', function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var sampleProj = projects[0];
@@ -324,14 +354,14 @@ suite('api', function () {
         // assert(sampleProj.pm, "pm property should exist");
         // assert(sampleProj.url, "url property should exist");
         assert(sampleProj.startDate, "startDate property should exist");
-        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED', 'UNSPECIFIED'], sampleProj.category),
-            "category should be one of: ['DIRECT_FUNDED','INCORPORATED','UNSPECIFIED']. was: " + sampleProj.category);
+        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED'], sampleProj.category),
+            "category should be one of: ['DIRECT_FUNDED','INCORPORATED']. was: " + sampleProj.category);
         done();
       });
     });
 
     test('GET /projects/{id}', function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       projManagerClient.getAllProjects(function (err, projects) {
         assert.ifError(err);
         var id = projects[0].id;
@@ -353,6 +383,7 @@ suite('api', function () {
     });
 
     test('POST /projects', function (done) {
+      this.timeout(5000);
       var sampleProj = {
         name: 'Sample Project',
         description: 'Sample Project Description',
@@ -389,7 +420,7 @@ suite('api', function () {
     });
 
     test("POST then GET project", function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       var sampleProj = {
         name: 'Sample Project 3',
         // description: 'Sample Project Description',
@@ -414,7 +445,7 @@ suite('api', function () {
     });
 
     // test('DELETE /projects/{id}', function (done) {
-    //   this.timeout(4000);
+    //   this.timeout(5000);
     //   var sampleProj = {
     //     name: 'Sample Project',
     //     // description: 'Sample Project Description',
@@ -437,7 +468,7 @@ suite('api', function () {
     // });
 
     test('PATCH /projects/{id}', function (done) {
-      this.timeout(4000);
+      this.timeout(5000);
       projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var project = _.last(projects);
@@ -463,250 +494,70 @@ suite('api', function () {
     });
 
     test('GET /project', function (done) {
+      this.timeout(5000);
       projManagerClient.getMyProjects(function (err, projects) {
         assert.ifError(err);
         var sampleProj = projects[0];
         assert(sampleProj, "A single project should exist in the returned response array");
         assert(sampleProj.id, "id property should exist");
         assert(sampleProj.name, "name property should exist");
-        assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED'], sampleProj.category),
-            "category should be one of: ['DIRECT_FUNDED','INCORPORATED']. was: " + sampleProj.category);
+        // assert(_.includes(['DIRECT_FUNDED', 'INCORPORATED'], sampleProj.category),
+        //     "category should be one of: ['DIRECT_FUNDED','INCORPORATED']. was: " + sampleProj.category);
         done();
       });
     });
 
-  //   suite('Email Aliases Endpoints', function () {
-  //     test('GET /projects/{id}/emailaliases', function (done) {
-  //       projManagerClient.getAllProjects(function (err, projects) {
-  //         assert.ifError(err);
-  //         var id = projects[0].id;
-  //         projManagerClient.getEmailAliases(id, function (err, emailAliases) {
-  //           assert.ifError(err);
-  //           assert(emailAliases);
-  //           done();
-  //         });
-  //       })
-  //     });
-  //
-  //     test('GET /projects/{id}/emailaliases 404', function (done) {
-  //       projManagerClient.getAllProjects(function (err, projects) {
-  //         projManagerClient.getEmailAliases("not_a_real_id", function (err, emailAliases) {
-  //           assert.equal(err.statusCode, 404);
-  //           done();
-  //         });
-  //       })
-  //     });
-  //
-  //     test('POST /projects/{id}/emailaliases', function (done) {
-  //       var sampleAlias = {
-  //         "address": "ab@cd.org",
-  //         "participants": [
-  //           {
-  //             "address": "foo@bar.com"
-  //           },
-  //           {
-  //             "address": "foo2@bar.com"
-  //           },
-  //           {
-  //             "address": "foo3@bar.com"
-  //           }
-  //         ]
-  //       };
-  //       projManagerClient.getMyProjects(function (err, projects) {
-  //         assert.ifError(err);
-  //         var projectId = projects[0].id;
-  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
-  //           assert.ifError(err);
-  //           assert(created);
-  //           done();
-  //         });
-  //       });
-  //     });
-  //
-  //     test('POST /projects/{projectId}/emailaliases/{aliasId}/participants', function (done) {
-  //       var newParticipant = {
-  //         "address": "newFoo@bar.com"
-  //       };
-  //       var sampleAlias = {
-  //         "address": "anEmailAlias@myDomain.org",
-  //         "participants": [
-  //           {
-  //             "address": "foo@bar.com"
-  //           }
-  //         ]
-  //       };
-  //       projManagerClient.getMyProjects(function (err, projects) {
-  //         assert.ifError(err);
-  //         var projectId = projects[0].id;
-  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
-  //           assert.ifError(err);
-  //           projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
-  //             assert(created);
-  //             done();
-  //           });
-  //         });
-  //       });
-  //     });
-  //
-  //     test('DELETE /projects/{projectId}/emailaliases/{aliasId}/participants/{participantAddress}', function (done) {
-  //       var participantTBR = "participantToBeRemoved@bar.com";
-  //       var newParticipant = {
-  //         "address": participantTBR
-  //       };
-  //       var sampleAlias = {
-  //         "address": "anotherEmailAlias@myDomain.org",
-  //         "participants": [
-  //           {
-  //             "address": "someFoo@bar.com"
-  //           }
-  //         ]
-  //       };
-  //       projManagerClient.getMyProjects(function (err, projects) {
-  //         assert.ifError(err);
-  //         var projectId = projects[0].id;
-  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
-  //           assert.ifError(err);
-  //           projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
-  //             assert.ifError(err);
-  //             projManagerClient.removeParticipantFromEmailAlias(projectId, aliasId.aliasId, participantTBR, function (err, removed) {
-  //               assert.ifError(err);
-  //               assert(removed);
-  //               done();
-  //             });
-  //           });
-  //         });
-  //       });
-  //     });
-  //
-  //   }); // END 'Email Aliases Endpoints' test
-  //
-  //   suite('Member Companies Endpoints', function () {
-  //     test('GET /projects/{projectId}/members', function (done) {
-  //       projManagerClient.getAllProjects(function (err, projects) {
-  //         assert.ifError(err);
-  //         var projectId = projects[0].id;
-  //         projManagerClient.getMemberCompanies(projectId, function (err, memberCompanies) {
-  //           assert.ifError(err);
-  //           assert(memberCompanies);
-  //           done();
-  //         });
-  //       })
-  //     });
-  //
-  //     test('GET /projects/{projectId}/members 404', function (done) {
-  //       projManagerClient.getAllProjects(function (err, projects) {
-  //         projManagerClient.getMemberCompanies("not_a_real_id", function (err, memberCompanies) {
-  //           assert.equal(err.statusCode, 404);
-  //           done();
-  //         });
-  //       })
-  //     });
-  //
-  //     test('POST /projects/{projectId}/members', function (done) {
-  //       projManagerClient.getAllOrganizations(function (err, organizations) {
-  //         var organizationId = organizations[0].id;
-  //         var sampleMember = {
-  //           orgId: organizationId,
-  //           tier: {
-  //             type: "PLATINUM",
-  //             qualifier: 1
-  //           },
-  //           startDate: "2016-10-24T15:16:52.885Z",
-  //           renewalDate: "2017-10-24T00:00:00.000Z"
-  //         };
-  //         projManagerClient.getMyProjects(function (err, projects) {
-  //           assert.ifError(err);
-  //           var projectId = projects[0].id;
-  //           projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
-  //             assert.ifError(err);
-  //             assert(created);
-  //             done();
-  //           });
-  //         });
-  //       });
-  //     });
-  //
-  //     test('DELETE /projects/{projectId}/members/{memberId}', function (done) {
-  //       projManagerClient.getAllOrganizations(function (err, organizations) {
-  //         var organizationId = organizations[0].id;
-  //         var memberToBeRemoved = {
-  //           orgId: organizationId,
-  //           tier: {
-  //             type: "GOLD",
-  //           },
-  //           startDate: "2016-03-24T15:16:52.885Z",
-  //           renewalDate: "2017-04-24T00:00:00.000Z"
-  //         };
-  //         projManagerClient.getMyProjects(function (err, projects) {
-  //           assert.ifError(err);
-  //           var projectId = projects[0].id;
-  //           projManagerClient.addMemberToProject(projectId, memberToBeRemoved, function (err, created, memberId) {
-  //             projManagerClient.removeMemberFromProject(projectId, memberId, function (err, removed) {
-  //               assert.ifError(err);
-  //               assert(removed);
-  //               done();
-  //             });
-  //           });
-  //         });
-  //       });
-  //     });
-  //
-  //     test('GET /projects/{projectId}/members/{memberId}', function (done) {
-  //       projManagerClient.getAllOrganizations(function (err, organizations) {
-  //         var organizationId = organizations[0].id;
-  //         var sampleMember = {
-  //           orgId: organizationId,
-  //           tier: {
-  //             type: "GOLD",
-  //           },
-  //           startDate: "2016-10-24T15:16:52.885Z",
-  //           renewalDate: "2017-10-24T00:00:00.000Z"
-  //         };
-  //         projManagerClient.getMyProjects(function (err, projects) {
-  //           assert.ifError(err);
-  //           var projectId = projects[0].id;
-  //           projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
-  //             projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
-  //               assert.ifError(err);
-  //               assert(memberCompany);
-  //               done();
-  //             });
-  //           });
-  //         });
-  //       });
-  //     });
-  //
-  //     test('PATCH /projects/{projectId}/members/{memberId}', function (done) {
-  //       projManagerClient.getAllOrganizations(function (err, organizations) {
-  //         var organizationId = organizations[0].id;
-  //         var sampleMember = {
-  //           orgId: organizationId,
-  //           tier: {
-  //             type: "PLATINUM"
-  //           },
-  //           startDate: "2016-10-24T15:16:52.885Z",
-  //           renewalDate: "2017-10-24T00:00:00.000Z"
-  //         };
-  //         var updatedProperties = {
-  //           tier: {
-  //             type: "GOLD"
-  //           },
-  //           renewalDate: "2018-10-24T00:00:00.000Z"
-  //         };
-  //         projManagerClient.getMyProjects(function (err, projects) {
-  //           assert.ifError(err);
-  //           var projectId = projects[0].id;
-  //           projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
-  //             projManagerClient.updateMember(projectId, memberId, updatedProperties, function (err, updated, updatedMember) {
-  //               assert.ifError(err);
-  //               assert(updatedMember);
-  //               done();
-  //             });
-  //           });
-  //         });
-  //       });
-  //     });
-  //
+    suite('Member Companies Endpoints', function () {
+      this.timeout(5000);
+      test('GET /projects/{projectId}/members', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
+          assert.ifError(err);
+          var projectId = projects[0].id;
+          projManagerClient.getProjectMembers(projectId, function (err, memberCompanies) {
+            assert.ifError(err);
+            assert(memberCompanies);
+            done();
+          });
+        })
+      });
+
+      test('GET /projects/{projectId}/members 404', function (done) {
+        projManagerClient.getAllProjects(function (err, projects) {
+          projManagerClient.getProjectMembers("lol_Unreal_ID_jAjA", function (err, memberCompanies) {
+            assert.equal(err.statusCode, 404);
+            done();
+          });
+        })
+      });
+
+
+      // test('GET /projects/{projectId}/members/{memberId}', function (done) {
+      //   projManagerClient.getAllOrganizations(function (err, organizations) {
+      //     var organizationId = organizations[0].id;
+      //     var sampleMember = {
+      //       orgId: organizationId,
+      //       tier: {
+      //         type: "GOLD",
+      //       },
+      //       startDate: "2016-10-24T15:16:52.885Z",
+      //       renewalDate: "2017-10-24T00:00:00.000Z"
+      //     };
+      //     projManagerClient.getMyProjects(function (err, projects) {
+      //       assert.ifError(err);
+      //       var projectId = projects[0].id;
+      //       projManagerClient.addMemberToProject(projectId, sampleMember, function (err, created, memberId) {
+      //         projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
+      //           assert.ifError(err);
+      //           assert(memberCompany);
+      //           done();
+      //         });
+      //       });
+      //     });
+      //   });
+      // });
+      //
+
+
   //     test('POST /projects/{projectId}/members/{memberId}/contacts', function (done) {
   //       projManagerClient.getAllOrganizations(function (err, organizations) {
   //         var organizationId = organizations[0].id;
@@ -819,7 +670,114 @@ suite('api', function () {
   //       });
   //     });
   //
-  //   }); // END 'Member Companies Endpoints' test
+    }); // END 'Member Companies Endpoints' test
+
+  //   suite('Email Aliases Endpoints', function () {
+  //     test('GET /projects/{id}/emailaliases', function (done) {
+  //       projManagerClient.getAllProjects(function (err, projects) {
+  //         assert.ifError(err);
+  //         var id = projects[0].id;
+  //         projManagerClient.getEmailAliases(id, function (err, emailAliases) {
+  //           assert.ifError(err);
+  //           assert(emailAliases);
+  //           done();
+  //         });
+  //       })
+  //     });
+  //
+  //     test('GET /projects/{id}/emailaliases 404', function (done) {
+  //       projManagerClient.getAllProjects(function (err, projects) {
+  //         projManagerClient.getEmailAliases("not_a_real_id", function (err, emailAliases) {
+  //           assert.equal(err.statusCode, 404);
+  //           done();
+  //         });
+  //       })
+  //     });
+  //
+  //     test('POST /projects/{id}/emailaliases', function (done) {
+  //       var sampleAlias = {
+  //         "address": "ab@cd.org",
+  //         "participants": [
+  //           {
+  //             "address": "foo@bar.com"
+  //           },
+  //           {
+  //             "address": "foo2@bar.com"
+  //           },
+  //           {
+  //             "address": "foo3@bar.com"
+  //           }
+  //         ]
+  //       };
+  //       projManagerClient.getMyProjects(function (err, projects) {
+  //         assert.ifError(err);
+  //         var projectId = projects[0].id;
+  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
+  //           assert.ifError(err);
+  //           assert(created);
+  //           done();
+  //         });
+  //       });
+  //     });
+  //
+  //     test('POST /projects/{projectId}/emailaliases/{aliasId}/participants', function (done) {
+  //       var newParticipant = {
+  //         "address": "newFoo@bar.com"
+  //       };
+  //       var sampleAlias = {
+  //         "address": "anEmailAlias@myDomain.org",
+  //         "participants": [
+  //           {
+  //             "address": "foo@bar.com"
+  //           }
+  //         ]
+  //       };
+  //       projManagerClient.getMyProjects(function (err, projects) {
+  //         assert.ifError(err);
+  //         var projectId = projects[0].id;
+  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
+  //           assert.ifError(err);
+  //           projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
+  //             assert(created);
+  //             done();
+  //           });
+  //         });
+  //       });
+  //     });
+  //
+  //     test('DELETE /projects/{projectId}/emailaliases/{aliasId}/participants/{participantAddress}', function (done) {
+  //       var participantTBR = "participantToBeRemoved@bar.com";
+  //       var newParticipant = {
+  //         "address": participantTBR
+  //       };
+  //       var sampleAlias = {
+  //         "address": "anotherEmailAlias@myDomain.org",
+  //         "participants": [
+  //           {
+  //             "address": "someFoo@bar.com"
+  //           }
+  //         ]
+  //       };
+  //       projManagerClient.getMyProjects(function (err, projects) {
+  //         assert.ifError(err);
+  //         var projectId = projects[0].id;
+  //         projManagerClient.createEmailAliases(projectId, sampleAlias, function (err, created, aliasId) {
+  //           assert.ifError(err);
+  //           projManagerClient.addParticipantToEmailAlias(projectId, aliasId.aliasId, newParticipant, function (err, created, response) {
+  //             assert.ifError(err);
+  //             projManagerClient.removeParticipantFromEmailAlias(projectId, aliasId.aliasId, participantTBR, function (err, removed) {
+  //               assert.ifError(err);
+  //               assert(removed);
+  //               done();
+  //             });
+  //           });
+  //         });
+  //       });
+  //     });
+  //
+  //   }); // END 'Email Aliases Endpoints' test
+  //
+
   //
   //   suite('Maling Lists Endpoints', function () {
   //
