@@ -69,14 +69,14 @@ export class ProjectDetailsPage {
       project_start_date: this.project.startDate
     };
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
-      this.navCtrl.push('ProjectPage', {
+      this.navCtrl.setRoot('ProjectPage', {
         projectId: this.projectId
       });
     });
   }
 
   cancelEditProject() {
-    this.navCtrl.push('ProjectPage', {
+    this.navCtrl.setRoot('ProjectPage', {
       projectId: this.projectId
     });
   }
