@@ -39,7 +39,7 @@ export class CincoService{
 
    getProject(projectId, getMembers) {
      if (getMembers) { projectId = projectId + '?members=true' ; }
-     return this.http.get(this.baseUrl + '/get_project/' + projectId)
+     return this.http.get(this.baseUrl + '/projects/' + projectId)
              .map(res => res.json());
    }
 
@@ -57,7 +57,7 @@ export class CincoService{
      body.append('project_status', newProject.status);
      body.append('project_category', newProject.category);
      body.append('project_start_date', newProject.startDate);
-     return this.http.post('/post_project', body, headers)
+     return this.http.post('/projects', body, headers)
                  .map((res) => res.json());
    }
 

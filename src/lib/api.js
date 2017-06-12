@@ -181,7 +181,7 @@ module.exports = {
       getMyProjects: function (next) {
         var opts = {
           method: 'GET',
-          path: 'project/'
+          path: 'project'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -266,7 +266,7 @@ module.exports = {
       createProject: function (project, next) {
         var opts = {
           method: 'POST',
-          path: 'projects/',
+          path: 'projects',
           body: JSON.stringify(project)
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -281,21 +281,21 @@ module.exports = {
         });
       },
 
-      archiveProject: function (id, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'projects/' + id
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode != 204) {
-            next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
-          } else {
-            next(null, true);
-          }
-        });
-      },
+      // archiveProject: function (id, next) {
+      //   var opts = {
+      //     method: 'DELETE',
+      //     path: 'projects/' + id
+      //   };
+      //   makeSignedRequest(opts, function (err, res) {
+      //     if (err) {
+      //       next(err, false);
+      //     } else if (res.statusCode != 204) {
+      //       next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
+      //     } else {
+      //       next(null, true);
+      //     }
+      //   });
+      // },
 
       getProject: function (projectId, next) {
         var opts = {
@@ -318,7 +318,7 @@ module.exports = {
         var body = JSON.stringify(updatedProperties);
         var opts = {
           method: 'PUT',
-          path: 'projects/' + updatedProperties.id + '/',
+          path: 'projects/' + updatedProperties.id,
           body: body
         };
         makeSignedRequest(opts, function (err, res, body) {
