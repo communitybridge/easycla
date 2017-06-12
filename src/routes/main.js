@@ -30,10 +30,6 @@ router.get('/login', function(req,res) {
   res.render('login');
 });
 
-router.get('/login', function(req,res) {
-  res.render('login');
-});
-
 router.get('/404', function(req,res) {
   res.render('404', { lfid: "" });
 });
