@@ -21,7 +21,6 @@ export class MembershipsModal {
   ) {
     this.orgName = navParams.get('orgName');
     this.memberships = navParams.get('memberships');
-    console.log(this.memberships);
     this.getDefaults();
   }
 
