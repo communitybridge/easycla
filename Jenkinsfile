@@ -10,50 +10,54 @@ node {
     git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "${env.BRANCH_NAME}"
   }
 
+
+
   def project = "pmc"
   def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
   def shortCommit = gitCommit.take(7)
-  def instancePath = "${project}_dev_${env.BUILD_NUMBER}_${shortCommit}"
   def gitAuthor = sh(returnStdout: true, script: 'git log -1 --pretty=format:"%an"').trim()
   def gitCommitMsg = sh(returnStdout: true, script: 'git log -1 --pretty=format:"%s"').trim()
 
   try {
 
     stage ("Launching CINCO Instance") {
-      sh "lf i create --project=cinco --branch=develop --name='${instancePath}_cinco' -y -d"
+      dir('cinco') {
+        git branch: 'develop', credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: 'git@github.linuxfoundation.org:Engineering/integration-platform.git'
+        sh "lf init -d"
+      }
     }
 
     stage ("Launching PMC Instance") {
-      sh "lf i create --project=pmc --branch=${env.BRANCH_NAME} --name='${instancePath}' --dep-map='cinco:${instancePath}_cinco' --sequence=jenkins -y -d --no-autorun"
+      sh "lf init -d --mode=ci --dep-map=cinco:cinco/"
     }
 
-    def workspaceID = sh (script: "cd ${instancePath}; lf i workspace", returnStdout: true).trim()
+    stage ("Waiting for CINCO") {
+      timeout(10) {
+        sh 'lf run wait-for-cinco'
+      }
+    }
+
+    def workspaceID = sh (script: "lf workspace", returnStdout: true).trim()
 
     stage ("NPM Installation") {
-      dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm install\""
-      }
+      sh "docker exec ${workspaceID} bash -c \"cd src && npm install\""
     }
 
     stage ("Ionic Installation") {
-      dir ("${instancePath}") {
-        sh "docker exec ${workspaceID} bash -c \"cd /srv/app/src && npm run build\""
-      }
+      sh "docker exec ${workspaceID} bash -c \"cd src && npm run build\""
     }
 
 //    stage ("Automated Tests") {
-//      dir ("${instancePath}") {
 //        try {
 //          sh "docker exec ${workspaceID} bash -c \"cd /srv/app && npm run tests\""
 //        } finally {
 //          step([$class: "JUnitResultArchiver", testResults: "test-results/*.xml"])
 //        }
-//      }
 //    }
 
     stage("Destroying Instances") {
-      sh "lf i rm ${instancePath}/ -y"
-      sh "lf i rm ${instancePath}_cinco/ -y"
+      sh "lf -i cinco/ rm -y"
+      sh "lf rm -y"
     }
 
     if (env.BRANCH_NAME == 'develop') {
@@ -67,8 +71,8 @@ node {
 
     // Making sure we always destroy the instance after each build
     stage("Destroying Instances") {
-      sh "lf i rm ${instancePath}/ -y"
-      sh "lf i rm ${instancePath}_cinco/ -y"
+      sh "lf -i cinco/ rm -y"
+      sh "lf rm -y"
     }
 
     throw err

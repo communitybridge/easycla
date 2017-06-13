@@ -20,7 +20,7 @@ node {
     }
 
     stage ("Updating Sandbox") {
-      sh "lf s update --project=pmc --name=sandbox --newrelic -d -y"
+      sh "/home/centos/.local/bin/lfs update --project=pmc --name=sandbox --newrelic -d -y"
     }
 
     sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
