@@ -6,10 +6,13 @@
   <ion-content>
     <ul class="menu-list">
       <li *ngFor="let p of pages" menuClose ion-item (click)="openPage(p)" style="background-color: #fafafa">
+        <ng-container *ngIf="p.icon">
+          <ion-icon name="{{ p.icon }}"></ion-icon>
+        </ng-container>
         {{p.title}}
       </li>
-      <li menuClose ion-item style="background-color: #fafafa">
-        <a href="/logout">Logout</a>
+      <li menuClose ion-item style="background-color: #fafafa;">
+        <a href="/logout" style="color: inherit; text-decoration: none;">Sign out</a>
       </li>
     </ul>
   </ion-content>
