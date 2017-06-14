@@ -1,4 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
+import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service'
 import { Chart } from 'chart.js';
@@ -13,11 +14,11 @@ import { Chart } from 'chart.js';
 export class ProjectsListPage {
   loading: boolean;
   allProjects: any;
-
   numberOfContracts: {
     new: number,
     renewal: number,
   }
+  user: any;
   numberOfInvoices: {
     fewerThan60Days: number,
     fewerThan30Days: number,
@@ -25,10 +26,6 @@ export class ProjectsListPage {
     late: number,
     paidLast30Days: number,
   }
-  meetings: Array<{
-    label: string,
-    value: string
-  }>;
   projects: Array<{
     icon: string,
     title: string,
@@ -49,19 +46,33 @@ export class ProjectsListPage {
   @ViewChild('invoicesCanvas') invoicesCanvas;
   invoicesChart: any;
 
-  constructor(public navCtrl: NavController, private cincoService: CincoService) {
+  constructor(
+    public navCtrl: NavController,
+    private cincoService: CincoService,
+    private sanitizer: DomSanitizer,
+  ) {
     this.getDefaults();
     this.loading = true;
   }
 
   ngOnInit(){
     this.getAllProjects();
-  };
+    this.getCurrentUser();
+  }
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
       this.allProjects = response;
       this.loading = false;
+    });
+  }
+
+  getCurrentUser(){
+    this.cincoService.getCurrentUser().subscribe(response => {
+      this.user = response;
+      if (response.calendar !== null) {
+        this.user.calendar = this.sanitizer.bypassSecurityTrustResourceUrl(response.calendar);
+      }
     });
   }
 
@@ -183,20 +194,12 @@ export class ProjectsListPage {
       paidLast30Days: 15,
     };
 
-    this.meetings = [
-      {
-        label: "TODO",
-        value: "3/16/2017, 4:00 - 5:00 pst"
-      },
-      {
-        label: "Open Switch",
-        value: "3/17/2017, 4:00 - 5:00 pst"
-      },
-      {
-        label: "Zephyr",
-        value: "3/18/2017, 4:00 - 5:00 pst"
-      },
-    ];
+    this.user = {
+      userId: "",
+      email: "",
+      roles: [],
+      calendar: null,
+    }
 
     this.projects = [
       {
@@ -316,6 +319,10 @@ export class ProjectsListPage {
         ],
       },
     ];
+  }
+
+  openAccountSettings() {
+    this.navCtrl.setRoot('AccountSettingsPage');
   }
 
 }

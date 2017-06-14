@@ -14,23 +14,27 @@
       <ion-row>
         <ion-col col-12 col-md-3>
           <span class="main-headers">CONTRACTS</span>
-          <div>
+          <div class="chart-container">
             <canvas height="250" #contractsCanvas></canvas>
           </div>
         </ion-col>
         <ion-col col-12 col-md-5>
           <span class="main-headers">INVOICES</span>
-          <div>
+          <div class="chart-container">
             <canvas #invoicesCanvas></canvas>
           </div>
         </ion-col>
-        <ion-col col-12 col-md-4>
-          <span class="main-headers">BOARD MEETING</span>
-          <ion-item *ngFor="let meeting of meetings">
-            <ion-icon name="calendar" item-left large></ion-icon>
-            <h2>{{meeting.label}}</h2>
-            <p>{{meeting.value}}</p>
-          </ion-item>
+        <ion-col col-12 col-md-4 class="calendar-column">
+          <span class="main-headers">Calendar</span>
+          <div class="calendar-container">
+            <iframe *ngIf="user.calendar !== null; else noCalendar" [src]="user.calendar"></iframe>
+            <ng-template #noCalendar>
+              <div class="no-calendar" (click)="openAccountSettings()">
+                <ion-icon name="calendar"></ion-icon>
+                <ion-label>Add your calendar on the Account Settings page.</ion-label>
+              </div>
+            </ng-template>
+          </div>
         </ion-col>
       </ion-row>
     </ion-grid>
