@@ -34,16 +34,6 @@ var cpUploadLogoCompany = uploadLogoCompany.fields([
   Resources to expose and manipulate organizations
  */
 
- router.get('/organizations', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-     var projManagerClient = cinco.client(req.session.user.cinco_keys);
-     projManagerClient.getAllOrganizations(function (err, organizations) {
-       if (err) return res.send('');
-       res.send(organizations);
-     });
-   }
- });
-
  router.get('/organizations/:organizationId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
    if(req.session.user.isAdmin || req.session.user.isProjectManager){
      var organizationId = req.params.organizationId;

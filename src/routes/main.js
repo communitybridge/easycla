@@ -14,7 +14,6 @@ router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), functi
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getAllProjects(function (err, projects) {
       req.session.projects = projects;
-      // res.render('homepage', {projects: projects});
       res.redirect('/pmc')
     });
   }
@@ -25,10 +24,6 @@ router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), 
   req.session.destroy();
   req.logout();
   res.redirect('/');
-});
-
-router.get('/login', function(req,res) {
-  res.render('login');
 });
 
 router.get('/login', function(req,res) {
@@ -74,7 +69,7 @@ router.get('/login_cas', function(req, res, next) {
                   {
                     if(user.roles[i] == "ADMIN") req.session.user.isAdmin = true;
                     if(user.roles[i] == "USER") req.session.user.isUser = true;
-                    if(user.roles[i] == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
+                    if(user.roles[i] == "PROGRAM_MANAGER") req.session.user.isProjectManager = true;
                   }
                 }
               }
@@ -108,20 +103,6 @@ router.get('/login_cas', function(req, res, next) {
       });
     });
   })(req, res, next);
-});
-
-router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  var adminClient = cinco.client(req.session.user.cinco_keys);
-  var lfid = req.session.user.user;
-  adminClient.getUser(lfid, function(err, user) {
-    if(user){
-      req.session.user.cinco_groups = JSON.stringify(user.roles);
-      res.render('profile');
-    }
-    else {
-      res.render('profile');
-    }
-  });
 });
 
 module.exports = router;
