@@ -2,23 +2,10 @@ if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
 var request = require('request');
-var multer  = require('multer');
-var async = require('async');
 
 var cinco = require("../lib/api");
 
 var router = express.Router();
-
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads')
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname)
-  }
-});
-var upload = multer({ storage: storage });
-var cpUpload = upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'agreement', maxCount: 1 }]);
 
 /**
 * Projects:
@@ -95,9 +82,8 @@ router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login')
 * POST /projects
 * Add a new project
 **/
-router.post('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
+router.post('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
-
     var now = new Date().toISOString();
     var url = req.body.project_url;
     if(url){
@@ -116,7 +102,7 @@ router.post('/projects', require('connect-ensure-login').ensureLoggedIn('/login'
       managers: [req.session.user.user],
       url: url,
       sector: req.body.project_sector,
-      address: JSON.parse(req.body.project_address),
+      address: req.body.project_address,
       status: req.body.project_status,
       category: req.body.project_category,
       startDate: req.body.project_start_date?req.body.project_start_date:now
@@ -167,35 +153,19 @@ router.get('/projects/:projectId', require('connect-ensure-login').ensureLoggedI
 * POST /edit_project/{projectId}
 * Update a project by id
 **/
-router.post('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
+router.post('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-
    var projectId = req.params.projectId;
-
-   // var logoFileName = "";
-   // var agreementFileName = "";
-   // var url = req.body.url;
-   // if(url){
-     // if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-   // }
-   // if(req.files.logo) logoFileName = req.files.logo[0].originalname;
-   // else logoFileName = req.body.old_logoRef;
-   // if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
-   // else agreementFileName = req.body.old_agreementRef;
-
    var updatedProps = {
      id: projectId,
      name: req.body.project_name,
      description: req.body.project_description,
      url: req.body.project_url,
      sector: req.body.project_sector,
-     address: JSON.parse(req.body.project_address),
+     address: req.body.project_address,
      status: req.body.project_status,
      category: req.body.project_category,
      startDate: req.body.project_start_date
-     // pm: req.body.creator_pm,
-     // logoRef: logoFileName,
-     // agreementRef: agreementFileName,
    };
    var projManagerClient = cinco.client(req.session.user.cinco_keys);
    projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
@@ -225,7 +195,8 @@ router.get('/projects/:projectId/config', require('connect-ensure-login').ensure
 * PUT /projects/{projectId}/managers
 * Update the user ids that should be program managers of this project
 **/
-router.put('/projects/:projectId/managers', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
+// router.put('/projects/:projectId/managers', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
+router.put('/projects/:projectId/managers', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager) {
     var projectId = req.params.projectId;
     var managers = JSON.parse(req.body.managers);
