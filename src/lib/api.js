@@ -973,6 +973,24 @@ module.exports = {
         });
       },
 
+      updateUser: function (userId, user, next) {
+        var opts = {
+          method: 'PUT',
+          path: 'users/' + userId,
+          body: JSON.stringify(user),
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var user = JSON.parse(body);
+            next(null, user);
+          } else {
+            next(errors.fromResponse(res, 'Unable to update user with id [' + userId + '].'));
+          }
+        });
+      },
+
     };
   }
 }
