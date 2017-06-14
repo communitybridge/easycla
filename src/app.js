@@ -1,5 +1,6 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
+var bodyParser = require('body-parser');
 var passport = require('passport');
 var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
@@ -21,7 +22,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
-app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(bodyParser.json()); // for parsing application/json
 app.use(session({
   store: new RedisStore({
     host: config.get('console.redisHost'),
