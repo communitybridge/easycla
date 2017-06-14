@@ -2,6 +2,7 @@
   "name": "pmc-app",
   "author": "",
   "private": true,
+  "os" : ["linux", "darwin"],
   "scripts": {
     "clean": "ionic-app-scripts clean",
     "build": "ionic-app-scripts build",

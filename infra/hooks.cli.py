@@ -1,27 +1,26 @@
 import gossip
-import core
+import lf
+import os
 
 
-@gossip.register('local_instance_build_dockerfile', tags=['pmc'])
-def local_instance_build_dockerfile(containers, instance_config, dependencies, envs):
+@gossip.register('local.instance.init.docker-compose', tags=['pmc'])
+def local_init_docker_compose_file(containers, config, dependencies, envs, mode, path):
     if len(dependencies) >= 1:
         platform_instance = dependencies[0]
-        docker_config = platform_instance.artifacts.get('DockerComposeFile')
+        docker_config = lf.utils.loadYaml(os.path.join(platform_instance.path, 'docker-compose.yml'))
 
-        for key, port in enumerate(docker_config.config['services']['workspace']['ports']):
+        for key, port in enumerate(docker_config['services']['workspace']['ports']):
             p = port.split(':')
             if p[1] == '5000':
                 envs['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0] + '/'
-                core.logger.info('Setting CINCO_SERVER_URL to ' + envs['CINCO_SERVER_URL'])
+                lf.logger.info('Setting CINCO_SERVER_URL to ' + envs['CINCO_SERVER_URL'])
 
-    envs['CINCO_CONSOLE_URL'] = 'http://' + core.config.local['hostname'] + ':8081/'
-    core.logger.info('Setting CINCO_CONSOLE_URL to ' + envs['CINCO_CONSOLE_URL'])
+    for key, port in enumerate(containers['workspace']['ports']):
+        p = port.split(':')
+        if p[1] == '8081':
+            envs['CINCO_CONSOLE_URL'] = 'http://' + lf.storage.config['hostname'] + ':' + p[0] + '/'
 
-
-@gossip.register('procedures.local.instance_create.execute', tags=['pmc'])
-def local_instance_create_execute(procedure):
-    procedure.extra['autorun'] = core.utils. \
-        yes_or_no('Would you like to automatically run the console on container startup?')
+    lf.logger.info('Setting CINCO_CONSOLE_URL to ' + envs['CINCO_CONSOLE_URL'])
 
 
 @gossip.register('preprod_instance_task_build', tags=['pmc'])
@@ -38,5 +37,5 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
             'value': 'https://' + domains['primary'] + '/'
         })
 
-        core.logger.info('Setting CINCO_CONSOLE_URL to ' + 'https://' + platform.domains['primary'] + '/')
-        core.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'] + '/')
+        lf.logger.info('Setting CINCO_CONSOLE_URL to ' + 'https://' + platform.domains['primary'] + '/')
+        lf.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'] + '/')
