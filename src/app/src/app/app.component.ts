@@ -14,7 +14,11 @@ export class MyApp {
 
   rootPage: any = 'ProjectsListPage';
 
-  pages: Array<{title: string, component: any}>;
+  pages: Array<{
+    icon?: string,
+    title: string,
+    component: any
+  }>;
 
   constructor(public platform: Platform, public statusBar: StatusBar, public splashScreen: SplashScreen) {
     this.initializeApp();
@@ -23,7 +27,12 @@ export class MyApp {
     this.pages = [
       { title: 'All Projects', component: 'ProjectsListPage' },
       { title: 'Member Companies', component: 'AllMembersPage' },
-      { title: 'All Invoices Status', component: 'AllInvoicesPage' }
+      { title: 'All Invoices Status', component: 'AllInvoicesPage' },
+      {
+        icon: 'settings',
+        title: 'Account Settings',
+        component: 'AccountSettingsPage'
+      }
     ];
 
   }
