@@ -165,13 +165,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contactUpdateForm.value.primaryContact = 'false';
+              this.contactUpdateForm.patchValue({primaryContact:'false'});
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contactUpdateForm.value.primaryContact = 'true';
+              this.contactUpdateForm.patchValue({primaryContact:'true'});
             }
           }
         ]
@@ -190,13 +190,13 @@ export class ContactUpdate {
           {
             text: 'Cancel',
             handler: data => {
-              this.contactUpdateForm.value.boardMember = 'false';
+              this.contactUpdateForm.patchValue({boardMember:'false'});
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.contactUpdateForm.value.boardMember = 'true';
+              this.contactUpdateForm.patchValue({boardMember:'true'});
             }
           }
         ]
