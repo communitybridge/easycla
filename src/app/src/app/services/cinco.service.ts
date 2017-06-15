@@ -66,13 +66,9 @@ export class CincoService{
              .map(res => res.json());
    }
 
-   updateProjectManagers(projectId, managers) {
-     var headers = new Headers();
-     headers.append("Accept", 'application/json');
-     headers.append('Content-Type', 'application/json' );
-     let options = new RequestOptions({ headers: headers });
-     return this.http.put('/projects/' + projectId + '/managers', managers, options)
-                 .map((res) => res.json());
+   updateProjectManagers(projectId, updatedManagers) {
+     return this.http.put('/projects/' + projectId + '/managers', updatedManagers)
+             .map((res) => res.json());
    }
 
   /*
