@@ -195,7 +195,6 @@ router.get('/projects/:projectId/config', require('connect-ensure-login').ensure
 * PUT /projects/{projectId}/managers
 * Update the user ids that should be program managers of this project
 **/
-// router.put('/projects/:projectId/managers', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
 router.put('/projects/:projectId/managers', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager) {
     var projectId = req.params.projectId;
