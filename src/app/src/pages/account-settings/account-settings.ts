@@ -71,7 +71,7 @@ export class AccountSettingsPage {
     this.cincoService.updateUser(this.user.userId, user).subscribe(response => {
       this.currentlySubmitting = false;
       this.updateSuccess();
-      this.getCurrentUser();
+      this.navCtrl.setRoot(this.navCtrl['root']);
     });
   }
 
