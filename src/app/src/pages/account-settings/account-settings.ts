@@ -44,7 +44,7 @@ export class AccountSettingsPage {
 
   ngOnInit(){
     this.getCurrentUser();
-  };
+  }
 
   getCurrentUser(){
     this.cincoService.getCurrentUser().subscribe(response => {

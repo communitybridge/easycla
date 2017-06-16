@@ -4,7 +4,7 @@ import { CincoService } from '../../app/services/cinco.service';
 
 
 @IonicPage({
-  segment: 'project-page/:projectId/member-page/:memberId'
+  segment: 'project/:projectId/member/:memberId'
 })
 @Component({
   selector: 'page-member',
