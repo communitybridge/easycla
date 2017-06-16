@@ -25,11 +25,11 @@
           </div>
         </ion-col>
         <ion-col col-12 col-md-4 class="calendar-column">
-          <span class="main-headers">Calendar</span>
+          <span class="main-headers">CALENDAR</span>
           <div class="calendar-container">
             <iframe *ngIf="user.calendar !== null; else noCalendar" [src]="user.calendar"></iframe>
             <ng-template #noCalendar>
-              <div class="no-calendar" (click)="openAccountSettings()">
+              <div class="no-calendar clickable" (click)="openAccountSettings()">
                 <ion-icon name="calendar"></ion-icon>
                 <ion-label>Add your calendar on the Account Settings page.</ion-label>
               </div>
