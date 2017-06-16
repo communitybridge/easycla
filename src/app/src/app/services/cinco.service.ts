@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
+import { Http, Headers, RequestOptions } from '@angular/http';
 
 import 'rxjs/Rx';
 
@@ -18,7 +18,7 @@ export class CincoService{
     Resources to expose and manipulate details of projects
    */
    getProjectStatuses() {
-     return this.http.get(this.baseUrl + '/project/statuses')
+     return this.http.get(this.baseUrl + '/project/status')
              .map(res => res.json());
    }
 
@@ -39,43 +39,25 @@ export class CincoService{
 
    getProject(projectId, getMembers) {
      if (getMembers) { projectId = projectId + '?members=true' ; }
-     return this.http.get(this.baseUrl + '/get_project/' + projectId)
+     return this.http.get(this.baseUrl + '/projects/' + projectId)
              .map(res => res.json());
    }
 
    postProject(newProject) {
-     let headers = new Headers({
-       'Content-Type': 'application/json',
-       json: true
-     });
-     let body = new FormData();
-     body.append('project_name', newProject.name);
-     body.append('project_description', newProject.description);
-     body.append('project_url', newProject.url);
-     body.append('project_sector', newProject.sector);
-     body.append('project_address', JSON.stringify(newProject.address).replace(/'/g, "\\'"));
-     body.append('project_status', newProject.status);
-     body.append('project_category', newProject.category);
-     body.append('project_start_date', newProject.startDate);
-     return this.http.post('/post_project', body, headers)
+     var headers = new Headers();
+     headers.append("Accept", 'application/json');
+     headers.append('Content-Type', 'application/json' );
+     let options = new RequestOptions({ headers: headers });
+     return this.http.post('/projects', newProject, options)
                  .map((res) => res.json());
    }
 
    editProject(projectId, editProject) {
-     let headers = new Headers({
-       'Content-Type': 'application/json',
-       json: true
-     });
-     let body = new FormData();
-     body.append('project_name', editProject.project_name);
-     body.append('project_description', editProject.project_description);
-     body.append('project_url', editProject.project_url);
-     body.append('project_sector', editProject.project_sector);
-     body.append('project_address', JSON.stringify(editProject.project_address).replace(/'/g, "\\'"));
-     body.append('project_status', editProject.project_status);
-     body.append('project_category', editProject.project_category);
-     body.append('project_start_date', editProject.project_start_date);
-     return this.http.post('/edit_project/' + projectId, body, headers)
+     var headers = new Headers();
+     headers.append("Accept", 'application/json');
+     headers.append('Content-Type', 'application/json' );
+     let options = new RequestOptions({ headers: headers });
+     return this.http.post('/edit_project/' + projectId, editProject, options)
                  .map((res) => res.json());
    }
 
@@ -84,12 +66,9 @@ export class CincoService{
              .map(res => res.json());
    }
 
-   updateProjectManagers(projectId, managers) {
-     let headers = new Headers({ 'Content-Type': 'application/json' });
-     let body = new FormData();
-     body.append('managers', JSON.stringify(managers));
-     return this.http.put('/projects/' + projectId + '/managers', body, headers)
-                 .map((res) => res.json());
+   updateProjectManagers(projectId, updatedManagers) {
+     return this.http.put('/projects/' + projectId + '/managers', updatedManagers)
+             .map((res) => res.json());
    }
 
   /*

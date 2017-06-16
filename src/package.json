@@ -24,7 +24,7 @@
     "connect-redis": "^3.3.0",
     "cookie-parser": "^1.4.2",
     "ejs": "^2.4.1",
-    "express": "^4.13.4",
+    "express": "^4.15.3",
     "express-session": "^1.13.0",
     "lodash": "^4.17.4",
     "moment": "^2.17.1",
@@ -40,10 +40,6 @@
     "request": "^2.74.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-concat": "^2.6.1",
-    "gulp-minify-css": "^1.2.4",
-    "gulp-uglify": "^2.0.0",
     "mocha": "^2.4.5",
     "should": "^11.2.0"
   }
