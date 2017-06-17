@@ -78,45 +78,37 @@ router.get('/projects', require('connect-ensure-login').ensureLoggedIn('/login')
   }
 });
 
+//  Disabled for PMC v1.0
 /**
 * POST /projects
 * Add a new project
 **/
-router.post('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var now = new Date().toISOString();
-    var url = req.body.project_url;
-    if(url){
-      if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
-    }
-    // var logoFileName = "";
-    // var agreementFileName = "";
-    // if(req.files){
-    //   if(req.files.logo) logoFileName = req.file .logo[0].originalname;
-    //   if(req.files.agreement) agreementFileName = req.files.agreement[0].originalname;
-    // }
+// router.post('/projects', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+//   if(req.session.user.isAdmin || req.session.user.isProjectManager){
+//     var now = new Date().toISOString();
+//     var url = req.body.project_url;
+//     if(url){
+//       if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+//     }
+//     var newProject = {
+//       name: req.body.project_name,
+//       description: req.body.project_description,
+//       managers: [req.session.user.user],
+//       url: url,
+//       sector: req.body.project_sector,
+//       address: req.body.project_address,
+//       status: req.body.project_status,
+//       category: req.body.project_category,
+//       startDate: req.body.project_start_date?req.body.project_start_date:now
+//     };
+//     var projManagerClient = cinco.client(req.session.user.cinco_keys);
+//     projManagerClient.createProject(newProject, function (err, created, projectId) {
+//       return res.json(projectId);
+//     });
+//   }
+// });
 
-    var newProject = {
-      name: req.body.project_name,
-      description: req.body.project_description,
-      managers: [req.session.user.user],
-      url: url,
-      sector: req.body.project_sector,
-      address: req.body.project_address,
-      status: req.body.project_status,
-      category: req.body.project_category,
-      startDate: req.body.project_start_date?req.body.project_start_date:now
-    };
-
-    console.log(newProject);
-
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.createProject(newProject, function (err, created, projectId) {
-      return res.json(projectId);
-    });
-  }
-});
-
+//  Disabled for PMC v1.0
 /**
 * DELETE /projects/{projectId}
 * Archive a project
@@ -149,18 +141,21 @@ router.get('/projects/:projectId', require('connect-ensure-login').ensureLoggedI
 });
 
 /**
-* TODO: Convert to PUT /projects/{projectId}
-* POST /edit_project/{projectId}
+* PUT /projects/{projectId}
 * Update a project by id
 **/
-router.post('/edit_project/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+router.put('/projects/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
  if(req.session.user.isAdmin || req.session.user.isProjectManager){
    var projectId = req.params.projectId;
+   var url = req.body.project_url;
+   if(url){
+     if (!/^(?:f|ht)tps?\:\/\//.test(url)) url = "http://" + url;
+   }
    var updatedProps = {
      id: projectId,
      name: req.body.project_name,
      description: req.body.project_description,
-     url: req.body.project_url,
+     url: url,
      sector: req.body.project_sector,
      address: req.body.project_address,
      status: req.body.project_status,
