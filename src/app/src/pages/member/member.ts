@@ -4,7 +4,7 @@ import { CincoService } from '../../app/services/cinco.service';
 
 
 @IonicPage({
-  segment: 'project-page/:projectId/member-page/:memberId'
+  segment: 'project/:projectId/member/:memberId'
 })
 @Component({
   selector: 'page-member',
@@ -53,7 +53,6 @@ export class MemberPage {
     this.cincoService.getMemberContacts(projectId, memberId).subscribe(response => {
       if(response) {
         this.memberContacts = response;
-        console.log(this.memberContacts);
       }
     });
   }
@@ -129,12 +128,10 @@ export class MemberPage {
   }
 
   getOrganizationProjectMemberships(organizationId) {
-    console.log("getOrganizationProjectMemberships called");
     this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
       if(response) {
         this.orgProjectMemberships = response;
         this.orgProjectMembershipsFiltered = this.orgProjectMemberships.filter((item, index) => index < 4 );
-        console.log(this.orgProjectMembershipsFiltered);
       }
     });
   }

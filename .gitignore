@@ -62,6 +62,7 @@ __pycache__
 src/app/www/build/*
 
 # Terraform
+.lf/
 terraform.tfstate.backup
 .terraform
 terraform.tfstate
