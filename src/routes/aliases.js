@@ -1,13 +1,13 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
-var passport = require('passport');
-var request = require('request');
-var multer  = require('multer');
-var async = require('async');
+var router = express.Router();
 
 var cinco = require("../lib/api");
 
-var router = express.Router();
+/**
+* Email Aliases
+* Resources for working with email aliases of projects
+**/
 
 router.get('/aliases/:id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){

@@ -1,13 +1,13 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
-var passport = require('passport');
-var request = require('request');
-var multer  = require('multer');
-var async = require('async');
+var router = express.Router();
 
 var cinco = require("../lib/api");
 
-var router = express.Router();
+/**
+* Mailing Lists
+* Resources for working with mailing lists of projects
+**/
 
 router.get('/mailing/:projectId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
@@ -15,7 +15,7 @@ router.get('/mailing/:projectId', require('connect-ensure-login').ensureLoggedIn
     var projManagerClient = cinco.client(req.session.user.cinco_keys);
     projManagerClient.getProject(projectId, function (err, project) {
       projManagerClient.getMailingListsAndParticipants(projectId, function (err, mailingLists) {
-        res.render('mailing', { mailingLists: mailingLists, project:project, message: req.flash('info') });
+        res.send(mailingLists);
       });
     });
   }
@@ -49,7 +49,6 @@ router.post('/mailing/:projectId', require('connect-ensure-login').ensureLoggedI
     projManagerClient.createMailingList(projectId, newMailingList, function (err, created, mailingListId) {
       if (err) {
         console.log(err);
-        req.flash('info', err.userMessage);
       }
       return res.redirect('/mailing/' + projectId);
     });
