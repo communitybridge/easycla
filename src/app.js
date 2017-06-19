@@ -5,11 +5,10 @@ var passport = require('passport');
 var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
-var flash = require('connect-flash');
 var url = require('url');
 var session = require('express-session');
 var RedisStore = require('connect-redis')(session);
-const util = require('util')
+const util = require('util');
 
 var app = express();
 
@@ -33,12 +32,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
-app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.disable('x-powered-by')
+app.disable('x-powered-by');
 
 app.use(function (req, res, next) {
   res.locals.req = req;
@@ -53,7 +51,6 @@ app.use('/pmc', authMiddleware, express.static(path.join(__dirname, 'app/www')))
 
 // Routes
 var mainRouter = require('./routes/main');
-var adminRouter = require('./routes/admin');
 var organizations = require('./routes/organizations');
 var projectsRouter = require('./routes/projects');
 var projectsMembersRouter = require('./routes/projects.members');
@@ -65,7 +62,6 @@ var aliasesRouter = require('./routes/aliases');
 var usersRouter = require('./routes/users');
 
 app.use(mainRouter);
-app.use(adminRouter);
 app.use(organizations);
 app.use(projectsRouter);
 app.use(projectsMembersRouter);
