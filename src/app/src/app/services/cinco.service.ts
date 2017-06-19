@@ -241,6 +241,11 @@ export class CincoService{
     Resources to manage internal LF users and roles
    */
 
+  getCurrentUser() {
+    return this.http.get(this.baseUrl + '/user')
+            .map(res => res.json());
+  }
+
   getAllUsers() {
     return this.http.get(this.baseUrl + '/users')
             .map(res => res.json());
@@ -248,6 +253,16 @@ export class CincoService{
 
   getUser(userId) {
     return this.http.get(this.baseUrl + '/users/' + userId)
+            .map(res => res.json());
+  }
+
+  updateUser(userId, user) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let body = new FormData();
+    body.append('userId', user.userId);
+    body.append('email', user.email);
+    body.append('calendar', user.calendar);
+    return this.http.put('/users/' + userId, body, headers)
             .map(res => res.json());
   }
 

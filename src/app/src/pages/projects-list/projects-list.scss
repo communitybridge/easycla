@@ -43,4 +43,43 @@ projects-list {
     }
   }
 
+  .chart-container {
+    position: relative;
+  }
+
+  .calendar-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .calendar-container {
+    position: relative;
+    background-color: #fafafa;
+    flex-grow: 1;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    iframe {
+      display: block;
+      overflow: hidden;
+      border: 0px;
+      margin: 0px;
+      top: 0px;
+      left: 0px;
+      bottom: 0px;
+      right: 0px;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+    }
+  }
+
+  .calendar-container .no-calendar {
+    text-align: center;
+    width: 100%;
+    ion-icon {
+      font-size: 9rem;
+    }
+  }
+
 }
