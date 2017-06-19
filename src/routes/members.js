@@ -40,35 +40,6 @@ router.get('/create_member/:project_id', require('connect-ensure-login').ensureL
   }
 });
 
-/*
-  Projects - Members:
-  Resources for getting details about project members
- */
-
-router.get('/projects/:projectId/members', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projectId = req.params.projectId;
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getProjectMembers(projectId, function (err, memberCompanies) {
-      // TODO: Create 404 page for when project doesn't exist
-      if (err) return res.send('');
-      res.send(memberCompanies);
-    });
-  }
-});
-
-router.get('/projects/:projectId/members/:memberId', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projectId = req.params.projectId;
-    var memberId = req.params.memberId;
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getMemberFromProject(projectId, memberId, function (err, memberCompany) {
-      // TODO: Create 404 page for when project doesn't exist
-      if (err) return res.send('');
-      res.send(memberCompany);
-    });
-  }
-});
 
 router.get('/member/:project_id/:member_id', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager){
