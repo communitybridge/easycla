@@ -601,7 +601,7 @@ module.exports = {
       getOrganization: function (organizationId, next) {
         var opts = {
           method: 'GET',
-          path: 'organizations/' + organizationId + '/'
+          path: 'organizations/' + organizationId
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
