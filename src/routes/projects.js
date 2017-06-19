@@ -5,7 +5,7 @@ var router = express.Router();
 var cinco = require("../lib/api");
 
 /**
-* Projects:
+* Projects
 * Resources to expose and manipulate details of projects
 **/
 
