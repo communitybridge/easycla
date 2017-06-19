@@ -99,51 +99,51 @@ export class CincoService {
   }
 
   addMemberContact(projectId, memberId, contactId, contact) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('id', contact.id);
-    body.append('memberId', memberId);
-    body.append('type', contact.type);
-    body.append('boardMember', contact.boardMember);
-    body.append('primaryContact', contact.primaryContact);
-    body.append('contactId', contact.contact.id);
-    body.append('contactGivenName', contact.contact.givenName);
-    body.append('contactFamilyName', contact.contact.familyName);
-    body.append('contactTitle', contact.contact.title);
-    body.append('contactBio', contact.contact.bio);
-    body.append('contactEmail', contact.contact.email);
-    body.append('contactPhone', contact.contact.phone);
-    body.append('contactHeadshotRef', contact.contact.headshotRef);
-    body.append('contactType', contact.contact.type);
-    return this.http.post('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId, body, headers)
+    // TODO: Convert newContact to Contact Model
+    let newContact = {
+      id: contact.id,
+      memberId: memberId,
+      type: contact.type,
+      boardMember: contact.boardMember,
+      primaryContact: contact.primaryContact,
+      contactId: contact.contact.id,
+      contactGivenName: contact.contact.givenName,
+      contactFamilyName: contact.contact.familyName,
+      contactTitle: contact.contact.title,
+      contactBio: contact.contact.bio,
+      contactEmail: contact.contact.email,
+      contactPhone: contact.contact.phone,
+      contactHeadshotRef: contact.contact.headshotRef,
+      contactType: contact.contact.type
+    };
+    return this.http.post('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId, newContact)
       .map((res) => res.json());
   }
 
   removeMemberContact(projectId, memberId, contactId, roleId) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    return this.http.delete('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, body, headers)
+    return this.http.delete('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId)
       .map((res) => res.json());
   }
 
   updateMemberContact(projectId, memberId, contactId, roleId, contact) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('id', contact.id);
-    body.append('memberId', memberId);
-    body.append('type', contact.type);
-    body.append('boardMember', contact.boardMember);
-    body.append('primaryContact', contact.primaryContact);
-    body.append('contactId', contact.contact.id);
-    body.append('contactGivenName', contact.contact.givenName);
-    body.append('contactFamilyName', contact.contact.familyName);
-    body.append('contactTitle', contact.contact.title);
-    body.append('contactBio', contact.contact.bio);
-    body.append('contactEmail', contact.contact.email);
-    body.append('contactPhone', contact.contact.phone);
-    body.append('contactHeadshotRef', contact.contact.headshotRef);
-    body.append('contactType', contact.contact.type);
-    return this.http.put('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, body, headers)
+    //TODO: Convert updatedContact to Contact Model
+    let updatedContact = {
+      id: contact.id,
+      memberId: memberId,
+      type: contact.type,
+      boardMember: contact.boardMember,
+      primaryContact: contact.primaryContact,
+      contactId: contact.contact.id,
+      contactGivenName: contact.contact.givenName,
+      contactFamilyName: contact.contact.familyName,
+      contactTitle: contact.contact.title,
+      contactBio: contact.contact.bio,
+      contactEmail: contact.contact.email,
+      contactPhone: contact.contact.phone,
+      contactHeadshotRef: contact.contact.headshotRef,
+      contactType: contact.contact.type
+    };
+    return this.http.put('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, updatedContact)
       .map((res) => res.json());
   }
 
