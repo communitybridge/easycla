@@ -5,7 +5,7 @@ var router = express.Router();
 var cinco = require("../lib/api");
 
 /**
-* Projects - Members - Contacts:
+* Projects - Members - Contacts
 * Resources for getting and manipulating contacts of project members
 **/
 

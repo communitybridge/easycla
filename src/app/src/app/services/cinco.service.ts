@@ -88,7 +88,7 @@ export class CincoService {
   //////////////////////////////////////////////////////////////////////////////
 
   /**
-  * Projects - Members - Contacts:
+  * Projects - Members - Contacts
   * Resources for getting and manipulating contacts of project members
   **/
 
@@ -153,10 +153,12 @@ export class CincoService {
       .map((res) => res.json());
   }
 
-  /*
-    Organizations - Contacts:
-    Resources for getting and manipulating contacts of organizations
-   */
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+  * Organizations - Contacts
+  * Resources for getting and manipulating contacts of organizations
+  **/
 
   getOrganizationContactTypes() {
     var response = this.http.get(this.baseUrl + '/organizations/contacts/types')
@@ -170,17 +172,8 @@ export class CincoService {
     return response;
   }
 
-  createOrganizationContact(organizationId, contact) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('type', contact.type);
-    body.append('givenName', contact.givenName);
-    body.append('familyName', contact.familyName);
-    body.append('title', contact.title);
-    body.append('bio', contact.bio);
-    body.append('email', contact.email);
-    body.append('phone', contact.phone);
-    return this.http.post('/organizations/' + organizationId + '/contacts', body, headers)
+  createOrganizationContact(organizationId, newContact) {
+    return this.http.post('/organizations/' + organizationId + '/contacts', newContact)
       .map((res) => res.json());
   }
 
@@ -191,18 +184,11 @@ export class CincoService {
   }
 
   updateOrganizationContact(organizationId, contactId, contact) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('type', contact.type);
-    body.append('givenName', contact.givenName);
-    body.append('familyName', contact.familyName);
-    body.append('title', contact.title);
-    body.append('bio', contact.bio);
-    body.append('email', contact.email);
-    body.append('phone', contact.phone);
-    return this.http.put('/organizations/' + organizationId + '/contacts/' + contactId, body, headers)
+    return this.http.put('/organizations/' + organizationId + '/contacts/' + contactId, contact)
       .map((res) => res.json());
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
   * Organizations - Projects:
