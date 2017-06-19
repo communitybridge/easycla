@@ -224,13 +224,10 @@ export class CincoService {
   }
 
   updateUser(userId, user) {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let body = new FormData();
-    body.append('userId', user.userId);
-    body.append('email', user.email);
-    body.append('calendar', user.calendar);
-    return this.http.put('/users/' + userId, body, headers)
+    return this.http.put('/users/' + userId, user)
       .map(res => res.json());
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
 }
