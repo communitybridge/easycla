@@ -11,6 +11,7 @@
     "postinstall": "npm --prefix ./app install ./app",
     "build": "npm --prefix ./app run ionic:build ./app"
   },
+  "os" : ["linux", "darwin"],
   "author": "",
   "license": "",
   "dependencies": {

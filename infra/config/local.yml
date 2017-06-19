@@ -4,10 +4,11 @@
 containers:
   redis:
     image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/redis:latest'
-    volumes: ['./logs/redis:/var/log/redis']
+    volumes: ['.lf/logs/redis:/var/log/redis']
   workspace:
-    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/workspace/node:latest'
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/cli/workspace/node:6'
     ports: ['%:8081']
+    internal_volumes: ['app']
 
 # Environment Variables to be injected in the container.
 environment:
@@ -18,14 +19,23 @@ environment:
     redis_host: 'redis'
     redis_port: '6379'
 
-sequences:
+modes:
+  default:
+    description: "Only the workspace container will have have an external port mappings. App will autorun in workspace."
+    containers:
+      workspace:
+        command: '/srv/app/scripts/run.sh'
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
 
-  jenkins:
-    Doing Nothing: 'echo \"Skipping Installation Procedures\"'
+  dev:
+    description: "All containers will have external port mappings. No autorun."
+    containers:
+      workspace:
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
+      redis:
+        ports: ['%:6379']
 
-  install:
-    Installing Dependencies: "cd /srv/app/src && npm install --quiet"
-
-  start:
-    _detach: True
-    Launching Console: "cd /srv/app/src && npm run develop"
+  ci:
+    description: "All containers are launched, including the workspace but no port mappings are set and no autorun"
