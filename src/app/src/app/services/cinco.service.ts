@@ -13,6 +13,8 @@ export class CincoService {
     this.baseUrl = '';
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
   * Projects
   * Resources to expose and manipulate details of projects
@@ -65,6 +67,8 @@ export class CincoService {
       .map((res) => res.json());
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
   * Projects - Members
   * Resources for getting details about project members
@@ -80,6 +84,8 @@ export class CincoService {
       .map(res => res.json());
     return response;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
   * Projects - Members - Contacts:
