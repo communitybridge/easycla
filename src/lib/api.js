@@ -942,7 +942,7 @@ module.exports = {
       getAllUsers: function (next) {
         var opts = {
           method: 'GET',
-          path: 'users/'
+          path: 'users'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -969,6 +969,23 @@ module.exports = {
             next(null, user);
           } else {
             next(errors.fromResponse(res, 'Unable to get user with id [' + userId + '].'));
+          }
+        });
+      },
+
+      getUserRoles: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/roles'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var roles = JSON.parse(body);
+            next(null, roles);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get all user roles.'));
           }
         });
       },

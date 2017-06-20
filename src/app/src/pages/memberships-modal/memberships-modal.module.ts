@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { MembershipsModal } from './memberships-modal';
-// import { ComponentsModule } from '../../components/components.modules';
 
 @NgModule({
   declarations: [
@@ -9,7 +8,6 @@ import { MembershipsModal } from './memberships-modal';
   ],
   imports: [
     IonicPageModule.forChild(MembershipsModal),
-    // ComponentsModule
   ],
   entryComponents: [
     MembershipsModal,

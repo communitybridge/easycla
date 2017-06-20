@@ -54,6 +54,15 @@ router.get('/users/:userId', require('connect-ensure-login').ensureLoggedIn('/lo
   }
 });
 
+router.get('/users/roles', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
+  if(req.session.user.isAdmin || req.session.user.isProjectManager){
+    var projManagerClient = cinco.client(req.session.user.cinco_keys);
+    projManagerClient.getUserRoles(function (err, roles) {
+      res.send(roles);
+    });
+  }
+});
+
 router.put('/users/:userId', require('connect-ensure-login').ensureLoggedIn('/login'), cpUpload, function(req, res){
   if(req.session.user.isAdmin || (req.session.user.isProjectManager && req.session.user.user == req.params.userId)){
     var userId = req.params.userId;
