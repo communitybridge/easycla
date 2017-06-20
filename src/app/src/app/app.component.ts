@@ -32,6 +32,10 @@ export class MyApp {
         icon: 'settings',
         title: 'Account Settings',
         component: 'AccountSettingsPage'
+      },
+      {
+        title: 'Linux Console Users',
+        component: 'ConsoleUsersPage'
       }
     ];
 

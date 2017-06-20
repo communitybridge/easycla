@@ -256,6 +256,11 @@ export class CincoService{
             .map(res => res.json());
   }
 
+  getUserRoles() {
+    return this.http.get(this.baseUrl + '/user/roles')
+            .map(res => res.json());
+  }
+
   updateUser(userId, user) {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let body = new FormData();
