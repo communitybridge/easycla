@@ -63,13 +63,14 @@ module.exports = {
     }
 
     return {
-      createUser: function (lfId, next) {
+      createUser: function (lfId, email, next) {
         var body = {
-          "lfId": lfId
+          "lfId": lfId,
+          "email": email
         };
         var opts = {
           method: 'POST',
-          path: 'users/',
+          path: 'users',
           body: JSON.stringify(body)
         };
         makeSignedRequest(opts, function (err, res) {
@@ -88,7 +89,7 @@ module.exports = {
       getUser: function (id, next) {
         var opts = {
           method: 'GET',
-          path: 'users/' + id + '/'
+          path: 'users/' + id
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -102,11 +103,11 @@ module.exports = {
         });
       },
 
-      addGroupForUser: function (id, group, next) {
+      addRoleToUser: function (id, role, next) {
         var opts = {
           method: 'POST',
-          path: 'users/' + id + '/group/',
-          body: JSON.stringify(group)
+          path: 'users/' + id + '/role',
+          body: JSON.stringify(role)
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -117,32 +118,15 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, false, null);
           } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have group added'));
+            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have role [' + role + ']  added'));
           }
         });
       },
 
-      getAllGroups: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'usergroups/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var groups = JSON.parse(body);
-            next(null, groups);
-          } else {
-            next(errors.fromResponse(res, 'Unable to look up usergroups. '));
-          }
-        });
-      },
-
-      removeGroupFromUser: function (userId, groupId, next) {
+      removeRoleFromUser: function (userId, role, next) {
         var opts = {
           method: 'DELETE',
-          path: 'users/' + userId + '/group/' + groupId + '/'
+          path: 'users/' + userId + '/role/' + role
         };
         makeSignedRequest(opts, function (err, res) {
           if (err) {
@@ -150,8 +134,25 @@ module.exports = {
           } else if (res.statusCode == 204) {
             next(null, true);
           } else {
-            next(errors.fromResponse(res, 'Unable to delete group with id of [' + groupId + '] from user with id of [' +
+            next(errors.fromResponse(res, 'Unable to delete role [' + role + '] from user with id of [' +
                 userId + '].'));
+          }
+        });
+      },
+
+      getAllRoles: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/roles'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var roles = JSON.parse(body);
+            next(null, roles);
+          } else {
+            next(errors.fromResponse(res, 'Unable to look up user roles. '));
           }
         });
       },
@@ -180,7 +181,7 @@ module.exports = {
       getMyProjects: function (next) {
         var opts = {
           method: 'GET',
-          path: 'project/'
+          path: 'project'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -265,7 +266,7 @@ module.exports = {
       createProject: function (project, next) {
         var opts = {
           method: 'POST',
-          path: 'projects/',
+          path: 'projects',
           body: JSON.stringify(project)
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -280,21 +281,21 @@ module.exports = {
         });
       },
 
-      archiveProject: function (id, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'projects/' + id + '/'
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode != 204) {
-            next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
-          } else {
-            next(null, true);
-          }
-        });
-      },
+      // archiveProject: function (id, next) {
+      //   var opts = {
+      //     method: 'DELETE',
+      //     path: 'projects/' + id
+      //   };
+      //   makeSignedRequest(opts, function (err, res) {
+      //     if (err) {
+      //       next(err, false);
+      //     } else if (res.statusCode != 204) {
+      //       next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
+      //     } else {
+      //       next(null, true);
+      //     }
+      //   });
+      // },
 
       getProject: function (projectId, next) {
         var opts = {
@@ -317,7 +318,7 @@ module.exports = {
         var body = JSON.stringify(updatedProperties);
         var opts = {
           method: 'PUT',
-          path: 'projects/' + updatedProperties.id + '/',
+          path: 'projects/' + updatedProperties.id,
           body: body
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -579,27 +580,10 @@ module.exports = {
         Resources to expose and manipulate organizations
        */
 
-      getAllOrganizations: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'organizations/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var organizations = JSON.parse(body);
-            next(null, organizations);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get all organizations.'));
-          }
-        });
-      },
-
       createOrganization: function (organization, next) {
         var opts = {
           method: 'POST',
-          path: 'organizations/',
+          path: 'organizations',
           body: JSON.stringify(organization)
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -617,7 +601,7 @@ module.exports = {
       getOrganization: function (organizationId, next) {
         var opts = {
           method: 'GET',
-          path: 'organizations/' + organizationId + '/'
+          path: 'organizations/' + organizationId
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
