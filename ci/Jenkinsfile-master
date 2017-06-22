@@ -56,25 +56,27 @@ node {
 
       dir("infra/terraform/app") {
 
-        sh "terraform --version"
-        sh "terraform get"
-        sh "terraform init -force-copy"
+        sshagent(['d78c94c4-9179-4765-9851-9907b5ef2cc4']) {
 
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'production-terraform', usernameVariable: 'AWS_ACCESS_KEY', passwordVariable: 'AWS_SECRET_KEY']]) {
-          sh "set +e; terraform plan -var access_key=${env.AWS_ACCESS_KEY} -var secret_key=${env.AWS_SECRET_KEY} -var build_hash=${params.SHA} -out=plan.out -detailed-exitcode; echo \$? > status"
+          sh "terraform --version"
+          sh "terraform get"
+          sh "terraform init -force-copy"
+
+          withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'production-terraform', usernameVariable: 'AWS_ACCESS_KEY', passwordVariable: 'AWS_SECRET_KEY']]) {
+            sh "set +e; terraform plan -var access_key=${env.AWS_ACCESS_KEY} -var secret_key=${env.AWS_SECRET_KEY} -var build_hash=${params.SHA} -out=plan.out -detailed-exitcode; echo \$? > status"
+          }
+
+          statusTerraformPlan = readFile('status').trim()
+
+          echo "Terraform Plan Exit Code: ${statusTerraformPlan}"
+
+          if (statusTerraformPlan == "1") {
+            currentBuild.result = 'FAILURE'
+          } else if (statusTerraformPlan == "2") {
+            stash name: "plan", includes: "plan.out"
+            apply = true
+          }
         }
-
-        statusTerraformPlan = readFile('status').trim()
-
-        echo "Terraform Plan Exit Code: ${statusTerraformPlan}"
-
-        if (statusTerraformPlan == "1") {
-          currentBuild.result = 'FAILURE'
-        } else if (statusTerraformPlan == "2") {
-          stash name: "plan", includes: "plan.out"
-          apply = true
-        }
-
       }
     }
 
