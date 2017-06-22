@@ -1,14 +1,14 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
+var bodyParser = require('body-parser');
 var passport = require('passport');
 var config = require('config');
 var CasStrategy = require('passport-cas').Strategy;
 var path = require('path');
-var flash = require('connect-flash');
 var url = require('url');
 var session = require('express-session');
 var RedisStore = require('connect-redis')(session);
-const util = require('util')
+const util = require('util');
 
 var app = express();
 
@@ -21,7 +21,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(require('morgan')('combined')); // HTTP request logger middleware
 app.use(require('cookie-parser')());
-app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(bodyParser.json()); // for parsing application/json
 app.use(session({
   store: new RedisStore({
     host: config.get('console.redisHost'),
@@ -31,12 +32,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
-app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.disable('x-powered-by')
+app.disable('x-powered-by');
 
 app.use(function (req, res, next) {
   res.locals.req = req;
@@ -51,19 +51,23 @@ app.use('/pmc', authMiddleware, express.static(path.join(__dirname, 'app/www')))
 
 // Routes
 var mainRouter = require('./routes/main');
-var adminRouter = require('./routes/admin');
 var organizations = require('./routes/organizations');
 var projectsRouter = require('./routes/projects');
-var membersRouter = require('./routes/members');
+var projectsMembersRouter = require('./routes/projects.members');
+var projectsMembersContactsRouter = require('./routes/projects.members.contacts');
+var organizationsContactsRouter = require('./routes/organizations.contacts');
+var organizationsProjectsRouter = require('./routes/organizations.projects');
 var mailingRouter = require('./routes/mailing');
 var aliasesRouter = require('./routes/aliases');
 var usersRouter = require('./routes/users');
 
 app.use(mainRouter);
-app.use(adminRouter);
 app.use(organizations);
 app.use(projectsRouter);
-app.use(membersRouter);
+app.use(projectsMembersRouter);
+app.use(projectsMembersContactsRouter);
+app.use(organizationsContactsRouter);
+app.use(organizationsProjectsRouter);
 app.use(mailingRouter);
 app.use(aliasesRouter);
 app.use(usersRouter);
@@ -81,13 +85,7 @@ console.log("Node App listening port: ", appPort);
 const pmcURL = config.get('console.endpoint');
 console.log('Docker project-management-console-url: ' + pmcURL);
 
-if(process.argv[2] == 'dev') {
-  var gulp = require('gulp');
-  require('./gulpfile');
-  if (gulp.tasks.styles) gulp.start('styles');
-  if (gulp.tasks.scripts) gulp.start('scripts');
-  if (gulp.tasks.watch) gulp.start('watch');
-}
+displayBanner();
 
 passport.use(new CasStrategy({
   version: 'CAS3.0',
@@ -106,3 +104,15 @@ passport.serializeUser(function(user, callback) {
 passport.deserializeUser(function(obj, callback) {
   callback(null, obj);
 });
+
+function displayBanner() {
+  let fs = require('fs')
+  let max = 4;
+  let min = 1;
+  let version = Math.floor (Math.random() * (max - min + 1) ) + min;
+  let banner = 'banners/' + version + '.txt';
+  fs.readFile(banner, 'utf8', function(err, data) {
+    if (err) throw err;
+    console.log(data)
+  });
+};
