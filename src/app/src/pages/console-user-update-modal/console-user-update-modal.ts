@@ -1,8 +1,9 @@
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
-import { PhoneNumberValidator } from  '../../validators/phonenumber';
 import { EmailValidator } from  '../../validators/email';
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/forkJoin';
 import { CincoService } from '../../app/services/cinco.service';
 
 @IonicPage({
@@ -31,27 +32,18 @@ export class ConsoleUserUpdateModal {
     private cincoService: CincoService,
     public formBuilder: FormBuilder
   ) {
-    this.getDefaults();
     let originalUser = this.navParams.get('user');
     this.keysGetter = Object.keys;
 
     // Deep copy originalContact to contact
     this.user = Object.assign({}, originalUser);
-    console.log("user:");
-    console.log(this.user);
 
     this._form = formBuilder.group({
       userId:[this.user.userId, Validators.required],
       email:[this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
-      // 
-      // boardMember:[this.contact.boardMember, Validators.required],
-      // bio:[this.contact.contact.bio, Validators.required],
+      roles:[this.user.roles],
     });
-
-  }
-
-  ngOnInit() {
-    this.getUserRoles();
+    this.getDefaults();
   }
 
   getDefaults() {
@@ -61,16 +53,19 @@ export class ConsoleUserUpdateModal {
       email: '',
       roles: [],
     };
-
     this.userRoles = {};
   }
 
+  ngOnInit() {
+    this.getUserRoles();
+  }
+
   getUserRoles() {
-    // this.cincoService.getUserRoles().subscribe(response => {
-    //   if(response) {
-    //     this.userRoles = response;
-    //   }
-    // });
+    this.cincoService.getUserRoles().subscribe(response => {
+      if(response) {
+        this.userRoles = response;
+      }
+    });
   }
 
   // ContactUpdate modal dismiss
@@ -78,199 +73,126 @@ export class ConsoleUserUpdateModal {
     this.viewCtrl.dismiss();
   }
 
-  primarySelectChanged(value) {
-    // // normalize the value from string to bool
-    // if (value == 'true') {
-    //   let prompt = this.alertCtrl.create({
-    //     title: 'Assign as Primary?',
-    //     message: 'This will replace the exising primary contact on this project.',
-    //     buttons: [
-    //       {
-    //         text: 'Cancel',
-    //         handler: data => {
-    //           this.contactUpdateForm.patchValue({primaryContact:'false'});
-    //         }
-    //       },
-    //       {
-    //         text: 'Assign',
-    //         handler: data => {
-    //           this.contactUpdateForm.patchValue({primaryContact:'true'});
-    //         }
-    //       }
-    //     ]
-    //   });
-    //   prompt.present();
-    // }
-  }
-
-  boardSelectChanged(value) {
-    // // normalize the value from string to bool
-    // if (value == 'true') {
-    //   let prompt = this.alertCtrl.create({
-    //     title: 'Assign to Board?',
-    //     message: 'This will replace the exising member company Board member on this project.',
-    //     buttons: [
-    //       {
-    //         text: 'Cancel',
-    //         handler: data => {
-    //           this.contactUpdateForm.patchValue({boardMember:'false'});
-    //         }
-    //       },
-    //       {
-    //         text: 'Assign',
-    //         handler: data => {
-    //           this.contactUpdateForm.patchValue({boardMember:'true'});
-    //         }
-    //       }
-    //     ]
-    //   });
-    //   prompt.present();
-    // }
-  }
-
-  removeContactPrompt() {
-    // let prompt = this.alertCtrl.create({
-    //   title: 'Remove contact?',
-    //   message: 'This will remove this contact from the project and remove them from any email alias or list.',
-    //   buttons: [
-    //     {
-    //       text: 'Cancel',
-    //       handler: data => {
-    //         // Do nothing
-    //       }
-    //     },
-    //     {
-    //       text: 'Remove',
-    //       handler: data => {
-    //         this.removeContact();
-    //       }
-    //     }
-    //   ]
-    // });
-    // prompt.present();
+  removeUserPrompt() {
+    let prompt = this.alertCtrl.create({
+      title: 'Remove console user?',
+      message: 'This will remove this user from the console and any project they manage.',
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: data => {
+            // Do nothing
+          }
+        },
+        {
+          text: 'Remove',
+          handler: data => {
+            this.removeUser();
+          }
+        }
+      ]
+    });
+    prompt.present();
   }
 
 
-  showPrompt() {
-    // let prompt = this.alertCtrl.create({
-    //   title: 'Add Email Group',
-    //   message: '',
-    //   inputs: [
-    //     {
-    //       name: 'email',
-    //       placeholder: 'Title'
-    //     },
-    //   ],
-    //   buttons: [
-    //     {
-    //       text: 'Cancel',
-    //       handler: data => {
-    //         // Don't add contact
-    //       }
-    //     },
-    //     {
-    //       text: 'Save',
-    //       handler: data => {
-    //         this.addEmailGroup(data.email);
-    //       }
-    //     }
-    //   ]
-    // });
-    // prompt.present();
-  }
-
-
-  saveContact() {
+  saveUser() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    // if (!this.contactUpdateForm.valid){
-    //   this.content.scrollToTop();
-    //   this.currentlySubmitting = false;
-    //   // prevent submit
-    //   return;
-    // }
-    // let primaryContact = this.contactUpdateForm.value.primaryContact;
-    // primaryContact = (primaryContact === true || primaryContact === 'true')
-    //       ? true
-    //       : false;
-    // let boardMember = this.contactUpdateForm.value.boardMember;
-    // boardMember = (boardMember === true || boardMember === 'true')
-    //       ? true
-    //       : false;
-    // var memberContact = {
-    //   id: this.contact.id,
-    //   memberId: this.contact.memberId,
-    //   type: this.contactUpdateForm.value.role,
-    //   primaryContact: primaryContact,
-    //   boardMember: boardMember,
-    //   contact: {
-    //     id: this.contact.contact.id,
-    //     email: this.contactUpdateForm.value.email,
-    //     givenName: this.contactUpdateForm.value.givenName,
-    //     familyName: this.contactUpdateForm.value.familyName,
-    //     title: this.contactUpdateForm.value.title,
-    //     phone: this.contactUpdateForm.value.phone,
-    //     type: this.contactUpdateForm.value.type,
-    //     bio: this.contactUpdateForm.value.bio,
-    //   },
-    // };
-    // if (this.contactId) {
-    //   if (this.roleId) {
-    //     this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
-    //       if (response) {
-    //         // update org contact with response from update
-    //         // should be the same as what was sent, but we will just be sure
-    //         memberContact.contact = response;
-    //         // add as a member contact
-    //         this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, memberContact).subscribe(response => {
-    //           if(response) {
-    //             this.dismiss();
-    //           }
-    //         });
-    //       }
-    //     });
-    //   }
-    //   else {
-    //     this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
-    //       if (response) {
-    //         // update org contact with response from update
-    //         // should be the same as what was sent, but we will just be sure
-    //         memberContact.contact = response;
-    //         // add as a member contact
-    //         this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
-    //           if (response) {
-    //             this.dismiss();
-    //           }
-    //         });
-    //       }
-    //     });
-    //   }
-    // }
-    // else {
-    //   // Add new contact to organization
-    //   this.cincoService.createOrganizationContact(this.org.id, memberContact.contact).subscribe(response => {
-    //     if (response) {
-    //       this.contactId = response;
-    //       memberContact.contact.id = this.contactId;
-    //       // add to member
-    //       this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
-    //         if (response) {
-    //           this.dismiss();
-    //         }
-    //       });
-    //     }
-    //   });
-    // }
+    if (!this._form.valid){
+      this.content.scrollToTop();
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+
+    let userId = '';
+    if (this.user.userId) {
+      userId = this.user.userId;
+    } else {
+      userId = this._form.value.userId;
+    }
+
+    let email = '';
+    if (this.user.email) {
+      email = this.user.email;
+    } else {
+      email = this._form.value.email;
+    }
+
+    var user = {
+      lfId: userId,
+      email: email,
+    };
+    if (this.user.userId) {
+      this.updateUserRoles();
+    }
+    else {
+      // create user
+      // update roles
+      this.cincoService.createUser(user).subscribe(response => {
+        if (response) {
+          this.updateUserRoles();
+        }
+      });
+    }
 
   }
 
-  removeContact() {
+  addUser() {
+    this.saveUser();
+  }
+
+  updateUserRoles() {
+    let userId = '';
+    if (this.user.userId) {
+      userId = this.user.userId;
+    } else {
+      userId = this._form.value.userId;
+    }
+
+    let prevRoles = [];
+    if (this.user.roles) {
+      prevRoles = this.user.roles;
+    }
+    var newRoles = this._form.value.roles;
+    let observablesArray = [];
+    for (let i=0; i<prevRoles.length; i++) {
+      let role = prevRoles[i];
+      let inNew = (newRoles.indexOf(role) !== -1);
+      if(!inNew) {
+        let observable = this.cincoService.removeUserRole(userId, role);
+        observablesArray.push(observable);
+      }
+    }
+    for (let i=0; i<newRoles.length; i++) {
+      let role = newRoles[i];
+      let inPrev = (prevRoles.indexOf(role) !== -1);
+      if(!inPrev) {
+        let observable = this.cincoService.addUserRole(userId, role);
+        observablesArray.push(observable);
+      }
+    }
+    Observable.forkJoin(observablesArray).subscribe(response => {
+      if (response) {
+        this.dismiss();
+      }
+    });
+  }
+
+  removeUser() {
     this.currentlySubmitting = true;
-    // this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
-    //   if(response) {
-    //     this.dismiss();
-    //   }
-    // });
+    let userId = '';
+    if (this.user.userId) {
+      userId = this.user.userId;
+    } else {
+      userId = this._form.value.userId;
+    }
+    this.cincoService.removeUser(userId).subscribe(response => {
+      if(response) {
+        this.dismiss();
+      }
+    });
   }
 
 }

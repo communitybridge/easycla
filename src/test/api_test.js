@@ -77,9 +77,9 @@ suite('api', function () {
       });
     });
 
-    test('POST user/{id}/group', function (done) {
+    test('POST user/{id}/role', function (done) {
       var adminRole = 'ADMIN';
-      adminClient.addRoleToUser(sampleUserName, adminRole, function (err, isUpdated, user) {
+      adminClient.addUserRole(sampleUserName, adminRole, function (err, isUpdated, user) {
         assert.ifError(err);
         assert(isUpdated, "User resource should be updated wtesth new role")
         assert.equal(user.userId, sampleUserName, 'Username is not the same as requested');
@@ -96,7 +96,7 @@ suite('api', function () {
 
     test('DELETE users/{id}/role/{role}', function (done) {
       var role = 'PROGRAM_MANAGER';
-      adminClient.addRoleToUser(sampleUserName, role, function (err, isUpdated, user) {
+      adminClient.addUserRole(sampleUserName, role, function (err, isUpdated, user) {
         assert.ifError(err);
         adminClient.removeRoleFromUser(sampleUserName, role, function (err, isUpdated) {
           assert.ifError(err);
@@ -161,7 +161,7 @@ suite('api', function () {
         adminClient = api.client(keys);
         adminClient.createUser(projUserName, projUserEmail, function (err, created) {
           var projectManagerRole = 'PROGRAM_MANAGER';
-          adminClient.addRoleToUser(projUserName, projectManagerRole, function (err, isUpdated, user) {
+          adminClient.addUserRole(projUserName, projectManagerRole, function (err, isUpdated, user) {
             api.getKeysForLfId(projUserName, function (err, keys) {
               projManagerClient = api.client(keys);
               done();
@@ -302,7 +302,7 @@ suite('api', function () {
         adminClient = api.client(keys);
         adminClient.createUser(projUserName, projUserEmail, function (err, created) {
           var projectManagerRole = 'PROGRAM_MANAGER';
-          adminClient.addRoleToUser(projUserName, projectManagerRole, function (err, isUpdated, user) {
+          adminClient.addUserRole(projUserName, projectManagerRole, function (err, isUpdated, user) {
             api.getKeysForLfId(projUserName, function (err, keys) {
               projManagerClient = api.client(keys);
               var sampleOrganization = {

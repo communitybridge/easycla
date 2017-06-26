@@ -13,6 +13,7 @@ import { CincoService } from '../../app/services/cinco.service'
 })
 export class ConsoleUsersPage {
   users: any;
+  userRoles: any;
 
   constructor(
     public navCtrl: NavController,
@@ -24,10 +25,20 @@ export class ConsoleUsersPage {
 
   getDefaults() {
     this.users = [];
+    this.userRoles = {};
   }
 
   ngOnInit(){
+    this.getUserRoles();
     this.getAllUsers();
+  }
+
+  getUserRoles() {
+    this.cincoService.getUserRoles().subscribe(response => {
+      if(response) {
+        this.userRoles = response;
+      }
+    });
   }
 
   getAllUsers() {
@@ -42,11 +53,21 @@ export class ConsoleUsersPage {
     let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {
       user: user,
     });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getAllUsers();
+    });
     modal.present();
-    // this.navCtrl.push('MemberPage', {
-    //   projectId: member.projectId,
-    //   memberId: member.id,
-    // });
+  }
+
+  addNewUser() {
+    let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getAllUsers();
+    });
+    modal.present();
   }
 
 }
