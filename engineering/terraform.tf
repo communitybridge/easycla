@@ -56,29 +56,6 @@ module "security_groups" {
   name    = "Engineering"
 }
 
-module "redis-cluster" "pypi-storage" {
-  source = "../modules/redis-cluster"
-
-  environment = "Production"
-  name = "pypi-storage"
-  team = "Engineering"
-  security_groups = ["${module.security_groups.pypi_redis}"]
-  subnet_ids = "${module.vpc.internal_subnets}"
-  publicly_accessible = false
-  vpc_id = "${module.vpc.id}"
-}
-
-module "pritunl" {
-  source                 = "../modules/pritunl-link"
-
-  key_pair               = "production-shared-tools"
-  vpc_cidr               = "${var.cidr}"
-  external_subnets       = "${module.vpc.external_subnets}"
-  vpn_sg                 = "${module.security_groups.vpn}"
-  pritunl_link           = "pritunl://592ef6a7b8181a0a1cf53601:K4q0MCLtyLeM7DkJ50uPB5bjcvDK5z5a@vpn.engineering.tux.rocks"
-  project                = "ENG"
-}
-
 module "jenkins" {
   source                 = "./jenkins"
 
@@ -106,10 +83,11 @@ module "peering" {
   source                    = "../modules/peering"
 
   vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
   tools_account_number      = "${data.terraform_remote_state.production-tools.account_number}"
   tools_cidr                = "${data.terraform_remote_state.production-tools.west_cidr}"
-  tools_external_rtb_id     = "${data.terraform_remote_state.production-tools.west_external_rtb_id}"
-  tools_raw_route_tables_id = "${data.terraform_remote_state.production-tools.west_raw_route_tables_id}"
   tools_vpc_id              = "${data.terraform_remote_state.production-tools.west_vpc_id}"
 }
 

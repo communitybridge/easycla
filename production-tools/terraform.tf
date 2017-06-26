@@ -70,10 +70,6 @@ module "vpc_west" {
   newrelic_key       = "${var.newrelic_key}"
   key_name           = "production-shared-tools"
 
-  # Pypi Server
-  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
-  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
-
   # Consul
   consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
 
@@ -102,10 +98,6 @@ module "vpc_west" {
 //
 //  newrelic_key       = "${var.newrelic_key}"
 //  key_name           = "eastern-production-tools"
-//
-//  # Pypi Server
-//  pypi_redis_host    = "pypi-storage.fbnrd8.0001.usw2.cache.amazonaws.com"
-//  pypi_bucket        = "${module.s3_buckets.pypi_repo_bucket}"
 //
 //  # Consul
 //  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
@@ -136,25 +128,25 @@ module "vpc_west" {
 //  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
 //}
 
-//# Peering Request with CINCO Production
-//module "project_cinco" {
-//  source = "./project_peering"
-//
-//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
-//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
-//  project_cidr = "10.32.3.0/24"
-//  peering_id = "pcx-41831228"
-//}
-//
-//# Peering Request with PMC Production
-//module "project_pmc" {
-//  source = "./project_peering"
-//
-//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
-//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
-//  project_cidr = "10.32.4.0/24"
-//  peering_id = "pcx-12d0477b"
-//}
+# Peering Request with CINCO Production
+module "project_cinco" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.3.0/24"
+  peering_id = "pcx-e8ee7e81"
+}
+
+# Peering Request with PMC Production
+module "project_pmc" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.4.0/24"
+  peering_id = "pcx-a6eb7bcf"
+}
 
 # Peering Request with Engineering VPC
 module "project_engineering" {
@@ -180,14 +172,6 @@ output "west_dns_servers" {
 
 output "west_cidr" {
   value = "${module.vpc_west.cidr}"
-}
-
-output "west_external_rtb_id" {
-  value = "${module.vpc_west.external_rtb_id}"
-}
-
-output "west_raw_route_tables_id" {
-  value = "${module.vpc_west.raw_route_tables_id}"
 }
 
 //output "east_vpc_id" {

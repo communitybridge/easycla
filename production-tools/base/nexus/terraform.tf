@@ -124,7 +124,7 @@ resource "aws_autoscaling_attachment" "nexus" {
   elb                    = "${aws_elb.nexus.id}"
 }
 
-resource "aws_route53_record" "consul" {
+resource "aws_route53_record" "nexus" {
   count    = "${var.building}"
   zone_id = "Z2MDT77FL23F9B"
   name    = "nexus"
