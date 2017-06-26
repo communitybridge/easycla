@@ -29,8 +29,42 @@ export class MemberPage {
     // If we navigated to this page, we will have an item available as a nav param
     this.projectId = navParams.get('projectId');
     this.memberId = navParams.get('memberId');
-
     this.getDefaults();
+  }
+
+  getDefaults() {
+    this.member = {
+      id: this.memberId,
+      contacts: [
+        {
+          bio: "",
+          email: "",
+          familyName: "",
+          givenName: "",
+          headshotRef: "",
+          id: "",
+          phone: "",
+          type: "",
+        }
+      ],
+      invoices: [],
+      org: {
+        addresses: [],
+        id: "",
+        logoRef: "",
+        name: "",
+        phone: "",
+        url: "",
+      },
+      projectId: "",
+      renewalDate: "",
+      startDate: "",
+      tier: {
+        qualifier: "",
+        type: "",
+      }
+    };
+    this.memberContactRoles = {};
   }
 
   ngOnInit() {
@@ -38,6 +72,14 @@ export class MemberPage {
     this.getMemberContactRoles();
     this.getMember(this.projectId, this.memberId);
     this.getMemberContacts(this.projectId, this.memberId);
+  }
+
+  getMemberContactRoles() {
+    this.cincoService.getMemberContactRoles().subscribe(response => {
+      if(response) {
+        this.memberContactRoles = response;
+      }
+    });
   }
 
   getMember(projectId, memberId) {
@@ -82,49 +124,6 @@ export class MemberPage {
       this.getMemberContacts(this.projectId, this.memberId);
     });
     modal.present();
-  }
-
-  getDefaults() {
-    this.member = {
-      id: this.memberId,
-      contacts: [
-        {
-          bio: "",
-          email: "",
-          familyName: "",
-          givenName: "",
-          headshotRef: "",
-          id: "",
-          phone: "",
-          type: "",
-        }
-      ],
-      invoices: [],
-      org: {
-        addresses: [],
-        id: "",
-        logoRef: "",
-        name: "",
-        phone: "",
-        url: "",
-      },
-      projectId: "",
-      renewalDate: "",
-      startDate: "",
-      tier: {
-        qualifier: "",
-        type: "",
-      }
-    };
-    this.memberContactRoles = {};
-  }
-
-  getMemberContactRoles() {
-    this.cincoService.getMemberContactRoles().subscribe(response => {
-      if(response) {
-        this.memberContactRoles = response;
-      }
-    });
   }
 
   getOrganizationProjectMemberships(organizationId) {

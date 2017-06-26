@@ -6,7 +6,6 @@
     <ion-title>Console Users</ion-title>
   </ion-navbar>
 </ion-header>
-
 <ion-content padding overflow-scroll="true">
   <ion-grid>
     <ion-row>
@@ -18,19 +17,22 @@
                   <th>Name</th>
                   <th>Email</th>
                   <th>Roles</th>
-                  <!-- <th>Invoice Status</th>
-                  <th>Renewal Date</th>
-                  <th>Category</th> -->
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let user of users" (click)="userSelected(user)">
                   <td data-title="Name">{{ user.userId }}</td>
                   <td data-title="Email">{{ user.email }}</td>
-                  <td data-title="Roles">{{ user.roles }}</td>
-                  <!-- <td data-title="Invoice Status">{{ member.invoiceStatus }}</td>
-                  <td data-title="Renewal Date">{{ member.renewalDate }}</td>
-                  <td data-title="Category">{{ projectSectors[member.projectCategory] }}</td> -->
+                  <td data-title="Roles">
+                    <span *ngFor="let role of user.roles; let last = last;">
+                      <ng-container *ngIf="!last; else lastRole;">
+                        {{ userRoles[role] }},
+                      </ng-container>
+                      <ng-template #lastRole>
+                        {{ userRoles[role] }}
+                      </ng-template>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -38,4 +40,10 @@
       </ion-col>
     </ion-row>
   </ion-grid>
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="left">
+      <button ion-fab (click)="addNewUser()" title="Add Console User"><ion-icon name="person-add"></ion-icon></button>
+    </ion-fab-list>
+  </ion-fab>
 </ion-content>
