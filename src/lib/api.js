@@ -63,115 +63,6 @@ module.exports = {
     }
 
     return {
-      createUser: function (lfId, email, next) {
-        var body = {
-          "lfId": lfId,
-          "email": email
-        };
-        var opts = {
-          method: 'POST',
-          path: 'users',
-          body: JSON.stringify(body)
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 201) {
-            next(null, true)
-          } else if (res.statusCode == 409) {
-            next(null, false);
-          } else {
-            next(errors.fromResponse(res, 'User with lfId of [' + lfId + '] not created.'));
-          }
-        });
-      },
-
-      getUser: function (id, next) {
-        var opts = {
-          method: 'GET',
-          path: 'users/' + id
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err, null);
-          } else if (res.statusCode == 200) {
-            var user = JSON.parse(body);
-            next(null, user);
-          } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not be retrieved'));
-          }
-        });
-      },
-
-      addRoleToUser: function (id, role, next) {
-        var opts = {
-          method: 'POST',
-          path: 'users/' + id + '/role',
-          body: JSON.stringify(role)
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var updatedUser = JSON.parse(body);
-            next(null, true, updatedUser)
-          } else if (res.statusCode == 204) {
-            next(null, false, null);
-          } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have role [' + role + ']  added'));
-          }
-        });
-      },
-
-      removeRoleFromUser: function (userId, role, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'users/' + userId + '/role/' + role
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 204) {
-            next(null, true);
-          } else {
-            next(errors.fromResponse(res, 'Unable to delete role [' + role + '] from user with id of [' +
-                userId + '].'));
-          }
-        });
-      },
-
-      getAllRoles: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'users/roles'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var roles = JSON.parse(body);
-            next(null, roles);
-          } else {
-            next(errors.fromResponse(res, 'Unable to look up user roles. '));
-          }
-        });
-      },
-
-      removeUser: function (userId, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'users/' + userId + '/'
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 204) {
-            next(null, true);
-          } else {
-            next(errors.fromResponse(res, 'Unable to delete user with id of [' + userId + '].'));
-          }
-        });
-      },
 
       /*
         Projects:
@@ -686,7 +577,7 @@ module.exports = {
             var obj = JSON.parse(body);
             next(null, true, obj.id);
           } else {
-            next(errors.fromResponse(res, 'Organization not created'), false);
+            next(errors.fromResponse(res, 'Organization contact not created'), false);
           }
         });
       },
@@ -940,6 +831,46 @@ module.exports = {
         });
       },
 
+      createUser: function (user, next) {
+        var opts = {
+          method: 'POST',
+          path: 'users',
+          body: JSON.stringify(user)
+        };
+        makeSignedRequest(opts, function (err, res) {
+          console.log('err:');
+          console.log(err);
+          console.log('res:');
+          console.log(res);
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 201) {
+            next(null, true)
+          } else if (res.statusCode == 409) {
+            next(null, false);
+          } else {
+            console.log(err);
+            next(errors.fromResponse(res, 'Unable to create user.'));
+          }
+        });
+      },
+
+      removeUser: function (userId, next) {
+        var opts = {
+          method: 'DELETE',
+          path: 'users/' + userId,
+        };
+        makeSignedRequest(opts, function (err, res) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 204) {
+            next(null, true);
+          } else {
+            next(errors.fromResponse(res, 'Unable to delete user with id of [' + userId + '].'));
+          }
+        });
+      },
+
       getUser: function (userId, next) {
         var opts = {
           method: 'GET',
@@ -953,6 +884,24 @@ module.exports = {
             next(null, user);
           } else {
             next(errors.fromResponse(res, 'Unable to get user with id [' + userId + '].'));
+          }
+        });
+      },
+
+      updateUser: function (userId, user, next) {
+        var opts = {
+          method: 'PUT',
+          path: 'users/' + userId,
+          body: JSON.stringify(user),
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var user = JSON.parse(body);
+            next(null, user);
+          } else {
+            next(errors.fromResponse(res, 'Unable to update user with id [' + userId + '].'));
           }
         });
       },
@@ -974,20 +923,39 @@ module.exports = {
         });
       },
 
-      updateUser: function (userId, user, next) {
+      addUserRole: function (userId, role, next) {
         var opts = {
-          method: 'PUT',
-          path: 'users/' + userId,
-          body: JSON.stringify(user),
+          method: 'POST',
+          path: 'users/' + userId + '/role',
+          body: JSON.stringify(role)
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
             next(err);
           } else if (res.statusCode == 200) {
-            var user = JSON.parse(body);
-            next(null, user);
+            var updatedUser = JSON.parse(body);
+            next(null, true, updatedUser)
+          } else if (res.statusCode == 204) {
+            next(null, false, null);
           } else {
-            next(errors.fromResponse(res, 'Unable to update user with id [' + userId + '].'));
+            next(errors.fromResponse(res, 'User with id of [' + userId + '] could not have role [' + role + ']  added'));
+          }
+        });
+      },
+
+      removeUserRole: function (userId, roleId, next) {
+        var opts = {
+          method: 'DELETE',
+          path: 'users/' + userId + '/role/' + roleId
+        };
+        makeSignedRequest(opts, function (err, res) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 204) {
+            next(null, true);
+          } else {
+            next(errors.fromResponse(res, 'Unable to delete role [' + roleId + '] from user with id of [' +
+                userId + '].'));
           }
         });
       },

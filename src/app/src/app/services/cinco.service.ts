@@ -218,18 +218,38 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  createUser(user) {
+    return this.http.post('/users', { user: user })
+      .map(res => res.json());
+  }
+
+  removeUser(userId) {
+    return this.http.delete(this.baseUrl + '/users/' + userId)
+      .map(res => res.json());
+  }
+
   getUser(userId) {
     return this.http.get(this.baseUrl + '/users/' + userId)
       .map(res => res.json());
   }
 
   getUserRoles() {
-    return this.http.get(this.baseUrl + '/user/roles')
+    return this.http.get(this.baseUrl + '/users/roles')
             .map(res => res.json());
   }
 
   updateUser(userId, user) {
     return this.http.put('/users/' + userId, user)
+      .map(res => res.json());
+  }
+
+  addUserRole(userId, role) {
+    return this.http.post('/users/' + userId + '/role', { role: role })
+      .map(res => res.json());
+  }
+
+  removeUserRole(userId, roleId) {
+    return this.http.delete('/users/' + userId + '/role/' + roleId)
       .map(res => res.json());
   }
 
