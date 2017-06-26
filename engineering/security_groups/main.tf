@@ -14,39 +14,10 @@ variable "cidr" {
   description = "The cidr block to use for internal security groups"
 }
 
-resource "aws_security_group" "pypi_redis" {
+resource "aws_security_group" "vpn-link" {
   provider    = "aws.local"
-  name        = "${format("%s-redis-server", var.name)}"
-  description = "Redis Server for Pypi"
-  vpc_id      = "${var.vpc_id}"
-
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags {
-    Name        = "${format("%s redis for pypi", var.name)}"
-  }
-}
-
-resource "aws_security_group" "vpn" {
-  provider    = "aws.local"
-  name        = "${format("%s-vpn", var.name)}"
-  description = "Pritunl OpenVPN Link"
+  name        = "${format("%s-vpn-link", var.name)}"
+  description = "Pritunl Link"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
@@ -125,13 +96,6 @@ resource "aws_security_group" "jenkins-master" {
     to_port         = 0
     protocol        = "-1"
     security_groups = ["${aws_security_group.jenkins-slaves.id}"]
-  }
-
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["${aws_security_group.vpn.id}"]
   }
 
   ingress {
@@ -274,13 +238,6 @@ resource "aws_security_group" "engineering-sandboxes" {
     security_groups = ["${aws_security_group.engineering-sandboxes-redis.id}"]
   }
 
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["${aws_security_group.vpn.id}"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -318,12 +275,8 @@ resource "aws_security_group" "engineering-sandboxes-redis" {
   }
 }
 
-output "pypi_redis" {
-  value = "${aws_security_group.pypi_redis.id}"
-}
-
-output "vpn" {
-  value = "${aws_security_group.vpn.id}"
+output "vpn-link" {
+  value = "${aws_security_group.vpn-link.id}"
 }
 
 output "jenkins_slaves" {

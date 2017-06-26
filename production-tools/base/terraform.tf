@@ -45,14 +45,6 @@ variable "region_identitier" {
   description = "Label to recognize the region"
 }
 
-variable "pypi_redis_host" {
-  description = "Redis host to use for Pypi Database"
-}
-
-variable "pypi_bucket" {
-  description = "The bucket to use to store Pypi Repository files"
-}
-
 variable "consul_encryption_key" {
   description = "The encryption key used for consul"
 }
@@ -283,16 +275,16 @@ module "pritunl" {
   vpn_sg                 = "${module.security_groups.vpn}"
 }
 
-module "pritunl-link" {
-  source                 = "../../modules/pritunl-link"
+module "it-managed-vpn" {
+  source            = "./it_vpn_tunnel"
 
-  key_pair               = "production-shared-tools"
-  vpc_cidr               = "${var.cidr}"
-  external_subnets       = "${module.vpc.external_subnets}"
-  vpn_sg                 = "${module.security_groups.vpn_link}"
-  project                = "ProdTools"
-  pritunl_link           = "pritunl://592efd0ab8181a0a1cf5525c:IBXCgflFd3ACWi2H1YQ6JfUr5i8u1quj@vpn.engineering.tux.rocks"
+  vpc_id            = "${module.vpc.id}"
+  internal_subnets  = "${module.vpc.internal_subnets}"
+  cidr              = "10.32.0.0/12"
+  key_name          = "${var.key_name}"
+  route_tables      = "${module.vpc.raw_route_tables_id}"
 }
+
 
 /**
  * Outputs
