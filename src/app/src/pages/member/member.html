@@ -32,28 +32,29 @@
           </p>
         </ion-col>
         <ion-col width-40>
-          <ion-item>
+          <ion-item no-lines>
             <h1>{{ member.org.name }}</h1>
             <h2 margin-top>{{ member.org.url }}</h2>
             <p>Replace</p>
             <p>with</p>
             <p>member.org.addresses</p>
           </ion-item>
-          <ion-item>
+          <ion-item no-lines>
             <p>Status: ACTIVE</p>
             <p>Membership: {{ member.tier.type }} ($20,000.000)</p>
             <p>Board: Yes</p>
           </ion-item>
         </ion-col>
         <ion-col width-30>
-          <ion-item>
-            <p>Zephyr Renewal Date</p>
-            <b>{{ member.renewalDate }}</b>
-            <br><br><br>
+          <span class="renewal-date-title" padding>Zephyr Renewal Date</span>
+          <ion-item no-lines>
+            <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
+          </ion-item>
+          <ion-item no-lines>
             <p>LF Membership: #123456</p>
             <p>Expires 7/7/2018</p>
           </ion-item>
-          <ion-item>
+          <ion-item no-lines>
             <b>Press Release: - / - / -</b>
             <br><br>
             <p><ion-icon name="cloud-upload"></ion-icon> Upload Press Release</p>
@@ -158,10 +159,12 @@
                   <p>{{ member.product }}, {{ member.invoices[0].status }}</p>
                 </ion-col>
                 <ion-col width-40>
-                  <p>Joined: {{ member.startDate }}</p>
+                  <p>Joined: </p>
+                  <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.startDate" ></ion-datetime>
                 </ion-col>
                 <ion-col width-45>
-                  <p>Renewal: {{ member.renewalDate }}</p>
+                  <p>Renewal:</p>
+                  <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
                 </ion-col>
               </ion-row>
             </div>

@@ -35,7 +35,7 @@
           {{ membership.invoices[0].status }}
         </td>
         <td data-title="Renewal Date">
-          {{ membership.renewalDate }}
+          <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="membership.renewalDate" ></ion-datetime>
         </td>
       </tr>
     </tbody>
