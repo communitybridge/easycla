@@ -41,7 +41,7 @@
       <ion-col col-4>
         <ion-item>
           <ion-label stacked>Date Launched</ion-label>
-          <ion-input type="text" [(ngModel)]="project.startDate"></ion-input>
+          <ion-datetime displayFormat="MM/DD/YYYY" [(ngModel)]="project.startDate" max="2099-12-31"></ion-datetime>
         </ion-item>
       </ion-col>
     </ion-row>
