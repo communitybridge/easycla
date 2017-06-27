@@ -32,7 +32,7 @@ suite('api', function () {
 
   suite('Trusted Auth Endpoints', function () {
     suite('keysForLfId', function () {
-      test('Calling keysForLfId wtesth an lfId returns an object wtesth keys', function (done) {
+      test('Calling keysForLfId with an lfId returns an object with keys', function (done) {
         api.getKeysForLfId("LaneMeyer", function (err, keys) {
           assert.ifError(err);
           assert.equal(keys.keyId.length, 20, "keyId length should be 20");
@@ -48,27 +48,38 @@ suite('api', function () {
     var adminClient;
     var sampleUserName = randomUserName();
     var sampleUserEmail = randomUserName()  + "@" +  randomUserName() + ".com";
-
+    var user = {
+      userId: sampleUserName,
+      email: sampleUserEmail
+    };
     suiteSetup(function (done) {
       api.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = api.client(keys);
-        adminClient.createUser(sampleUserName, sampleUserEmail, function (err, created) {
+        adminClient.createUser(user, function (err, created) {
           done();
         });
       });
     });
 
-    test('POST users/', function (done) {
+    test('POST users', function (done) {
       var username = randomUserName();
       var useremail = randomUserName();
-      adminClient.createUser(username, useremail, function (err, created) {
-        assert.ifError(err);
-        assert(created, "New user wtesth username of " + username + " should have been created");
+      var user = {
+        lfId: username,
+        email: useremail
+      };
+      adminClient.createUser(user, function (err, created) {
+        // console.log('err');
+        // console.log(err);
+        // console.log('created');
+        // console.log(created);
+        // assert.ifError(err);
+        assert(created, "New user with username of " + username + " should have been created");
         done();
       });
     });
 
-    test('GET user/{id}', function (done) {
+    test('GET user/{userId}', function (done) {
       adminClient.getUser(sampleUserName, function (err, user) {
         assert.ifError(err);
         assert.equal(user.userId, sampleUserName, 'Username is not the same as requested');
@@ -77,11 +88,11 @@ suite('api', function () {
       });
     });
 
-    test('POST user/{id}/role', function (done) {
+    test('POST user/{userId}/role', function (done) {
       var adminRole = 'ADMIN';
       adminClient.addUserRole(sampleUserName, adminRole, function (err, isUpdated, user) {
         assert.ifError(err);
-        assert(isUpdated, "User resource should be updated wtesth new role")
+        assert(isUpdated, "User resource should be updated with new role")
         assert.equal(user.userId, sampleUserName, 'Username is not the same as requested');
         assert.equal(user.roles.length, 2, 'User must have 2 roles');
         assert(_.some(user.roles, function (r) {
@@ -94,7 +105,7 @@ suite('api', function () {
       });
     });
 
-    test('DELETE users/{id}/role/{role}', function (done) {
+    test('DELETE users/{userId}/role/{role}', function (done) {
       var role = 'PROGRAM_MANAGER';
       adminClient.addUserRole(sampleUserName, role, function (err, isUpdated, user) {
         assert.ifError(err);
