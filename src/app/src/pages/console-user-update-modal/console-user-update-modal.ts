@@ -32,18 +32,17 @@ export class ConsoleUserUpdateModal {
     private cincoService: CincoService,
     public formBuilder: FormBuilder
   ) {
+    this.getDefaults();
     let originalUser = this.navParams.get('user');
     this.keysGetter = Object.keys;
 
     // Deep copy originalContact to contact
     this.user = Object.assign({}, originalUser);
-
     this._form = formBuilder.group({
       userId:[this.user.userId, Validators.required],
       email:[this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
       roles:[this.user.roles],
     });
-    this.getDefaults();
   }
 
   getDefaults() {

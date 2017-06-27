@@ -838,10 +838,6 @@ module.exports = {
           body: JSON.stringify(user)
         };
         makeSignedRequest(opts, function (err, res) {
-          console.log('err:');
-          console.log(err);
-          console.log('res:');
-          console.log(res);
           if (err) {
             next(err, false);
           } else if (res.statusCode == 201) {
@@ -849,7 +845,6 @@ module.exports = {
           } else if (res.statusCode == 409) {
             next(null, false);
           } else {
-            console.log(err);
             next(errors.fromResponse(res, 'Unable to create user.'));
           }
         });
