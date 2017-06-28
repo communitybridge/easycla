@@ -14,6 +14,10 @@ export class CincoService {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  getSessionData() {
+    return this.http.get(this.baseUrl + '/session_data')
+      .map(res => res.json());
+  }
 
   /**
   * Projects
