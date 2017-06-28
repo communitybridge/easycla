@@ -46,7 +46,7 @@
           </ion-item>
         </ion-col>
         <ion-col width-30>
-          <span class="renewal-date-title" padding>Zephyr Renewal Date</span>
+          <span class="renewal-date-title" padding>{{ member.projectName }} Renewal Date</span>
           <ion-item no-lines>
             <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
           </ion-item>
