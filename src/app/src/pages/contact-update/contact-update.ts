@@ -5,6 +5,8 @@ import { PhoneNumberValidator } from  '../../validators/phonenumber';
 import { EmailValidator } from  '../../validators/email';
 import { CincoService } from '../../app/services/cinco.service';
 
+import { MemberContactModel } from '../../models/member-contact-model';
+
 @IonicPage({
   segment: 'contact-update'
 })
@@ -25,6 +27,8 @@ export class ContactUpdate {
   keysGetter;
   primaryContactOptions: any;
   boardMemberOptions: any;
+
+  memberContact = new MemberContactModel();
 
   contactUpdateForm: FormGroup;
   submitAttempt: boolean = false;
@@ -131,6 +135,25 @@ export class ContactUpdate {
 
     this.memberContactRoles = {};
     this.orgContactRoles = {};
+
+    this.memberContact = {
+      id: "",
+      memberId: "",
+      type: "",
+      primaryContact: false,
+      boardMember: false,
+      contact: {
+        id: "",
+        accountId: "",
+        givenName: "",
+        familyName: "",
+        title: "",
+        bio: "",
+        email: "",
+        phone: "",
+        type: ""
+      }
+    };
 
   }
 
@@ -288,7 +311,7 @@ export class ContactUpdate {
     boardMember = (boardMember === true || boardMember === 'true')
           ? true
           : false;
-    var memberContact = {
+    this.memberContact = {
       id: this.contact.id,
       memberId: this.contact.memberId,
       type: this.contactUpdateForm.value.role,
@@ -296,24 +319,26 @@ export class ContactUpdate {
       boardMember: boardMember,
       contact: {
         id: this.contact.contact.id,
-        email: this.contactUpdateForm.value.email,
+        accountId: "",
         givenName: this.contactUpdateForm.value.givenName,
         familyName: this.contactUpdateForm.value.familyName,
         title: this.contactUpdateForm.value.title,
-        phone: this.contactUpdateForm.value.phone,
-        type: this.contactUpdateForm.value.type,
         bio: this.contactUpdateForm.value.bio,
+        email: this.contactUpdateForm.value.email,
+        phone: this.contactUpdateForm.value.phone,
+        type: this.contactUpdateForm.value.type
       },
     };
     if (this.contactId) {
       if (this.roleId) {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact).subscribe(response => {
           if (response) {
             // update org contact with response from update
             // should be the same as what was sent, but we will just be sure
-            memberContact.contact = response;
+            // TODO: Validate response and this.memberContact.contact are equivalent
+            this.memberContact.contact = response;
             // add as a member contact
-            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, memberContact).subscribe(response => {
+            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.memberContact).subscribe(response => {
               if(response) {
                 this.dismiss();
               }
@@ -322,13 +347,14 @@ export class ContactUpdate {
         });
       }
       else {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, memberContact.contact).subscribe(response => {
+        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact).subscribe(response => {
           if (response) {
             // update org contact with response from update
             // should be the same as what was sent, but we will just be sure
-            memberContact.contact = response;
+            // TODO: Validate response and this.memberContact.contact are equivalent
+            this.memberContact.contact = response;
             // add as a member contact
-            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
+            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact).subscribe(response => {
               if (response) {
                 this.dismiss();
               }
@@ -339,12 +365,12 @@ export class ContactUpdate {
     }
     else {
       // Add new contact to organization
-      this.cincoService.createOrganizationContact(this.org.id, memberContact.contact).subscribe(response => {
+      this.cincoService.createOrganizationContact(this.org.id, this.memberContact.contact).subscribe(response => {
         if (response) {
           this.contactId = response;
-          memberContact.contact.id = this.contactId;
+          this.memberContact.contact.id = this.contactId;
           // add to member
-          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, memberContact).subscribe(response => {
+          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact).subscribe(response => {
             if (response) {
               this.dismiss();
             }

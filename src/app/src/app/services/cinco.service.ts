@@ -108,24 +108,7 @@ export class CincoService {
     return response;
   }
 
-  addMemberContact(projectId, memberId, contactId, contact) {
-    // TODO: Convert newContact to Contact Model
-    let newContact = {
-      id: contact.id,
-      memberId: memberId,
-      type: contact.type,
-      boardMember: contact.boardMember,
-      primaryContact: contact.primaryContact,
-      contactId: contact.contact.id,
-      contactGivenName: contact.contact.givenName,
-      contactFamilyName: contact.contact.familyName,
-      contactTitle: contact.contact.title,
-      contactBio: contact.contact.bio,
-      contactEmail: contact.contact.email,
-      contactPhone: contact.contact.phone,
-      contactHeadshotRef: contact.contact.headshotRef,
-      contactType: contact.contact.type
-    };
+  addMemberContact(projectId, memberId, contactId, newContact) {
     return this.http.post('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId, newContact)
       .map((res) => res.json());
   }
@@ -135,24 +118,7 @@ export class CincoService {
       .map((res) => res.json());
   }
 
-  updateMemberContact(projectId, memberId, contactId, roleId, contact) {
-    //TODO: Convert updatedContact to Contact Model
-    let updatedContact = {
-      id: contact.id,
-      memberId: memberId,
-      type: contact.type,
-      boardMember: contact.boardMember,
-      primaryContact: contact.primaryContact,
-      contactId: contact.contact.id,
-      contactGivenName: contact.contact.givenName,
-      contactFamilyName: contact.contact.familyName,
-      contactTitle: contact.contact.title,
-      contactBio: contact.contact.bio,
-      contactEmail: contact.contact.email,
-      contactPhone: contact.contact.phone,
-      contactHeadshotRef: contact.contact.headshotRef,
-      contactType: contact.contact.type
-    };
+  updateMemberContact(projectId, memberId, contactId, roleId, updatedContact) {
     return this.http.put('/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, updatedContact)
       .map((res) => res.json());
   }
