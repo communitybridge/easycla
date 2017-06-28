@@ -285,6 +285,16 @@ module "it-managed-vpn" {
   route_tables      = "${module.vpc.raw_route_tables_id}"
 }
 
+module "cert-managed-vpn" {
+  source            = "./cert_vpn_tunnel"
+
+  vpc_id            = "${module.vpc.id}"
+  internal_subnets  = "${module.vpc.internal_subnets}"
+  cidr              = "10.32.0.0/12"
+  key_name          = "${var.key_name}"
+  route_tables      = "${module.vpc.raw_route_tables_id}"
+}
+
 
 /**
  * Outputs
