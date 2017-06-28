@@ -154,7 +154,7 @@ export class ConsoleUserUpdateModal {
     if (this.user.roles) {
       prevRoles = this.user.roles;
     }
-    var newRoles = this._form.value.roles;
+    var newRoles = this._form.value.roles || [];
     let observablesArray = [];
     for (let i=0; i<prevRoles.length; i++) {
       let role = prevRoles[i];
@@ -171,6 +171,9 @@ export class ConsoleUserUpdateModal {
         let observable = this.cincoService.addUserRole(userId, role);
         observablesArray.push(observable);
       }
+    }
+    if (observablesArray.length == 0) {
+      this.dismiss();
     }
     Observable.forkJoin(observablesArray).subscribe(response => {
       if (response) {
