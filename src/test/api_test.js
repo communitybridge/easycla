@@ -44,39 +44,32 @@ suite('api', function () {
     });
   });
 
-  suite('Admin Endpoints', function () {
+  suite('Users Endpoints', function () {
     var adminClient;
     var sampleUserName = randomUserName();
     var sampleUserEmail = randomUserName()  + "@" +  randomUserName() + ".com";
-    var user = {
-      userId: sampleUserName,
-      email: sampleUserEmail
-    };
+    var sampleUserErr;
+    var sampleUserCreated;
+
     suiteSetup(function (done) {
+      let user = {
+        lfId: sampleUserName,
+        email: sampleUserEmail
+      };
       api.getKeysForLfId("LaneMeyer", function (err, keys) {
         adminClient = api.client(keys);
         adminClient.createUser(user, function (err, created) {
+          sampleUserErr = err;
+          sampleUserCreated = created;
           done();
         });
       });
     });
 
     test('POST users', function (done) {
-      var username = randomUserName();
-      var useremail = randomUserName();
-      var user = {
-        lfId: username,
-        email: useremail
-      };
-      adminClient.createUser(user, function (err, created) {
-        // console.log('err');
-        // console.log(err);
-        // console.log('created');
-        // console.log(created);
-        // assert.ifError(err);
-        assert(created, "New user with username of " + username + " should have been created");
-        done();
-      });
+      assert.ifError(sampleUserErr);
+      assert(sampleUserCreated, "New user with username of " + sampleUserName + " should have been created");
+      done();
     });
 
     test('GET user/{userId}', function (done) {
@@ -106,10 +99,10 @@ suite('api', function () {
     });
 
     test('DELETE users/{userId}/role/{role}', function (done) {
-      var role = 'PROGRAM_MANAGER';
+      var role = 'ADMIN';
       adminClient.addUserRole(sampleUserName, role, function (err, isUpdated, user) {
         assert.ifError(err);
-        adminClient.removeRoleFromUser(sampleUserName, role, function (err, isUpdated) {
+        adminClient.removeUserRole(sampleUserName, role, function (err, isUpdated) {
           assert.ifError(err);
           assert(isUpdated);
           adminClient.getUser(sampleUserName, function (err, user) {
@@ -131,7 +124,7 @@ suite('api', function () {
         PRIMARY_CONTACT: 'Primary Contact',
         PROGRAM_MANAGER: 'Program Manager'
       }
-      adminClient.getAllRoles(function (err, roles) {
+      adminClient.getUserRoles(function (err, roles) {
         assert.ifError(err);
         _.each(expected, function (er) {
           var found = _.find(roles, function (r) {
@@ -157,29 +150,62 @@ suite('api', function () {
       });
     });
 
+    test('DELETE users/{userId}', function (done) {
+      adminClient.removeUser(sampleUserName, function (err, removed) {
+        assert.ifError(err);
+        assert(removed, "New user with username of " + sampleUserName + " should have been deleted");
+        done();
+      });
+    });
+
   });
 
   suite('Organizations Endpoints', function () {
 
     var projUserName = randomUserName();
     var projUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
-    var projManagerClient;
+    var basicUserName = randomUserName();
+    var basicUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
     var adminClient;
+    var projManagerClient;
+    var basicClient;
     var projOrganizationId;
 
     suiteSetup(function (done) {
-      api.getKeysForLfId("LaneMeyer", function (err, keys) {
-        adminClient = api.client(keys);
-        adminClient.createUser(projUserName, projUserEmail, function (err, created) {
+      getAdminClient();
+      function getAdminClient() {
+        api.getKeysForLfId("LaneMeyer", function (err, keys) {
+          adminClient = api.client(keys);
+          createProjManagerClient();
+        });
+      }
+      function createProjManagerClient() {
+        let user = {
+          lfId: projUserName,
+          email: projUserEmail
+        };
+        adminClient.createUser(user, function (err, created) {
           var projectManagerRole = 'PROGRAM_MANAGER';
           adminClient.addUserRole(projUserName, projectManagerRole, function (err, isUpdated, user) {
             api.getKeysForLfId(projUserName, function (err, keys) {
               projManagerClient = api.client(keys);
-              done();
+              createBasicClient();
             });
           });
         });
-      });
+      }
+      function createBasicClient() {
+        let user = {
+          lfId: basicUserName,
+          email: basicUserEmail
+        };
+        adminClient.createUser(user, function (err, created) {
+          api.getKeysForLfId(basicUserName, function (err, keys) {
+            basicClient = api.client(keys);
+            done();
+          });
+        });
+      }
     });
 
     test('POST /organizations', function (done) {
@@ -192,7 +218,7 @@ suite('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
-              localityName: "Some Ctesty (e.g. Anchorage)",
+              localityName: "Some City (e.g. Anchorage)",
               postalCode: 99501,
               thoroughfare: "Some street address"
             }
@@ -202,7 +228,7 @@ suite('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some Province (e.g. Alaska)",
-              localityName: "Some Ctesty (e.g. Anchorage)",
+              localityName: "Some City (e.g. Anchorage)",
               postalCode: 99501,
               thoroughfare: "Some street address"
             }
@@ -219,18 +245,9 @@ suite('api', function () {
     });
 
     test('POST /organizations 403 ', function (done) {
-      var username = randomUserName();
-      var email = randomUserName();
-      adminClient.createUser(username, email, function (err) {
-        assert.ifError(err);
-        api.getKeysForLfId(username, function (err, keys) {
-          assert.ifError(err);
-          var client = api.client(keys);
-          client.createOrganization({}, function (err) {
-            assert.equal(err.statusCode, 403);
-            done();
-          });
-        });
+      basicClient.createOrganization({}, function (err) {
+        assert.equal(err.statusCode, 403);
+        done();
       });
     });
 
@@ -272,7 +289,7 @@ suite('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some updated Province (e.g. Alaska)",
-              localityName: "Some updated Ctesty (e.g. Anchorage)",
+              localityName: "Some updated City (e.g. Anchorage)",
               postalCode: 99501,
               thoroughfare: "Some updated street address"
             }
@@ -282,7 +299,7 @@ suite('api', function () {
             address: {
               country: "US",
               administrativeArea: "Some updated Province (e.g. Alaska)",
-              localityName: "Some updated Ctesty (e.g. Anchorage)",
+              localityName: "Some updated City (e.g. Anchorage)",
               postalCode: 99501,
               thoroughfare: "Some updated street address"
             }
@@ -298,58 +315,99 @@ suite('api', function () {
       });
     });
 
+    suiteTeardown(function (done) {
+      removeProjUser();
+      function removeProjUser(){
+        adminClient.removeUser(projUserName, function (err, removed) {
+          removeBasicUser();
+        });
+      }
+      function removeBasicUser() {
+        adminClient.removeUser(basicUserName, function (err, removed) {
+          done();
+        });
+      }
+    });
   });
 
   suite('Projects Endpoints', function () {
 
     var projUserName = randomUserName();
     var projUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
+    var basicUserName = randomUserName();
+    var basicUserEmail = randomUserName() + "@" +  randomUserName() + ".com";
     var adminClient;
     var projManagerClient;
+    var basicClient;
     var projOrganizationId;
 
     suiteSetup(function (done) {
-      api.getKeysForLfId("LaneMeyer", function (err, keys) {
-        adminClient = api.client(keys);
-        adminClient.createUser(projUserName, projUserEmail, function (err, created) {
+      getAdminClient();
+      function getAdminClient() {
+        api.getKeysForLfId("LaneMeyer", function (err, keys) {
+          adminClient = api.client(keys);
+          createProjManagerClient();
+        });
+      }
+      function createProjManagerClient() {
+        let user = {
+          lfId: projUserName,
+          email: projUserEmail
+        };
+        adminClient.createUser(user, function (err, created) {
           var projectManagerRole = 'PROGRAM_MANAGER';
           adminClient.addUserRole(projUserName, projectManagerRole, function (err, isUpdated, user) {
             api.getKeysForLfId(projUserName, function (err, keys) {
               projManagerClient = api.client(keys);
-              var sampleOrganization = {
-                name: "Company Sample Name 2",
-                addresses: [
-                  {
-                    type: "MAIN",
-                    address: {
-                      country: "US",
-                      administrativeArea: "Some Province (e.g. Alaska)",
-                      localityName: "Some Ctesty (e.g. Anchorage)",
-                      postalCode: 99501,
-                      thoroughfare: "Some street address"
-                    }
-                  },
-                  {
-                    type: "BILLING",
-                    address: {
-                      country: "US",
-                      administrativeArea: "Some Province (e.g. Alaska)",
-                      localityName: "Some Ctesty (e.g. Anchorage)",
-                      postalCode: 99501,
-                      thoroughfare: "Some street address"
-                    }
-                  }
-                ],
-                logoRef: "logoName.jpg"
-              }
-              projManagerClient.createOrganization(sampleOrganization, function (err, created, organizationId) {
-                projOrganizationId = organizationId;
-                done();
-              });
+              createBasicClient();
             });
           });
         });
-      });
+      }
+      function createBasicClient() {
+        let user = {
+          lfId: basicUserName,
+          email: basicUserEmail
+        };
+        adminClient.createUser(user, function (err, created) {
+          api.getKeysForLfId(basicUserName, function (err, keys) {
+            basicClient = api.client(keys);
+            createProjOrganization();
+          });
+        });
+      }
+      function createProjOrganization() {
+        var sampleOrganization = {
+          name: "Company Sample Name 2",
+          addresses: [
+            {
+              type: "MAIN",
+              address: {
+                country: "US",
+                administrativeArea: "Some Province (e.g. Alaska)",
+                localityName: "Some City (e.g. Anchorage)",
+                postalCode: 99501,
+                thoroughfare: "Some street address"
+              }
+            },
+            {
+              type: "BILLING",
+              address: {
+                country: "US",
+                administrativeArea: "Some Province (e.g. Alaska)",
+                localityName: "Some City (e.g. Anchorage)",
+                postalCode: 99501,
+                thoroughfare: "Some street address"
+              }
+            }
+          ],
+          logoRef: "logoName.jpg"
+        };
+        projManagerClient.createOrganization(sampleOrganization, function (err, created, organizationId) {
+          projOrganizationId = organizationId;
+          done();
+        });
+      }
     });
 
 
@@ -415,18 +473,9 @@ suite('api', function () {
     });
 
     test('POST /projects 403 ', function (done) {
-      var username = randomUserName();
-      var useremail = randomUserName() + "@" +  randomUserName() + ".com";
-      adminClient.createUser(username, useremail, function (err) {
-        assert.ifError(err);
-        api.getKeysForLfId(username, function (err, keys) {
-          assert.ifError(err);
-          var client = api.client(keys);
-          client.createProject({}, function (err) {
-            assert.equal(err.statusCode, 403);
-            done();
-          });
-        });
+      basicClient.createProject({}, function (err) {
+        assert.equal(err.statusCode, 403);
+        done();
       });
     });
 
@@ -999,6 +1048,25 @@ suite('api', function () {
   //     });
   //
   //   }); // END 'Mailing List Endpoints' test
+  //
+    suiteTeardown(function (done) {
+      removeProjUser();
+      function removeProjUser() {
+        adminClient.removeUser(projUserName, function (err, removed) {
+          removeBasicUser();
+        });
+      }
+      function removeBasicUser() {
+        adminClient.removeUser(basicUserName, function (err, removed) {
+          removeProjOrganization();
+        });
+      }
+      function removeProjOrganization() {
+        // TODO: Ideally we'd have a delete method for orgs and tear down tests
+        done();
+      }
+
+    });
 
   });
 });
