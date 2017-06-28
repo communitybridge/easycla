@@ -37,7 +37,9 @@
                     <td data-title="Project">{{ member.projectName }}</td>
                     <td data-title="Level">{{ member.level }}</td>
                     <td data-title="Invoice Status">{{ member.invoiceStatus }}</td>
-                    <td data-title="Renewal Date">{{ member.renewalDate }}</td>
+                    <td data-title="Renewal Date">
+                      <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
+                    </td>
                     <td data-title="Category">{{ projectSectors[member.projectCategory] }}</td>
                   </tr>
                 </ng-container>
