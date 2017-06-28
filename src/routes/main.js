@@ -85,4 +85,13 @@ router.get('/login_cas', function(req, res, next) {
   })(req, res, next);
 });
 
+router.get('/session_data', function(req, res) {
+  res.send({
+    isAdmin: req.session.user.isAdmin,
+    isProjectManager: req.session.user.isProjectManager,
+    isUser: req.session.user.isUser,
+    user: req.session.user.user,
+  });
+});
+
 module.exports = router;
