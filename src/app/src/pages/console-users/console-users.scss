@@ -1,4 +1,4 @@
-all-members {
+console-users {
   .toolbar-select {
     display: flex;
     margin-right: 8px;
@@ -17,11 +17,4 @@ all-members {
       }
     }
   }
-
-  ion-datetime {
-    color:#000 !important;
-    background: none !important;
-    opacity: 1 !important;
-  }
-
 }

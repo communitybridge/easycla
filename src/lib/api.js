@@ -63,114 +63,6 @@ module.exports = {
     }
 
     return {
-      createUser: function (lfId, next) {
-        var body = {
-          "lfId": lfId
-        };
-        var opts = {
-          method: 'POST',
-          path: 'users/',
-          body: JSON.stringify(body)
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 201) {
-            next(null, true)
-          } else if (res.statusCode == 409) {
-            next(null, false);
-          } else {
-            next(errors.fromResponse(res, 'User with lfId of [' + lfId + '] not created.'));
-          }
-        });
-      },
-
-      getUser: function (id, next) {
-        var opts = {
-          method: 'GET',
-          path: 'users/' + id + '/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err, null);
-          } else if (res.statusCode == 200) {
-            var user = JSON.parse(body);
-            next(null, user);
-          } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not be retrieved'));
-          }
-        });
-      },
-
-      addGroupForUser: function (id, group, next) {
-        var opts = {
-          method: 'POST',
-          path: 'users/' + id + '/group/',
-          body: JSON.stringify(group)
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var updatedUser = JSON.parse(body);
-            next(null, true, updatedUser)
-          } else if (res.statusCode == 204) {
-            next(null, false, null);
-          } else {
-            next(errors.fromResponse(res, 'User with id of [' + id + '] could not have group added'));
-          }
-        });
-      },
-
-      getAllGroups: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'usergroups/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var groups = JSON.parse(body);
-            next(null, groups);
-          } else {
-            next(errors.fromResponse(res, 'Unable to look up usergroups. '));
-          }
-        });
-      },
-
-      removeGroupFromUser: function (userId, groupId, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'users/' + userId + '/group/' + groupId + '/'
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 204) {
-            next(null, true);
-          } else {
-            next(errors.fromResponse(res, 'Unable to delete group with id of [' + groupId + '] from user with id of [' +
-                userId + '].'));
-          }
-        });
-      },
-
-      removeUser: function (userId, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'users/' + userId + '/'
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode == 204) {
-            next(null, true);
-          } else {
-            next(errors.fromResponse(res, 'Unable to delete user with id of [' + userId + '].'));
-          }
-        });
-      },
 
       /*
         Projects:
@@ -180,7 +72,7 @@ module.exports = {
       getMyProjects: function (next) {
         var opts = {
           method: 'GET',
-          path: 'project/'
+          path: 'project'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -265,7 +157,7 @@ module.exports = {
       createProject: function (project, next) {
         var opts = {
           method: 'POST',
-          path: 'projects/',
+          path: 'projects',
           body: JSON.stringify(project)
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -280,21 +172,21 @@ module.exports = {
         });
       },
 
-      archiveProject: function (id, next) {
-        var opts = {
-          method: 'DELETE',
-          path: 'projects/' + id + '/'
-        };
-        makeSignedRequest(opts, function (err, res) {
-          if (err) {
-            next(err, false);
-          } else if (res.statusCode != 204) {
-            next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
-          } else {
-            next(null, true);
-          }
-        });
-      },
+      // archiveProject: function (id, next) {
+      //   var opts = {
+      //     method: 'DELETE',
+      //     path: 'projects/' + id
+      //   };
+      //   makeSignedRequest(opts, function (err, res) {
+      //     if (err) {
+      //       next(err, false);
+      //     } else if (res.statusCode != 204) {
+      //       next(errors.fromResponse(res, 'Error while archiving project with id of [' + id + ']'), false);
+      //     } else {
+      //       next(null, true);
+      //     }
+      //   });
+      // },
 
       getProject: function (projectId, next) {
         var opts = {
@@ -317,7 +209,7 @@ module.exports = {
         var body = JSON.stringify(updatedProperties);
         var opts = {
           method: 'PUT',
-          path: 'projects/' + updatedProperties.id + '/',
+          path: 'projects/' + updatedProperties.id,
           body: body
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -579,27 +471,10 @@ module.exports = {
         Resources to expose and manipulate organizations
        */
 
-      getAllOrganizations: function (next) {
-        var opts = {
-          method: 'GET',
-          path: 'organizations/'
-        };
-        makeSignedRequest(opts, function (err, res, body) {
-          if (err) {
-            next(err);
-          } else if (res.statusCode == 200) {
-            var organizations = JSON.parse(body);
-            next(null, organizations);
-          } else {
-            next(errors.fromResponse(res, 'Unable to get all organizations.'));
-          }
-        });
-      },
-
       createOrganization: function (organization, next) {
         var opts = {
           method: 'POST',
-          path: 'organizations/',
+          path: 'organizations',
           body: JSON.stringify(organization)
         };
         makeSignedRequest(opts, function (err, res, body) {
@@ -617,7 +492,7 @@ module.exports = {
       getOrganization: function (organizationId, next) {
         var opts = {
           method: 'GET',
-          path: 'organizations/' + organizationId + '/'
+          path: 'organizations/' + organizationId
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -702,7 +577,7 @@ module.exports = {
             var obj = JSON.parse(body);
             next(null, true, obj.id);
           } else {
-            next(errors.fromResponse(res, 'Organization not created'), false);
+            next(errors.fromResponse(res, 'Organization contact not created'), false);
           }
         });
       },
@@ -942,7 +817,7 @@ module.exports = {
       getAllUsers: function (next) {
         var opts = {
           method: 'GET',
-          path: 'users/'
+          path: 'users'
         };
         makeSignedRequest(opts, function (err, res, body) {
           if (err) {
@@ -952,6 +827,41 @@ module.exports = {
             next(null, users);
           } else {
             next(errors.fromResponse(res, 'Unable to get all users.'));
+          }
+        });
+      },
+
+      createUser: function (user, next) {
+        var opts = {
+          method: 'POST',
+          path: 'users',
+          body: JSON.stringify(user)
+        };
+        makeSignedRequest(opts, function (err, res) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 201) {
+            next(null, true)
+          } else if (res.statusCode == 409) {
+            next(null, false);
+          } else {
+            next(errors.fromResponse(res, 'Unable to create user.'));
+          }
+        });
+      },
+
+      removeUser: function (userId, next) {
+        var opts = {
+          method: 'DELETE',
+          path: 'users/' + userId,
+        };
+        makeSignedRequest(opts, function (err, res) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 204) {
+            next(null, true);
+          } else {
+            next(errors.fromResponse(res, 'Unable to delete user with id of [' + userId + '].'));
           }
         });
       },
@@ -987,6 +897,60 @@ module.exports = {
             next(null, user);
           } else {
             next(errors.fromResponse(res, 'Unable to update user with id [' + userId + '].'));
+          }
+        });
+      },
+
+      getUserRoles: function (next) {
+        var opts = {
+          method: 'GET',
+          path: 'users/roles'
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var roles = JSON.parse(body);
+            next(null, roles);
+          } else {
+            next(errors.fromResponse(res, 'Unable to get all user roles.'));
+          }
+        });
+      },
+
+      addUserRole: function (userId, role, next) {
+        var opts = {
+          method: 'POST',
+          path: 'users/' + userId + '/role',
+          body: JSON.stringify(role)
+        };
+        makeSignedRequest(opts, function (err, res, body) {
+          if (err) {
+            next(err);
+          } else if (res.statusCode == 200) {
+            var updatedUser = JSON.parse(body);
+            next(null, true, updatedUser)
+          } else if (res.statusCode == 204) {
+            next(null, false, null);
+          } else {
+            next(errors.fromResponse(res, 'User with id of [' + userId + '] could not have role [' + role + ']  added'));
+          }
+        });
+      },
+
+      removeUserRole: function (userId, roleId, next) {
+        var opts = {
+          method: 'DELETE',
+          path: 'users/' + userId + '/role/' + roleId
+        };
+        makeSignedRequest(opts, function (err, res) {
+          if (err) {
+            next(err, false);
+          } else if (res.statusCode == 204) {
+            next(null, true);
+          } else {
+            next(errors.fromResponse(res, 'Unable to delete role [' + roleId + '] from user with id of [' +
+                userId + '].'));
           }
         });
       },

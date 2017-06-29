@@ -1,22 +1,13 @@
 if (process.env['NEWRELIC_LICENSE']) require('newrelic');
 var express = require('express');
 var passport = require('passport');
-var request = require('request');
-var multer  = require('multer');
-var async = require('async');
+var router = express.Router();
 
 var cinco = require("../lib/api");
 
-var router = express.Router();
-
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  if(req.session.user.isAdmin || req.session.user.isProjectManager){
-    var projManagerClient = cinco.client(req.session.user.cinco_keys);
-    projManagerClient.getAllProjects(function (err, projects) {
-      req.session.projects = projects;
-      // res.render('homepage', {projects: projects});
-      res.redirect('/pmc')
-    });
+  if(req.session.user.isAdmin || req.session.user.isProjectManager) {
+    res.redirect('/pmc')
   }
 });
 
@@ -25,10 +16,6 @@ router.get('/logout', require('connect-ensure-login').ensureLoggedIn('/login'), 
   req.session.destroy();
   req.logout();
   res.redirect('/');
-});
-
-router.get('/login', function(req,res) {
-  res.render('login');
 });
 
 router.get('/login', function(req,res) {
@@ -46,8 +33,7 @@ router.get('/401', function(req,res) {
 router.get('/login_cas', function(req, res, next) {
   passport.authenticate('cas', function (err, user, info) {
     if (err) return next(err);
-    if(user)
-    {
+    if(user) {
       req.session.user = user;
     }
     if (!user) {
@@ -58,36 +44,25 @@ router.get('/login_cas', function(req, res, next) {
       if (err) return next(err);
       var lfid = req.session.user.user;
       cinco.getKeysForLfId(lfid, function (err, keys) {
-        if(keys){
+        if(keys) {
           req.session.user.cinco_keys = keys;
           var adminClient = cinco.client(keys);
           adminClient.getUser(lfid, function(err, user) {
-            if(user){
-              req.session.user.cinco_groups = JSON.stringify(user.roles);
+            if(user) {
               req.session.user.isAdmin = false;
               req.session.user.isUser = false;
               req.session.user.isProjectManager = false;
-              if(user.roles)
-              {
-                if(user.roles.length > 0){
-                  for(var i = 0; i < user.roles.length; i ++)
-                  {
+              if(user.roles) {
+                if(user.roles.length > 0) {
+                  for(var i = 0; i < user.roles.length; i ++) {
                     if(user.roles[i] == "ADMIN") req.session.user.isAdmin = true;
                     if(user.roles[i] == "USER") req.session.user.isUser = true;
-                    if(user.roles[i] == "PROJECT_MANAGER") req.session.user.isProjectManager = true;
+                    if(user.roles[i] == "PROGRAM_MANAGER") req.session.user.isProjectManager = true;
                   }
                 }
               }
               if( (req.session.user.isAdmin || req.session.user.isProjectManager) && (req.session.user.isUser)) {
-                var projManagerClient = cinco.client(req.session.user.cinco_keys);
-                projManagerClient.getAllProjects(function (err, projects) {
-                  req.session.projects = projects;
-                  projManagerClient.getMyProjects(function (err, myProjects) {
-                    req.session.myProjects = myProjects;
-                    return res.redirect('/');
-                  });
-                });
-
+                return res.redirect('/');
               }
               else {
                 req.session.destroy();
@@ -99,7 +74,7 @@ router.get('/login_cas', function(req, res, next) {
             }
           });
         }
-        if(err){
+        if(err) {
           req.session.destroy();
           console.log("getKeysForLfId err: " + err);
           if(err.statusCode == 404) return res.render('404', { lfid: lfid }); // Returned if a user with the given id is not found
@@ -110,17 +85,12 @@ router.get('/login_cas', function(req, res, next) {
   })(req, res, next);
 });
 
-router.get('/profile', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
-  var adminClient = cinco.client(req.session.user.cinco_keys);
-  var lfid = req.session.user.user;
-  adminClient.getUser(lfid, function(err, user) {
-    if(user){
-      req.session.user.cinco_groups = JSON.stringify(user.roles);
-      res.render('profile');
-    }
-    else {
-      res.render('profile');
-    }
+router.get('/session_data', function(req, res) {
+  res.send({
+    isAdmin: req.session.user.isAdmin,
+    isProjectManager: req.session.user.isProjectManager,
+    isUser: req.session.user.isUser,
+    user: req.session.user.user,
   });
 });
 
