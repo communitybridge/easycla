@@ -6,6 +6,16 @@ page-member {
     user-select: text;
   }
 
+  .renewal-date-title {
+    background: none !important;
+    opacity: 0.7 !important;
+  }
+
+  ion-datetime {
+    background: none !important;
+    opacity: 0.7 !important;
+  }
+
   .profile-photo {
     display: inline;
     max-width: 40px;
