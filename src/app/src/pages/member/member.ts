@@ -19,6 +19,7 @@ export class MemberPage {
   memberContactRoles: any;
   orgProjectMemberships: any;
   orgProjectMembershipsFiltered: any;
+  loading: any;
 
   constructor(
     public navCtrl: NavController,
@@ -33,6 +34,11 @@ export class MemberPage {
   }
 
   getDefaults() {
+    this.loading = {
+      member: true,
+      projects: true,
+      contacts: true,
+    };
     this.member = {
       id: this.memberId,
       contacts: [
@@ -86,6 +92,7 @@ export class MemberPage {
     this.cincoService.getMember(projectId, memberId).subscribe(response => {
       if(response) {
         this.member = response;
+        this.loading.member = false;
         this.getOrganizationProjectMemberships(this.member.org.id);
       }
     });
@@ -96,6 +103,7 @@ export class MemberPage {
       if(response) {
         this.memberContacts = response;
       }
+      this.loading.contacts = false;
     });
   }
 
@@ -130,6 +138,7 @@ export class MemberPage {
     this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
       if(response) {
         this.orgProjectMemberships = response;
+        this.loading.projects = false;
         this.orgProjectMembershipsFiltered = this.orgProjectMemberships.filter((item, index) => index < 4 );
       }
     });

@@ -102,6 +102,27 @@ ion-menu {
   cursor: pointer;
 }
 
+.loading-display {
+  &-initial {
+    display: none;
+  }
+
+  &-loaded {
+    display: block;
+    animation-name: loadingDisplayFadeIn;
+    animation-duration: 2.5s;
+  }
+}
+
+@keyframes loadingDisplayFadeIn {
+  0% {
+      opacity: 0;
+  }
+  100% {
+      opacity: 1;
+  }
+}
+
 // Tables
 //
 // -----------------

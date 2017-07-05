@@ -1,6 +1,5 @@
 import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter } from '@angular/core';
 import { PopoverController, ToastController } from 'ionic-angular';
-import { ActionPopover } from '../action-popover/action-popover';
 
 /*
   Generated class for the UploadButton component.
@@ -156,15 +155,13 @@ export class UploadButtonComponent {
     };
 
     let popover = this.popoverCtrl.create(
-      ActionPopover,
+      'ActionPopoverComponent',
       popoverData,
     );
 
     popover.present({
       ev: ev
     });
-
-    popover.present({ev:ev});
 
     popover.onDidDismiss((popoverData) => {
       if(popoverData) {
