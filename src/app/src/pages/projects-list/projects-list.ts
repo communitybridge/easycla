@@ -12,7 +12,7 @@ import { Chart } from 'chart.js';
   templateUrl: 'projects-list.html'
 })
 export class ProjectsListPage {
-  loading: boolean;
+  loading: any;
   allProjects: any;
   numberOfContracts: {
     new: number,
@@ -52,18 +52,19 @@ export class ProjectsListPage {
     private sanitizer: DomSanitizer,
   ) {
     this.getDefaults();
-    this.loading = true;
   }
 
-  ngOnInit(){
+  async ngOnInit(){
     this.getAllProjects();
     this.getCurrentUser();
   }
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
-      this.allProjects = response;
-      this.loading = false;
+      // setTimeout(() => {
+        this.allProjects = response;
+        this.loading.projects = false;
+      // }, 4000);
     });
   }
 
@@ -181,6 +182,11 @@ export class ProjectsListPage {
   }
 
   getDefaults(){
+    this.loading = {
+      charts: true,
+      projects: true,
+    }
+
     this.numberOfContracts = {
       new: 15,
       renewal: 50
