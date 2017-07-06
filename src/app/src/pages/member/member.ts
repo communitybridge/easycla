@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service';
 
+import { MemberModel } from '../../models/member-model';
 
 @IonicPage({
   segment: 'project/:projectId/member/:memberId'
@@ -14,11 +15,12 @@ import { CincoService } from '../../app/services/cinco.service';
 export class MemberPage {
   projectId: any;
   memberId: any;
-  member: any;
   memberContacts: any;
   memberContactRoles: any;
   orgProjectMemberships: any;
   orgProjectMembershipsFiltered: any;
+
+  member = new MemberModel();
 
   constructor(
     public navCtrl: NavController,
@@ -35,35 +37,24 @@ export class MemberPage {
   getDefaults() {
     this.member = {
       id: this.memberId,
-      contacts: [
-        {
-          bio: "",
-          email: "",
-          familyName: "",
-          givenName: "",
-          headshotRef: "",
-          id: "",
-          phone: "",
-          type: "",
-        }
-      ],
-      invoices: [],
-      org: {
-        addresses: [],
-        id: "",
-        logoRef: "",
-        name: "",
-        phone: "",
-        url: "",
-      },
       projectId: "",
-      renewalDate: "",
+      projectName: "",
+      org: {
+        id: "",
+        name: "",
+        parent: "",
+        logoRef: "",
+        url: "",
+        addresses: ""
+      },
+      product: "",
+      tier: "",
+      annualDues: "",
       startDate: "",
-      tier: {
-        qualifier: "",
-        type: "",
-      }
+      renewalDate: "",
+      invoices: [""]
     };
+
     this.memberContactRoles = {};
   }
 
