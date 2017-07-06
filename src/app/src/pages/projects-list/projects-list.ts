@@ -54,7 +54,7 @@ export class ProjectsListPage {
     this.getDefaults();
   }
 
-  async ngOnInit(){
+  ngOnInit(){
     this.getAllProjects();
     this.getCurrentUser();
   }
