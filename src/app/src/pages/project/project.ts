@@ -34,7 +34,7 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
-  };
+  }
 
   getProject(projectId) {
     let getMembers = true;
