@@ -61,10 +61,8 @@ export class ProjectsListPage {
 
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
-      // setTimeout(() => {
         this.allProjects = response;
         this.loading.projects = false;
-      // }, 4000);
     });
   }
 

@@ -14,8 +14,8 @@
 </ion-header>
 
 <ion-content padding>
-
-  <ion-grid>
+  <loading-spinner [loading]="loading.user"></loading-spinner>
+  <ion-grid [loading-display]="loading.user">
     <form [formGroup]="accountSettingsForm" [ngClass]="{'submit-attempt': submitAttempt}">
       <ion-row *ngIf="submitAttempt && !accountSettingsForm.valid">
         <ion-col col-12>
