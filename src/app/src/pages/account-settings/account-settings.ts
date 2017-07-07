@@ -17,6 +17,7 @@ export class AccountSettingsPage {
   accountSettingsForm: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
+  loading: any;
 
   @ViewChild(Content) content: Content;
 
@@ -33,23 +34,27 @@ export class AccountSettingsPage {
     });
   }
 
-  getDefaults(){
+  getDefaults() {
+    this.loading = {
+      user: true,
+    };
     this.user = {
       userId: "",
       email: "",
       roles: [],
       calendar: null,
-    }
+    };
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getCurrentUser();
   }
 
-  getCurrentUser(){
+  getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       this.accountSettingsForm.patchValue({calendar:this.user.calendar});
+      this.loading.user = false;
     });
   }
 

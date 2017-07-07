@@ -85,8 +85,8 @@
       </ion-row>
     </ion-grid>
   </header>
-
-  <ion-grid>
+  <loading-spinner [loading]="loading.project"></loading-spinner>
+  <ion-grid [loading-display]="loading.project">
     <ion-row>
       <ion-col col-12>
         <div class="table-responsive-vertical">

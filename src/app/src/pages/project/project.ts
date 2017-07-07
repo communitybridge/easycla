@@ -19,6 +19,7 @@ export class ProjectPage {
   project = new ProjectModel();
 
   membersCount: number;
+  loading: any;
 
   constructor(
     public navCtrl: NavController,
@@ -33,7 +34,7 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
-  };
+  }
 
   getProject(projectId) {
     let getMembers = true;
@@ -55,6 +56,7 @@ export class ProjectPage {
         this.project.address = response.address;
         this.project.members = response.members;
         this.membersCount = this.project.members.length;
+        this.loading.project = false;
       }
     });
   }
@@ -88,6 +90,9 @@ export class ProjectPage {
   }
 
   getDefaults() {
+    this.loading = {
+      project: true,
+    };
     this.project = {
       id: "",
       name: "Project",

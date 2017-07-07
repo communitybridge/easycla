@@ -14,7 +14,8 @@
   </ion-header>
   <ion-content>
     <ion-grid>
-      <table class="table table-hover assign-user-table">
+      <loading-spinner [loading]="loading.users"></loading-spinner>
+      <table class="table table-hover assign-user-table" [loading-display]="loading.users">
         <thead>
           <tr>
             <th>User Id</th>

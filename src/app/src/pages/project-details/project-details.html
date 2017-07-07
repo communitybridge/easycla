@@ -12,8 +12,8 @@
     </ion-col>
   </ion-row>
 </ion-header>
-
-<ion-content padding name="project-details-content">
+<loading-spinner [loading]="loading.project"></loading-spinner>
+<ion-content padding name="project-details-content" [loading-display]="loading.project">
   <ion-grid>
     <ion-row>
       <ion-col col-12>
