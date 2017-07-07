@@ -15,6 +15,7 @@ export class AssetManagementModal {
   files: any;
   folders: any;
   selectedFiles: any;
+  loading: any;
 
   /**
    * Comma separated array of allowed file extensions

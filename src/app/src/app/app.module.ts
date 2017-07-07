@@ -7,12 +7,11 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { MyApp } from './app.component';
-import { ActionPopover } from '../components/action-popover/action-popover';
+
 
 @NgModule({
   declarations: [
     MyApp,
-    ActionPopover
   ],
   imports: [
     BrowserModule,
@@ -22,7 +21,6 @@ import { ActionPopover } from '../components/action-popover/action-popover';
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    ActionPopover
   ],
   providers: [
     StatusBar,

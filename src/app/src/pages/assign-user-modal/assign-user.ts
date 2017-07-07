@@ -15,6 +15,7 @@ export class AssignUserModal {
   users: any;
   folders: any;
   selectedUsers: any;
+  loading: any;
 
   /**
    * Comma separated array of allowed user extensions
@@ -50,6 +51,9 @@ export class AssignUserModal {
   }
 
   getDefaults() {
+    this.loading = {
+      users: true,
+    };
     this.users = [
       {
         userId:'',
@@ -64,6 +68,7 @@ export class AssignUserModal {
     this.cincoService.getAllUsers().subscribe(response => {
       if(response) {
         this.users = response;
+        this.loading.users = false;
       }
     });
   }
