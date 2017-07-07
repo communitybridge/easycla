@@ -1,6 +1,7 @@
 import { Component, Output, EventEmitter } from '@angular/core';
-import { NavParams, ViewController } from 'ionic-angular';
+import { IonicPage, NavParams, ViewController } from 'ionic-angular';
 
+@IonicPage()
 @Component({
   template: `
     <ion-list class="action-popover">
@@ -10,7 +11,7 @@ import { NavParams, ViewController } from 'ionic-angular';
     </ion-list>
   `
 })
-export class ActionPopover {
+export class ActionPopoverComponent {
 
   popoverItems: any;
 
