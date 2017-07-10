@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../app/services/cinco.service';
-
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
@@ -13,12 +12,15 @@ import { ProjectModel } from '../../models/project-model';
   providers: [CincoService]
 })
 export class ProjectPage {
+  reposRoot: any = 'AccountSettingsPage';
   selectedProject: any;
   projectId: string;
 
   project = new ProjectModel();
 
   membersCount: number;
+  tab = 'membership';
+  repoPage = 'reposHome';
 
   constructor(
     public navCtrl: NavController,
@@ -33,7 +35,7 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
-  };
+  }
 
   getProject(projectId) {
     let getMembers = true;
