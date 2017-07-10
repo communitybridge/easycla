@@ -112,7 +112,7 @@ export class MemberPage {
   }
 
   contactSelected(event, contact) {
-    let modal = this.modalCtrl.create('ContactUpdate', {
+    let modal = this.modalCtrl.create('ContactUpdateModal', {
       projectId: this.projectId,
       memberId: this.member.id,
       org: this.member.org,

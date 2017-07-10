@@ -64,13 +64,13 @@ export class SearchAddContact {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
 
   addContact(contact) {
-    let modal = this.modalCtrl.create('ContactUpdate', {
+    let modal = this.modalCtrl.create('ContactUpdateModal', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.org,

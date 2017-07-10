@@ -73,7 +73,7 @@ export class AssignUserModal {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
