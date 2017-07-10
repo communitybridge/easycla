@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 
 @IonicPage({

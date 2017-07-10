@@ -2,7 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CalendarLinkValidator } from  '../../validators/calendarlink';
 import { NavController, IonicPage, Content, ToastController, } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 
 @IonicPage({

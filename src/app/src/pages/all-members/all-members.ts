@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
   segment: 'all-members'

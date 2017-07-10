@@ -1,6 +1,6 @@
 import { Component, Renderer, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage, ModalController, } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
   segment: 'project-user-management'
