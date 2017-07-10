@@ -8,14 +8,14 @@ import { CincoService } from '../../services/cinco.service';
 import { MemberContactModel } from '../../models/member-contact-model';
 
 @IonicPage({
-  segment: 'contact-update'
+  segment: 'contact-update-modal'
 })
 @Component({
-  selector: 'contact-update',
-  templateUrl: 'contact-update.html',
+  selector: 'contact-update-modal',
+  templateUrl: 'contact-update-modal.html',
   providers: [CincoService]
 })
-export class ContactUpdate {
+export class ContactUpdateModal {
   projectId: string; // Always Needed
   memberId: string; // Always Needed
   org: any;
@@ -173,7 +173,7 @@ export class ContactUpdate {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

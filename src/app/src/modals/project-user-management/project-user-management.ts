@@ -42,7 +42,7 @@ export class ProjectUserManagementModal {
     this.selectedUsers = [];
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
