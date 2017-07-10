@@ -99,7 +99,7 @@ export class MemberPage {
   }
 
   addMemberContact() {
-    let modal = this.modalCtrl.create('SearchAddContact', {
+    let modal = this.modalCtrl.create('SearchAddContactModal', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.member.org,
