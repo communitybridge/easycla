@@ -12,7 +12,7 @@ import { CincoService } from '../services/cinco.service';
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'ProjectsListPage';
+  rootPage: any = 'AllProjectsPage';
 
   thisUser: any;
   pages: Array<{
@@ -77,7 +77,7 @@ export class MyApp {
       {
         title: 'All Projects',
         access: true,
-        component: 'ProjectsListPage'
+        component: 'AllProjectsPage'
       },
       {
         title: 'Member Companies',

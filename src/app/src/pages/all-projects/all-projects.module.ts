@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ProjectsListPage } from './projects-list';
+import { AllProjectsPage } from './all-projects';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
   declarations: [
-    ProjectsListPage,
+    AllProjectsPage,
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ProjectsListPage),
+    IonicPageModule.forChild(AllProjectsPage),
   ],
   entryComponents: [
-    ProjectsListPage
+    AllProjectsPage
   ]
 })
-export class ProjectsListPageModule {}
+export class AllProjectsPageModule {}
