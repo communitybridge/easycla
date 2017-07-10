@@ -12,7 +12,6 @@ import { ProjectModel } from '../../models/project-model';
   providers: [CincoService]
 })
 export class ProjectPage {
-  reposRoot: any = 'AccountSettingsPage';
   selectedProject: any;
   projectId: string;
 
