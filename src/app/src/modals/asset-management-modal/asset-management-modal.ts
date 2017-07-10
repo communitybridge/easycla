@@ -3,11 +3,11 @@ import { NavController, NavParams, ViewController, AlertController, ToastControl
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'asset-management'
+  segment: 'asset-management-modal'
 })
 @Component({
-  selector: 'asset-management',
-  templateUrl: 'asset-management.html',
+  selector: 'asset-management-modal',
+  templateUrl: 'asset-management-modal.html',
   providers: [CincoService]
 })
 export class AssetManagementModal {
