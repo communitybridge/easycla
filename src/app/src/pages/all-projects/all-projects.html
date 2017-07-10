@@ -39,7 +39,7 @@
     </ion-grid>
   </header>
   <loading-spinner [loading]="loading.projects"></loading-spinner>
-  <ion-grid class="projects-list" [loading-display]="loading.projects">
+  <ion-grid class="all-projects" [loading-display]="loading.projects">
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
         <ion-card >
@@ -74,7 +74,7 @@
   </ion-grid>
 
   <!-- This will be ported and removed once CINCO API has the ability to return the full payload with all the information required -->
-  <!-- <ion-grid class="projects-list">
+  <!-- <ion-grid class="all-projects">
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
         <ion-card>
