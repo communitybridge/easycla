@@ -7,7 +7,7 @@ import 'rxjs/add/observable/forkJoin';
 import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
-  segment: 'console-user-update'
+  segment: 'console-user-update-modal'
 })
 @Component({
   selector: 'console-user-update-modal',

@@ -3,11 +3,11 @@ import { NavController, NavParams, ViewController, AlertController, ToastControl
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'assign-user'
+  segment: 'assign-user-modal'
 })
 @Component({
-  selector: 'assign-user',
-  templateUrl: 'assign-user.html',
+  selector: 'assign-user-modal',
+  templateUrl: 'assign-user-modal.html',
   providers: [CincoService]
 })
 export class AssignUserModal {
