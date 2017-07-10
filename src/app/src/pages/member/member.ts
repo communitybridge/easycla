@@ -8,7 +8,7 @@ import { MemberModel } from '../../models/member-model';
   segment: 'project/:projectId/member/:memberId'
 })
 @Component({
-  selector: 'page-member',
+  selector: 'member',
   templateUrl: 'member.html',
   providers: [CincoService],
 })
