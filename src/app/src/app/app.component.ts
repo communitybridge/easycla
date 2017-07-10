@@ -3,7 +3,7 @@ import { Nav, Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
-import { CincoService } from './services/cinco.service';
+import { CincoService } from '../services/cinco.service';
 
 @Component({
   templateUrl: 'app.html',

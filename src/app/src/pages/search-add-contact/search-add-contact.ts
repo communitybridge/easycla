@@ -1,6 +1,6 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
   segment: 'search-add-contact'
