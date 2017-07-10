@@ -84,45 +84,179 @@
         </ion-col>
       </ion-row>
     </ion-grid>
+
+    <ion-segment [(ngModel)]="tab" color="secondary">
+      <ion-segment-button value="membership">
+        Membership
+      </ion-segment-button>
+      <ion-segment-button value="repositories">
+        Repositories
+      </ion-segment-button>
+      <ion-segment-button value="support">
+        Support
+      </ion-segment-button>
+    </ion-segment>
   </header>
 
-  <ion-grid>
-    <ion-row>
-      <ion-col col-12>
-        <div class="table-responsive-vertical">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Alert</th>
-                <th>Company</th>
-                <th>Tier</th>
-                <th>Product</th>
-                <th>Invoices Status</th>
-                <th>Annual Dues</th>
-                <th>Renewal Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let member of project.members">
-                <td data-title="Alert">
-                  <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
-                  <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
-                  <span *ngIf="member.alert == ''" class="circle-null"></span>
-                </td>
-                <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
-                <td data-title="Tier">{{ member.tier }}</td>
-                <td data-title="Product">{{ member.product }}</td>
-                <td data-title="Status">{{ member.invoices[0].status }}</td>
-                <td data-title="Annual Dues">{{ member.annualDues | currency:'USD':true:'4.2-2' }}</td>
-                <td data-title="Renewal Date">
-                  <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+  <div [ngSwitch]="tab">
+    <ion-grid *ngSwitchCase="'membership'">
+      <ion-row>
+        <ion-col col-12>
+          <div class="table-responsive-vertical">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Alert</th>
+                  <th>Company</th>
+                  <th>Tier</th>
+                  <th>Product</th>
+                  <th>Invoices Status</th>
+                  <th>Annual Dues</th>
+                  <th>Renewal Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let member of project.members">
+                  <td data-title="Alert">
+                    <span *ngIf="member.alert == 'alert'" class="circle-alert"></span>
+                    <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
+                    <span *ngIf="member.alert == ''" class="circle-null"></span>
+                  </td>
+                  <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
+                  <td data-title="Tier">{{ member.tier }}</td>
+                  <td data-title="Product">{{ member.product }}</td>
+                  <td data-title="Status">{{ member.invoices[0].status }}</td>
+                  <td data-title="Annual Dues">{{ member.annualDues | currency:'USD':true:'4.2-2' }}</td>
+                  <td data-title="Renewal Date">
+                    <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
+    <ion-grid *ngSwitchCase="'repositories'">
+      <ion-row>
+        <ion-col col-12 col-sm-3 col-md-2>
+          <ion-segment [(ngModel)]="repoPage" class="segment-sidebar">
+            <ion-segment-button value="reposHome">
+              Repositories Home
+            </ion-segment-button>
+            <ion-segment-button value="indivContracts">
+              Individual Contracts
+            </ion-segment-button>
+            <ion-segment-button value="corpContracts">
+              Corporate Contracts
+            </ion-segment-button>
+            <div class="menu-divider"></div>
+            <ion-segment-button value="repoSettings">
+              <ion-icon name="settings"></ion-icon> Repository Settings
+            </ion-segment-button>
+          </ion-segment>
+        </ion-col>
+
+        <ion-col col-12 col-sm-9 col-md-10>
+          <div [ngSwitch]="repoPage">
+            <div *ngSwitchCase="'reposHome'" class="reposHome">
+
+              <ion-card>
+                <ion-card-content>
+                  <ion-grid>
+                    <ion-row class="with-icon">
+                      <ion-col col-6>
+                        <ion-icon name="person" class="card-icon"></ion-icon>
+                        <h2>Individual CLA</h2>
+                        <p>
+                          zephyr_CLA_individual.pdf<br>
+                          6/30/2017, 11:31 PST,
+                          Version 2.1
+                        </p>
+                      </ion-col>
+                      <ion-col col-6>
+                        <h2 class="approvals-pending">8</h2>
+                        <p>
+                          Pending Approvals
+                        </p>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+
+              <ion-card>
+                <ion-card-content>
+                  <ion-grid>
+                    <ion-row class="with-icon">
+                      <ion-col col-6>
+                        <ion-icon name="people" class="card-icon"></ion-icon>
+                        <h2>Corporate CLA</h2>
+                        <p>
+                          zephyr_CLA_corporate.pdf<br>
+                          6/30/2017, 11:31 PST,
+                          Version 2.1
+                        </p>
+                      </ion-col>
+                      <ion-col col-6>
+                        <h2 class="approvals-pending">1</h2>
+                        <p>
+                          Pending Approvals
+                        </p>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+
+              <ion-card>
+                <ion-card-content>
+                  <ion-grid>
+                    <ion-row class="with-icon">
+                      <ion-col col-6>
+                        <ion-icon name="logo-github" class="card-icon"></ion-icon>
+                        <h2>Repository Settings</h2>
+                        <p>
+                          3 Connected Repositories
+                        </p>
+                      </ion-col>
+                      <ion-col col-6>
+                        <p>
+                          zephyrproject-rtos/zephyr<br>
+                          Primary GIT Repository for the Zephyr Project
+                        </p>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+
+            </div>
+
+            <div *ngSwitchCase="'indivContracts'">
+              <h1>Indiv Contracts</h1>
+            </div>
+
+            <div *ngSwitchCase="'corpContracts'">
+              <h1>Corp Contracts</h1>
+            </div>
+
+            <div *ngSwitchCase="'repoSettings'">
+              <h1>Repo Settings</h1>
+            </div>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <ion-grid *ngSwitchCase="'support'">
+      <ion-row>
+        <ion-col col-12>
+          <h1>Support</h1>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+  </div>
 </ion-content>

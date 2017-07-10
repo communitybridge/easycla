@@ -98,6 +98,14 @@ ion-menu {
   }
 }
 
+.menu-divider {
+  border-top-width: 2px;
+  border-top-style: solid;
+  border-top-color: rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 .clickable {
   cursor: pointer;
 }
