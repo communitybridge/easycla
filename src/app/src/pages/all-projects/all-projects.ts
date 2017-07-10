@@ -8,10 +8,10 @@ import { Chart } from 'chart.js';
   segment: 'projects'
 })
 @Component({
-  selector: 'projects-list',
-  templateUrl: 'projects-list.html'
+  selector: 'all-projects',
+  templateUrl: 'all-projects.html'
 })
-export class ProjectsListPage {
+export class AllProjectsPage {
   loading: any;
   allProjects: any;
   numberOfContracts: {
