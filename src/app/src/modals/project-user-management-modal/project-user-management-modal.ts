@@ -3,11 +3,11 @@ import { NavController, NavParams, ViewController, AlertController, ToastControl
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'project-user-management'
+  segment: 'project-user-management-modal'
 })
 @Component({
-  selector: 'project-user-management',
-  templateUrl: 'project-user-management.html',
+  selector: 'project-user-management-modal',
+  templateUrl: 'project-user-management-modal.html',
   providers: [CincoService]
 })
 export class ProjectUserManagementModal {
