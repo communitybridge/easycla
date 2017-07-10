@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 import { MemberModel } from '../../models/member-model';
 

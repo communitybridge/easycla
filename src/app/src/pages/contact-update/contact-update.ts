@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
 import { PhoneNumberValidator } from  '../../validators/phonenumber';
 import { EmailValidator } from  '../../validators/email';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 import { MemberContactModel } from '../../models/member-contact-model';
 
