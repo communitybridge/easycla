@@ -105,7 +105,7 @@ export class AssetManagementModal {
     ];
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

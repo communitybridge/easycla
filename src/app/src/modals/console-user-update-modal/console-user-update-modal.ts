@@ -67,7 +67,7 @@ export class ConsoleUserUpdateModal {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
