@@ -3,14 +3,14 @@ import { NavController, NavParams, ModalController, ViewController, AlertControl
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'search-add-contact'
+  segment: 'search-add-contact-modal'
 })
 @Component({
-  selector: 'search-add-contact',
-  templateUrl: 'search-add-contact.html',
+  selector: 'search-add-contact-modal',
+  templateUrl: 'search-add-contact-modal.html',
   providers: [CincoService]
 })
-export class SearchAddContact {
+export class SearchAddContactModal {
   projectId: string;
   memberId: string;
   org: any;

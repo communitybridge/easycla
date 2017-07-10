@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ProjectUserManagementModal } from './project-user-management';
+import { ProjectUserManagementModal } from './project-user-management-modal';
 
 @NgModule({
   declarations: [
