@@ -4,13 +4,13 @@ import { ProjectPage } from './project';
 
 @NgModule({
   declarations: [
-    ProjectPage
+    ProjectPage,
   ],
   imports: [
     IonicPageModule.forChild(ProjectPage)
   ],
   entryComponents: [
-    ProjectPage
+    ProjectPage,
   ]
 })
 export class ProjectPageModule {}
