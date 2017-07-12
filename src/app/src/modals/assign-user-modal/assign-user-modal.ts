@@ -1,13 +1,13 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'assign-user'
+  segment: 'assign-user-modal'
 })
 @Component({
-  selector: 'assign-user',
-  templateUrl: 'assign-user.html',
+  selector: 'assign-user-modal',
+  templateUrl: 'assign-user-modal.html',
   providers: [CincoService]
 })
 export class AssignUserModal {
@@ -73,7 +73,7 @@ export class AssignUserModal {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

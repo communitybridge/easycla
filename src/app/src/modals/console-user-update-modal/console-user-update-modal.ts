@@ -4,10 +4,10 @@ import { NavController, NavParams, ViewController, AlertController, IonicPage, C
 import { EmailValidator } from  '../../validators/email';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/forkJoin';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
-  segment: 'console-user-update'
+  segment: 'console-user-update-modal'
 })
 @Component({
   selector: 'console-user-update-modal',
@@ -67,7 +67,7 @@ export class ConsoleUserUpdateModal {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

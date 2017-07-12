@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 import { NavController, NavParams, IonicPage } from 'ionic-angular';
 
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 import { ProjectModel } from '../../models/project-model';
 
