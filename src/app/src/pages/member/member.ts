@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 import { MemberModel } from '../../models/member-model';
 
@@ -8,7 +8,7 @@ import { MemberModel } from '../../models/member-model';
   segment: 'project/:projectId/member/:memberId'
 })
 @Component({
-  selector: 'page-member',
+  selector: 'member',
   templateUrl: 'member.html',
   providers: [CincoService],
 })
@@ -99,7 +99,7 @@ export class MemberPage {
   }
 
   addMemberContact() {
-    let modal = this.modalCtrl.create('SearchAddContact', {
+    let modal = this.modalCtrl.create('SearchAddContactModal', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.member.org,
@@ -112,7 +112,7 @@ export class MemberPage {
   }
 
   contactSelected(event, contact) {
-    let modal = this.modalCtrl.create('ContactUpdate', {
+    let modal = this.modalCtrl.create('ContactUpdateModal', {
       projectId: this.projectId,
       memberId: this.member.id,
       org: this.member.org,

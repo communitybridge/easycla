@@ -1,22 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ContactUpdate } from './contact-update';
+import { SearchAddContactModal } from './search-add-contact-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { UploadButtonComponentModule } from '../../components/upload-button/upload-button.module';
 
 @NgModule({
   declarations: [
-    ContactUpdate,
+    SearchAddContactModal,
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    UploadButtonComponentModule,
-    IonicPageModule.forChild(ContactUpdate),
+    IonicPageModule.forChild(SearchAddContactModal)
   ],
   entryComponents: [
-    ContactUpdate,
+    SearchAddContactModal,
   ]
 })
-export class ContactUpdateModule {}
+export class SearchAddContactModalModule {}

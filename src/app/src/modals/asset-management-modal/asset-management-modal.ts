@@ -1,13 +1,13 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'asset-management'
+  segment: 'asset-management-modal'
 })
 @Component({
-  selector: 'asset-management',
-  templateUrl: 'asset-management.html',
+  selector: 'asset-management-modal',
+  templateUrl: 'asset-management-modal.html',
   providers: [CincoService]
 })
 export class AssetManagementModal {
@@ -105,7 +105,7 @@ export class AssetManagementModal {
     ];
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { AssetManagementModal } from './asset-management';
+import { AssignUserModal } from './assign-user-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
   declarations: [
-    AssetManagementModal
+    AssignUserModal
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(AssetManagementModal)
+    IonicPageModule.forChild(AssignUserModal)
   ],
   entryComponents: [
-    AssetManagementModal
+    AssignUserModal
   ]
 })
-export class AssetManagementModalModule {}
+export class AssignUserModalModule {}
