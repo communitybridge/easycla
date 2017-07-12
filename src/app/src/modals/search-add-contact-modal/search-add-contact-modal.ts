@@ -1,16 +1,16 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'search-add-contact'
+  segment: 'search-add-contact-modal'
 })
 @Component({
-  selector: 'search-add-contact',
-  templateUrl: 'search-add-contact.html',
+  selector: 'search-add-contact-modal',
+  templateUrl: 'search-add-contact-modal.html',
   providers: [CincoService]
 })
-export class SearchAddContact {
+export class SearchAddContactModal {
   projectId: string;
   memberId: string;
   org: any;
@@ -64,13 +64,13 @@ export class SearchAddContact {
     });
   }
 
-  // ContactUpdate modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
 
   addContact(contact) {
-    let modal = this.modalCtrl.create('ContactUpdate', {
+    let modal = this.modalCtrl.create('ContactUpdateModal', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.org,

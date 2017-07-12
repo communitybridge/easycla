@@ -13,6 +13,7 @@ export class LoadingSpinnerComponent {
   private loading: boolean;
 
   constructor() {
+    this.loading = true;
   }
 
 }
