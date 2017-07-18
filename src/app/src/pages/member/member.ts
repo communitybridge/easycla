@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
-
+import { SortService } from '../../services/sort.service';
 import { MemberModel } from '../../models/member-model';
 
 @IonicPage({
@@ -20,6 +20,7 @@ export class MemberPage {
   orgProjectMemberships: any;
   orgProjectMembershipsFiltered: any;
   loading: any;
+  sort: any;
 
   member = new MemberModel();
 
@@ -27,6 +28,7 @@ export class MemberPage {
     public navCtrl: NavController,
     public modalCtrl: ModalController,
     public navParams: NavParams,
+    private sortService: SortService,
     private cincoService: CincoService
   ) {
     // If we navigated to this page, we will have an item available as a nav param
@@ -62,6 +64,27 @@ export class MemberPage {
     };
 
     this.memberContactRoles = {};
+
+    this.sort = {
+      role: {
+        arrayProp: 'type',
+        prop: 'role',
+        sortType: 'text',
+        sort: null,
+      },
+      name: {
+        arrayProp: 'contact.givenName',
+        prop: 'name',
+        sortType: 'text',
+        sort: null,
+      },
+      email: {
+        arrayProp: 'contact.email',
+        prop: 'email',
+        sortType: 'text',
+        sort: null,
+      },
+    };
   }
 
   ngOnInit() {
@@ -147,6 +170,14 @@ export class MemberPage {
     this.navCtrl.push('ProjectPage', {
       projectId: projectId,
     });
+  }
+
+  sortContacts(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.memberContacts,
+    );
   }
 
 }

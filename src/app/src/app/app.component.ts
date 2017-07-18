@@ -4,10 +4,14 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
+import { SortService } from '../services/sort.service';
 
 @Component({
   templateUrl: 'app.html',
-  providers: [CincoService]
+  providers: [
+    CincoService,
+    SortService,
+  ]
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;

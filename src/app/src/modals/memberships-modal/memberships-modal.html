@@ -17,10 +17,22 @@
   <table id="contacts-table" class="table table-hover">
     <thead>
       <tr>
-        <th>Project</th>
-        <th>Class</th>
-        <th>Status</th>
-        <th>Renewal Date</th>
+        <th class="clickable" (click)="sortProjects('project')">
+          Project
+          <sorting-display [sorting]='sort.project.sort'></sorting-display>
+        </th>
+        <th class="clickable" (click)="sortProjects('class')">
+          Class
+          <sorting-display [sorting]='sort.class.sort'></sorting-display>
+        </th>
+        <th class="clickable" (click)="sortProjects('status')">
+          Status
+          <sorting-display [sorting]='sort.status.sort'></sorting-display>
+        </th>
+        <th class="clickable" (click)="sortProjects('renewal')">
+          Renewal Date
+          <sorting-display [sorting]='sort.renewal.sort'></sorting-display>
+        </th>
       </tr>
     </thead>
     <tbody>

@@ -1,6 +1,7 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service'
+import { CincoService } from '../../services/cinco.service';
+import { SortService } from '../../services/sort.service';
 
 @IonicPage({
   segment: 'search-add-contact-modal'
@@ -8,7 +9,10 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'search-add-contact-modal',
   templateUrl: 'search-add-contact-modal.html',
-  providers: [CincoService]
+  providers: [
+    CincoService,
+    SortService,
+  ]
 })
 export class SearchAddContactModal {
   projectId: string;
@@ -18,6 +22,7 @@ export class SearchAddContactModal {
   organizationContacts: any;
   orgContactRoles: any;
   loading: any;
+  sort: any;
 
   constructor(
     public navCtrl: NavController,
@@ -26,7 +31,8 @@ export class SearchAddContactModal {
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    private sortService: SortService,
   ) {
     this.getDefaults();
     this.projectId = this.navParams.get('projectId');
@@ -39,6 +45,23 @@ export class SearchAddContactModal {
       contacts: true,
     }
     this.orgContactRoles = {};
+    this.sort = {
+      type: {
+        arrayProp: 'type',
+        sortType: 'text',
+        sort: null,
+      },
+      name: {
+        arrayProp: 'givenName',
+        sortType: 'text',
+        sort: null,
+      },
+      email: {
+        arrayProp: 'email',
+        sortType: 'text',
+        sort: null,
+      },
+    };
   }
 
   ngOnInit() {
@@ -86,6 +109,14 @@ export class SearchAddContactModal {
 
   filterContactsByEmail() {
 
+  }
+
+  sortContacts(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.organizationContacts,
+    );
   }
 
 }
