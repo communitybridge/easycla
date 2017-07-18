@@ -32,9 +32,18 @@
     <table id="table" class="table table-hover" [loading-display]="loading.contacts">
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Name</th>
-          <th>Email</th>
+          <th class="clickable" (click)="sortContacts('type')">
+            Type
+            <sorting-display [sorting]='sort.type.sort'></sorting-display>
+          </th>
+          <th class="clickable" (click)="sortContacts('name')">
+            Name
+            <sorting-display [sorting]='sort.name.sort'></sorting-display>
+          </th>
+          <th class="clickable" (click)="sortContacts('email')">
+            Email
+            <sorting-display [sorting]='sort.email.sort'></sorting-display>
+          </th>
         </tr>
       </thead>
       <tbody>
