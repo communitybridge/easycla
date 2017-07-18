@@ -93,13 +93,31 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>Alert</th>
-                <th>Company</th>
+                <th class="clickable" (click)="sortMembers('alert')">
+                  Alert
+                  <sorting-display [sorting]='sort.alert.sort'></sorting-display>
+                </th>
+                <th class="clickable" (click)="sortMembers('company')">
+                  Company
+                  <sorting-display [sorting]='sort.company.sort'></sorting-display>
+                </th>
                 <th>Tier</th>
-                <th>Product</th>
-                <th>Invoices Status</th>
-                <th>Annual Dues</th>
-                <th>Renewal Date</th>
+                <th class="clickable" (click)="sortMembers('product')">
+                  Product
+                  <sorting-display [sorting]='sort.product.sort'></sorting-display>
+                </th>
+                <th class="clickable" (click)="sortMembers('status')">
+                  Invoices Status
+                  <sorting-display [sorting]='sort.status.sort'></sorting-display>
+                </th>
+                <th class="clickable" (click)="sortMembers('dues')">
+                  Annual Dues
+                  <sorting-display [sorting]='sort.dues.sort'></sorting-display>
+                </th>
+                <th class="clickable" (click)="sortMembers('renewal')">
+                  Renewal Date
+                  <sorting-display [sorting]='sort.renewal.sort'></sorting-display>
+                </th>
               </tr>
             </thead>
             <tbody>

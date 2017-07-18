@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
-
+import { SortService } from '../../services/sort.service';
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
@@ -20,11 +20,13 @@ export class ProjectPage {
 
   membersCount: number;
   loading: any;
+  sort: any;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private cincoService: CincoService,
+    private sortService: SortService,
     public modalCtrl: ModalController,
   ) {
     this.selectedProject = navParams.get('project');
@@ -98,7 +100,7 @@ export class ProjectPage {
       name: "Project",
       description: "Description",
       managers: "",
-      members: "",
+      members: [],
       status: "",
       category: "",
       sector: "",
@@ -119,6 +121,46 @@ export class ProjectPage {
         type: ""
       }
     };
+    this.sort = {
+      alert: {
+        arrayProp: 'alert',
+        sortType: 'text',
+        sort: null,
+      },
+      company: {
+        arrayProp: 'org.name',
+        sortType: 'text',
+        sort: null,
+      },
+      product: {
+        arrayProp: 'product',
+        sortType: 'text',
+        sort: null,
+      },
+      status: {
+        arrayProp: 'invoices[0].status',
+        sortType: 'text',
+        sort: null,
+      },
+      dues: {
+        arrayProp: 'annualDues',
+        sortType: 'number',
+        sort: null,
+      },
+      renewal: {
+        arrayProp: 'renewalDate',
+        sortType: 'date',
+        sort: null,
+      },
+    };
+  }
+
+  sortMembers(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.project.members,
+    );
   }
 
 }
