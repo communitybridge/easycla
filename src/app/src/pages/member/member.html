@@ -190,11 +190,20 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>Role</th>
+                    <th class="clickable" (click)="sortContacts('role')">
+                      Role
+                      <sorting-display [sorting]='sort.role.sort'></sorting-display>
+                    </th>
                     <th></th>
-                    <th>Name / Title</th>
+                    <th class="clickable" (click)="sortContacts('name')">
+                      Name / Title
+                      <sorting-display [sorting]='sort.name.sort'></sorting-display>
+                    </th>
                     <!--th>Timezone</th-->
-                    <th>Email</th>
+                    <th class="clickable" (click)="sortContacts('email')">
+                      Email
+                      <sorting-display [sorting]='sort.email.sort'></sorting-display>
+                    </th>
                     <th></th>
                     <th></th>
                   </tr>
