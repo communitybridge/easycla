@@ -3,6 +3,7 @@ import { IonicPageModule } from 'ionic-angular';
 import { SearchAddContactModal } from './search-add-contact-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
+import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
   declarations: [
@@ -11,6 +12,7 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
+    SortingDisplayComponentModule,
     IonicPageModule.forChild(SearchAddContactModal)
   ],
   entryComponents: [
