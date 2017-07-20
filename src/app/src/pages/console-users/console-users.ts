@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
   segment: 'console-users'
@@ -14,6 +14,7 @@ import { CincoService } from '../../app/services/cinco.service'
 export class ConsoleUsersPage {
   users: any;
   userRoles: any;
+  loading: any;
 
   constructor(
     public navCtrl: NavController,
@@ -24,6 +25,9 @@ export class ConsoleUsersPage {
   }
 
   getDefaults() {
+    this.loading = {
+      users: true,
+    };
     this.users = [];
     this.userRoles = {};
   }
@@ -45,6 +49,7 @@ export class ConsoleUsersPage {
     this.cincoService.getAllUsers().subscribe(response => {
       if(response) {
         this.users = response;
+        this.loading.users = false;
       }
     });
   }

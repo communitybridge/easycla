@@ -2,7 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CalendarLinkValidator } from  '../../validators/calendarlink';
 import { NavController, IonicPage, Content, ToastController, } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
 
 
 @IonicPage({
@@ -17,6 +17,7 @@ export class AccountSettingsPage {
   accountSettingsForm: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
+  loading: any;
 
   @ViewChild(Content) content: Content;
 
@@ -33,23 +34,27 @@ export class AccountSettingsPage {
     });
   }
 
-  getDefaults(){
+  getDefaults() {
+    this.loading = {
+      user: true,
+    };
     this.user = {
       userId: "",
       email: "",
       roles: [],
       calendar: null,
-    }
+    };
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getCurrentUser();
   }
 
-  getCurrentUser(){
+  getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       this.accountSettingsForm.patchValue({calendar:this.user.calendar});
+      this.loading.user = false;
     });
   }
 
