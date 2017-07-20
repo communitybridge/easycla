@@ -7,7 +7,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding class="member" overflow-scroll="true">
+<ion-content padding class="member-wrapper" overflow-scroll="true">
   <ion-fab right bottom>
     <button ion-fab mini><ion-icon name="add"></ion-icon></button>
     <ion-fab-list side="left">
@@ -15,14 +15,15 @@
     </ion-fab-list>
   </ion-fab>
   <header padding-bottom>
-    <ion-grid>
+    <loading-spinner [loading]="loading.member"></loading-spinner>
+    <ion-grid [loading-display]="loading.member">
       <ion-row responsive-sm>
         <ion-col col-12 text-right padding-top>
             <span color="gray">Last Updated: 3/16/2017</span>
         </ion-col>
       </ion-row>
     </ion-grid>
-    <ion-grid>
+    <ion-grid [loading-display]="loading.member">
       <ion-row responsive-sm>
         <ion-col width-30 text-center>
           <p><img src="{{ member.org.logoRef }}"/></p>
@@ -152,7 +153,8 @@
             </ion-row>
           </ion-card-header>
           <ion-card-content>
-            <div no-padding class="project-memberships" *ngFor="let member of orgProjectMembershipsFiltered" (click)="openProjectPage(member.projectId)">
+            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <div no-padding class="project-memberships" *ngFor="let member of orgProjectMembershipsFiltered" (click)="openProjectPage(member.projectId)" [loading-display]="loading.projects">
               <h2>{{ member.projectName }}</h2>
               <ion-row responsive-md class="project-info">
                 <ion-col width-25>
@@ -182,16 +184,26 @@
             <ion-card-title>
               Contacts
             </ion-card-title>
-            <div class="table-responsive-vertical">
+            <loading-spinner [loading]="loading.contacts"></loading-spinner>
+            <div class="table-responsive-vertical" [loading-display]="loading.contacts">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th></th>
-                    <th>Role</th>
+                    <th class="clickable" (click)="sortContacts('role')">
+                      Role
+                      <sorting-display [sorting]='sort.role.sort'></sorting-display>
+                    </th>
                     <th></th>
-                    <th>Name / Title</th>
+                    <th class="clickable" (click)="sortContacts('name')">
+                      Name / Title
+                      <sorting-display [sorting]='sort.name.sort'></sorting-display>
+                    </th>
                     <!--th>Timezone</th-->
-                    <th>Email</th>
+                    <th class="clickable" (click)="sortContacts('email')">
+                      Email
+                      <sorting-display [sorting]='sort.email.sort'></sorting-display>
+                    </th>
                     <th></th>
                     <th></th>
                   </tr>

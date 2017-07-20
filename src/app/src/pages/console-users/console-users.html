@@ -10,7 +10,8 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-          <div class="table-responsive-vertical">
+        <loading-spinner [loading]="loading.users"></loading-spinner>
+          <div class="table-responsive-vertical" [loading-display]="loading.users">
             <table id="table" class="table table-hover">
               <thead>
                 <tr>

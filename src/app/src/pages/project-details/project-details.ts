@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 import { NavController, NavParams, IonicPage } from 'ionic-angular';
 
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 
 import { ProjectModel } from '../../models/project-model';
 
@@ -22,6 +22,7 @@ export class ProjectDetailsPage {
   membershipsCount: number;
 
   editProject: any;
+  loading: any;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
     this.editProject = {};
@@ -31,7 +32,7 @@ export class ProjectDetailsPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
-  };
+  }
 
   getProject(projectId) {
     let getMembers = true;
@@ -52,6 +53,7 @@ export class ProjectDetailsPage {
         this.project.mailingListType = response.mailingListType;
         this.project.emailAliasType = response.emailAliasType;
         this.project.address = response.address;
+        this.loading.project = false;
       }
     });
   }
@@ -86,6 +88,9 @@ export class ProjectDetailsPage {
   }
 
   getDefaults() {
+    this.loading = {
+      project: true,
+    };
     this.project = {
       id: "",
       name: "",
