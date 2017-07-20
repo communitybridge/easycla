@@ -3,16 +3,20 @@ import { Nav, Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
-import { CincoService } from './services/cinco.service';
+import { CincoService } from '../services/cinco.service';
+import { SortService } from '../services/sort.service';
 
 @Component({
   templateUrl: 'app.html',
-  providers: [CincoService]
+  providers: [
+    CincoService,
+    SortService,
+  ]
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'ProjectsListPage';
+  rootPage: any = 'AllProjectsPage';
 
   thisUser: any;
   pages: Array<{
@@ -77,7 +81,7 @@ export class MyApp {
       {
         title: 'All Projects',
         access: true,
-        component: 'ProjectsListPage'
+        component: 'AllProjectsPage'
       },
       {
         title: 'Member Companies',

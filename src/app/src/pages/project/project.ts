@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
+import { CincoService } from '../../services/cinco.service';
+import { SortService } from '../../services/sort.service';
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
@@ -18,6 +19,8 @@ export class ProjectPage {
   project = new ProjectModel();
 
   membersCount: number;
+  loading: any;
+  sort: any;
   tab = 'membership';
   repoPage = 'reposHome';
 
@@ -25,6 +28,7 @@ export class ProjectPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private cincoService: CincoService,
+    private sortService: SortService,
     public modalCtrl: ModalController,
   ) {
     this.selectedProject = navParams.get('project');
@@ -56,6 +60,7 @@ export class ProjectPage {
         this.project.address = response.address;
         this.project.members = response.members;
         this.membersCount = this.project.members.length;
+        this.loading.project = false;
       }
     });
   }
@@ -89,12 +94,15 @@ export class ProjectPage {
   }
 
   getDefaults() {
+    this.loading = {
+      project: true,
+    };
     this.project = {
       id: "",
       name: "Project",
       description: "Description",
       managers: "",
-      members: "",
+      members: [],
       status: "",
       category: "",
       sector: "",
@@ -115,6 +123,46 @@ export class ProjectPage {
         type: ""
       }
     };
+    this.sort = {
+      alert: {
+        arrayProp: 'alert',
+        sortType: 'text',
+        sort: null,
+      },
+      company: {
+        arrayProp: 'org.name',
+        sortType: 'text',
+        sort: null,
+      },
+      product: {
+        arrayProp: 'product',
+        sortType: 'text',
+        sort: null,
+      },
+      status: {
+        arrayProp: 'invoices[0].status',
+        sortType: 'text',
+        sort: null,
+      },
+      dues: {
+        arrayProp: 'annualDues',
+        sortType: 'number',
+        sort: null,
+      },
+      renewal: {
+        arrayProp: 'renewalDate',
+        sortType: 'date',
+        sort: null,
+      },
+    };
+  }
+
+  sortMembers(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.project.members,
+    );
   }
 
 }

@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../app/services/cinco.service';
-
+import { CincoService } from '../../services/cinco.service';
+import { SortService } from '../../services/sort.service';
 import { MemberModel } from '../../models/member-model';
 
 @IonicPage({
   segment: 'project/:projectId/member/:memberId'
 })
 @Component({
-  selector: 'page-member',
+  selector: 'member',
   templateUrl: 'member.html',
   providers: [CincoService],
 })
@@ -19,6 +19,8 @@ export class MemberPage {
   memberContactRoles: any;
   orgProjectMemberships: any;
   orgProjectMembershipsFiltered: any;
+  loading: any;
+  sort: any;
 
   member = new MemberModel();
 
@@ -26,6 +28,7 @@ export class MemberPage {
     public navCtrl: NavController,
     public modalCtrl: ModalController,
     public navParams: NavParams,
+    private sortService: SortService,
     private cincoService: CincoService
   ) {
     // If we navigated to this page, we will have an item available as a nav param
@@ -35,6 +38,11 @@ export class MemberPage {
   }
 
   getDefaults() {
+    this.loading = {
+      member: true,
+      projects: true,
+      contacts: true,
+    };
     this.member = {
       id: this.memberId,
       projectId: "",
@@ -56,6 +64,27 @@ export class MemberPage {
     };
 
     this.memberContactRoles = {};
+
+    this.sort = {
+      role: {
+        arrayProp: 'type',
+        prop: 'role',
+        sortType: 'text',
+        sort: null,
+      },
+      name: {
+        arrayProp: 'contact.givenName',
+        prop: 'name',
+        sortType: 'text',
+        sort: null,
+      },
+      email: {
+        arrayProp: 'contact.email',
+        prop: 'email',
+        sortType: 'text',
+        sort: null,
+      },
+    };
   }
 
   ngOnInit() {
@@ -77,6 +106,7 @@ export class MemberPage {
     this.cincoService.getMember(projectId, memberId).subscribe(response => {
       if(response) {
         this.member = response;
+        this.loading.member = false;
         this.getOrganizationProjectMemberships(this.member.org.id);
       }
     });
@@ -87,11 +117,12 @@ export class MemberPage {
       if(response) {
         this.memberContacts = response;
       }
+      this.loading.contacts = false;
     });
   }
 
   addMemberContact() {
-    let modal = this.modalCtrl.create('SearchAddContact', {
+    let modal = this.modalCtrl.create('SearchAddContactModal', {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.member.org,
@@ -104,7 +135,7 @@ export class MemberPage {
   }
 
   contactSelected(event, contact) {
-    let modal = this.modalCtrl.create('ContactUpdate', {
+    let modal = this.modalCtrl.create('ContactUpdateModal', {
       projectId: this.projectId,
       memberId: this.member.id,
       org: this.member.org,
@@ -121,6 +152,7 @@ export class MemberPage {
     this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
       if(response) {
         this.orgProjectMemberships = response;
+        this.loading.projects = false;
         this.orgProjectMembershipsFiltered = this.orgProjectMemberships.filter((item, index) => index < 4 );
       }
     });
@@ -138,6 +170,14 @@ export class MemberPage {
     this.navCtrl.push('ProjectPage', {
       projectId: projectId,
     });
+  }
+
+  sortContacts(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.memberContacts,
+    );
   }
 
 }

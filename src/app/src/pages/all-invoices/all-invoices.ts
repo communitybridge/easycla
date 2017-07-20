@@ -2,7 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 
 import { NavController, IonicPage } from 'ionic-angular';
 
-import { CincoService } from '../../app/services/cinco.service'
+import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 
 import { ProjectModel } from '../../models/project-model';
