@@ -16,8 +16,8 @@
 <ion-content padding>
   <loading-spinner [loading]="loading.user"></loading-spinner>
   <ion-grid [loading-display]="loading.user">
-    <form [formGroup]="accountSettingsForm" [ngClass]="{'submit-attempt': submitAttempt}">
-      <ion-row *ngIf="submitAttempt && !accountSettingsForm.valid">
+    <form [formGroup]="_form" [ngClass]="{'submit-attempt': submitAttempt}">
+      <ion-row *ngIf="submitAttempt && !_form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>
@@ -53,7 +53,7 @@
           <ion-item class="description" no-lines>
             <p>Use the <a href="https://calendar.google.com/calendar/embedhelper" target="_blank">Calendar Embed Helper</a> to generate your embed code.</p>
           </ion-item>
-          <ion-item *ngIf="!accountSettingsForm.controls.calendar.valid && (accountSettingsForm.controls.calendar.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!_form.controls.calendar.valid && (_form.controls.calendar.touched || submitAttempt)" no-lines>
             <p>* You must use a Google Calendar embed or link with 'https://calendar.google.com/calendar/embed'.</p>
           </ion-item>
         </ion-col>
