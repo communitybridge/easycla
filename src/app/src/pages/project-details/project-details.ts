@@ -105,16 +105,26 @@ export class ProjectDetailsPage {
       // prevent submit
       return;
     }
+    let address = {
+      address: {
+        thoroughfare: this._form.value.addressThoroughfare,
+        postalCode: this._form.value.addressPostalCode,
+        localityName: this._form.value.addressLocalityName,
+        administrativeArea: this._form.value.addressAdministrativeArea,
+        country: this._form.value.addressCountry,
+      }
+    }
     this.editProject = {
-      project_name: this.project.name,
-      project_description: this.project.description,
-      project_url: this.project.url,
-      project_sector: this.project.sector,
-      project_address: this.project.address,
-      project_status: this.project.status,
-      project_category: this.project.category,
-      project_start_date: this.project.startDate
+      project_name: this._form.value.name,
+      project_description: this._form.value.description,
+      project_url: this._form.value.url,
+      project_sector: this._form.value.sector,
+      project_address: address,
+      project_status: this._form.value.status,
+      project_category: this._form.value.category,
+      project_start_date: this._form.value.startDate,
     };
+
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
       this.currentlySubmitting = false;
       this.navCtrl.setRoot('ProjectPage', {
