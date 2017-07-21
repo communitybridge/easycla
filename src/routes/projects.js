@@ -161,6 +161,8 @@ router.put('/projects/:projectId', require('connect-ensure-login').ensureLoggedI
    };
    var projManagerClient = cinco.client(req.session.user.cinco_keys);
    projManagerClient.updateProject(updatedProps, function (err, updatedProject) {
+     console.log('updateProject');
+     console.log(err);
      return res.json(updatedProject);
    });
  }
