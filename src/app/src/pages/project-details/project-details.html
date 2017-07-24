@@ -31,8 +31,8 @@
         </div>
       </ion-col>
     </ion-row>
-    <form [formGroup]="_form" [ngClass]="{'submit-attempt': submitAttempt}">
-      <ion-row *ngIf="submitAttempt && !_form.valid">
+    <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+      <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>

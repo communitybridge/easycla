@@ -23,7 +23,7 @@ export class ProjectDetailsPage {
   editProject: any;
   loading: any;
 
-  _form: FormGroup;
+  form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   @ViewChild(Content) content: Content;
@@ -37,7 +37,7 @@ export class ProjectDetailsPage {
     this.editProject = {};
     this.projectId = navParams.get('projectId');
     this.getDefaults();
-    this._form = formBuilder.group({
+    this.form = formBuilder.group({
       name:[this.project.name, Validators.compose([Validators.required])],
       startDate:[this.project.startDate],
       status:[this.project.status],
@@ -64,7 +64,7 @@ export class ProjectDetailsPage {
         this.project = response;
         this.loading.project = false;
 
-        this._form.patchValue({
+        this.form.patchValue({
           name:this.project.name,
           startDate:this.project.startDate,
           status:this.project.status,
@@ -85,7 +85,7 @@ export class ProjectDetailsPage {
   submitEditProject() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this._form.valid) {
+    if (!this.form.valid) {
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
@@ -93,23 +93,23 @@ export class ProjectDetailsPage {
     }
     let address = {
       address: {
-        thoroughfare: this._form.value.addressThoroughfare,
-        postalCode: this._form.value.addressPostalCode,
-        localityName: this._form.value.addressLocalityName,
-        administrativeArea: this._form.value.addressAdministrativeArea,
-        country: this._form.value.addressCountry,
+        thoroughfare: this.form.value.addressThoroughfare,
+        postalCode: this.form.value.addressPostalCode,
+        localityName: this.form.value.addressLocalityName,
+        administrativeArea: this.form.value.addressAdministrativeArea,
+        country: this.form.value.addressCountry,
       },
       type: "BILLING",
     }
     this.editProject = {
-      project_name: this._form.value.name,
-      project_description: this._form.value.description,
-      project_url: this._form.value.url,
-      project_sector: this._form.value.sector,
+      project_name: this.form.value.name,
+      project_description: this.form.value.description,
+      project_url: this.form.value.url,
+      project_sector: this.form.value.sector,
       project_address: address,
-      project_status: this._form.value.status,
-      project_category: this._form.value.category,
-      project_start_date: this._form.value.startDate,
+      project_status: this.form.value.status,
+      project_category: this.form.value.category,
+      project_start_date: this.form.value.startDate,
     };
 
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
