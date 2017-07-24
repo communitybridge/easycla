@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { NavController, NavParams, IonicPage, Content } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UrlValidator } from  '../../validators/url';
 import { CincoService } from '../../services/cinco.service'
 import { ProjectModel } from '../../models/project-model';
 
@@ -9,7 +10,7 @@ import { ProjectModel } from '../../models/project-model';
 })
 @Component({
   selector: 'project-details',
-  templateUrl: 'project-details.html'
+  templateUrl: 'project-details.html',
 })
 export class ProjectDetailsPage {
 
@@ -37,12 +38,12 @@ export class ProjectDetailsPage {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
     this._form = formBuilder.group({
-      name:[this.project.name],
+      name:[this.project.name, Validators.compose([Validators.required])],
       startDate:[this.project.startDate],
       status:[this.project.status],
       category:[this.project.category],
       sector:[this.project.sector],
-      url:[this.project.url],
+      url:[this.project.url, Validators.compose([UrlValidator.isValid])],
       addressThoroughfare:[this.project.address.address.thoroughfare],
       addressPostalCode:[this.project.address.address.postalCode],
       addressLocalityName:[this.project.address.address.localityName],
@@ -60,21 +61,6 @@ export class ProjectDetailsPage {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if (response) {
-        // this.project.id = response.id;
-        // this.project.name = response.name;
-        // this.project.description = response.description;
-        // this.project.managers = response.managers;
-        // this.project.members = response.members
-        // this.project.status = response.status;
-        // this.project.category = response.category;
-        // this.project.sector = response.sector;
-        // this.project.url = response.url;
-        // this.project.startDate = response.startDate;
-        // this.project.logoRef = response.logoRef;
-        // this.project.agreementRef = response.agreementRef;
-        // this.project.mailingListType = response.mailingListType;
-        // this.project.emailAliasType = response.emailAliasType;
-        // this.project.address = response.address;
         this.project = response;
         this.loading.project = false;
 
@@ -112,7 +98,8 @@ export class ProjectDetailsPage {
         localityName: this._form.value.addressLocalityName,
         administrativeArea: this._form.value.addressAdministrativeArea,
         country: this._form.value.addressCountry,
-      }
+      },
+      type: "BILLING",
     }
     this.editProject = {
       project_name: this._form.value.name,
