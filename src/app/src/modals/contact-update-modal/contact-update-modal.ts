@@ -30,7 +30,7 @@ export class ContactUpdateModal {
 
   memberContact = new MemberContactModel();
 
-  _form: FormGroup;
+  form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   @ViewChild(Content) content: Content;
@@ -90,7 +90,7 @@ export class ContactUpdateModal {
       ? 'true'
       : 'false';
 
-    this._form = formBuilder.group({
+    this.form = formBuilder.group({
       email:[this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
       givenName:[this.contact.contact.givenName, Validators.required],
       familyName:[this.contact.contact.familyName, Validators.required],
@@ -188,13 +188,13 @@ export class ContactUpdateModal {
           {
             text: 'Cancel',
             handler: data => {
-              this._form.patchValue({primaryContact:'false'});
+              this.form.patchValue({primaryContact:'false'});
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this._form.patchValue({primaryContact:'true'});
+              this.form.patchValue({primaryContact:'true'});
             }
           }
         ]
@@ -213,13 +213,13 @@ export class ContactUpdateModal {
           {
             text: 'Cancel',
             handler: data => {
-              this._form.patchValue({boardMember:'false'});
+              this.form.patchValue({boardMember:'false'});
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this._form.patchValue({boardMember:'true'});
+              this.form.patchValue({boardMember:'true'});
             }
           }
         ]
@@ -297,36 +297,36 @@ export class ContactUpdateModal {
   saveContact() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this._form.valid){
+    if (!this.form.valid){
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
       return;
     }
-    let primaryContact = this._form.value.primaryContact;
+    let primaryContact = this.form.value.primaryContact;
     primaryContact = (primaryContact === true || primaryContact === 'true')
           ? true
           : false;
-    let boardMember = this._form.value.boardMember;
+    let boardMember = this.form.value.boardMember;
     boardMember = (boardMember === true || boardMember === 'true')
           ? true
           : false;
     this.memberContact = {
       id: this.contact.id,
       memberId: this.contact.memberId,
-      type: this._form.value.role,
+      type: this.form.value.role,
       primaryContact: primaryContact,
       boardMember: boardMember,
       contact: {
         id: this.contact.contact.id,
         accountId: "",
-        givenName: this._form.value.givenName,
-        familyName: this._form.value.familyName,
-        title: this._form.value.title,
-        bio: this._form.value.bio,
-        email: this._form.value.email,
-        phone: this._form.value.phone,
-        type: this._form.value.type
+        givenName: this.form.value.givenName,
+        familyName: this.form.value.familyName,
+        title: this.form.value.title,
+        bio: this.form.value.bio,
+        email: this.form.value.email,
+        phone: this.form.value.phone,
+        type: this.form.value.type
       },
     };
     if (this.contactId) {

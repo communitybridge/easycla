@@ -15,7 +15,7 @@ import { CincoService } from '../../services/cinco.service';
 export class AccountSettingsPage {
   user: any;
 
-  _form: FormGroup;
+  form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   @ViewChild(Content) content: Content;
@@ -30,7 +30,7 @@ export class AccountSettingsPage {
   ) {
     this.getDefaults();
 
-    this._form = formBuilder.group({
+    this.form = formBuilder.group({
       calendar:[this.user.calendar, Validators.compose([CalendarLinkValidator.isValid])],
     });
   }
@@ -54,7 +54,7 @@ export class AccountSettingsPage {
   getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
-      this._form.patchValue({calendar:this.user.calendar});
+      this.form.patchValue({calendar:this.user.calendar});
       this.loading.user = false;
     });
   }
@@ -62,13 +62,13 @@ export class AccountSettingsPage {
   submitEditUser() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this._form.valid){
+    if (!this.form.valid){
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
       return;
     }
-    let calendar_url = this.calendarProcess(this._form.value.calendar);
+    let calendar_url = this.calendarProcess(this.form.value.calendar);
     let user = {
       userId: this.user.userId,
       email: this.user.email,
