@@ -93,6 +93,12 @@ export class ProjectPage {
     modal.present();
   }
 
+  openClaCorporateMemberModal() {
+    let modal = this.modalCtrl.create('ClaCorporateMemberModal');
+    modal.present();
+  }
+
+
   getDefaults() {
     this.loading = {
       project: true,
