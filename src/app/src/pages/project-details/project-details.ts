@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
-
-import { NavController, NavParams, IonicPage } from 'ionic-angular';
-
+import { Component, ViewChild } from '@angular/core';
+import { NavController, NavParams, IonicPage, Content } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UrlValidator } from  '../../validators/url';
 import { CincoService } from '../../services/cinco.service'
-
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
@@ -11,7 +10,7 @@ import { ProjectModel } from '../../models/project-model';
 })
 @Component({
   selector: 'project-details',
-  templateUrl: 'project-details.html'
+  templateUrl: 'project-details.html',
 })
 export class ProjectDetailsPage {
 
@@ -24,10 +23,34 @@ export class ProjectDetailsPage {
   editProject: any;
   loading: any;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, private cincoService: CincoService) {
+  form: FormGroup;
+  submitAttempt: boolean = false;
+  currentlySubmitting: boolean = false;
+  @ViewChild(Content) content: Content;
+
+  constructor(
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    private cincoService: CincoService,
+    private formBuilder: FormBuilder,
+  ) {
     this.editProject = {};
     this.projectId = navParams.get('projectId');
     this.getDefaults();
+    this.form = formBuilder.group({
+      name:[this.project.name, Validators.compose([Validators.required])],
+      startDate:[this.project.startDate],
+      status:[this.project.status],
+      category:[this.project.category],
+      sector:[this.project.sector],
+      url:[this.project.url, Validators.compose([UrlValidator.isValid])],
+      addressThoroughfare:[this.project.address.address.thoroughfare],
+      addressPostalCode:[this.project.address.address.postalCode],
+      addressLocalityName:[this.project.address.address.localityName],
+      addressAdministrativeArea:[this.project.address.address.administrativeArea],
+      addressCountry:[this.project.address.address.country],
+      description:[this.project.description],
+    });
   }
 
   ngOnInit() {
@@ -38,38 +61,59 @@ export class ProjectDetailsPage {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if (response) {
-        this.project.id = response.id;
-        this.project.name = response.name;
-        this.project.description = response.description;
-        this.project.managers = response.managers;
-        this.project.members = response.members
-        this.project.status = response.status;
-        this.project.category = response.category;
-        this.project.sector = response.sector;
-        this.project.url = response.url;
-        this.project.startDate = response.startDate;
-        this.project.logoRef = response.logoRef;
-        this.project.agreementRef = response.agreementRef;
-        this.project.mailingListType = response.mailingListType;
-        this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address;
+        this.project = response;
         this.loading.project = false;
+
+        this.form.patchValue({
+          name:this.project.name,
+          startDate:this.project.startDate,
+          status:this.project.status,
+          category:this.project.category,
+          sector:this.project.sector,
+          url:this.project.url,
+          addressThoroughfare:this.project.address.address.thoroughfare,
+          addressPostalCode:this.project.address.address.postalCode,
+          addressLocalityName:this.project.address.address.localityName,
+          addressAdministrativeArea:this.project.address.address.administrativeArea,
+          addressCountry:this.project.address.address.country,
+          description:this.project.description,
+        });
       }
     });
   }
 
   submitEditProject() {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    if (!this.form.valid) {
+      this.content.scrollToTop();
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    let address = {
+      address: {
+        thoroughfare: this.form.value.addressThoroughfare,
+        postalCode: this.form.value.addressPostalCode,
+        localityName: this.form.value.addressLocalityName,
+        administrativeArea: this.form.value.addressAdministrativeArea,
+        country: this.form.value.addressCountry,
+      },
+      type: "BILLING",
+    }
     this.editProject = {
-      project_name: this.project.name,
-      project_description: this.project.description,
-      project_url: this.project.url,
-      project_sector: this.project.sector,
-      project_address: this.project.address,
-      project_status: this.project.status,
-      project_category: this.project.category,
-      project_start_date: this.project.startDate
+      project_name: this.form.value.name,
+      project_description: this.form.value.description,
+      project_url: this.form.value.url,
+      project_sector: this.form.value.sector,
+      project_address: address,
+      project_status: this.form.value.status,
+      project_category: this.form.value.category,
+      project_start_date: this.form.value.startDate,
     };
+
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
+      this.currentlySubmitting = false;
       this.navCtrl.setRoot('ProjectPage', {
         projectId: this.projectId
       });

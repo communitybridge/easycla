@@ -11,9 +11,9 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <form [formGroup]="_form" [ngClass]="{'submit-attempt': submitAttempt}">
+  <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
-      <ion-row *ngIf="submitAttempt && !_form.valid">
+      <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>
@@ -30,7 +30,7 @@
             <ion-label stacked>Email</ion-label>
             <ion-input type="email" formControlName="email" required></ion-input>
           </ion-item>
-          <ion-item *ngIf="!_form.controls.email.valid && (_form.controls.email.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>
         </ion-col>

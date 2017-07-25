@@ -13,9 +13,9 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <form [formGroup]="contactUpdateForm" [ngClass]="{'submit-attempt': submitAttempt}">
+  <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
-      <ion-row *ngIf="submitAttempt && !contactUpdateForm.valid">
+      <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>
@@ -31,7 +31,7 @@
             <ion-label stacked>Email *</ion-label>
             <ion-input type="email" formControlName="email" required></ion-input>
           </ion-item>
-          <ion-item *ngIf="!contactUpdateForm.controls.email.valid && (contactUpdateForm.controls.email.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>
         </ion-col>
@@ -61,7 +61,7 @@
             <ion-label stacked>Phone *</ion-label>
             <ion-input type="text" formControlName="phone"></ion-input>
           </ion-item>
-          <ion-item *ngIf="!contactUpdateForm.controls.phone.valid && (contactUpdateForm.controls.phone.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!form.controls.phone.valid && (form.controls.phone.touched || submitAttempt)" no-lines>
             <p>* A valid phone number is required.</p>
           </ion-item>
         </ion-col>
@@ -106,7 +106,7 @@
             <ion-col col-12 col-md-6>
               <ion-item class="contact-primary">
                 <ion-label stacked>Primary</ion-label>
-                <ion-icon *ngIf="contactUpdateForm.value.primaryContact=='true'; else notPrimaryContact" name="star" item-left></ion-icon>
+                <ion-icon *ngIf="form.value.primaryContact=='true'; else notPrimaryContact" name="star" item-left></ion-icon>
                 <ng-template #notPrimaryContact>
                   <ion-icon name="star-outline" item-left></ion-icon>
                 </ng-template>
