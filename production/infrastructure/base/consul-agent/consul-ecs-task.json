@@ -24,17 +24,17 @@
       }
     ],
     "logConfiguration": {
-      "logDriver": "gelf",
+      "logDriver": "awslogs",
       "options": {
-        "gelf-address": "udp://logstash.service.consul:12201",
-        "labels": "realm,application,environment,tags"
+        "awslogs-group": "infrastructure",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "consul-agent"
       }
     },
     "dockerLabels": {
-      "realm": "cinco",
-      "application": "consul-agent",
-      "environment": "production",
-      "tags": "service, consul"
+      "app_name": "consul-agent",
+      "app_env": "production",
+      "app_region": "${AWS_REGION}"
     }
   }
 ]

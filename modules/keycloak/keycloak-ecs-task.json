@@ -1,0 +1,84 @@
+[
+  {
+    "essential": true,
+    "image": "jboss/keycloak-mysql",
+    "memoryReservation": 512,
+    "name": "keycloak",
+    "portMappings": [{
+      "containerPort": 8576,
+      "hostPort": 8576
+    }],
+    "command": [
+      "-b 0.0.0.0",
+      "-Djboss.http.port=8576"
+    ],
+    "dnsServers": [
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
+    ],
+    "environment": [
+      {
+        "name": "KEYCLOAK_USER",
+        "value": "${KEYCLOAK_USER}"
+      },
+      {
+        "name": "KEYCLOAK_PASSWORD",
+        "value": "${KEYCLOAK_PASSWORD}"
+      },
+      {
+        "name": "MYSQL_DATABASE",
+        "value": "${MYSQL_DATABASE}"
+      },
+      {
+        "name": "MYSQL_PASSWORD",
+        "value": "${MYSQL_PASS}"
+      },
+      {
+        "name": "MYSQL_PORT_3306_TCP_ADDR",
+        "value": "${MYSQL_HOST}"
+      },
+      {
+        "name": "MYSQL_PORT_3306_TCP_PORT",
+        "value": "${MYSQL_PORT}"
+      },
+      {
+        "name": "MYSQL_USERNAME",
+        "value": "${MYSQL_USER}"
+      },
+      {
+        "name": "KEYCLOAK_ENV",
+        "value": "${KEYCLOAK_ENV}"
+      },
+      {
+        "name": "SERVICE_NAME",
+        "value": "keycloak-${KEYCLOAK_ENV}"
+      },
+      {
+        "name": "SERVICE_TAGS",
+        "value": "${TAG_REGION},${TAG_VPC_ID}"
+      },
+      {
+        "name": "SERVICE_8081_CHECK_HTTP",
+        "value": "/"
+      },
+      {
+        "name": "SERVICE_8081_CHECK_INTERVAL",
+        "value": "300s"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "keycloak",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "${KEYCLOAK_ENV}"
+      }
+    },
+    "dockerLabels": {
+      "app_name": "keycloak",
+      "app_env": "${KEYCLOAK_ENV}",
+      "app_region": "${TAG_REGION}"
+    }
+  }
+]

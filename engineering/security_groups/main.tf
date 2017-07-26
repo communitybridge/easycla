@@ -202,6 +202,13 @@ resource "aws_security_group" "engineering-sandboxes-elb" {
     cidr_blocks     = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port = 9990
+    protocol = "tcp"
+    to_port = 9990
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -236,6 +243,13 @@ resource "aws_security_group" "engineering-sandboxes" {
     to_port         = 0
     protocol        = "-1"
     security_groups = ["${aws_security_group.engineering-sandboxes-redis.id}"]
+  }
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    self            = true
   }
 
   egress {
