@@ -77,6 +77,7 @@ module "sandboxes" {
   availability_zones       = "${module.vpc.availability_zones}"
   sg_engineering_sandboxes = "${module.security_groups.engineering_sandboxes}"
   redis_sg                 = "${module.security_groups.engineering_sandboxes_redis}"
+  internal_elb_sg          = "${module.security_groups.engineering_sandboxes_elb}"
 }
 
 module "peering" {

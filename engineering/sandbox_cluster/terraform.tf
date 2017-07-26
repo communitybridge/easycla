@@ -16,8 +16,9 @@ variable "availability_zones" {
   type = "list"
 }
 
-variable "redis_sg" {
-}
+variable "redis_sg" {}
+
+variable "internal_elb_sg" {}
 
 data "template_file" "ecs_cloud_config" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
@@ -74,4 +75,42 @@ module "redis-cluster" {
   team                 = "Engineering"
   security_groups      = ["${var.redis_sg}"]
   instance_type        = "cache.t2.small"
+}
+
+# LDAP used for Keycloak sandbox
+module "open-ldap" {
+  source                 = "../../modules/openldap"
+
+  ecs_cluster_name       = "${module.engineering-sandboxes-ecs-cluster.name}"
+  ecs_asg_name           = "${module.engineering-sandboxes-ecs-cluster.asg_name}"
+  internal_subnets       = "${var.internal_subnets}"
+  internal_elb_sg        = "${module.engineering-sandboxes-ecs-cluster.security_group_id}"
+  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
+
+  vpc_id                 = "${var.vpc_id}"
+  region                 = "${var.region}"
+
+  ldap_org               = "linuxfoundation"
+  ldap_domain            = "linuxfoundation.org"
+  ldap_admin_password    = "ZPw4RRzxLikVdN"
+}
+
+module "keycloak" {
+  source                 = "../../modules/keycloak"
+
+  ecs_cluster_name       = "${module.engineering-sandboxes-ecs-cluster.name}"
+  ecs_asg_name           = "${module.engineering-sandboxes-ecs-cluster.asg_name}"
+  subnets                = "${var.external_subnets}"
+  internal_elb_sg        = "${var.internal_elb_sg}"
+  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
+
+  vpc_id                 = "${var.vpc_id}"
+  region                 = "${var.region}"
+  env                    = "sandbox"
+
+  mysql_db               = "keycloak_sandbox"
+  mysql_host             = "engineering-sandboxes.cnfn2tun3mjw.us-west-2.rds.amazonaws.com"
+  mysql_pass             = "buanCAWwwAGxUyoU2Fai"
+  mysql_port             = "3306"
+  mysql_user             = "lfengineering"
 }

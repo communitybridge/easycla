@@ -29,6 +29,7 @@ resource "aws_vpc_peering_connection" "peer" {
   peer_owner_id = "${var.tools_account_number}"
   peer_vpc_id   = "${var.tools_vpc_id}"
   vpc_id        = "${var.vpc_id}"
+  auto_accept   = true
 
   accepter {
     allow_remote_vpc_dns_resolution = true

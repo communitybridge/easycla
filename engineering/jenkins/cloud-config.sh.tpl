@@ -1,7 +1,10 @@
 #!/bin/bash
 
 yum update -y
+yum remove java-1.7.0 -y
 yum install -y gcc java-1.8.0-openjdk git yum-utils openssl-devel install jq nfs-utils python27 python27-pip
+
+echo "nameserver 10.32.2.2" > /etc/resolv.conf
 
 echo "license_key: ${newrelic_license}" | tee -a /etc/newrelic-infra.yml
 printf "[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\nenable=1\ngpgcheck=0" | tee -a /etc/yum.repos.d/newrelic-infra.repo

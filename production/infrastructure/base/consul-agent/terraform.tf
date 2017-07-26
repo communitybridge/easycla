@@ -11,10 +11,6 @@ variable "region" {
   default = "us-west-2"
 }
 
-variable "build_hash" {
-  description = "The Build Number we are to deploy."
-}
-
 variable "encryption_key" {
   description = "The Consul Encryption Key"
 }
@@ -23,9 +19,7 @@ variable "datacenter" {
   description = "The Consul Datacenter we are connecting to"
 }
 
-variable "endpoint" {
-  description = "Consul Server Endpoint the Agent needs to connect to"
-}
+variable "endpoint" {}
 
 data "template_file" "consul_ecs_task" {
   template = "${file("${path.module}/consul-ecs-task.json")}"
@@ -53,12 +47,12 @@ resource "aws_ecs_task_definition" "consul" {
   network_mode          = "host"
 }
 
-resource "aws_ecs_service" "consul" {
+resource "aws_ecs_service" "registrator" {
   provider                           = "aws.local"
   name                               = "consul-agent"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.consul.arn}"
-  desired_count                      = "6"
+  desired_count                      = "12"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
 

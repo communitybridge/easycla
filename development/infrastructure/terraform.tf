@@ -51,6 +51,15 @@ module "s3_buckets" {
   secret_key         = "${var.secret_key}"
 }
 
+# Creating Cloudtrail audit logs on all AWS Events
+module "cloudtrail_audit" {
+  source          = "../modules/cloudtrail"
+
+  aws_account_id  = "433610389961"
+  bucket_creation = true
+  environment     = "sandbox"
+}
+
 # First VPC
 module "vpc_west" {
   source             = "./base"
@@ -80,53 +89,15 @@ module "vpc_west" {
   nexus             = true
 }
 
-# Second VPC
-//module "vpc_east" {
-//  source             = "./base"
-//  access_key         = "${var.access_key}"
-//  secret_key         = "${var.secret_key}"
-//  region             = "us-east-2"
-//  region_identitier  = "east"
-//  dns_server         = "10.32.1.2"
-//  r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
-//
-//  name               = "Eastern Production Tools"
-//  cidr               = "10.32.1.0/24"
-//  internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
-//  external_subnets   = ["10.32.1.0/27",   "10.32.1.32/27",  "10.32.1.64/27"]
-//  availability_zones = ["us-east-2a",     "us-east-2b",     "us-east-2c"]
-//
-//  newrelic_key       = "${var.newrelic_key}"
-//  key_name           = "eastern-production-tools"
-//
-//  # Consul
-//  consul_encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
-//
-//  # Peering for GHE
-//  ghe_peering       = false
-//
-//  # Nexus Repository
-//  nexus             = false
-//}
+# Peering Request with CINCO Production
+module "production_infra" {
+  source = "./project_peering"
 
-# Consul DNS Region-Balancing (FO/HA)
-//module "consul_dns_failover" {
-//  source = "./region_failover_dns"
-//
-//  # General
-//  dns_name = "consul"
-//  dns_zone = "${aws_route53_zone.prod.zone_id}"
-//
-//  # West
-//  west_elb_dnsname = "${module.vpc_west.consul_elb_cname}"
-//  west_elb_name = "${module.vpc_west.consul_elb_name}"
-//  west_elb_zoneid = "${module.vpc_west.consul_elb_zoneid}"
-//
-//  # East
-//  east_elb_dnsname = "${module.vpc_east.consul_elb_cname}"
-//  east_elb_name = "${module.vpc_east.consul_elb_name}"
-//  east_elb_zoneid = "${module.vpc_east.consul_elb_zoneid}"
-//}
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.40.0.0/21"
+  peering_id = "pcx-4a73ea23"
+}
 
 # Peering Request with CINCO Production
 module "project_cinco" {
@@ -173,18 +144,6 @@ output "west_dns_servers" {
 output "west_cidr" {
   value = "${module.vpc_west.cidr}"
 }
-
-//output "east_vpc_id" {
-//  value = "${module.vpc_east.vpc_id}"
-//}
-//
-//output "east_dns_servers" {
-//  value = "${module.vpc_east.bind_dns_servers}"
-//}
-//
-//output "east_cidr" {
-//  value = "${module.vpc_east.cidr}"
-//}
 
 output "newrelic_key" {
   value = "${var.newrelic_key}"

@@ -53,11 +53,7 @@ variable "dns_server" {
   description = "DNS Server for the VPC"
 }
 
-variable "r53_zone_id" {}
-
-variable "ghe_peering" {}
-
-variable "nexus" {}
+variable "lb_bucket" {}
 
 provider "aws" {
   region     = "${var.region}"
@@ -67,7 +63,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source             = "../../modules/vpc"
+  source             = "../../../modules/vpc"
   name               = "${var.name}"
   cidr               = "${var.cidr}"
   internal_subnets   = "${var.internal_subnets}"
@@ -76,31 +72,43 @@ module "vpc" {
 }
 
 module "dhcp" {
-  source  = "../../modules/dhcp"
-  name    = "prod.engineering.internal"
+  source  = "../../../modules/dhcp"
+  name    = "eng.linuxfoundation.org"
   vpc_id  = "${module.vpc.id}"
-  servers = "${replace(var.cidr, ".0/24", ".140")},${replace(var.cidr, ".0/24", ".180")},${replace(var.cidr, ".0/24", ".220")},${cidrhost(var.cidr, 2)}"
+  servers = "${replace(var.cidr, ".0.0/21", ".0.10")},${replace(var.cidr, ".0.0/21", ".1.10")},${replace(var.cidr, ".0.0/21", ".2.10")},${cidrhost(var.cidr, 2)}"
+//  servers = "${cidrhost(var.cidr, 2)}"
 }
 
 module "security_groups" {
   source  = "./security_groups"
   cidr    = "${var.cidr}"
   vpc_id  = "${module.vpc.id}"
-  name    = "Engineering"
+  name    = "Infrastructure"
 }
 
-resource "aws_route53_zone_association" "prod_zone" {
-  zone_id      = "${var.r53_zone_id}"
-  vpc_id       = "${module.vpc.id}"
-  vpc_region   = "${var.region}"
+module "iams" {
+  source      = "./iams"
+
+  name        = "infrastructure"
+  environment = "prod"
 }
 
-resource "aws_vpc_peering_connection" "peer" {
+# Creating combined zone for prod
+resource "aws_route53_zone" "prod" {
+  name = "${var.region_identitier}.prod-infra.linuxfoundation.internal."
+  vpc_id = "${module.vpc.id}"
+  vpc_region = "${var.region}"
+}
+
+resource "aws_cloudwatch_log_group" "infrastructure" {
+  name = "infrastructure"
+}
+
+resource "aws_vpc_peering_connection" "sandbox" {
   provider      = "aws.local"
-  count         = "${var.ghe_peering}"
 
-  peer_owner_id = "961082193871"
-  peer_vpc_id   = "vpc-10c9f477"
+  peer_owner_id = "433610389961"
+  peer_vpc_id   = "vpc-f4201f93"
   vpc_id        = "${module.vpc.id}"
 
   accepter {
@@ -110,88 +118,52 @@ resource "aws_vpc_peering_connection" "peer" {
 
 resource "aws_route" "peer_internal_1" {
   provider                  = "aws.local"
-  count                     = "${var.ghe_peering}"
   route_table_id            = "${module.vpc.raw_route_tables_id[0]}"
-  destination_cidr_block    = "10.31.0.0/23"
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+  destination_cidr_block    = "10.32.0.0/24"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.sandbox.id}"
 }
 
 resource "aws_route" "peer_internal_2" {
   provider                  = "aws.local"
-  count                     = "${var.ghe_peering}"
   route_table_id            = "${module.vpc.raw_route_tables_id[1]}"
-  destination_cidr_block    = "10.31.0.0/23"
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+  destination_cidr_block    = "10.32.0.0/24"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.sandbox.id}"
 }
 
 resource "aws_route" "peer_internal_3" {
   provider                  = "aws.local"
-  count                     = "${var.ghe_peering}"
   route_table_id            = "${module.vpc.raw_route_tables_id[2]}"
-  destination_cidr_block    = "10.31.0.0/23"
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+  destination_cidr_block    = "10.32.0.0/24"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.sandbox.id}"
 }
 
 resource "aws_route" "peer_external" {
   provider                  = "aws.local"
-  count                     = "${var.ghe_peering}"
   route_table_id            = "${module.vpc.external_rtb_id}"
-  destination_cidr_block    = "10.31.0.0/23"
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
-}
-
-# Creating EFS for Tools Storage
-resource "aws_efs_file_system" "production-tools-storage" {
-  provider = "aws.local"
-  creation_token = "production-tools-storage"
-
-  tags {
-    Name = "Enginnering - Production Tools Storage"
-  }
-}
-
-resource "aws_efs_mount_target" "efs_mount_1" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
-  subnet_id       = "${module.vpc.internal_subnets[0]}"
-  security_groups = ["${module.security_groups.efs}"]
-}
-
-resource "aws_efs_mount_target" "efs_mount_2" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
-  subnet_id       = "${module.vpc.internal_subnets[1]}"
-  security_groups = ["${module.security_groups.efs}"]
-}
-
-resource "aws_efs_mount_target" "efs_mount_3" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.production-tools-storage.id}"
-  subnet_id       = "${module.vpc.internal_subnets[2]}"
-  security_groups = ["${module.security_groups.efs}"]
+  destination_cidr_block    = "10.32.0.0/24"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.sandbox.id}"
 }
 
 data "template_file" "ecs_instance_cloudinit_tools" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    ecs_cluster_name  = "production-tools"
+    ecs_cluster_name  = "infrastructure"
     region            = "${var.region}"
     region_identifier = "${var.region_identitier}"
     newrelic_key      = "${var.newrelic_key}"
-    efs_id            = "${aws_efs_file_system.production-tools-storage.id}"
   }
 }
 
 module "tools-ecs-cluster" {
-  source                 = "../../modules/ecs-cluster"
+  source                 = "../../../modules/ecs-cluster"
   environment            = "Production"
   team                   = "Engineering"
-  name                   = "production-tools"
+  name                   = "infrastructure"
   vpc_id                 = "${module.vpc.id}"
   subnet_ids             = "${module.vpc.internal_subnets}"
   key_name               = "${var.key_name}"
-  iam_instance_profile   = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
+  iam_instance_profile   = "${module.iams.ecsInstanceProfile}"
   region                 = "${var.region}"
   availability_zones     = "${module.vpc.availability_zones}"
   instance_type          = "t2.medium"
@@ -210,6 +182,10 @@ module "consul-bind" {
   cidr                   = "${var.cidr}"
   region                 = "${var.region}"
   internal_elb_sg        = "${module.security_groups.internal_elb}"
+  r53_zone_id            = "Z1WGT54F777KX0"
+  keypair                = "${var.key_name}"
+  iam_role               = "${module.iams.ecsInstanceProfile}"
+  lb_logs_bucket         = "${var.lb_bucket}"
 }
 
 module "registrator" {
@@ -223,10 +199,11 @@ module "registrator" {
 module "consul-agent" {
   source = "./consul-agent"
 
-  encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
-  datacenter = "aws"
+  encryption_key   = "${var.consul_encryption_key}"
+  datacenter       = "production"
+  endpoint         = "consul.service.consul"
   ecs_cluster_name = "${module.tools-ecs-cluster.name}"
-  dns_servers = "${module.consul-bind.dns_servers}"
+  dns_servers      = "${module.consul-bind.dns_servers}"
 }
 
 module "vault" "vault-master" {
@@ -246,55 +223,35 @@ module "logstash" {
 
   ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
   dns_servers            = "${module.consul-bind.dns_servers}"
-
   vpc_id                 = "${module.vpc.id}"
   region                 = "${var.region}"
 }
 
-module "nexus" "nexus-master" {
-  source                 = "./nexus"
+module "logstash-cloudwatch" {
+  source                 = "./logstash-cloudwatch"
 
-  building               = "${var.nexus}"
   ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
   ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
   dns_servers            = "${module.consul-bind.dns_servers}"
-
   vpc_id                 = "${module.vpc.id}"
   region                 = "${var.region}"
 }
 
-module "pritunl" {
-  source                 = "./pritunl"
+module "mongodb" {
+  source                 = "./mongodb"
 
-  external_subnets       = "${module.vpc.external_subnets}"
-  vpn_sg                 = "${module.security_groups.vpn}"
+  dns_servers            = "${module.consul-bind.dns_servers}"
+  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
+  ecs_security_group     = "${module.security_groups.tools-ecs-cluster}"
+  region                 = "${var.region}"
+  keypair                = "${var.key_name}"
+  newrelic_key           = "${var.newrelic_key}"
+  vpc_id                 = "${module.vpc.id}"
+  internal_subnets       = "${module.vpc.internal_subnets}"
+  region_identifier      = "${var.region_identitier}"
+  iam_role               = "${module.iams.ecsInstanceProfile}"
 }
-
-module "it-managed-vpn" {
-  source            = "./it_vpn_tunnel"
-
-  vpc_id            = "${module.vpc.id}"
-  internal_subnets  = "${module.vpc.internal_subnets}"
-  cidr              = "10.32.0.0/12"
-  key_name          = "${var.key_name}"
-  route_tables      = "${module.vpc.raw_route_tables_id}"
-}
-
-module "cert-managed-vpn" {
-  source            = "./cert_vpn_tunnel"
-
-  vpc_id            = "${module.vpc.id}"
-  internal_subnets  = "${module.vpc.internal_subnets}"
-  cidr              = "10.32.0.0/12"
-  key_name          = "${var.key_name}"
-  route_tables      = "${module.vpc.raw_route_tables_id}"
-}
-
 
 /**
  * Outputs
@@ -372,22 +329,6 @@ output "tools_ecs_name" {
 output "tools_ecs_sg" {
   value = "${module.tools-ecs-cluster.security_group_id}"
 }
-
-//output "consul_elb_cname" {
-//  value = "${module.consul.consul_elb_cname}"
-//}
-//
-//output "consul_elb_name" {
-//  value = "${module.consul.consul_elb_name}"
-//}
-//
-//output "consul_service_name" {
-//  value = "${module.consul.consul_service_name}"
-//}
-//
-//output "consul_elb_zoneid" {
-//  value = "${module.consul.consul_elb_zoneid}"
-//}
 
 output "dns_servers" {
   value = "${module.consul-bind.dns_servers}"

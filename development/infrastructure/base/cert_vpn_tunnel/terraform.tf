@@ -1,6 +1,6 @@
 variable "key_name" {}
 
-variable "internal_subnets" {
+variable "external_subnets" {
   type = "list"
 }
 
@@ -54,7 +54,7 @@ resource "aws_instance" "it-managed-vpn-tunnel" {
 
   disable_api_termination = "true"
   vpc_security_group_ids  = ["${aws_security_group.it-vpn-tunnel.id}"]
-  subnet_id               = "${var.internal_subnets[0]}"
+  subnet_id               = "${var.external_subnets[0]}"
 
   tags {
     Name                  = "Cert Managed VPN Tunnel"

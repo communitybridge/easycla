@@ -4,7 +4,7 @@
     "memory": 256,
     "image": "gliderlabs/registrator:latest",
     "name": "registrator",
-    "command": ["-cleanup", "consul://localhost:8500"],
+    "command": ["-cleanup", "consul://127.0.0.1:8500"],
     "mountPoints": [
       {
         "sourceVolume": "docker-sock",
@@ -19,7 +19,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "shared-production-infra",
+        "awslogs-group": "infrastructure",
         "awslogs-region": "us-west-2",
         "awslogs-stream-prefix": "registrator"
       }

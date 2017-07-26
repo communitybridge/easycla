@@ -6,19 +6,6 @@ variable "secret_key" {
   description   = "Your AWS Secret Key"
 }
 
-# S3 Bucket for Pypi Server
-resource "aws_s3_bucket" "pypi_repo" {
-  provider      = "aws.western"
-  bucket        = "lf-engineering-python-repo"
-  acl           = "private"
-
-  tags {
-    Name        = "Pypi Repository"
-    Environment = "Production"
-    Team        = "Engineering"
-  }
-}
-
 # S3 Bucket for Backups
 resource "aws_s3_bucket" "backups" {
   provider      = "aws.western"
@@ -67,10 +54,6 @@ resource "aws_s3_bucket" "engineering-database-backups" {
     Name        = "Engineering Database Backups"
     Environment = "Production"
   }
-}
-
-output "pypi_repo_bucket" {
-  value         = "${aws_s3_bucket.pypi_repo.bucket}"
 }
 
 output "backups_bucket" {
