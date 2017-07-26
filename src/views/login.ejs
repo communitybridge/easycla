@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Integration Console</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href=".">
+    <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    <link href="/assets/dist/all.min.css" rel="stylesheet">
+    <script src="/assets/dist/jquery.min.js"></script>
+    <script src="/assets/dist/all.min.js"></script>
+    <style>
+      body {
+        background: url(../assets/img/boat.jpeg) no-repeat center center fixed #000;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 content">
+          <div class="login-container">
+            <div class="gray-rectangle">
+              <div class="white-rectangle"></div>
+              <div class="login-content">
+                <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 200px;  display: block; margin-left: auto; margin-right: auto;"/>
+                <br />
+                <br />
+                <form action="/login_cas">
+                  <button class="btn btn-primary btn-login" type="submit" >
+                    <span class="icon icon-login"></span>
+                    <span class="btn-label">Sign in</span>
+                  </button>
+                </form>
+              </div>
+              <div class="white-rectangle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // execute/clear BS loaders for docs
+      $(function(){while(window.BS&&window.BS.loader&&window.BS.loader.length){(window.BS.loader.pop())()}})
+    </script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+[
+  {
+    "essential": true,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${build_hash}",
+    "memoryReservation": 512,
+    "name": "pmc",
+    "portMappings": [{
+      "containerPort": 8081
+    }],
+    "dnsServers": [
+      "${DNS_SERVER_1}",
+      "${DNS_SERVER_2}",
+      "${DNS_SERVER_3}"
+    ],
+    "environment": [
+      {
+        "name": "SERVICE_8081_NAME",
+        "value": "PMC_${build_hash}"
+      },
+      {
+        "name": "SERVICE_8081_TAGS",
+        "value": "${TAG_REGION},${TAG_VPC_ID}"
+      },
+      {
+        "name": "NEWRELIC_LICENSE",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "gelf",
+      "options": {
+        "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
+        "labels": "realm,application,version,environment,region,tags"
+      }
+    },
+    "dockerLabels": {
+      "realm": "pmc",
+      "application": "pmc",
+      "version": "${build_hash}",
+      "environment": "production",
+      "region": "${TAG_REGION}",
+      "tags": "application, cinco, nodejs"
+    }
+  }
+]
