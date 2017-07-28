@@ -57,27 +57,6 @@ resource "aws_security_group" "tools" {
   }
 
   ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    security_groups = ["${aws_security_group.internal_elb.id}"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = ["643009352547/sg-ffcc8d84"] # CINCO ECS
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = ["643009352547/sg-a64c08dd"] # PMC ECS
-  }
-
-  ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -110,6 +89,13 @@ resource "aws_security_group" "vpn" {
   vpc_id      = "${var.vpc_id}"
 
   ingress {
+    from_port = 22
+    protocol = "tcp"
+    to_port = 22
+    cidr_blocks = ["50.188.159.47/32"]
+  }
+
+  ingress {
     from_port   = 10000
     to_port     = 20000
     protocol    = "udp"
@@ -119,6 +105,13 @@ resource "aws_security_group" "vpn" {
   ingress {
     from_port   = 443
     to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

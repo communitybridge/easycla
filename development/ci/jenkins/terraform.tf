@@ -162,5 +162,5 @@ module "iam" {
   source = "./iam-role"
 
   name = "jenkins"
-  environment = "slave"
+  environment = "slaves"
 }

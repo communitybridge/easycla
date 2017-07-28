@@ -22,28 +22,50 @@ data "aws_ami" "pritunl" {
   }
 }
 
-resource "aws_instance" "pritunl" {
-  count                  = "${length(var.external_subnets)}"
-  provider               = "aws.local"
-  ami                    = "${data.aws_ami.pritunl.id}"
-  source_dest_check      = false
-  instance_type          = "t2.small"
-  subnet_id              = "${element(var.external_subnets, count.index)}"
-  key_name               = "production-shared-tools"
-  vpc_security_group_ids = ["${var.vpn_sg}"]
-  monitoring             = true
+resource "aws_launch_configuration" "main" {
+  provider    = "aws.local"
+  name_prefix = "vpn-pritunl-nodes-config"
 
-  tags {
-    Name        = "Pritunl - Node #${count.index}"
-    Team        = "Engineering"
-    Environment = "Production"
+  image_id                    = "${data.aws_ami.pritunl.id}"
+  instance_type               = "t2.small"
+  key_name                    = "production-shared-tools"
+  security_groups             = ["${var.vpn_sg}"]
+  associate_public_ip_address = true
+
+  # root
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = "30"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-resource "aws_eip" "pritunl" {
-  provider = "aws.local"
-  instance = "${element(aws_instance.pritunl.*.id, count.index)}"
-  vpc      = true
+resource "aws_autoscaling_group" "main" {
+  provider             = "aws.local"
+  name                 = "vpn-pritunl-nodes"
+
+  availability_zones   = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  vpc_zone_identifier  = ["${var.external_subnets}"]
+  launch_configuration = "${aws_launch_configuration.main.id}"
+  min_size             = "2"
+  max_size             = "2"
+  desired_capacity     = "2"
+  termination_policies = ["OldestLaunchConfiguration", "Default"]
+
+  tag {
+    key                 = "Name"
+    value               = "(VPN) Pritunl Node"
+    propagate_at_launch = true
+  }
+
+  load_balancers = ["${aws_elb.pritunl-cluster.name}"]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Create a new load balancer
@@ -75,7 +97,6 @@ resource "aws_elb" "pritunl-cluster" {
     interval            = 30
   }
 
-  instances                   = ["${aws_instance.pritunl.*.id}"]
   cross_zone_load_balancing   = true
   idle_timeout                = 400
   connection_draining         = true

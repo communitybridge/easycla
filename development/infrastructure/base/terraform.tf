@@ -66,6 +66,10 @@ provider "aws" {
   secret_key = "${var.secret_key}"
 }
 
+resource "aws_cloudwatch_log_group" "infrastructure" {
+  name = "infrastructure"
+}
+
 module "vpc" {
   source             = "../../modules/vpc"
   name               = "${var.name}"
@@ -175,7 +179,7 @@ data "template_file" "ecs_instance_cloudinit_tools" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    ecs_cluster_name  = "production-tools"
+    ecs_cluster_name  = "infrastructure"
     region            = "${var.region}"
     region_identifier = "${var.region_identitier}"
     newrelic_key      = "${var.newrelic_key}"
@@ -187,18 +191,18 @@ module "tools-ecs-cluster" {
   source                 = "../../modules/ecs-cluster"
   environment            = "Production"
   team                   = "Engineering"
-  name                   = "production-tools"
+  name                   = "infrastructure"
   vpc_id                 = "${module.vpc.id}"
   subnet_ids             = "${module.vpc.internal_subnets}"
   key_name               = "${var.key_name}"
   iam_instance_profile   = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
   region                 = "${var.region}"
   availability_zones     = "${module.vpc.availability_zones}"
-  instance_type          = "t2.medium"
+  instance_type          = "t2.large"
   security_group         = "${module.security_groups.tools-ecs-cluster}"
   instance_ebs_optimized = false
-  desired_capacity       = "3"
-  min_size               = "3"
+  desired_capacity       = "1"
+  min_size               = "1"
   cloud_config_content   = "${data.template_file.ecs_instance_cloudinit_tools.rendered}"
 }
 
@@ -223,35 +227,11 @@ module "registrator" {
 module "consul-agent" {
   source = "./consul-agent"
 
-  encryption_key = "9F2n4KWdxSj2Z4MMVqbHqg=="
-  datacenter = "aws"
+  encryption_key   = "${var.consul_encryption_key}"
+  datacenter       = "development"
+  endpoint         = "consul.service.development.consul"
   ecs_cluster_name = "${module.tools-ecs-cluster.name}"
-  dns_servers = "${module.consul-bind.dns_servers}"
-}
-
-module "vault" "vault-master" {
-  source                 = "./vault"
-
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
-  consul_endpoint        = "127.0.0.1:8500"
-  dns_servers            = "${module.consul-bind.dns_servers}"
-  region                 = "${var.region}"
-}
-
-module "logstash" {
-  source                 = "./logstash"
-
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
-  dns_servers            = "${module.consul-bind.dns_servers}"
-
-  vpc_id                 = "${module.vpc.id}"
-  region                 = "${var.region}"
+  dns_servers      = "${module.consul-bind.dns_servers}"
 }
 
 module "nexus" "nexus-master" {
@@ -273,6 +253,15 @@ module "pritunl" {
 
   external_subnets       = "${module.vpc.external_subnets}"
   vpn_sg                 = "${module.security_groups.vpn}"
+}
+
+module "mongodb" {
+  source = "./mongodb"
+
+  vpc_id = "${module.vpc.id}"
+  region = "${var.region}"
+  dns_servers = "${module.consul-bind.dns_servers}"
+  ecs_cluster_name = "${module.tools-ecs-cluster.name}"
 }
 
 module "it-managed-vpn" {
@@ -299,7 +288,7 @@ module "cert-managed-vpn" {
 module "rds-cluster" {
   source               = "../../modules/rds-cluster"
   master_username      = "lfengineering"
-  name                 = "production-tools"
+  name                 = "keycloak"
   master_password      = "buanCAWwwAGxUyoU2Fai"
   availability_zones   = "${var.availability_zones}"
   vpc_id               = "${module.vpc.id}"
@@ -311,6 +300,44 @@ module "rds-cluster" {
   engine_version       = "10.1.19"
   parameter_group_name = "engineering"
   instance_type        = "db.t2.small"
+}
+
+# LDAP used for Keycloak sandbox
+module "open-ldap" {
+  source                 = "./openldap"
+
+  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
+  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
+  internal_subnets       = "${var.internal_subnets}"
+  internal_elb_sg        = "${module.tools-ecs-cluster.security_group_id}"
+  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
+
+  vpc_id                 = "${module.vpc.id}"
+  region                 = "${var.region}"
+
+  ldap_org               = "linuxfoundation"
+  ldap_domain            = "linuxfoundation.org"
+  ldap_admin_password    = "ZPw4RRzxLikVdN"
+}
+
+module "keycloak" {
+  source                 = "./keycloak"
+
+  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
+  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
+  subnets                = "${var.external_subnets}"
+  internal_elb_sg        = "${module.security_groups.internal_elb}"
+  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
+
+  vpc_id                 = "${module.vpc.id}"
+  region                 = "${var.region}"
+  env                    = "sandbox"
+
+  mysql_db               = "sandbox"
+  mysql_host             = "keycloak.cnfn2tun3mjw.us-west-2.rds.amazonaws.com"
+  mysql_pass             = "buanCAWwwAGxUyoU2Fai"
+  mysql_port             = "3306"
+  mysql_user             = "lfengineering"
 }
 
 

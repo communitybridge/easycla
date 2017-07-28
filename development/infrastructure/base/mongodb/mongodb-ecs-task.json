@@ -3,7 +3,8 @@
     "essential": true,
     "image": "mongo:3.5",
     "memoryReservation": 1024,
-    "name": "logstash",
+    "name": "mongodb",
+    "command": ["mongod", "--auth", "--bind_ip", "0.0.0.0"],
     "portMappings": [
       {
         "containerPort": 27017,
