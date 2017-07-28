@@ -73,6 +73,6 @@ resource "aws_route" "route_it_2" {
   count                     = "${length(var.internal_subnets)}"
   provider                  = "aws.local"
   route_table_id            = "${var.route_tables[count.index]}"
-  destination_cidr_block    = "172.30.0.0/16"
+  destination_cidr_block    = "172.30.100.128/25"
   instance_id               = "${aws_instance.it-managed-vpn-tunnel.id}"
 }

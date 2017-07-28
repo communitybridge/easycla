@@ -21,14 +21,6 @@
       {
         "name": "SERVICE_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
-      },
-      {
-        "name": "SERVICE_8081_CHECK_HTTP",
-        "value": "/"
-      },
-      {
-        "name": "SERVICE_8081_CHECK_INTERVAL",
-        "value": "300s"
       }
     ],
     "mountPoints": [
@@ -38,10 +30,11 @@
       }
     ],
     "logConfiguration": {
-      "logDriver": "gelf",
+      "logDriver": "awslogs",
       "options": {
-        "gelf-address": "udp://${TAG_REGION}.logstash.service.consul:12201",
-        "labels": "app_name,app_env,app_region"
+        "awslogs-group": "infrastructure",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "nexus"
       }
     },
     "dockerLabels": {

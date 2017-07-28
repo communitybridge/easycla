@@ -201,7 +201,7 @@ module "consul-agent" {
 
   encryption_key   = "${var.consul_encryption_key}"
   datacenter       = "production"
-  endpoint         = "consul.service.consul"
+  endpoint         = "consul.service.production.consul"
   ecs_cluster_name = "${module.tools-ecs-cluster.name}"
   dns_servers      = "${module.consul-bind.dns_servers}"
 }
@@ -238,20 +238,6 @@ module "logstash-cloudwatch" {
   region                 = "${var.region}"
 }
 
-module "mongodb" {
-  source                 = "./mongodb"
-
-  dns_servers            = "${module.consul-bind.dns_servers}"
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_security_group     = "${module.security_groups.tools-ecs-cluster}"
-  region                 = "${var.region}"
-  keypair                = "${var.key_name}"
-  newrelic_key           = "${var.newrelic_key}"
-  vpc_id                 = "${module.vpc.id}"
-  internal_subnets       = "${module.vpc.internal_subnets}"
-  region_identifier      = "${var.region_identitier}"
-  iam_role               = "${module.iams.ecsInstanceProfile}"
-}
 
 /**
  * Outputs

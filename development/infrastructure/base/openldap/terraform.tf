@@ -59,6 +59,16 @@ resource "aws_ecs_task_definition" "openldap" {
   }
 
   container_definitions = "${data.template_file.openldap_ecs_task.rendered}"
+
+  volume {
+    name = "openldap"
+    host_path = "/mnt/storage/ldap/core"
+  }
+
+  volume {
+    name = "openldap-storage"
+    host_path = "/mnt/storage/ldap/storage"
+  }
 }
 
 resource "aws_ecs_service" "openldap" {
@@ -72,65 +82,5 @@ resource "aws_ecs_service" "openldap" {
 
   lifecycle {
     create_before_destroy = true
-  }
-}
-
-# Create a new load balancer
-resource "aws_elb" "openldap" {
-  provider = "aws.local"
-  name = "openldap"
-  subnets = ["${var.internal_subnets}"]
-  security_groups = ["${var.internal_elb_sg}"]
-  internal = true
-
-  listener {
-    instance_port = 389
-    instance_protocol = "tcp"
-    lb_port = 389
-    lb_protocol = "tcp"
-  }
-
-  listener {
-    instance_port = 636
-    instance_protocol = "tcp"
-    lb_port = 636
-    lb_protocol = "tcp"
-  }
-
-  health_check {
-    healthy_threshold = 2
-    unhealthy_threshold = 2
-    timeout = 3
-    target = "TCP:389"
-    interval = 30
-  }
-
-  cross_zone_load_balancing = true
-  idle_timeout = 400
-  connection_draining = true
-  connection_draining_timeout = 400
-
-  tags {
-    Name = "openldap"
-  }
-}
-
-# Create a new load balancer attachment
-resource "aws_autoscaling_attachment" "openldap" {
-  provider = "aws.local"
-  autoscaling_group_name = "${var.ecs_asg_name}"
-  elb                    = "${aws_elb.openldap.id}"
-}
-
-resource "aws_route53_record" "openldap" {
-  provider    = "aws.local"
-  zone_id = "Z2MDT77FL23F9B"
-  name    = "sandbox-ldap"
-  type    = "A"
-
-  alias {
-    name                   = "${aws_elb.openldap.dns_name}"
-    zone_id                = "${aws_elb.openldap.zone_id}"
-    evaluate_target_health = true
   }
 }

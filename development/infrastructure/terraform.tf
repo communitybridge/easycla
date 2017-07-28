@@ -12,8 +12,8 @@ variable "newrelic_key" {
 
 terraform {
   backend "consul" {
-    address = "consul.service.consul:8500"
-    path    = "terraform/production-tools"
+    address = "consul.service.development.consul:8500"
+    path    = "terraform/infrastructure"
   }
 }
 
@@ -70,7 +70,7 @@ module "vpc_west" {
   dns_server         = "10.32.0.2"
   r53_zone_id        = "${aws_route53_zone.prod.zone_id}"
 
-  name               = "Western Production Tools"
+  name               = "Infrastructure"
   cidr               = "10.32.0.0/24"
   internal_subnets   = ["10.32.0.128/27", "10.32.0.160/27", "10.32.0.192/27"]
   external_subnets   = ["10.32.0.0/27",   "10.32.0.32/27",  "10.32.0.64/27"]

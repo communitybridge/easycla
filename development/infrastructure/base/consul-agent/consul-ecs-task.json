@@ -17,12 +17,16 @@
       {
         "name": "CONSUL_DATACENTER",
         "value": "${DATACENTER}"
+      },
+      {
+        "name": "CONSUL_ENDPOINT",
+        "value": "${CONSUL_ENDPOINT}"
       }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "shared-production-infra",
+        "awslogs-group": "infrastructure",
         "awslogs-region": "us-west-2",
         "awslogs-stream-prefix": "consul-agent"
       }

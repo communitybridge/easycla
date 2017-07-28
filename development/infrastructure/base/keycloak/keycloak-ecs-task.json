@@ -51,28 +51,20 @@
         "value": "${KEYCLOAK_ENV}"
       },
       {
-        "name": "SERVICE_NAME",
-        "value": "keycloak-${KEYCLOAK_ENV}"
+        "name": "SERVICE_8576_NAME",
+        "value": "keycloak"
       },
       {
-        "name": "SERVICE_TAGS",
+        "name": "SERVICE_8576_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
-      },
-      {
-        "name": "SERVICE_8081_CHECK_HTTP",
-        "value": "/"
-      },
-      {
-        "name": "SERVICE_8081_CHECK_INTERVAL",
-        "value": "300s"
       }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "keycloak",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream-prefix": "${KEYCLOAK_ENV}"
+        "awslogs-group": "infrastructure",
+        "awslogs-region": "${TAG_REGION}",
+        "awslogs-stream-prefix": "keycloak"
       }
     },
     "dockerLabels": {

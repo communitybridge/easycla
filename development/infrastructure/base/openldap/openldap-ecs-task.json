@@ -31,27 +31,29 @@
         "value": "${LDAP_ADMIN_PASSWORD}"
       },
       {
-        "name": "SERVICE_NAME",
+        "name": "SERVICE_389_NAME",
         "value": "openldap"
       },
       {
-        "name": "SERVICE_TAGS",
+        "name": "SERVICE_389_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
+      }
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "openldap",
+        "containerPath": "/var/lib/ldap"
       },
       {
-        "name": "SERVICE_8081_CHECK_HTTP",
-        "value": "/"
-      },
-      {
-        "name": "SERVICE_8081_CHECK_INTERVAL",
-        "value": "300s"
+        "sourceVolume": "openldap-storage",
+        "containerPath": "/etc/ldap/slapd.d"
       }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "keycloak",
-        "awslogs-region": "us-west-2",
+        "awslogs-group": "infrastructure",
+        "awslogs-region": "${TAG_REGION}",
         "awslogs-stream-prefix": "openldap"
       }
     },

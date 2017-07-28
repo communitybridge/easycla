@@ -12,8 +12,8 @@ variable "newrelic_key" {
 
 terraform {
   backend "consul" {
-    address = "consul.service.consul:8500"
-    path    = "terraform/production/infrastructure"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure"
   }
 }
 
@@ -116,25 +116,15 @@ module "project_cinco" {
   peering_id = "pcx-91f961f8"
 }
 
-//# Peering Request with PMC Production
-//module "project_pmc" {
-//  source = "./project_peering"
-//
-//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
-//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
-//  project_cidr = "10.32.4.0/24"
-//  peering_id = "pcx-a6eb7bcf"
-//}
+# Peering Request with PMC Production
+module "project_pmc" {
+  source = "./project_peering"
 
-//# Peering Request with Engineering VPC
-//module "project_engineering" {
-//  source = "./project_peering"
-//
-//  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
-//  external_rtb_id = "${module.vpc_west.external_rtb_id}"
-//  project_cidr = "10.32.2.0/24"
-//  peering_id = "pcx-6beb7b02"
-//}
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.4.0/24"
+  peering_id = "pcx-c4f961ad"
+}
 
 output "account_number" {
   value = "643009352547"
