@@ -25,6 +25,37 @@ resource "aws_security_group" "it-vpn-tunnel" {
     cidr_blocks = ["${var.cidr}"]
   }
 
+  # Certification firewalls.
+  #  - 54.213.24.55     (us-west-2-lfc-fw-1.dmz)
+  #  - 174.143.200.141  (dfw-lfc-fw.dmz)
+  #  - 119.9.92.26      (hkg-lfc-fw.dmz)
+  #  - 54.193.90.43     (us-west-1-lfc-fw.dmz)
+  #  - 54.172.59.54     (us-east-1-lfc-fw.dmz)
+  #  - 54.179.151.230   (ap-southeast-1-lfc-fw.dmz)
+  #  - 52.193.246.225   (ap-northeast-1-lfc-fw.dmz)
+  ingress {
+    from_port   = 1194
+    to_port     = 1194
+    protocol    = "udp"
+    cidr_blocks = [
+        "54.213.24.55/32",
+        "174.143.200.141/32",
+        "119.9.92.26/32",
+        "54.193.90.43/32",
+        "54.172.59.54/32",
+        "54.179.151.230/32",
+        "52.193.246.225/32"
+    ]
+  }
+
+  # Rene's managment server in Cert network.
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["52.64.150.59/32"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
