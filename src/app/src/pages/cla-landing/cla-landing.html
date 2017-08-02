@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Member Console</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing overflow-scroll="true">
+  <header>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-2>
+          <img src="https://www.linuxfoundation.org/sites/lfcorp/files/styles/logo_teaser_1x_tablet/public/2016-03/logo_lfcp_zephyr.png?itok=ebyOPmET" alt="Zephyr Logo" />
+        </ion-col>
+        <ion-col col-12 col-md-10>
+          <h1>Zephyr</h1>
+          <p>CLA</p>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12 col-md-6 (click)="openClaIndividualPage()">
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+              <ion-icon name="person" item-left large ></ion-icon>
+              <span>Individual</span>
+            </ion-card-title>
+            <ion-item>
+              <p>Select this if you are signing the CLA on behalf of yourself.</p>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-12 col-md-6 (click)="openClaIndividualEmployeeModal()">
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title >
+              <ion-icon name="person" item-left large ></ion-icon>
+              <ion-icon name="briefcase" item-left large ></ion-icon>
+              <span>Individual Employee</span>
+            </ion-card-title>
+            <ion-item>
+              <p>Select this if you are signing the CLA on behalf of yourself.</p>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+</ion-content>
