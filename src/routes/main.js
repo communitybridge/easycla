@@ -7,7 +7,7 @@ var cinco = require("../lib/api");
 
 router.get('/', require('connect-ensure-login').ensureLoggedIn('/login'), function(req, res){
   if(req.session.user.isAdmin || req.session.user.isProjectManager) {
-    res.redirect('/pmc')
+    res.redirect('/member-console')
   }
 });
 
