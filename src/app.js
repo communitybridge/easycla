@@ -47,7 +47,7 @@ var authMiddleware = function(req, res, next) {
   if (req.isAuthenticated()) return next();
   else return res.render('login');
 }
-app.use('/member-console', authMiddleware, express.static(path.join(__dirname, 'app/www')));
+app.use('/cla', authMiddleware, express.static(path.join(__dirname, 'app/www')));
 
 // Routes
 var mainRouter = require('./routes/main');
@@ -82,8 +82,8 @@ app.listen(APP_PORT, function() {});
 console.log("Node App listening port: ", APP_PORT);
 
 // Docker resolves the port mapping to "console.endpoint.port:8081"
-const MEMBER_CONSOLE_URL = config.get('console.endpoint');
-console.log('Docker member-console-url: ' + MEMBER_CONSOLE_URL);
+const CLA_URL = config.get('console.endpoint');
+console.log('Docker cla-url: ' + CLA_URL);
 
 displayBanner();
 
@@ -91,7 +91,7 @@ passport.use(new CasStrategy({
   version: 'CAS3.0',
   validateURL: '/serviceValidate',
   ssoBaseURL: 'https://identity.linuxfoundation.org/cas',
-  serverBaseURL: MEMBER_CONSOLE_URL
+  serverBaseURL: CLA_URL
 }, function(login, done) {
   return done(null, login);
 }));
@@ -109,7 +109,8 @@ function displayBanner() {
   let fs = require('fs')
   let max = 4;
   let min = 1;
-  let version = Math.floor (Math.random() * (max - min + 1) ) + min;
+  // let version = Math.floor (Math.random() * (max - min + 1) ) + min;
+  let version = 3;
   let banner = 'banners/' + version + '.txt';
   fs.readFile(banner, 'utf8', function(err, data) {
     if (err) throw err;

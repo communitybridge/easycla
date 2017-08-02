@@ -1,5 +1,5 @@
 {
-  "name": "member-console-app",
+  "name": "cla-console-app",
   "author": "",
   "private": true,
   "os": [
@@ -55,5 +55,5 @@
       "locator": "ios"
     }
   ],
-  "description": "member-console-app"
+  "description": "cla-console-app"
 }
