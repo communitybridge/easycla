@@ -1,7 +1,7 @@
 {
-  "name": "member-console",
+  "name": "cla-console",
   "version": "0.0.1",
-  "description": "Member Console",
+  "description": "CLA Console",
   "private": true,
   "main": "app.js",
   "scripts": {
