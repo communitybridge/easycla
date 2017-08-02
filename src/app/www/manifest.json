@@ -1,6 +1,6 @@
 {
-  "name": "member-console-app",
-  "short_name": "member-console-app",
+  "name": "cla-console-app",
+  "short_name": "cla-console-app",
   "start_url": "index.html",
   "display": "standalone",
   "icons": [{
