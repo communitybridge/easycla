@@ -27,6 +27,10 @@ variable "endpoint" {
   description = "Consul Server Endpoint the Agent needs to connect to"
 }
 
+variable "project" {
+  description = "project name"
+}
+
 data "template_file" "consul_ecs_task" {
   template = "${file("${path.module}/consul-ecs-task.json")}"
 
@@ -43,6 +47,7 @@ data "template_file" "consul_ecs_task" {
 
     # For Logging
     AWS_REGION    = "${var.region}"
+    PROJECT       = "${var.project}"
   }
 }
 

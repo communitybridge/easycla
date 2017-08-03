@@ -24,7 +24,7 @@
       }
     },
     "dockerLabels": {
-      "realm": "cinco",
+      "realm": "${PROJECT}",
       "application": "registrator",
       "environment": "production",
       "tags": "service, registrator"

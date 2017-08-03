@@ -19,6 +19,23 @@ resource "aws_s3_bucket" "backups" {
   }
 }
 
+# S3 Bucket for Storing Secrets
+resource "aws_s3_bucket" "secrets" {
+  provider      = "aws.western"
+  bucket        = "lf-engineering-prod-secrets"
+  acl           = "private"
+
+  tags {
+    Name        = "Secrets"
+    Environment = "Production"
+    Team        = "Engineering"
+  }
+
+  versioning {
+    enabled = true
+  }
+}
+
 # S3 Bucket for Production Logstash Logs
 resource "aws_s3_bucket" "production-logs" {
   provider      = "aws.western"

@@ -15,6 +15,10 @@ variable "build_hash" {
   description = "The Build Number we are to deploy."
 }
 
+variable "project" {
+  description = "project name"
+}
+
 data "template_file" "registrator_ecs_task" {
   template = "${file("${path.module}/registrator-ecs-task.json")}"
 
@@ -26,6 +30,7 @@ data "template_file" "registrator_ecs_task" {
 
     # For Logging
     AWS_REGION    = "${var.region}"
+    PROJECT       = "${var.project}"
   }
 }
 
