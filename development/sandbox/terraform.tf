@@ -57,7 +57,7 @@ data "template_file" "ecs_cloud_config" {
 
 module "vpc" {
   source             = "../../modules/vpc"
-  name               = "CI"
+  name               = "Sandboxes"
   cidr               = "${var.cidr}"
   internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
   external_subnets   = ["10.32.1.0/27",   "10.32.1.32/27",  "10.32.1.64/27"]

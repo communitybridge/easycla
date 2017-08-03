@@ -31,7 +31,7 @@
       }
     },
     "dockerLabels": {
-      "realm": "cinco",
+      "realm": "${PROJECT}",
       "application": "consul-agent",
       "environment": "production",
       "tags": "service, consul"
