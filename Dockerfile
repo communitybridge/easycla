@@ -4,9 +4,8 @@ MAINTAINER Linux Foundation <webmaster@linuxfoundation.org>
 
 RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash - && yum install -y nodejs gcc-c++ make
 
-ADD https://releases.hashicorp.com/consul-template/0.18.3/consul-template_0.18.3_linux_amd64.tgz /srv/
-RUN tar -xvf /srv/consul-template_0.18.3_linux_amd64.tgz -C /usr/bin/ && \
-    rm -f /srv/consul-template_0.18.3_linux_amd64.tgz
+RUN cd /srv/ && wget https://releases.hashicorp.com/consul-template/0.19.0/consul-template_0.19.0_linux_amd64.tgz
+RUN tar -xvf /srv/consul-template_0.19.0_linux_amd64.tgz -C /usr/bin/
 
 RUN useradd www-data && \
     usermod -u 1000 --shell /bin/bash www-data
