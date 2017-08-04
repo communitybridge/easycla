@@ -13,8 +13,8 @@ variable "build_hash" {
 # We are saving the state for this infra in Consul
 terraform {
   backend "consul" {
-    address = "consul.service.consul:8500"
-    path    = "terraform/applications/pmc/app"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/pmc/application"
   }
 }
 
@@ -73,7 +73,8 @@ module "registrator" {
   source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
 
   # Application Information
-  build_hash      = "${var.build_hash}"
+  build_hash       = "${var.build_hash}"
+  project          = "pmc"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
@@ -86,10 +87,12 @@ module "consul" {
 
   # Consul
   encryption_key   = "9F2n4KWdxSj2Z4MMVqbHqg=="
-  datacenter       = "AWS"
+  datacenter       = "production"
+  endpoint         = "consul.service.consul"
 
   # Application Information
-  build_hash     = "${var.build_hash}"
+  build_hash       = "${var.build_hash}"
+  project          = "pmc"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
