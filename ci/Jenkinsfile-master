@@ -83,7 +83,7 @@ node {
     withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
       sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/cd_notif -d '{\
           \"steps\": {\
-            \"Docker Image: CLA-Console": "${statusDockerCLAConsole}\",\
+            \"Docker Image: CLA-Console\": \"${statusDockerCLAConsole}\",\
             \"Docker Image: NGINX\": \"${statusDockerNGINX}\",\
             \"Terraform Plan\": \"${statusTerraformPlan}\"\
           },\
