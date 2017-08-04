@@ -1,5 +1,5 @@
-name: Member Console
-machine_name: member-console
+name: CLA Console
+machine_name: cla-console
 stack: nodejs
 modes:
   - default

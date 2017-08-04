@@ -1,9 +1,9 @@
 [
   {
     "essential": true,
-    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${build_hash}",
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/production:${build_hash}",
     "memoryReservation": 512,
-    "name": "pmc",
+    "name": "cla-console",
     "portMappings": [{
       "containerPort": 8081
     }],
@@ -15,7 +15,7 @@
     "environment": [
       {
         "name": "SERVICE_8081_NAME",
-        "value": "PMC_${build_hash}"
+        "value": "CLA_CONSOLE_${build_hash}"
       },
       {
         "name": "SERVICE_8081_TAGS",
@@ -34,8 +34,8 @@
       }
     },
     "dockerLabels": {
-      "realm": "pmc",
-      "application": "pmc",
+      "realm": "cla",
+      "application": "console",
       "version": "${build_hash}",
       "environment": "production",
       "region": "${TAG_REGION}",
