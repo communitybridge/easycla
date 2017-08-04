@@ -5,7 +5,7 @@ node {
   sh "sudo rm -rf *"
 
   stage ("Checkout") {
-    git credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "develop"
+    git credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/cla-console.git", branch: "develop"
     sh "git checkout ${params.SHA}"
   }
 
@@ -13,29 +13,35 @@ node {
 
     stage ("Generating Docker Build Artifact") {
       docker.withRegistry("https://433610389961.dkr.ecr.us-west-2.amazonaws.com", "ecr:us-west-2:jenkins-aws-user") {
-        sh "docker build -t pmc/sandbox/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} ."
-        sh "docker tag pmc/sandbox/${params.SHA} 433610389961.dkr.ecr.us-west-2.amazonaws.com/pmc/sandbox:${env.BUILD_NUMBER}"
-        sh "docker push 433610389961.dkr.ecr.us-west-2.amazonaws.com/pmc/sandbox:${env.BUILD_NUMBER}"
+        sh "docker build -t cla-console/sandbox/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} ."
+        sh "docker tag cla-console/sandbox/${params.SHA} 433610389961.dkr.ecr.us-west-2.amazonaws.com/cla-console/sandbox:${env.BUILD_NUMBER}"
+        sh "docker push 433610389961.dkr.ecr.us-west-2.amazonaws.com/cla-console/sandbox:${env.BUILD_NUMBER}"
       }
     }
 
     stage ("Updating Sandbox") {
       sshagent(['d78c94c4-9179-4765-9851-9907b5ef2cc4']) {
-        sh "/home/centos/.local/bin/lfs update --project=pmc --name=sandbox --newrelic -d -y"
+        sh "/home/centos/.local/bin/lfs update --project=cla-console --name=sandbox --newrelic -d -y"
       }
     }
 
-    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
           \"color\": \"#008000\",\
-          \"message\": \"PMC Sandbox has been updated to `${params.SHA}`\",\
-          \"channel\": \"#integration\"}'"
+          \"message\": \"CLA-Console Sandbox has been updated to `${params.SHA}`\",\
+          \"channel\": \"#lfplatform-cla\"}'"
+    }
+
   } catch(err) {
-    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
-          \"color\": \"#cc0000\",\
-          \"message\": \"PMC Sandbox has fail to update. <${env.BUILD_URL}>\",\
-          \"channel\": \"#integration\"}'"
+
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+            \"color\": \"#cc0000\",\
+            \"message\": \"CLA-Console Sandbox has fail to update. <${env.BUILD_URL}>\",\
+            \"channel\": \"#lfplatform-cla\"}'"
+    }
+
     throw err
   }
 
 }
-
