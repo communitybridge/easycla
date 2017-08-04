@@ -78,7 +78,8 @@ node {
     throw err
 
   } finally {
-    sh "curl -s https://workflow.engineering.tux.rocks/api/jenkins/github-build/slack -d '{ \
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/build_notif -d '{ \
         \"build\": \"${env.BUILD_ID}\", \
         \"build_url\": \"${env.BUILD_URL}\", \
         \"gitAuthor\": \"${gitAuthor}\", \
@@ -88,8 +89,9 @@ node {
         \"job_url\": \"${env.JOB_URL}\", \
         \"status\": \"${buildStatus}\", \
         \"gitBranch\": \"${env.BRANCH_NAME}\", \
-        \"job_base_name\": \"${env.JOB_BASE_NAME}\"}'"
+        \"job_base_name\": \"${env.JOB_BASE_NAME}\", \
+        \"channel\": \"#lfplatform-pmc\"}'"
+    }
   }
-
 }
 
