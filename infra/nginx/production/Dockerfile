@@ -7,7 +7,7 @@ LABEL build_number $build_number
 LABEL hash $git_hash
 LABEL maintainer "engineering@linuxfoundation.org"
 
-RUN apt-get update -y && apt-get install curl gettext -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install curl gettext wget -y && rm -rf /var/lib/apt/lists/*
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY production.conf.tpl /etc/nginx/conf.d/production.conf.tpl
 COPY nginx.conf /etc/nginx/nginx.conf
