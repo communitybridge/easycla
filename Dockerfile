@@ -2,7 +2,7 @@ FROM 433610389961.dkr.ecr.us-west-2.amazonaws.com/base:latest
 
 MAINTAINER Linux Foundation <webmaster@linuxfoundation.org>
 
-RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash - && yum install -y nodejs gcc-c++ make
+RUN curl --silent --location https://rpm.nodesource.com/setup_6.x | bash - && yum install -y nodejs gcc-c++ make wget
 
 RUN cd /srv/ && wget https://releases.hashicorp.com/consul-template/0.19.0/consul-template_0.19.0_linux_amd64.tgz
 RUN tar -xvf /srv/consul-template_0.19.0_linux_amd64.tgz -C /usr/bin/
