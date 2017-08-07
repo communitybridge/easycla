@@ -30,6 +30,7 @@
     "google-libphonenumber": "^2.0.18",
     "ionic-angular": "3.3.0",
     "ionicons": "3.0.0",
+    "ngx-clipboard": "^8.0.3",
     "rxjs": "5.1.1",
     "sw-toolbox": "3.4.0",
     "timsort": "^0.3.0",
