@@ -1,5 +1,5 @@
 import { Component,  } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
+import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
@@ -24,6 +24,7 @@ export class ClaSelectCompanyModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private cincoService: CincoService,
+    private modalCtrl: ModalController,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -32,7 +33,19 @@ export class ClaSelectCompanyModal {
   }
 
   getDefaults() {
-    // this.companies = [];
+    this.companies = [];
+  }
+
+  ngOnInit() {
+    this.getCompanies();
+  }
+
+  // ContactUpdateModal modal dismiss
+  dismiss() {
+    this.viewCtrl.dismiss();
+  }
+
+  getCompanies() {
     this.companies = [
       {
         name: "Alphabet (Google)",
@@ -81,19 +94,6 @@ export class ClaSelectCompanyModal {
     ];
   }
 
-  ngOnInit() {
-    this.getCompanies();
-  }
-
-  // ContactUpdateModal modal dismiss
-  dismiss() {
-    this.viewCtrl.dismiss();
-  }
-
-  getCompanies() {
-
-  }
-
   openClaEmployeeCompanyPage(company) {
     this.navCtrl.push('ClaEmployeeCompanyPage', {
       projectId: this.projectId,
@@ -103,14 +103,13 @@ export class ClaSelectCompanyModal {
     });
   }
 
-
-
-  // sortContacts(prop) {
-  //   this.sortService.toggleSort(
-  //     this.sort,
-  //     prop,
-  //     this.organizationContacts,
-  //   );
-  // }
+  openClaNewCompanyModal() {
+    let modal = this.modalCtrl.create('ClaNewCompanyModal', {
+      projectId: this.projectId,
+      repositoryId: this.repositoryId,
+      userId: this.userId,
+    });
+    modal.present();
+  }
 
 }
