@@ -1,5 +1,5 @@
 // Setting stage results in variables for Slack Notification
-def statusDockerPMC = 0
+def statusDockerCLAConsole = 0
 def statusDockerNGINX = 0
 def statusTerraformPlan = 0
 def apply = false
@@ -15,7 +15,7 @@ node {
   env.PATH = "${tfHome}:${env.PATH}"
 
   stage("Checkout") {
-    git credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "master"
+    git credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/cla-console.git", branch: "master"
     sh "git checkout ${params.SHA}"
   }
 
@@ -23,14 +23,14 @@ node {
 
     docker.withRegistry("https://643009352547.dkr.ecr.us-west-2.amazonaws.com", "ecr:us-west-2:production-aws") {
 
-      stage("Docker Artifact: PMC") {
+      stage("Docker Artifact: CLA Console") {
         try {
-          sh "docker build -t pmc/production/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-          sh "docker tag pmc/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${params.SHA}"
-          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/production:${params.SHA}"
+          sh "docker build -t cla-console/production/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
+          sh "docker tag cla-console/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/production:${params.SHA}"
+          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/production:${params.SHA}"
         } catch (err) {
           echo "Caught Exception: ${err}"
-          statusDockerPMC = 1
+          statusDockerCLAConsole = 1
           currentBuild.result = 'FAILURE'
         }
       }
@@ -38,9 +38,9 @@ node {
       stage("Docker Artifact: NGINX") {
         try {
           dir("infra/nginx/production") {
-            sh "docker build -t pmc/nginx/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-            sh "docker tag pmc/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
-            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
+            sh "docker build -t cla-console/nginx/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
+            sh "docker tag cla-console/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${params.SHA}"
+            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${params.SHA}"
           }
         } catch (err) {
           echo "Caught Exception: ${err}"
@@ -80,26 +80,28 @@ node {
       }
     }
 
-    sh "curl -s https://workflow.engineering.tux.rocks/api/jenkins/cd/recap -d '{\
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/cd_notif -d '{\
           \"steps\": {\
-            \"Docker Image: PMC\": \"${statusDockerPMC}\",\
+            \"Docker Image: CLA-Console\": \"${statusDockerCLAConsole}\",\
             \"Docker Image: NGINX\": \"${statusDockerNGINX}\",\
             \"Terraform Plan\": \"${statusTerraformPlan}\"\
           },\
           \"job_name\": \"${env.JOB_NAME}\",\
           \"build\": \"${env.BUILD_NUMBER}\",\
-          \"channel\": \"#integration\"}'"
+          \"channel\": \"#lfplatform-cla\"}'"
+    }
   }
 }
 
-if (statusTerraformPlan == "2" && statusDockerPMC == 0 && statusDockerNGINX == 0) {
+if (statusTerraformPlan == "2" && statusDockerCLAConsole == 0 && statusDockerNGINX == 0) {
   timeout(time: 7, unit: 'DAYS') {
     input 'Deploy to Production?'
   }
 
   milestone()
 
-  lock('PMC Deployment') {
+  lock('CLA-Console Deployment') {
     node {
       dir("infra/terraform/app") {
         wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
@@ -115,15 +117,19 @@ if (statusTerraformPlan == "2" && statusDockerPMC == 0 && statusDockerNGINX == 0
               def applyExitCode = readFile('status.apply').trim()
 
               if (applyExitCode == "0") {
-                sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{ \
-                    \"color\": \"#008000\", \
-                    \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} (${params.SHA}) was successful. Services will be updated within 5 minutes.\", \
-                    \"channel\": \"#integration\"}'"
+                withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+                  sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+                      \"color\": \"#008000\",\
+                      \"message\": \"[CLA Console] Deployment of Build #${env.BUILD_NUMBER} (${params.SHA}) was successful. Services will be updated within 5 minutes.\",\
+                      \"channel\": \"#lfplatform-cla\"}'"
+                }
               } else {
-                sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{ \
-                    \"color\": \"#cc0000\", \
-                    \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} failed. Details here: ${env.BUILD_URL}\", \
-                    \"channel\": \"#integration\"}'"
+                withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+                  sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+                      \"color\": \"#cc0000\",\
+                      \"message\": \"[CLA Console] Deployment of Build #${env.BUILD_NUMBER} failed. Details here: ${env.BUILD_URL}\", \
+                      \"channel\": \"#lfplatform-cla\"}'"
+                }
                 currentBuild.result = 'FAILURE'
               }
             }

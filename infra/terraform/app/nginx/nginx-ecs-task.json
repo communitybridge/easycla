@@ -1,7 +1,7 @@
 [
   {
     "essential": true,
-    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${build_hash}",
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${build_hash}",
     "memoryReservation": 258,
     "name": "nginx",
     "portMappings": [{
@@ -23,7 +23,7 @@
       },
       {
         "name": "SERVICE_80_NAME",
-        "value": "PMC_NGINX_${build_hash}"
+        "value": "CLA_CONSOLE_NGINX_${build_hash}"
       },
       {
         "name": "SERVICE_80_TAGS",
@@ -38,8 +38,8 @@
       }
     },
     "dockerLabels": {
-      "realm": "pmc",
-      "application": "nginx",
+      "realm": "cla",
+      "application": "console-nginx",
       "version": "${build_hash}",
       "environment": "production",
       "region": "${TAG_REGION}",

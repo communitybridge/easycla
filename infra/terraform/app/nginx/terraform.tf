@@ -41,13 +41,13 @@ data "template_file" "nginx_ecs_task" {
 
   vars {
     # Information for Consul-Template
-    CONSUL_SERVICE            = "PMC_${var.build_hash}"
+    CONSUL_SERVICE            = "CLA_CONSOLE_${var.build_hash}"
 
     # NGINX Domains
-    APP_DOMAINS               = "projectconsole.linuxfoundation.org www.projectconsole.linuxfoundation.org"
+    APP_DOMAINS               = "cla.linuxfoundation.org www.cla.linuxfoundation.org"
 
     # Build Information
-    build_hash              = "${var.build_hash}"
+    build_hash                = "${var.build_hash}"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
@@ -62,7 +62,7 @@ data "template_file" "nginx_ecs_task" {
 
 resource "aws_ecs_task_definition" "nginx" {
   provider = "aws.local"
-  family = "pmc-nginx"
+  family = "cla-console-nginx"
 
   lifecycle {
     ignore_changes        = ["image"]
@@ -74,7 +74,7 @@ resource "aws_ecs_task_definition" "nginx" {
 
 resource "aws_ecs_service" "nginx" {
   provider                           = "aws.local"
-  name                               = "pmc-nginx"
+  name                               = "cla-console-nginx"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.nginx.arn}"
   desired_count                      = "3"
@@ -91,7 +91,7 @@ resource "aws_ecs_service" "nginx" {
 
 resource "aws_alb_target_group" "nginx" {
   provider             = "aws.local"
-  name                 = "pmc-nginx-80"
+  name                 = "cla-console-nginx-80"
   port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
@@ -106,7 +106,7 @@ resource "aws_alb_target_group" "nginx" {
 
 resource "aws_alb" "nginx" {
   provider           = "aws.local"
-  name               = "pmc-nginx"
+  name               = "cla-console-nginx"
   subnets            = ["${var.external_subnets}"]
   security_groups    = ["${var.external_elb_sg}"]
   internal           = false

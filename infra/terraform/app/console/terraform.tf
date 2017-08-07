@@ -37,11 +37,11 @@ variable "route53_zone_id" {
 }
 
 data "template_file" "pmc_ecs_task" {
-  template = "${file("${path.module}/pmc-ecs-task.json")}"
+  template = "${file("${path.module}/cla-console-ecs-task.json")}"
 
   vars {
     # Build Information
-    build_hash              = "${var.build_hash}"
+    build_hash                = "${var.build_hash}"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
@@ -56,7 +56,7 @@ data "template_file" "pmc_ecs_task" {
 
 resource "aws_ecs_task_definition" "pmc" {
   provider                = "aws.local"
-  family                  = "pmc"
+  family                  = "cla-console"
 
   lifecycle {
     ignore_changes        = ["image"]
@@ -68,7 +68,7 @@ resource "aws_ecs_task_definition" "pmc" {
 
 resource "aws_ecs_service" "pmc" {
   provider                           = "aws.local"
-  name                               = "pmc"
+  name                               = "cla-console"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.pmc.arn}"
   desired_count                      = "3"
@@ -78,7 +78,7 @@ resource "aws_ecs_service" "pmc" {
 
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.pmc.arn}"
-    container_name     = "pmc"
+    container_name     = "cla-console"
     container_port     = 8081
   }
 
@@ -89,7 +89,7 @@ resource "aws_ecs_service" "pmc" {
 
 resource "aws_alb_target_group" "pmc" {
   provider             = "aws.local"
-  name                 = "pmc-8081"
+  name                 = "cla-console-8081"
   port                 = 8081
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
@@ -105,7 +105,7 @@ resource "aws_alb_target_group" "pmc" {
 
 resource "aws_alb" "pmc" {
   provider           = "aws.local"
-  name               = "pmc"
+  name               = "cla-console"
   subnets            = ["${var.internal_subnets}"]
   security_groups    = ["${var.internal_elb_sg}"]
 }
