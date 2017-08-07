@@ -7,12 +7,10 @@ node {
   sh "sudo rm -rf *"
 
   stage ("Checkout") {
-    git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/member-console.git", branch: "${env.BRANCH_NAME}"
+    git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/cla-console.git", branch: "${env.BRANCH_NAME}"
   }
 
-
-
-  def project = "pmc"
+  def project = "cla-console"
   def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
   def shortCommit = gitCommit.take(7)
   def gitAuthor = sh(returnStdout: true, script: 'git log -1 --pretty=format:"%an"').trim()
@@ -27,7 +25,7 @@ node {
       }
     }
 
-    stage ("Launching PMC Instance") {
+    stage ("Launching CLA Console Instance") {
       sh "lf init -d --mode=ci --dep-map=cinco:cinco/"
     }
 
@@ -47,23 +45,15 @@ node {
       sh "docker exec ${workspaceID} bash -c \"cd src && npm run build\""
     }
 
-//    stage ("Automated Tests") {
-//        try {
-//          sh "docker exec ${workspaceID} bash -c \"cd /srv/app && npm run tests\""
-//        } finally {
-//          step([$class: "JUnitResultArchiver", testResults: "test-results/*.xml"])
-//        }
-//    }
-
     stage("Destroying Instances") {
       sh "lf -i cinco/ rm -y"
       sh "lf rm -y"
     }
 
     if (env.BRANCH_NAME == 'develop') {
-      build job: 'PMC - Sandbox', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
+      build job: 'CLA Console - Sandbox', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
     } else if (env.BRANCH_NAME == 'master') {
-      build job: 'PMC - Production', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
+      build job: 'CLA Console - Production', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
     }
 
   } catch(err) {
@@ -78,7 +68,8 @@ node {
     throw err
 
   } finally {
-    sh "curl -s https://workflow.engineering.tux.rocks/api/jenkins/github-build/slack -d '{ \
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/build_notif -d '{ \
         \"build\": \"${env.BUILD_ID}\", \
         \"build_url\": \"${env.BUILD_URL}\", \
         \"gitAuthor\": \"${gitAuthor}\", \
@@ -88,7 +79,9 @@ node {
         \"job_url\": \"${env.JOB_URL}\", \
         \"status\": \"${buildStatus}\", \
         \"gitBranch\": \"${env.BRANCH_NAME}\", \
-        \"job_base_name\": \"${env.JOB_BASE_NAME}\"}'"
+        \"job_base_name\": \"${env.JOB_BASE_NAME}\", \
+        \"channel\": \"#lfplatform-cla\"}'"
+    }
   }
 
 }
