@@ -3,7 +3,7 @@ import lf
 import os
 
 
-@gossip.register('local.instance.init.docker-compose', tags=['member-console'])
+@gossip.register('local.instance.init.docker-compose', tags=['cla-console'])
 def local_init_docker_compose_file(containers, config, dependencies, envs, mode, path):
     if len(dependencies) >= 1:
         platform_instance = dependencies[0]
@@ -23,7 +23,7 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
     lf.logger.info('Setting CINCO_CONSOLE_URL to ' + envs['CINCO_CONSOLE_URL'])
 
 
-@gossip.register('preprod_instance_task_build', tags=['member-console'])
+@gossip.register('preprod_instance_task_build', tags=['cla-console'])
 def preprod_instance_task_build(containers, instance_config, dependencies, domains, envs):
     if len(dependencies) >= 1:
         platform = dependencies.get('cinco')
