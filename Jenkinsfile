@@ -25,7 +25,7 @@ node {
       }
     }
 
-    stage ("Launching PMC Instance") {
+    stage ("Launching CLA Console Instance") {
       sh "lf init -d --mode=ci --dep-map=cinco:cinco/"
     }
 
