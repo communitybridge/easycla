@@ -1,0 +1,7 @@
+version: "2"
+services:
+  dynamodb:
+    container_name: "cla_dynamodb"
+    image: "dwmkerr/dynamodb"
+    ports:
+    - "8000:8000"

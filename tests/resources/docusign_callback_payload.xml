@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DocuSignEnvelopeInformation xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.docusign.net/API/3.0">
+   <EnvelopeStatus>
+       <RecipientStatuses>
+           <RecipientStatus>
+               <Type>Signer</Type>
+               <Email>test@user2.com</Email>
+               <UserName>Test2 User2</UserName>
+               <RoutingOrder>1</RoutingOrder>
+               <Sent>2017-05-12T09:09:26.263</Sent>
+               <Delivered>2017-05-12T09:10:00.21</Delivered>
+               <Signed>2017-05-12T09:10:09.383</Signed>
+               <DeclineReason xsi:nil="true" />
+               <Status>Completed</Status>
+               <RecipientIPAddress>178.19.218.17</RecipientIPAddress>
+               <ClientUserId>%s</ClientUserId>
+               <CustomFields />
+               <TabStatuses>
+                   <TabStatus>
+                       <TabType>SignHere</TabType>
+                       <Status>Signed</Status>
+                       <XPosition>583</XPosition>
+                       <YPosition>1458</YPosition>
+                       <TabLabel>Sign Here</TabLabel>
+                       <TabName>SignHere</TabName>
+                       <TabValue />
+                       <DocumentID>34505</DocumentID>
+                       <PageNumber>1</PageNumber>
+                   </TabStatus>
+               </TabStatuses>
+               <AccountStatus>Active</AccountStatus>
+               <EsignAgreementInformation>
+                   <AccountEsignId>96932548-0956-4d33-af81-e2cc63e3cccc</AccountEsignId>
+                   <UserEsignId>1f9e9ee8-d394-4cb2-b808-571d160b10d1</UserEsignId>
+                   <AgreementDate>2017-05-12T09:10:00.21</AgreementDate>
+               </EsignAgreementInformation>
+               <RecipientId>82d9870c-7443-41c0-9483-3fec1a697c6b</RecipientId>
+           </RecipientStatus>
+       </RecipientStatuses>
+       <TimeGenerated>2017-05-12T09:11:26.8077959</TimeGenerated>
+       <EnvelopeID>2c11781c-bfe6-41f9-9244-1543f30026ca</EnvelopeID>
+       <Subject>CLA Sign Request</Subject>
+       <UserName>***REMOVED*** ***REMOVED***</UserName>
+       <Email>***REMOVED***@linuxfoundation.org</Email>
+       <Status>Sent</Status>
+       <Created>2017-05-12T09:09:25.857</Created>
+       <Sent>2017-05-12T09:09:26.327</Sent>
+       <ACStatus>Original</ACStatus>
+       <ACStatusDate>2017-05-12T09:09:25.857</ACStatusDate>
+       <ACHolder>***REMOVED*** ***REMOVED***</ACHolder>
+       <ACHolderEmail>***REMOVED***@linuxfoundation.org</ACHolderEmail>
+       <ACHolderLocation>DocuSign</ACHolderLocation>
+       <SigningLocation>Online</SigningLocation>
+       <SenderIPAddress>171.36.112.87  </SenderIPAddress>
+       <EnvelopePDFHash />
+       <CustomFields>
+           <CustomField>
+               <Name>AccountId</Name>
+               <Show>false</Show>
+               <Required>false</Required>
+               <Value>1188217</Value>
+               <CustomFieldType>Text</CustomFieldType>
+           </CustomField>
+           <CustomField>
+               <Name>AccountName</Name>
+               <Show>false</Show>
+               <Required>false</Required>
+               <Value>The Linux Foundation</Value>
+               <CustomFieldType>Text</CustomFieldType>
+           </CustomField>
+           <CustomField>
+               <Name>AccountSite</Name>
+               <Show>false</Show>
+               <Required>false</Required>
+               <Value>demo</Value>
+               <CustomFieldType>Text</CustomFieldType>
+           </CustomField>
+       </CustomFields>
+       <AutoNavigation>true</AutoNavigation>
+       <EnvelopeIdStamping>true</EnvelopeIdStamping>
+       <AuthoritativeCopy>false</AuthoritativeCopy>
+       <DocumentStatuses>
+           <DocumentStatus>
+               <ID>32501</ID>
+               <Name>cla.pdf</Name>
+               <TemplateName />
+               <Sequence>1</Sequence>
+           </DocumentStatus>
+       </DocumentStatuses>
+   </EnvelopeStatus>
+   <TimeZone>Pacific Standard Time</TimeZone>
+   <TimeZoneOffset>-7</TimeZoneOffset>
+</DocuSignEnvelopeInformation>
