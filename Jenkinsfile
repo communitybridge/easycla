@@ -10,8 +10,6 @@ node {
     git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "${env.BRANCH_NAME}"
   }
 
-
-
   def project = "pmc"
   def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
   def shortCommit = gitCommit.take(7)
@@ -21,9 +19,14 @@ node {
   try {
 
     stage ("Launching CINCO Instance") {
+      dir('keycloak') {
+        git branch: 'master', credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: 'git@github.linuxfoundation.org:Engineering/keycloak.git'
+        sh "lf init -d"
+        sh "sleep 60"
+      }
       dir('cinco') {
         git branch: 'develop', credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: 'git@github.linuxfoundation.org:Engineering/integration-platform.git'
-        sh "lf init -d"
+        sh "lf init -d --dep-map=keycloak:../keycloak/"
       }
     }
 
@@ -47,16 +50,9 @@ node {
       sh "docker exec ${workspaceID} bash -c \"cd src && npm run build\""
     }
 
-//    stage ("Automated Tests") {
-//        try {
-//          sh "docker exec ${workspaceID} bash -c \"cd /srv/app && npm run tests\""
-//        } finally {
-//          step([$class: "JUnitResultArchiver", testResults: "test-results/*.xml"])
-//        }
-//    }
-
     stage("Destroying Instances") {
       sh "lf -i cinco/ rm -y"
+      sh "lf -i keycloak/ rm -y"
       sh "lf rm -y"
     }
 
@@ -72,6 +68,7 @@ node {
     // Making sure we always destroy the instance after each build
     stage("Destroying Instances") {
       sh "lf -i cinco/ rm -y"
+      sh "lf -i keycloak/ rm -y"
       sh "lf rm -y"
     }
 
