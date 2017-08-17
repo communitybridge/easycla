@@ -3,6 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
 
 import { CincoService } from '../../services/cinco.service'
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { Chart } from 'chart.js';
 
 import { ProjectModel } from '../../models/project-model';
@@ -55,8 +56,24 @@ export class AllInvoicesPage {
   @ViewChild('sentInvoicesCanvas') sentInvoicesCanvas;
   sentInvoicesChart: any;
 
-  constructor(public navCtrl: NavController, private cincoService: CincoService) {
+  constructor(public navCtrl: NavController, private cincoService: CincoService, private keycloak: KeycloakService) {
     this.getDefaults();
+  }
+
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
   }
 
   async ngOnInit(){

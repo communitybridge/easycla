@@ -3,7 +3,7 @@ import { NavController, NavParams, ViewController, AlertController, ToastControl
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
-  segment: 'asset-management-modal'
+  segment: 'asset-management-modal/:projectId'
 })
 @Component({
   selector: 'asset-management-modal',
@@ -11,7 +11,11 @@ import { CincoService } from '../../services/cinco.service'
   providers: [CincoService]
 })
 export class AssetManagementModal {
+
   projectId: string; // Always Needed
+  classifier: string; //can be anything, but it's meant to be something like "main" or "black-and-white" or "thumbnail".
+  image: any;
+
   files: any;
   folders: any;
   selectedFiles: any;
@@ -42,6 +46,7 @@ export class AssetManagementModal {
     private renderer: Renderer,
     public alertCtrl: AlertController,
   ) {
+    this.projectId = navParams.get('projectId');
     this.selectedFiles = [];
     this.uploadTypes = 'jpg,jpeg,png,gif,tif,psd,ai,docx,pptx,pdf';
     this.uploadSizeMax = 50000000; // 50MB
@@ -54,48 +59,48 @@ export class AssetManagementModal {
 
   getDefaults() {
     this.files = [
-      {
-        id: 'A000000001',
-        name: 'Zephyr_Bylaws.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: ''
-      },
-      {
-        id: 'A000000002',
-        name: 'Zephyr_LF_membership_agreement.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: 'Linux Foundation membership agreement'
-      },
-      {
-        id: 'A000000003',
-        name: 'Zephyr_project_membership_agreement.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: 'Project membership agreement, updated on March 2nd.'
-      },
-      {
-        id: 'A000000004',
-        name: 'Zephyr_sow.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: ''
-      },
-      {
-        id: 'A000000005',
-        name: 'Technical_steering_ctr.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: 'Technical steering charter, last updated March 1st'
-      },
-      {
-        id: 'A000000006',
-        name: 'Zephyr_Bylaws.pdf',
-        type: 'file',
-        lastUpdated: '3/3/2017',
-        notes: ''
-      },
+      // {
+      //   id: 'A000000001',
+      //   name: 'Zephyr_Bylaws.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: ''
+      // },
+      // {
+      //   id: 'A000000002',
+      //   name: 'Zephyr_LF_membership_agreement.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: 'Linux Foundation membership agreement'
+      // },
+      // {
+      //   id: 'A000000003',
+      //   name: 'Zephyr_project_membership_agreement.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: 'Project membership agreement, updated on March 2nd.'
+      // },
+      // {
+      //   id: 'A000000004',
+      //   name: 'Zephyr_sow.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: ''
+      // },
+      // {
+      //   id: 'A000000005',
+      //   name: 'Technical_steering_ctr.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: 'Technical steering charter, last updated March 1st'
+      // },
+      // {
+      //   id: 'A000000006',
+      //   name: 'Zephyr_Bylaws.pdf',
+      //   type: 'file',
+      //   lastUpdated: '3/3/2017',
+      //   notes: ''
+      // },
     ];
     this.folders = [
       {
@@ -222,8 +227,30 @@ export class AssetManagementModal {
 
     for(let i=0; i< addedFiles.length; i++) {
       let file = addedFiles.item(i);
+      let contentType;
+      this.classifier = "main";
+
       let valid = this.validateFile(file);
       if(valid) {
+
+        let reader = new FileReader();
+        reader.onload = event => {
+
+          const imgBase64 = (<any>event).target.result;
+          contentType = file.type
+          this.image = {
+            imageBytes: imgBase64,
+            contentType: contentType
+          }
+          this.cincoService.obtainS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+            if(response.putUrl) {
+              let S3URL = response.putUrl.url;
+              this.cincoService.uploadLogo(S3URL, file, contentType).subscribe(response => {});
+            }
+          });
+        }
+        reader.readAsDataURL(file);
+
         // merge files from the input with the files
         /*
           TODO: send a call to cinco with the new file data
