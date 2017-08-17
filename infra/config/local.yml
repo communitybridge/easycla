@@ -37,3 +37,7 @@ modes:
 
   ci:
     description: "All containers are launched, including the workspace but no port mappings are set and no autorun"
+    containers:
+      workspace:
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/generate-constants.sh"
