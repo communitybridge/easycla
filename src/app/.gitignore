@@ -32,3 +32,7 @@ $RECYCLE.BIN/
 .DS_Store
 Thumbs.db
 UserInterfaceState.xcuserstate
+
+# Config file
+src/app/src/assets/keycloak.json
+src/app/src/services/constants.ts
