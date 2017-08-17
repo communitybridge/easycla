@@ -1,7 +1,0 @@
-{
-  "realm": "LinuxFoundation",
-  "auth-server-url": "http://keycloak.service.development.consul:8576/auth",
-  "ssl-required": "external",
-  "resource": "pmc",
-  "public-client": true
-}
