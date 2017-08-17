@@ -12,21 +12,15 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
         envs = docker_config['services']['workspace']['environment']
         kc_endpoint = [x for k, x in envs.items() if k == 'KEYCLOAK_SERVER_URL'][0]
 
-        envs['KEYCLOAK_SERVER_URL'] = kc_endpoint
-        lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + envs['KEYCLOAK_SERVER_URL'])
+        kc_port = kc_endpoint.split(':')[2]
+        containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = 'http://' + lf.storage.config['hostname'] + ':' + kc_port
+        lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
 
         for key, port in enumerate(docker_config['services']['workspace']['ports']):
             p = port.split(':')
             if p[1] == '5000':
-                envs['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0] + '/'
-                lf.logger.info('Setting CINCO_SERVER_URL to ' + envs['CINCO_SERVER_URL'])
-
-    for key, port in enumerate(containers['workspace']['ports']):
-        p = port.split(':')
-        if p[1] == '8081':
-            envs['CINCO_CONSOLE_URL'] = 'http://' + lf.storage.config['hostname'] + ':' + p[0] + '/'
-
-    lf.logger.info('Setting CINCO_CONSOLE_URL to ' + envs['CINCO_CONSOLE_URL'])
+                containers['workspace']['environment']['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0] + '/'
+                lf.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
 
 
 @gossip.register('preprod_instance_task_build', tags=['pmc'])
@@ -43,14 +37,9 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
             'value': 'https://' + platform.domain + '/'
         })
         envs.append({
-            'name': 'CINCO_CONSOLE_URL',
-            'value': 'https://' + domains['primary'] + '/'
-        })
-        envs.append({
             'name': 'KEYCLOAK_SERVER_URL',
             'value': kc_endpoint
         })
 
-        lf.logger.info('Setting CINCO_CONSOLE_URL to ' + 'https://' + platform.domains['primary'] + '/')
         lf.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'] + '/')
         lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + kc_endpoint)
