@@ -367,7 +367,7 @@ export class ContactUpdateModal {
       // Add new contact to organization
       this.cincoService.createOrganizationContact(this.org.id, this.memberContact.contact).subscribe(response => {
         if (response) {
-          this.contactId = response;
+          this.contactId = response.id;
           this.memberContact.contact.id = this.contactId;
           // add to member
           this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact).subscribe(response => {

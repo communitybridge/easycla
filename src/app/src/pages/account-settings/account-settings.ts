@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CalendarLinkValidator } from  '../../validators/calendarlink';
 import { NavController, IonicPage, Content, ToastController, } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
-
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 
 @IonicPage({
   segment: 'account-settings'
@@ -27,6 +27,7 @@ export class AccountSettingsPage {
     private cincoService: CincoService,
     public formBuilder: FormBuilder,
     public toastCtrl: ToastController,
+    private keycloak: KeycloakService
   ) {
     this.getDefaults();
 
@@ -47,6 +48,22 @@ export class AccountSettingsPage {
     };
   }
 
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
+  }
+
   ngOnInit() {
     this.getCurrentUser();
   }
@@ -54,6 +71,7 @@ export class AccountSettingsPage {
   getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
+      this.user.userId = this.user.lfId;
       this.form.patchValue({calendar:this.user.calendar});
       this.loading.user = false;
     });
@@ -70,11 +88,13 @@ export class AccountSettingsPage {
     }
     let calendar_url = this.calendarProcess(this.form.value.calendar);
     let user = {
-      userId: this.user.userId,
+      //userId: this.user.userId,
+      lfId: this.user.userId,
+      id: this.user.id,
       email: this.user.email,
       calendar: calendar_url,
     };
-    this.cincoService.updateUser(this.user.userId, user).subscribe(response => {
+    this.cincoService.updateUser(this.user.id, user).subscribe(response => {
       this.currentlySubmitting = false;
       this.updateSuccess();
       this.navCtrl.setRoot(this.navCtrl['root']);
