@@ -1,8 +1,9 @@
 import { Component, ViewChild } from '@angular/core';
-import { NavController, NavParams, IonicPage, Content } from 'ionic-angular';
+import { NavController, NavParams, IonicPage, ModalController, Content } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UrlValidator } from  '../../validators/url';
 import { CincoService } from '../../services/cinco.service'
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
@@ -22,7 +23,6 @@ export class ProjectDetailsPage {
 
   editProject: any;
   loading: any;
-
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
@@ -32,8 +32,11 @@ export class ProjectDetailsPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private cincoService: CincoService,
+    public modalCtrl: ModalController,
     private formBuilder: FormBuilder,
+    private keycloak: KeycloakService
   ) {
+
     this.editProject = {};
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -51,6 +54,22 @@ export class ProjectDetailsPage {
       addressCountry:[this.project.address.address.country],
       description:[this.project.description],
     });
+  }
+
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
   }
 
   ngOnInit() {
@@ -102,14 +121,14 @@ export class ProjectDetailsPage {
       type: "BILLING",
     }
     this.editProject = {
-      project_name: this.form.value.name,
-      project_description: this.form.value.description,
-      project_url: this.form.value.url,
-      project_sector: this.form.value.sector,
-      project_address: address,
-      project_status: this.form.value.status,
-      project_category: this.form.value.category,
-      project_start_date: this.form.value.startDate,
+      name: this.form.value.name,
+      description: this.form.value.description,
+      url: this.form.value.url,
+      sector: this.form.value.sector,
+      address: address,
+      status: this.form.value.status,
+      category: this.form.value.category,
+      startDate: this.form.value.startDate,
     };
 
     this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
@@ -129,6 +148,14 @@ export class ProjectDetailsPage {
   changeLogo() {
     // TODO: WIP
     alert("Change Logo");
+  }
+
+
+  openAssetManagementModal() {
+    let modal = this.modalCtrl.create('AssetManagementModal', {
+      projectId: this.projectId,
+    });
+    modal.present();
   }
 
   getDefaults() {

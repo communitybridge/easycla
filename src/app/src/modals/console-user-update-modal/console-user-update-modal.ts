@@ -38,6 +38,7 @@ export class ConsoleUserUpdateModal {
 
     // Deep copy originalContact to contact
     this.user = Object.assign({}, originalUser);
+    this.user.userId = this.user.lfId;
     this.form = formBuilder.group({
       userId:[this.user.userId, Validators.required],
       email:[this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
@@ -48,6 +49,8 @@ export class ConsoleUserUpdateModal {
   getDefaults() {
     // Instantiate user data
     this.user = {
+      id: '',
+      lfId: '',
       userId: '',
       email: '',
       roles: [],
@@ -144,8 +147,8 @@ export class ConsoleUserUpdateModal {
 
   updateUserRoles() {
     let userId = '';
-    if (this.user.userId) {
-      userId = this.user.userId;
+    if (this.user.id) {
+      userId = this.user.id;
     } else {
       userId = this.form.value.userId;
     }
@@ -185,8 +188,8 @@ export class ConsoleUserUpdateModal {
   removeUser() {
     this.currentlySubmitting = true;
     let userId = '';
-    if (this.user.userId) {
-      userId = this.user.userId;
+    if (this.user.id) {
+      userId = this.user.id;
     } else {
       userId = this.form.value.userId;
     }

@@ -22,7 +22,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let user of users" (click)="userSelected(user)">
-                  <td data-title="Name">{{ user.userId }}</td>
+                  <td data-title="Name">{{ user.lfId }}</td>
                   <td data-title="Email">{{ user.email }}</td>
                   <td data-title="Roles">
                     <span *ngFor="let role of user.roles; let last = last;">

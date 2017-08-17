@@ -18,8 +18,6 @@ environment:
     server_name: ''
     domain_hash: ''
   workspace:
-    console_integration_user: 'cinco'
-    console_integration_password: 'cinco'
     encryption_sauce: 'WqNGjk@%ym7eRsXGAZYskF'
 
 # All secondary domains are automatically setup as nginx aliases, and all of them are SSL-enabled by default.
