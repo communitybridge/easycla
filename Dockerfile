@@ -12,6 +12,9 @@ RUN useradd www-data && \
 
 COPY infra/docker-prod-entrypoint.sh /srv/entrypoint.sh
 
+COPY scripts/constants.ts /srv/app/src/app/src/services/constants.ts
+COPY scripts/keycloak.json /srv/app/src/app/src/assets/keycloak.json
+
 COPY . /srv/app/
 
 RUN chown -R www-data:www-data /srv/app
