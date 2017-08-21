@@ -11,9 +11,10 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
 
         envs = docker_config['services']['workspace']['environment']
         kc_endpoint = [x for k, x in envs.items() if k == 'KEYCLOAK_SERVER_URL'][0]
+        kc_instance = platform_instance.dependencies.get('keycloak')
 
         kc_port = kc_endpoint.split(':')[2]
-        containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = 'http://' + lf.storage.config['hostname'] + ':' + kc_port
+        containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = 'http://' + kc_instance.containers.bridge_ip + ':' + kc_port
         lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
 
         for key, port in enumerate(docker_config['services']['workspace']['ports']):
