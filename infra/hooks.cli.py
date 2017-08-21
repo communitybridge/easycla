@@ -19,7 +19,7 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
         for key, port in enumerate(docker_config['services']['workspace']['ports']):
             p = port.split(':')
             if p[1] == '5000':
-                containers['workspace']['environment']['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0] + '/'
+                containers['workspace']['environment']['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0]
                 lf.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
 
 
