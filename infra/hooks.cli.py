@@ -34,12 +34,12 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
 
         envs.append({
             'name': 'CINCO_SERVER_URL',
-            'value': 'https://' + platform.domain + '/'
+            'value': 'https://' + platform.domain
         })
         envs.append({
             'name': 'KEYCLOAK_SERVER_URL',
             'value': kc_endpoint
         })
 
-        lf.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'] + '/')
+        lf.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'])
         lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + kc_endpoint)
