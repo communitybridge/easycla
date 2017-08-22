@@ -1,0 +1,7 @@
+{
+  "realm": "LinuxFoundation",
+  "auth-server-url": "http://localhost:50569/auth",
+  "ssl-required": "external",
+  "resource": "pmc",
+  "public-client": true
+}
