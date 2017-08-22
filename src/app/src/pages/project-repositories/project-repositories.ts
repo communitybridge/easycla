@@ -5,23 +5,21 @@ import { SortService } from '../../services/sort.service';
 import { ProjectModel } from '../../models/project-model';
 
 @IonicPage({
-  segment: 'project/:projectId'
+  segment: 'project/:projectId/repositories'
 })
 @Component({
-  selector: 'project',
-  templateUrl: 'project.html',
+  selector: 'project-repositories',
+  templateUrl: 'project-repositories.html',
   providers: [CincoService]
 })
-export class ProjectPage {
-  selectedProject: any;
+export class ProjectRepositoriesPage {
   projectId: string;
-
   project = new ProjectModel();
 
   membersCount: number;
   loading: any;
   sort: any;
-  tab = 'membership';
+  tab = 'repositories';
 
   contracts: any;
 
@@ -35,7 +33,6 @@ export class ProjectPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
   ) {
-    this.selectedProject = navParams.get('project');
     this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
@@ -45,7 +42,7 @@ export class ProjectPage {
   }
 
   getProject(projectId) {
-    let getMembers = true;
+    let getMembers = false;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
         this.project.id = response.id;
@@ -69,34 +66,6 @@ export class ProjectPage {
     });
   }
 
-  memberSelected(event, memberId) {
-    this.navCtrl.push('MemberPage', {
-      projectId: this.projectId,
-      memberId: memberId,
-    });
-  }
-
-  viewProjectDetails(projectId){
-    this.navCtrl.push('ProjectDetailsPage', {
-      projectId: projectId
-    });
-  }
-
-  openProjectUserManagementModal() {
-    let modal = this.modalCtrl.create('ProjectUserManagementModal', {
-      projectId: this.projectId,
-      projectName: this.project.name,
-    });
-    modal.present();
-  }
-
-  openAssetManagementModal() {
-    let modal = this.modalCtrl.create('AssetManagementModal', {
-      projectId: this.projectId,
-    });
-    modal.present();
-  }
-
   openClaContractConfigModal(contract) {
     let modal = this.modalCtrl.create('ClaContractConfigModal', {
       contract: contract,
@@ -111,9 +80,15 @@ export class ProjectPage {
     modal.present();
   }
 
-  openProjectRepositoriesPage() {
-    this.navCtrl.push('ProjectRepositoriesPage', {
-      projectId: this.projectId
+  openClaContractVersionModal(uploadInfo) {
+    let modal = this.modalCtrl.create('ClaContractVersionModal', {
+    });
+    modal.present();
+  }
+
+  openProjectPage() {
+    this.navCtrl.push('ProjectPage', {
+      projectId: this.projectId,
     });
   }
 
@@ -121,64 +96,59 @@ export class ProjectPage {
     this.loading = {
       project: true,
     };
-    this.project = {
-      id: "",
-      name: "Project",
-      description: "Description",
-      managers: "",
-      members: [],
-      status: "",
-      category: "",
-      sector: "",
-      url: "",
-      startDate: "",
-      logoRef: "",
-      agreementRef: "",
-      mailingListType: "",
-      emailAliasType: "",
-      address: {
-        address: {
-          administrativeArea: "",
-          country: "",
-          localityName: "",
-          postalCode: "",
-          thoroughfare: ""
+    // this.project = {
+    //   id: "",
+    //   name: "Project",
+    //   description: "Description",
+    //   managers: "",
+    //   members: [],
+    //   status: "",
+    //   category: "",
+    //   sector: "",
+    //   url: "",
+    //   startDate: "",
+    //   logoRef: "",
+    //   agreementRef: "",
+    //   mailingListType: "",
+    //   emailAliasType: "",
+    //   address: {
+    //     address: {
+    //       administrativeArea: "",
+    //       country: "",
+    //       localityName: "",
+    //       postalCode: "",
+    //       thoroughfare: ""
+    //     },
+    //     type: ""
+    //   }
+    // };
+
+    this.contracts = [
+      {
+        id: '000001',
+        name: 'Zephyr Contract',
+        ccla: true,
+        cclaAndIcla: true,
+        icla: true,
+        contracts: {
+          ccla: {
+            name: 'zephyr_CLA_corporate.pdf',
+            src: 'https://example.com/something.pdf',
+            uploadDate: '6/30/2017, 11:31 PST',
+            version: '1.0',
+          },
+          icla: {
+            name: 'zephyr_CLA_corporate.pdf',
+            src: 'https://example.com/something.pdf',
+            uploadDate: '6/30/2017, 11:31 PST',
+            version: '1.0',
+          }
         },
-        type: ""
-      }
-    };
-    this.sort = {
-      alert: {
-        arrayProp: 'alert',
-        sortType: 'text',
-        sort: null,
+        organizations: [
+
+        ],
       },
-      company: {
-        arrayProp: 'org.name',
-        sortType: 'text',
-        sort: null,
-      },
-      product: {
-        arrayProp: 'product',
-        sortType: 'text',
-        sort: null,
-      },
-      status: {
-        arrayProp: 'invoices[0].status',
-        sortType: 'text',
-        sort: null,
-      },
-      dues: {
-        arrayProp: 'annualDues',
-        sortType: 'number',
-        sort: null,
-      },
-      renewal: {
-        arrayProp: 'renewalDate',
-        sortType: 'date',
-        sort: null,
-      },
-    };
+    ];
   }
 
   sortMembers(prop) {

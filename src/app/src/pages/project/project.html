@@ -89,7 +89,7 @@
       <ion-segment-button value="membership">
         Membership
       </ion-segment-button>
-      <ion-segment-button value="repositories">
+      <ion-segment-button value="repositories" (click)="openProjectRepositoriesPage()">
         Repositories
       </ion-segment-button>
       <ion-segment-button value="support">
@@ -99,7 +99,7 @@
   </header>
   <loading-spinner [loading]="loading.project"></loading-spinner>
   <div [ngSwitch]="tab">
-    <ion-grid [loading-display]="loading.project" *ngSwitchCase="'membership'">
+    <ion-grid [loading-display]="loading.project">
       <ion-row>
         <ion-col col-12>
           <div class="table-responsive-vertical">
@@ -155,126 +155,5 @@
         </ion-col>
       </ion-row>
     </ion-grid>
-
-    <ion-grid *ngSwitchCase="'repositories'">
-      <ion-row>
-        <ion-col col-12 col-sm-3 col-md-2>
-          <ion-segment [(ngModel)]="repoPage" class="segment-sidebar">
-            <ion-segment-button value="reposHome">
-              Repositories Home
-            </ion-segment-button>
-            <ion-segment-button value="indivContracts">
-              Individual Contracts
-            </ion-segment-button>
-            <ion-segment-button value="corpContracts">
-              Corporate Contracts
-            </ion-segment-button>
-            <div class="menu-divider"></div>
-            <ion-segment-button value="repoSettings">
-              <ion-icon name="settings"></ion-icon> Repository Settings
-            </ion-segment-button>
-          </ion-segment>
-        </ion-col>
-
-        <ion-col col-12 col-sm-9 col-md-10>
-          <div [ngSwitch]="repoPage">
-            <div *ngSwitchCase="'reposHome'" class="reposHome">
-
-              <ion-card>
-                <ion-card-content>
-                  <ion-grid>
-                    <ion-row class="with-icon">
-                      <ion-col col-6>
-                        <ion-icon name="person" class="card-icon"></ion-icon>
-                        <h2>Individual CLA</h2>
-                        <p>
-                          zephyr_CLA_individual.pdf<br>
-                          6/30/2017, 11:31 PST,
-                          Version 2.1
-                        </p>
-                      </ion-col>
-                      <ion-col col-6>
-                        <h2 class="approvals-pending">8</h2>
-                        <p>
-                          Pending Approvals
-                        </p>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
-                </ion-card-content>
-              </ion-card>
-
-              <ion-card>
-                <ion-card-content>
-                  <ion-grid>
-                    <ion-row class="with-icon">
-                      <ion-col col-6>
-                        <ion-icon name="briefcase" class="card-icon"></ion-icon>
-                        <h2 class="clickable" (click)="openClaCorporateMemberModal()">Corporate CLA</h2>
-                        <p>
-                          zephyr_CLA_corporate.pdf<br>
-                          6/30/2017, 11:31 PST,
-                          Version 2.1
-                        </p>
-                      </ion-col>
-                      <ion-col col-6>
-                        <h2 class="approvals-pending">1</h2>
-                        <p>
-                          Pending Approvals
-                        </p>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
-                </ion-card-content>
-              </ion-card>
-
-              <ion-card>
-                <ion-card-content>
-                  <ion-grid>
-                    <ion-row class="with-icon">
-                      <ion-col col-6>
-                        <ion-icon name="logo-github" class="card-icon"></ion-icon>
-                        <h2>Repository Settings</h2>
-                        <p>
-                          3 Connected Repositories
-                        </p>
-                      </ion-col>
-                      <ion-col col-6>
-                        <p>
-                          zephyrproject-rtos/zephyr<br>
-                          Primary GIT Repository for the Zephyr Project
-                        </p>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
-                </ion-card-content>
-              </ion-card>
-
-            </div>
-
-            <div *ngSwitchCase="'indivContracts'">
-              <h1>Indiv Contracts</h1>
-            </div>
-
-            <div *ngSwitchCase="'corpContracts'">
-              <h1>Corp Contracts</h1>
-            </div>
-
-            <div *ngSwitchCase="'repoSettings'">
-              <h1>Repo Settings</h1>
-            </div>
-          </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-
-    <ion-grid *ngSwitchCase="'support'">
-      <ion-row>
-        <ion-col col-12>
-          <h1>Support</h1>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-
   </div>
 </ion-content>

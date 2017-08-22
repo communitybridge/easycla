@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      CLA PDF
+    </ion-title>
+
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+    <ion-grid>
+      <ion-row *ngIf="submitAttempt && !form.valid">
+        <ion-col col-12>
+          <p class="form-message">Please check the fields below for errors.</p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>File:</ion-label>
+            <input type="file" #input/>
+          </ion-item>
+        </ion-col>
+
+        <ion-col col-12 col-md-6>
+          <ion-item>
+            <ion-label stacked>Version</ion-label>
+            <ion-input type="text" formControlName="version"></ion-input>
+          </ion-item>
+        </ion-col>
+
+        <ion-col col-12 col-md-6>
+          <ion-item no-lines>
+            <ion-label>Require new signature</ion-label>
+            <ion-checkbox color="secondary" formControlName="newSignature"></ion-checkbox>
+          </ion-item>
+
+          <div class="checkbox-description">
+            <p>
+              Existing users will be required to sign this new version before access.
+            </p>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="light" (click)="dismiss()">
+        Cancel Upload
+      </button>
+      <button ion-button icon-right color="primary" (click)="submit()">
+        Save
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

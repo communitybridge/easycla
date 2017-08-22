@@ -5,8 +5,8 @@ project {
   }
   header {
     ion-segment {
+      width: calc(100% + 32px);
       margin-left: -16px;
-      margin-right: -16px;
       border-top-width: 2px;
       border-top-style: solid;
       border-top-color: rgba(0, 0, 0, 0.1);
