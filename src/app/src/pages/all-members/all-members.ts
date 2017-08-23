@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
 import { CincoService } from '../../services/cinco.service'
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 
 @IonicPage({
   segment: 'all-members'
@@ -23,6 +24,7 @@ export class AllMembersPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     public modalCtrl: ModalController,
+    private keycloak: KeycloakService
   ) {
     this.getDefaults();
     this.keysGetter = Object.keys;
@@ -32,6 +34,22 @@ export class AllMembersPage {
     this.membersList = {};
     this.membersSelected = {};
     this.projectSectors = [];
+  }
+
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
   }
 
   ngOnInit(){

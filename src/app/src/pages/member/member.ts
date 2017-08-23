@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 import { MemberModel } from '../../models/member-model';
 
@@ -29,7 +30,8 @@ export class MemberPage {
     public modalCtrl: ModalController,
     public navParams: NavParams,
     private sortService: SortService,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    private keycloak: KeycloakService
   ) {
     // If we navigated to this page, we will have an item available as a nav param
     this.projectId = navParams.get('projectId');
@@ -85,6 +87,22 @@ export class MemberPage {
         sort: null,
       },
     };
+  }
+
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
   }
 
   ngOnInit() {
