@@ -244,6 +244,7 @@ export class AssetManagementModal {
           }
           this.cincoService.obtainS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
             if(response.putUrl) {
+              console.log("response.putUrl: ", response.putUrl);
               let S3URL = response.putUrl.url;
               this.cincoService.uploadLogo(S3URL, file, contentType).subscribe(response => {});
             }

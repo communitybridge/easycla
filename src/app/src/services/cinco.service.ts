@@ -85,11 +85,7 @@ export class CincoService {
   * That will actually upload the image.
   **/
   obtainS3URL(projectId, classifier, image) {
-    // let headers = new Headers();
-    // headers.append('Content-Type', image.contentType);
-    // return this.http.put('/projects/' + projectId + '/logos/' + classifier, image, {headers: headers})
-    //TODO: Change headers in httpClient to ('Content-Type', image.contentType);
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image)
+    return this.http.putS3URL(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image, image.contentType)
       .map((res) => res.json());
   }
 
