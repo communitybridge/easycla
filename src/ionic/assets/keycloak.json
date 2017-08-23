@@ -1,6 +1,6 @@
 {
   "realm": "LinuxFoundation",
-  "auth-server-url": "http://localhost:50569/auth",
+  "auth-server-url": "http://docker.for.mac.localhost:64066/auth",
   "ssl-required": "external",
   "resource": "pmc",
   "public-client": true
