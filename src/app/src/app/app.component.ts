@@ -1,24 +1,20 @@
 import { Component, ViewChild } from '@angular/core';
-import { Nav, Platform } from 'ionic-angular';
+import { Nav, Platform, App } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
-import { SortService } from '../services/sort.service';
+import { KeycloakService } from '../services/keycloak/keycloak.service';
 
 @Component({
   templateUrl: 'app.html',
-  providers: [
-    CincoService,
-    SortService,
-  ]
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'AllProjectsPage';
+  rootPage: any = 'LoginPage';
 
-  thisUser: any;
+  userRoles: any;
   pages: Array<{
     icon?: string,
     access: boolean,
@@ -28,25 +24,45 @@ export class MyApp {
 
   constructor(
     public platform: Platform,
+    public app: App,
     public statusBar: StatusBar,
     public splashScreen: SplashScreen,
-    private cincoService: CincoService
+    private cincoService: CincoService,
+    private keycloak: KeycloakService
   ) {
     this.getDefaults();
     this.initializeApp();
   }
 
+  authenticated(): boolean {
+    return this.keycloak.authenticated();
+  }
+
+  login() {
+    this.keycloak.login();
+  }
+
+  logout() {
+    this.nav.setRoot('LoginPage');
+    this.nav.popToRoot();
+    this.keycloak.logout();
+  }
+
+  account() {
+    this.keycloak.account();
+  }
+
   getDefaults() {
-    this.thisUser = {
+    this.userRoles = {
       isAdmin: false,
-      isProjectManager: false,
-      isUser: true,
+      isProgramManager: false,
+      isUser: false,
     };
     this.pages = [];
   }
 
   ngOnInit() {
-    this.getUserAccess();
+    this.getUserRoles();
   }
 
   initializeApp() {
@@ -55,6 +71,13 @@ export class MyApp {
       // Here you can do any higher level native things you might need.
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
+
+      if(this.keycloak.authenticated()) {
+        this.rootPage = 'AllProjectsPage';
+      } else {
+        this.rootPage = 'LoginPage';
+      }
+
     });
   }
 
@@ -67,13 +90,29 @@ export class MyApp {
     this.nav.setRoot(page.component);
   }
 
-  getUserAccess() {
-    this.cincoService.getSessionData().subscribe(response => {
-      if(response) {
-        this.thisUser = response;
-        this.regeneratePagesMenu();
+  isInArray(roles, role) {
+    for(let i=0; i<roles.length; i++) {
+      if (roles[i].toLowerCase() === role.toLowerCase()) return true;
+    }
+    return false;
+  }
+
+  getUserRoles() {
+    this.keycloak.getTokenParsed().then(
+      (tokenParsed) => {
+        if(tokenParsed){
+          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'admin');
+          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'program_manager');
+          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'user');
+          this.userRoles = {
+            isAdmin: isAdmin,
+            isProgramManager: isProgramManager,
+            isUser: isUser,
+          };
+          this.regeneratePagesMenu();
+        }
       }
-    });
+    )
   }
 
   regeneratePagesMenu() {
@@ -101,7 +140,7 @@ export class MyApp {
       },
       {
         title: 'Linux Console Users',
-        access: this.thisUser.isAdmin,
+        access: this.userRoles.isAdmin,
         component: 'ConsoleUsersPage'
       }
     ];
