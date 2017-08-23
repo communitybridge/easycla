@@ -17,7 +17,7 @@
             <ion-col col-12 col-md-4>
               <div *ngIf="!project.logoRef" text-center>
                 <ion-icon name="image"></ion-icon>
-                <ion-label>Change logo in <a (click)="viewProjectDetails(project.id)">Project Details</a></ion-label>
+                <ion-label>Change logo in <a class="project-details-link" (click)="viewProjectDetails(project.id)">Project Details</a></ion-label>
               </div>
               <div *ngIf="project.logoRef">
                 <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
@@ -62,23 +62,23 @@
         </ion-col>
         <ion-col col-12 col-md-3>
           <ion-item (click)="openProjectUserManagementModal()">
-            <ion-icon name="people" item-left large></ion-icon>
-            <p>
+            <ion-icon class="add-pointer" name="people" item-left large></ion-icon>
+            <p class="add-pointer">
               LF Users
             </p>
           </ion-item>
           <ion-item (click)="openAssetManagementModal()">
-            <ion-icon name="folder" item-left large></ion-icon>
-            <p>Project Files</p>
+            <ion-icon class="add-pointer" name="folder" item-left large></ion-icon>
+            <p class="add-pointer">Project Files</p>
           </ion-item>
           <ion-item>
             <ion-icon name="mail" item-left large></ion-icon>
             <p>Email Lists</p>
           </ion-item>
           <ion-item>
-            <ion-icon name="md-create" item-left large></ion-icon>
-            <p>
-              <a (click)="viewProjectDetails(project.id)">Project Details</a>
+            <ion-icon class="add-pointer" name="md-create" item-left large (click)="viewProjectDetails(project.id)"></ion-icon>
+            <p class="add-pointer" (click)="viewProjectDetails(project.id)">
+              Project Details
             </p>
           </ion-item>
         </ion-col>

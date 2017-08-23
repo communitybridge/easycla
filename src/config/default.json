@@ -1,9 +1,5 @@
 {
   "console": {
-    "auth": {
-      "user": "default_user",
-      "pass": "default_pass"
-    },
     "endpoint": "http://localhost:8081",
     "redisHost": "http://localhost",
     "redisPort": "3535"

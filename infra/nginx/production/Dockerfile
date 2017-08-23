@@ -7,12 +7,12 @@ LABEL build_number $build_number
 LABEL hash $git_hash
 LABEL maintainer "engineering@linuxfoundation.org"
 
-RUN apt-get update -y && apt-get install curl gettext -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install curl gettext wget -y && rm -rf /var/lib/apt/lists/*
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY production.conf.tpl /etc/nginx/conf.d/production.conf.tpl
 COPY nginx.conf /etc/nginx/nginx.conf
-ADD https://releases.hashicorp.com/consul-template/0.18.3/consul-template_0.18.3_linux_amd64.tgz /srv/
-RUN tar -xvf /srv/consul-template_0.18.3_linux_amd64.tgz -C /usr/bin/
+RUN cd /srv/ && wget https://releases.hashicorp.com/consul-template/0.19.0/consul-template_0.19.0_linux_amd64.tgz
+RUN tar -xvf /srv/consul-template_0.19.0_linux_amd64.tgz -C /usr/bin/
 COPY entrypoint.sh /srv/
 
 ENTRYPOINT ["/srv/entrypoint.sh"]

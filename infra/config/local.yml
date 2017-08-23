@@ -13,8 +13,6 @@ containers:
 # Environment Variables to be injected in the container.
 environment:
   workspace:
-    console_integration_user: 'cinco'
-    console_integration_password: 'cinco'
     encryption_sauce: 'WqNGjk@%ym7eRsXGAZYskF'
     redis_host: 'redis'
     redis_port: '6379'
@@ -39,3 +37,7 @@ modes:
 
   ci:
     description: "All containers are launched, including the workspace but no port mappings are set and no autorun"
+    containers:
+      workspace:
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/generate-constants.sh"
