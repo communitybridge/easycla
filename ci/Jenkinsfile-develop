@@ -25,17 +25,25 @@ node {
       }
     }
 
-    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
           \"color\": \"#008000\",\
           \"message\": \"PMC Sandbox has been updated to `${params.SHA}`\",\
-          \"channel\": \"#integration\"}'"
+          \"channel\": \"#lfplatform-pmc\"}'"
+    }
+
   } catch(err) {
-    sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{\
-          \"color\": \"#cc0000\",\
-          \"message\": \"PMC Sandbox has fail to update. <${env.BUILD_URL}>\",\
-          \"channel\": \"#integration\"}'"
+
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+            \"color\": \"#cc0000\",\
+            \"message\": \"PMC Sandbox has fail to update. <${env.BUILD_URL}>\",\
+            \"channel\": \"#lfplatform-pmc\"}'"
+    }
+
     throw err
   }
 
 }
+
 

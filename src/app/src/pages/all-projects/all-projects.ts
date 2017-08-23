@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 
@@ -50,13 +51,40 @@ export class AllProjectsPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     private sanitizer: DomSanitizer,
+    private keycloak: KeycloakService
   ) {
     this.getDefaults();
+  }
+
+  ionViewCanEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.setRoot('LoginPage');
+      this.navCtrl.popToRoot();
+    }
+    return this.keycloak.authenticated();
+  }
+
+  ionViewWillEnter() {
+    if(!this.keycloak.authenticated())
+    {
+      this.navCtrl.push('LoginPage');
+    }
   }
 
   ngOnInit(){
     this.getAllProjects();
     this.getCurrentUser();
+    // this.keycloak.profile()
+    //   .then((profile: any) => {
+    //     console.log(profile);
+    //     // this.name = `${profile.lastName} ${profile.firstName}`;
+    //     // this.email = profile.email;
+    //     // this.username = profile.username;
+    //   })
+    //   .catch((error: any) => {
+    //     console.log(error)
+    //   });
   }
 
   getAllProjects(){

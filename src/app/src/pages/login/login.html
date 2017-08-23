@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Integration Console</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href=".">
+    <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    <!-- <link href="/assets/dist/all.min.css" rel="stylesheet"> -->
+    <style>
+      body {
+        background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <div padding headerspacing overflow-scroll="true">
+      <div padding>
+        <div class="login-container">
+          <div class="gray-rectangle">
+            <div class="white-rectangle"></div>
+            <div class="login-content">
+              <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 200px;  display: block; margin-left: auto; margin-right: auto;"/>
+              <br />
+              <br />
+              <br />
+              <br />
+              <div (click)="login()">
+                <button class="btn btn-primary btn-login" type="submit" >
+                  <span class="icon icon-login"></span>
+                  <span class="btn-label">Sign in</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
