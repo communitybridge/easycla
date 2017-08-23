@@ -80,7 +80,8 @@ node {
       }
     }
 
-    sh "curl -s https://workflow.engineering.tux.rocks/api/jenkins/cd/recap -d '{\
+    withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+      sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/cd_notif -d '{\
           \"steps\": {\
             \"Docker Image: PMC\": \"${statusDockerPMC}\",\
             \"Docker Image: NGINX\": \"${statusDockerNGINX}\",\
@@ -88,7 +89,8 @@ node {
           },\
           \"job_name\": \"${env.JOB_NAME}\",\
           \"build\": \"${env.BUILD_NUMBER}\",\
-          \"channel\": \"#integration\"}'"
+          \"channel\": \"#lfplatform-pmc\"}'"
+    }
   }
 }
 
@@ -115,15 +117,19 @@ if (statusTerraformPlan == "2" && statusDockerPMC == 0 && statusDockerNGINX == 0
               def applyExitCode = readFile('status.apply').trim()
 
               if (applyExitCode == "0") {
-                sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{ \
-                    \"color\": \"#008000\", \
-                    \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} (${params.SHA}) was successful. Services will be updated within 5 minutes.\", \
-                    \"channel\": \"#integration\"}'"
+                withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+                  sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+                      \"color\": \"#008000\",\
+                      \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} (${params.SHA}) was successful. Services will be updated within 5 minutes.\",\
+                      \"channel\": \"#lfplatform-pmc\"}'"
+                }
               } else {
-                sh "curl -s https://workflow.engineering.tux.rocks/api/slack/channel-msg -d '{ \
-                    \"color\": \"#cc0000\", \
-                    \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} failed. Details here: ${env.BUILD_URL}\", \
-                    \"channel\": \"#integration\"}'"
+                withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
+                  sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
+                      \"color\": \"#cc0000\",\
+                      \"message\": \"[PMC] Deployment of Build #${env.BUILD_NUMBER} failed. Details here: ${env.BUILD_URL}\", \
+                      \"channel\": \"#lfplatform-pmc\"}'"
+                }
                 currentBuild.result = 'FAILURE'
               }
             }

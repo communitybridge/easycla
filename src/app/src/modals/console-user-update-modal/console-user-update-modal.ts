@@ -18,7 +18,7 @@ export class ConsoleUserUpdateModal {
   user: any;
   userRoles: any;
   keysGetter;
-  _form: FormGroup;
+  form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   @ViewChild(Content) content: Content;
@@ -38,7 +38,8 @@ export class ConsoleUserUpdateModal {
 
     // Deep copy originalContact to contact
     this.user = Object.assign({}, originalUser);
-    this._form = formBuilder.group({
+    this.user.userId = this.user.lfId;
+    this.form = formBuilder.group({
       userId:[this.user.userId, Validators.required],
       email:[this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
       roles:[this.user.roles],
@@ -48,6 +49,8 @@ export class ConsoleUserUpdateModal {
   getDefaults() {
     // Instantiate user data
     this.user = {
+      id: '',
+      lfId: '',
       userId: '',
       email: '',
       roles: [],
@@ -98,7 +101,7 @@ export class ConsoleUserUpdateModal {
   saveUser() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this._form.valid){
+    if (!this.form.valid){
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
@@ -109,14 +112,14 @@ export class ConsoleUserUpdateModal {
     if (this.user.userId) {
       userId = this.user.userId;
     } else {
-      userId = this._form.value.userId;
+      userId = this.form.value.userId;
     }
 
     let email = '';
     if (this.user.email) {
       email = this.user.email;
     } else {
-      email = this._form.value.email;
+      email = this.form.value.email;
     }
 
     var user = {
@@ -144,17 +147,17 @@ export class ConsoleUserUpdateModal {
 
   updateUserRoles() {
     let userId = '';
-    if (this.user.userId) {
-      userId = this.user.userId;
+    if (this.user.id) {
+      userId = this.user.id;
     } else {
-      userId = this._form.value.userId;
+      userId = this.form.value.userId;
     }
 
     let prevRoles = [];
     if (this.user.roles) {
       prevRoles = this.user.roles;
     }
-    var newRoles = this._form.value.roles || [];
+    var newRoles = this.form.value.roles || [];
     let observablesArray = [];
     for (let i=0; i<prevRoles.length; i++) {
       let role = prevRoles[i];
@@ -185,10 +188,10 @@ export class ConsoleUserUpdateModal {
   removeUser() {
     this.currentlySubmitting = true;
     let userId = '';
-    if (this.user.userId) {
-      userId = this.user.userId;
+    if (this.user.id) {
+      userId = this.user.id;
     } else {
-      userId = this._form.value.userId;
+      userId = this.form.value.userId;
     }
     this.cincoService.removeUser(userId).subscribe(response => {
       if(response) {

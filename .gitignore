@@ -66,3 +66,7 @@ src/app/www/build/*
 terraform.tfstate.backup
 .terraform
 terraform.tfstate
+
+# Configuration Files
+src/app/src/services/constants.ts
+src/app/src/assets/keycloak.json
