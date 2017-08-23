@@ -5,7 +5,7 @@
     "memoryReservation": 512,
     "name": "pmc",
     "portMappings": [{
-      "containerPort": 8081
+      "containerPort": 80
     }],
     "dnsServers": [
       "${DNS_SERVER_1}",
@@ -13,6 +13,10 @@
       "${DNS_SERVER_3}"
     ],
     "environment": [
+      {
+        "name": "APP_DOMAINS",
+        "value": "${APP_DOMAINS}"
+      },
       {
         "name": "SERVICE_8081_NAME",
         "value": "PMC_${build_hash}"
@@ -39,7 +43,7 @@
       "version": "${build_hash}",
       "environment": "production",
       "region": "${TAG_REGION}",
-      "tags": "application, cinco, nodejs"
+      "tags": "application, pmc, nodejs"
     }
   }
 ]
