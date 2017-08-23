@@ -27,6 +27,14 @@ project {
     opacity: 1 !important;
   }
 
+  .project-details-link {
+    cursor:pointer;
+  }
+
+  .add-pointer {
+    cursor:pointer;
+  }
+
   .circle-alert,
   .circle-notice,
   .circle-null {
