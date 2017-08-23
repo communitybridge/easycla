@@ -42,6 +42,24 @@ export class HttpClient {
 
   }
 
+  buildUploadS3URLHeaders(){
+    let headers = new Headers({
+      'Accept': 'application/json',
+      // 'Content-Type': contentType
+    })
+
+    return this.keycloak.getToken().then(
+      (token) => {
+        if(token){
+          // headers.append('Authorization', 'Bearer ' + token);
+          return headers;
+        }
+      }
+    );
+
+  }
+
+
   get(url) {
     return Observable
         .fromPromise(this.buildHeaders())
@@ -61,8 +79,16 @@ export class HttpClient {
   }
 
   putS3URL(url, data, contentType) {
+    console.log(contentType);
     return Observable
         .fromPromise(this.buildS3URLHeaders(contentType))
+        .switchMap((headers) => this.http.put(url, data, { headers: headers }));
+  }
+
+  putUploadS3URL(url, data) {
+    console.log(data);
+    return Observable
+        .fromPromise(this.buildUploadS3URLHeaders())
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
   }
 
