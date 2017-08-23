@@ -116,21 +116,3 @@ module "pmc" {
   dns_servers       = "${data.terraform_remote_state.pmc-env.dns_servers}"
   ecs_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsService}"
 }
-
-# NGINX Proxy
-module "nginx" {
-  source            = "./nginx"
-
-  # Application Information
-  build_hash      = "${var.build_hash}"
-  route53_zone_id   = "${data.terraform_remote_state.pmc-env.route53_zone_id}"
-
-  # ECS Information
-  external_elb_sg   = "${data.terraform_remote_state.pmc-env.sg_external_elb}"
-  external_subnets  = "${data.terraform_remote_state.pmc-env.external_subnets}"
-  region            = "${data.terraform_remote_state.pmc-env.region}"
-  vpc_id            = "${data.terraform_remote_state.pmc-env.vpc_id}"
-  ecs_cluster_name  = "${module.pmc-ecs-cluster.name}"
-  dns_servers       = "${data.terraform_remote_state.pmc-env.dns_servers}"
-  ecs_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsService}"
-}

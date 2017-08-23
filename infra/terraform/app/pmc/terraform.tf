@@ -43,6 +43,9 @@ data "template_file" "pmc_ecs_task" {
     # Build Information
     build_hash              = "${var.build_hash}"
 
+    # NGINX Domains
+    APP_DOMAINS               = "projectconsole.linuxfoundation.org www.projectconsole.linuxfoundation.org"
+
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
     DNS_SERVER_2              = "${var.dns_servers[1]}"
@@ -79,7 +82,7 @@ resource "aws_ecs_service" "pmc" {
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.pmc.arn}"
     container_name     = "pmc"
-    container_port     = 8081
+    container_port     = 80
   }
 
   lifecycle {
@@ -89,8 +92,8 @@ resource "aws_ecs_service" "pmc" {
 
 resource "aws_alb_target_group" "pmc" {
   provider             = "aws.local"
-  name                 = "pmc-8081"
-  port                 = 8081
+  name                 = "pmc-80"
+  port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30
@@ -99,7 +102,6 @@ resource "aws_alb_target_group" "pmc" {
     path = "/"
     protocol = "HTTP"
     interval = 15
-    matcher = "301,302"
   }
 }
 
@@ -123,3 +125,40 @@ resource "aws_alb_listener" "pmc" {
   }
 }
 
+resource "aws_alb_listener" "pmc_80" {
+  provider           = "aws.local"
+  load_balancer_arn  = "${aws_alb.pmc.id}"
+  port               = "80"
+  protocol           = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.pmc.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_route53_record" "public" {
+  provider= "aws.local"
+  zone_id = "${var.route53_zone_id}"
+  name    = "."
+  type    = "A"
+
+  alias {
+    name                   = "${aws_alb.pmc.dns_name}"
+    zone_id                = "${aws_alb.pmc.zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "public_www" {
+  provider= "aws.local"
+  zone_id = "${var.route53_zone_id}"
+  name    = "www"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_alb.pmc.dns_name}"
+    zone_id                = "${aws_alb.pmc.zone_id}"
+    evaluate_target_health = true
+  }
+}
