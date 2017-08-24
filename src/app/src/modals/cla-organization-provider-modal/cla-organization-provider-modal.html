@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Connect to Organization
+    </ion-title>
+
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+    <ion-grid>
+      <ion-row *ngIf="submitAttempt && !form.valid">
+        <ion-col col-12>
+          <p class="form-message">Please check the fields below for errors.</p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Type *</ion-label>
+            <ion-select formControlName="provider">
+              <ion-option value="github">GitHub</ion-option>
+              <ion-option value="gitlab" disabled>GitLab</ion-option>
+              <ion-option value="gerrit" disabled>Gerrit</ion-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Organization</ion-label>
+            <ion-label>https://github.com/</ion-label>
+            <ion-input formControlName="organization"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button color="light" (click)="dismiss()">
+        Cancel
+      </button>
+      <button ion-button color="secondary" (click)="submit()">
+        Connect
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
