@@ -1,24 +1,11 @@
-{{ $service_name := env "CONSUL_SERVICE" }}
-upstream pmc {
-  least_conn;
-  {{range service $service_name }}server {{.NodeAddress}}:{{.Port}} max_fails=3 fail_timeout=60 weight=1;
-  {{end}}
-}
-
 server {
   listen 80;
   server_name ${APP_DOMAINS};
+  root /srv/app/src/www;
 
   # If request came through the ELB as http, we forward to https
   if ($http_x_forwarded_proto != "https") {
     return 301 https://$host$request_uri;
-  }
-
-  location / {
-    proxy_pass       http://pmc;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header Host $http_host;
   }
 }
 
