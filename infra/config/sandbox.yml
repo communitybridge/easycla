@@ -31,6 +31,3 @@ sequences:
     Configuration: 'echo \"-> Generating Configuration...\"; /srv/app/scripts/generate-constants.sh'
     Installing: 'echo \"-> Installing Node Packages...\"; cd /srv/app/src && npm install'
     Building: 'echo \"-> Building Ionic...\"; cd /srv/app/src && npm run build'
-
-  start:
-    Launching Console: 'cd /srv/app/src && npm start'
