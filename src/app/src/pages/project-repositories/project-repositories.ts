@@ -104,6 +104,12 @@ export class ProjectRepositoriesPage {
     modal.present();
   }
 
+  openClaOrganizationProviderModal() {
+    let modal = this.modalCtrl.create('ClaOrganizationProviderModal', {
+    });
+    modal.present();
+  }
+
   openProjectPage() {
     this.navCtrl.push('ProjectPage', {
       projectId: this.projectId,

@@ -170,20 +170,61 @@
         <h3>Organizations</h3>
       </ion-col>
       <div class="organizations col-wrapper">
-
+        <ion-col col-12>
+          <ion-card>
+            <ion-card-content>
+              <ion-card-title>
+                <ion-icon name="person" item-left large></ion-icon>
+                <span>Individual CLA</span>
+                <div class="contract-title-buttons" *ngIf="contract.contracts.icla.src">
+                  <ion-icon name="cloud-upload"
+                    (click)="openClaContractUploadModal({})"></ion-icon>
+                  <ion-icon name="time"
+                    (click)="openClaContractVersionModal()"></ion-icon>
+                </div>
+              </ion-card-title>
+              <ng-container *ngIf="!contract.contracts.icla.src">
+                <p>Upload the Individual CLA pdf required for signature.</p>
+                <button ion-button (click)="openClaContractUploadModal({})" color="secondary">Upload PDF</button>
+              </ng-container>
+              <ng-container *ngIf="contract.contracts.icla.src">
+                <ion-grid>
+                  <ion-row>
+                    <ion-col col-12 col-md-6>
+                      <span>
+                        <ion-icon name="document" item-left></ion-icon>
+                        {{ contract.contracts.icla.name }}
+                      </span><br>
+                      <span>
+                        {{ contract.contracts.icla.uploadDate }}
+                      </span><br>
+                      <span>
+                        Version {{ contract.contracts.icla.version }}
+                      </span><br>
+                    </ion-col>
+                    <ion-col class="text-right" col-12 col-md-6 >
+                      <span>
+                        View ICLA in Docusign
+                      </span>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ng-container>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
       </div>
       <div class="add-organizations">
-        <button ion-button (click)="console.log()" color="secondary">Add Organization</button>
+        <button ion-button (click)="openClaOrganizationProviderModal()" color="secondary">Add Organization</button>
       </div>
     </ion-row>
-
-    <ion-fab right bottom>
-      <button ion-fab mini><ion-icon name="add"></ion-icon></button>
-      <ion-fab-list side="top">
-        <button ion-fab (click)="openClaContractConfigModal({})" title="Add Contract Group">
-          <ion-icon name="folder-open"></ion-icon>
-        </button>
-      </ion-fab-list>
-    </ion-fab>
   </ion-grid>
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="top">
+      <button ion-fab (click)="openClaContractConfigModal({})" title="Add Contract Group">
+        <ion-icon name="folder-open"></ion-icon>
+      </button>
+    </ion-fab-list>
+  </ion-fab>
 </ion-content>
