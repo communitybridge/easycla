@@ -59,14 +59,26 @@ docker-compose.yml
 __pycache__
 
 # Ionic Build Files
-src/app/www/build/*
+src/www
+src/.sass-cache/
+src/.tmp/
+src/.versions/
+src/coverage/
+src/dist/
+src/node_modules/
+src/tmp/
+src/temp/
+src/hooks/
+src/platforms/
+src/plugins/
+$RECYCLE.BIN/
+
+# Config file
+src/ionic/assets/keycloak.json
+src/ionic/services/constants.ts
 
 # Terraform
 .lf/
 terraform.tfstate.backup
 .terraform
 terraform.tfstate
-
-# Configuration Files
-src/app/src/services/constants.ts
-src/app/src/assets/keycloak.json
