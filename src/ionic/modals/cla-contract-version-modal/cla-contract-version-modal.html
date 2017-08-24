@@ -1,0 +1,82 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      CLA PDF
+    </ion-title>
+
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <div>
+      <button ion-button icon-left color="light" (click)="openClaContractUploadModal({})">
+        <ion-icon name="cloud-upload"></ion-icon> Upload New Version
+      </button>
+    </div>
+    <hr>
+    <table class="table">
+      <thead>
+
+      </thead>
+      <tbody>
+        <tr>
+          <th><ion-icon name="checkmark"></ion-icon></th>
+          <th colspan="5">Current Version</th>
+        </tr>
+        <tr>
+          <td>
+            <ion-icon name="document"></ion-icon>
+          </td>
+          <td data-title="Name">my_icla_pdf_vXX.pdf</td>
+          <td>v2.1</td>
+          <td>May 31, 2017 7:42, PST</td>
+          <td>Sarah Programmanager</td>
+          <td>
+            <!-- <span icon-right class="file_list-more" (click)="currentContractPopover($event, 0)">
+              <ion-icon name="more"></ion-icon>
+            </span> -->
+            <button ion-button clear round class="file_list-more" (click)="currentContractPopover($event, 0)">
+              <ion-icon name="more"></ion-icon>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <th colspan="6">Previous</th>
+        </tr>
+        <tr *ngFor="let item of [1,2,3,4,5]">
+          <td>
+            <ion-icon name="document"></ion-icon>
+          </td>
+          <td data-title="Name">my_icla_pdf_vXX.pdf</td>
+          <td>v2.1</td>
+          <td>May 31, 2017 7:42, PST</td>
+          <td>Sarah Programmanager</td>
+          <td>
+            <!-- <span icon-right class="file_list-more" (click)="previousContractPopover($event, item)">
+              <ion-icon name="more"></ion-icon>
+            </span> -->
+            <button ion-button clear round class="file_list-more" (click)="previousContractPopover($event, item)">
+              <ion-icon name="more"></ion-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ion-grid>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="secondary" (click)="dismiss()">
+        Close
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
