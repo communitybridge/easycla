@@ -2,4 +2,4 @@
 
 cd /srv/app/src
 
-npm start
+npm run ionic:watch
