@@ -53,6 +53,7 @@ export class ProjectPage {
   }
 
   ngOnInit() {
+    this.getProjectLogos(this.projectId);
     this.getProject(this.projectId);
   }
 
@@ -77,6 +78,16 @@ export class ProjectPage {
         this.project.members = response.members;
         this.membersCount = this.project.members.length;
         this.loading.project = false;
+      }
+    });
+  }
+
+  getProjectLogos(projectId){
+    this.cincoService.getProjectLogos(projectId).subscribe(response => {
+      if(response) {
+        if(response[0]) {
+          this.project.logoRef = response[0].publicUrl;
+        }
       }
     });
   }
