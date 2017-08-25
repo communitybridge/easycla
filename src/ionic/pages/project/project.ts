@@ -53,8 +53,7 @@ export class ProjectPage {
   }
 
   ngOnInit() {
-    this.getProjectLogos(this.projectId);
-    this.getProject(this.projectId);
+    this.getProject(this.projectId);  
   }
 
   getProject(projectId) {
@@ -78,6 +77,9 @@ export class ProjectPage {
         this.project.members = response.members;
         this.membersCount = this.project.members.length;
         this.loading.project = false;
+
+        this.getProjectLogos(this.projectId);
+
       }
     });
   }
