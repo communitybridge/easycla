@@ -74,6 +74,11 @@ export class CincoService {
       .map((res) => res.json());
   }
 
+  getProjectLogos(projectId) {
+    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/logos')
+      .map(res => res.json());
+  }
+
   /**
   * PUT /projects/{projectId}/logos/{classifier}
   * For logos, any program manager/admin should be able to submit a PUT to `/projects/{projectId}/logos/{classifier}`.
