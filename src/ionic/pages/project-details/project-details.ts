@@ -81,6 +81,7 @@ export class ProjectDetailsPage {
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if (response) {
         this.project = response;
+        this.getProjectLogos(projectId);
         this.loading.project = false;
 
         this.form.patchValue({
@@ -97,6 +98,16 @@ export class ProjectDetailsPage {
           addressCountry:this.project.address.address.country,
           description:this.project.description,
         });
+      }
+    });
+  }
+
+  getProjectLogos(projectId){
+    this.cincoService.getProjectLogos(projectId).subscribe(response => {
+      if(response) {
+        if(response[0]) {
+          this.project.logoRef = response[0].publicUrl;
+        }
       }
     });
   }
