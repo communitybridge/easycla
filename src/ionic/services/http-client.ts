@@ -78,6 +78,12 @@ export class HttpClient {
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
   }
 
+  delete(url) {
+    return Observable
+        .fromPromise(this.buildHeaders())
+        .switchMap((headers) => this.http.delete(url, { headers: headers }));
+  }
+
   putS3URL(url, data, contentType) {
     console.log(contentType);
     return Observable
@@ -90,12 +96,6 @@ export class HttpClient {
     return Observable
         .fromPromise(this.buildUploadS3URLHeaders())
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
-  }
-
-  delete(url) {
-    return Observable
-        .fromPromise(this.buildHeaders())
-        .switchMap((headers) => this.http.delete(url, { headers: headers }));
   }
 
 }
