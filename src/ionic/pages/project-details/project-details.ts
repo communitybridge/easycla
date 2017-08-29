@@ -100,7 +100,7 @@ export class ProjectDetailsPage {
       }
     });
   }
-  
+
   submitEditProject() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
@@ -154,6 +154,11 @@ export class ProjectDetailsPage {
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
+    });
+    modal.onDidDismiss(newlogoRef => {
+      if(newlogoRef){
+        this.project.config.logoRef = newlogoRef;
+      }
     });
     modal.present();
   }
