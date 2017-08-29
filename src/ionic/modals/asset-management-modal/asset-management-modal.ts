@@ -21,6 +21,8 @@ export class AssetManagementModal {
   selectedFiles: any;
   loading: any;
 
+  newLogoRef: string = "";
+
   /**
    * Comma separated array of allowed file extensions
    */
@@ -112,7 +114,7 @@ export class AssetManagementModal {
 
   // ContactUpdateModal modal dismiss
   dismiss() {
-    this.viewCtrl.dismiss();
+    this.viewCtrl.dismiss(this.newLogoRef);
   }
 
   selectFile(event, file) {
@@ -243,11 +245,12 @@ export class AssetManagementModal {
             contentType: contentType
           }
           this.cincoService.obtainS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
-            console.log("obtainS3URL response: ", response);
             if(response.url) {
-              console.log("response.url: ", response.url);
               let S3URL = response.url;
-              this.cincoService.uploadLogo(S3URL, file).subscribe(response => {console.log(response)});
+              this.cincoService.uploadLogo(S3URL, file, this.image.contentType).subscribe(response => {
+                this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
+                this.dismiss();
+              });
             }
           });
         }

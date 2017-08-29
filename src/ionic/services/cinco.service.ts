@@ -91,26 +91,20 @@ export class CincoService {
   **/
   obtainS3URL(projectId, classifier, image) {
     return this.http.putS3URL(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image, image.contentType)
-      .map((res) => {
-        console.log(res);
-        return res;
-      });
+      .map(res => res);
   }
 
-  uploadLogo(S3URL, file) {
+  uploadLogo(S3URL, file, contentType) {
     // let headers = new Headers();
     // headers.append('Content-Type', contentType);
     // return this.http.put(S3URL, file, {headers: headers})
     //TODO: Change headers in httpClient to ('Content-Type', contentType);
-    return this.http.putUploadS3URL(S3URL, file)
-      .catch((e) => {
-        console.log(e)
-        return e;
-      })
-      .map(response => {
-        console.log(response);
-        return response;
-      })
+    return this.http.putUploadS3URL(S3URL, file, contentType)
+      // .catch((e) => {
+      //   console.log(e)
+      //   return e;
+      // })
+      .map((res) => res );
       // .map(response => response.ok)
   }
 
