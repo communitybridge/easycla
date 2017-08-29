@@ -53,43 +53,16 @@ export class ProjectPage {
   }
 
   ngOnInit() {
-    this.getProject(this.projectId);  
+    this.getProject(this.projectId);
   }
 
   getProject(projectId) {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
-        this.project.id = response.id;
-        this.project.name = response.name;
-        this.project.description = response.description;
-        this.project.managers = response.managers;
-        this.project.status = response.status;
-        this.project.category = response.category;
-        this.project.sector = response.sector;
-        this.project.url = response.url;
-        this.project.startDate = response.startDate;
-        this.project.logoRef = response.logoRef;
-        this.project.agreementRef = response.agreementRef;
-        this.project.mailingListType = response.mailingListType;
-        this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address;
-        this.project.members = response.members;
+        this.project = response;
         this.membersCount = this.project.members.length;
         this.loading.project = false;
-
-        this.getProjectLogos(this.projectId);
-
-      }
-    });
-  }
-
-  getProjectLogos(projectId){
-    this.cincoService.getProjectLogos(projectId).subscribe(response => {
-      if(response) {
-        if(response[0]) {
-          this.project.logoRef = response[0].publicUrl;
-        }
       }
     });
   }
@@ -137,7 +110,6 @@ export class ProjectPage {
       sector: "",
       url: "",
       startDate: "",
-      logoRef: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
@@ -150,6 +122,9 @@ export class ProjectPage {
           thoroughfare: ""
         },
         type: ""
+      },
+      config: {
+        logoRef: ""
       }
     };
     this.sort = {
