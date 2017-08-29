@@ -91,21 +91,6 @@ export class AllProjectsPage {
     this.cincoService.getAllProjects().subscribe(response => {
         this.allProjects = response;
         this.loading.projects = false;
-        for(let eachProject of this.allProjects) {
-          this.getProjectLogos(eachProject.id, eachProject);
-        }
-    });
-  }
-
-  // TODO: CINCO will add to the getAllProjects response the acutal logoRef image,
-  // and then this method could be removed.
-  getProjectLogos(projectId, eachProject){
-    this.cincoService.getProjectLogos(projectId).subscribe(response => {
-      if(response) {
-        if(response[0]) {
-          eachProject.logoRef = response[0].publicUrl;
-        }
-      }
     });
   }
 

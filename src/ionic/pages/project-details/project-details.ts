@@ -81,7 +81,6 @@ export class ProjectDetailsPage {
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if (response) {
         this.project = response;
-        this.getProjectLogos(projectId);
         this.loading.project = false;
 
         this.form.patchValue({
@@ -101,17 +100,7 @@ export class ProjectDetailsPage {
       }
     });
   }
-
-  getProjectLogos(projectId){
-    this.cincoService.getProjectLogos(projectId).subscribe(response => {
-      if(response) {
-        if(response[0]) {
-          this.project.logoRef = response[0].publicUrl;
-        }
-      }
-    });
-  }
-
+  
   submitEditProject() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
@@ -184,7 +173,6 @@ export class ProjectDetailsPage {
       sector: "",
       url: "",
       startDate: "",
-      logoRef: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
@@ -197,6 +185,9 @@ export class ProjectDetailsPage {
           thoroughfare: ""
         },
         type: ""
+      },
+      config: {
+        logoRef: ""
       }
     };
   }
