@@ -4,6 +4,7 @@ import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 import { ProjectModel } from '../../models/project-model';
+import { PopoverController } from 'ionic-angular';
 
 @IonicPage({
   segment: 'project/:projectId/repositories'
@@ -34,6 +35,7 @@ export class ProjectRepositoriesPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
+    private popoverCtrl: PopoverController,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -110,6 +112,13 @@ export class ProjectRepositoriesPage {
     modal.present();
   }
 
+  openClaOrganizationAppModal(orgName) {
+    let modal = this.modalCtrl.create('ClaOrganizationAppModal', {
+      orgName: orgName,
+    });
+    modal.present();
+  }
+
   openProjectPage() {
     this.navCtrl.push('ProjectPage', {
       projectId: this.projectId,
@@ -120,32 +129,6 @@ export class ProjectRepositoriesPage {
     this.loading = {
       project: true,
     };
-    // this.project = {
-    //   id: "",
-    //   name: "Project",
-    //   description: "Description",
-    //   managers: "",
-    //   members: [],
-    //   status: "",
-    //   category: "",
-    //   sector: "",
-    //   url: "",
-    //   startDate: "",
-    //   logoRef: "",
-    //   agreementRef: "",
-    //   mailingListType: "",
-    //   emailAliasType: "",
-    //   address: {
-    //     address: {
-    //       administrativeArea: "",
-    //       country: "",
-    //       localityName: "",
-    //       postalCode: "",
-    //       thoroughfare: ""
-    //     },
-    //     type: ""
-    //   }
-    // };
 
     this.contracts = [
       {
@@ -169,18 +152,112 @@ export class ProjectRepositoriesPage {
           }
         },
         organizations: [
-
+          {
+            id: "000001",
+            name: "Zephyr Project",
+            gitUrl: "https://github.com/zephyrproject-rtos",
+            description: "https://www.zephyrproject.org",
+            appConnected: true,
+            repositories: [
+              {
+                name: "zephyr",
+              },
+              {
+                name: "zephyr-bluetooth",
+              },
+              {
+                name: "zephyr-wifi",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: '000001',
+        name: 'Zephyr Contract',
+        ccla: true,
+        cclaAndIcla: true,
+        icla: true,
+        contracts: {
+          ccla: {
+            name: 'zephyr_CLA_corporate.pdf',
+            src: 'https://example.com/something.pdf',
+            uploadDate: '6/30/2017, 11:31 PST',
+            version: '1.0',
+          },
+          icla: {
+            name: 'zephyr_CLA_corporate.pdf',
+            src: 'https://example.com/something.pdf',
+            uploadDate: '6/30/2017, 11:31 PST',
+            version: '1.0',
+          }
+        },
+        organizations: [
+          {
+            id: "000001",
+            name: "Zephyr Project",
+            gitUrl: "https://github.com/zephyrproject-rtos",
+            description: "https://www.zephyrproject.org",
+            appConnected: false,
+            repositories: [
+              {
+                name: "zephyr",
+              },
+              {
+                name: "zephyr-bluetooth",
+              },
+              {
+                name: "zephyr-wifi",
+              },
+            ],
+          },
         ],
       },
     ];
   }
 
-  sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.project.members,
+  organizationPopover(ev, organization) {
+    let actions = {
+      items: [
+        {
+          label: 'Delete',
+          callback: 'organizationDelete',
+          callbackData: {
+            organization: organization,
+          }
+        },
+      ]
+    };
+    let popover = this.popoverCtrl.create(
+      'ActionPopoverComponent',
+      actions,
     );
+
+    popover.present({
+      ev: ev
+    });
+
+    popover.onDidDismiss((popoverData) => {
+      if(popoverData) {
+        this.popoverResponse(popoverData);
+      }
+    });
+  }
+
+  /**
+   * Called if popover dismissed with data. Passes data to a callback function
+   * @param  {object} popoverData should contain .callback and .callbackData
+   */
+  popoverResponse(popoverData) {
+    let callback = popoverData.callback;
+    if(this[callback]) {
+      this[callback](popoverData.callbackData);
+    }
+  }
+
+  organizationDelete(data) {
+    console.log('organization delete');
+    console.log(data.organization);
   }
 
 }
