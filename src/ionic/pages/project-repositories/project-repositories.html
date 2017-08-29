@@ -170,47 +170,41 @@
         <h3>Organizations</h3>
       </ion-col>
       <div class="organizations col-wrapper">
-        <ion-col col-12>
+        <ion-col col-12 *ngFor="let organization of contract.organizations">
           <ion-card>
-            <ion-card-content>
-              <ion-card-title>
-                <ion-icon name="person" item-left large></ion-icon>
-                <span>Individual CLA</span>
-                <div class="contract-title-buttons" *ngIf="contract.contracts.icla.src">
-                  <ion-icon name="cloud-upload"
-                    (click)="openClaContractUploadModal({})"></ion-icon>
-                  <ion-icon name="time"
-                    (click)="openClaContractVersionModal()"></ion-icon>
-                </div>
-              </ion-card-title>
-              <ng-container *ngIf="!contract.contracts.icla.src">
-                <p>Upload the Individual CLA pdf required for signature.</p>
-                <button ion-button (click)="openClaContractUploadModal({})" color="secondary">Upload PDF</button>
-              </ng-container>
-              <ng-container *ngIf="contract.contracts.icla.src">
-                <ion-grid>
-                  <ion-row>
-                    <ion-col col-12 col-md-6>
-                      <span>
-                        <ion-icon name="document" item-left></ion-icon>
-                        {{ contract.contracts.icla.name }}
-                      </span><br>
-                      <span>
-                        {{ contract.contracts.icla.uploadDate }}
-                      </span><br>
-                      <span>
-                        Version {{ contract.contracts.icla.version }}
-                      </span><br>
-                    </ion-col>
-                    <ion-col class="text-right" col-12 col-md-6 >
-                      <span>
-                        View ICLA in Docusign
-                      </span>
-                    </ion-col>
-                  </ion-row>
-                </ion-grid>
-              </ng-container>
-            </ion-card-content>
+            <ion-grid>
+              <ion-row>
+                <ion-col class="vertical-rule-right" col-12 col-md-6>
+                  <ion-card-content>
+                    <ion-card-title>
+                      <ion-icon name="logo-github"></ion-icon>
+                      <span>{{ organization.name }}</span>
+                    </ion-card-title>
+                    <p><a target="_blank" href="{{ organization.gitUrl }}">{{ organization.gitUrl }}</a></p>
+                    <p>{{ organization.description }}</p>
+                  </ion-card-content>
+                </ion-col>
+                <ion-col col-12 col-md-6 >
+                  <ion-card-content>
+                    <h1>Repositories</h1>
+                    <button *ngIf="!organization.appConnected" ion-button (click)="openClaOrganizationAppModal()" color="secondary">Connect CLA App</button>
+                    <div class="repositories" *ngIf="organization.appConnected">
+                      <ion-row *ngFor="let repository of organization.repositories">
+                        <ion-col col-12 icon-left>
+                          <ion-icon name="checkmark"></ion-icon>
+                          {{ repository.name }}
+                        </ion-col>
+                      </ion-row>
+                    </div>
+                  </ion-card-content>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+            <div class="organization-actions">
+              <button ion-button clear round (click)="organizationPopover($event, organization)">
+                <ion-icon name="more"></ion-icon>
+              </button>
+            </div>
           </ion-card>
         </ion-col>
       </div>
