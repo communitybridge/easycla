@@ -39,4 +39,29 @@ project-repositories {
     text-align: right;
   }
 
+  .add-organizations {
+    text-align: center;
+    width: 100%;
+  }
+
+  .contract-group {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 2px solid #888;
+  }
+
+  .organizations ion-card {
+    position: relative;
+  }
+
+  .organization-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    button {
+      padding: 0;
+      width: 3.6rem;  
+    }
+  }
+
 }
