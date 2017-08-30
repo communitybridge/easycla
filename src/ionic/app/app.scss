@@ -68,6 +68,17 @@ ion-content .scroll-content > header {
   cursor: pointer;
 }
 
+.vertical-rule-right::after {
+    content: "";
+    display: block;
+    border-right: 1px solid rgba(0, 0, 0, .1);
+    height: 80%;
+    position: absolute;
+    width: 0;
+    right: -1px;
+    top: 10%;
+}
+
 @import './styles/menu';
 @import './styles/grid';
 @import './styles/form';
