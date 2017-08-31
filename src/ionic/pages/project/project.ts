@@ -61,6 +61,8 @@ export class ProjectPage {
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
         this.project = response;
+        // This is to refresh an image that have same URL
+        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
         this.membersCount = this.project.members.length;
         this.loading.project = false;
       }
