@@ -82,7 +82,7 @@ export class ProjectDetailsPage {
       if (response) {
         this.project = response;
         this.loading.project = false;
-
+        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
         this.form.patchValue({
           name:this.project.name,
           startDate:this.project.startDate,
