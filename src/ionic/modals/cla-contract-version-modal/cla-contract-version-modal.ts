@@ -31,7 +31,7 @@ export class ClaContractVersionModal {
 
   }
 
-  currentContractPopover(ev, index) {
+  contractPopover(ev, index) {
     let currentContractActions = {
       items: [
         {
@@ -41,61 +41,11 @@ export class ClaContractVersionModal {
             index: index,
           }
         },
-        {
-          label: 'Delete',
-          callback: 'contractDelete',
-          callbackData: {
-            index: index,
-          }
-        },
       ]
     };
     let popover = this.popoverCtrl.create(
       'ActionPopoverComponent',
       currentContractActions,
-    );
-
-    popover.present({
-      ev: ev
-    });
-
-    popover.onDidDismiss((popoverData) => {
-      if(popoverData) {
-        this.popoverResponse(popoverData);
-      }
-    });
-  }
-
-  previousContractPopover(ev, index) {
-    let previousContractActions = {
-      items: [
-        {
-          label: 'Make Current',
-          callback: 'contractMakeCurrent',
-          callbackData: {
-            index: index,
-          }
-        },
-        {
-          label: 'Download',
-          callback: 'contractDownload',
-          callbackData: {
-            index: index,
-          }
-        },
-        {
-          label: 'Delete',
-          callback: 'contractDelete',
-          callbackData: {
-            index: index,
-          }
-        },
-      ]
-    };
-
-    let popover = this.popoverCtrl.create(
-      'ActionPopoverComponent',
-      previousContractActions,
     );
 
     popover.present({
