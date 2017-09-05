@@ -1,5 +1,5 @@
 """
-Tests having to do with the agreement endpoints.
+Tests having to do with the signature endpoints.
 """
 
 import unittest

@@ -32,7 +32,7 @@ class UserTestCase(CLATestCase):
                                          'user_id': response.data['user_id'],
                                          'user_ldap_id': None,
                                          'user_name': 'User Name',
-                                         'user_organization_id': None})
+                                         'user_company_id': None})
 
     def test_post_user(self):
         self.create_user(user_email='user1@email.com', user_github_id=11111)
@@ -56,14 +56,14 @@ class UserTestCase(CLATestCase):
         response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'])
         self.assertEqual(response.data, {'errors': {'user_id': 'User not found'}})
 
-    def test_get_user_agreements(self):
+    def test_get_user_signatures(self):
         user = self.create_user()
         project = self.create_project()
         self.create_document(project['project_id'])
-        self.create_agreement(project['project_id'], user['user_id'], 'user')
-        self.create_agreement(project['project_id'], user['user_id'], 'user')
-        self.create_agreement(project['project_id'], user['user_id'], 'user')
-        response = hug.test.get(cla.routes, '/v1/user/%s/agreements' %user['user_id'])
+        self.create_signature(project['project_id'], user['user_id'], 'user')
+        self.create_signature(project['project_id'], user['user_id'], 'user')
+        self.create_signature(project['project_id'], user['user_id'], 'user')
+        response = hug.test.get(cla.routes, '/v1/user/%s/signatures' %user['user_id'])
         self.assertTrue('errors' not in response.data)
         self.assertTrue(len(response.data) == 3)
 
@@ -77,13 +77,13 @@ class UserTestCase(CLATestCase):
         response = hug.test.get(cla.routes, '/v1/user/github/' + user['user_github_id'])
         self.assertEqual(response.data['user_id'], user['user_id'])
 
-    def test_get_users_by_organization(self):
-        organization = self.create_organization()
-        self.create_user(user_organization_id=organization['organization_id'])
+    def test_get_users_by_company(self):
+        company = self.create_company()
+        self.create_user(user_company_id=company['company_id'])
         self.create_user()
-        self.create_user(user_organization_id=organization['organization_id'])
-        response = hug.test.get(cla.routes, '/v1/users/organization/' + \
-                                            organization['organization_id'])
+        self.create_user(user_company_id=company['company_id'])
+        response = hug.test.get(cla.routes, '/v1/users/company/' + \
+                                            company['company_id'])
         self.assertTrue(len(response.data) == 2)
 
 if __name__ == '__main__':

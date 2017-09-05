@@ -2,6 +2,7 @@
 Holds the model interfaces that all storage models must implement.
 """
 
+
 class Project(object): # pylint: disable=too-many-public-methods
     """
     Interface to the Project model.
@@ -51,6 +52,15 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_project_external_id(self):
+        """
+        Getter for the project's External ID.
+
+        :return: The project's External ID.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def get_project_name(self):
         """
         Getter for the project's name.
@@ -62,7 +72,7 @@ class Project(object): # pylint: disable=too-many-public-methods
 
     def get_project_individual_documents(self):
         """
-        Getter for the project's individual agreement documents.
+        Getter for the project's individual signature documents.
 
         :return: The project ICLA documents.
         :rtype: [cla.models.model_interfaces.Document]
@@ -71,16 +81,34 @@ class Project(object): # pylint: disable=too-many-public-methods
 
     def get_project_corporate_documents(self):
         """
-        Getter for the project's corporate agreement documents.
+        Getter for the project's corporate signature documents.
 
         :return: The project CCLA documents.
         :rtype: [cla.models.model_interfaces.Document]
         """
         raise NotImplementedError()
 
+    def get_project_ccla_requires_icla_signature(self):
+        """
+        Getter for the project's ccla_requires_icla_signature setting.
+
+        :return: If the Project requires CCLAs employee to sign a iCLA.
+        :rtype: bool
+        """
+        raise NotImplementedError()
+
+    def get_project_current_major_version(self):
+        """
+        Getter for the project's current Major Document Version.
+
+        :return: Version of the current Major Version.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
     def get_project_individual_document(self, revision=None):
         """
-        Getter for the project's individual agreement document given a revision number.
+        Getter for the project's individual signature document given a revision number.
 
         A revision number of None should return the latest revision document.
 
@@ -93,7 +121,7 @@ class Project(object): # pylint: disable=too-many-public-methods
 
     def get_project_corporate_document(self, revision=None):
         """
-        Getter for the project's corporate agreement document by revision.
+        Getter for the project's corporate signature document by revision.
 
         A revision number of None should return the latest revision document.
 
@@ -113,6 +141,15 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def set_project_external_id(self, project_external_id):
+        """
+        Setter for the project's External ID.
+
+        :param project_external_id: The project's External ID.
+        :type project_external_id: string
+        """
+        raise NotImplementedError()
+
     def set_project_name(self, project_name):
         """
         Setter for the project's name.
@@ -124,7 +161,7 @@ class Project(object): # pylint: disable=too-many-public-methods
 
     def set_project_individual_documents(self, documents):
         """
-        Setter for the project's individual agreement documents.
+        Setter for the project's individual signature documents.
 
         :param documents: The project's individual documents.
         :type documents: [cla.models.model_interfaces.Document]
@@ -133,10 +170,19 @@ class Project(object): # pylint: disable=too-many-public-methods
 
     def set_project_corporate_documents(self, documents):
         """
-        Setter for the project's corporate agreement documents.
+        Setter for the project's corporate signature documents.
 
         :param document: The project's corporate documents.
         :type document: [cla.models.model_interfaces.Document]
+        """
+        raise NotImplementedError()
+
+    def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
+        """
+        Setter for the project's ccla_requires_icla_signature setting.
+
+        :param ccla_requires_icla_signature
+        :type bool
         """
         raise NotImplementedError()
 
@@ -185,18 +231,18 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_project_agreements(self, agreement_signed=None, agreement_approved=None):
+    def get_project_signatures(self, signature_signed=None, signature_approved=None):
         """
-        Getter for the project's agreements.
+        Getter for the project's signatures.
 
-        :param agreement_signed: Whether or not to filter by signed agreements.
+        :param signature_signed: Whether or not to filter by signed signatures.
             None = no filter, True = only signed, False = only unsigned.
-        :type agreement_signed: boolean
-        :param agreement_approved: Whether or not to filter by approved agreements.
+        :type signature_signed: boolean
+        :param signature_approved: Whether or not to filter by approved signatures.
             None = no filter, True = only approved, False = only unapproved.
-        :type agreement_approved: boolean
-        :return: The project's agreement objects.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :type signature_approved: boolean
+        :return: The project's signature objects.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
@@ -210,6 +256,7 @@ class Project(object): # pylint: disable=too-many-public-methods
         :rtype: [cla.models.model_interfaces.Project]
         """
         raise NotImplementedError()
+
 
 class User(object):
     """
@@ -256,6 +303,15 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_user_external_id(self):
+        """
+        Getter for the user's External ID.
+
+        :return: The user's External ID.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def get_user_email(self):
         """
         Getter for the user's email address.
@@ -292,11 +348,11 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def get_user_organization_id(self):
+    def get_user_company_id(self):
         """
-        Getter for the user's organization ID.
+        Getter for the user's company ID.
 
-        :return: The user's organization ID.
+        :return: The user's company ID.
         :rtype: string
         """
         raise NotImplementedError()
@@ -307,6 +363,15 @@ class User(object):
 
         :param user_id: The ID for this user.
         :type user_id: string
+        """
+        raise NotImplementedError()
+
+    def set_user_external_id(self, user_external_id):
+        """
+        Setter for the user's External ID.
+
+        :param user_external_id: The External ID for this user.
+        :type user_external_id: string
         """
         raise NotImplementedError()
 
@@ -328,12 +393,12 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def set_user_organization_id(self, organization_id):
+    def set_user_company_id(self, company_id):
         """
-        Setter for the user's organization ID.
+        Setter for the user's company ID.
 
-        :param organization_id: The user's organization ID.
-        :type organization_id: string
+        :param company_id: The user's company ID.
+        :type company_id: string
         """
         raise NotImplementedError()
 
@@ -377,31 +442,31 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def get_user_agreements(self, project_id=None, agreement_signed=None, agreement_approved=None):
+    def get_user_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
         """
-        Fetches the agreements associated with this user.
+        Fetches the signatures associated with this user.
 
         :param project_id: Filter for project IDs. None = no filter.
         :type project_id: string | None
-        :param agreement_signed: Whether or not to filter by signed agreements.
+        :param signature_signed: Whether or not to filter by signed signatures.
             None = no filter, True = only signed, False = only unsigned.
-        :type agreement_signed: boolean
-        :param agreement_approved: Whether or not to filter by approved agreements.
+        :type signature_signed: boolean
+        :param signature_approved: Whether or not to filter by approved signatures.
             None = no filter, True = only approved, False = only unapproved.
-        :type agreement_approved: boolean
-        :return: The agreement objects associated with this user.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :type signature_approved: boolean
+        :return: The signature objects associated with this user.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
-    def get_users_by_organization(self, organization_id):
+    def get_users_by_company(self, company_id):
         """
-        Fetches the users associated with an organization.
+        Fetches the users associated with an company.
 
-        :param organization_id: The organization ID to filter users by.
-        :type organization_id: string
-        :return: The agreement objects associated with this user.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :param company_id: The company ID to filter users by.
+        :type company_id: string
+        :return: The signature objects associated with this user.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
@@ -415,6 +480,7 @@ class User(object):
         :rtype: [cla.models.model_interfaces.User]
         """
         raise NotImplementedError()
+
 
 class Repository(object):
     """
@@ -584,9 +650,10 @@ class Repository(object):
         """
         raise NotImplementedError()
 
-class Agreement(object): # pylint: disable=too-many-public-methods
+
+class Signature(object): # pylint: disable=too-many-public-methods
     """
-    Interface to the Agreement model.
+    Interface to the Signature model.
     """
 
     def to_dict(self):
@@ -604,13 +671,13 @@ class Agreement(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def load(self, agreement_id):
+    def load(self, signature_id):
         """
         Simple abstraction around the supported ORMs to load a model.
         Populates the current object.
 
-        :param agreement_id: The agreement ID of the repo to load.
-        :type agreement_id: string
+        :param signature_id: The signature ID of the repo to load.
+        :type signature_id: string
         """
         raise NotImplementedError()
 
@@ -620,193 +687,229 @@ class Agreement(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_agreement_id(self):
+    def get_signature_id(self):
         """
-        Getter for an agreement's ID.
+        Getter for an signature's ID.
 
-        :return: The agreement's ID.
+        :return: The signature's ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_project_id(self):
+    def get_signature_external_id(self):
         """
-        Getter for an agreement's project ID.
+        Getter for an signature's External ID.
 
-        :return: The agreement's project ID.
+        :return: The signature's External ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_document_revision(self):
+    def get_signature_project_id(self):
         """
-        Getter for an agreement's document revision.
+        Getter for an signature's project ID.
 
-        :return: The agreement's document revision.
+        :return: The signature's project ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_reference_id(self):
+    def get_signature_document_minor_version(self):
         """
-        Getter for an agreement's user or organization ID, depending on the type
-        of agreement this is (individual or corporate).
+        Getter for an signature's document minor version.
 
-        :return: The agreement's user or organization ID.
+        :return: The signature's document minor version.
+        :rtype: integer
+        """
+        raise NotImplementedError()
+
+    def get_signature_document_major_version(self):
+        """
+        Getter for an signature's document major version.
+
+        :return: The signature's document major version.
+        :rtype: integer
+        """
+        raise NotImplementedError()
+
+    def get_signature_reference_id(self):
+        """
+        Getter for an signature's user or company ID, depending on the type
+        of signature this is (individual or corporate).
+
+        :return: The signature's user or company ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_reference_type(self):
+    def get_signature_reference_type(self):
         """
-        Getter for an agreement's reference type - could be 'user' or 'organization'.
+        Getter for an signature's reference type - could be 'user' or 'company'.
 
-        :return: The agreement's reference type.
+        :return: The signature's reference type.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_type(self):
+    def get_signature_type(self):
         """
-        Getter for an agreement's type ('cla' or 'dco').
+        Getter for an signature's type ('cla' or 'dco').
 
-        :return: The agreement type (cla or dco)
+        :return: The signature type (cla or dco)
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_signed(self):
+    def get_signature_signed(self):
         """
-        Getter for an agreement's signed status. True for signed, False otherwise.
+        Getter for an signature's signed status. True for signed, False otherwise.
 
-        :return: The agreement's signed status. True if signed, False otherwise.
+        :return: The signature's signed status. True if signed, False otherwise.
         :rtype: boolean
         """
         raise NotImplementedError()
 
-    def get_agreement_approved(self):
+    def get_signature_approved(self):
         """
-        Getter for an agreement's approval status. True is approved, False otherwise.
+        Getter for an signature's approval status. True is approved, False otherwise.
 
-        :return: The agreement's approval status. True is approved, False otherwise.
+        :return: The signature's approval status. True is approved, False otherwise.
         :rtype: boolean
         """
         raise NotImplementedError()
 
-    def get_agreement_sign_url(self):
+    def get_signature_sign_url(self):
         """
-        Getter for an agreement's signing URL. The URL the user has to visit in
-        order to sign the agreement.
+        Getter for an signature's signing URL. The URL the user has to visit in
+        order to sign the signature.
 
-        :return: The agreement's signing URL.
+        :return: The signature's signing URL.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_return_url(self):
+    def get_signature_return_url(self):
         """
-        Getter for an agreement's return URL. The URL the user gets sent to after signing.
+        Getter for an signature's return URL. The URL the user gets sent to after signing.
 
-        :return: The agreement's return URL.
+        :return: The signature's return URL.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_agreement_callback_url(self):
+    def get_signature_callback_url(self):
         """
-        Getter for an agreement's callback URL. The URL that the signing service provider should
+        Getter for an signature's callback URL. The URL that the signing service provider should
         hit once signature has been confirmed.
 
-        :return: The agreement's callback URL.
+        :return: The signature's callback URL.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def set_agreement_id(self, agreement_id):
+    def set_signature_id(self, signature_id):
         """
-        Setter for an agreement ID.
+        Setter for an signature ID.
 
-        :param agreement_id: The agreement's ID.
-        :type agreement_id: string
+        :param signature_id: The signature's ID.
+        :type signature_id: string
         """
         raise NotImplementedError()
 
-    def set_agreement_project_id(self, project_id):
+    def set_signature_external_id(self, signature_external_id):
         """
-        Setter for an agreement's project ID.
+        Setter for an signature External ID.
 
-        :param project_id: The agreement's project ID.
+        :param signature_external_id: The signature's External ID.
+        :type signature_external_id: string
+        """
+        raise NotImplementedError()
+
+    def set_signature_project_id(self, project_id):
+        """
+        Setter for an signature's project ID.
+
+        :param project_id: The signature's project ID.
         :type project_id: string
         """
         raise NotImplementedError()
 
-    def set_agreement_document_revision(self, document_revision):
+    def set_signature_document_minor_version(self, document_minor_version):
         """
-        Setter for an agreement's document revision.
+        Setter for an signature's document minor version.
 
-        :param document_revision: The agreement's document revision.
-        :type document_revision: string
+        :param document_minor_version: The signature's document minor version.
+        :type document_minor_version: string
         """
         raise NotImplementedError()
 
-    def set_agreement_reference_id(self, reference_id):
+    def set_signature_document_major_version(self, document_major_version):
         """
-        Setter for an agreement's reference ID.
+        Setter for an signature's document major version.
 
-        :param reference_id: The agreement's reference ID.
+        :param document_major_version: The signature's document major version.
+        :type document_major_version: string
+        """
+        raise NotImplementedError()
+
+    def set_signature_reference_id(self, reference_id):
+        """
+        Setter for an signature's reference ID.
+
+        :param reference_id: The signature's reference ID.
         :type reference_id: string
         """
         raise NotImplementedError()
 
-    def set_agreement_reference_type(self, reference_type):
+    def set_signature_reference_type(self, reference_type):
         """
-        Setter for an agreement's reference type.
+        Setter for an signature's reference type.
 
-        :param reference_type: The agreement's reference type ('user' or 'organization').
+        :param reference_type: The signature's reference type ('user' or 'company').
         :type reference_type: string
         """
         raise NotImplementedError()
 
-    def set_agreement_type(self, agreement_type):
+    def set_signature_type(self, signature_type):
         """
-        Setter for an agreement's type ('cla' or 'dco').
+        Setter for an signature's type ('cla' or 'dco').
 
-        :param agreement_type: The agreement type ('cla' or 'dco').
-        :type agreement_type: string
+        :param signature_type: The signature type ('cla' or 'dco').
+        :type signature_type: string
         """
         raise NotImplementedError()
 
-    def set_agreement_signed(self, signed):
+    def set_signature_signed(self, signed):
         """
-        Setter for an agreement's signed status.
+        Setter for an signature's signed status.
 
         :param signed: Signed status. True for signed, False otherwise.
         :type signed: bool
         """
         raise NotImplementedError()
 
-    def set_agreement_approved(self, approved):
+    def set_signature_approved(self, approved):
         """
-        Setter for an agreement's approval status.
+        Setter for an signature's approval status.
 
         :param approved: Approved status. True for approved, False otherwise.
         :type approved: bool
         """
         raise NotImplementedError()
 
-    def set_agreement_sign_url(self, sign_url):
+    def set_signature_sign_url(self, sign_url):
         """
-        Setter for an agreement's signing URL. Optional on agreement creation.
+        Setter for an signature's signing URL. Optional on signature creation.
         The signing provider's request_signatures() method will populate the field.
 
-        :param sign_url: The URL the user must visit in order to sign the agreement.
+        :param sign_url: The URL the user must visit in order to sign the signature.
         :type sign_url: string
         """
         raise NotImplementedError()
 
-    def set_agreement_return_url(self, return_url):
+    def set_signature_return_url(self, return_url):
         """
-        Setter for an agreement's return URL. Optional on agreement creation.
+        Setter for an signature's return URL. Optional on signature creation.
 
         If this value is not set, the CLA system will do it's best to redirect the user to the
         appropriate location once signing is complete (project or repository page).
@@ -816,9 +919,9 @@ class Agreement(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_agreement_callback_url(self, callback_url):
+    def set_signature_callback_url(self, callback_url):
         """
-        Setter for an agreement's callback URL. Optional on agreement creation.
+        Setter for an signature's callback URL. Optional on signature creation.
 
         If this value is not set, the signing service provider will not fire a callback request
         when the user's signature has been confirmed.
@@ -828,66 +931,67 @@ class Agreement(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_agreements_by_reference(self, reference_id, reference_type, # pylint: disable=too-many-arguments
+    def get_signatures_by_reference(self, reference_id, reference_type, # pylint: disable=too-many-arguments
                                     project_id=None,
-                                    agreement_signed=None,
-                                    agreement_approved=None):
+                                    signature_signed=None,
+                                    signature_approved=None):
         """
         Simple abstraction around the supported ORMs to get a user's or
-        orgnanization's agreements.
+        orgnanization's signatures.
 
-        :param reference_id: The reference ID (user_id or organization_id) for
-            whom we'll be fetching agreements.
+        :param reference_id: The reference ID (user_id or company_id) for
+            whom we'll be fetching signatures.
         :type reference_id: string
-        :param reference_type: The reference type ('user' or 'organization') for
-            whom we'll be fetching agreements.
+        :param reference_type: The reference type ('user' or 'company') for
+            whom we'll be fetching signatures.
         :type reference_id: string
         :param project_id: The project ID to filter by. None will not apply any filters.
         :type project_id: string or None
-        :param agreement_signed: Whether or not to return only signed/unsigned agreements.
+        :param signature_signed: Whether or not to return only signed/unsigned signatures.
             None will not apply any filters for signed.
-        :type agreement_signed: bool or None
-        :param agreement_approved: Whether or not to return only approved/unapproved agreements.
+        :type signature_signed: bool or None
+        :param signature_approved: Whether or not to return only approved/unapproved signatures.
             None will not apply any filters for approved.
-        :type agreement_approved: bool or None
-        :return: List of agreements.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :type signature_approved: bool or None
+        :return: List of signatures.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
-    def get_agreements_by_project(self, project_id,
-                                  agreement_signed=None,
-                                  agreement_approved=None):
+    def get_signatures_by_project(self, project_id,
+                                  signature_signed=None,
+                                  signature_approved=None):
         """
-        Simple abstraction around the supported ORMs to get a project's agreements.
+        Simple abstraction around the supported ORMs to get a project's signatures.
 
-        :param project_id: The project ID we'll be fetching agreements for.
+        :param project_id: The project ID we'll be fetching signatures for.
         :type project_id: string
-        :param agreement_signed: Whether or not to return only signed/unsigned agreements.
+        :param signature_signed: Whether or not to return only signed/unsigned signatures.
             None will not apply any filters for signed.
-        :type agreement_signed: bool or None
-        :param agreement_approved: Whether or not to return only approved/unapproved agreements.
+        :type signature_signed: bool or None
+        :param signature_approved: Whether or not to return only approved/unapproved signatures.
             None will not apply any filters for approved.
-        :type agreement_approved: bool or None
-        :return: List of agreements.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :type signature_approved: bool or None
+        :return: List of signatures.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
     def all(self, ids=None):
         """
-        Fetches all agreements in the CLA system.
+        Fetches all signatures in the CLA system.
 
-        :param ids: List of agreement IDs to retrieve.
+        :param ids: List of signature IDs to retrieve.
         :type ids: None or [string]
-        :return: A list of agreement objects.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :return: A list of signature objects.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
-class Organization(object): # pylint: disable=too-many-public-methods
+
+class Company(object): # pylint: disable=too-many-public-methods
     """
-    Interface to the Organization model.
+    Interface to the Company model.
     """
 
     def to_dict(self):
@@ -905,13 +1009,13 @@ class Organization(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def load(self, organization_id):
+    def load(self, company_id):
         """
         Simple abstraction around the supported ORMs to load a model.
         Populates the current object.
 
-        :param organization_id: The ID of the organization to load.
-        :type organization_id: string
+        :param company_id: The ID of the company to load.
+        :type company_id: string
         """
         raise NotImplementedError()
 
@@ -921,87 +1025,105 @@ class Organization(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_organization_id(self):
+    def get_company_id(self):
         """
-        Getter for an organization's ID.
+        Getter for an company's ID.
 
-        :return: The organization's ID.
+        :return: The company's ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_organization_name(self):
+    def get_company_external_id(self):
         """
-        Getter for an organization's name.
+        Getter for an company's External ID.
 
-        :return: The organization's name.
+        :return: The company's External ID.
         :rtype: string
         """
         raise NotImplementedError()
 
-    def get_organization_whitelist(self):
+    def get_company_name(self):
         """
-        Getter for an organization's whitelisted domain names.
+        Getter for an company's name.
 
-        :return: The organization's configured whitelist of domains.
+        :return: The company's name.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_company_whitelist(self):
+        """
+        Getter for an company's whitelisted domain names.
+
+        :return: The company's configured whitelist of domains.
         :rtype: [string]
         """
         raise NotImplementedError()
 
-    def get_organization_exclude_patterns(self):
+    def get_company_whitelist_patterns(self):
         """
-        Getter for an organization's exclude regex patterns.
+        Getter for an company's exclude regex patterns.
 
-        :return: The organization's configured exclude patterns.
+        :return: The company's configured exclude patterns.
         :rtype: [string]
         """
         raise NotImplementedError()
 
-    def get_organization_agreements(self,
-                                    agreement_type=None,
-                                    agreement_signed=None,
-                                    agreement_corporate=None):
+    def get_company_signatures(self,
+                                    signature_type=None,
+                                    signature_signed=None,
+                                    signature_corporate=None):
         """
-        Simple abstraction around the supported ORMs to fetch agreements for
-        an organization.
+        Simple abstraction around the supported ORMs to fetch signatures for
+        an company.
 
-        :param agreement_type: Filters the agreements by type ('cla' or 'dco')
-            None will return all available agreement types.
-        :type agreement_type: string or None
-        :param agreement_signed: Whether or not to return only signed/unsigned agreements.
-            None will return all agreements for this organization.
-        :type agreement_signed: bool or None
-        :param agreement_corporate: Filter for corporate vs individual agreement.
+        :param signature_type: Filters the signatures by type ('cla' or 'dco')
+            None will return all available signature types.
+        :type signature_type: string or None
+        :param signature_signed: Whether or not to return only signed/unsigned signatures.
+            None will return all signatures for this company.
+        :type signature_signed: bool or None
+        :param signature_corporate: Filter for corporate vs individual signature.
             True will return just corporate CLAs.
             False will return just individual CLAs.
             None will return both individual and corporate.
-        :type agreement_corporate: bool or None
-        :return: The filtered agreements for this organization.
-        :rtype: [cla.models.model_interfaces.Agreement]
+        :type signature_corporate: bool or None
+        :return: The filtered signatures for this company.
+        :rtype: [cla.models.model_interfaces.Signature]
         """
         raise NotImplementedError()
 
-    def set_organization_id(self, organization_id):
+    def set_company_id(self, company_id):
         """
-        Setter for an organization ID.
+        Setter for an company ID.
 
-        :param organization_id: The organization's ID.
-        :type organization_id: string
+        :param company_id: The company's ID.
+        :type company_id: string
         """
         raise NotImplementedError()
 
-    def set_organization_name(self, organization_name):
+    def set_company_external_id(self, company_external_id):
         """
-        Setter for an organization's name.
+        Setter for an company External ID.
 
-        :param organization_name: The name of the organization.
-        :type organization_name: string
+        :param company_external_id: The company's External ID.
+        :type company_external_id: string
         """
         raise NotImplementedError()
 
-    def set_organization_whitelist(self, whitelist):
+    def set_company_name(self, company_name):
         """
-        Setter for an organization's whitelisted domain names.
+        Setter for an company's name.
+
+        :param company_name: The name of the company.
+        :type company_name: string
+        """
+        raise NotImplementedError()
+
+    def set_company_whitelist(self, whitelist):
+        """
+        Setter for an company's whitelisted domain names.
 
         :param whitelist: The list of domain names to mark as safe.
             Example: ['ibm.com', 'ibm.ca']
@@ -1009,29 +1131,29 @@ class Organization(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def add_organization_whitelist(self, whitelist_item):
+    def add_company_whitelist(self, whitelist_item):
         """
         Adds another entry in the list of whitelisted domain names.
         Does not query the DB - save() will take care of that.
 
-        :param whitelist_item: A domain name to add to the whitelist of this organization.
+        :param whitelist_item: A domain name to add to the whitelist of this company.
         :type whitelist_item: string
         """
         raise NotImplementedError()
 
-    def remove_organization_whitelist(self, whitelist_item):
+    def remove_company_whitelist(self, whitelist_item):
         """
         Removes an entry from the list of whitelisted domain names.
         Does not query the DB - save() will take care of that.
 
-        :param whitelist_item: A domain name to remove from the whitelist of this organization.
+        :param whitelist_item: A domain name to remove from the whitelist of this company.
         :type whitelist_item: string
         """
         raise NotImplementedError()
 
-    def set_organization_exclude_patterns(self, exclude_patterns):
+    def set_company_whitelist_patterns(self, exclude_patterns):
         """
-        Setter for an organization's exclude regex patterns.
+        Setter for an company's exclude regex patterns.
 
         :param exclude_patterns: The list of email patterns to exlude from signing.
             Example: ['.*@ibm.co.uk$', '^info.*']
@@ -1041,37 +1163,38 @@ class Organization(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def add_organization_exclude_pattern(self, exclude_pattern):
+    def add_company_exclude_pattern(self, exclude_pattern):
         """
         Adds another entry in the list of excluded patterns.
         Does not query the DB - save() will take care of that.
 
-        :param exclude_pattern: A regex string to add to the exluded patterns of this organization.
+        :param exclude_pattern: A regex string to add to the exluded patterns of this company.
         :type exclude_pattern: string
         """
         raise NotImplementedError()
 
-    def remove_organization_exclude_pattern(self, exclude_pattern):
+    def remove_company_exclude_pattern(self, exclude_pattern):
         """
         Removes an entry from the list of whitelisted domain names.
         Does not query the DB - save() will take care of that.
 
         :param exclude_pattern: A regex string to remove from the exluded patterns
-            of this organization.
+            of this company.
         :type exclude_pattern: string
         """
         raise NotImplementedError()
 
     def all(self, ids=None):
         """
-        Fetches all organizations in the CLA system.
+        Fetches all companies in the CLA system.
 
-        :param ids: List of organization IDs to retrieve.
+        :param ids: List of company IDs to retrieve.
         :type ids: None or [string]
-        :return: A list of organization objects.
-        :rtype: [cla.models.model_interfaces.Organization]
+        :return: A list of company objects.
+        :rtype: [cla.models.model_interfaces.Company]
         """
         raise NotImplementedError()
+
 
 class Document(object):
     """
@@ -1194,5 +1317,116 @@ class Document(object):
 
         :param document_revision: The document's revision number.
         :type document_revision: integer
+        """
+        raise NotImplementedError()
+
+
+class GitHubOrg(object):
+    """
+    Interface to the GitHubOrg model.
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model.
+        """
+        raise NotImplementedError()
+
+    def load(self, organization_id):
+        """
+        Simple abstraction around the supported ORMs to load a model.
+        Should populate the current object.
+
+        :param organization_id: The github organization's ID.
+        :type organization_id: string
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model.
+        """
+        raise NotImplementedError()
+
+    def get_organization_name(self):
+        """
+        Getter for the github organization's Name.
+
+        :return: The github organization's Name.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_organization_company_id(self):
+        """
+        Getter for the github organization's company id.
+
+        :return: The github organization's id.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_organization_installation_id(self):
+        """
+        Getter for the github organization's installation id.
+
+        :return: The github organization's installation id.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def set_organization_name(self, organization_name):
+        """
+        Setter for the github organization's name.
+
+        :param organization_name: The Name for this github organization.
+        :type organization_name: string
+        """
+        raise NotImplementedError()
+
+    def set_organization_company_id(self, organization_company_id):
+        """
+        Setter for the github organization's company id.
+
+        :param organization_company_id: The company id for this github organization.
+        :type organization_company_id: string
+        """
+        raise NotImplementedError()
+
+    def set_organization_installation_id(self, organization_installation_id):
+        """
+        Setter for the github organization's installation id.
+
+        :param organization_installation_id: The github organization's installation id.
+        :type organization_installation_id: string
+        """
+        raise NotImplementedError()
+
+    def get_organizations_by_company(self, company_id):
+        """
+        Fetches the github organizations associated with an company.
+
+        :param company_id: The company ID to filter github organizations by.
+        :type company_id: string
+        :return: The signature objects associated with this github organization.
+        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all github organizations in the CLA system.
+
+        :return: A list of GitHubOrg objects.
+        :rtype: [cla.models.model_interfaces.GitHubOrg]
         """
         raise NotImplementedError()

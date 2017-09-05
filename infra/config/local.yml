@@ -1,0 +1,66 @@
+# List of all the containers that needs to be spun up.
+# The workspace container will be added and configured automatically.
+# The Syntax for each container should mimic the docker-compose format.
+containers:
+  dynamodb:
+    image: 'dwmkerr/dynamodb'
+    expose: ['8000']
+    command: '-dbPath /srv/data -sharedDb -optimizeDbBeforeStartup'
+    volumes: ['.lf/data/dynamo:/srv/data']
+  mailhog:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/mailhog:latest'
+    expose: ['1025']
+  workspace:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/cli/workspace/python:3'
+    ports: ['%:5000']
+    internal_volumes: ['app']
+
+# Environment Variables to be injected in the container.
+environment:
+  workspace:
+    base_url: Ooops
+    signed_callback_url: Ooops
+    database: 'DynamoDB'
+    database_host: 'http://dynamodb:8000'
+    keyvalue: 'Memory'
+    dynamo_region: 'us-west-2'
+    dynamo_write_units: 1
+    dynamo_read_units: 1
+    signing_service: 'DocuSign'
+    docusign_root_url: 'https://demo.docusign.net/restapi/v2'
+    docusign_username: ''
+    docusign_password: ''
+    docusign_integrator_key: ''
+    github_app_id: '4449'
+    github_app_client_id: 'Iv1.3899cde846512a7e'
+    github_app_secret: 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
+    github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
+    github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
+    keycloak_endpoint: Ooops
+    cinco_endpoint: Ooops
+    email_service: 'SMTP'
+    smtp_sender_email_address: 'donotreply@cla.system'
+    smtp_host: 'mailhog'
+    smtp_port: '1025'
+    storage_service: 'LocalStorage'
+    local_storage_folder: '/tmp/cla'
+
+modes:
+  default:
+    description: "Only the workspace container will have have an external port mappings. App will autorun in workspace."
+    containers:
+      workspace:
+        command: '/srv/app/scripts/run.sh'
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
+
+  dev:
+    description: "All containers will have external port mappings. No autorun. No Workspace Container."
+    containers:
+      dynamodb:
+        ports: ['%:8000']
+      mailhog:
+          ports: ['%:1025', '%:8025']
+
+  ci:
+    description: "All containers are launched, including the workspace but no port mappings are set and no autorun"

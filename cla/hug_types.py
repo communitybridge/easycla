@@ -6,6 +6,7 @@ from email.utils import parseaddr
 from urllib.parse import urlparse
 import hug
 
+
 def valid_email(value):
     """
     Simple function to validate an email address.
@@ -17,6 +18,7 @@ def valid_email(value):
     :rtype: boolean
     """
     return '@' in parseaddr(value)[1]
+
 
 def valid_url(value):
     """
@@ -31,6 +33,7 @@ def valid_url(value):
     parsed_url = urlparse(value)
     return len(parsed_url.scheme) > 0 and len(parsed_url.netloc) > 0
 
+
 class Email(hug.types.Text):
     """Simple hug type for email address validation."""
     def __call__(self, value):
@@ -39,6 +42,7 @@ class Email(hug.types.Text):
             raise ValueError('Invalid email address specified')
         return value
 email = Email()
+
 
 class URL(hug.types.Text):
     """Simple hug type for URL validation."""

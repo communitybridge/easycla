@@ -46,7 +46,7 @@ def get_user(user_id=None, user_email=None, user_github_id=None):
             return {'errors': {'user_github_id': 'User not found'}}
     return user.to_dict()
 
-def create_user(user_email, user_name=None, user_organization_id=None, user_github_id=None):
+def create_user(user_email, user_name=None, user_company_id=None, user_github_id=None):
     """
     Creates a user and returns it in dict format.
 
@@ -54,8 +54,8 @@ def create_user(user_email, user_name=None, user_organization_id=None, user_gith
     :type user_email: string
     :param user_name: The name of the new user.
     :type user_name: string
-    :param user_organization_id: The organization ID the user belongs to.
-    :type user_organization_id: string
+    :param user_company_id: The company ID the user belongs to.
+    :type user_company_id: string
     :param user_github_id: The GitHub ID of the user (optional).
     :type user_github_id: integer | None
     :return: dict object containing user data.
@@ -65,13 +65,13 @@ def create_user(user_email, user_name=None, user_organization_id=None, user_gith
     user.set_user_id(str(uuid.uuid4()))
     user.set_user_email(str(user_email).lower())
     user.set_user_name(user_name)
-    user.set_user_organization_id(user_organization_id)
+    user.set_user_company_id(user_company_id)
     user.set_user_github_id(user_github_id)
     user.save()
     return user.to_dict()
 
 def update_user(user_id, user_email=None, user_name=None,
-                user_organization_id=None, user_github_id=None):
+                user_company_id=None, user_github_id=None):
     """
     Updates a user and returns it in dict format.
 
@@ -81,8 +81,8 @@ def update_user(user_id, user_email=None, user_name=None,
     :type user_email: string
     :param user_name: The new name for the user.
     :type user_name: string
-    :param user_organization_id: The new organization ID for the user.
-    :type user_organization_id: string
+    :param user_company_id: The new company ID for the user.
+    :type user_company_id: string
     :param user_github_id: The new GitHub ID of the user (optional).
     :type user_github_id: integer | None
     :return: dict object containing the updated user data.
@@ -101,9 +101,9 @@ def update_user(user_id, user_email=None, user_name=None,
             return {'errors': {'user_email': 'Invalid email specified'}}
     if user_name is not None:
         user.set_user_name(str(user_name))
-    if user_organization_id is not None:
-        # TODO: Ensure organization_id exists.
-        user.set_user_organization_id(user_organization_id)
+    if user_company_id is not None:
+        # TODO: Ensure user_company_id exists.
+        user.set_user_company_id(user_company_id)
     if user_github_id is not None:
         try:
             val = hug.types.number(user_github_id)
@@ -128,13 +128,13 @@ def delete_user(user_id):
     user.delete()
     return {'success': True}
 
-def get_user_agreements(user_id):
+def get_user_signatures(user_id):
     """
-    Given a user ID, returns the user's agreements.
+    Given a user ID, returns the user's signatures.
 
     :param user_id: The user's ID.
     :type user_id: string
-    :return: list of agreement data for this user.
+    :return: list of signature data for this user.
     :rtype: [dict]
     """
     user = get_user_instance()
@@ -142,17 +142,17 @@ def get_user_agreements(user_id):
         user.load(user_id)
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
-    agreements = user.get_user_agreements()
-    return [agr.to_dict() for agr in agreements]
+    signatures = user.get_user_signatures()
+    return [agr.to_dict() for agr in signatures]
 
-def get_users_organization(user_organization_id):
+def get_users_company(user_company_id):
     """
-    Fetches all users that are associated with the organization specified.
+    Fetches all users that are associated with the company specified.
 
-    :param user_organization_id: The ID of the organization in question.
-    :type user_organization_id: string
+    :param user_company_id: The ID of the company in question.
+    :type user_company_id: string
     :return: A list of user data in dict format.
     :rtype: [dict]
     """
-    users = get_user_instance().get_users_by_organization(user_organization_id)
+    users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]

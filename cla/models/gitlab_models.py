@@ -158,11 +158,11 @@ class GitLab(repository_service_interface.RepositoryService):
         cla.log.info('Initiating GitLab signing workflow for GitLab repo %s MR: %s',
                      gitlab_repository_id, change_request_id)
         user = self.get_or_create_user(request)
-        agreement = cla.utils.get_user_agreement_by_repository(repository, user)
-        if agreement is not None:
-            cla.utils.redirect_user_by_agreement(user, agreement)
+        signature = cla.utils.get_user_signature_by_repository(repository, user)
+        if signature is not None:
+            cla.utils.redirect_user_by_signature(user, signature)
         else:
-            # Agreement not found, create new one and send user to sign.
+            # Signature not found, create new one and send user to sign.
             cla.utils.request_signature(repository, user, change_request_id)
 
     def process_opened_merge_request(self, data):
@@ -400,7 +400,7 @@ class GitLab(repository_service_interface.RepositoryService):
 
 def handle_commit_from_gitlab_user(repository, commit, signed, missing):
     """
-    Helper method to triage commits between signed and not-signed user agreements.
+    Helper method to triage commits between signed and not-signed user signatures.
 
     This method deals with GitLab users found in the commit information.
 
@@ -417,21 +417,21 @@ def handle_commit_from_gitlab_user(repository, commit, signed, missing):
     """
     user = cla.utils.get_user_instance().get_user_by_email(commit.committer_email)
     if user is None:
-        # GitLab user not in system yet, agreement does not exist for this user.
+        # GitLab user not in system yet, signature does not exist for this user.
         cla.log.info('GitLab user not found: %s <%s>',
                      commit.committer_name, commit.committer_email)
         missing.append((commit.id, commit.committer_name))
     else:
         cla.log.info('GitLab user found: %s <%s>',
                      user.get_user_name(), user.get_user_email())
-        if cla.utils.user_signed_project_agreement(user, repository):
+        if cla.utils.user_signed_project_signature(user, repository):
             signed.append((commit.id, user.get_user_name()))
         else:
             missing.append((commit.id, None))
 
 def handle_commit_from_git_author(repository, commit, signed, missing):
     """
-    Helper method to triage commits between signed and not-signed user agreements.
+    Helper method to triage commits between signed and not-signed user signatures.
 
     This method deals with non-GitLab users found in the commit information.
 
@@ -448,14 +448,14 @@ def handle_commit_from_git_author(repository, commit, signed, missing):
     """
     user = cla.utils.get_user_instance().get_user_by_email(commit.author_email)
     if user is None:
-        # Git commit author not in system yet, agreement does not exist for this user.
+        # Git commit author not in system yet, signature does not exist for this user.
         cla.log.info('Git commit author not found: %s <%s>',
                      commit.author_name, commit.author_email)
         missing.append((commit.id, commit.author_name))
     else:
         cla.log.info('Git commit author found: %s <%s>',
                      user.get_user_name(), user.get_user_email())
-        if cla.utils.user_signed_project_agreement(user, repository):
+        if cla.utils.user_signed_project_signature(user, repository):
             signed.append((commit.id, user.get_user_name()))
         else:
             missing.append((commit.id, None))
@@ -469,10 +469,10 @@ def update_merge_request(repository_id, merge_request, signed, missing): # pylin
     :param merge_request: The GitLab merge request object.
     :type merge_request: gitlab.ProjectMergeRequest
     :param signed: The list of (commit, author info) tuples that have signed an
-        agreement for this merge request.
+        signature for this merge request.
     :type signed: [(gitlab.ProjectCommit, dict)]
     :param missing: The list of (commit, author info) tuples that have not signed
-        an agreement for this merge request.
+        an signature for this merge request.
     :type missing: [(gitlab.ProjectCommit, dict)]
     """
     notification = cla.conf['GITLAB_MR_NOTIFICATION']

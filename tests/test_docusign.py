@@ -21,10 +21,10 @@ class DocuSignTestCase(CLATestCase):
                 'user_id': user['user_id'],
                 'return_url': 'http://return-url.com/done'}
         result = hug.test.post(cla.routes, '/v1/request-signature', data)
-        agreement_id = result.data['agreement_id']
+        signature_id = result.data['signature_id']
         expected = {'user_id': user['user_id'],
                     'project_id': project['project_id'],
-                    'agreement_id': agreement_id,
+                    'signature_id': signature_id,
                     'sign_url': 'http://signing-service.com/send-user-here'}
         self.assertEqual(result.data, expected)
 

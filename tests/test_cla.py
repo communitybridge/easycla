@@ -38,36 +38,36 @@ class CLATestCase(unittest.TestCase):
     def create_user(self,
                     user_email='user@email.com',
                     user_name='User Name',
-                    user_organization_id=None,
+                    user_company_id=None,
                     user_github_id=12345):
         """Helper method to create a user."""
         data = {'user_email': user_email,
                 'user_name': user_name,
                 'user_github_id': user_github_id}
-        if user_organization_id is not None:
-            data['user_organization_id'] = user_organization_id
+        if user_company_id is not None:
+            data['user_company_id'] = user_company_id
         response = hug.test.post(routes, '/v1/user', data)
         return response.data
 
-    def create_agreement(self,
-                         agreement_project_id,
-                         agreement_reference_id,
-                         agreement_reference_type,
-                         agreement_type='cla',
-                         agreement_signed=True,
-                         agreement_approved=True,
-                         agreement_return_url='http://test-github.com/user/repo/1',
-                         agreement_sign_url='http://link-to-agreement.com/sign-here'):
-        """Helper method to create an agreements."""
-        data = {'agreement_project_id': agreement_project_id,
-                'agreement_reference_id': agreement_reference_id,
-                'agreement_reference_type': agreement_reference_type,
-                'agreement_type': agreement_type,
-                'agreement_signed': agreement_signed,
-                'agreement_approved': agreement_approved,
-                'agreement_return_url': agreement_return_url,
-                'agreement_sign_url': agreement_sign_url}
-        response = hug.test.post(routes, '/v1/agreement', data)
+    def create_signature(self,
+                         signature_project_id,
+                         signature_reference_id,
+                         signature_reference_type,
+                         signature_type='cla',
+                         signature_signed=True,
+                         signature_approved=True,
+                         signature_return_url='http://test-github.com/user/repo/1',
+                         signature_sign_url='http://link-to-signature.com/sign-here'):
+        """Helper method to create an signatures."""
+        data = {'signature_project_id': signature_project_id,
+                'signature_reference_id': signature_reference_id,
+                'signature_reference_type': signature_reference_type,
+                'signature_type': signature_type,
+                'signature_signed': signature_signed,
+                'signature_approved': signature_approved,
+                'signature_return_url': signature_return_url,
+                'signature_sign_url': signature_sign_url}
+        response = hug.test.post(routes, '/v1/signature', data)
         return response.data
 
     def create_repository(self, # pylint: disable=too-many-arguments
@@ -85,15 +85,15 @@ class CLATestCase(unittest.TestCase):
         response = hug.test.post(routes, '/v1/repository', data)
         return response.data
 
-    def create_organization(self,
-                            organization_name='Org Name',
-                            organization_whitelist=['safe.org'],
-                            organization_exclude_patterns=['^info@.*']):
-        """Helper method to create organizations."""
-        data = {'organization_name': organization_name,
-                'organization_whitelist': organization_whitelist,
-                'organization_exclude_patterns': organization_exclude_patterns}
-        response = hug.test.post(routes, '/v1/organization', data)
+    def create_company(self,
+                            company_name='Org Name',
+                            company_whitelist=['safe.org'],
+                            company_exclude_patterns=['^info@.*']):
+        """Helper method to create companys."""
+        data = {'company_name': company_name,
+                'company_whitelist': company_whitelist,
+                'company_exclude_patterns': company_exclude_patterns}
+        response = hug.test.post(routes, '/v1/company', data)
         return response.data
 
     def create_document(self, project_id, document_type='individual',

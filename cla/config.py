@@ -53,6 +53,16 @@ GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 #: How users get notified of CLA status in GitHub ('status', 'comment', or 'status+comment').
 GITHUB_PR_NOTIFICATION = 'status+comment'
 
+# GitHub Application Service.
+GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
+GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
+GITHUB_APP_CLIENT_ID = 'app_client_id'
+GITHUB_APP_SECRET = 'app_secret'
+GITHUB_APP_ID = '0000'
+
+# KeyCloak Authentication
+KEYCLOAK_ENDPOINT = 'url'
+
 # GitLab Repository Service.
 GITLAB_DOMAIN = 'https://<gitlab-domain>' #: URL to GitLab instance.
 GITLAB_TOKEN = 'token' #: GitLab personal access token for the CLA system user.
@@ -67,7 +77,7 @@ GITLAB_MR_NOTIFICATION = 'status+comment'
 
 # Email Service.
 EMAIL_SERVICE = 'SMTP' #: Email service to use for notification emails.
-EMAIL_ON_AGREEMENT_APPROVED = True #: Whether to email the user when agreement has been approved.
+EMAIL_ON_SIGNATURE_APPROVED = True #: Whether to email the user when signature has been approved.
 
 # SMTP Configuration.
 #: Sender email address for SMTP service (from address).
