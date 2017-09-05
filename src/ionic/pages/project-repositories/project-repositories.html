@@ -69,13 +69,20 @@
   <loading-spinner [loading]="loading.project"></loading-spinner>
   <ion-grid>
     <ion-row class="contract-group" *ngFor="let contract of contracts">
-      <ion-col col-12>
-        <h2 (click)="openClaContractConfigModal(contract)">
-          Zephyr Contract
-          <ion-buttons end>
-            <ion-icon name="settings" item-right></ion-icon>
-          </ion-buttons>
+      <ion-col col-12 class="header-row">
+        <h2>
+          {{ contract.name }}
         </h2>
+        <ion-buttons start>
+          <button ion-button icon-only clear round (click)="openClaContractConfigModal(contract)">
+            <ion-icon name="settings" item-right></ion-icon>
+          </button>
+        </ion-buttons>
+        <ion-buttons end>
+          <button ion-button (click)="openClaContractsContributorsPage(contract.id)" color="secondary">
+            View Signatures
+          </button>
+        </ion-buttons>
       </ion-col>
       <div class="contracts col-wrapper">
 
@@ -86,9 +93,12 @@
                 <ion-icon name="briefcase" item-left large></ion-icon>
                 <span>Corporate CLA</span>
                 <div class="contract-title-buttons" *ngIf="contract.contracts.ccla.src">
-                  <ion-icon name="cloud-upload" (click)="openClaContractUploadModal({})"></ion-icon>
-                  <ion-icon name="time"
-                    (click)="openClaContractVersionModal()"></ion-icon>
+                  <button ion-button icon-only clear round (click)="openClaContractUploadModal({})">
+                    <ion-icon name="cloud-upload"></ion-icon>
+                  </button>
+                  <button ion-button icon-only clear round (click)="openClaContractVersionModal()">
+                    <ion-icon name="time"></ion-icon>
+                  </button>
                 </div>
               </ion-card-title>
               <ng-container *ngIf="!contract.contracts.ccla.src">
@@ -111,9 +121,9 @@
                       </span><br>
                     </ion-col>
                     <ion-col class="text-right" col-12 col-md-6>
-                      <span>
-                        View CCLA in Docusign
-                      </span>
+                      <button ion-button clear (click)="openClaOrganizationProviderModal()" color="secondary">
+                        View Companies
+                      </button>
                     </ion-col>
                   </ion-row>
                 </ion-grid>
@@ -129,10 +139,12 @@
                 <ion-icon name="person" item-left large></ion-icon>
                 <span>Individual CLA</span>
                 <div class="contract-title-buttons" *ngIf="contract.contracts.icla.src">
-                  <ion-icon name="cloud-upload"
-                    (click)="openClaContractUploadModal({})"></ion-icon>
-                  <ion-icon name="time"
-                    (click)="openClaContractVersionModal()"></ion-icon>
+                  <button ion-button icon-only clear round (click)="openClaContractUploadModal({})">
+                    <ion-icon name="cloud-upload"></ion-icon>
+                  </button>
+                  <button ion-button icon-only clear round (click)="openClaContractVersionModal()">
+                    <ion-icon name="time"></ion-icon>
+                  </button>
                 </div>
               </ion-card-title>
               <ng-container *ngIf="!contract.contracts.icla.src">
@@ -155,9 +167,7 @@
                       </span><br>
                     </ion-col>
                     <ion-col class="text-right" col-12 col-md-6 >
-                      <span>
-                        View ICLA in Docusign
-                      </span>
+
                     </ion-col>
                   </ion-row>
                 </ion-grid>
@@ -201,7 +211,7 @@
               </ion-row>
             </ion-grid>
             <div class="organization-actions">
-              <button ion-button clear round (click)="organizationPopover($event, organization)">
+              <button ion-button icon-only clear round (click)="organizationPopover($event, organization)">
                 <ion-icon name="more"></ion-icon>
               </button>
             </div>

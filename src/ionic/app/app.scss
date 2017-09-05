@@ -79,6 +79,19 @@ ion-content .scroll-content > header {
     top: 10%;
 }
 
+.button[icon-only][round] {
+  width: 3.6rem;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.table > tbody > tr > td.actions-cell {
+  text-align: right;
+  padding-top: .6rem;
+}
+
 @import './styles/menu';
 @import './styles/grid';
 @import './styles/form';
