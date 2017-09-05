@@ -1,0 +1,6 @@
+name: CLA System
+machine_name: cla
+stack: python
+dependencies:
+- cinco
+files:

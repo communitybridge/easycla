@@ -1,0 +1,10 @@
+hug==2.2.0
+gossip==2.2.0
+pylint==1.5.2
+coverage==4.3.4
+pygithub==1.34.0
+pynamodb==2.1.5
+gunicorn==19.7.1
+pydocusign==1.2.0
+requests_oauthlib==0.8.0
+git+https://github.com/ibotty/keycloak-python.git

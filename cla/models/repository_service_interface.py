@@ -38,7 +38,7 @@ class RepositoryService(object):
 
         :param repository_id: The ID of the repository in question.
         :type repository: string
-        :param change_request_id: The ID of the change request for this agreement signature.
+        :param change_request_id: The ID of the change request for this signature signature.
             For GitHub, this would be the pull request number that initiated the signature.
         :type change_request_id: string
         :param request: The hug request object.
@@ -49,9 +49,9 @@ class RepositoryService(object):
     def update_change_request(self, repository, change_request_id):
         """
         This method should handle updating the pull request/change request in the
-        repository provider in order to mirror the state of the agreements in the CLA DB.
+        repository provider in order to mirror the state of the signatures in the CLA DB.
 
-        Will be called on change request creation/update, and after a user signs an agreement.
+        Will be called on change request creation/update, and after a user signs an signature.
         For GitHub, this should handle creating/updating the comment/status.
 
         :param repository: The Repository in question.
@@ -64,7 +64,7 @@ class RepositoryService(object):
     def get_return_url(self, repository_id, change_request_id):
         """
         Method meant to be overriden by the repository provider which will return
-        the URL the user should be redirected to upon agreement signed, if agreement was initiated
+        the URL the user should be redirected to upon signature signed, if signature was initiated
         from a pull request/merge request/etc, specific to the repository service provider.
 
         :param repository_id: The ID of the repository in question.

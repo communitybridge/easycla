@@ -1,0 +1,56 @@
+# List of all the containers that needs to be spun up.
+# The workspace container will be added and configured automatically.
+# The Syntax for each container should mimic the docker-compose format.
+containers:
+  nginx:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/nginx:latest'
+    ports: [80]
+    links: ['workspace']
+    memory: 256
+  mailhog:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/mailhog:latest'
+    ports: [8025]
+    memory: 256
+  dynamodb:
+    image: 'dwmkerr/dynamodb'
+    memory: 256
+  workspace:
+    memory: 512
+    links: ['dynamodb', 'mailhog']
+
+# Environment Variables to be injected in the container.
+environment:
+  nginx:
+    web_docroot: '/srv/app/src'
+    custom_config_file: '/srv/app/infra/nginx/sandbox.conf'
+    server_name: ''
+    domain_hash: ''
+  workspace:
+    base_url: ''
+    database_host: ''
+    docusign_username: ''
+    docusign_password: ''
+    docusign_integrator_key: ''
+    keyvalue: ''
+    keyvalue_host: ''
+    github_username: ''
+    github_token: ''
+    github_client_id: ''
+    github_secret: ''
+    email_service: ''
+    smtp_host: ''
+    smtp_port: ''
+
+# All secondary domains are automatically setup as nginx aliases, and all of them are SSL-enabled by default.
+domains:
+  primary: '{project_name}-{instance_name}' # .engineering.tux.rocks
+
+# Sequences for this environment.
+sequences:
+
+  install:
+    Compiling the Platform: 'echo \"-> Installation...\"; /srv/app/scripts/install.sh'
+
+  start:
+    _detach: True
+    Launching Platform: 'mv /srv/app/src/config/cla_config_sandbox.py /srv/app/src/config/cla_config.py && hug -f /srv/app/src/lfcla.py'

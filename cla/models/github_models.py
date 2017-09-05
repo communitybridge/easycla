@@ -166,12 +166,12 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.info('Initiating GitHub signing workflow for GitHub repo %s PR: %s',
                      github_repository_id, pull_request_number)
         user = self.get_or_create_user(request)
-        agreement = cla.utils.get_user_agreement_by_repository(repository, user)
+        signature = cla.utils.get_user_signature_by_repository(repository, user)
 
-        if agreement is not None:
-            cla.utils.redirect_user_by_agreement(user, agreement)
+        if signature is not None:
+            cla.utils.redirect_user_by_signature(user, signature)
         else:
-            # Agreement not found, create new one and send user to sign.
+            # Signature not found, create new one and send user to sign.
             cla.utils.request_signature(repository, user, pull_request_number)
 
     def process_opened_pull_request(self, data):
@@ -396,7 +396,7 @@ def create_repository(data):
 
 def handle_commit_from_github_user(repository, commit, author, signed, missing): # pylint: disable=too-many-arguments
     """
-    Helper method to triage commits between signed and not-signed user agreements.
+    Helper method to triage commits between signed and not-signed user signatures.
 
     This method deals with GitHub users found in the commit information.
 
@@ -415,14 +415,14 @@ def handle_commit_from_github_user(repository, commit, author, signed, missing):
     """
     user = cla.utils.get_user_instance().get_user_by_github_id(author.id)
     if user is None:
-        # GitHub user not in system yet, agreement does not exist for this user.
+        # GitHub user not in system yet, signature does not exist for this user.
         cla.log.info('GitHub user (%s - %s - %s) not found',
                      author.id, author.login, author.email)
         missing.append((commit.sha, author.name))
     else:
         cla.log.info('GitHub user found (%s - %s)',
                      user.get_user_email(), user.get_user_github_id())
-        if cla.utils.user_signed_project_agreement(user, repository):
+        if cla.utils.user_signed_project_signature(user, repository):
             signed.append((commit.sha, author.name))
         else:
             missing.append((commit.sha, author.name))
@@ -430,7 +430,7 @@ def handle_commit_from_github_user(repository, commit, author, signed, missing):
 
 def handle_commit_from_git_author(repository, commit, author, signed, missing):
     """
-    Helper method to triage commits between signed and not-signed user agreements.
+    Helper method to triage commits between signed and not-signed user signatures.
 
     This method deals with non-GitHub users found in the commit information.
 
@@ -451,7 +451,7 @@ def handle_commit_from_git_author(repository, commit, author, signed, missing):
     if user is not None:
         cla.log.info('Git commit user found %s', user.get_user_email())
         # For now, accept non-github users as legitimate users.
-        if cla.utils.user_signed_project_agreement(user, repository):
+        if cla.utils.user_signed_project_signature(user, repository):
             signed.append((commit.sha, author.name))
         else:
             missing.append((commit.sha, author.name))
@@ -499,10 +499,10 @@ def update_pull_request(repository_id, pull_request, signed, missing): # pylint:
     :param pull_request: The GitHub PullRequest object for this PR.
     :type pull_request: GitHub.PullRequest
     :param signed: The list of (commit hash, author name) tuples that have signed an
-        agreement for this PR.
+        signature for this PR.
     :type signed: [(string, string)]
     :param missing: The list of (commit hash, author name) tuples that have not signed
-        an agreement for this PR.
+        an signature for this PR.
     :type missing: [(string, string)]
     """
     notification = cla.conf['GITHUB_PR_NOTIFICATION']

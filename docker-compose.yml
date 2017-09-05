@@ -1,7 +1,26 @@
-version: "2"
+version: "3"
 services:
   dynamodb:
-    container_name: "cla_dynamodb"
+    container_name: "LF17_dynamodb"
+    networks:
+    - "LF_17"
     image: "dwmkerr/dynamodb"
+    expose: ["8000"]
+    command: "-dbPath /srv/data -sharedDb -optimizeDbBeforeStartup"
     ports:
-    - "8000:8000"
+    - "50458:8000"
+    volumes:
+    - ".lf/data/dynamo:/srv/data"
+  mailhog:
+    container_name: "LF17_mailhog"
+    networks:
+    - "LF_17"
+    image: "433610389961.dkr.ecr.us-west-2.amazonaws.com/mailhog:latest"
+    expose: ["1025"]
+    ports:
+    - "50459:1025"
+    - "50460:8025"
+    volumes: []
+networks:
+  LF_17:
+    driver: "bridge"

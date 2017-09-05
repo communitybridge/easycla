@@ -46,11 +46,11 @@ class DocuSign(signing_service_interface.SigningService):
                                                 integrator_key=integrator_key)
 
     def request_signature(self, project_id, user_id, return_url, callback_url=None):
-        # Create new agreement.
-        cla.log.info('Creating new agreement for user %s on project %s', user_id, project_id)
-        agreement = cla.utils.get_agreement_instance()
-        agreement.set_agreement_callback_url(callback_url)
-        agreement.set_agreement_id(str(uuid.uuid4()))
+        # Create new signature.
+        cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
+        signature = cla.utils.get_signature_instance()
+        signature.set_signature_callback_url(callback_url)
+        signature.set_signature_id(str(uuid.uuid4()))
         try:
             project = cla.utils.get_project_instance()
             project.load(project_id)
@@ -58,40 +58,40 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.error('Project ID not found when trying to request a signature: %s',
                           project_id)
             return {'errors': {'project_id': str(err)}}
-        agreement.set_agreement_project_id(project_id)
+        signature.set_signature_project_id(project_id)
         # Assume ICLA only for now.
         try:
             document = project.get_project_individual_document()
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
-        agreement.set_agreement_document_revision(document.get_document_revision())
-        agreement.set_agreement_signed(False)
-        agreement.set_agreement_approved(True)
-        agreement.set_agreement_type('cla')
-        # Ensure this is a valid user_id - should be done in Agreement model?
+        signature.set_signature_document_revision(document.get_document_revision())
+        signature.set_signature_signed(False)
+        signature.set_signature_approved(True)
+        signature.set_signature_type('cla')
+        # Ensure this is a valid user_id - should be done in Signature model?
         try:
             user_id = str(user_id)
             user = cla.utils.get_user_instance()
             user.load(user_id)
-            agreement.set_agreement_reference_id(user_id)
-            agreement.set_agreement_reference_type('user')
+            signature.set_signature_reference_id(user_id)
+            signature.set_signature_reference_type('user')
         except DoesNotExist as err:
             cla.log.warning('User ID not found when trying to request a signature: %s',
                             user_id)
             return {'errors': {'user_id': str(err)}}
-        cla.log.info('Setting agreement return_url to %s', return_url)
-        agreement.set_agreement_return_url(return_url)
-        self.populate_sign_url(agreement, callback_url)
-        agreement.save()
+        cla.log.info('Setting signature return_url to %s', return_url)
+        signature.set_signature_return_url(return_url)
+        self.populate_sign_url(signature, callback_url)
+        signature.save()
         return {'user_id': str(user_id),
                 'project_id': project_id,
-                'agreement_id': agreement.get_agreement_id(),
-                'sign_url': agreement.get_agreement_sign_url()}
+                'signature_id': signature.get_signature_id(),
+                'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, agreement, callback_url=None): # pylint: disable=too-many-locals
-        cla.log.debug('Populating sign_url for agreement %s', agreement.get_agreement_id())
+    def populate_sign_url(self, signature, callback_url=None): # pylint: disable=too-many-locals
+        cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         user = cla.utils.get_user_instance()
-        user.load(agreement.get_agreement_reference_id())
+        user.load(signature.get_signature_reference_id())
         name = user.get_user_name()
         if name is None:
             name = 'Unknown'
@@ -104,7 +104,7 @@ class DocuSign(signing_service_interface.SigningService):
         signer = pydocusign.Signer(email=user.get_user_email(),
                                    name=name,
                                    recipientId=1,
-                                   clientUserId=agreement.get_agreement_id(),
+                                   clientUserId=signature.get_signature_id(),
                                    tabs=[tab], # Can be placed in DocuSign UI
                                    emailSubject='CLA Sign Request',
                                    emailBody='CLA Sign Request for %s'
@@ -113,7 +113,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Fetch the document to sign.
         # TODO: Need to support corporate CLAs?
         project = cla.utils.get_project_instance()
-        project.load(agreement.get_agreement_project_id())
+        project.load(signature.get_signature_project_id())
         document = project.get_project_individual_document()
         if document is None:
             cla.log.error('Could not get sign url for project %s: Project has no individual \
@@ -147,11 +147,11 @@ class DocuSign(signing_service_interface.SigningService):
         envelope = self.prepare_sign_request(envelope)
         recipient = envelope.recipients[0]
         # The URL the user will be redirected to after signing.
-        # This route will be in charge of extracting the agreement's return_url and redirecting.
+        # This route will be in charge of extracting the signature's return_url and redirecting.
         return_url = cla.conf['BASE_URL'] + '/v1/return-url/' + str(recipient.clientUserId)
         sign_url = self.get_sign_url(envelope, recipient, return_url)
-        cla.log.info('Setting agreement sign_url to %s', sign_url)
-        agreement.set_agreement_sign_url(sign_url)
+        cla.log.info('Setting signature sign_url to %s', sign_url)
+        signature.set_signature_sign_url(sign_url)
 
     def signed_callback(self, content, repository_id, change_request_id):
         """
@@ -162,31 +162,31 @@ class DocuSign(signing_service_interface.SigningService):
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
-        # Assume only one agreement per signature.
-        agreement_id = tree.find('.//' + self.TAGS['client_user_id']).text
-        agreement = cla.utils.get_agreement_instance()
+        # Assume only one signature per signature.
+        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+        signature = cla.utils.get_signature_instance()
         try:
-            agreement.load(agreement_id)
+            signature.load(signature_id)
         except DoesNotExist:
-            cla.log.error('DocuSign callback returned signed info on invalid agreement: %s',
+            cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
                           content)
             return
-        # Iterate through recipients and update the agreement signature status if changed.
+        # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
-        if status == 'Completed' and not agreement.get_agreement_signed():
-            cla.log.info('CLA agreement signed (%s) - Notifying repository service provider',
-                         agreement_id)
-            agreement.set_agreement_signed(True)
-            agreement.save()
+        if status == 'Completed' and not signature.get_signature_signed():
+            cla.log.info('CLA signature signed (%s) - Notifying repository service provider',
+                         signature_id)
+            signature.set_signature_signed(True)
+            signature.save()
             # Send user their signed document.
             # TODO: This currently only supports ICLAs.
-            if agreement.get_agreement_reference_type() != 'user':
+            if signature.get_signature_reference_type() != 'user':
                 cla.log.error('Trying to handle CCLA as a ICLA - not implemented yet')
                 raise NotImplementedError()
             user = cla.utils.get_user_instance()
-            user.load(agreement.get_agreement_reference_id())
+            user.load(signature.get_signature_reference_id())
             self.send_signed_document(envelope_id, user)
             # Update the repository provider with this change.
             update_repository_provider(repository_id, change_request_id)

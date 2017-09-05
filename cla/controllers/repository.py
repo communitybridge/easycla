@@ -7,6 +7,7 @@ import cla.hug_types
 from cla.utils import get_repository_instance, get_supported_repository_providers
 from cla.models import DoesNotExist
 
+
 def get_repositories():
     """
     Returns a list of repositories in the CLA system.
@@ -15,6 +16,7 @@ def get_repositories():
     :rtype: [dict]
     """
     return [repository.to_dict() for repository in get_repository_instance().all()]
+
 
 def get_repository(repository_id):
     """
@@ -31,6 +33,7 @@ def get_repository(repository_id):
     except DoesNotExist as err:
         return {'errors': {'repository_id': str(err)}}
     return repository.to_dict()
+
 
 def create_repository(repository_project_id, # pylint: disable=too-many-arguments
                       repository_name,
@@ -63,6 +66,7 @@ def create_repository(repository_project_id, # pylint: disable=too-many-argument
         repository.set_repository_external_id(repository_external_id)
     repository.save()
     return repository.to_dict()
+
 
 def update_repository(repository_id, # pylint: disable=too-many-arguments
                       repository_project_id=None,
@@ -117,6 +121,7 @@ def update_repository(repository_id, # pylint: disable=too-many-arguments
             return {'errors': {'repository_url': 'Invalid URL specified'}}
     repository.save()
     return repository.to_dict()
+
 
 def delete_repository(repository_id):
     """

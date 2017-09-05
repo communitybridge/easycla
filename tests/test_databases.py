@@ -12,7 +12,7 @@ import unittest
 from test_cla import CLATestCase
 # TODO: Add document tests.
 from cla.utils import get_user_instance, get_project_instance, get_document_instance, \
-                      get_agreement_instance, get_repository_instance, get_organization_instance, \
+                      get_signature_instance, get_repository_instance, get_company_instance, \
                       create_database, delete_database
 from cla.models import InvalidParameters, MultipleResults, DoesNotExist
 
@@ -49,8 +49,8 @@ class DatabaseTestCase(CLATestCase):
         repo_name = 'Repo Name'
         repo_type = 'mock_github'
         repo_url = 'https://some-github-url.com/repo-name'
-        repo_agreement_type = 'url+pdf'
-        repo_agreement_content = 'https://some-github-url.com/cla.pdf'
+        repo_signature_type = 'url+pdf'
+        repo_signature_content = 'https://some-github-url.com/cla.pdf'
         repo = get_repository_instance()
         repo.set_repository_id(repo_id)
         repo.set_repository_project_id(project.get_project_id())
@@ -99,166 +99,166 @@ class DatabaseTestCase(CLATestCase):
         self.assertEqual(repo_data['repository_type'], repo_type)
         self.assertEqual(repo_data['repository_url'], repo_url)
 
-    def test_agreement_model(self):
-        """Test agreement creation/querying/assertions."""
-        agreement_id = str(uuid.uuid4())
+    def test_signature_model(self):
+        """Test signature creation/querying/assertions."""
+        signature_id = str(uuid.uuid4())
         project_id = self.create_project()['project_id']
         user_id = str(uuid.uuid4())
-        agreement_type = 'cla'
-        agreement_corporate = True
-        agreement_signed = True
-        agreement_approved = True
-        agreement = get_agreement_instance()
-        agreement.set_agreement_id(agreement_id)
-        agreement.set_agreement_project_id(project_id)
-        agreement.set_agreement_document_revision(1)
-        agreement.set_agreement_reference_id(user_id)
-        agreement.set_agreement_reference_type('user')
-        agreement.set_agreement_type(agreement_type)
-        agreement.set_agreement_signed(agreement_signed)
-        agreement.set_agreement_approved(agreement_approved)
-        agreement.save()
+        signature_type = 'cla'
+        signature_corporate = True
+        signature_signed = True
+        signature_approved = True
+        signature = get_signature_instance()
+        signature.set_signature_id(signature_id)
+        signature.set_signature_project_id(project_id)
+        signature.set_signature_document_revision(1)
+        signature.set_signature_reference_id(user_id)
+        signature.set_signature_reference_type('user')
+        signature.set_signature_type(signature_type)
+        signature.set_signature_signed(signature_signed)
+        signature.set_signature_approved(signature_approved)
+        signature.save()
 
-        # Re-load agreement by ID.
-        agreement2 = get_agreement_instance()
-        agreement2.load(agreement_id)
-        self.assertEqual(agreement.get_agreement_id(), agreement2.get_agreement_id())
-        self.assertEqual(agreement.get_agreement_project_id(), agreement2.get_agreement_project_id())
-        self.assertEqual(agreement.get_agreement_reference_id(),
-                         agreement2.get_agreement_reference_id())
-        self.assertEqual(agreement.get_agreement_reference_type(),
-                         agreement2.get_agreement_reference_type())
-        self.assertEqual(agreement.get_agreement_type(), agreement2.get_agreement_type())
-        self.assertEqual(agreement.get_agreement_signed(), agreement2.get_agreement_signed())
-        self.assertEqual(agreement.get_agreement_approved(), agreement2.get_agreement_approved())
+        # Re-load signature by ID.
+        signature2 = get_signature_instance()
+        signature2.load(signature_id)
+        self.assertEqual(signature.get_signature_id(), signature2.get_signature_id())
+        self.assertEqual(signature.get_signature_project_id(), signature2.get_signature_project_id())
+        self.assertEqual(signature.get_signature_reference_id(),
+                         signature2.get_signature_reference_id())
+        self.assertEqual(signature.get_signature_reference_type(),
+                         signature2.get_signature_reference_type())
+        self.assertEqual(signature.get_signature_type(), signature2.get_signature_type())
+        self.assertEqual(signature.get_signature_signed(), signature2.get_signature_signed())
+        self.assertEqual(signature.get_signature_approved(), signature2.get_signature_approved())
 
-        # Test agreement not found query.
-        agreement3 = get_agreement_instance()
+        # Test signature not found query.
+        signature3 = get_signature_instance()
         with self.assertRaises(DoesNotExist) as context:
-            agreement3.load(str(uuid.uuid4()))
-        self.assertTrue('Agreement not found' in str(context.exception))
+            signature3.load(str(uuid.uuid4()))
+        self.assertTrue('Signature not found' in str(context.exception))
 
-        # Test loading all agreements.
-        agreements = get_agreement_instance().all()
-        expected = [agreement.get_agreement_id() for agreement in agreements]
+        # Test loading all signatures.
+        signatures = get_signature_instance().all()
+        expected = [signature.get_signature_id() for signature in signatures]
         self.assertEqual(len(expected), 1)
-        self.assertTrue(agreement.get_agreement_id() in expected)
-        agreements = get_agreement_instance().all(ids=[agreement.get_agreement_id()])
-        self.assertEqual(len(agreements), 1)
-        self.assertEqual(agreements[0].get_agreement_id(), agreement.get_agreement_id())
+        self.assertTrue(signature.get_signature_id() in expected)
+        signatures = get_signature_instance().all(ids=[signature.get_signature_id()])
+        self.assertEqual(len(signatures), 1)
+        self.assertEqual(signatures[0].get_signature_id(), signature.get_signature_id())
 
         # Test JSON serialization.
-        agreement_data = agreement.to_dict()
-        self.assertEqual(agreement_data['agreement_id'], agreement_id)
-        self.assertEqual(agreement_data['agreement_project_id'], project_id)
-        self.assertEqual(agreement_data['agreement_reference_id'], user_id)
-        self.assertEqual(agreement_data['agreement_reference_type'], 'user')
-        self.assertEqual(agreement_data['agreement_type'], agreement_type)
-        self.assertEqual(agreement_data['agreement_signed'], agreement_signed)
-        self.assertEqual(agreement_data['agreement_approved'], agreement_approved)
+        signature_data = signature.to_dict()
+        self.assertEqual(signature_data['signature_id'], signature_id)
+        self.assertEqual(signature_data['signature_project_id'], project_id)
+        self.assertEqual(signature_data['signature_reference_id'], user_id)
+        self.assertEqual(signature_data['signature_reference_type'], 'user')
+        self.assertEqual(signature_data['signature_type'], signature_type)
+        self.assertEqual(signature_data['signature_signed'], signature_signed)
+        self.assertEqual(signature_data['signature_approved'], signature_approved)
 
-    def test_organization_model(self):
-        """Test organization creation/querying/assertions."""
-        # Create agreement for tests.
-        agreement_id = str(uuid.uuid4())
+    def test_company_model(self):
+        """Test company creation/querying/assertions."""
+        # Create signature for tests.
+        signature_id = str(uuid.uuid4())
         project_id = str(uuid.uuid4())
         user_id = str(uuid.uuid4())
         user_email = 'test@user.com'
-        agreement_type = 'cla'
-        agreement_corporate = True
-        agreement_signed = True
-        agreement_approved = True
-        agreement = get_agreement_instance()
-        agreement.set_agreement_id(agreement_id)
-        agreement.set_agreement_project_id(project_id)
-        agreement.set_agreement_document_revision(1)
-        agreement.set_agreement_reference_id(user_id)
-        agreement.set_agreement_reference_type('user')
-        agreement.set_agreement_type(agreement_type)
-        agreement.set_agreement_signed(agreement_signed)
-        agreement.set_agreement_approved(agreement_approved)
-        agreement.save()
-        # Create organization for tests.
-        organization_id = str(uuid.uuid4())
+        signature_type = 'cla'
+        signature_corporate = True
+        signature_signed = True
+        signature_approved = True
+        signature = get_signature_instance()
+        signature.set_signature_id(signature_id)
+        signature.set_signature_project_id(project_id)
+        signature.set_signature_document_revision(1)
+        signature.set_signature_reference_id(user_id)
+        signature.set_signature_reference_type('user')
+        signature.set_signature_type(signature_type)
+        signature.set_signature_signed(signature_signed)
+        signature.set_signature_approved(signature_approved)
+        signature.save()
+        # Create company for tests.
+        company_id = str(uuid.uuid4())
         name = 'Org name'
         whitelist = ['whitelist.org', 'okdomain.com']
         exclude_patterns = ['^info@.*', '.*admin.*']
-        organization = get_organization_instance()
-        organization.set_organization_id(organization_id + '-FAKE')
-        organization.set_organization_name(name + ' Bad')
-        organization.set_organization_id(organization_id)
-        organization.set_organization_name(name)
+        company = get_company_instance()
+        company.set_company_id(company_id + '-FAKE')
+        company.set_company_name(name + ' Bad')
+        company.set_company_id(company_id)
+        company.set_company_name(name)
         for wl_item in whitelist:
-            organization.add_organization_whitelist(wl_item)
+            company.add_company_whitelist(wl_item)
         for excp in exclude_patterns:
-            organization.add_organization_exclude_pattern(excp)
-        organization.save()
+            company.add_company_exclude_pattern(excp)
+        company.save()
 
-        # Re-load organization by ID.
-        organization2 = get_organization_instance()
-        organization2.load(organization_id)
-        self.assertEqual(organization.get_organization_id(), organization2.get_organization_id())
-        self.assertEqual(organization.get_organization_name(),
-                         organization2.get_organization_name())
-        self.assertEqual(organization.get_organization_whitelist(),
-                         organization2.get_organization_whitelist())
-        self.assertEqual(organization.get_organization_exclude_patterns(),
-                         organization2.get_organization_exclude_patterns())
+        # Re-load company by ID.
+        company2 = get_company_instance()
+        company2.load(company_id)
+        self.assertEqual(company.get_company_id(), company2.get_company_id())
+        self.assertEqual(company.get_company_name(),
+                         company2.get_company_name())
+        self.assertEqual(company.get_company_whitelist(),
+                         company2.get_company_whitelist())
+        self.assertEqual(company.get_company_exclude_patterns(),
+                         company2.get_company_exclude_patterns())
 
-        # Test organization not found query.
-        organization3 = get_organization_instance()
+        # Test company not found query.
+        company3 = get_company_instance()
         with self.assertRaises(DoesNotExist) as context:
-            organization3.load(str(uuid.uuid4()))
-        self.assertTrue('Organization not found' in str(context.exception))
+            company3.load(str(uuid.uuid4()))
+        self.assertTrue('Company not found' in str(context.exception))
 
         # Test add/remove whitelist.
-        organization.set_organization_whitelist(['safe.org'])
-        organization.add_organization_whitelist('another.org')
-        self.assertTrue('safe.org' in organization.get_organization_whitelist())
-        self.assertTrue('another.org' in organization.get_organization_whitelist())
-        organization.save()
-        organization4 = get_organization_instance()
-        organization4.load(organization.get_organization_id())
-        self.assertTrue('safe.org' in organization4.get_organization_whitelist())
-        self.assertTrue('another.org' in organization4.get_organization_whitelist())
-        organization4.remove_organization_whitelist('safe.org')
-        organization4.save()
-        organization4 = get_organization_instance()
-        organization4.load(organization.get_organization_id())
-        self.assertTrue('safe.org' not in organization4.get_organization_whitelist())
-        self.assertTrue('another.org' in organization4.get_organization_whitelist())
+        company.set_company_whitelist(['safe.org'])
+        company.add_company_whitelist('another.org')
+        self.assertTrue('safe.org' in company.get_company_whitelist())
+        self.assertTrue('another.org' in company.get_company_whitelist())
+        company.save()
+        company4 = get_company_instance()
+        company4.load(company.get_company_id())
+        self.assertTrue('safe.org' in company4.get_company_whitelist())
+        self.assertTrue('another.org' in company4.get_company_whitelist())
+        company4.remove_company_whitelist('safe.org')
+        company4.save()
+        company4 = get_company_instance()
+        company4.load(company.get_company_id())
+        self.assertTrue('safe.org' not in company4.get_company_whitelist())
+        self.assertTrue('another.org' in company4.get_company_whitelist())
 
         # Test add/remove exclude patterns.
-        organization.set_organization_exclude_patterns(['^admin@.*$'])
-        organization.add_organization_exclude_pattern('.*@blacklist.org')
-        self.assertTrue('^admin@.*$' in organization.get_organization_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' in organization.get_organization_exclude_patterns())
-        organization.save()
-        organization5 = get_organization_instance()
-        organization5.load(organization.get_organization_id())
-        self.assertTrue('^admin@.*$' in organization5.get_organization_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' in organization5.get_organization_exclude_patterns())
-        organization5.remove_organization_exclude_pattern('.*@blacklist.org')
-        organization5.save()
-        organization5 = get_organization_instance()
-        organization5.load(organization.get_organization_id())
-        self.assertTrue('^admin@.*$' in organization5.get_organization_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' not in organization5.get_organization_exclude_patterns())
+        company.set_company_exclude_patterns(['^admin@.*$'])
+        company.add_company_exclude_pattern('.*@blacklist.org')
+        self.assertTrue('^admin@.*$' in company.get_company_exclude_patterns())
+        self.assertTrue('.*@blacklist.org' in company.get_company_exclude_patterns())
+        company.save()
+        company5 = get_company_instance()
+        company5.load(company.get_company_id())
+        self.assertTrue('^admin@.*$' in company5.get_company_exclude_patterns())
+        self.assertTrue('.*@blacklist.org' in company5.get_company_exclude_patterns())
+        company5.remove_company_exclude_pattern('.*@blacklist.org')
+        company5.save()
+        company5 = get_company_instance()
+        company5.load(company.get_company_id())
+        self.assertTrue('^admin@.*$' in company5.get_company_exclude_patterns())
+        self.assertTrue('.*@blacklist.org' not in company5.get_company_exclude_patterns())
 
         # Test JSON serialization.
-        organization_data = organization.to_dict()
-        self.assertEqual(organization_data['organization_id'], organization_id)
-        self.assertEqual(organization_data['organization_name'], name)
-        self.assertEqual(organization_data['organization_whitelist'],
+        company_data = company.to_dict()
+        self.assertEqual(company_data['company_id'], company_id)
+        self.assertEqual(company_data['company_name'], name)
+        self.assertEqual(company_data['company_whitelist'],
                          ['safe.org', 'another.org'])
-        self.assertEqual(organization_data['organization_exclude_patterns'],
+        self.assertEqual(company_data['company_exclude_patterns'],
                          ['^admin@.*$', '.*@blacklist.org'])
 
-        # Test loading all organizations.
-        organizations = get_organization_instance().all()
-        expected = [organization.get_organization_id() for organization in organizations]
+        # Test loading all companys.
+        companys = get_company_instance().all()
+        expected = [company.get_company_id() for company in companys]
         self.assertEqual(len(expected), 1)
-        self.assertTrue(organization.get_organization_id() in expected)
-        organizations = get_organization_instance().all(ids=[organization.get_organization_id()])
-        self.assertEqual(len(organizations), 1)
-        self.assertEqual(organizations[0].get_organization_id(), organization.get_organization_id())
+        self.assertTrue(company.get_company_id() in expected)
+        companys = get_company_instance().all(ids=[company.get_company_id()])
+        self.assertEqual(len(companys), 1)
+        self.assertEqual(companys[0].get_company_id(), company.get_company_id())

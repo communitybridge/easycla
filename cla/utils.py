@@ -63,21 +63,22 @@ def get_database_models(conf=None):
 
     :param conf: Configuration dictionary/object - typically parsed from the CLA config file.
     :type conf: dict
-    :return: Dictionary of all the supported database object classes (User, Agreement, Repository,
-        Organization, Project, Document) - keyed by name:
+    :return: Dictionary of all the supported database object classes (User, Signature, Repository,
+        company, Project, Document) - keyed by name:
 
             {'User': cla.models.model_interfaces.User,
-             'Agreement': cla.models.model_interfaces.Agreement,...}
+             'Signature': cla.models.model_interfaces.Signature,...}
 
     :rtype: dict
     """
     if conf is None:
         conf = cla.conf
     if conf['DATABASE'] == 'DynamoDB':
-        from cla.models.dynamo_models import User, Agreement, Repository, \
-                                             Organization, Project, Document
-        return {'User': User, 'Agreement': Agreement, 'Repository': Repository,
-                'Organization': Organization, 'Project': Project, 'Document': Document}
+        from cla.models.dynamo_models import User, Signature, Repository, \
+                                             Company, Project, Document, GitHubOrg
+        return {'User': User, 'Signature': Signature, 'Repository': Repository,
+                'Company': Company, 'Project': Project, 'Document': Document,
+                'GitHubOrg': GitHubOrg}
     else:
         raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
 
@@ -92,16 +93,16 @@ def get_user_instance(conf=None):
     """
     return get_database_models(conf)['User']()
 
-def get_agreement_instance(conf=None):
+def get_signature_instance(conf=None):
     """
-    Helper function to get a database Agreement model instance based on CLA configuration.
+    Helper function to get a database Signature model instance based on CLA configuration.
 
     :param conf: Same as get_database_models().
     :type conf: dict
-    :return: An Agreement model instance based on configuration.
-    :rtype: cla.models.model_interfaces.Agreement
+    :return: An Signature model instance based on configuration.
+    :rtype: cla.models.model_interfaces.Signature
     """
-    return get_database_models(conf)['Agreement']()
+    return get_database_models(conf)['Signature']()
 
 def get_repository_instance(conf=None):
     """
@@ -114,16 +115,27 @@ def get_repository_instance(conf=None):
     """
     return get_database_models(conf)['Repository']()
 
-def get_organization_instance(conf=None):
+def get_github_organization_instance(conf=None):
     """
-    Helper function to get a database Organization model instance based on CLA configuration.
+    Helper function to get a database GitHubOrg model instance based on CLA configuration.
 
     :param conf: Same as get_database_models().
     :type conf: dict
-    :return: A Organization model instance based on configuration specified.
-    :rtype: cla.models.model_interfaces.Organization
+    :return: A Repository model instance based on configuration specified.
+    :rtype: cla.models.model_interfaces.GitHubOrg
     """
-    return get_database_models(conf)['Organization']()
+    return get_database_models(conf)['GitHubOrg']()
+
+def get_company_instance(conf=None):
+    """
+    Helper function to get a database company model instance based on CLA configuration.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A company model instance based on configuration specified.
+    :rtype: cla.models.model_interfaces.Company
+    """
+    return get_database_models(conf)['Company']()
 
 def get_project_instance(conf=None):
     """
@@ -325,63 +337,63 @@ def get_last_revision(documents):
             last = document.get_document_revision()
     return last
 
-def user_signed_project_agreement(user, repository):
+def user_signed_project_signature(user, repository):
     """
-    Helper function to check if a user has signed a project agreement tied to a repository.
+    Helper function to check if a user has signed a project signature tied to a repository.
 
     :param user: The user object to check for.
     :type user: cla.models.model_interfaces.User
     :param repository: The repository to check for.
     :type repository: cla.models.model_interfaces.Repository
-    :return: Whether or not the user has an agreement that's signed and approved
+    :return: Whether or not the user has an signature that's signed and approved
         for this project based on repository.
     :rtype: boolean
     """
     project_id = repository.get_repository_project_id()
-    agreements = user.get_user_agreements(project_id=project_id)
-    num_agreements = len(agreements)
-    if num_agreements > 0:
-        agreement = agreements[0]
-        cla.log.info('Agreement found for this user on project %s: %s',
-                     project_id, agreement.get_agreement_id())
-        if agreement.get_agreement_signed() and agreement.get_agreement_approved():
-            # Agreement found and signed/approved.
-            cla.log.info('User already has a signed and approved agreement ' + \
+    signatures = user.get_user_signatures(project_id=project_id)
+    num_signatures = len(signatures)
+    if num_signatures > 0:
+        signature = signatures[0]
+        cla.log.info('Signature found for this user on project %s: %s',
+                     project_id, signature.get_signature_id())
+        if signature.get_signature_signed() and signature.get_signature_approved():
+            # Signature found and signed/approved.
+            cla.log.info('User already has a signed and approved signature ' + \
                          'for project: %s', project_id)
             return True
-        elif agreement.get_agreement_signed(): # Not approved yet.
-            cla.log.warning('Agreement (%s) has not been approved yet for ' + \
+        elif signature.get_signature_signed(): # Not approved yet.
+            cla.log.warning('Signature (%s) has not been approved yet for ' + \
                             'user %s on project %s', \
-                            agreement.get_agreement_id(),
+                            signature.get_signature_id(),
                             user.get_user_email(),
                             project_id)
         else: # Not signed or approved yet.
-            cla.log.info('Agreement (%s) has not been signed by %s for project %s', \
-                         agreement.get_agreement_id(),
+            cla.log.info('Signature (%s) has not been signed by %s for project %s', \
+                         signature.get_signature_id(),
                          user.get_user_email(),
                          project_id)
-    else: # Agreement not found for this user on this project.
-        cla.log.info('Agreement not found for project %s and user %s',
+    else: # Signature not found for this user on this project.
+        cla.log.info('Signature not found for project %s and user %s',
                      project_id, user.get_user_email())
     return False
 
-def get_user_agreement_by_repository(repository, user):
+def get_user_signature_by_repository(repository, user):
     """
-    Helper function to get a user's agreement for a specified repository.
+    Helper function to get a user's signature for a specified repository.
 
     :param repository: The Repository object.
     :type repository: cla.models.model_interfaces.Repository
-    :param user: The user object that represents the agreement signer.
+    :param user: The user object that represents the signature signer.
     :type user: cla.models.model_interfaces.User
-    :return: The agreement for this user on this repository, or None if not found.
-    :rtype: cla.models.model_interfaces.Agreement | None
+    :return: The signature for this user on this repository, or None if not found.
+    :rtype: cla.models.model_interfaces.Signature | None
     """
 
     project_id = repository.get_repository_project_id()
-    agreements = user.get_user_agreements(project_id=project_id)
-    num_agreements = len(agreements)
-    if num_agreements > 0:
-        return agreements[0]
+    signatures = user.get_user_signatures(project_id=project_id)
+    num_signatures = len(signatures)
+    if num_signatures > 0:
+        return signatures[0]
     return None
 
 def get_redirect_uri(repository_service, repository_id, change_request_id):
@@ -454,7 +466,7 @@ def assemble_cla_status(author_name, signed=False):
 
     :param author_name: The name of the author of this commit.
     :type author_name: string
-    :param signed: Whether or not the author has signed an agreement.
+    :param signed: Whether or not the author has signed an signature.
     :type signed: boolean
     """
     if author_name is None:
@@ -474,7 +486,7 @@ def assemble_cla_comment(repository_type, repository_id, change_request_id, sign
     :type repository_id: int
     :param change_request_id: The repository service's ID of this change request.
     :type change_request_id: id
-    :param signed: The list of commit hashes and authors that have signed an agreement for this
+    :param signed: The list of commit hashes and authors that have signed an signature for this
         change request.
     :type signed: [(string, string)]
     :param missing: The list of commit hashes and authors that have not signed for this
@@ -524,7 +536,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you! Please sign our [Contributor License Agreement](' + \
+        text = 'Thank you! Please sign our [Contributor License Signature](' + \
                sign_url + ') before we can accept your contribution:'
         # Group commits by author.
         committers = {}
@@ -582,40 +594,40 @@ def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=N
         oauth2 = OAuth2Session(client_id, state=state)
     return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
 
-def redirect_user_by_agreement(user, agreement):
+def redirect_user_by_signature(user, signature):
     """
-    Helper method to redirect a user based on their agreement status and return_url.
+    Helper method to redirect a user based on their signature status and return_url.
 
     :param user: The user object for this redirect.
     :type user: cla.models.model_interfaces.User
-    :param agreement: The agreement object for this user.
-    :type agreement: cla.models.model_interfaces.Agreement
+    :param signature: The signature object for this user.
+    :type signature: cla.models.model_interfaces.Signature
     """
-    return_url = agreement.get_agreement_return_url()
-    if agreement.get_agreement_signed() and agreement.get_agreement_approved():
-        # Agreement already signed and approved.
-        # TODO: Notify user of signed and approved agreement somehow.
-        cla.log.info('Agreement already signed and approved for user: %s, %s',
-                     user.get_user_email(), agreement.get_agreement_id())
+    return_url = signature.get_signature_return_url()
+    if signature.get_signature_signed() and signature.get_signature_approved():
+        # Signature already signed and approved.
+        # TODO: Notify user of signed and approved signature somehow.
+        cla.log.info('Signature already signed and approved for user: %s, %s',
+                     user.get_user_email(), signature.get_signature_id())
         cla.log.info('Redirecting user back to %s', return_url)
         raise falcon.HTTPFound(return_url)
-    elif agreement.get_agreement_signed():
+    elif signature.get_signature_signed():
         # Awaiting approval.
         # TODO: Notify user of pending approval somehow.
-        cla.log.info('Agreement signed but not approved yet: %s',
-                     agreement.get_agreement_id())
+        cla.log.info('Signature signed but not approved yet: %s',
+                     signature.get_signature_id())
         cla.log.info('Redirecting user back to %s', return_url)
         raise falcon.HTTPFound(return_url)
     else:
-        # Agreement awaiting signature.
-        sign_url = agreement.get_agreement_sign_url()
-        agreement_id = agreement.get_agreement_id()
-        cla.log.info('Agreement exists, sending user to sign: %s (%s)', agreement_id, sign_url)
+        # Signature awaiting signature.
+        sign_url = signature.get_signature_sign_url()
+        signature_id = signature.get_signature_id()
+        cla.log.info('Signature exists, sending user to sign: %s (%s)', signature_id, sign_url)
         raise falcon.HTTPFound(sign_url)
 
 def request_signature(repository, user, change_request_id, callback_url=None):
     """
-    Helper function send the user off to sign an agreement based on the repository.
+    Helper function send the user off to sign an signature based on the repository.
 
     :param repository: The repository object in question.
     :type repository: cla.models.model_interfaces.Repository

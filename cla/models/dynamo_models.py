@@ -17,17 +17,19 @@ from pynamodb.attributes import UTCDateTimeAttribute, \
 import cla
 from cla.models import model_interfaces, key_value_store_interface
 
+
 def create_database():
     """
     Named "create_database" instead of "create_tables" because create_database
     is expected to exist in all database storage wrappers.
     """
-    tables = [RepositoryModel, ProjectModel, AgreementModel, \
-              OrganizationModel, UserModel, StoreModel]
+    tables = [RepositoryModel, ProjectModel, SignatureModel, \
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
     # Create all required tables.
     for table in tables:
         # Wait blocks until table is created.
         table.create_table(wait=True)
+
 
 def delete_database():
     """
@@ -36,12 +38,13 @@ def delete_database():
 
     WARNING: This will delete all existing table data.
     """
-    tables = [RepositoryModel, ProjectModel, AgreementModel, \
-              OrganizationModel, UserModel, StoreModel]
+    tables = [RepositoryModel, ProjectModel, SignatureModel, \
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
     # Delete all existing tables.
     for table in tables:
         if table.exists():
             table.delete_table()
+
 
 class EmailUserIndex(GlobalSecondaryIndex):
     """
@@ -58,6 +61,7 @@ class EmailUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_email = UnicodeAttribute(hash_key=True)
 
+
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by GitHub ID.
@@ -73,6 +77,7 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by project ID.
@@ -87,6 +92,7 @@ class ProjectRepositoryIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     repository_project_id = UnicodeAttribute(hash_key=True)
+
 
 class ExternalRepositoryIndex(GlobalSecondaryIndex):
     """
@@ -104,35 +110,37 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     repository_external_id = UnicodeAttribute(hash_key=True)
 
 
-class ProjectAgreementIndex(GlobalSecondaryIndex):
+class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
-    This class represents a global secondary index for querying agreements by project ID.
+    This class represents a global secondary index for querying signatures by project ID.
     """
     class Meta:
-        """Meta class for reference Agreement index."""
-        index_name = 'project-agreement-index'
+        """Meta class for reference Signature index."""
+        index_name = 'project-signature-index'
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
     # This attribute is the hash key for the index.
-    agreement_project_id = UnicodeAttribute(hash_key=True)
+    signature_project_id = UnicodeAttribute(hash_key=True)
 
-class ReferenceAgreementIndex(GlobalSecondaryIndex):
+
+class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
-    This class represents a global secondary index for querying agreements by reference.
+    This class represents a global secondary index for querying signatures by reference.
     """
     class Meta:
-        """Meta class for reference Agreement index."""
-        index_name = 'reference-agreement-index'
+        """Meta class for reference Signature index."""
+        index_name = 'reference-signature-index'
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
     # This attribute is the hash key for the index.
-    agreement_reference_id = UnicodeAttribute(hash_key=True)
+    signature_reference_id = UnicodeAttribute(hash_key=True)
+
 
 class BaseModel(Model):
     """
@@ -155,6 +163,7 @@ class BaseModel(Model):
             else:
                 yield name, attr.serialize(getattr(self, name))
 
+
 class DocumentModel(MapAttribute):
     """
     Represents a document in the project model.
@@ -164,6 +173,8 @@ class DocumentModel(MapAttribute):
     document_content_type = UnicodeAttribute() # pdf, url+pdf, storage+pdf, etc
     document_content = UnicodeAttribute(null=True) # None if using storage service.
     document_revision = NumberAttribute(default=1)
+    document_author_name = UnicodeAttribute()
+
 
 class Document(model_interfaces.Document):
     """
@@ -174,11 +185,13 @@ class Document(model_interfaces.Document):
                  document_file_id=None,
                  document_content_type=None,
                  document_content=None,
-                 document_revision=None):
+                 document_revision=None,
+                 document_author_name=None):
         super().__init__()
         self.model = DocumentModel()
         self.model.document_name = document_name
         self.model.document_file_id = document_file_id
+        self.model.document_author_name = document_author_name
         self.model.document_content_type = document_content_type
         self.model.document_content = self.set_document_content(document_content)
         if document_revision is not None:
@@ -189,6 +202,7 @@ class Document(model_interfaces.Document):
                 'document_file_id': self.model.document_file_id,
                 'document_content_type': self.model.document_content_type,
                 'document_content': self.model.document_content,
+                'document_author_name': self.model.document_author_name,
                 'document_revision': self.model.document_revision}
 
     def get_document_name(self):
@@ -199,6 +213,9 @@ class Document(model_interfaces.Document):
 
     def get_document_content_type(self):
         return self.model.document_content_type
+
+    def get_document_author_name(self):
+        return self.model.document_author_name
 
     def get_document_content(self):
         content_type = self.get_document_content_type()
@@ -212,6 +229,9 @@ class Document(model_interfaces.Document):
 
     def get_document_revision(self):
         return self.model.document_revision
+
+    def set_document_author_name(self, document_author_name):
+        self.model.document_author_name = document_author_name
 
     def set_document_name(self, document_name):
         self.model.document_name = document_name
@@ -239,6 +259,7 @@ class Document(model_interfaces.Document):
     def set_document_revision(self, revision):
         self.model.document_revision = revision
 
+
 class ProjectModel(BaseModel):
     """
     Represents a project in the database.
@@ -251,19 +272,25 @@ class ProjectModel(BaseModel):
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
     project_id = UnicodeAttribute(hash_key=True)
+    project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
+    project_ccla_requires_icla_signature = BooleanAttribute()
+
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Project model.
     """
-    def __init__(self, project_id=None, project_name=None):
+    def __init__(self, project_id=None, project_external_id=None, project_name=None,
+                 project_ccla_requires_icla_signature=None):
         super(Project).__init__()
         self.model = ProjectModel()
         self.model.project_id = project_id
+        self.model.project_external_id = project_external_id
         self.model.project_name = project_name
+        self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
 
     def to_dict(self):
         individual_documents = []
@@ -296,6 +323,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
 
     def get_project_id(self):
         return self.model.project_id
+
+    def get_project_external_id(self):
+        return self.model.project_external_id
 
     def get_project_name(self):
         return self.model.project_name
@@ -354,8 +384,18 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         document.model = latest_document
         return document
 
+    def get_project_ccla_requires_icla_signature(self):
+        return self.model.project_ccla_requires_icla_signature
+
+    def get_project_latest_major_version(self):
+        pass
+        # @todo: Loop through documents for this project, return the highest version of them all.
+
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
+
+    def set_project_external_id(self, project_external_id):
+        self.model.project_external_id = str(project_external_id)
 
     def set_project_name(self, project_name):
         self.model.project_name = project_name
@@ -382,6 +422,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def set_project_corporate_documents(self, documents):
         self.model.project_corporate_documents = documents
 
+    def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
+        self.model.project_ccla_requires_icla_signature = ccla_requires_icla_signature
+
     def get_project_repositories(self):
         repository_generator = RepositoryModel.repository_project_index.query(self.get_project_id())
         repositories = []
@@ -391,10 +434,10 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             repositories.append(repository)
         return repositories
 
-    def get_project_agreements(self, agreement_signed=None, agreement_approved=None):
-        return Agreement().get_agreements_by_project(self.get_project_id(),
-                                                     agreement_approved=agreement_approved,
-                                                     agreement_signed=agreement_signed)
+    def get_project_signatures(self, signature_signed=None, signature_approved=None):
+        return Signature().get_signatures_by_project(self.get_project_id(),
+                                                     signature_approved=signature_approved,
+                                                     signature_signed=signature_signed)
 
     def all(self, project_ids=None):
         if project_ids is None:
@@ -407,6 +450,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             proj.model = project
             ret.append(proj)
         return ret
+
 
 def _remove_project_document(documents, revision):
     # TODO Need to optimize this on the DB side - delete directly from list of records.
@@ -423,6 +467,7 @@ def _remove_project_document(documents, revision):
         raise cla.models.DoesNotExist('Document revision not found')
     return new_documents
 
+
 class UserModel(BaseModel):
     """
     Represents a user in the database.
@@ -435,22 +480,25 @@ class UserModel(BaseModel):
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
     user_id = UnicodeAttribute(hash_key=True)
+    user_external_id = UnicodeAttribute(null=True)
     user_email = UnicodeAttribute()
     user_name = UnicodeAttribute(null=True)
-    user_organization_id = UnicodeAttribute(null=True)
+    user_company_id = UnicodeAttribute(null=True)
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
     user_email_index = EmailUserIndex()
     user_github_id_index = GitHubUserIndex()
 
+
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_github_id=None, user_ldap_id=None):
+    def __init__(self, user_external_id=None, user_email=None, user_github_id=None, user_ldap_id=None):
         super(User).__init__()
         self.model = UserModel()
         self.model.user_email = user_email
+        self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
 
@@ -478,14 +526,17 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_id(self):
         return self.model.user_id
 
+    def get_user_external_id(self):
+        return self.model.user_id
+
     def get_user_email(self):
         return self.model.user_email
 
     def get_user_name(self):
         return self.model.user_name
 
-    def get_user_organization_id(self):
-        return self.model.user_organization_id
+    def get_user_company_id(self):
+        return self.model.user_company_id
 
     def get_user_github_id(self):
         return self.model.user_github_id
@@ -496,14 +547,17 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def set_user_id(self, user_id):
         self.model.user_id = user_id
 
+    def set_user_external_id(self, user_external_id):
+        self.model.user_external_id = user_external_id
+
     def set_user_email(self, user_email):
         self.model.user_email = user_email
 
     def set_user_name(self, user_name):
         self.model.user_name = user_name
 
-    def set_user_organization_id(self, organization_id):
-        self.model.user_organization_id = organization_id
+    def set_user_company_id(self, company_id):
+        self.model.user_company_id = company_id
 
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
@@ -527,14 +581,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             return user
         return None
 
-    def get_user_agreements(self, project_id=None, agreement_signed=None, agreement_approved=None):
-        return Agreement().get_agreements_by_reference(self.get_user_id(), 'user',
+    def get_user_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
+        return Signature().get_signatures_by_reference(self.get_user_id(), 'user',
                                                        project_id=project_id,
-                                                       agreement_approved=agreement_approved,
-                                                       agreement_signed=agreement_signed)
+                                                       signature_approved=signature_approved,
+                                                       signature_signed=signature_signed)
 
-    def get_users_by_organization(self, organization_id):
-        user_generator = self.model.scan(user_organization_id__eq=str(organization_id))
+    def get_users_by_company(self, company_id):
+        user_generator = self.model.scan(user_company_id__eq=str(company_id))
         users = []
         for user_model in user_generator:
             user = User()
@@ -553,6 +607,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             usr.model = user
             ret.append(usr)
         return ret
+
 
 class RepositoryModel(BaseModel):
     """
@@ -573,6 +628,7 @@ class RepositoryModel(BaseModel):
     repository_external_id = UnicodeAttribute(null=True)
     repository_project_index = ProjectRepositoryIndex()
     repository_external_index = ExternalRepositoryIndex()
+
 
 class Repository(model_interfaces.Repository):
     """
@@ -664,60 +720,68 @@ class Repository(model_interfaces.Repository):
             ret.append(repo)
         return ret
 
-class AgreementModel(BaseModel): # pylint: disable=too-many-instance-attributes
+
+class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     """
-    Represents an agreement in the database.
+    Represents an signature in the database.
     """
     class Meta:
-        """Meta class for Agreement."""
-        table_name = 'cla_agreements'
+        """Meta class for Signature."""
+        table_name = 'cla_signatures'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
-    agreement_id = UnicodeAttribute(hash_key=True)
-    agreement_project_id = UnicodeAttribute()
-    agreement_document_revision = NumberAttribute()
-    agreement_reference_id = UnicodeAttribute()
-    agreement_reference_type = UnicodeAttribute()
-    agreement_type = UnicodeAttribute(default='cla') # Only CLA/DCO.
-    agreement_signed = BooleanAttribute(default=False)
-    agreement_approved = BooleanAttribute(default=False)
-    agreement_sign_url = UnicodeAttribute(null=True)
-    agreement_return_url = UnicodeAttribute(null=True)
-    agreement_callback_url = UnicodeAttribute(null=True)
-    agreement_project_index = ProjectAgreementIndex()
-    agreement_reference_index = ReferenceAgreementIndex()
+    signature_id = UnicodeAttribute(hash_key=True)
+    signature_external_id = UnicodeAttribute(null=True)
+    signature_project_id = UnicodeAttribute()
+    signature_document_minor_version = NumberAttribute()
+    signature_document_major_version = NumberAttribute()
+    signature_reference_id = UnicodeAttribute()
+    signature_reference_type = UnicodeAttribute()
+    signature_type = UnicodeAttribute(default='icla') # Only icla/ccla.
+    signature_signed = BooleanAttribute(default=False)
+    signature_approved = BooleanAttribute(default=False)
+    signature_sign_url = UnicodeAttribute(null=True)
+    signature_return_url = UnicodeAttribute(null=True)
+    signature_callback_url = UnicodeAttribute(null=True)
+    signature_project_index = ProjectSignatureIndex()
+    signature_reference_index = ReferenceSignatureIndex()
 
-class Agreement(model_interfaces.Agreement): # pylint: disable=too-many-public-methods
+
+class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
-    ORM-agnostic wrapper for the DynamoDB Agreement model.
+    ORM-agnostic wrapper for the DynamoDB Signature model.
     """
     def __init__(self, # pylint: disable=too-many-arguments
-                 agreement_id=None,
-                 agreement_project_id=None,
-                 agreement_document_revision=None,
-                 agreement_reference_id=None,
-                 agreement_reference_type='user',
-                 agreement_type=None,
-                 agreement_signed=False,
-                 agreement_approved=False,
-                 agreement_sign_url=None,
-                 agreement_return_url=None,
-                 agreement_callback_url=None):
-        super(Agreement).__init__()
-        self.model = AgreementModel()
-        self.model.agreement_id = agreement_id
-        self.model.agreement_project_id = agreement_project_id
-        self.model.agreement_document_revision = agreement_document_revision
-        self.model.agreement_reference_id = agreement_reference_id
-        self.model.agreement_reference_type = agreement_reference_type
-        self.model.agreement_type = agreement_type
-        self.model.agreement_signed = agreement_signed
-        self.model.agreement_approved = agreement_approved
-        self.model.agreement_sign_url = agreement_sign_url
-        self.model.agreement_return_url = agreement_return_url
-        self.model.agreement_callback_url = agreement_callback_url
+                 signature_id=None,
+                 signature_external_id=None,
+                 signature_project_id=None,
+                 signature_document_minor_version=None,
+                 signature_document_major_version=None,
+                 signature_reference_id=None,
+                 signature_reference_type='user',
+                 signature_type=None,
+                 signature_signed=False,
+                 signature_approved=False,
+                 signature_sign_url=None,
+                 signature_return_url=None,
+                 signature_callback_url=None):
+        super(Signature).__init__()
+        self.model = SignatureModel()
+        self.model.signature_id = signature_id
+        self.model.signature_external_id = signature_external_id
+        self.model.signature_project_id = signature_project_id
+        self.model.signature_document_minor_version = signature_document_minor_version
+        self.model.signature_document_major_version = signature_document_major_version
+        self.model.signature_reference_id = signature_reference_id
+        self.model.signature_reference_type = signature_reference_type
+        self.model.signature_type = signature_type
+        self.model.signature_signed = signature_signed
+        self.model.signature_approved = signature_approved
+        self.model.signature_sign_url = signature_sign_url
+        self.model.signature_return_url = signature_return_url
+        self.model.signature_callback_url = signature_callback_url
 
     def to_dict(self):
         return dict(self.model)
@@ -725,167 +789,184 @@ class Agreement(model_interfaces.Agreement): # pylint: disable=too-many-public-m
     def save(self):
         self.model.save()
 
-    def load(self, agreement_id):
+    def load(self, signature_id):
         try:
-            agreement = self.model.get(agreement_id)
-        except AgreementModel.DoesNotExist:
-            raise cla.models.DoesNotExist('Agreement not found')
-        self.model = agreement
+            signature = self.model.get(signature_id)
+        except SignatureModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Signature not found')
+        self.model = signature
 
     def delete(self):
         self.model.delete()
 
-    def get_agreement_id(self):
-        return self.model.agreement_id
+    def get_signature_id(self):
+        return self.model.signature_id
 
-    def get_agreement_project_id(self):
-        return self.model.agreement_project_id
+    def get_signature_external_id(self):
+        return self.model.signature_external_id
 
-    def get_agreement_document_revision(self):
-        return self.model.agreement_document_revision
+    def get_signature_project_id(self):
+        return self.model.signature_project_id
 
-    def get_agreement_type(self):
-        return self.model.agreement_type
+    def get_signature_document_minor_version(self):
+        return self.model.signature_document_minor_version
 
-    def get_agreement_signed(self):
-        return self.model.agreement_signed
+    def get_signature_document_major_version(self):
+        return self.model.signature_document_major_version
 
-    def get_agreement_approved(self):
-        return self.model.agreement_approved
+    def get_signature_type(self):
+        return self.model.signature_type
 
-    def get_agreement_sign_url(self):
-        return self.model.agreement_sign_url
+    def get_signature_signed(self):
+        return self.model.signature_signed
 
-    def get_agreement_return_url(self):
-        return self.model.agreement_return_url
+    def get_signature_approved(self):
+        return self.model.signature_approved
 
-    def get_agreement_callback_url(self):
-        return self.model.agreement_callback_url
+    def get_signature_sign_url(self):
+        return self.model.signature_sign_url
 
-    def get_agreement_reference_id(self):
-        return self.model.agreement_reference_id
+    def get_signature_return_url(self):
+        return self.model.signature_return_url
 
-    def get_agreement_reference_type(self):
-        return self.model.agreement_reference_type
+    def get_signature_callback_url(self):
+        return self.model.signature_callback_url
 
-    def set_agreement_id(self, agreement_id):
-        self.model.agreement_id = str(agreement_id)
+    def get_signature_reference_id(self):
+        return self.model.signature_reference_id
 
-    def set_agreement_project_id(self, project_id):
-        self.model.agreement_project_id = str(project_id)
+    def get_signature_reference_type(self):
+        return self.model.signature_reference_type
 
-    def set_agreement_document_revision(self, document_revision):
-        self.model.agreement_document_revision = int(document_revision)
+    def set_signature_id(self, signature_id):
+        self.model.signature_id = str(signature_id)
 
-    def set_agreement_type(self, agreement_type):
-        self.model.agreement_type = agreement_type
+    def set_signature_external_id(self, signature_external_id):
+        self.model.signature_external_id = str(signature_external_id)
 
-    def set_agreement_signed(self, signed):
-        self.model.agreement_signed = bool(signed)
+    def set_signature_project_id(self, project_id):
+        self.model.signature_project_id = str(project_id)
 
-    def set_agreement_approved(self, approved):
-        self.model.agreement_approved = bool(approved)
+    def set_signature_document_minor_version(self, document_minor_version):
+        self.model.signature_document_minor_version = int(document_minor_version)
 
-    def set_agreement_sign_url(self, sign_url):
-        self.model.agreement_sign_url = sign_url
+    def set_signature_document_major_version(self, document_major_version):
+        self.model.signature_document_major_version = int(document_major_version)
 
-    def set_agreement_return_url(self, return_url):
-        self.model.agreement_return_url = return_url
+    def set_signature_type(self, signature_type):
+        self.model.signature_type = signature_type
 
-    def set_agreement_callback_url(self, callback_url):
-        self.model.agreement_callback_url = callback_url
+    def set_signature_signed(self, signed):
+        self.model.signature_signed = bool(signed)
 
-    def set_agreement_reference_id(self, reference_id):
-        self.model.agreement_reference_id = reference_id
+    def set_signature_approved(self, approved):
+        self.model.signature_approved = bool(approved)
 
-    def set_agreement_reference_type(self, reference_type):
-        self.model.agreement_reference_type = reference_type
+    def set_signature_sign_url(self, sign_url):
+        self.model.signature_sign_url = sign_url
 
-    def get_agreements_by_reference(self, # pylint: disable=too-many-arguments
+    def set_signature_return_url(self, return_url):
+        self.model.signature_return_url = return_url
+
+    def set_signature_callback_url(self, callback_url):
+        self.model.signature_callback_url = callback_url
+
+    def set_signature_reference_id(self, reference_id):
+        self.model.signature_reference_id = reference_id
+
+    def set_signature_reference_type(self, reference_type):
+        self.model.signature_reference_type = reference_type
+
+    def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
                                     reference_type,
                                     project_id=None,
-                                    agreement_signed=None,
-                                    agreement_approved=None):
+                                    signature_signed=None,
+                                    signature_approved=None):
         # TODO: Optimize this query to use filters properly.
-        agreement_generator = self.model.agreement_reference_index.query(reference_id)
-        agreements = []
-        for agreement_model in agreement_generator:
-            if agreement_model.agreement_reference_type != reference_type:
+        signature_generator = self.model.signature_reference_index.query(reference_id)
+        signatures = []
+        for signature_model in signature_generator:
+            if signature_model.signature_reference_type != reference_type:
                 continue
             if project_id is not None and \
-               agreement_model.agreement_project_id != project_id:
+               signature_model.signature_project_id != project_id:
                 continue
-            if agreement_signed is not None and \
-               agreement_model.agreement_signed != agreement_signed:
+            if signature_signed is not None and \
+               signature_model.signature_signed != signature_signed:
                 continue
-            if agreement_approved is not None and \
-               agreement_model.agreement_approved != agreement_approved:
+            if signature_approved is not None and \
+               signature_model.signature_approved != signature_approved:
                 continue
-            agreement = Agreement()
-            agreement.model = agreement_model
-            agreements.append(agreement)
-        return agreements
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+        return signatures
 
-    def get_agreements_by_project(self, project_id, agreement_signed=None,
-                                  agreement_approved=None):
-        agreement_generator = self.model.agreement_project_index.query(project_id)
-        agreements = []
-        for agreement_model in agreement_generator:
-            if agreement_signed is not None and \
-               agreement_model.agreement_signed != agreement_signed:
+    def get_signatures_by_project(self, project_id, signature_signed=None,
+                                  signature_approved=None):
+        signature_generator = self.model.signature_project_index.query(project_id)
+        signatures = []
+        for signature_model in signature_generator:
+            if signature_signed is not None and \
+               signature_model.signature_signed != signature_signed:
                 continue
-            if agreement_approved is not None and \
-               agreement_model.agreement_approved != agreement_approved:
+            if signature_approved is not None and \
+               signature_model.signature_approved != signature_approved:
                 continue
-            agreement = Agreement()
-            agreement.model = agreement_model
-            agreements.append(agreement)
-        return agreements
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+        return signatures
 
     def all(self, ids=None):
         if ids is None:
-            agreements = self.model.scan()
+            signatures = self.model.scan()
         else:
-            agreements = AgreementModel.batch_get(ids)
+            signatures = SignatureModel.batch_get(ids)
         ret = []
-        for agreement in agreements:
-            agr = Agreement()
-            agr.model = agreement
+        for signature in signatures:
+            agr = Signature()
+            agr.model = signature
             ret.append(agr)
         return ret
 
-class OrganizationModel(BaseModel):
+
+class CompanyModel(BaseModel):
     """
-    Represents an organization in the database.
+    Represents an company in the database.
     """
     class Meta:
-        """Meta class for Organization."""
-        table_name = 'cla_organizations'
+        """Meta class for Company."""
+        table_name = 'cla_companies'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
         write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
-    organization_id = UnicodeAttribute(hash_key=True)
-    organization_name = UnicodeAttribute()
-    organization_whitelist = ListAttribute()
-    organization_exclude_patterns = ListAttribute()
+    company_id = UnicodeAttribute(hash_key=True)
+    company_external_id = UnicodeAttribute(null=True)
+    company_name = UnicodeAttribute()
+    company_whitelist = ListAttribute()
+    company_whitelist_patterns = ListAttribute()
 
-class Organization(model_interfaces.Organization): # pylint: disable=too-many-public-methods
+
+class Company(model_interfaces.Company): # pylint: disable=too-many-public-methods
     """
-    ORM-agnostic wrapper for the DynamoDB Organization model.
+    ORM-agnostic wrapper for the DynamoDB Company model.
     """
     def __init__(self, # pylint: disable=too-many-arguments
-                 organization_id=None,
-                 organization_name=None,
-                 organization_exclude_patterns=None,
-                 organization_whitelist=None):
-        super(Organization).__init__()
-        self.model = OrganizationModel()
-        self.model.organization_id = organization_id
-        self.model.organization_name = organization_name
-        self.model.organization_whitelist = organization_whitelist
-        self.model.organization_exclude_patterns = organization_exclude_patterns
+                 company_id=None,
+                 company_external_id=None,
+                 company_name=None,
+                 company_whitelist_patterns=None,
+                 company_whitelist=None):
+        super(Company).__init__()
+        self.model = CompanyModel()
+        self.model.company_id = company_id
+        self.model.company_external_id = company_external_id
+        self.model.company_name = company_name
+        self.model.company_whitelist = company_whitelist
+        self.model.company_whitelist_patterns = company_whitelist_patterns
 
     def to_dict(self):
         return dict(self.model)
@@ -893,78 +974,85 @@ class Organization(model_interfaces.Organization): # pylint: disable=too-many-pu
     def save(self):
         self.model.save()
 
-    def load(self, organization_id):
+    def load(self, company_id):
         try:
-            organization = self.model.get(organization_id)
-        except OrganizationModel.DoesNotExist:
-            raise cla.models.DoesNotExist('Organization not found')
-        self.model = organization
+            company = self.model.get(company_id)
+        except CompanyModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Company not found')
+        self.model = company
 
     def delete(self):
         self.model.delete()
 
-    def get_organization_id(self):
-        return self.model.organization_id
+    def get_company_id(self):
+        return self.model.company_id
 
-    def get_organization_name(self):
-        return self.model.organization_name
+    def get_company_external_id(self):
+        return self.model.company_external_id
 
-    def get_organization_whitelist(self):
-        return self.model.organization_whitelist
+    def get_company_name(self):
+        return self.model.company_name
 
-    def get_organization_exclude_patterns(self):
-        return self.model.organization_exclude_patterns
+    def get_company_whitelist(self):
+        return self.model.company_whitelist
 
-    def set_organization_id(self, organization_id):
-        self.model.organization_id = organization_id
+    def get_company_whitelist_patterns(self):
+        return self.model.company_whitelist_patterns
 
-    def set_organization_name(self, organization_name):
-        self.model.organization_name = str(organization_name)
+    def set_company_id(self, company_id):
+        self.model.company_id = company_id
 
-    def set_organization_whitelist(self, whitelist):
-        self.model.organization_whitelist = [str(wl) for wl in whitelist]
+    def set_company_external_id(self, company_external_id):
+        self.model.company_external_id = company_external_id
 
-    def add_organization_whitelist(self, whitelist_item):
-        if self.model.organization_whitelist is None:
-            self.model.organization_whitelist = [str(whitelist_item)]
+    def set_company_name(self, company_name):
+        self.model.company_name = str(company_name)
+
+    def set_company_whitelist(self, whitelist):
+        self.model.company_whitelist = [str(wl) for wl in whitelist]
+
+    def add_company_whitelist(self, whitelist_item):
+        if self.model.company_whitelist is None:
+            self.model.company_whitelist = [str(whitelist_item)]
         else:
-            self.model.organization_whitelist.append(str(whitelist_item))
+            self.model.company_whitelist.append(str(whitelist_item))
 
-    def remove_organization_whitelist(self, whitelist_item):
-        if str(whitelist_item) in self.model.organization_whitelist:
-            self.model.organization_whitelist.remove(str(whitelist_item))
+    def remove_company_whitelist(self, whitelist_item):
+        if str(whitelist_item) in self.model.company_whitelist:
+            self.model.company_whitelist.remove(str(whitelist_item))
 
-    def set_organization_exclude_patterns(self, exclude_patterns):
-        self.model.organization_exclude_patterns = [str(ep) for ep in exclude_patterns]
+    def set_company_whitelist_patterns(self, exclude_patterns):
+        self.model.company_whitelist_patterns = [str(ep) for ep in exclude_patterns]
 
-    def add_organization_exclude_pattern(self, exclude_pattern):
-        if self.model.organization_exclude_patterns is None:
-            self.model.organization_exclude_patterns = [str(exclude_pattern)]
+    def add_company_exclude_pattern(self, exclude_pattern):
+        if self.model.company_whitelist_patterns is None:
+            self.model.company_whitelist_patterns = [str(exclude_pattern)]
         else:
-            self.model.organization_exclude_patterns.append(str(exclude_pattern))
+            self.model.company_whitelist_patterns.append(str(exclude_pattern))
 
-    def remove_organization_exclude_pattern(self, exclude_pattern):
-        if str(exclude_pattern) in self.model.organization_exclude_patterns:
-            self.model.organization_exclude_patterns.remove(str(exclude_pattern))
+    def remove_company_exclude_pattern(self, exclude_pattern):
+        if str(exclude_pattern) in self.model.company_whitelist_patterns:
+            self.model.company_whitelist_patterns.remove(str(exclude_pattern))
 
-    def get_organization_agreements(self, # pylint: disable=arguments-differ
-                                    agreement_signed=None,
-                                    agreement_approved=None):
-        return Agreement().get_agreements_by_reference(self.get_organization_id(), 'organization',
-                                                       agreement_approved=agreement_approved,
-                                                       agreement_signed=agreement_signed)
+    def get_company_signatures(self, # pylint: disable=arguments-differ
+                               signature_signed=None,
+                               signature_approved=None):
+        return Signature().get_signatures_by_reference(self.get_company_id(), 'company',
+                                                       signature_approved=signature_approved,
+                                                       signature_signed=signature_signed)
 
     def all(self, ids=None):
         if ids is None:
-            organizations = self.model.scan()
+            companies = self.model.scan()
         else:
-            organizations = OrganizationModel.batch_get(ids)
+            companies = CompanyModel.batch_get(ids)
         ret = []
-        for organization in organizations:
-            org = Organization()
-            org.model = organization
+        for company in companies:
+            org = Company()
+            org.model = company
             ret.append(org)
         return ret
+
 
 class StoreModel(Model):
     """
@@ -979,6 +1067,7 @@ class StoreModel(Model):
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
     key = UnicodeAttribute(hash_key=True)
     value = JSONAttribute()
+
 
 class Store(key_value_store_interface.KeyValueStore):
     """
@@ -1012,3 +1101,86 @@ class Store(key_value_store_interface.KeyValueStore):
             return True
         except cla.models.DoesNotExist:
             return False
+
+
+class GitHubOrgModel(BaseModel):
+    """
+    Represents a user in the database.
+    """
+    class Meta:
+        """Meta class for User."""
+        table_name = 'cla_github_orgs'
+        host = cla.conf['DATABASE_HOST']
+        region = cla.conf['DYNAMO_REGION']
+        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
+        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+    organization_name = UnicodeAttribute(hash_key=True)
+    organization_company_id = UnicodeAttribute(null=True)
+    organization_installation_id = NumberAttribute(null=True)
+
+
+class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
+    """
+    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None):
+        super(User).__init__()
+        self.model = GitHubOrgModel()
+        self.model.organization_name = organization_name
+        self.model.organization_company_id = organization_company_id
+        self.model.organization_installation_id = organization_installation_id
+
+    def to_dict(self):
+        ret = dict(self.model)
+        if ret['organization_installation_id'] == 'null':
+            ret['organization_installation_id'] = None
+        return ret
+
+    def save(self):
+        self.model.save()
+
+    def load(self, organization_name):
+        try:
+            organization = self.model.get(str(organization_name))
+        except GitHubOrgModel.DoesNotExist:
+            raise cla.models.DoesNotExist('GitHub Org not found')
+        self.model = organization
+
+    def delete(self):
+        self.model.delete()
+
+    def get_organization_name(self):
+        return self.model.organization_name
+
+    def get_organization_company_id(self):
+        return self.model.organization_company_id
+
+    def get_organization_installation_id(self):
+        return self.model.organization_installation_id
+
+    def set_organization_name(self, organization_name):
+        self.model.organization_name = organization_name
+
+    def set_organization_company_id(self, organization_company_id):
+        self.model.organization_company_id = organization_company_id
+
+    def set_organization_installation_id(self, organization_installation_id):
+        self.model.organization_installation_id = organization_installation_id
+
+    def get_organizations_by_company(self, company_id):
+        organization_generator = self.model.scan(organization_company_id__eq=str(company_id))
+        organizations = []
+        for org_model in organization_generator:
+            org = GitHubOrg()
+            org.model = org_model
+            organizations.append(org)
+        return organizations
+
+    def all(self):
+        orgs = self.model.scan()
+        ret = []
+        for organization in orgs:
+            org = GitHubOrg()
+            org.model = organization
+            ret.append(org)
+        return ret

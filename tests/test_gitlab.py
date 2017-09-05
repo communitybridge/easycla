@@ -69,17 +69,17 @@ class GitLabTestCase(CLATestCase):
         repo_data = self.create_repository(project['project_id'])
         repository = get_repository_instance()
         repository.load(repo_data['repository_id'])
-        # Update with a signed and approved agreement.
-        agreement_data = self.create_agreement(agreement_project_id=project['project_id'],
-                                               agreement_reference_id=user_data['user_id'],
-                                               agreement_reference_type='user')
+        # Update with a signed and approved signature.
+        signature_data = self.create_signature(signature_project_id=project['project_id'],
+                                               signature_reference_id=user_data['user_id'],
+                                               signature_reference_type='user')
         change_request_id = 1
         gitlab.update_change_request(repository, change_request_id)
-        # Update with a signed agreement, not approved.
-        agreement_data = self.create_agreement(agreement_project_id=project['project_id'],
-                                               agreement_reference_id=user_data['user_id'],
-                                               agreement_reference_type='user',
-                                               agreement_approved=False)
+        # Update with a signed signature, not approved.
+        signature_data = self.create_signature(signature_project_id=project['project_id'],
+                                               signature_reference_id=user_data['user_id'],
+                                               signature_reference_type='user',
+                                               signature_approved=False)
         change_request_id = 1
         gitlab.update_change_request(repository, change_request_id)
 

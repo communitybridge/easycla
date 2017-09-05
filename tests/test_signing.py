@@ -1,5 +1,5 @@
 """
-Tests having to do with the agreement endpoints.
+Tests having to do with the signature endpoints.
 """
 
 import unittest
@@ -9,7 +9,7 @@ import hug
 # Importing to setup proper python path and DB for tests.
 from test_cla import CLATestCase
 import cla
-from cla.utils import get_agreement_instance
+from cla.utils import get_signature_instance
 
 class SigningTestCase(CLATestCase):
     """Signing test cases."""
@@ -20,21 +20,21 @@ class SigningTestCase(CLATestCase):
         repo = self.create_repository(project['project_id'])
         user = self.create_user()
         self.create_document(project['project_id'])
-        agreement = self.create_agreement(project['project_id'],
+        signature = self.create_signature(project['project_id'],
                                           user['user_id'],
                                           'user',
-                                          agreement_signed=False)
+                                          signature_signed=False)
         change_id = 1 # Repository provider specific ID.
         # First one has status 'Sent', second one has status 'Completed'.
         fhandle = open('resources/docusign_callback_payload.xml')
         docusign_payload = fhandle.read()
         fhandle.close()
-        data = docusign_payload %agreement['agreement_id']
+        data = docusign_payload %signature['signature_id']
         signed_route = '/v1/signed/%s/%s' %(repo['repository_id'], change_id)
         response = hug.test.post(cla.routes, signed_route, data)
-        agr = get_agreement_instance()
-        agr.load(agreement['agreement_id'])
-        self.assertTrue(agr.get_agreement_signed())
+        agr = get_signature_instance()
+        agr.load(signature['signature_id'])
+        self.assertTrue(agr.get_signature_signed())
 
     def test_return_url(self):
         """Tests for the user return URL after signing."""
@@ -43,9 +43,9 @@ class SigningTestCase(CLATestCase):
         repo = self.create_repository(project['project_id'])
         user = self.create_user()
         self.create_document(project['project_id'])
-        agreement = self.create_agreement(project['project_id'], user['user_id'], 'user',
-                                          agreement_return_url='http://github.com/user/repo/1')
-        url = '/v1/return-url/' + agreement['agreement_id']
+        signature = self.create_signature(project['project_id'], user['user_id'], 'user',
+                                          signature_return_url='http://github.com/user/repo/1')
+        url = '/v1/return-url/' + signature['signature_id']
         response = hug.test.get(cla.routes, url)
         self.assertEqual(response.status, '302 Found')
         self.assertEqual(response.headers_dict['location'], 'http://github.com/user/repo/1')
@@ -67,8 +67,8 @@ class SigningTestCase(CLATestCase):
                                  {'project_id': project['project_id'],
                                   'user_id': user['user_id'],
                                   'return_url': 'http://return.url/here'})
-        agreement_id = response.data['agreement_id']
-        self.assertEqual(response.data,  {'agreement_id': agreement_id,
+        signature_id = response.data['signature_id']
+        self.assertEqual(response.data,  {'signature_id': signature_id,
                                           'project_id': project['project_id'],
                                           'sign_url': 'http://signing-service.com/send-user-here',
                                           'user_id': user['user_id']})
