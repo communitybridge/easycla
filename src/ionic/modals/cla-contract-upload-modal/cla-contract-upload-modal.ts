@@ -28,8 +28,7 @@ export class ClaContractUploadModal {
     this.uploadInfo = this.navParams.get('uploadInfo');
     this.form = formBuilder.group({
       file:['', Validators.compose([Validators.required])],
-      version:[this.uploadInfo.version, Validators.compose([Validators.required])],
-      newSignature:[false, Validators.compose([Validators.required])],
+      newSignature:[false],
     });
   }
 
