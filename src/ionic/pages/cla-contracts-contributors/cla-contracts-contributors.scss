@@ -1,0 +1,101 @@
+cla-contracts-contributors {
+
+  ion-content .scroll-content > header {
+    padding-bottom: 0;
+  }
+  header {
+    ion-segment {
+      width: calc(100% + 32px);
+      margin-left: -16px;
+      border-top-width: 2px;
+      border-top-style: solid;
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .segment-md .segment-button {
+      border-bottom-color: transparent;
+    }
+  }
+
+  a {
+    text-decoration:none;
+  }
+
+  ion-datetime {
+    color:#000 !important;
+    background: none !important;
+    opacity: 1 !important;
+  }
+
+  .project-details-link {
+    cursor:pointer;
+  }
+
+  .add-pointer {
+    cursor:pointer;
+  }
+
+  .circle-alert,
+  .circle-notice,
+  .circle-null {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 100%;
+    position: relative;
+    top: .2rem;
+  }
+
+  .circle-alert {
+    background-color: color($colors, danger);
+  }
+
+  .circle-notice {
+    background-color: orange;
+  }
+
+  .circle-null {
+    background-color: null;
+  }
+
+  ion-icon[name=image] {
+    font-size: 90px;
+  }
+
+  ion-segment.segment-sidebar {
+    display: block;
+    &.segment-md .segment-button {
+      width: 100%;
+      border-bottom: 0;
+      text-align: left;
+      &.segment-activated {
+        background-color: rgba(0, 0, 0, .1);
+      }
+      ion-icon {
+        vertical-align: bottom;
+      }
+    }
+  }
+  .reposHome {
+    ion-card {
+      h2 {
+        margin-bottom: 1rem;
+        color: color($colors, secondary);
+      }
+      h2.approvals-pending {
+        color: color($colors, danger);
+      }
+    }
+    ion-row.with-icon {
+      ion-col:first-child {
+        padding-left: 2.5rem;
+        ion-icon.card-icon {
+          position: absolute;
+          margin-left: -3rem;
+          font-size: 2.5rem;
+        }
+      }
+    }
+  }
+
+}
