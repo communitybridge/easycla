@@ -37,11 +37,8 @@
           <td>v2.1</td>
           <td>May 31, 2017 7:42, PST</td>
           <td>Sarah Programmanager</td>
-          <td>
-            <!-- <span icon-right class="file_list-more" (click)="currentContractPopover($event, 0)">
-              <ion-icon name="more"></ion-icon>
-            </span> -->
-            <button ion-button clear round class="file_list-more" (click)="currentContractPopover($event, 0)">
+          <td class="actions-cell">
+            <button ion-button icon-only clear round (click)="contractPopover($event, 0)">
               <ion-icon name="more"></ion-icon>
             </button>
           </td>
@@ -57,11 +54,8 @@
           <td>v2.1</td>
           <td>May 31, 2017 7:42, PST</td>
           <td>Sarah Programmanager</td>
-          <td>
-            <!-- <span icon-right class="file_list-more" (click)="previousContractPopover($event, item)">
-              <ion-icon name="more"></ion-icon>
-            </span> -->
-            <button ion-button clear round class="file_list-more" (click)="previousContractPopover($event, item)">
+          <td class="actions-cell">
+            <button ion-button icon-only clear round (click)="contractPopover($event, item)">
               <ion-icon name="more"></ion-icon>
             </button>
           </td>

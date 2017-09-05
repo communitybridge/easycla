@@ -125,6 +125,12 @@ export class ProjectRepositoriesPage {
     });
   }
 
+  openClaContractsContributorsPage(contractId) {
+    this.navCtrl.push('ClaContractsContributorsPage', {
+      contractId: contractId,
+    });
+  }
+
   getDefaults() {
     this.loading = {
       project: true,
