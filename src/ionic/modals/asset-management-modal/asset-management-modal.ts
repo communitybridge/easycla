@@ -244,10 +244,10 @@ export class AssetManagementModal {
             imageBytes: imgBase64,
             contentType: contentType
           }
-          this.cincoService.obtainS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+          this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
             if(response.url) {
               let S3URL = response.url;
-              this.cincoService.uploadLogo(S3URL, file, this.image.contentType).subscribe(response => {
+              this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
                 // This is to refresh an image that have same URL
                 this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
                 this.dismiss();
