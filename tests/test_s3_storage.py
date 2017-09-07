@@ -33,7 +33,8 @@ class S3StorageTestCase(CLATestCase):
         self.assertEqual(response.data, document)
         doc = get_document_instance()
         doc.set_document_content_type('storage+pdf')
-        doc.set_document_revision(document['document_revision'])
+        doc.set_document_major_version(document['document_major_version'])
+        doc.set_document_minor_version(document['document_minor_version'])
         doc.set_document_file_id(document['document_file_id'])
         content = doc.get_document_content()
         with open('resources/test.pdf', 'rb') as fhandle:

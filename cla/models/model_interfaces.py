@@ -106,27 +106,31 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_project_individual_document(self, revision=None):
+    def get_project_individual_document(self, major_version=None, minor_version=None):
         """
-        Getter for the project's individual signature document given a revision number.
+        Getter for the project's individual signature document given a version number.
 
-        A revision number of None should return the latest revision document.
+        A version number of None for both major and minor should return the latest document.
 
-        :param revision: The revision requested. None for latest revision.
-        :type revision: integer
+        :param major_version: The major version requested. None for latest version.
+        :type major_version: integer
+        :param minor_version: The minor version requested. None for latest version.
+        :type minor_version: integer
         :return: The project's ICLA document corresponding to the revision requested.
         :rtype: cla.models.model_interfaces.Document
         """
         raise NotImplementedError()
 
-    def get_project_corporate_document(self, revision=None):
+    def get_project_corporate_document(self, major_version=None, minor_version=None):
         """
-        Getter for the project's corporate signature document by revision.
+        Getter for the project's corporate signature document by version number.
 
-        A revision number of None should return the latest revision document.
+        A version number of None for major and minor should return the latest document.
 
-        :param revision: The revision requested. None for latest revision.
-        :type revision: integer
+        :param major_version: The major version requested. None for latest version.
+        :type major_version: integer
+        :param minor_version: The minor version requested. None for latest version.
+        :type minor_version: integer
         :return: The project CCLA document requested.
         :rtype: cla.models.model_interfaces.Document
         """
@@ -1063,9 +1067,9 @@ class Company(object): # pylint: disable=too-many-public-methods
 
     def get_company_whitelist_patterns(self):
         """
-        Getter for an company's exclude regex patterns.
+        Getter for an company's whitelist regex patterns.
 
-        :return: The company's configured exclude patterns.
+        :return: The company's configured whitelist patterns.
         :rtype: [string]
         """
         raise NotImplementedError()
@@ -1151,36 +1155,36 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_company_whitelist_patterns(self, exclude_patterns):
+    def set_company_whitelist_patterns(self, whitelist_patterns):
         """
-        Setter for an company's exclude regex patterns.
+        Setter for an company's whitelist regex patterns.
 
-        :param exclude_patterns: The list of email patterns to exlude from signing.
+        :param whitelist_patterns: The list of email patterns to exlude from signing.
             Example: ['.*@ibm.co.uk$', '^info.*']
-        :type exclude_patterns: list of strings
+        :type whitelist_patterns: list of strings
 
         :todo: Need to actually test out those examples.
         """
         raise NotImplementedError()
 
-    def add_company_exclude_pattern(self, exclude_pattern):
+    def add_company_whitelist_pattern(self, whitelist_pattern):
         """
-        Adds another entry in the list of excluded patterns.
+        Adds another entry in the list of whitelistd patterns.
         Does not query the DB - save() will take care of that.
 
-        :param exclude_pattern: A regex string to add to the exluded patterns of this company.
-        :type exclude_pattern: string
+        :param whitelist_pattern: A regex string to add to the exluded patterns of this company.
+        :type whitelist_pattern: string
         """
         raise NotImplementedError()
 
-    def remove_company_exclude_pattern(self, exclude_pattern):
+    def remove_company_whitelist_pattern(self, whitelist_pattern):
         """
         Removes an entry from the list of whitelisted domain names.
         Does not query the DB - save() will take care of that.
 
-        :param exclude_pattern: A regex string to remove from the exluded patterns
+        :param whitelist_pattern: A regex string to remove from the exluded patterns
             of this company.
-        :type exclude_pattern: string
+        :type whitelist_pattern: string
         """
         raise NotImplementedError()
 
@@ -1252,11 +1256,20 @@ class Document(object):
         """
         raise NotImplementedError()
 
-    def get_document_revision(self):
+    def get_document_major_version(self):
         """
-        Getter for the document's revision number.
+        Getter for the document's major version number.
 
-        :return: The document's revision number.
+        :return: The document's major version number.
+        :rtype: integer
+        """
+        raise NotImplementedError()
+
+    def get_document_minor_version(self):
+        """
+        Getter for the document's minor version number.
+
+        :return: The document's minor version number.
         :rtype: integer
         """
         raise NotImplementedError()
@@ -1311,11 +1324,20 @@ class Document(object):
         """
         raise NotImplementedError()
 
-    def set_document_revision(self, revision):
+    def set_document_major_version(self, version):
         """
-        Setter for the document's revision number.
+        Setter for the document's major version number.
 
-        :param document_revision: The document's revision number.
+        :param document_revision: The document's major version number.
+        :type document_revision: integer
+        """
+        raise NotImplementedError()
+
+    def set_document_minor_version(self, version):
+        """
+        Setter for the document's minor version number.
+
+        :param document_revision: The document's minor version number.
         :type document_revision: integer
         """
         raise NotImplementedError()

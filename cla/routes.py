@@ -390,24 +390,24 @@ def get_company(company_id: hug.types.text):
 
 @hug.post('/company', versions=1,
           examples=" - {'company_name': 'Company Name', \
-                        'company_whitelist': ['safe.org'], \
-                        'company_exclude_patterns': ['^info@*']}")
+                        'company_whitelist': ['user@safe.org'], \
+                        'company_whitelist_patterns': ['*@safe.org']}")
 def post_company(company_name: hug.types.text,
                  company_whitelist: hug.types.multiple,
-                 company_exclude_patterns: hug.types.multiple):
+                 company_whitelist_patterns: hug.types.multiple):
     """
     POST: /company
 
     DATA: {'company_name': 'Org Name',
-           'company_whitelist': ['safe.org'],
-           'company_exclude_patterns': ['^info@*']}
+           'company_whitelist': ['safe@email.org'],
+           'company_whitelist': ['*@email.org']}
 
     Returns the CLA company that was just created.
     """
     return cla.controllers.company.create_company(
         company_name=company_name,
         company_whitelist=company_whitelist,
-        company_exclude_patterns=company_exclude_patterns)
+        company_whitelist_patterns=company_whitelist_patterns)
 
 
 @hug.put('/company', versions=1,
@@ -415,8 +415,8 @@ def post_company(company_name: hug.types.text,
                        'company_name': 'New Company Name'}")
 def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
                 company_name=None,
-                company_exclude_patterns=None,
-                company_whitelist=None):
+                company_whitelist=None,
+                company_whitelist_patterns=None):
     """
     PUT: /company
 
@@ -429,7 +429,7 @@ def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
         company_id,
         company_name=company_name,
         company_whitelist=company_whitelist,
-        company_exclude_patterns=company_exclude_patterns)
+        company_whitelist_patterns=company_whitelist_patterns)
 
 
 @hug.delete('/company/{company_id}', versions=1)
@@ -467,15 +467,15 @@ def get_project(project_id: hug.types.text):
 
 @hug.post('/project', versions=1,
           examples=" - {'project_name': 'Project Name'}")
-def post_project(project_id: hug.types.text, project_name: hug.types.text):
+def post_project(project_external_id: hug.types.text, project_name: hug.types.text, project_ccla_requires_icla_signature: hug.types.boolean):
     """
     POST: /project
 
-    DATA: {'project_id': '<proj-id>', 'project_name': 'Project Name'}
+    DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name', 'project_ccla_requires_icla_signature': True}
 
     Returns the CLA project that was just created.
     """
-    return cla.controllers.project.create_project(project_id, project_name=project_name)
+    return cla.controllers.project.create_project(project_external_id, project_name, project_ccla_requires_icla_signature)
 
 
 @hug.put('/project', versions=1,
@@ -556,16 +556,20 @@ def post_project_document(
         document_content=document_content)
 
 
-@hug.delete('/project/{project_id}/document/{document_type}/{revision}', versions=1)
+@hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
 def delete_project_document(project_id: hug.types.text,
                             document_type: hug.types.one_of(['individual', 'corporate']),
-                            revision: hug.types.number):
+                            major_version: hug.types.number,
+                            minor_version: hug.types.number):
     """
     DELETE: /project/{project_id}/document/{document_type}/{revision}
 
     Delete a project's signature document by revision.
     """
-    return cla.controllers.project.delete_project_document(project_id, document_type, revision)
+    return cla.controllers.project.delete_project_document(project_id,
+                                                           document_type,
+                                                           major_version,
+                                                           minor_version)
 
 
 #

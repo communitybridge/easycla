@@ -66,20 +66,23 @@ class ProjectTestCase(CLATestCase):
         self.assertTrue(len(doc3['project_corporate_documents']) == 1)
         response = hug.test.get(cla.routes,
                                 '/v1/project/' + project_id + '/document/individual')
-        self.assertEqual(response.data['document_revision'], 2)
+        self.assertEqual(response.data['document_major_version'], 1)
+        self.assertEqual(response.data['document_minor_version'], 1)
         response = hug.test.get(cla.routes,
                                 '/v1/project/' + project_id + '/document/corporate')
-        self.assertEqual(response.data['document_revision'], 1)
-        path = '/v1/project/' + project_id + '/document/individual/3'
+        self.assertEqual(response.data['document_major_version'], 1)
+        self.assertEqual(response.data['document_minor_version'], 0)
+        path = '/v1/project/' + project_id + '/document/individual/3/0'
         response = hug.test.delete(cla.routes, path)
-        self.assertEqual(response.data, {'errors': {'document': 'Document revision not found'}})
-        path = '/v1/project/' + project_id + '/document/individual/2'
+        self.assertEqual(response.data, {'errors': {'document': 'Document version not found'}})
+        path = '/v1/project/' + project_id + '/document/individual/1/1'
         response = hug.test.delete(cla.routes, path)
         self.assertEqual(response.data, {'success': True})
         response = hug.test.get(cla.routes,
                                 '/v1/project/' + project_id + '/document/individual')
-        self.assertEqual(response.data['document_revision'], 1)
-        path = '/v1/project/' + project_id + '/document/corporate/1'
+        self.assertEqual(response.data['document_major_version'], 1)
+        self.assertEqual(response.data['document_minor_version'], 0)
+        path = '/v1/project/' + project_id + '/document/corporate/1/0'
         response = hug.test.delete(cla.routes, path)
         self.assertEqual(response.data, {'success': True})
         response = hug.test.get(cla.routes,

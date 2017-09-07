@@ -37,7 +37,7 @@ def get_company(company_id):
 
 def create_company(company_name=None,
                    company_whitelist=None,
-                   company_exclude_patterns=None):
+                   company_whitelist_patterns=None):
     """
     Creates an company and returns the newly created company in dict format.
 
@@ -45,16 +45,17 @@ def create_company(company_name=None,
     :type company_name: string
     :param company_whitelist: The list of whitelisted domain names for this company.
     :type company_whitelist: [string]
-    :param company_exclude_patterns: List of exclude patterns for email addresses.
-    :type company_exclude_patterns: [string]
+    :param company_whitelist_patterns: List of whitelisted email patterns.
+    :type company_whitelist_patterns: [string]
     :return: dict representation of the company object.
     :rtype: dict
     """
     company = get_company_instance()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
+    # TODO: Need to validate these values.
     company.set_company_whitelist(company_whitelist)
-    company.set_company_exclude_patterns(company_exclude_patterns)
+    company.set_company_whitelist_patterns(company_whitelist_patterns)
     company.save()
     return company.to_dict()
 
@@ -62,7 +63,7 @@ def create_company(company_name=None,
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
                    company_whitelist=None,
-                   company_exclude_patterns=None):
+                   company_whitelist_patterns=None):
     """
     Updates an company and returns the newly updated company in dict format.
     A value of None means the field should not be updated.
@@ -73,8 +74,8 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     :type company_name: string | None
     :param company_whitelist: New whitelist for this company.
     :type company_whitelist: [string] | None
-    :param company_exclude_patterns: New exclude patterns list for this company.
-    :type company_exclude_patterns: [string] | None
+    :param company_whitelist_patterns: New company whitelisted email patterns.
+    :type company_whitelist_patterns: [string] | None
     :return: dict representation of the company object.
     :rtype: dict
     """
@@ -85,12 +86,14 @@ def update_company(company_id, # pylint: disable=too-many-arguments
         return {'errors': {'company_id': str(err)}}
     if company_name is not None:
         company.set_company_name(company_name)
+    # TODO: Need to validate these values.
     if company_whitelist is not None:
         val = hug.types.multiple(company_whitelist)
         company.set_company_whitelist(val)
-    if company_exclude_patterns is not None:
-        val = hug.types.multiple(company_exclude_patterns)
-        company.set_company_exclude_patterns(val)
+    # TODO: Need to validate these values.
+    if company_whitelist_patterns is not None:
+        val = hug.types.multiple(company_whitelist_patterns)
+        company.set_company_whitelist_patterns(val)
     company.save()
     return company.to_dict()
 

@@ -109,6 +109,20 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     repository_external_id = UnicodeAttribute(hash_key=True)
 
+class ExternalProjectIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying projects by external ID.
+    """
+    class Meta:
+        """Meta class for external ID project index."""
+        index_name = 'external-project-index'
+        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
+        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    project_external_id = UnicodeAttribute(hash_key=True)
 
 class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
@@ -172,7 +186,8 @@ class DocumentModel(MapAttribute):
     document_file_id = UnicodeAttribute(null=True)
     document_content_type = UnicodeAttribute() # pdf, url+pdf, storage+pdf, etc
     document_content = UnicodeAttribute(null=True) # None if using storage service.
-    document_revision = NumberAttribute(default=1)
+    document_major_version = NumberAttribute(default=1)
+    document_minor_version = NumberAttribute(default=0)
     document_author_name = UnicodeAttribute()
 
 
@@ -185,7 +200,8 @@ class Document(model_interfaces.Document):
                  document_file_id=None,
                  document_content_type=None,
                  document_content=None,
-                 document_revision=None,
+                 document_major_version=None,
+                 document_minor_version=None,
                  document_author_name=None):
         super().__init__()
         self.model = DocumentModel()
@@ -194,8 +210,10 @@ class Document(model_interfaces.Document):
         self.model.document_author_name = document_author_name
         self.model.document_content_type = document_content_type
         self.model.document_content = self.set_document_content(document_content)
-        if document_revision is not None:
-            self.model.document_revision = document_revision
+        if document_major_version is not None:
+            self.model.document_major_version = document_major_version
+        if document_minor_version is not None:
+            self.model.document_minor_version = document_minor_version
 
     def to_dict(self):
         return {'document_name': self.model.document_name,
@@ -203,7 +221,8 @@ class Document(model_interfaces.Document):
                 'document_content_type': self.model.document_content_type,
                 'document_content': self.model.document_content,
                 'document_author_name': self.model.document_author_name,
-                'document_revision': self.model.document_revision}
+                'document_major_version': self.model.document_major_version,
+                'document_minor_version': self.model.document_minor_version}
 
     def get_document_name(self):
         return self.model.document_name
@@ -227,8 +246,11 @@ class Document(model_interfaces.Document):
                 return cla.utils.get_storage_service().retrieve(filename)
         return self.model.document_content
 
-    def get_document_revision(self):
-        return self.model.document_revision
+    def get_document_major_version(self):
+        return self.model.document_major_version
+
+    def get_document_minor_version(self):
+        return self.model.document_minor_version
 
     def set_document_author_name(self, document_author_name):
         self.model.document_author_name = document_author_name
@@ -256,8 +278,11 @@ class Document(model_interfaces.Document):
         else:
             self.model.document_content = document_content
 
-    def set_document_revision(self, revision):
-        self.model.document_revision = revision
+    def set_document_major_version(self, version):
+        self.model.document_major_version = version
+
+    def set_document_minor_version(self, version):
+        self.model.document_minor_version = version
 
 
 class ProjectModel(BaseModel):
@@ -277,7 +302,7 @@ class ProjectModel(BaseModel):
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
     project_ccla_requires_icla_signature = BooleanAttribute()
-
+    project_external_id_index = ExternalProjectIndex()
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
@@ -346,43 +371,33 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             documents.append(document)
         return documents
 
-    def get_project_individual_document(self, revision=None):
-        num_documents = len(self.model.project_individual_documents)
+    def get_project_individual_document(self, major_version=None, minor_version=None):
+        document_models = self.get_project_individual_documents()
+        num_documents = len(document_models)
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
+        if major_version is None:
+            major_version, minor_version = cla.utils.get_last_version(document_models)
         # TODO Need to optimize this on the DB side.
-        latest_document = None
-        for document in self.model.project_individual_documents:
-            if document.document_revision == revision:
-                latest_document = document
-                break
-            if latest_document is None or \
-               document.document_revision > latest_document.document_revision:
-                latest_document = document
-        if latest_document is None:
-            raise cla.models.DoesNotExist('Document revision not found')
-        document = Document()
-        document.model = latest_document
-        return document
+        for document in document_models:
+            if document.get_document_major_version() == major_version and \
+               document.get_document_minor_version() == minor_version:
+                return document
+        raise cla.models.DoesNotExist('Document revision not found')
 
-    def get_project_corporate_document(self, revision=None):
-        num_documents = len(self.model.project_corporate_documents)
+    def get_project_corporate_document(self, major_version=None, minor_version=None):
+        document_models = self.get_project_corporate_documents()
+        num_documents = len(document_models)
         if num_documents < 1:
             raise cla.models.DoesNotExist('No corporate document exists for this project')
+        if major_version is None:
+            major_version, minor_version = cla.utils.get_last_version(document_models)
         # TODO Need to optimize this on the DB side.
-        latest_document = None
-        for document in self.model.project_corporate_documents:
-            if document.document_revision == revision:
-                latest_document = document
-                break
-            if latest_document is None or \
-               document.document_revision > latest_document.document_revision:
-                latest_document = document
-        if latest_document is None:
-            raise cla.models.DoesNotExist('Document revision not found')
-        document = Document()
-        document.model = latest_document
-        return document
+        for document in document_models:
+            if document.get_document_major_version() == major_version and \
+               document.get_document_minor_version() == minor_version:
+                return document
+        raise cla.models.DoesNotExist('Document revision not found')
 
     def get_project_ccla_requires_icla_signature(self):
         return self.model.project_ccla_requires_icla_signature
@@ -408,12 +423,14 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
 
     def remove_project_individual_document(self, document):
         new_documents = _remove_project_document(self.model.project_individual_documents,
-                                                 document.get_document_revision())
+                                                 document.get_document_major_version(),
+                                                 document.get_document_minor_version())
         self.model.project_individual_documents = new_documents
 
     def remove_project_corporate_document(self, document):
         new_documents = _remove_project_document(self.model.project_corporate_documents,
-                                                 document.get_document_revision())
+                                                 document.get_document_major_version(),
+                                                 document.get_document_minor_version())
         self.model.project_corporate_documents = new_documents
 
     def set_project_individual_documents(self, documents):
@@ -439,6 +456,15 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_approved=signature_approved,
                                                      signature_signed=signature_signed)
 
+    def get_project_by_external_id(self, project_external_id):
+        """Currently only returns the first one found."""
+        project_generator = self.model.project_external_id_index.query(project_external_id)
+        for project_model in project_generator:
+            project = Project()
+            project.model = project_model
+            return project
+        return None
+
     def all(self, project_ids=None):
         if project_ids is None:
             projects = self.model.scan()
@@ -451,13 +477,13 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             ret.append(proj)
         return ret
 
-
-def _remove_project_document(documents, revision):
+def _remove_project_document(documents, major_version, minor_version):
     # TODO Need to optimize this on the DB side - delete directly from list of records.
     new_documents = []
     found = False
     for document in documents:
-        if document.document_revision == revision:
+        if document.document_major_version == major_version and \
+           document.document_minor_version == minor_version:
             found = True
             if document.document_content_type.startswith('storage+'):
                 cla.utils.get_storage_service().delete(document.document_file_id)
@@ -1021,18 +1047,18 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         if str(whitelist_item) in self.model.company_whitelist:
             self.model.company_whitelist.remove(str(whitelist_item))
 
-    def set_company_whitelist_patterns(self, exclude_patterns):
-        self.model.company_whitelist_patterns = [str(ep) for ep in exclude_patterns]
+    def set_company_whitelist_patterns(self, whitelist_patterns):
+        self.model.company_whitelist_patterns = [str(wp) for wp in whitelist_patterns]
 
-    def add_company_exclude_pattern(self, exclude_pattern):
+    def add_company_whitelist_pattern(self, whitelist_pattern):
         if self.model.company_whitelist_patterns is None:
-            self.model.company_whitelist_patterns = [str(exclude_pattern)]
+            self.model.company_whitelist_patterns = [str(whitelist_pattern)]
         else:
-            self.model.company_whitelist_patterns.append(str(exclude_pattern))
+            self.model.company_whitelist_patterns.append(str(whitelist_pattern))
 
-    def remove_company_exclude_pattern(self, exclude_pattern):
-        if str(exclude_pattern) in self.model.company_whitelist_patterns:
-            self.model.company_whitelist_patterns.remove(str(exclude_pattern))
+    def remove_company_whitelist_pattern(self, whitelist_pattern):
+        if str(whitelist_pattern) in self.model.company_whitelist_patterns:
+            self.model.company_whitelist_patterns.remove(str(whitelist_pattern))
 
     def get_company_signatures(self, # pylint: disable=arguments-differ
                                signature_signed=None,

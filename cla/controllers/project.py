@@ -2,6 +2,7 @@
 Controller related to project operations.
 """
 
+import uuid
 import cla
 from cla.utils import get_project_instance, get_document_instance
 from cla.models import DoesNotExist
@@ -43,28 +44,32 @@ def get_project_by_external_id(project_external_id):
     :return: dict representation of the project object.
     :rtype: dict
     """
-    project = get_project_instance()
     try:
-        project.load(project_external_id=str(project_external_id))
+        p_instance = get_project_instance()
+        project = p_instance.get_project_by_external_id(str(project_external_id))
     except DoesNotExist as err:
         return {'errors': {'project_external_id': str(err)}}
     return project.to_dict()
 
 
-def create_project(project_id, project_name=None):
+def create_project(project_external_id, project_name, project_ccla_requires_icla_signature):
     """
     Creates a project and returns the newly created project in dict format.
 
-    :param project_id: The project's given ID.
-    :type project_id: string
+    :param project_external_id: The project's external ID.
+    :type project_external_id: string
     :param project_name: The project's name.
     :type project_name: string
+    :param project_ccla_requires_icla_signature: Whether or not the project requires ICLA with CCLA.
+    :type project_ccla_requires_icla_signature: bool
     :return: dict representation of the project object.
     :rtype: dict
     """
     project = get_project_instance()
-    project.set_project_id(str(project_id))
+    project.set_project_id(str(uuid.uuid4()))
+    project.set_project_external_id(str(project_external_id))
     project.set_project_name(project_name)
+    project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
     project.save()
     return project.to_dict()
 
@@ -126,16 +131,18 @@ def get_project_repositories(project_id):
     return [repository.to_dict() for repository in repositories]
 
 
-def get_project_document(project_id, document_type, revision=None):
+def get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
-    Returns the specified project's document based on type (ICLA or CCLA) and revision.
+    Returns the specified project's document based on type (ICLA or CCLA) and version.
 
     :param project_id: The ID of the project to fetch the document from.
     :type project_id: string
     :param document_type: The type of document (individual or corporate).
     :type document_type: string
-    :param revision: The revision number of the document to fetch.
-    :type revision: integer
+    :param major_version: The major version number.
+    :type major_version: integer
+    :param minor_version: The minor version number.
+    :type minor_version: integer
     """
     project = get_project_instance()
     try:
@@ -144,12 +151,12 @@ def get_project_document(project_id, document_type, revision=None):
         return {'errors': {'project_id': str(err)}}
     if document_type == 'individual':
         try:
-            document = project.get_project_individual_document(revision)
+            document = project.get_project_individual_document(major_version, minor_version)
         except DoesNotExist as err:
             return {'errors': {'document': str(err)}}
     else:
         try:
-            document = project.get_project_corporate_document(revision)
+            document = project.get_project_corporate_document(major_version, minor_version)
         except DoesNotExist as err:
             return {'errors': {'document': str(err)}}
     return document.to_dict()
@@ -186,18 +193,18 @@ def post_project_document(project_id,
     document.set_document_content_type(document_content_type)
     document.set_document_content(document_content)
     if document_type == 'individual':
-        revision = cla.utils.get_last_revision(project.get_project_individual_documents())
-        document.set_document_revision(revision + 1)
+        major, minor = cla.utils.get_last_version(project.get_project_individual_documents())
+        document.set_document_minor_version(minor + 1)
         project.add_project_individual_document(document)
     else:
-        revision = cla.utils.get_last_revision(project.get_project_corporate_documents())
-        document.set_document_revision(revision + 1)
+        major, minor = cla.utils.get_last_version(project.get_project_corporate_documents())
+        document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
     project.save()
     return project.to_dict()
 
 
-def delete_project_document(project_id, document_type, revision):
+def delete_project_document(project_id, document_type, major_version, minor_version):
     """
     Deletes the document from the specified project.
 
@@ -205,17 +212,19 @@ def delete_project_document(project_id, document_type, revision):
     :type project_id: string
     :param document_type: The type of document to remove (individual or corporate).
     :type document_type: string
-    :param revision: The document revision number to remove.
-    :type revision: integer
+    :param major_version: The document major version number to remove.
+    :type major_version: integer
+    :param minor_version: The document minor version number to remove.
+    :type minor_version: integer
     """
     project = get_project_instance()
     try:
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    document = cla.utils.get_project_document(project, document_type, revision)
+    document = cla.utils.get_project_document(project, document_type, major_version, minor_version)
     if document is None:
-        return {'errors': {'document': 'Document revision not found'}}
+        return {'errors': {'document': 'Document version not found'}}
     if document_type == 'individual':
         project.remove_project_individual_document(document)
     else:

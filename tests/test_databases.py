@@ -111,7 +111,8 @@ class DatabaseTestCase(CLATestCase):
         signature = get_signature_instance()
         signature.set_signature_id(signature_id)
         signature.set_signature_project_id(project_id)
-        signature.set_signature_document_revision(1)
+        signature.set_signature_document_major_version(1)
+        signature.set_signature_document_minor_version(0)
         signature.set_signature_reference_id(user_id)
         signature.set_signature_reference_type('user')
         signature.set_signature_type(signature_type)
@@ -171,7 +172,8 @@ class DatabaseTestCase(CLATestCase):
         signature = get_signature_instance()
         signature.set_signature_id(signature_id)
         signature.set_signature_project_id(project_id)
-        signature.set_signature_document_revision(1)
+        signature.set_signature_document_major_version(1)
+        signature.set_signature_document_minor_version(0)
         signature.set_signature_reference_id(user_id)
         signature.set_signature_reference_type('user')
         signature.set_signature_type(signature_type)
@@ -182,7 +184,7 @@ class DatabaseTestCase(CLATestCase):
         company_id = str(uuid.uuid4())
         name = 'Org name'
         whitelist = ['whitelist.org', 'okdomain.com']
-        exclude_patterns = ['^info@.*', '.*admin.*']
+        whitelist_patterns = ['^info@.*', '.*admin.*']
         company = get_company_instance()
         company.set_company_id(company_id + '-FAKE')
         company.set_company_name(name + ' Bad')
@@ -190,8 +192,8 @@ class DatabaseTestCase(CLATestCase):
         company.set_company_name(name)
         for wl_item in whitelist:
             company.add_company_whitelist(wl_item)
-        for excp in exclude_patterns:
-            company.add_company_exclude_pattern(excp)
+        for excp in whitelist_patterns:
+            company.add_company_whitelist_pattern(excp)
         company.save()
 
         # Re-load company by ID.
@@ -202,8 +204,8 @@ class DatabaseTestCase(CLATestCase):
                          company2.get_company_name())
         self.assertEqual(company.get_company_whitelist(),
                          company2.get_company_whitelist())
-        self.assertEqual(company.get_company_exclude_patterns(),
-                         company2.get_company_exclude_patterns())
+        self.assertEqual(company.get_company_whitelist_patterns(),
+                         company2.get_company_whitelist_patterns())
 
         # Test company not found query.
         company3 = get_company_instance()
@@ -228,22 +230,22 @@ class DatabaseTestCase(CLATestCase):
         self.assertTrue('safe.org' not in company4.get_company_whitelist())
         self.assertTrue('another.org' in company4.get_company_whitelist())
 
-        # Test add/remove exclude patterns.
-        company.set_company_exclude_patterns(['^admin@.*$'])
-        company.add_company_exclude_pattern('.*@blacklist.org')
-        self.assertTrue('^admin@.*$' in company.get_company_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' in company.get_company_exclude_patterns())
+        # Test add/remove whitelist patterns.
+        company.set_company_whitelist_patterns(['^admin@.*$'])
+        company.add_company_whitelist_pattern('.*@blacklist.org')
+        self.assertTrue('^admin@.*$' in company.get_company_whitelist_patterns())
+        self.assertTrue('.*@blacklist.org' in company.get_company_whitelist_patterns())
         company.save()
         company5 = get_company_instance()
         company5.load(company.get_company_id())
-        self.assertTrue('^admin@.*$' in company5.get_company_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' in company5.get_company_exclude_patterns())
-        company5.remove_company_exclude_pattern('.*@blacklist.org')
+        self.assertTrue('^admin@.*$' in company5.get_company_whitelist_patterns())
+        self.assertTrue('.*@blacklist.org' in company5.get_company_whitelist_patterns())
+        company5.remove_company_whitelist_pattern('.*@blacklist.org')
         company5.save()
         company5 = get_company_instance()
         company5.load(company.get_company_id())
-        self.assertTrue('^admin@.*$' in company5.get_company_exclude_patterns())
-        self.assertTrue('.*@blacklist.org' not in company5.get_company_exclude_patterns())
+        self.assertTrue('^admin@.*$' in company5.get_company_whitelist_patterns())
+        self.assertTrue('.*@blacklist.org' not in company5.get_company_whitelist_patterns())
 
         # Test JSON serialization.
         company_data = company.to_dict()
@@ -251,7 +253,7 @@ class DatabaseTestCase(CLATestCase):
         self.assertEqual(company_data['company_name'], name)
         self.assertEqual(company_data['company_whitelist'],
                          ['safe.org', 'another.org'])
-        self.assertEqual(company_data['company_exclude_patterns'],
+        self.assertEqual(company_data['company_whitelist_patterns'],
                          ['^admin@.*$', '.*@blacklist.org'])
 
         # Test loading all companys.
