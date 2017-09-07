@@ -249,9 +249,10 @@ def get_supported_repository_providers():
     :rtype: dict
     """
     from cla.models.github_models import GitHub, MockGitHub
-    from cla.models.gitlab_models import GitLab, MockGitLab
-    return {'github': GitHub, 'mock_github': MockGitHub,
-            'gitlab': GitLab, 'mock_gitlab': MockGitLab}
+    #from cla.models.gitlab_models import GitLab, MockGitLab
+    #return {'github': GitHub, 'mock_github': MockGitHub,
+            #'gitlab': GitLab, 'mock_gitlab': MockGitLab}
+    return {'github': GitHub, 'mock_github': MockGitHub}
 
 def get_repository_service(provider, initialize=True):
     """

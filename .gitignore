@@ -2,5 +2,10 @@ __pycache__
 build/
 tests/.coverage
 tests/cover/
+DynamoDBLocal_lib/
+DynamoDBLocal.jar
+docker-compose.yml
 *.egg*
 .lf
+*.swp
+*.pyc
