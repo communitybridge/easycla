@@ -44,8 +44,8 @@ setup(
                       'pygithub>=1.34.0,<2.0',
                       'pynamodb>=2.1.6,<3.0',
                       'python-gitlab>=0.21.2,<1.0',
-                      'requests-oauthlib>=0.8.0,<1.0',
-                      'git+https://github.com/ibotty/keycloak-python.git'],
+                      'requests-oauthlib>=0.8.0,<1.0'],
+                      #'git+https://github.com/ibotty/keycloak-python.git'],
     extras_require={'dev': ['pylint'], 'test': ['nose', 'coverage']},
     entry_points={'console_scripts': []},
 )
