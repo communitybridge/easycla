@@ -303,7 +303,7 @@ def get_supported_document_content_types(): # pylint: disable=invalid-name
     """
     return ['pdf', 'url+pdf', 'storage+pdf']
 
-def get_project_document(project, document_type, revision):
+def get_project_document(project, document_type, major_version, minor_version):
     """
     Helper function to get the specified document from a project.
 
@@ -311,8 +311,10 @@ def get_project_document(project, document_type, revision):
     :type project: cla.models.model_interfaces.Project
     :param document_type: The type of document (individual or corporate).
     :type document_type: string
-    :param revision: The revision number to look for.
-    :type revision: integer
+    :param major_version: The major version number to look for.
+    :type major_version: integer
+    :param minor_version: The minor version number to look for.
+    :type minor_version: integer
     :return: The document model if found.
     :rtype: cla.models.model_interfaces.Document
     """
@@ -321,22 +323,32 @@ def get_project_document(project, document_type, revision):
     else:
         documents = project.get_project_corporate_documents()
     for document in documents:
-        if document.get_document_revision() == revision:
+        if document.get_document_major_version() == major_version and \
+           document.get_document_minor_version() == minor_version:
             return document
     return None
 
-def get_last_revision(documents):
+def get_last_version(documents):
     """
-    Helper function to get the last revision of the list of documents provided.
+    Helper function to get the last version of the list of documents provided.
 
     :param documents: List of documents to check.
     :type documents: [cla.models.model_interfaces.Document]
+    :return: 2-item tuple containing (major, minor) version number.
+    :rtype: tuple
     """
-    last = 0
+    last_major = 0 # 0 will be returned if no document was found.
+    last_minor = -1 # -1 will be returned if no document was found.
     for document in documents:
-        if document.get_document_revision() > last:
-            last = document.get_document_revision()
-    return last
+        current_major = document.get_document_major_version()
+        current_minor = document.get_document_minor_version()
+        if current_major > last_major:
+            last_major = current_major
+            last_minor = current_minor
+            continue
+        if current_major == last_major and current_minor > last_minor:
+            last_minor = current_minor
+    return (last_major, last_minor)
 
 def user_signed_project_signature(user, repository):
     """

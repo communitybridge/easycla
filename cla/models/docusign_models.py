@@ -64,7 +64,8 @@ class DocuSign(signing_service_interface.SigningService):
             document = project.get_project_individual_document()
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
-        signature.set_signature_document_revision(document.get_document_revision())
+        signature.set_signature_document_major_version(document.get_document_major_version())
+        signature.set_signature_document_minor_version(document.get_document_minor_version())
         signature.set_signature_signed(False)
         signature.set_signature_approved(True)
         signature.set_signature_type('cla')

@@ -39,6 +39,7 @@ class CLATestCase(unittest.TestCase):
                     user_email='user@email.com',
                     user_name='User Name',
                     user_company_id=None,
+                    user_external_id=None,
                     user_github_id=12345):
         """Helper method to create a user."""
         data = {'user_email': user_email,
@@ -86,13 +87,13 @@ class CLATestCase(unittest.TestCase):
         return response.data
 
     def create_company(self,
-                            company_name='Org Name',
-                            company_whitelist=['safe.org'],
-                            company_exclude_patterns=['^info@.*']):
+                       company_name='Org Name',
+                       company_whitelist=['whitelisted@safe.org'],
+                       company_whitelist_patterns=['safe.org']):
         """Helper method to create companys."""
         data = {'company_name': company_name,
                 'company_whitelist': company_whitelist,
-                'company_exclude_patterns': company_exclude_patterns}
+                'company_whitelist_patterns': company_whitelist_patterns}
         response = hug.test.post(routes, '/v1/company', data)
         return response.data
 
@@ -109,11 +110,14 @@ class CLATestCase(unittest.TestCase):
                                  '/document/' + document_type, data)
         return response.data
 
-    def create_project(self, project_id=None, project_name='Project Name'):
+    def create_project(self, project_external_id='external-id', project_name='Project Name',
+                       project_ccla_requires_icla_signature=True):
         """Helper method to create a project."""
-        if project_id is None:
-            project_id = str(uuid.uuid4())
-        data = {'project_id': project_id, 'project_name': project_name}
+        project_id = str(uuid.uuid4())
+        data = {'project_id': project_id,
+                'project_external_id': project_external_id,
+                'project_ccla_requires_icla_signature': project_ccla_requires_icla_signature,
+                'project_name': project_name}
         response = hug.test.post(routes, '/v1/project', data)
         return response.data
 

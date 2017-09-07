@@ -93,7 +93,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
             document = project.get_project_corporate_document()
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
-    signature.set_signature_document_revision(document.get_document_revision())
+    signature.set_signature_document_minor_version(document.get_document_minor_version())
+    signature.set_signature_document_major_version(document.get_document_major_version())
     signature.set_signature_reference_id(str(signature_reference_id))
     signature.set_signature_reference_type(signature_reference_type)
     signature.set_signature_type(signature_type)

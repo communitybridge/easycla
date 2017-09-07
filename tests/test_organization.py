@@ -34,7 +34,7 @@ class CompanyTestCase(CLATestCase):
         self.assertTrue('errors' not in response)
         data = {'company_name': 'Org Name',
                 'company_whitelist': [],
-                'company_exclude_patterns': []}
+                'company_whitelist_patterns': []}
         missing_name = data.copy()
         del missing_name['company_name']
         response = hug.test.post(cla.routes, '/v1/company', missing_name)
@@ -43,10 +43,6 @@ class CompanyTestCase(CLATestCase):
         del missing_whitelist['company_whitelist']
         response = hug.test.post(cla.routes, '/v1/company', missing_whitelist)
         self.assertEqual(response.data, {'errors': {'company_whitelist': "Required parameter 'company_whitelist' not supplied"}})
-        missing_exclude_patterns = data.copy()
-        del missing_exclude_patterns['company_exclude_patterns']
-        response = hug.test.post(cla.routes, '/v1/company', missing_exclude_patterns)
-        self.assertEqual(response.data, {'errors': {'company_exclude_patterns': "Required parameter 'company_exclude_patterns' not supplied"}})
 
     def test_put_companys(self):
         """Tests for updating companys."""
@@ -61,13 +57,13 @@ class CompanyTestCase(CLATestCase):
                                                              'company_name': 'New Org Name'})
         self.assertEqual(response.data['company_name'], 'New Org Name')
         response = hug.test.put(cla.routes, '/v1/company', {'company_id': company['company_id'],
-                                                             'company_whitelist': ['@very-safe.org', '@super-safe.org']})
-        self.assertTrue('@very-safe.org' in response.data['company_whitelist'])
-        self.assertTrue('@super-safe.org' in response.data['company_whitelist'])
+                                                             'company_whitelist': ['user@very-safe.org', 'another-user@super-safe.org']})
+        self.assertTrue('user@very-safe.org' in response.data['company_whitelist'])
+        self.assertTrue('another-user@super-safe.org' in response.data['company_whitelist'])
         response = hug.test.put(cla.routes, '/v1/company', {'company_id': company['company_id'],
-                                                             'company_exclude_patterns': ['^admin@*', '^info@*']})
-        self.assertTrue('^admin@*' in response.data['company_exclude_patterns'])
-        self.assertTrue('^info@*' in response.data['company_exclude_patterns'])
+                                                             'company_whitelist_patterns': ['@ibm.com', '@info.ibm.*']})
+        self.assertTrue('@ibm.com' in response.data['company_whitelist_patterns'])
+        self.assertTrue('@info.ibm.*' in response.data['company_whitelist_patterns'])
 
     def test_delete_companys(self):
         """Tests for deleting companys."""
