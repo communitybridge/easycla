@@ -1,4 +1,6 @@
 __pycache__
 build/
+tests/.coverage
+tests/cover/
 *.egg*
 .lf
