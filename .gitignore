@@ -5,6 +5,7 @@ tests/cover/
 DynamoDBLocal_lib/
 DynamoDBLocal.jar
 docker-compose.yml
+cla_config.py
 *.egg*
 .lf
 *.swp
