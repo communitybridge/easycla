@@ -1143,23 +1143,27 @@ class GitHubOrgModel(BaseModel):
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
+    organization_project_id = UnicodeAttribute(null=True)
 
 
 class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
-    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None):
+    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None, organization_project_id=None):
         super(User).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
         self.model.organization_company_id = organization_company_id
         self.model.organization_installation_id = organization_installation_id
+        self.model.organization_project_id = organization_project_id
 
     def to_dict(self):
         ret = dict(self.model)
         if ret['organization_installation_id'] == 'null':
             ret['organization_installation_id'] = None
+        if ret['organization_project_id'] == 'null':
+            ret['organization_project_id'] = None
         return ret
 
     def save(self):
@@ -1184,6 +1188,9 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def get_organization_installation_id(self):
         return self.model.organization_installation_id
 
+    def get_organization_project_id(self):
+        return self.model.organization_project_id
+
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
 
@@ -1192,6 +1199,9 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
 
     def set_organization_installation_id(self, organization_installation_id):
         self.model.organization_installation_id = organization_installation_id
+
+    def set_organization_project_id(self, organization_project_id):
+        self.model.organization_project_id = organization_project_id
 
     def get_organizations_by_company(self, company_id):
         organization_generator = self.model.scan(organization_company_id__eq=str(company_id))
