@@ -107,6 +107,11 @@ def delete_organization(organization_name):
     github_organization.delete()
     return {'success': True}
 
+def user_oauth2_callback(code, state, request):
+    provider = 'github'
+    repository_id = ''
+    change_request_id = ''
+    return oauth2_redirect(state, code, repository_id, change_request_id, request)
 
 def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
@@ -117,7 +122,7 @@ def activity(body):
     if 'installation' in body:
 
         # New Installations
-        if body['action'] == 'created':
+        if 'action' in body and body['action'] == 'created':
             existing = get_organization(body['installation']['account']['login'])
             if 'errors' in existing:
                 org = create_organization(
@@ -143,8 +148,12 @@ def activity(body):
         if org_is_covered_by_cla(body['pull_request']['head']['repo']['owner']['login']):
 
             # New PR opened
-            if body['action'] == 'opened':
-                print('New PR opened!')
+            if body['action'] == 'opened' or body['action'] == 'reopened':
+                # Copied from repository_service.py
+                provider = 'github'
+                service = cla.utils.get_repository_service(provider)
+                result = service.received_activity(body)
+                return result
 
         # If the repo is not covered, post an annoying message on the Pull Request
         else:
@@ -167,11 +176,10 @@ def get_organization_repositories(organization_name):
 
 def org_is_covered_by_cla(owner):
     orgs = get_organizations()
-
     for org in orgs:
         # Org urls have to match and full enrollment has to be completed.
         if org['organization_name'] == owner and \
-                org['organization_company_id'] and \
+                org['organization_project_id'] and \
                 org['organization_installation_id']:
             return True
 

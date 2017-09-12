@@ -9,6 +9,7 @@ from github.GithubException import UnknownObjectException, BadCredentialsExcepti
 from requests_oauthlib import OAuth2Session
 import cla
 from cla.models import repository_service_interface, DoesNotExist
+from cla.controllers.github_application import GitHubInstallation
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -19,14 +20,15 @@ class GitHub(repository_service_interface.RepositoryService):
         self.client = None
 
     def initialize(self, config):
-        username = config['GITHUB_USERNAME']
-        token = config['GITHUB_TOKEN']
-        self.client = self._get_github_client(username, token)
+        #username = config['GITHUB_USERNAME']
+        #token = config['GITHUB_TOKEN']
+        #self.client = self._get_github_client(username, token)
+        pass
 
     def _get_github_client(self, username, token): # pylint: disable=no-self-use
         return github.Github(username, token)
 
-    def get_repository_id(self, repo_name):
+    def get_repository_id(self, repo_name, installation_id=None):
         """
         Helper method to get a GitHub repository ID based on repository name.
 
@@ -35,8 +37,11 @@ class GitHub(repository_service_interface.RepositoryService):
         :return: The repository ID.
         :rtype: integer
         """
+        client = self.client
+        if installation_id is not None:
+            client = get_github_integration_client(installation_id)
         try:
-            return self.client.get_repo(repo_name).id
+            return client.get_repo(repo_name).id
         except github.GithubException as err:
             cla.log.error('Could not find GitHub repository (%s), ensure it exists and that '
                           'your personal access token is configured with the repo scope', repo_name)
@@ -104,10 +109,10 @@ class GitHub(repository_service_interface.RepositoryService):
         :param scope: The list of OAuth2 scopes to request from GitHub.
         :type scope: [string]
         """
-        client_id = cla.conf['GITHUB_CLIENT_ID']
-        redirect_uri = cla.utils.get_redirect_uri('github', repository_id, pull_request_number)
-        return self._get_authorization_url_and_state(client_id,
-                                                     redirect_uri,
+        # redirect_uri was used for non-App OAuth on GitHub.
+        #redirect_uri = cla.utils.get_redirect_uri('github', repository_id, pull_request_number)
+        return self._get_authorization_url_and_state(cla.conf['GITHUB_APP_CLIENT_ID'],
+                                                     cla.conf['GITHUB_OAUTH_CALLBACK_URL'],
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
 
@@ -121,8 +126,7 @@ class GitHub(repository_service_interface.RepositoryService):
     def oauth2_redirect(self, state, code, repository_id, change_request_id, request): # pylint: disable=too-many-arguments
         """
         This is where the user will end up after having authorized the CLA system
-        to get information such as email address. GitHub redirects the user here
-        based on the redirect_uri we have provided in self.get_authorization_url_state()
+        to get information such as email address.
 
         It will handle storing the OAuth2 session information for this user for
         further requests and initiate the signing workflow.
@@ -133,7 +137,7 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.warning('Invalid GitHub OAuth2 state')
             raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
         cla.log.info('Attempting to fetch OAuth2 token for state %s', state)
-        client_id = cla.conf['GITHUB_CLIENT_ID']
+        client_id = cla.conf['GITHUB_APP_CLIENT_ID']
         state = session.get('github_oauth2_state')
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
         client_secret = cla.conf['GITHUB_SECRET']
@@ -183,6 +187,9 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         pull_request_id = data['pull_request']['number']
         github_repository_id = data['repository']['id']
+        installation_id = None
+        if 'installation' in data and 'id' in data['installation']:
+            installation_id = data['installation']['id']
         repository_instance = cla.utils.get_repository_instance()
         repository = repository_instance.get_repository_by_external_id(github_repository_id,
                                                                        'github')
@@ -199,15 +206,17 @@ class GitHub(repository_service_interface.RepositoryService):
                              'this GitHub project automatically')
                 repository = create_repository(data)
         if repository is not None:
-            self.update_change_request(repository, pull_request_id)
+            self.update_change_request(repository, pull_request_id, installation_id=installation_id)
 
     def get_return_url(self, repository_id, change_request_id):
         pull_request = self.get_pull_request(repository_id, change_request_id)
         return pull_request.html_url
 
-    def update_change_request(self, repository, change_request_id):
+    def update_change_request(self, repository, change_request_id, installation_id=None):
         github_repository_id = repository.get_repository_external_id()
-        pull_request = self.get_pull_request(github_repository_id, change_request_id)
+        pull_request = self.get_pull_request(github_repository_id,
+                                             change_request_id,
+                                             installation_id=installation_id)
         # Get all unique users involved in this PR.
         commit_authors = get_pull_request_commit_authors(pull_request)
         # Find users who have signed and who have not signed.
@@ -236,7 +245,7 @@ class GitHub(repository_service_interface.RepositoryService):
                             signed=signed,
                             missing=missing)
 
-    def get_pull_request(self, repository_id, pull_request_number):
+    def get_pull_request(self, repository_id, pull_request_number, installation_id=None):
         """
         Helper method to get the pull request object from GitHub.
 
@@ -244,9 +253,14 @@ class GitHub(repository_service_interface.RepositoryService):
         :type repository_id: int
         :param pull_request_number: The number (not ID) of the GitHub PR.
         :type pull_request_number: int
+        :param installation_id: The ID of the GitHub application installed on this repository.
+        :type installation_id: int | None
         """
         cla.log.debug('Getting PR %s from repository %s', pull_request_number, repository_id)
-        repo = self.client.get_repo(int(repository_id))
+        client = self.client
+        if installation_id is not None:
+            client = get_github_integration_client(installation_id)
+        repo = client.get_repo(int(repository_id))
         try:
             return repo.get_pull(int(pull_request_number))
         except UnknownObjectException:
@@ -264,7 +278,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :type request: Request
         """
         session = self._get_request_session(request)
-        github_user = self.get_user_data(session, cla.conf['GITHUB_CLIENT_ID'])
+        github_user = self.get_user_data(session, cla.conf['GITHUB_APP_CLIENT_ID'])
         if 'error' in github_user:
             # Could not get GitHub user data - maybe user revoked CLA app permissions?
             session = self._get_request_session(request)
@@ -595,6 +609,13 @@ def get_existing_cla_comment(pull_request):
         if '[![CLA Check](' in comment.body:
             cla.log.info('Found matching CLA comment for PR: %s', pull_request.number)
             return comment
+
+
+def get_github_integration_client(installation_id):
+    """
+    GitHub App integration client used for authenticated client actions through an installed app.
+    """
+    return GitHubInstallation(installation_id).api_object
 
 
 class MockGitHub(GitHub):

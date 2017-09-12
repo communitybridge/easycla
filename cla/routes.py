@@ -683,6 +683,8 @@ def oauth2_redirect(provider: hug.types.one_of(get_supported_repository_provider
     """
     GET: /repository-provider/{provider}/oauth2_redirect
 
+    FIXME: This has been deprecated in favor of GET:/github/installation for GitHub Apps.
+
     Handles the redirect from an OAuth2 provider when initiating a signature.
     """
     return cla.controllers.repository_service.oauth2_redirect(provider,
@@ -764,6 +766,15 @@ def delete_repository(organization_name: hug.types.text):
     """
     return cla.controllers.github.delete_organization(organization_name)
 
+@hug.get('/github/installation', versions=1)
+def github_oauth2_callback(code, state):
+    """
+    GET: /github/installation
+
+    GitHub will send the user to this endpoint when new OAuth2 handshake occurs.
+    This needs to match the callback used when users install the app as well (below).
+    """
+    return cla.controllers.github.user_oauth2_callback(code, state)
 
 @hug.post('/github/installation', versions=1)
 def github_app_installation(body):

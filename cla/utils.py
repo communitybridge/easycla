@@ -586,27 +586,6 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     authorization_url, state = oauth.authorization_url(authorize_url)
     return authorization_url, state
 
-def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=None): # pylint: disable=too-many-arguments
-    """
-    Helper function to fetch a OAuth2 session token.
-
-    :param client_id: The client ID for this OAuth2 session.
-    :type client_id: string
-    :param state: The OAuth2 session state.
-    :type state: string
-    :param token_url: The token URL for this OAuth2 session.
-    :type token_url: string
-    :param code: The OAuth2 session code.
-    :type code: string
-    :param redirect_uri: The redirect URI for this OAuth2 session.
-    :type redirect_uri: string
-    """
-    if redirect_uri is not None:
-        oauth2 = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
-    else:
-        oauth2 = OAuth2Session(client_id, state=state)
-    return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
-
 def redirect_user_by_signature(user, signature):
     """
     Helper method to redirect a user based on their signature status and return_url.
