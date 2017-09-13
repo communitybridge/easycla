@@ -26,9 +26,11 @@ def request_signature(project_id, user_id, ret_url, callback_url=None):
                                                    ret_url,
                                                    callback_url)
 
-def post_signed(content, repository_id, change_request_id):
+def post_signed(content, installation_id, github_repository_id, change_request_id):
     """
     Handle the posted callback from the signing service.
+
+    :TODO: Update comments.
 
     :param content: The POST body from the signing service callback.
     :type content: string
@@ -38,7 +40,7 @@ def post_signed(content, repository_id, change_request_id):
         initiated this signature.
     :type change_request_id: string
     """
-    get_signing_service().signed_callback(content, repository_id, change_request_id)
+    get_signing_service().signed_callback(content, installation_id, github_repository_id, change_request_id)
 
 def return_url(signature_id, event=None): # pylint: disable=unused-argument
     """

@@ -23,17 +23,17 @@ def change_icon(provider, signed=False):
     return cla.utils.change_icon(provider, signed)
 
 
-def oauth2_redirect(provider, state, code, repository_id, change_request_id, request): # pylint: disable=too-many-arguments
+def oauth2_redirect(provider, state, code, installation_id, github_repository_id, change_request_id, request): # pylint: disable=too-many-arguments
     """
     Properly triages the OAuth2 redirect to the appropriate provider.
     """
     service = cla.utils.get_repository_service(provider)
-    return service.oauth2_redirect(state, code, repository_id, change_request_id, request)
+    return service.oauth2_redirect(state, code, installation_id, github_repository_id, change_request_id, request)
 
 
-def sign_request(provider, repository_id, change_request_id, request):
+def sign_request(provider, installation_id, github_repository_id, change_request_id, request):
     """
     Properly triage the sign request to the appropriate provider.
     """
     service = cla.utils.get_repository_service(provider)
-    return service.sign_request(repository_id, change_request_id, request)
+    return service.sign_request(installation_id, github_repository_id, change_request_id, request)

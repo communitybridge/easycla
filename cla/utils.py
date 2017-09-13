@@ -350,19 +350,18 @@ def get_last_version(documents):
             last_minor = current_minor
     return (last_major, last_minor)
 
-def user_signed_project_signature(user, repository):
+def user_signed_project_signature(user, project_id):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
 
     :param user: The user object to check for.
     :type user: cla.models.model_interfaces.User
-    :param repository: The repository to check for.
-    :type repository: cla.models.model_interfaces.Repository
+    :param project_id: The project to check for.
+    :type project_id: string
     :return: Whether or not the user has an signature that's signed and approved
-        for this project based on repository.
+        for this project.
     :rtype: boolean
     """
-    project_id = repository.get_repository_project_id()
     signatures = user.get_user_signatures(project_id=project_id)
     num_signatures = len(signatures)
     if num_signatures > 0:
@@ -390,9 +389,11 @@ def user_signed_project_signature(user, repository):
                      project_id, user.get_user_email())
     return False
 
-def get_user_signature_by_repository(repository, user):
+def get_user_signature_by_github_repository(installation_id, user):
     """
     Helper function to get a user's signature for a specified repository.
+
+    :TODO: Update comments.
 
     :param repository: The Repository object.
     :type repository: cla.models.model_interfaces.Repository
@@ -401,15 +402,19 @@ def get_user_signature_by_repository(repository, user):
     :return: The signature for this user on this repository, or None if not found.
     :rtype: cla.models.model_interfaces.Signature | None
     """
-
-    project_id = repository.get_repository_project_id()
+    project_id = get_project_id_from_installation_id(installation_id)
     signatures = user.get_user_signatures(project_id=project_id)
     num_signatures = len(signatures)
     if num_signatures > 0:
         return signatures[0]
     return None
 
-def get_redirect_uri(repository_service, repository_id, change_request_id):
+def get_project_id_from_installation_id(installation_id):
+    github_org = get_github_organization_instance()
+    github_org = github_org.get_organization_by_installation_id(int(installation_id))
+    return github_org.get_organization_project_id()
+
+def get_redirect_uri(repository_service, installation_id, github_repository_id, change_request_id):
     """
     Function to generate the redirect_uri parameter for a repository service's OAuth2 process.
 
@@ -424,16 +429,19 @@ def get_redirect_uri(repository_service, repository_id, change_request_id):
     :return: The redirect_uri parameter expected by the OAuth2 process.
     :rtype: string
     """
-    params = {'repository_id': repository_id,
+    params = {'installation_id': installation_id,
+              'github_repository_id': github_repository_id,
               'change_request_id': change_request_id}
     params = urllib.parse.urlencode(params)
     return cla.conf['BASE_URL'] + '/v1/repository-provider/' + repository_service + \
            '/oauth2_redirect?' + params
 
-def get_full_sign_url(repository_service, repository_id, change_request_id):
+def get_full_sign_url(repository_service, installation_id, github_repository_id, change_request_id):
     """
     Helper function to get the full sign URL that the user should click to initiate the signing
     workflow.
+
+    :TODO: Update comments.
 
     :param repository_service: The repository service provider we're getting the sign url for.
         Should be one of the supported repository providers ('github', 'gitlab', etc).
@@ -448,7 +456,7 @@ def get_full_sign_url(repository_service, repository_id, change_request_id):
     :type change_request_id: int
     """
     return cla.conf['BASE_URL'] + '/v1/repository-provider/' + repository_service + '/sign/' + \
-           str(repository_id) + '/' + str(change_request_id)
+           str(installation_id) + '/' + str(github_repository_id) + '/' + str(change_request_id)
 
 def get_comment_badge(repository_type, all_signed, sign_url):
     """
@@ -488,9 +496,11 @@ def assemble_cla_status(author_name, signed=False):
         return 'Thank you for signing the CLA.'
     return 'Still missing CLA signature from %s.' %author_name
 
-def assemble_cla_comment(repository_type, repository_id, change_request_id, signed, missing):
+def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
     """
     Helper function to generate a CLA comment based on a a change request.
+
+    :TODO: Update comments
 
     :param repository_type: The type of repository this comment will be posted on ('github',
         'gitlab', etc).
@@ -507,7 +517,7 @@ def assemble_cla_comment(repository_type, repository_id, change_request_id, sign
     :type missing: [(string, string)]
     """
     num_missing = len(missing)
-    sign_url = get_full_sign_url(repository_type, repository_id, change_request_id)
+    sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
     badge = get_comment_badge(repository_type, all_signed, sign_url)
@@ -586,6 +596,27 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     authorization_url, state = oauth.authorization_url(authorize_url)
     return authorization_url, state
 
+def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=None): # pylint: disable=too-many-arguments
+    """
+    Helper function to fetch a OAuth2 session token.
+
+    :param client_id: The client ID for this OAuth2 session.
+    :type client_id: string
+    :param state: The OAuth2 session state.
+    :type state: string
+    :param token_url: The token URL for this OAuth2 session.
+    :type token_url: string
+    :param code: The OAuth2 session code.
+    :type code: string
+    :param redirect_uri: The redirect URI for this OAuth2 session.
+    :type redirect_uri: string
+    """
+    if redirect_uri is not None:
+        oauth2 = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
+    else:
+        oauth2 = OAuth2Session(client_id, state=state)
+    return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
+
 def redirect_user_by_signature(user, signature):
     """
     Helper method to redirect a user based on their signature status and return_url.
@@ -617,9 +648,11 @@ def redirect_user_by_signature(user, signature):
         cla.log.info('Signature exists, sending user to sign: %s (%s)', signature_id, sign_url)
         raise falcon.HTTPFound(sign_url)
 
-def request_signature(repository, user, change_request_id, callback_url=None):
+def request_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
     Helper function send the user off to sign an signature based on the repository.
+
+    :TODO: Update comments.
 
     :param repository: The repository object in question.
     :type repository: cla.models.model_interfaces.Repository
@@ -631,14 +664,13 @@ def request_signature(repository, user, change_request_id, callback_url=None):
         <SIGNED_CALLBACK_URL>/<repo_id>/<change_request_id>.
     :type callback_url: string
     """
-    project_id = repository.get_repository_project_id()
-    repo_id = repository.get_repository_id()
-    repo_service = get_repository_service(repository.get_repository_type())
-    return_url = repo_service.get_return_url(repository.get_repository_external_id(),
+    project_id = get_project_id_from_installation_id(installation_id)
+    repo_service = get_repository_service('github')
+    return_url = repo_service.get_return_url(github_repository_id,
                                              change_request_id)
     if callback_url is None:
         callback_url = cla.conf['SIGNED_CALLBACK_URL'] + \
-                       '/' + str(repo_id) + '/' + str(change_request_id)
+                       '/' + str(installation_id) + '/' + str(change_request_id)
     signing_service = get_signing_service()
     signature_data = signing_service.request_signature(project_id,
                                                        user.get_user_id(),
