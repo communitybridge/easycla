@@ -10,7 +10,7 @@ TEST_DOCUMENT_URL = 'https://github.com/cncf/cla/raw/master/individual-cla.pdf'
 PROJECT_EXTERNAL_ID = 'salesforce-id-here'
 # The GitHub user/org used for testing purposes.
 GITHUB_ORGANIZATION_NAME = 'linuxfoundation'
-GITHUB_INSTALLATION_ID = 5032
+GITHUB_INSTALLATION_ID = 52353 # NOT THE APP ID - find it in the webhook request JSON
 
 import sys
 sys.path.append('../')

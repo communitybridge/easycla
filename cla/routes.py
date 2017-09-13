@@ -613,10 +613,12 @@ def request_signature(project_id: hug.types.text,
                                                      callback_url)
 
 
-@hug.post('/signed/{repository_id}/{change_request_id}', versions=1)
-def post_signed(body, repository_id: hug.types.text, change_request_id: hug.types.text):
+@hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+def post_signed(body, installation_id: hug.types.text,
+                      github_repository_id: hug.types.text,
+                      change_request_id: hug.types.text):
     """
-    POST: /signed/{repository_id}/{change_request_id}
+    POST: /signed/{installation_id}/{github_repository_id}/{change_request_id}
 
     Callback URL from signing service upon signature.
 
@@ -625,7 +627,7 @@ def post_signed(body, repository_id: hug.types.text, change_request_id: hug.type
     /request-signature endpoint.
     """
     content = body.read()
-    return cla.controllers.signing.post_signed(content, repository_id, change_request_id)
+    return cla.controllers.signing.post_signed(content, installation_id, github_repository_id, change_request_id)
 
 
 @hug.get('/return-url/{signature_id}', versions=1)
@@ -645,18 +647,20 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
 #
 # Repository Provider Routes.
 #
-@hug.get('/repository-provider/{provider}/sign/{repository_id}/{change_request_id}', versions=1)
+@hug.get('/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
 def sign_request(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-                 repository_id: hug.types.text,
+                 installation_id: hug.types.text,
+                 github_repository_id: hug.types.text,
                  change_request_id: hug.types.text,
                  request):
     """
-    GET: /repository-provider/{provider}/sign/{repository_id}/{change_request_id}
+    GET: /repository-provider/{provider}/sign/{installation_id}/{repository_id}/{change_request_id}
 
     The endpoint that will initiate a CLA signature for the user.
     """
     return cla.controllers.repository_service.sign_request(provider,
-                                                           repository_id,
+                                                           installation_id,
+                                                           github_repository_id,
                                                            change_request_id,
                                                            request)
 
@@ -767,14 +771,14 @@ def delete_repository(organization_name: hug.types.text):
     return cla.controllers.github.delete_organization(organization_name)
 
 @hug.get('/github/installation', versions=1)
-def github_oauth2_callback(code, state):
+def github_oauth2_callback(code, state, request):
     """
     GET: /github/installation
 
     GitHub will send the user to this endpoint when new OAuth2 handshake occurs.
     This needs to match the callback used when users install the app as well (below).
     """
-    return cla.controllers.github.user_oauth2_callback(code, state)
+    return cla.controllers.github.user_oauth2_callback(code, state, request)
 
 @hug.post('/github/installation', versions=1)
 def github_app_installation(body):

@@ -5,7 +5,7 @@ import requests
 import hmac
 import cla
 from pprint import pprint
-from cla.utils import get_github_organization_instance
+from cla.utils import get_github_organization_instance, get_repository_service
 from cla.models import DoesNotExist
 from cla.controllers.github_application import GitHubInstallation
 
@@ -108,10 +108,8 @@ def delete_organization(organization_name):
     return {'success': True}
 
 def user_oauth2_callback(code, state, request):
-    provider = 'github'
-    repository_id = ''
-    change_request_id = ''
-    return oauth2_redirect(state, code, repository_id, change_request_id, request)
+    github = get_repository_service('github')
+    return github.oauth2_redirect(state, code, request)
 
 def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
@@ -149,6 +147,7 @@ def activity(body):
 
             # New PR opened
             if body['action'] == 'opened' or body['action'] == 'reopened':
+
                 # Copied from repository_service.py
                 provider = 'github'
                 service = cla.utils.get_repository_service(provider)

@@ -46,13 +46,15 @@ class RepositoryService(object):
         """
         raise NotImplementedError()
 
-    def update_change_request(self, repository, change_request_id):
+    def update_change_request(self, installation_id, github_repository_id, change_request_id):
         """
         This method should handle updating the pull request/change request in the
         repository provider in order to mirror the state of the signatures in the CLA DB.
 
         Will be called on change request creation/update, and after a user signs an signature.
         For GitHub, this should handle creating/updating the comment/status.
+
+        :TODO: Update comments.
 
         :param repository: The Repository in question.
         :type repository: cla.models.model_interfaces.Repository

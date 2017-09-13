@@ -154,7 +154,7 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting signature sign_url to %s', sign_url)
         signature.set_signature_sign_url(sign_url)
 
-    def signed_callback(self, content, repository_id, change_request_id):
+    def signed_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
         Will be called on signature callback, but also when a document has been
         opened by a user - no action required then.
@@ -190,7 +190,7 @@ class DocuSign(signing_service_interface.SigningService):
             user.load(signature.get_signature_reference_id())
             self.send_signed_document(envelope_id, user)
             # Update the repository provider with this change.
-            update_repository_provider(repository_id, change_request_id)
+            update_repository_provider(installation_id, github_repository_id, change_request_id)
 
     def send_signed_document(self, envelope_id, user):
         """Helper method to send the user their signed document."""
@@ -306,9 +306,7 @@ class MockDocuSign(DocuSign):
         """Mock method to send a signed DocuSign document to the user's email."""
         pass
 
-def update_repository_provider(repository_id, change_request_id):
+def update_repository_provider(installation_id, github_repository_id, change_request_id):
     """Helper method to notify the repository provider of successful signature."""
-    repo_provider = cla.utils.get_repository_service_by_repository(repository_id)
-    repository = cla.utils.get_repository_instance()
-    repository.load(repository_id)
-    repo_provider.update_change_request(repository, change_request_id)
+    repo_service = utils.get_repository_service('github')
+    repo_provider.update_change_request(installation_id, github_repository_id, change_request_id)
