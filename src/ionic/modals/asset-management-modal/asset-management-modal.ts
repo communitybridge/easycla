@@ -1,5 +1,5 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
+import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage, ActionSheetController  } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
@@ -47,6 +47,7 @@ export class AssetManagementModal {
     public toastCtrl: ToastController,
     private renderer: Renderer,
     public alertCtrl: AlertController,
+    public actionSheetCtrl: ActionSheetController
   ) {
     this.projectId = navParams.get('projectId');
     this.selectedFiles = [];
@@ -56,6 +57,26 @@ export class AssetManagementModal {
   }
 
   ngOnInit() {
+
+  }
+
+  ionViewDidEnter(){
+
+    this.cincoService.getProjectLogos(this.projectId).subscribe(response => {
+
+      // CINCO sample response
+      // classifier: "main"
+      // key:"logos/project/a090n000000uQhdAAE/main.png"
+      // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
+
+      console.log("getProjectLogos");
+      console.log(response);
+    });
+
+    this.cincoService.getProjectDocuments(this.projectId).subscribe(response => {
+      console.log("getProjectDocuments");
+      console.log(response);
+    });
 
   }
 
@@ -74,34 +95,6 @@ export class AssetManagementModal {
       //   type: 'file',
       //   lastUpdated: '3/3/2017',
       //   notes: 'Linux Foundation membership agreement'
-      // },
-      // {
-      //   id: 'A000000003',
-      //   name: 'Zephyr_project_membership_agreement.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: 'Project membership agreement, updated on March 2nd.'
-      // },
-      // {
-      //   id: 'A000000004',
-      //   name: 'Zephyr_sow.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: ''
-      // },
-      // {
-      //   id: 'A000000005',
-      //   name: 'Technical_steering_ctr.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: 'Technical steering charter, last updated March 1st'
-      // },
-      // {
-      //   id: 'A000000006',
-      //   name: 'Zephyr_Bylaws.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: ''
       // },
     ];
     this.folders = [
@@ -212,13 +205,45 @@ export class AssetManagementModal {
   * @param  {Event}  event should be a mouse click event
   */
   uploadClicked(event: Event) {
-
+    this.presentActionSheet();
     // trigger click event of hidden input
-    let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-    this.renderer.invokeElementMethod(
-      this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-    );
+    // let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+    // this.renderer.invokeElementMethod(
+    //   this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+    // );
   }
+
+  presentActionSheet() {
+    let actionSheet = this.actionSheetCtrl.create({
+      title: 'I want to upload a',
+      buttons: [
+        {
+        text: 'Logo',
+        role: 'logo',
+        handler: () => {
+          console.log('Logo clicked');
+          // trigger click event of hidden input
+          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+          this.renderer.invokeElementMethod(
+            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+          );
+        }
+      },{
+        text: 'Document',
+        handler: () => {
+          console.log('Upload clicked');
+        }
+      },{
+        text: 'Cancel',
+        role: 'cancel',
+        handler: () => {
+          console.log('Cancel clicked');
+        }
+      }
+    ]
+  });
+  actionSheet.present();
+}
 
   /**
   * Callback which is executed after files from native popup are selected.
