@@ -137,7 +137,7 @@ def get_users_company(user_company_id: hug.types.uuid):
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid):
     """
-    POST: /users/{user_id}/request-company-whitelist/{company_id}
+    POST: /user/{user_id}/request-company-whitelist/{company_id}
 
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
