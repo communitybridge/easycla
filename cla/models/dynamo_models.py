@@ -971,9 +971,7 @@ class CompanyModel(BaseModel):
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
-    # Not nullable because if a user isn't whitelisted in their company, they will request an email
-    # be sent to company manager. Can maybe handle this scenario in the UI? Or ignore the request?
-    company_manager_id = UnicodeAttribute()
+    company_manager_id = UnicodeAttribute(null=True)
     company_name = UnicodeAttribute()
     company_whitelist = ListAttribute()
     company_whitelist_patterns = ListAttribute()
