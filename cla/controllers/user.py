@@ -4,7 +4,7 @@ Controller related to user operations.
 
 import uuid
 import hug
-from cla.utils import get_user_instance
+from cla.utils import get_user_instance, get_company_instance, get_email_service
 from cla.models import DoesNotExist
 import cla
 
@@ -156,3 +156,47 @@ def get_users_company(user_company_id):
     """
     users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]
+
+def request_company_whitelist(user_id, company_id):
+    """
+    Sends email to the specified company manager notifying them that a user has requested to be
+    added to their whitelist.
+
+    :param user_id: The ID of the user requesting to be added to the company's whitelist.
+    :type user_id: string
+    :param company_id: The ID of the company that the request is going to.
+    :type company_id: string
+    """
+    user = get_user_instance()
+    try:
+        user.load(user_id)
+    except DoesNotExist as err:
+        return {'errors': {'user_id': str(err)}}
+    company = get_company_instance()
+    try:
+        company.load(company_id)
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+    subject = 'CLA: User requesting to be whitelisted'
+    body = '''The following user is requesting to be whitelisted as a contributor for your organization (%s):
+
+%s <%s>
+
+You can whitelist the user in the CLA console.
+If the user email above is the personal email of one of you employees, please request that they add
+their organization email to their GitHub profile and try signing the CLA again.
+If you are unsure about this request - it may be prudent to get in touch with the user to clarify.
+
+Please follow up with the user as necessary.
+
+- Linux Foundation CLA System
+''' %(company.get_company_name(), user.get_user_name(), user.get_user_email())
+    manager_id = company.get_company_manager_id()
+    manager = get_user_instance()
+    try:
+        manager.load(manager_id)
+    except DoesNotExist as err:
+        return {'errors': {'company_id': 'No manager exists for this company - can not send email'}}
+    recipient = manager.get_user_email()
+    email_service = get_email_service()
+    email_service.send(subject, body, recipient)
