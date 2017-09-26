@@ -1047,6 +1047,15 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_company_manager_id(self):
+        """
+        Getter for the company's CLA manager user ID.
+
+        :return: The company's CLA manager user ID.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def get_company_name(self):
         """
         Getter for an company's name.
@@ -1113,6 +1122,15 @@ class Company(object): # pylint: disable=too-many-public-methods
 
         :param company_external_id: The company's External ID.
         :type company_external_id: string
+        """
+        raise NotImplementedError()
+
+    def set_company_manager_id(self, company_manager_id):
+        """
+        Setter for the company manager ID.
+
+        :param company_manager_id: The company manager ID.
+        :type company_manager_id: string
         """
         raise NotImplementedError()
 

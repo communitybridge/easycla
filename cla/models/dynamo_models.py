@@ -971,6 +971,9 @@ class CompanyModel(BaseModel):
         read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
+    # Not nullable because if a user isn't whitelisted in their company, they will request an email
+    # be sent to company manager. Can maybe handle this scenario in the UI? Or ignore the request?
+    company_manager_id = UnicodeAttribute()
     company_name = UnicodeAttribute()
     company_whitelist = ListAttribute()
     company_whitelist_patterns = ListAttribute()
@@ -983,6 +986,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def __init__(self, # pylint: disable=too-many-arguments
                  company_id=None,
                  company_external_id=None,
+                 company_manager_id=None,
                  company_name=None,
                  company_whitelist_patterns=None,
                  company_whitelist=None):
@@ -990,6 +994,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         self.model = CompanyModel()
         self.model.company_id = company_id
         self.model.company_external_id = company_external_id
+        self.model.company_manager_id = company_manager_id
         self.model.company_name = company_name
         self.model.company_whitelist = company_whitelist
         self.model.company_whitelist_patterns = company_whitelist_patterns
@@ -1016,6 +1021,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_company_external_id(self):
         return self.model.company_external_id
 
+    def get_company_manager_id(self):
+        return self.model.company_manager_id
+
     def get_company_name(self):
         return self.model.company_name
 
@@ -1030,6 +1038,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
 
     def set_company_external_id(self, company_external_id):
         self.model.company_external_id = company_external_id
+
+    def set_company_manager_id(self, company_manager_id):
+        self.model.company_manager_id = company_manager_id
 
     def set_company_name(self, company_name):
         self.model.company_name = str(company_name)
