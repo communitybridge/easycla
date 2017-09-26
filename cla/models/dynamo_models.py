@@ -1005,7 +1005,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
 
     def load(self, company_id):
         try:
-            company = self.model.get(company_id)
+            company = self.model.get(str(company_id))
         except CompanyModel.DoesNotExist:
             raise cla.models.DoesNotExist('Company not found')
         self.model = company
