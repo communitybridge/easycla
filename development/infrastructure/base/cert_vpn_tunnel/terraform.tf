@@ -53,7 +53,7 @@ resource "aws_security_group" "it-vpn-tunnel" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["52.64.150.59/32"]
+    cidr_blocks = ["52.64.150.59/32", "13.210.89.242"]
   }
 
   egress {
