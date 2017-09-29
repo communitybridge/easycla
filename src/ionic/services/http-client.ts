@@ -13,6 +13,8 @@ export class HttpClient {
       'Accept': 'application/json',
       'Content-Type': contentType
     })
+    console.log("buildCINCOHeaders");
+    console.log(headers);
 
     return this.keycloak.getToken().then(
       (token) => {
@@ -27,7 +29,7 @@ export class HttpClient {
 
   buildS3Headers(contentType) {
     let headers = new Headers({
-      'Accept': 'application/json',
+      // 'Accept': 'application/json',
       'Content-Type': contentType
     })
 
@@ -66,10 +68,10 @@ export class HttpClient {
         .switchMap((headers) => this.http.delete(url, { headers: headers }));
   }
 
-  putS3(url, data, contentType) {
-    return Observable
-        .fromPromise(this.buildS3Headers(contentType))
-        .switchMap((headers) => this.http.put(url, data, { headers: headers }));
-  }
+  // putS3(url, data, contentType) {
+  //   return Observable
+  //       .fromPromise(this.buildS3Headers(contentType))
+  //       .switchMap((headers) => this.http.put(url, data, { headers: headers }));
+  // }
 
 }

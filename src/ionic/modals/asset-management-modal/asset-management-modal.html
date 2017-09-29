@@ -73,7 +73,7 @@
           <ion-icon name="cloud-upload"></ion-icon> Upload
         </button>
       </ion-buttons>
-      <input type="file" (change)="filesAdded($event)" style="display: none" #input multiple/>
+      <input type="file" (change)="filesAdded($event, uploadMode)" style="display: none" #input multiple/>
       <ion-buttons end>
         <button ion-button icon-right color="light" (click)="dismiss()">
           Close
