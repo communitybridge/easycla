@@ -100,8 +100,13 @@ export class CincoService {
   * That will actually upload the image.
   **/
   obtainLogoS3URL(projectId, classifier, image) {
+    console.log("obtainLogoS3URL call!!!!");
     return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image, image.contentType)
-      .map(res => res);
+      .map(res => {
+        console.log("obtainLogoS3URL res");
+        console.log(res);
+        return res;
+      });
   }
 
   /**
@@ -115,15 +120,21 @@ export class CincoService {
   * The response body contains details about the request. The putUrl.url property is where the real upload request should occur.
   * The putUrl.expiresOn property is an ISO-8601 timestamp indicating the last millisecond the putURL will be valid.
   **/
-  obtainDocumentS3URL(projectId, classifier, filename) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, null, filename.contentType)
-      .map(res => res);
+  obtainDocumentS3URL(projectId, classifier, filename, contentType) {
+    console.log("obtainDocumentS3URL call!!!!");
+    // return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, null, filename.contentType)
+    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, null, contentType)
+      .map(res => {
+        console.log("obtainDocumentS3URL res");
+        console.log(res);
+        return res;
+      });
   }
-
-  uploadToS3(S3URL, file, contentType) {
-    return this.http.putS3(S3URL, file, contentType)
-      .map((res) => res );
-  }
+  // 
+  // uploadToS3(S3URL, file, contentType) {
+  //   return this.http.putS3(S3URL, file, contentType)
+  //     .map((res) => res );
+  // }
 
   //////////////////////////////////////////////////////////////////////////////
 
