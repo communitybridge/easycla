@@ -23,6 +23,7 @@ export class AssetManagementModal {
 
   newLogoRef: string = "";
 
+  uploadMode: string = "";
   /**
    * Comma separated array of allowed file extensions
    */
@@ -222,6 +223,7 @@ export class AssetManagementModal {
         role: 'logo',
         handler: () => {
           console.log('Logo clicked');
+          this.uploadMode = "logo";
           // trigger click event of hidden input
           let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
           this.renderer.invokeElementMethod(
@@ -232,11 +234,18 @@ export class AssetManagementModal {
         text: 'Document',
         handler: () => {
           console.log('Upload clicked');
+          this.uploadMode = "document";
+          // trigger click event of hidden input
+          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+          this.renderer.invokeElementMethod(
+            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+          );
         }
       },{
         text: 'Cancel',
         role: 'cancel',
         handler: () => {
+          this.uploadMode = "";
           console.log('Cancel clicked');
         }
       }
@@ -249,36 +258,71 @@ export class AssetManagementModal {
   * Callback which is executed after files from native popup are selected.
   * @param  {Event}    event change event containing selected files
   */
-  filesAdded(event: Event): void {
+  filesAdded(event: Event, uploadMode: string): void {
+    console.log("uploadMode: ", uploadMode);
     let addedFiles: FileList = this.nativeInputBtn.nativeElement.files;
 
     for(let i=0; i< addedFiles.length; i++) {
       let file = addedFiles.item(i);
       let contentType;
-      this.classifier = "main";
+
 
       let valid = this.validateFile(file);
       if(valid) {
 
+        contentType = file.type;
+
         let reader = new FileReader();
         reader.onload = event => {
 
-          const imgBase64 = (<any>event).target.result;
-          contentType = file.type
-          this.image = {
-            imageBytes: imgBase64,
-            contentType: contentType
-          }
-          this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
-            if(response.url) {
-              let S3URL = response.url;
-              this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
-                // This is to refresh an image that have same URL
-                this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
-                this.dismiss();
-              });
+          if(uploadMode == 'logo') {
+            this.classifier = "main";
+            const imgBase64 = (<any>event).target.result;
+            this.image = {
+              imageBytes: imgBase64,
+              contentType: contentType
             }
-          });
+            this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+              if(response.url) {
+                let S3URL = response.url;
+                console.log("S3URL");
+                console.log(S3URL);
+              }
+            });
+          }
+          else if (uploadMode == 'document') {
+            this.classifier = 'minutes';
+
+            console.log("this.classifier: ", this.classifier);
+            contentType = file.type;
+            console.log("file");
+            console.log(file);
+            console.log("file.name");
+            console.log(file.name);
+            console.log("contentType");
+            console.log(contentType);
+
+            this.cincoService.obtainDocumentS3URL(this.projectId, this.classifier, file.name, contentType).subscribe(response => {
+              console.log("obtainDocumentS3URL");
+              console.log(response);
+              if(response.url) {
+                let S3URL = response.url;
+                console.log("S3URL");
+                console.log(S3URL);
+                console.log("file");
+                console.log(file);
+                console.log("contentType");
+                console.log(contentType);
+                this.dismiss();
+              }
+            });
+          }
+          else {
+            this.dismiss();
+          }
+
+
+
         }
         reader.readAsDataURL(file);
 
