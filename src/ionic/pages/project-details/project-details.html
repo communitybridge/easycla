@@ -17,16 +17,16 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-        <div *ngIf="!project.logoRef" name="logo-placeholder" text-center>
+        <div *ngIf="!project.config.logoRef" name="logo-placeholder" text-center>
           <ion-icon class="change-link" (click)="openAssetManagementModal()" name="image"></ion-icon>
           <div name="change-placeholder">
             <ion-label class="change-link" (click)="openAssetManagementModal()">CHANGE</ion-label>
           </div>
         </div>
-        <div *ngIf="project.logoRef" name="logo-placeholder" text-center>
-          <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+        <div *ngIf="project.config.logoRef" name="logo-placeholder" text-center>
+          <img class="change-link" (click)="openAssetManagementModal()" src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
           <div name="change-placeholder">
-            <ion-label (click)="openAssetManagementModal()">CHANGE</ion-label>
+            <ion-label class="change-link" (click)="openAssetManagementModal()">CHANGE</ion-label>
           </div>
         </div>
       </ion-col>
