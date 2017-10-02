@@ -1,7 +1,4 @@
-asset-management-modal {
-  .asset-management-modal-wrapper {
-    height: 100%;
-  }
+cla-corporate-member-options-modal {
   .selected-show {
     padding-left: 2rem;
     padding-right: 1rem;
@@ -9,9 +6,11 @@ asset-management-modal {
   ion-title ion-icon {
     vertical-align: text-bottom;
   }
+
   .content.selected .scroll-content {
     bottom: 45px;
   }
+
   tr {
     border-bottom: 1px solid #f5f5f5;
   }
