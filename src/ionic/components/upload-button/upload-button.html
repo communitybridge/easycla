@@ -15,7 +15,7 @@
               <ion-icon class="file_list-icon" name="document"></ion-icon>
               {{file.name}}
             </span>
-            <span icon-right class="file_list-more" (click)="presentPopover($event, index)" (popoverNotice)="popoverResponse(eventInfo)">
+            <span icon-right class="file_list-more" (click)="presentPopover($event, index)" (popoverNotice)="popoverNotice(eventInfo)">
               <ion-icon name="more"></ion-icon>
             </span>
           </div>

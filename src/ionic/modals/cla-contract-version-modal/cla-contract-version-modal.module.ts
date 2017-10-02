@@ -1,22 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ProjectPage } from './project';
+import { ClaContractVersionModal } from './cla-contract-version-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
   declarations: [
-    ProjectPage,
+    ClaContractVersionModal
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    SortingDisplayComponentModule,
-    IonicPageModule.forChild(ProjectPage)
+    IonicPageModule.forChild(ClaContractVersionModal)
   ],
   entryComponents: [
-    ProjectPage,
+    ClaContractVersionModal
   ]
 })
-export class ProjectPageModule {}
+export class ClaContractVersionModalModule {}
