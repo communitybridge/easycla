@@ -55,7 +55,12 @@ export class UploadButtonComponent {
    */
   @Output() notify: EventEmitter<Array<any>> = new EventEmitter<Array<any>>();
 
-  constructor(private renderer: Renderer, private popoverCtrl: PopoverController, public toastCtrl: ToastController) {
+  constructor(
+    private renderer: Renderer,
+    private popoverCtrl: PopoverController,
+    public toastCtrl: ToastController,
+  ) {
+
   }
 
   ngOnInit() {
