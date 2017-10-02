@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Connect Github CLA App
+    </ion-title>
+
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <p>Directions on connecting your organization with the github cla app</p>
+        <button ion-button icon-right color="secondary">
+          Install the GitHub CLA App
+        </button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="secondary" (click)="dismiss()">
+        Done
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
