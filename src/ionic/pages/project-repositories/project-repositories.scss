@@ -1,0 +1,72 @@
+project-repositories {
+
+  ion-content .scroll-content > header {
+    padding-bottom: 0;
+  }
+  header {
+    ion-segment {
+      width: calc(100% + 32px);
+      margin-left: -16px;
+      border-top-width: 2px;
+      border-top-style: solid;
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .segment-md .segment-button {
+      border-bottom-color: transparent;
+    }
+  }
+
+  ion-datetime {
+    color:#000 !important;
+    background: none !important;
+    opacity: 1 !important;
+  }
+
+  ion-icon[name=image] {
+    font-size: 90px;
+  }
+
+  h2 ion-buttons[end] {
+    float: right;
+  }
+
+  .contract-title-buttons {
+    float: right;
+    ion-icon {
+      font-size: 2.4rem;
+    }
+  }
+
+  .add-organizations {
+    text-align: center;
+    width: 100%;
+  }
+
+  .contract-group {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 2px solid #888;
+    .header-row {
+      display: flex;
+      align-items: center;
+      h2 {
+        margin: 0;
+      }
+      ion-buttons[start] {
+        flex-grow: 1;
+      }
+    }
+  }
+
+  .organizations ion-card {
+    position: relative;
+  }
+
+  .organization-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+}

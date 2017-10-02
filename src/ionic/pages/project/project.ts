@@ -22,6 +22,12 @@ export class ProjectPage {
   membersCount: number;
   loading: any;
   sort: any;
+  tab = 'membership';
+
+  contracts: any;
+
+  iclaUploadInfo: any;
+  cclaUploadInfo: any;
 
   constructor(
     public navCtrl: NavController,
@@ -107,6 +113,26 @@ export class ProjectPage {
       projectId: this.projectId,
     });
     modal.present();
+  }
+
+  openClaContractConfigModal(contract) {
+    let modal = this.modalCtrl.create('ClaContractConfigModal', {
+      contract: contract,
+    });
+    modal.present();
+  }
+
+  openClaContractUploadModal(uploadInfo) {
+    let modal = this.modalCtrl.create('ClaContractUploadModal', {
+      uploadInfo: uploadInfo,
+    });
+    modal.present();
+  }
+
+  openProjectRepositoriesPage() {
+    this.navCtrl.push('ProjectRepositoriesPage', {
+      projectId: this.projectId
+    });
   }
 
   getDefaults() {

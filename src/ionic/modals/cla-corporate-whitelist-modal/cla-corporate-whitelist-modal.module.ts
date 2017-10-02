@@ -1,22 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ProjectPage } from './project';
+import { ClaCorporateWhitelistModal } from './cla-corporate-whitelist-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
   declarations: [
-    ProjectPage,
+    ClaCorporateWhitelistModal
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    SortingDisplayComponentModule,
-    IonicPageModule.forChild(ProjectPage)
+    IonicPageModule.forChild(ClaCorporateWhitelistModal)
   ],
   entryComponents: [
-    ProjectPage,
+    ClaCorporateWhitelistModal
   ]
 })
-export class ProjectPageModule {}
+export class ClaCorporateWhitelistModalModule {}
