@@ -15,12 +15,12 @@
         <ion-col col-12 col-md-9>
           <ion-row>
             <ion-col col-12 col-md-4>
-              <div *ngIf="!project.logoRef" text-center>
+              <div *ngIf="!project.config.logoRef" text-center>
                 <ion-icon name="image"></ion-icon>
                 <ion-label>Change logo in <a class="project-details-link" (click)="viewProjectDetails(project.id)">Project Details</a></ion-label>
               </div>
-              <div *ngIf="project.logoRef">
-                <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+              <div *ngIf="project.config.logoRef">
+                <img src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
               </div>
             </ion-col>
             <ion-col col-12 col-md-8>

@@ -1,5 +1,5 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
+import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage, ActionSheetController  } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service'
 
 @IonicPage({
@@ -21,6 +21,9 @@ export class AssetManagementModal {
   selectedFiles: any;
   loading: any;
 
+  newLogoRef: string = "";
+
+  uploadMode: string = "";
   /**
    * Comma separated array of allowed file extensions
    */
@@ -45,6 +48,7 @@ export class AssetManagementModal {
     public toastCtrl: ToastController,
     private renderer: Renderer,
     public alertCtrl: AlertController,
+    public actionSheetCtrl: ActionSheetController
   ) {
     this.projectId = navParams.get('projectId');
     this.selectedFiles = [];
@@ -54,6 +58,26 @@ export class AssetManagementModal {
   }
 
   ngOnInit() {
+
+  }
+
+  ionViewDidEnter(){
+
+    this.cincoService.getProjectLogos(this.projectId).subscribe(response => {
+
+      // CINCO sample response
+      // classifier: "main"
+      // key:"logos/project/a090n000000uQhdAAE/main.png"
+      // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
+
+      console.log("getProjectLogos");
+      console.log(response);
+    });
+
+    this.cincoService.getProjectDocuments(this.projectId).subscribe(response => {
+      console.log("getProjectDocuments");
+      console.log(response);
+    });
 
   }
 
@@ -73,34 +97,6 @@ export class AssetManagementModal {
       //   lastUpdated: '3/3/2017',
       //   notes: 'Linux Foundation membership agreement'
       // },
-      // {
-      //   id: 'A000000003',
-      //   name: 'Zephyr_project_membership_agreement.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: 'Project membership agreement, updated on March 2nd.'
-      // },
-      // {
-      //   id: 'A000000004',
-      //   name: 'Zephyr_sow.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: ''
-      // },
-      // {
-      //   id: 'A000000005',
-      //   name: 'Technical_steering_ctr.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: 'Technical steering charter, last updated March 1st'
-      // },
-      // {
-      //   id: 'A000000006',
-      //   name: 'Zephyr_Bylaws.pdf',
-      //   type: 'file',
-      //   lastUpdated: '3/3/2017',
-      //   notes: ''
-      // },
     ];
     this.folders = [
       {
@@ -112,7 +108,7 @@ export class AssetManagementModal {
 
   // ContactUpdateModal modal dismiss
   dismiss() {
-    this.viewCtrl.dismiss();
+    this.viewCtrl.dismiss(this.newLogoRef);
   }
 
   selectFile(event, file) {
@@ -210,44 +206,123 @@ export class AssetManagementModal {
   * @param  {Event}  event should be a mouse click event
   */
   uploadClicked(event: Event) {
-
+    this.presentActionSheet();
     // trigger click event of hidden input
-    let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-    this.renderer.invokeElementMethod(
-      this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-    );
+    // let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+    // this.renderer.invokeElementMethod(
+    //   this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+    // );
   }
+
+  presentActionSheet() {
+    let actionSheet = this.actionSheetCtrl.create({
+      title: 'I want to upload a',
+      buttons: [
+        {
+        text: 'Logo',
+        role: 'logo',
+        handler: () => {
+          console.log('Logo clicked');
+          this.uploadMode = "logo";
+          // trigger click event of hidden input
+          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+          this.renderer.invokeElementMethod(
+            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+          );
+        }
+      },{
+        text: 'Document',
+        handler: () => {
+          console.log('Upload clicked');
+          this.uploadMode = "document";
+          // trigger click event of hidden input
+          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+          this.renderer.invokeElementMethod(
+            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+          );
+        }
+      },{
+        text: 'Cancel',
+        role: 'cancel',
+        handler: () => {
+          this.uploadMode = "";
+          console.log('Cancel clicked');
+        }
+      }
+    ]
+  });
+  actionSheet.present();
+}
 
   /**
   * Callback which is executed after files from native popup are selected.
   * @param  {Event}    event change event containing selected files
   */
-  filesAdded(event: Event): void {
+  filesAdded(event: Event, uploadMode: string): void {
+    console.log("uploadMode: ", uploadMode);
     let addedFiles: FileList = this.nativeInputBtn.nativeElement.files;
 
     for(let i=0; i< addedFiles.length; i++) {
       let file = addedFiles.item(i);
       let contentType;
-      this.classifier = "main";
+
 
       let valid = this.validateFile(file);
       if(valid) {
 
+        contentType = file.type;
+
         let reader = new FileReader();
         reader.onload = event => {
 
-          const imgBase64 = (<any>event).target.result;
-          contentType = file.type
-          this.image = {
-            imageBytes: imgBase64,
-            contentType: contentType
-          }
-          this.cincoService.obtainS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
-            if(response.putUrl) {
-              let S3URL = response.putUrl.url;
-              this.cincoService.uploadLogo(S3URL, file, contentType).subscribe(response => {});
+          if(uploadMode == 'logo') {
+            this.classifier = "main";
+            const imgBase64 = (<any>event).target.result;
+            this.image = {
+              imageBytes: imgBase64,
+              contentType: contentType
             }
-          });
+            this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+              if(response.url) {
+                let S3URL = response.url;
+                console.log("S3URL");
+                console.log(S3URL);
+              }
+            });
+          }
+          else if (uploadMode == 'document') {
+            this.classifier = 'minutes';
+
+            console.log("this.classifier: ", this.classifier);
+            contentType = file.type;
+            console.log("file");
+            console.log(file);
+            console.log("file.name");
+            console.log(file.name);
+            console.log("contentType");
+            console.log(contentType);
+
+            this.cincoService.obtainDocumentS3URL(this.projectId, this.classifier, file.name, contentType).subscribe(response => {
+              console.log("obtainDocumentS3URL");
+              console.log(response);
+              if(response.url) {
+                let S3URL = response.url;
+                console.log("S3URL");
+                console.log(S3URL);
+                console.log("file");
+                console.log(file);
+                console.log("contentType");
+                console.log(contentType);
+                this.dismiss();
+              }
+            });
+          }
+          else {
+            this.dismiss();
+          }
+
+
+
         }
         reader.readAsDataURL(file);
 

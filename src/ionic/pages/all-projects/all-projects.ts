@@ -72,7 +72,7 @@ export class AllProjectsPage {
     }
   }
 
-  ngOnInit(){
+  async ngOnInit(){
     this.getAllProjects();
     this.getCurrentUser();
     // this.keycloak.profile()
@@ -90,6 +90,12 @@ export class AllProjectsPage {
   getAllProjects(){
     this.cincoService.getAllProjects().subscribe(response => {
         this.allProjects = response;
+        for(let eachProject of this.allProjects) {
+          // After uploading a logo, Cinco will provide same name,
+          // so a refresh to the image needs to be forced.
+          // This is to refresh an image that have same URL
+          if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
+        }
         this.loading.projects = false;
     });
   }
