@@ -11,6 +11,7 @@ export class ProjectModel {
   sector: string;
   url: string;
   startDate: string;
+  logoRef: string;
   agreementRef: string;
   mailingListType: string;
   emailAliasType: string;

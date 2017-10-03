@@ -177,6 +177,7 @@ export class ProjectDetailsPage {
       category: "",
       sector: "",
       url: "",
+      logoRef: "",
       startDate: "",
       agreementRef: "",
       mailingListType: "",

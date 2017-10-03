@@ -142,6 +142,7 @@ export class ProjectPage {
       category: "",
       sector: "",
       url: "",
+      logoRef: "",
       startDate: "",
       agreementRef: "",
       mailingListType: "",
