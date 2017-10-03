@@ -5,23 +5,26 @@ import os
 
 @gossip.register('local.instance.init.docker-compose', tags=['cla-console'])
 def local_init_docker_compose_file(containers, config, dependencies, envs, mode, path):
-    if len(dependencies) >= 1:
-        platform_instance = dependencies[0]
-        docker_config = lf.utils.loadYaml(os.path.join(platform_instance.path, 'docker-compose.yml'))
+    platform = dependencies.get('cinco')
 
-        envs = docker_config['services']['workspace']['environment']
-        kc_endpoint = [x for k, x in envs.items() if k == 'KEYCLOAK_SERVER_URL'][0]
-        kc_instance = platform_instance.dependencies.get('keycloak')
+    if platform:
+        cinco_endpoint = platform.endpoints.containers.get('workspace', 5000).formatted
+        containers['workspace']['environment']['CINCO_SERVER_URL'] = cinco_endpoint
+        lf.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
 
-        kc_port = kc_endpoint.split(':')[2]
-        containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = 'http://' + kc_instance.containers.bridge_ip + ':' + kc_port
-        lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
+        keycloak = platform.instance.dependencies.get('keycloak')
 
-        for key, port in enumerate(docker_config['services']['workspace']['ports']):
-            p = port.split(':')
-            if p[1] == '5000':
-                containers['workspace']['environment']['CINCO_SERVER_URL'] = 'http://' + platform_instance.containers.bridge_ip + ':' + p[0]
-                lf.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
+        if keycloak:
+            kc_endpoint = keycloak.endpoints.containers.get('workspace', 8080).formatted
+            containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = kc_endpoint
+            lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
+
+    cla = dependencies.get('cla')
+
+    if cla:
+        cla_endpoint = cla.endpoints.containers.get('workspace', 5000).formatted
+        containers['workspace']['environment']['CLA_SERVER_URL'] = cla_endpoint
+        lf.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
 
 
 @gossip.register('preprod_instance_task_build', tags=['cla-console'])
