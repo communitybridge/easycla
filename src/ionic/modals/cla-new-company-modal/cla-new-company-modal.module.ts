@@ -5,7 +5,7 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
-import { ClipboardModule } from 'ngx-clipboard';
+// import { ClipboardModule } from 'ngx-clipboard';
 
 @NgModule({
   declarations: [
@@ -15,7 +15,7 @@ import { ClipboardModule } from 'ngx-clipboard';
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
-    ClipboardModule,
+    // ClipboardModule,
     IonicPageModule.forChild(ClaNewCompanyModal)
   ],
   entryComponents: [
