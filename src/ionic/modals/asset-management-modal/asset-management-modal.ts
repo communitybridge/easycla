@@ -282,11 +282,21 @@ export class AssetManagementModal {
               imageBytes: imgBase64,
               contentType: contentType
             }
+            console.log("test!");
             this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+              console.log("obtainLogoS3URL response");
+              console.log(response);
               if(response.url) {
                 let S3URL = response.url;
                 console.log("S3URL");
                 console.log(S3URL);
+
+                this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
+                   // This is to refresh an image that have same URL
+                   this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
+                   this.dismiss();
+                 });
+
               }
             });
           }
