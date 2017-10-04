@@ -8,7 +8,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.linuxfoundation.org:zaclittleberry/lf-theme.git"
+    "url": "git@github.linuxfoundation.org:engineering-npm-modules/lf-theme.git"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.engineering.tux.rocks/repository/npm-private/"
   },
   "author": "",
   "license": "UNLICENSED"
