@@ -164,7 +164,6 @@ class GitHub(repository_service_interface.RepositoryService):
                       '/cla/project/' + project_id + \
                       '/user/' + user.get_user_id() + \
                       '?redirect=' + redirect
-        print(console_url)
         raise falcon.HTTPFound(console_url)
 
     def _fetch_token(self, client_id, state, token_url, client_secret, code): # pylint: disable=too-many-arguments,no-self-use
@@ -645,7 +644,9 @@ class MockGitHub(GitHub):
     def _get_request_session(self, request):
         if self.oauth2_token:
             return {'github_oauth2_token': 'random-token',
-                    'github_oauth2_state': 'random-state'}
+                    'github_oauth2_state': 'random-state',
+                    'github_origin_url': 'http://github/origin/url',
+                    'github_installation_id': 1}
         return {}
 
     def get_user_data(self, session, client_id):
