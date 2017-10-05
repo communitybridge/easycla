@@ -2,7 +2,6 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from  '../../validators/email';
-import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -11,7 +10,7 @@ import { CincoService } from '../../services/cinco.service';
   selector: 'cla-employee-request-access-modal',
   templateUrl: 'cla-employee-request-access-modal.html',
   providers: [
-    CincoService,
+
   ]
 })
 export class ClaEmployeeRequestAccessModal {
@@ -31,7 +30,6 @@ export class ClaEmployeeRequestAccessModal {
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
-    private cincoService: CincoService,
     private formBuilder: FormBuilder,
   ) {
     this.getDefaults();
@@ -58,7 +56,6 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   submit() {
-    console.log('submit');
     this.openClaMessageSentPage();
   }
 
