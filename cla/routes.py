@@ -135,14 +135,16 @@ def get_users_company(user_company_id: hug.types.uuid):
     return cla.controllers.user.get_users_company(user_company_id)
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
-def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid):
+def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid, message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
+
+    DATA: {'message': 'custom message to manager'}
 
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
     """
-    return cla.controllers.user.request_company_whitelist(user_id, company_id)
+    return cla.controllers.user.request_company_whitelist(user_id, company_id, message)
 
 #
 # Signature Routes.
@@ -757,7 +759,8 @@ def get_github_organization_repos(organization_name: hug.types.text):
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
 def post_github_organization(organization_project_id: hug.types.text, # pylint: disable=too-many-arguments
-                             organization_name: hug.types.text):
+                             organization_name: hug.types.text,
+                             organization_installation_id=None):
     """
     POST: /github/organizations
 
@@ -767,7 +770,8 @@ def post_github_organization(organization_project_id: hug.types.text, # pylint: 
     Returns the CLA GitHub Organization that was just created.
     """
     return cla.controllers.github.create_organization(organization_project_id,
-                                                      organization_name)
+                                                      organization_name,
+                                                      organization_installation_id)
 
 
 @hug.delete('/github/organizations/{organization_name}', versions=1)

@@ -157,7 +157,7 @@ def get_users_company(user_company_id):
     users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]
 
-def request_company_whitelist(user_id, company_id):
+def request_company_whitelist(user_id, company_id, message=None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
     added to their whitelist.
@@ -166,6 +166,8 @@ def request_company_whitelist(user_id, company_id):
     :type user_id: string
     :param company_id: The ID of the company that the request is going to.
     :type company_id: string
+    :param messsage: A custom message to add to the email sent out to the manager.
+    :type message: string
     """
     user = get_user_instance()
     try:
@@ -180,7 +182,12 @@ def request_company_whitelist(user_id, company_id):
     subject = 'CLA: User requesting to be whitelisted'
     body = '''The following user is requesting to be whitelisted as a contributor for your organization (%s):
 
-%s <%s>
+    %s <%s>
+
+The message that was attached to the request:
+
+    %s
+
 
 You can whitelist the user in the CLA console.
 If the user email above is the personal email of one of you employees, please request that they add

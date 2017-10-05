@@ -26,6 +26,7 @@ cla.conf['BASE_URL'] = 'http://cla-system.com'
 cla.conf['EMAIL_SERVICE'] = 'MockSMTP'
 # Use exclusively local storage for tests.
 cla.conf['STORAGE_SERVICE'] = 'LocalStorage'
+cla.conf['GITHUB_APP_PRIVATE_KEY_PATH'] = '../' + cla.conf['GITHUB_APP_PRIVATE_KEY_PATH']
 
 from cla import routes
 from cla.utils import create_database, delete_database
@@ -95,6 +96,15 @@ class CLATestCase(unittest.TestCase):
                 'company_whitelist': company_whitelist,
                 'company_whitelist_patterns': company_whitelist_patterns}
         response = hug.test.post(routes, '/v1/company', data)
+        return response.data
+
+    def create_github_organization(self, project_id, organization_installation_id=1,
+                                   organization_name='GitHub Org Name'):
+        """Helper method to create a GitHub organization."""
+        data = {'organization_installation_id': organization_installation_id,
+                'organization_name': organization_name,
+                'organization_project_id': project_id}
+        response = hug.test.post(routes, '/v1/github/organizations', data)
         return response.data
 
     def create_document(self, project_id, document_type='individual',

@@ -36,8 +36,9 @@ class GitHubTestCase(CLATestCase):
         self.create_document(project['project_id'])
         repository = self.create_repository(project['project_id'])
         change_request_id = 1
+        github_org = self.create_github_organization(project['project_id'])
         with self.assertRaises(falcon.redirects.HTTPFound) as context:
-            github.sign_request(repository['repository_id'], change_request_id, request)
+            github.sign_request(github_org['organization_installation_id'], repository['repository_id'], change_request_id, request)
         self.assertTrue('http://signing-service.com/send-user-here' in str(context.exception))
 
     def test_oauth2_redirect(self):
@@ -50,15 +51,14 @@ class GitHubTestCase(CLATestCase):
         self.create_document(project['project_id'])
         repository = self.create_repository(project['project_id'])
         change_request_id = 1
+        self.create_github_organization(project['project_id'])
         request = None
         with self.assertRaises(falcon.HTTPBadRequest) as context:
-            github.oauth2_redirect(state, code, repository['repository_id'],
-                                   change_request_id, request)
+            github.oauth2_redirect(state, code, request)
         self.assertTrue('Invalid OAuth2 state' in str(context.exception))
         state = 'random-state'
         with self.assertRaises(falcon.HTTPFound) as context:
-            github.oauth2_redirect(state, code, repository['repository_id'],
-                                   change_request_id, request)
+            github.oauth2_redirect(state, code, request)
         self.assertTrue('http://signing-service.com/send-user-here' in str(context.exception))
 
     def test_get_pull_request_commit_authors(self): # pylint: disable=invalid-name
@@ -85,7 +85,8 @@ class GitHubTestCase(CLATestCase):
                                                signature_reference_id=user_data['user_id'],
                                                signature_reference_type='user')
         change_request_id = 1
-        github.update_change_request(repository, change_request_id)
+        installation_id = 1
+        github.update_change_request(installation_id, repository, change_request_id)
         # Update with a signed signature, not approved.
         signature_data = self.create_signature(signature_project_id=project['project_id'],
                                                signature_reference_id=user_data['user_id'],
