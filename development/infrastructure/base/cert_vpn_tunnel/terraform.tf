@@ -58,6 +58,14 @@ resource "aws_security_group" "it-vpn-tunnel" {
     cidr_blocks = ["52.64.150.59/32", "13.210.89.242"]
   }
 
+  # Toki's management server in Cert network.
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["52.62.157.81/32"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
