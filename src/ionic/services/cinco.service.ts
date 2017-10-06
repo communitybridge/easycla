@@ -120,8 +120,8 @@ export class CincoService {
   * The response body contains details about the request. The putUrl.url property is where the real upload request should occur.
   * The putUrl.expiresOn property is an ISO-8601 timestamp indicating the last millisecond the putURL will be valid.
   **/
-  obtainDocumentS3URL(projectId, classifier, filename, contentType) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, null, contentType)
+  obtainDocumentS3URL(projectId, classifier, file, filename, contentType) {
+    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
       .map((res) => res );
   }
 
