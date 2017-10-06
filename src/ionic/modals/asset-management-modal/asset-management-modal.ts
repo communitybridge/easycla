@@ -15,6 +15,7 @@ export class AssetManagementModal {
   projectId: string; // Always Needed
   classifier: string; //can be anything, but it's meant to be something like "main" or "black-and-white" or "thumbnail".
   image: any;
+  document: any;
 
   files: any;
   folders: any;
@@ -303,6 +304,8 @@ export class AssetManagementModal {
           else if (uploadMode == 'document') {
             this.classifier = 'minutes';
 
+            const docBytes = (<any>event).target.result;
+
             console.log("this.classifier: ", this.classifier);
             contentType = file.type;
             console.log("file");
@@ -311,8 +314,9 @@ export class AssetManagementModal {
             console.log(file.name);
             console.log("contentType");
             console.log(contentType);
-
-            this.cincoService.obtainDocumentS3URL(this.projectId, this.classifier, file.name, contentType).subscribe(response => {
+            console.log("docBytes");
+            console.log(docBytes);
+            this.cincoService.obtainDocumentS3URL(this.projectId, this.classifier, docBytes, file.name, contentType).subscribe(response => {
               console.log("obtainDocumentS3URL");
               console.log(response);
               if(response.url) {
