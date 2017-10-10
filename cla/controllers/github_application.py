@@ -1,6 +1,7 @@
 import time
 import cla
 from github import GithubIntegration, Github
+from github.GithubException import UnknownObjectException
 from jose import jwt
 
 
@@ -18,12 +19,30 @@ class GitHubInstallation(object):
     def repos(self):
         return self.api_object.get_installation(self.installation_id).get_repos()
 
-    def __init__(self, installation_id):
+    def __init__(self, installation_id=None):
+        if installation_id is None:
+            self.installation_id = cla.conf['GITHUB_MAIN_INSTALLATION_ID']
+        else:
+            self.installation_id = installation_id
         integration = GithubCLAIntegration(self.app_id, self.private_key)
-        auth = integration.get_access_token(installation_id)
+        auth = integration.get_access_token(self.installation_id)
         self.token = auth.token
         self.api_object = Github(self.token)
-        self.installation_id = installation_id
+
+    def namespace_exists(self, namespace):
+        """
+        :param namespace: The name of the Github account.
+        :type namespace: string
+        :return: Whether or not the Github namespace exists.
+        :rtype: bool
+        """
+        try:
+            self.api_object.get_user(namespace)
+            cla.log.info('Github User/Organization %s exists', namespace)
+            return True
+        except UnknownObjectException:
+            cla.log.info('Github User/Organization %s does not exist', namespace)
+            return False
 
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
