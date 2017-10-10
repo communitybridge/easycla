@@ -18,6 +18,9 @@ export class AssetManagementModal {
   image: any;
   document: any;
 
+  projectLogos: any;
+  projectDocuments: any;
+
   files: any;
   folders: any;
   selectedFiles: any;
@@ -73,12 +76,36 @@ export class AssetManagementModal {
       // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
 
       console.log("getProjectLogos");
-      console.log(response);
+      if(response){
+        this.projectLogos = response;
+        for(let eachLogo of this.projectLogos) {
+          console.log(eachLogo.logoClassifier);
+          console.log(eachLogo.key);
+          console.log(eachLogo.publicUrl);
+        }
+      }
+
     });
 
     this.cincoService.getProjectDocuments(this.projectId).subscribe(response => {
+
+      // CINCO sample response
+      // classifier:"minutes"
+      // expiresOn:"2017-10-10T16:02:02.654Z"
+      // name:"samplecontract.pdf"
+      // url:"http://docker.for.mac.localhost:51409/private-media.platform.linuxfoundation.org/documents/project/a093F0000001YReQAM/minutes/samplecontract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20171010T150202Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=NDB7TUF7W7FAQ7Z0U64V%2F20171010%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=9ef3d41d712766c493ba07b535cec189579e87b7966dc88f8ffeefea0212c383"
+
       console.log("getProjectDocuments");
-      console.log(response);
+      if(response){
+        this.projectDocuments = response;
+        for(let eachDocument of this.projectDocuments) {
+          console.log(eachDocument.classifier);
+          console.log(eachDocument.expiresOn);
+          console.log(eachDocument.name);
+          console.log(eachDocument.url);
+        }
+      }
+
     });
 
   }
