@@ -1,0 +1,61 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>CLA - {{ project.name }} - {{ company.name }} CCLA Company Confirm</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing overflow-scroll="true">
+  <header>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-2>
+          <img [src]='project.logoRef' alt="{{ project.name }} Logo" />
+        </ion-col>
+        <ion-col col-12 col-md-10>
+          <h1>{{ company.name }}</h1>
+          <p>(Message that they need to have their email associate with this CLA.)</p>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+                Confirmation of Association with {{ company.name }}
+            </ion-card-title>
+            <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
+              <p>
+                I hereby confirm that I am still affiliated with company {{ company.name }} and Lorem Ipsam Dolor Sit Legalese.
+              </p>
+              <p>
+                The button click will fire off a request to confirm if the user is associated with the company they say they are. If so, we send them back to github, or we present them with the icla if that is required. If not, they go to the troubleshooting page where they can contact their ccla manager
+              </p>
+              <ion-item>
+                <ion-label stacked>I agree &amp; verify that I have the legal authority to sign this form</ion-label>
+                <ion-checkbox formControlName="agree" required></ion-checkbox>
+              </ion-item>
+              <ion-item *ngIf="!form.controls.agree.valid && (form.controls.agree.touched || submitAttempt)" no-lines>
+                <p>* You must agree in order to submit this form.</p>
+              </ion-item>
+              <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+                Continue
+              </button>
+              <button ion-button (click)="goBackToPrevious()" [disabled]="currentlySubmitting">
+                Cancel
+              </button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
+</ion-content>
