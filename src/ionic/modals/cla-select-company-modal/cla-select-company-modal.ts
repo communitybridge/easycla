@@ -94,8 +94,8 @@ export class ClaSelectCompanyModal {
     ];
   }
 
-  openClaEmployeeCompanyPage(company) {
-    this.navCtrl.push('ClaEmployeeCompanyPage', {
+  openClaEmployeeCompanyConfirmPage(company) {
+    this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
       projectId: this.projectId,
       repositoryId: this.repositoryId,
       userId: this.userId,
