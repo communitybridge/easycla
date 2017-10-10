@@ -71,17 +71,16 @@ export class AssetManagementModal {
     this.cincoService.getProjectLogos(this.projectId).subscribe(response => {
 
       // CINCO sample response
-      // logoClassifier: "main"
+      // classifier: "main"
       // key:"logos/project/a090n000000uQhdAAE/main.png"
       // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
 
-      console.log("getProjectLogos");
-      if(response){
+      if(response) {
         this.projectLogos = response;
+        // Temporary Fix until CINCO returns filename in GET logos response
         for(let eachLogo of this.projectLogos) {
-          console.log(eachLogo.logoClassifier);
-          console.log(eachLogo.key);
-          console.log(eachLogo.publicUrl);
+          eachLogo.key = eachLogo.key.split("/");
+          eachLogo.key = eachLogo.key[3];
         }
       }
 
@@ -95,15 +94,8 @@ export class AssetManagementModal {
       // name:"samplecontract.pdf"
       // url:"http://docker.for.mac.localhost:51409/private-media.platform.linuxfoundation.org/documents/project/a093F0000001YReQAM/minutes/samplecontract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20171010T150202Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=NDB7TUF7W7FAQ7Z0U64V%2F20171010%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=9ef3d41d712766c493ba07b535cec189579e87b7966dc88f8ffeefea0212c383"
 
-      console.log("getProjectDocuments");
       if(response){
         this.projectDocuments = response;
-        for(let eachDocument of this.projectDocuments) {
-          console.log(eachDocument.classifier);
-          console.log(eachDocument.expiresOn);
-          console.log(eachDocument.name);
-          console.log(eachDocument.url);
-        }
       }
 
     });
@@ -117,14 +109,14 @@ export class AssetManagementModal {
       //   name: 'Zephyr_Bylaws.pdf',
       //   type: 'file',
       //   lastUpdated: '3/3/2017',
-      //   notes: ''
+      //   classifier: 'bylaws'
       // },
       // {
       //   id: 'A000000002',
       //   name: 'Zephyr_LF_membership_agreement.pdf',
       //   type: 'file',
       //   lastUpdated: '3/3/2017',
-      //   notes: 'Linux Foundation membership agreement'
+      //   classifier: 'bylaws'
       // },
     ];
     this.folders = [
@@ -132,6 +124,10 @@ export class AssetManagementModal {
         name: 'Logos',
         type: 'folder',
       },
+      {
+        name: 'Documents',
+        type: 'folder',
+      }
     ];
   }
 
@@ -167,7 +163,6 @@ export class AssetManagementModal {
 
   previewSelected(event) {
     event.stopPropagation();
-
   }
 
   deleteSelected(event) {
