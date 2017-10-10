@@ -2,9 +2,9 @@
   <ion-header>
     <ion-toolbar>
       <ion-title>
-        Project
-        <ion-icon name="arrow-dropright"></ion-icon> Folder
-         <ion-icon name="arrow-dropright"></ion-icon> Subfolder
+        {{ projectId }} Assets
+        <!-- <ion-icon name="arrow-dropright"></ion-icon> Logos -->
+        <!-- <ion-icon name="arrow-dropright"></ion-icon> Documents -->
       </ion-title>
 
       <ion-buttons start>
@@ -23,7 +23,7 @@
             <th>&nbsp;</th>
             <th>Name</th>
             <th>Last Updated</th>
-            <!-- <th>Notes</th> -->
+            <th>Classifier</th>
           </tr>
         </thead>
         <tbody>
@@ -33,16 +33,37 @@
             </td>
             <td data-title="Name">{{ folder.name }}</td>
             <td>&nbsp;</td>
-            <!-- <td>&nbsp;</td> -->
+            <td>&nbsp;</td>
           </tr>
+
+          <tr *ngFor="let logo of projectLogos">
+            <td data-title="Type">
+              <ion-icon name="document"></ion-icon>
+            </td>
+            <td data-title="Name">{{ logo.key }}</td>
+            <td data-title="Last Updated">NA</td>
+            <td data-title="Notes">{{ logo.classifier }}</td>
+          </tr>
+
+
           <tr *ngFor="let file of files" (click)="selectFile($event, file)" [ngClass]="{'selected':file.selected}">
             <td data-title="Type">
               <ion-icon name="document"></ion-icon>
             </td>
             <td data-title="Name">{{ file.name }}</td>
             <td data-title="Last Updated">{{ file.lastUpdated }}</td>
-            <!-- <td data-title="Notes">{{ file.notes }}</td> -->
+            <td data-title="Notes">{{ file.classifier }}</td>
           </tr>
+
+          <tr *ngFor="let document of projectDocuments">
+            <td data-title="Type">
+              <ion-icon name="document"></ion-icon>
+            </td>
+            <td data-title="Name">{{ document.name }}</td>
+            <td data-title="Last Updated">NA</td>
+            <td data-title="Notes">{{ document.classifier }}</td>
+          </tr>
+
         </tbody>
       </table>
     </ion-grid>
