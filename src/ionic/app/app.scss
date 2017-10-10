@@ -116,6 +116,10 @@ ion-menu {
   }
 }
 
+.card-md .item-md.item-block .item-inner {
+  border-bottom: 1px solid #dedede;
+}
+
 @keyframes loadingDisplayFadeIn {
   0% {
       opacity: 0;
