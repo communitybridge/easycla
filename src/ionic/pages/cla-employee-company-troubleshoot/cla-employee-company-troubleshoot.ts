@@ -5,10 +5,10 @@ import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-ang
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/:companyId'
 })
 @Component({
-  selector: 'cla-employee-company',
-  templateUrl: 'cla-employee-company.html'
+  selector: 'cla-employee-company-troubleshoot',
+  templateUrl: 'cla-employee-company-troubleshoot.html'
 })
-export class ClaEmployeeCompanyPage {
+export class ClaEmployeeCompanyTroubleshootPage {
   projectId: string;
   repositoryId: string;
   userId: string;
