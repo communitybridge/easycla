@@ -13,7 +13,8 @@ import { CincoService } from '../../services/cinco.service'
 export class AssetManagementModal {
 
   projectId: string; // Always Needed
-  classifier: string; //can be anything, but it's meant to be something like "main" or "black-and-white" or "thumbnail".
+  logoClassifier: string; //can be anything, but it's meant to be something like "main" or "black-and-white" or "thumbnail".
+  documentClassifier: string;
   image: any;
   document: any;
 
@@ -67,7 +68,7 @@ export class AssetManagementModal {
     this.cincoService.getProjectLogos(this.projectId).subscribe(response => {
 
       // CINCO sample response
-      // classifier: "main"
+      // logoClassifier: "main"
       // key:"logos/project/a090n000000uQhdAAE/main.png"
       // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
 
@@ -277,14 +278,14 @@ export class AssetManagementModal {
         reader.onload = event => {
 
           if(uploadMode == 'logo') {
-            this.classifier = "main";
+            this.logoClassifier = "main";
             const imgBase64 = (<any>event).target.result;
             this.image = {
               imageBytes: imgBase64,
               contentType: contentType
             }
             console.log("test!");
-            this.cincoService.obtainLogoS3URL(this.projectId, this.classifier, this.image).subscribe(response => {
+            this.cincoService.obtainLogoS3URL(this.projectId, this.logoClassifier, this.image).subscribe(response => {
               console.log("obtainLogoS3URL response");
               console.log(response);
               if(response.url) {
@@ -302,11 +303,11 @@ export class AssetManagementModal {
             });
           }
           else if (uploadMode == 'document') {
-            this.classifier = 'minutes';
+            this.documentClassifier = 'minutes';
 
             const docBytes = (<any>event).target.result;
 
-            console.log("this.classifier: ", this.classifier);
+            console.log("this.documentClassifier: ", this.documentClassifier);
             contentType = file.type;
             console.log("file");
             console.log(file);
@@ -316,7 +317,7 @@ export class AssetManagementModal {
             console.log(contentType);
             console.log("docBytes");
             console.log(docBytes);
-            this.cincoService.obtainDocumentS3URL(this.projectId, this.classifier, docBytes, file.name, contentType).subscribe(response => {
+            this.cincoService.obtainDocumentS3URL(this.projectId, this.documentClassifier, docBytes, file.name, contentType).subscribe(response => {
               console.log("obtainDocumentS3URL");
               console.log(response);
               if(response.url) {
