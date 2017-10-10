@@ -28,7 +28,6 @@ export class ClaEmployeeCompanyConfirmPage {
     public navCtrl: NavController,
     private modalCtrl: ModalController,
     public navParams: NavParams,
-    // private cincoService: CincoService,
     private formBuilder: FormBuilder,
   ) {
     this.getDefaults();
