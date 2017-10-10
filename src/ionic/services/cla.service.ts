@@ -33,11 +33,28 @@ export class ClaService {
   }
 
   postUser(user) {
+    /*
+      {
+        'user_email': 'user@email.com',
+        'user_name': 'User Name',
+        'user_company_id': '<org-id>',
+        'user_github_id': 12345
+      }
+     */
     return this.http.post(this.claApiUrl + '/user', user)
       .map((res) => res.json());
   }
 
   putUser(user) {
+    /*
+      {
+        'user_id': '<user-id>',
+        'user_email': 'user@email.com',
+        'user_name': 'User Name',
+        'user_company_id': '<org-id>',
+        'user_github_id': 12345
+      }
+     */
     return this.http.put(this.claApiUrl + '/user', user)
       .map((res) => res.json());
   }
