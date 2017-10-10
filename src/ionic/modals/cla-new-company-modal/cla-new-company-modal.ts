@@ -30,20 +30,15 @@ export class ClaNewCompanyModal {
   }
 
   getDefaults() {
-    this.cclaLink = "";
+    this.cclaLink = window.location.protocol + '//' + window.location.host + '/#/cla/project/' + this.projectId + '/repository/' + this.repositoryId + '/company-signup';
   }
 
   ngOnInit() {
-    this.getCclaLink();
   }
 
   // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
-  }
-
-  getCclaLink() {
-    this.cclaLink = "https://docusign.com/some/really/long/link/that/is/long/enough/to/push/it/out/of/the/input/viewport";
   }
 
   openClaEmployeeCompanyPage(company) {
