@@ -21,7 +21,6 @@ export class ClaMessageSentPage {
     public navCtrl: NavController,
     private modalCtrl: ModalController,
     public navParams: NavParams,
-    // private cincoService: CincoService,
   ) {
 
     this.getDefaults();
