@@ -59,6 +59,7 @@ GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
 GITHUB_APP_CLIENT_ID = 'app_client_id'
 GITHUB_APP_SECRET = 'app_secret'
 GITHUB_APP_ID = '0000'
+GITHUB_MAIN_INSTALLATION_ID = '00000' # App needs to be installed on the main organization.
 
 # KeyCloak Authentication
 KEYCLOAK_ENDPOINT = 'url'

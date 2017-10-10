@@ -826,3 +826,13 @@ def github_organization_validation(body):
     Acts upon any events triggered by our app installed in someone's organisation.
     """
     return cla.controllers.github.validate_organization(body)
+
+
+@hug.get('/github/check/namespace/{namespace}', versions=1)
+def github_check_namespace(namespace):
+    """
+    GET: /github/check/namespace/{namespace}
+
+    Returns True if the namespace provided is a valid GitHub account.
+    """
+    return cla.controllers.github.check_namespace(namespace)

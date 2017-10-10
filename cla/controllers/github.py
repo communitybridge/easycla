@@ -218,3 +218,15 @@ def webhook_secret_validation(webhook_signature, data):
     pprint(data)
 
     return True if str(mac.hexdigest()) == str(signature) else False
+
+def check_namespace(namespace):
+    """
+    Checks if the namespace provided is a valid GitHub organization.
+
+    :param namespace: The namespace to check.
+    :type namespace: string
+    :return: Whether or not the namespace is valid.
+    :rtype: bool
+    """
+    main_installation = GitHubInstallation()
+    return main_installation.namespace_exists(namespace)
