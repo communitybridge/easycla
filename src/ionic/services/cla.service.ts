@@ -186,7 +186,7 @@ export class ClaService {
   * /signatures/user/{user_id}
   **/
 
-  getUserSignatures(userId) {
+  getSignaturesUser(userId) {
     return this.http.get(this.claApiUrl + '/signatures/user/' + userId)
       .map((res) => res.json());
   }
@@ -232,7 +232,7 @@ export class ClaService {
        .map((res) => res.json());
   }
 
-  putRepository() {
+  putRepository(repository) {
     /*
       repository: {
         'repository_id': '<repo-id>',
