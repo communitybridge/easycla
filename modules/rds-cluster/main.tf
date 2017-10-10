@@ -148,6 +148,7 @@ resource "aws_db_instance" "main" {
   port                    = "${var.port}"
   multi_az                = "${var.multi_az}"
   publicly_accessible     = "${var.publicly_accessible}"
+  final_snapshot_identifier = "before-deletion"
 
   tags {
     Name        = "${var.name}"
