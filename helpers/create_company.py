@@ -11,7 +11,7 @@ sys.path.append('../')
 
 import cla
 import uuid
-from cla.utils import get_company_instance, get_user_intance
+from cla.utils import get_company_instance, get_user_instance
 
 # User
 manager = get_user_instance().get_user_by_github_id(MANAGER_GITHUB_ID)
