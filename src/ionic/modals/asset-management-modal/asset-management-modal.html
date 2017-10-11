@@ -40,7 +40,7 @@
             <td data-title="Type">
               <ion-icon name="document"></ion-icon>
             </td>
-            <td data-title="Name">{{ logo.key }}</td>
+            <td data-title="Name"><a href="{{ logo.publicUrl }}" target="_blank">{{ logo.key }}</a></td>
             <td data-title="Last Updated">NA</td>
             <td data-title="Notes">{{ logo.classifier }}</td>
           </tr>
@@ -59,7 +59,7 @@
             <td data-title="Type">
               <ion-icon name="document"></ion-icon>
             </td>
-            <td data-title="Name">{{ document.name }}</td>
+            <td data-title="Name"><a href="{{ document.url }}" target="_blank">{{ document.name }}</a></td>
             <td data-title="Last Updated">NA</td>
             <td data-title="Notes">{{ document.classifier }}</td>
           </tr>
