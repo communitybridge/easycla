@@ -67,14 +67,15 @@ export class AssetManagementModal {
   }
 
   ionViewDidEnter(){
+    this.getAllProjectLogosDocuments();
+  }
 
+  getAllProjectLogosDocuments(){
     this.cincoService.getProjectLogos(this.projectId).subscribe(response => {
-
       // CINCO sample response
       // classifier: "main"
       // key:"logos/project/a090n000000uQhdAAE/main.png"
       // publicUrl:"http://docker.for.mac.localhost:50563/public-media.platform.linuxfoundation.org/logos/project/a090n000000uQhdAAE/main.png
-
       if(response) {
         this.projectLogos = response;
         // Temporary Fix until CINCO returns filename in GET logos response
@@ -83,23 +84,18 @@ export class AssetManagementModal {
           eachLogo.key = eachLogo.key[3];
         }
       }
-
     });
 
     this.cincoService.getProjectDocuments(this.projectId).subscribe(response => {
-
       // CINCO sample response
       // classifier:"minutes"
       // expiresOn:"2017-10-10T16:02:02.654Z"
       // name:"samplecontract.pdf"
       // url:"http://docker.for.mac.localhost:51409/private-media.platform.linuxfoundation.org/documents/project/a093F0000001YReQAM/minutes/samplecontract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20171010T150202Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=NDB7TUF7W7FAQ7Z0U64V%2F20171010%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=9ef3d41d712766c493ba07b535cec189579e87b7966dc88f8ffeefea0212c383"
-
       if(response){
         this.projectDocuments = response;
       }
-
     });
-
   }
 
   getDefaults() {
@@ -364,9 +360,7 @@ export class AssetManagementModal {
 
         let reader = new FileReader();
         reader.onload = event => {
-
           if(uploadMode == 'logo') {
-
             const imgBase64 = (<any>event).target.result;
             this.image = {
               imageBytes: imgBase64,
@@ -377,22 +371,23 @@ export class AssetManagementModal {
                 let S3URL = response.url;
                 this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
                    // This is to refresh an Main Logo image that have same URL as its previous upload. E.g. main.png.
-                   if(this.logoClassifier == 'main') { this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime(); }
-                   this.dismiss();
+                   if(this.logoClassifier == 'main') {
+                     this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
+                     this.dismiss();
+                   }
+                   else { this.getAllProjectLogosDocuments(); }
                  });
 
               }
             });
           }
           else if (uploadMode == 'document') {
-
             const docBytes = (<any>event).target.result;
-
             this.cincoService.obtainDocumentS3URL(this.projectId, this.documentClassifier, docBytes, file.name, contentType).subscribe(response => {
               if(response.url) {
                 let S3URL = response.url;
                 this.cincoService.uploadToS3(S3URL, file, file.type).subscribe(response => {
-                   this.dismiss();
+                   this.getAllProjectLogosDocuments();
                  });
               }
             });
@@ -400,10 +395,8 @@ export class AssetManagementModal {
           else {
             this.dismiss();
           }
-
-
-
         }
+
         reader.readAsDataURL(file);
 
         // merge files from the input with the files
