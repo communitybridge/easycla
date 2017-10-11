@@ -100,13 +100,8 @@ export class CincoService {
   * That will actually upload the image.
   **/
   obtainLogoS3URL(projectId, classifier, image) {
-    console.log("test2!");
     return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image, image.contentType)
-      .map((res) => {
-          console.log("obtainLogoS3URL");
-          console.log(res);
-          return res;
-      } );
+      .map((res) => res );
   }
 
   /**

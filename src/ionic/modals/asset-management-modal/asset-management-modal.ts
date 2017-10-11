@@ -239,51 +239,117 @@ export class AssetManagementModal {
   }
 
   presentActionSheet() {
-    let actionSheet = this.actionSheetCtrl.create({
-      title: 'I want to upload a',
-      buttons: [
-        {
-        text: 'Logo',
-        role: 'logo',
-        handler: () => {
-          console.log('Logo clicked');
-          this.uploadMode = "logo";
-          // trigger click event of hidden input
-          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-          this.renderer.invokeElementMethod(
-            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-          );
+      let actionSheet = this.actionSheetCtrl.create({
+        title: 'I want to upload a',
+        buttons: [
+          {
+          text: 'Logo',
+          role: 'logo',
+          handler: () => {
+            this.uploadMode = "logo";
+            this.showLogoClassifier();
+          }
+        },{
+          text: 'Document',
+          role: 'document',
+          handler: () => {
+            this.uploadMode = "document";
+            this.showDocumentClassifier();
+          }
+        },{
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            this.uploadMode = "";
+          }
         }
-      },{
-        text: 'Document',
-        handler: () => {
-          console.log('Upload clicked');
-          this.uploadMode = "document";
-          // trigger click event of hidden input
-          let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-          this.renderer.invokeElementMethod(
-            this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-          );
-        }
-      },{
-        text: 'Cancel',
-        role: 'cancel',
-        handler: () => {
-          this.uploadMode = "";
-          console.log('Cancel clicked');
-        }
+      ]
+    });
+    actionSheet.present();
+  }
+
+  showLogoClassifier() {
+    let alert = this.alertCtrl.create();
+    alert.setTitle('Choose Logo Category');
+
+    alert.addInput({
+      type: 'radio',
+      label: 'Main Logo',
+      value: 'main',
+      checked: true
+    });
+
+    alert.addInput({
+      type: 'radio',
+      label: 'Black and White Logo',
+      value: 'black-and-white',
+      checked: false
+    });
+
+    alert.addInput({
+      type: 'radio',
+      label: 'Thumbnail Logo',
+      value: 'thumbnail',
+      checked: false
+    });
+
+    alert.addButton('Cancel');
+    alert.addButton({
+      text: 'OK',
+      handler: data => {
+        this.logoClassifier = data;
+        // trigger click event of hidden input
+        let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+        this.renderer.invokeElementMethod(
+          this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+        );
+
       }
-    ]
-  });
-  actionSheet.present();
-}
+    });
+    alert.present();
+  }
+
+
+  showDocumentClassifier() {
+    let alert = this.alertCtrl.create();
+    alert.setTitle('Choose Document Category');
+
+    alert.addInput({
+      type: 'radio',
+      label: 'Minutes',
+      value: 'minutes',
+      checked: true
+    });
+
+    alert.addInput({
+      type: 'radio',
+      label: 'Bylaws',
+      value: 'bylaws',
+      checked: false
+    });
+
+    alert.addButton('Cancel');
+    alert.addButton({
+      text: 'OK',
+      handler: data => {
+        this.documentClassifier = data;
+        // trigger click event of hidden input
+        let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
+        this.renderer.invokeElementMethod(
+          this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
+        );
+
+      }
+    });
+    alert.present();
+  }
 
   /**
   * Callback which is executed after files from native popup are selected.
   * @param  {Event}    event change event containing selected files
   */
   filesAdded(event: Event, uploadMode: string): void {
-    console.log("uploadMode: ", uploadMode);
+
     let addedFiles: FileList = this.nativeInputBtn.nativeElement.files;
 
     for(let i=0; i< addedFiles.length; i++) {
@@ -300,24 +366,18 @@ export class AssetManagementModal {
         reader.onload = event => {
 
           if(uploadMode == 'logo') {
-            this.logoClassifier = "main";
+
             const imgBase64 = (<any>event).target.result;
             this.image = {
               imageBytes: imgBase64,
               contentType: contentType
             }
-            console.log("test!");
             this.cincoService.obtainLogoS3URL(this.projectId, this.logoClassifier, this.image).subscribe(response => {
-              console.log("obtainLogoS3URL response");
-              console.log(response);
               if(response.url) {
                 let S3URL = response.url;
-                console.log("S3URL");
-                console.log(S3URL);
-
                 this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
-                   // This is to refresh an image that have same URL
-                   this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
+                   // This is to refresh an Main Logo image that have same URL as its previous upload. E.g. main.png.
+                   if(this.logoClassifier == 'main') { this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime(); }
                    this.dismiss();
                  });
 
@@ -325,32 +385,15 @@ export class AssetManagementModal {
             });
           }
           else if (uploadMode == 'document') {
-            this.documentClassifier = 'minutes';
 
             const docBytes = (<any>event).target.result;
 
-            console.log("this.documentClassifier: ", this.documentClassifier);
-            contentType = file.type;
-            console.log("file");
-            console.log(file);
-            console.log("file.name");
-            console.log(file.name);
-            console.log("contentType");
-            console.log(contentType);
-            console.log("docBytes");
-            console.log(docBytes);
             this.cincoService.obtainDocumentS3URL(this.projectId, this.documentClassifier, docBytes, file.name, contentType).subscribe(response => {
-              console.log("obtainDocumentS3URL");
-              console.log(response);
               if(response.url) {
                 let S3URL = response.url;
-                console.log("S3URL");
-                console.log(S3URL);
-                console.log("file");
-                console.log(file);
-                console.log("contentType");
-                console.log(contentType);
-                this.dismiss();
+                this.cincoService.uploadToS3(S3URL, file, file.type).subscribe(response => {
+                   this.dismiss();
+                 });
               }
             });
           }

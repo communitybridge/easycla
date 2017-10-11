@@ -17,9 +17,6 @@ export class HttpClient {
     return this.keycloak.getToken().then(
       (token) => {
         if(token){
-
-          console.log("test4!");
-
           headers.append('Authorization', 'Bearer ' + token);
           return headers;
         }
@@ -58,7 +55,6 @@ export class HttpClient {
   }
 
   put(url, data, contentType: string = 'application/json') {
-    console.log("test3!");
     return Observable
         .fromPromise(this.buildCINCOHeaders(contentType))
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
