@@ -53,8 +53,8 @@ class EmailUserIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for email User index."""
         index_name = 'email-user-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -69,8 +69,8 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for GitHub User index."""
         index_name = 'github-user-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -85,8 +85,8 @@ class ProjectRepositoryIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for project repository index."""
         index_name = 'project-repository-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -101,8 +101,8 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for external ID repository index."""
         index_name = 'external-repository-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -116,8 +116,8 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for external ID project index."""
         index_name = 'external-project-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -131,8 +131,8 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for reference Signature index."""
         index_name = 'project-signature-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -147,8 +147,8 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     class Meta:
         """Meta class for reference Signature index."""
         index_name = 'reference-signature-index'
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
         # All attributes are projected - not sure if this is necessary.
         projection = AllProjection()
 
@@ -294,8 +294,8 @@ class ProjectModel(BaseModel):
         table_name = 'cla_projects'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
@@ -503,8 +503,8 @@ class UserModel(BaseModel):
         table_name = 'cla_users'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
     user_external_id = UnicodeAttribute(null=True)
     user_email = UnicodeAttribute()
@@ -644,8 +644,8 @@ class RepositoryModel(BaseModel):
         table_name = 'cla_repositories'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
@@ -756,8 +756,8 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
         table_name = 'cla_signatures'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     signature_id = UnicodeAttribute(hash_key=True)
     signature_external_id = UnicodeAttribute(null=True)
     signature_project_id = UnicodeAttribute()
@@ -967,8 +967,8 @@ class CompanyModel(BaseModel):
         table_name = 'cla_companies'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
@@ -1098,8 +1098,8 @@ class StoreModel(Model):
         table_name = 'cla_store'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     key = UnicodeAttribute(hash_key=True)
     value = JSONAttribute()
 
@@ -1147,8 +1147,8 @@ class GitHubOrgModel(BaseModel):
         table_name = 'cla_github_orgs'
         host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = cla.conf['DYNAMO_WRITE_UNITS']
-        read_capacity_units = cla.conf['DYNAMO_READ_UNITS']
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)

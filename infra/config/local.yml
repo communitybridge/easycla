@@ -18,32 +18,33 @@ containers:
 # Environment Variables to be injected in the container.
 environment:
   workspace:
-    base_url: Ooops
-    signed_callback_url: Ooops
-    database: 'DynamoDB'
-    database_host: 'http://dynamodb:8000'
-    keyvalue: 'Memory'
-    dynamo_region: 'us-west-2'
-    dynamo_write_units: 1
-    dynamo_read_units: 1
-    signing_service: 'DocuSign'
-    docusign_root_url: 'https://demo.docusign.net/restapi/v2'
-    docusign_username: ''
-    docusign_password: ''
-    docusign_integrator_key: ''
-    github_app_id: '4449'
-    github_app_client_id: 'Iv1.3899cde846512a7e'
-    github_app_secret: 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
-    github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
-    github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
-    keycloak_endpoint: Ooops
-    cinco_endpoint: Ooops
-    email_service: 'SMTP'
-    smtp_sender_email_address: 'donotreply@cla.system'
-    smtp_host: 'mailhog'
-    smtp_port: '1025'
-    storage_service: 'LocalStorage'
-    local_storage_folder: '/tmp/cla'
+    cla_base_url: Ooops
+    cla_signed_callback_url: Ooops
+    cla_database: 'DynamoDB'
+    cla_database_host: 'http://dynamodb:8000'
+    cla_keyvalue: 'Memory'
+    cla_dynamo_region: 'us-west-2'
+    cla_dynamo_write_units: 1
+    cla_dynamo_read_units: 1
+    cla_signing_service: 'DocuSign'
+    cla_docusign_root_url: 'https://demo.docusign.net/restapi/v2'
+    cla_docusign_username: ''
+    cla_docusign_password: ''
+    cla_docusign_integrator_key: ''
+    cla_github_app_id: '4449'
+    cla_github_app_client_id: 'Iv1.3899cde846512a7e'
+    cla_github_app_secret: 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
+    cla_github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
+    cla_github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
+    cla_github_main_installation_id: 49309
+    cla_keycloak_endpoint: Ooops
+    cla_cinco_endpoint: Ooops
+    cla_email_service: 'SMTP'
+    cla_smtp_sender_email_address: 'donotreply@cla.system'
+    cla_smtp_host: 'mailhog'
+    cla_smtp_port: '1025'
+    cla_storage_service: 'LocalStorage'
+    cla_local_storage_folder: '/tmp/cla'
 
 modes:
   default:
