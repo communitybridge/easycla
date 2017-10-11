@@ -92,6 +92,10 @@ ion-content .scroll-content > header {
   padding-top: .6rem;
 }
 
+.cursor-pointer {
+  cursor:pointer;
+}
+
 @import './styles/menu';
 @import './styles/grid';
 @import './styles/form';

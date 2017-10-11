@@ -1,10 +1,17 @@
 <div class="asset-management-modal-wrapper" (click)="modalClick($event)">
   <ion-header>
     <ion-toolbar>
-      <ion-title>
-        {{ projectId }} Assets
-        <!-- <ion-icon name="arrow-dropright"></ion-icon> Logos -->
-        <!-- <ion-icon name="arrow-dropright"></ion-icon> Documents -->
+      <ion-title >
+        <ng-container *ngIf="selectedDirectory != 'root'">
+          <ion-icon name="arrow-dropleft" class="cursor-pointer" (click)="selectDirectory('root')"></ion-icon>
+        </ng-container>
+        <span (click)="selectDirectory('root')" class="cursor-pointer">{{ projectId }} Assets</span>
+        <ng-container *ngIf="selectedDirectory == 'logos'">
+          <ion-icon name="arrow-dropright"></ion-icon> Logos
+        </ng-container>
+        <ng-container *ngIf="selectedDirectory == 'documents'">
+          <ion-icon name="arrow-dropright"></ion-icon> Documents
+        </ng-container>
       </ion-title>
 
       <ion-buttons start>
@@ -18,34 +25,54 @@
   <ion-content [ngClass]="{'selected':selectedFiles.length > 0}">
     <ion-grid>
       <table id="table" class="table table-hover asset-management-table">
+
         <thead>
           <tr>
             <th>&nbsp;</th>
             <th>Name</th>
-            <th>Last Updated</th>
-            <th>Classifier</th>
+            <th *ngIf="selectedDirectory =='root'">&nbsp;</th>
+            <th *ngIf="selectedDirectory =='root'">&nbsp;</th>
+            <th *ngIf="selectedDirectory!='root'">Last Updated</th>
+            <th *ngIf="selectedDirectory!='root'">Classifier</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let folder of folders">
-            <td data-title="Type">
-              <ion-icon name="folder"></ion-icon>
-            </td>
-            <td data-title="Name">{{ folder.name }}</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-          </tr>
 
-          <tr *ngFor="let logo of projectLogos">
-            <td data-title="Type">
-              <ion-icon name="document"></ion-icon>
-            </td>
-            <td data-title="Name"><a href="{{ logo.publicUrl }}" target="_blank">{{ logo.key }}</a></td>
-            <td data-title="Last Updated">NA</td>
-            <td data-title="Notes">{{ logo.classifier }}</td>
-          </tr>
+          <ng-container *ngIf="selectedDirectory == 'root'">
+            <tr *ngFor="let folder of folders" (click)="selectDirectory(folder.value)" class="cursor-pointer">
+              <td data-title="Type">
+                <ion-icon name="folder"></ion-icon>
+              </td>
+              <td data-title="Name">{{ folder.displayName }}</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+          </ng-container>
 
+          <ng-container *ngIf="selectedDirectory == 'logos'">
+            <tr *ngFor="let logo of projectLogos" >
+              <td data-title="Type">
+                <ion-icon name="document"></ion-icon>
+              </td>
+              <td data-title="Name"><a href="{{ logo.publicUrl }}" target="_blank">{{ logo.key }}</a></td>
+              <td data-title="Last Updated">-</td>
+              <td data-title="Notes">{{ logo.classifier }}</td>
+            </tr>
+          </ng-container>
 
+          <ng-container *ngIf="selectedDirectory == 'documents'">
+            <tr *ngFor="let document of projectDocuments">
+              <td data-title="Type">
+                <ion-icon name="document"></ion-icon>
+              </td>
+              <td data-title="Name"><a href="{{ document.url }}" target="_blank">{{ document.name }}</a></td>
+              <td data-title="Last Updated">-</td>
+              <td data-title="Notes">{{ document.classifier }}</td>
+            </tr>
+          </ng-container>
+
+          <!--
           <tr *ngFor="let file of files" (click)="selectFile($event, file)" [ngClass]="{'selected':file.selected}">
             <td data-title="Type">
               <ion-icon name="document"></ion-icon>
@@ -54,21 +81,14 @@
             <td data-title="Last Updated">{{ file.lastUpdated }}</td>
             <td data-title="Notes">{{ file.classifier }}</td>
           </tr>
-
-          <tr *ngFor="let document of projectDocuments">
-            <td data-title="Type">
-              <ion-icon name="document"></ion-icon>
-            </td>
-            <td data-title="Name"><a href="{{ document.url }}" target="_blank">{{ document.name }}</a></td>
-            <td data-title="Last Updated">NA</td>
-            <td data-title="Notes">{{ document.classifier }}</td>
-          </tr>
+          -->
 
         </tbody>
       </table>
     </ion-grid>
 
   </ion-content>
+
   <div class="selected-show" *ngIf="selectedFiles.length > 0" (click)="stopEventPropagation($event)">
     <div class="selected-text-wrapper">
       <span class="selected-text">
