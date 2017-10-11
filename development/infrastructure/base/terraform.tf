@@ -71,7 +71,7 @@ resource "aws_cloudwatch_log_group" "infrastructure" {
 }
 
 module "vpc" {
-  source             = "../../modules/vpc"
+  source             = "../../../modules/vpc"
   name               = "${var.name}"
   cidr               = "${var.cidr}"
   internal_subnets   = "${var.internal_subnets}"
@@ -80,7 +80,7 @@ module "vpc" {
 }
 
 module "dhcp" {
-  source  = "../../modules/dhcp"
+  source  = "../../../modules/dhcp"
   name    = "prod.engineering.internal"
   vpc_id  = "${module.vpc.id}"
   servers = "${replace(var.cidr, ".0/24", ".140")},${replace(var.cidr, ".0/24", ".180")},${replace(var.cidr, ".0/24", ".220")},${cidrhost(var.cidr, 2)}"
@@ -188,7 +188,7 @@ data "template_file" "ecs_instance_cloudinit_tools" {
 }
 
 module "tools-ecs-cluster" {
-  source                 = "../../modules/ecs-cluster"
+  source                 = "../../../modules/ecs-cluster"
   environment            = "Production"
   team                   = "Engineering"
   name                   = "infrastructure"
@@ -268,7 +268,7 @@ module "it-managed-vpn" {
   source            = "./it_vpn_tunnel"
 
   vpc_id            = "${module.vpc.id}"
-  internal_subnets  = "${module.vpc.internal_subnets}"
+  internal_subnets  = "${module.vpc.external_subnets}"
   cidr              = "10.32.0.0/12"
   key_name          = "${var.key_name}"
   route_tables      = "${module.vpc.raw_route_tables_id}"
@@ -286,7 +286,7 @@ module "cert-managed-vpn" {
 
 # RDS Instance to use by some services, ie: Keycloak
 module "rds-cluster" {
-  source               = "../../modules/rds-cluster"
+  source               = "../../../modules/rds-cluster"
   master_username      = "lfengineering"
   name                 = "keycloak"
   master_password      = "buanCAWwwAGxUyoU2Fai"
@@ -301,45 +301,6 @@ module "rds-cluster" {
   parameter_group_name = "engineering"
   instance_type        = "db.t2.small"
 }
-
-# LDAP used for Keycloak sandbox
-module "open-ldap" {
-  source                 = "./openldap"
-
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  internal_subnets       = "${var.internal_subnets}"
-  internal_elb_sg        = "${module.tools-ecs-cluster.security_group_id}"
-  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
-
-  vpc_id                 = "${module.vpc.id}"
-  region                 = "${var.region}"
-
-  ldap_org               = "linuxfoundation"
-  ldap_domain            = "linuxfoundation.org"
-  ldap_admin_password    = "ZPw4RRzxLikVdN"
-}
-
-module "keycloak" {
-  source                 = "./keycloak"
-
-  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
-  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
-  subnets                = "${var.external_subnets}"
-  internal_elb_sg        = "${module.security_groups.internal_elb}"
-  dns_servers            = ["10.32.0.140", "10.32.0.180", "10.32.0.220"]
-
-  vpc_id                 = "${module.vpc.id}"
-  region                 = "${var.region}"
-  env                    = "sandbox"
-
-  mysql_db               = "sandbox"
-  mysql_host             = "keycloak.cnfn2tun3mjw.us-west-2.rds.amazonaws.com"
-  mysql_pass             = "buanCAWwwAGxUyoU2Fai"
-  mysql_port             = "3306"
-  mysql_user             = "lfengineering"
-}
-
 
 /**
  * Outputs

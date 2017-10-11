@@ -53,7 +53,7 @@ module "s3_buckets" {
 
 # Creating Cloudtrail audit logs on all AWS Events
 module "cloudtrail_audit" {
-  source          = "../modules/cloudtrail"
+  source          = "../../modules/cloudtrail"
 
   aws_account_id  = "433610389961"
   bucket_creation = true
@@ -119,6 +119,16 @@ module "project_pmc" {
   peering_id = "pcx-a6eb7bcf"
 }
 
+# Peering Request with Keycloak
+module "project_keycloak" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.7.0/24"
+  peering_id = "pcx-cd4f35a4"
+}
+
 # Peering Request with Engineering VPC
 module "project_engineering" {
   source = "./project_peering"
@@ -127,6 +137,26 @@ module "project_engineering" {
   external_rtb_id = "${module.vpc_west.external_rtb_id}"
   project_cidr = "10.32.2.0/24"
   peering_id = "pcx-6beb7b02"
+}
+
+# Peering Request with Engineering VPC
+module "project_sandboxes" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.1.0/24"
+  peering_id = "pcx-9c40d8f5"
+}
+
+# Peering Request with Engineering VPC
+module "project_cla" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.5.0/24"
+  peering_id = "pcx-0abf2563"
 }
 
 output "account_number" {

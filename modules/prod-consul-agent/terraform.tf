@@ -11,10 +11,6 @@ variable "region" {
   default = "us-west-2"
 }
 
-variable "build_hash" {
-  description = "The Build Number we are to deploy."
-}
-
 variable "encryption_key" {
   description = "The Consul Encryption Key"
 }

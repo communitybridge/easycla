@@ -126,6 +126,37 @@ module "project_pmc" {
   peering_id = "pcx-c4f961ad"
 }
 
+# Peering Request with CLA Production
+module "project_cla" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.5.0/24"
+  peering_id = "pcx-b1b822d8"
+}
+
+# Peering Request with Engineering CI VPC
+module "project_ci" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.2.0/24"
+  peering_id = "pcx-d94326b0"
+}
+
+# Peering Request with Keycloak
+module "project_keycloak" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.32.7.0/24"
+  peering_id = "pcx-6f4c3606"
+}
+
+
 output "account_number" {
   value = "643009352547"
 }
