@@ -124,3 +124,28 @@ module "redis-cluster" {
   security_groups      = ["${module.security_groups.engineering_sandboxes_redis}"]
   instance_type        = "cache.t2.small"
 }
+
+
+output "internal_subnets" {
+  value = "${module.vpc.internal_subnets}"
+}
+
+output "external_subnets" {
+  value = "${module.vpc.external_subnets}"
+}
+
+output "raw_route_tables_id" {
+  value = "${module.vpc.raw_route_tables_id}"
+}
+
+output "sg_external_elb" {
+  value = "${module.security_groups.engineering_sandboxes_elb}"
+}
+
+output "cidr" {
+  value = "${var.cidr}"
+}
+
+output "vpc_id" {
+  value = "${module.vpc.id}"
+}

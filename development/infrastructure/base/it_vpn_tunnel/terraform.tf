@@ -25,6 +25,46 @@ resource "aws_security_group" "it-vpn-tunnel" {
     cidr_blocks = ["${var.cidr}"]
   }
 
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [
+      "10.32.0.0/12",
+      "98.234.51.222/32",
+      "103.12.132.88/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 122
+    to_port     = 122
+    protocol    = "tcp"
+    cidr_blocks = [
+      "10.32.0.0/12",
+      "98.234.51.222/32",
+      "103.12.132.88/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = [
+      "10.32.0.0/12",
+      "98.234.51.222/32",
+      "103.12.132.88/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 636
+    to_port     = 636
+    protocol    = "tcp"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -42,7 +82,7 @@ resource "aws_security_group" "it-vpn-tunnel" {
 }
 
 resource "aws_instance" "it-managed-vpn-tunnel" {
-  ami                     = "ami-d2c924b2" # Centos 7
+  ami                     = "ami-8652b5fe" # AMI for it-managed vpn
   instance_type           = "t2.medium"
   key_name                = "${var.key_name}"
   count                   = "1"
@@ -59,6 +99,11 @@ resource "aws_instance" "it-managed-vpn-tunnel" {
   tags {
     Name                  = "IT Managed VPN Tunnel"
   }
+}
+
+resource "aws_eip" "it-managed-vpn-tunnel" {
+  vpc                       = true
+  instance                  = "${aws_instance.it-managed-vpn-tunnel.id}"
 }
 
 resource "aws_route" "route_it_1" {
