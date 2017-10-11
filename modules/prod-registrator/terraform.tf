@@ -32,7 +32,7 @@ data "template_file" "registrator_ecs_task" {
 
 resource "aws_ecs_task_definition" "registrator" {
   provider              = "aws.local"
-  family                = "registrator"
+  family                = "${var.project}-registrator"
   container_definitions = "${data.template_file.registrator_ecs_task.rendered}"
   network_mode          = "host"
 

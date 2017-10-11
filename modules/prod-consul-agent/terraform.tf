@@ -49,7 +49,7 @@ data "template_file" "consul_ecs_task" {
 
 resource "aws_ecs_task_definition" "consul" {
   provider              = "aws.local"
-  family                = "consul-agent"
+  family                = "${var.project}-consul-agent"
   container_definitions = "${data.template_file.consul_ecs_task.rendered}"
   network_mode          = "host"
 }
