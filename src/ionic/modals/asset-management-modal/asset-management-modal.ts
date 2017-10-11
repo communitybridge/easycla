@@ -24,6 +24,7 @@ export class AssetManagementModal {
   files: any;
   folders: any;
   selectedFiles: any;
+  selectedDirectory: any;
   loading: any;
 
   newLogoRef: string = "";
@@ -68,6 +69,7 @@ export class AssetManagementModal {
 
   ionViewDidEnter(){
     this.getAllProjectLogosDocuments();
+    this.selectDirectory("root");
   }
 
   getAllProjectLogosDocuments(){
@@ -117,12 +119,14 @@ export class AssetManagementModal {
     ];
     this.folders = [
       {
-        name: 'Logos',
+        displayName: 'Logos',
         type: 'folder',
+        value: 'logos'
       },
       {
-        name: 'Documents',
+        displayName: 'Documents',
         type: 'folder',
+        value: 'documents'
       }
     ];
   }
@@ -130,6 +134,10 @@ export class AssetManagementModal {
   // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss(this.newLogoRef);
+  }
+
+  selectDirectory(directory){
+    this.selectedDirectory = directory;
   }
 
   selectFile(event, file) {
@@ -375,7 +383,10 @@ export class AssetManagementModal {
                      this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
                      this.dismiss();
                    }
-                   else { this.getAllProjectLogosDocuments(); }
+                   else {
+                     this.getAllProjectLogosDocuments();
+                     this.selectDirectory('logos');
+                   }
                  });
 
               }
@@ -388,6 +399,7 @@ export class AssetManagementModal {
                 let S3URL = response.url;
                 this.cincoService.uploadToS3(S3URL, file, file.type).subscribe(response => {
                    this.getAllProjectLogosDocuments();
+                   this.selectDirectory('documents');
                  });
               }
             });
