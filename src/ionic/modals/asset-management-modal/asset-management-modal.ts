@@ -60,15 +60,15 @@ export class AssetManagementModal {
     this.selectedFiles = [];
     this.uploadTypes = 'jpg,jpeg,png,gif,tif,psd,ai,docx,pptx,pdf';
     this.uploadSizeMax = 50000000; // 50MB
-    this.getDefaults();
   }
 
   ngOnInit() {
 
   }
 
-  ionViewDidEnter(){
+  async ionViewDidEnter(){
     this.getAllProjectLogosDocuments();
+    this.getDefaults();
     this.selectDirectory("root");
   }
 
@@ -235,11 +235,6 @@ export class AssetManagementModal {
   */
   uploadClicked(event: Event) {
     this.presentActionSheet();
-    // trigger click event of hidden input
-    // let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-    // this.renderer.invokeElementMethod(
-    //   this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-    // );
   }
 
   presentActionSheet() {
