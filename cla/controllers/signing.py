@@ -7,7 +7,7 @@ import cla
 from cla.utils import get_signing_service, get_signature_instance
 from cla.models import DoesNotExist
 
-def request_signature(project_id, user_id, ret_url, callback_url=None):
+def request_signature(project_id, user_id, ret_url):
     """
     Handle POST request to send signature request to user.
 
@@ -17,14 +17,10 @@ def request_signature(project_id, user_id, ret_url, callback_url=None):
     :type user_id: string
     :param ret_url: The URL the user will be sent to after successful signature.
     :type ret_url: string
-    :param callback_url: Optional parameter to specify the URL the signing service should hit
-        after confirmation of successful signature.
-    :type callback_url: string
     """
     return get_signing_service().request_signature(project_id,
                                                    user_id,
-                                                   ret_url,
-                                                   callback_url)
+                                                   ret_url)
 
 def post_signed(content, installation_id, github_repository_id, change_request_id):
     """

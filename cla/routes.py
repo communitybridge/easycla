@@ -595,24 +595,19 @@ def delete_project_document(project_id: hug.types.text,
 @hug.post('/request-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'user_id': 'some-user-uuid', \
-                        'return_url': 'https://github.com/linuxfoundation/cla, \
-                        'callback_url': 'http://cla.system/signed-callback'}")
+                        'return_url': 'https://github.com/linuxfoundation/cla}")
 def request_signature(project_id: hug.types.text,
                       user_id: hug.types.uuid,
-                      return_url: hug.types.text,
-                      callback_url=None):
+                      return_url: hug.types.text):
     """
     POST: /request-signature
 
     DATA: {'project_id': 'some-project-id',
            'user_id': 'some-user-uuid',
-           'return_url': 'https://github.com/linuxfoundation/cla,
-           'callback_url': 'http://cla.system/signed-callback'}
+           'return_url': 'https://github.com/linuxfoundation/cla'}
 
     Creates a new signature given project and user IDs. The user will be redirected to the
-    return_url once signature is complete. If the optional callback_url is provided, the signing
-    service provider will hit that URL once user signature is confirmed (typically used to update
-    the pull request/merge request/etc.
+    return_url once signature is complete.
 
     Returns a dict of the format:
 
@@ -626,8 +621,7 @@ def request_signature(project_id: hug.types.text,
     """
     return cla.controllers.signing.request_signature(project_id,
                                                      user_id,
-                                                     return_url,
-                                                     callback_url)
+                                                     return_url)
 
 
 @hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)

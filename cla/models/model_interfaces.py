@@ -1451,13 +1451,24 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
-    def get_organizations_by_company(self, company_id):
+    def get_organizations_by_company_id(self, company_id):
         """
         Fetches the github organizations associated with an company.
 
         :param company_id: The company ID to filter github organizations by.
         :type company_id: string
-        :return: The signature objects associated with this github organization.
+        :return: The organizations associated with the company specified.
+        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        """
+        raise NotImplementedError()
+
+    def get_organization_by_project_id(self, project_id):
+        """
+        Fetches the github organizations associated with a project.
+
+        :param project_id: The project ID to filter github organizations by.
+        :type project_id: string
+        :return: The organization associated with the project specified.
         :rtype: [cla.models.model_interfaces.GitHubOrg]
         """
         raise NotImplementedError()
