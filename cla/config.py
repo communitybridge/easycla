@@ -17,6 +17,7 @@ DEBUG = False #: Debug off in production
 
 BASE_URL = 'http://change.me' #: Base URL used for callbacks and OAuth2 redirects.
 SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed' #: Default callback once signature is completed.
+ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
 DATABASE = 'SQLite' #: Database type ('SQLite', 'DynamoDB', etc).
