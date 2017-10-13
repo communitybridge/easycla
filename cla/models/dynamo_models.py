@@ -1212,8 +1212,17 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def set_organization_project_id(self, organization_project_id):
         self.model.organization_project_id = organization_project_id
 
-    def get_organizations_by_company(self, company_id):
+    def get_organizations_by_company_id(self, company_id):
         organization_generator = self.model.scan(organization_company_id__eq=str(company_id))
+        organizations = []
+        for org_model in organization_generator:
+            org = GitHubOrg()
+            org.model = org_model
+            organizations.append(org)
+        return organizations
+
+    def get_organization_by_project_id(self, project_id):
+        organization_generator = self.model.scan(organization_project_id__eq=str(project_id))
         organizations = []
         for org_model in organization_generator:
             org = GitHubOrg()

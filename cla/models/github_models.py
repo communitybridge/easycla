@@ -80,7 +80,7 @@ class GitHub(repository_service_interface.RepositoryService):
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
         if 'github_oauth2_token' in session:
             cla.log.info('Using existing session OAuth2 token')
-            return self.redirect_to_console(installation_id, origin_url, request)
+            return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
         else:
             cla.log.info('Initiating GitHub OAuth2 exchange')
             authorization_url, state = self.get_authorization_url_and_state(installation_id,
@@ -154,12 +154,17 @@ class GitHub(repository_service_interface.RepositoryService):
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
         cla.log.info('OAuth2 token received for state %s: %s', state, token)
         session['github_oauth2_token'] = token
-        self.redirect_to_console(installation_id, origin_url, request)
+        self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
-    def redirect_to_console(self, installation_id, redirect, request):
+    def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
         console_endpoint = cla.conf['CLA_CONSOLE_ENDPOINT']
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
+        # Store repository and PR info so we can redirect the user back later.
+        store = cla.utils.get_key_value_store_instance()
+        key = 'active_signature:' + str(user_id)
+        store.set(key, repository_id + '|' + pull_request_id)
+        # Generate console URL
         console_url = console_endpoint + \
                       '/cla/project/' + project_id + \
                       '/user/' + user.get_user_id() + \

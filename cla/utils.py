@@ -10,14 +10,8 @@ import cla
 
 def get_session_middleware():
     """Prepares the hug middleware to manage key-value session data."""
-    keyvalue = cla.conf['KEYVALUE']
-    if keyvalue == 'Memory':
-        from hug.store import InMemoryStore as Store
-    elif keyvalue == 'DynamoDB':
-        from cla.models.dynamo_models import Store
-    else:
-        raise Exception('Invalid key-value store selected in configuration: %s' %keyvalue)
-    return SessionMiddleware(Store(), context_name='session', cookie_name='cla-sid',
+    store = get_key_value_store_service()
+    return SessionMiddleware(store, context_name='session', cookie_name='cla-sid',
                              cookie_max_age=300, cookie_domain=None, cookie_path='/',
                              cookie_secure=False)
 
@@ -239,6 +233,26 @@ def get_storage_service(conf=None, initialize=True):
     if initialize:
         storage_instance.initialize(conf)
     return storage_instance
+
+def get_key_value_store_service(conf=None):
+    """
+    Helper function to get the configured key-value store service instance.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: The key-value store service instance based on configuration specified.
+    :rtype: KeyValueStore
+    """
+    if conf is None:
+        conf = cla.conf
+    keyvalue = cla.conf['KEYVALUE']
+    if keyvalue == 'Memory':
+        from hug.store import InMemoryStore as Store
+    elif keyvalue == 'DynamoDB':
+        from cla.models.dynamo_models import Store
+    else:
+        raise Exception('Invalid key-value store selected in configuration: %s' %keyvalue)
+    return Store()
 
 def get_supported_repository_providers():
     """
