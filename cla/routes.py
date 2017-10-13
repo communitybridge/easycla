@@ -20,8 +20,14 @@ from falcon import HTTP_403
 #
 # Middleware
 #
+
+# Session Middleware
 hug.API('cla/routes').http.add_middleware(get_session_middleware())
 
+# CORS Middleware
+@hug.response_middleware()
+def process_data(request, response, resource):
+      response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
 
 #
 # User routes.

@@ -9,6 +9,7 @@ DEBUG = True # Debug on for development purposes.
 BASE_URL = 'https://your.cla.domain.com' # Base URL used for callbacks and OAuth2 redirects.
 # Default callback once signature is completed - a custom endpoint can be provided if needed.
 SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed'
+ALLOW_ORIGIN = '*' # The CORS Access-Control-Allow-Origin response header value for requests.
 
 # Define the database we are working with.
 DATABASE = 'DynamoDB' # TODO: Should use in-memory database as default.
