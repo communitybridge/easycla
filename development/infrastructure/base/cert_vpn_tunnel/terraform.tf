@@ -33,6 +33,7 @@ resource "aws_security_group" "it-vpn-tunnel" {
   #  - 54.172.59.54     (us-east-1-lfc-fw.dmz)
   #  - 54.179.151.230   (ap-southeast-1-lfc-fw.dmz)
   #  - 52.193.246.225   (ap-northeast-1-lfc-fw.dmz)
+  #  - 13.114.180.10    (ap-northeast-1-lfc-salt.ext)
   ingress {
     from_port   = 1194
     to_port     = 1194
@@ -44,7 +45,8 @@ resource "aws_security_group" "it-vpn-tunnel" {
         "54.193.90.43/32",
         "54.172.59.54/32",
         "54.179.151.230/32",
-        "52.193.246.225/32"
+        "52.193.246.225/32",
+        "13.114.180.10/32",
     ]
   }
 
