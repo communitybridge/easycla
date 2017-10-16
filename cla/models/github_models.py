@@ -161,9 +161,11 @@ class GitHub(repository_service_interface.RepositoryService):
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
         # Store repository and PR info so we can redirect the user back later.
-        store = cla.utils.get_key_value_store_instance()
-        key = 'active_signature:' + str(user_id)
-        store.set(key, repository_id + '|' + pull_request_id)
+        store = cla.utils.get_key_value_store_service()
+        key = 'active_signature:' + str(user.get_user_id())
+        value = repository_id + '|' + pull_request_id
+        store.set(key, value)
+        cla.log.info('Stored active signature details for user %s: Key - %s  Value - %s', user.get_user_id(), key, value)
         # Generate console URL
         console_url = console_endpoint + \
                       '/cla/project/' + project_id + \
@@ -217,6 +219,10 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the project_id based on installation_id.
         github_org = cla.utils.get_github_organization_instance()
         github_org = github_org.get_organization_by_installation_id(installation_id)
+        if github_org is None:
+            cla.log.error('Could not find Github Organization with installation_id: %s', installation_id)
+            cla.log.error('Failed to update change request %s of repository %s', change_request_id, github_repository_id)
+            return
         project_id = github_org.get_organization_project_id()
         # Find users who have signed and who have not signed.
         signed = []
