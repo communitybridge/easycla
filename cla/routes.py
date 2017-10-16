@@ -28,6 +28,7 @@ hug.API('cla/routes').http.add_middleware(get_session_middleware())
 @hug.response_middleware()
 def process_data(request, response, resource):
       response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
+      response.set_header('Access-Control-Allow-Headers', 'Content-Type')
 
 #
 # User routes.
