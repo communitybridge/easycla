@@ -59,10 +59,10 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'project_id': str(err)}}
         signature.set_signature_project_id(project_id)
         # Get Installation ID
-        organization = cla.utils.get_organization_instance().get_organization_by_project_id(project_id)
-        installation_id = organization.get_installation_id()
+        organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(project_id)
+        installation_id = organization.get_organization_installation_id()
         # Get GitHub Repository and Pull Request ID
-        store = cla.utils.get_key_value_store_instance()
+        store = cla.utils.get_key_value_store_service()
         key = 'active_signature:' + str(user_id) # Should have been set when user initiated the signature.
         if store.exists(key):
             value = store.get(key)
@@ -75,7 +75,8 @@ class DocuSign(signing_service_interface.SigningService):
                     'sign_url': None,
                     'error': 'No active signature found for user - cannot generate callback_url without knowing where the user came from'}
         # Save the callback_url
-        callback_url = cla.conf['SIGNED_CALLBACK_URL'] + '/' + installation_id + '/' + repository_id + '/' + pull_request_id
+        callback_url = cla.conf['SIGNED_CALLBACK_URL'] + '/' + str(installation_id) + '/' + str(repository_id) + '/' + str(pull_request_id)
+        cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
         # Assume ICLA only for now.
         try:
