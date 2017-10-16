@@ -4,7 +4,6 @@ Convenience script to create a new user signature request (simulate a user click
 import sys
 sys.path.append('../')
 
-import uuid
 import cla
 from cla.utils import get_user_instance
 
@@ -12,9 +11,10 @@ from cla.utils import get_user_instance
 user = get_user_instance()
 user = user.get_user_by_github_id(123)
 
+repository_id = '96820382'
+pull_request = '4'
+cla.log.info('Creating new active signature for repository %s and PR %s', repository_id, pull_request)
 # Store data on signature.
 store = cla.utils.get_key_value_store_service()
 key = 'active_signature:' + str(user.get_user_id())
-# For now use PR 4 from the CLA-Test repository.
-value = '96820382|4'
-store.set(key, value)
+store.set(key, repository_id + '|' + pull_request)

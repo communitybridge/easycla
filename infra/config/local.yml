@@ -22,7 +22,8 @@ environment:
     cla_signed_callback_url: Ooops
     cla_database: 'DynamoDB'
     cla_database_host: 'http://dynamodb:8000'
-    cla_keyvalue: 'Memory'
+    cla_keyvalue: 'DynamoDB'
+    cla_keyvalue_host: 'http://dynamodb:8000'
     cla_dynamo_region: 'us-west-2'
     cla_dynamo_write_units: 1
     cla_dynamo_read_units: 1
