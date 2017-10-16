@@ -19,3 +19,4 @@ python3.6 /srv/app/helpers/create_organization.py
 python3.6 /srv/app/helpers/create_user.py
 python3.6 /srv/app/helpers/create_company.py
 python3.6 /srv/app/helpers/create_signature.py
+python3.6 /srv/app/helpers/create_new_active_signature.py
