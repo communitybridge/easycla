@@ -218,6 +218,8 @@ def get_active_signature(user_id):
     :rtype: dict | None
     """
     metadata = cla.utils.get_active_signature_metadata(user_id)
+    if metadata is None:
+        return None
     return_url = cla.utils.get_active_signature_return_url(user_id, metadata)
     metadata['return_url'] = return_url
     return metadata
