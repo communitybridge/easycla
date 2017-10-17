@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId'
+  segment: 'cla/project/:projectId/user/:userId'
 })
 @Component({
   selector: 'cla-landing',
@@ -10,27 +11,33 @@ import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-ang
 })
 export class ClaLandingPage {
   projectId: string;
-  repositoryId: string;
   userId: string;
+
+  user: any;
+  project: any;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    // private cincoService: CincoService,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
   }
 
   getDefaults() {
+    this.project = {
+      project_name: "",
+    }
 
   }
 
   ngOnInit() {
     this.determineAppropriateAgreements();
+    this.getUser(this.userId);
+    this.getProject(this.projectId);
   }
 
   determineAppropriateAgreements() {
@@ -43,7 +50,6 @@ export class ClaLandingPage {
     // send to the individual cla page which will give directions and redirect
     this.navCtrl.push('ClaIndividualPage', {
       projectId: this.projectId,
-      repositoryId: this.repositoryId,
       userId: this.userId,
     });
   }
@@ -51,10 +57,21 @@ export class ClaLandingPage {
   openClaIndividualEmployeeModal() {
     let modal = this.modalCtrl.create('ClaSelectCompanyModal', {
       projectId: this.projectId,
-      repositoryId: this.repositoryId,
       userId: this.userId,
     });
     modal.present();
+  }
+
+  getUser(userId) {
+    this.claService.getUser(userId).subscribe(response => {
+      this.user = response;
+    });
+  }
+
+  getProject(projectId) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
   }
 
 }

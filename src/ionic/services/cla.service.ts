@@ -12,7 +12,7 @@ export class ClaService {
 
   constructor(http: Http) {
     this.http = http;
-    this.claApiUrl = CLA_API_URL;
+    this.claApiUrl = CLA_API_URL + '/v1';
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -123,6 +123,15 @@ export class ClaService {
   //   return this.http.post(this.claApiUrl + '/user/' + userId + '/request-company-whitelist/' + companyId, message)
   //     .map((res) => res.json());
   // }
+
+  /**
+  * /user/{user_id}/active-signature
+  **/
+
+  getUserSignatureIntent(userId) {
+    return this.http.get(this.claApiUrl + '/user/' + userId + '/active-signature')
+      .map((res) => res.json());
+  }
 
   /**
   * /signature
@@ -320,7 +329,8 @@ export class ClaService {
     /*
       {
         'project_external_id': '<proj-external-id>',
-        'project_name': 'Project Name', 'project_ccla_requires_icla_signature': True
+        'project_name': 'Project Name',
+        'project_ccla_requires_icla_signature': True
       }
      */
     return this.http.post(this.claApiUrl + '/project', project)
@@ -400,7 +410,7 @@ export class ClaService {
       {
         'project_id': 'some-project-id',
         'user_id': 'some-user-uuid',
-        'return_url': 'https://github.com/linuxfoundation/cla,
+        'return_url': 'https://github.com/linuxfoundation/cla',
         'callback_url': 'http://cla.system/signed-callback'
       }
      */
