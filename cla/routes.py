@@ -153,6 +153,23 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, message)
 
+@hug.get('/user/{user_id}/active-signature', versions=1)
+def get_user_active_signature(user_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/active-signature
+
+    Returns all metadata associated with a user's active signature.
+
+    {'user_id': <user-id>,
+     'project_id': <project-id>,
+     'repository_id': <repository-id>,
+     'pull_request_id': <PR>,
+     'return_url': <url-where-user-initiated-signature-from>'}
+
+    Returns null if the user does not have an active signature.
+    """
+    return cla.controllers.user.get_active_signature(user_id)
+
 #
 # Signature Routes.
 #
@@ -595,17 +612,16 @@ def delete_project_document(project_id: hug.types.text,
 #
 @hug.post('/request-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
-                        'user_id': 'some-user-uuid', \
-                        'return_url': 'https://github.com/linuxfoundation/cla}")
+                        'user_id': 'some-user-uuid'}")
 def request_signature(project_id: hug.types.text,
                       user_id: hug.types.uuid,
-                      return_url: hug.types.text):
+                      return_url=None):
     """
     POST: /request-signature
 
     DATA: {'project_id': 'some-project-id',
            'user_id': 'some-user-uuid',
-           'return_url': 'https://github.com/linuxfoundation/cla'}
+           'return_url': <optional>}
 
     Creates a new signature given project and user IDs. The user will be redirected to the
     return_url once signature is complete.
@@ -620,9 +636,7 @@ def request_signature(project_id: hug.types.text,
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    return cla.controllers.signing.request_signature(project_id,
-                                                     user_id,
-                                                     return_url)
+    return cla.controllers.signing.request_signature(project_id, user_id, return_url)
 
 
 @hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
@@ -633,10 +647,6 @@ def post_signed(body, installation_id: hug.types.text,
     POST: /signed/{installation_id}/{github_repository_id}/{change_request_id}
 
     Callback URL from signing service upon signature.
-
-    If you want the repository service provider to be notified of a successful signature, this
-    callback URL should be specified when creating a new signature request with the
-    /request-signature endpoint.
     """
     content = body.read()
     return cla.controllers.signing.post_signed(content, installation_id, github_repository_id, change_request_id)

@@ -3,6 +3,7 @@ Utility functions for the CLA project.
 """
 
 import urllib.parse
+import json
 import falcon
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
@@ -661,6 +662,102 @@ def redirect_user_by_signature(user, signature):
         signature_id = signature.get_signature_id()
         cla.log.info('Signature exists, sending user to sign: %s (%s)', signature_id, sign_url)
         raise falcon.HTTPFound(sign_url)
+
+def get_active_signature_metadata(user_id):
+    """
+    When a user initiates the signing process, the CLA system must store information on this
+    signature - such as where the user came from, what repository it was initiated on, etc.
+    This information is temporary while the signature is in progress. See the Signature object
+    for information on this signature once the signing is complete.
+
+    :param user_id: The ID of the user in question.
+    :type user_id: string
+    :return: Dict of data on the signature request from this user.
+    :rtype: dict
+    """
+    store = get_key_value_store_service()
+    key = 'active_signature:' + str(user_id)
+    if store.exists(key):
+        return json.loads(store.get(key))
+    return None
+
+def set_active_signature_metadata(user_id, project_id, repository_id, pull_request_id):
+    """
+    When a user initiates the signing process, the CLA system must store information on this
+    signature - such as where the user came from, what repository it was initiated on, etc.
+    This is a helper function to perform the storage of this information.
+
+    :param user_id: The ID of the user beginning the signing process.
+    :type user_id: string
+    :param project_id: The ID of the project this signature is for.
+    :type project_id: string
+    :param repository_id: The repository where the signature is coming from.
+    :type repository_id: string
+    :param pull_request_id: The PR where this signature request is coming from (where the user
+        clicked on the 'Sign CLA' badge).
+    :type pull_request_id: string
+    """
+    store = get_key_value_store_service()
+    key = 'active_signature:' + str(user_id) # Should have been set when user initiated the signature.
+    value = json.dumps({'user_id': user_id,
+                        'project_id': project_id,
+                        'repository_id': repository_id,
+                        'pull_request_id': pull_request_id})
+    store.set(key, value)
+    cla.log.info('Stored active signature details for user %s: Key - %s  Value - %s', user_id, key, value)
+
+def delete_active_signature_metadata(user_id):
+    """
+    Helper function to delete all metadata regarding the active signature request for the user.
+
+    :param user_id: The ID of the user in question.
+    :type user_id: string
+    """
+    store = get_key_value_store_service()
+    key = 'active_signature:' + str(user_id)
+    store.delete(key)
+    cla.log.info('Deleted stored active signature details for user %s', user_id)
+
+def get_active_signature_return_url(user_id, metadata=None):
+    """
+    Helper function to get a user's active signature return URL.
+
+    :param user_id: The user ID in question.
+    :type user_id: string
+    :return: The URL the user will be redirected to upon successful signature.
+    :rtype: string
+    """
+    if metadata is None:
+        metadata = get_active_signature_metadata(user_id)
+    if metadata is None:
+        cla.log.error('Could not find active signature for user %s, return URL request failed' %user_id)
+        return None
+    organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
+    installation_id = organization.get_organization_installation_id()
+    github = cla.utils.get_repository_service('github')
+    return github.get_return_url(metadata['repository_id'],
+                                 metadata['pull_request_id'],
+                                 installation_id)
+
+def get_active_signature_callback_url(user_id, metadata=None):
+    """
+    Helper function to get a user's active signature callback URL.
+
+    :param user_id: The user ID in question.
+    :type user_id: string
+    :return: The callback URL that will be hit by the signing service provider.
+    :rtype: string
+    """
+    if metadata is None:
+        metadata = get_active_signature_metadata(user_id)
+    if metadata is None:
+        cla.log.error('Could not find active signature for user %s, callback URL request failed' %user_id)
+        return None
+    organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
+    installation_id = organization.get_organization_installation_id()
+    return cla.conf['SIGNED_CALLBACK_URL'] + '/' + str(installation_id) + '/' + \
+                                                   str(metadata['repository_id']) + '/' + \
+                                                   str(metadata['pull_request_id'])
 
 def request_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
