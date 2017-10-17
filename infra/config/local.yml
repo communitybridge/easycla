@@ -29,9 +29,9 @@ environment:
     cla_dynamo_read_units: 1
     cla_signing_service: 'DocuSign'
     cla_docusign_root_url: 'https://demo.docusign.net/restapi/v2'
-    cla_docusign_username: ''
-    cla_docusign_password: ''
-    cla_docusign_integrator_key: ''
+    cla_docusign_username: 'fa239181-b14a-489d-85c1-3cac52d58884'
+    cla_docusign_password: 'k3Y7Q5zot%ZD@i3W'
+    cla_docusign_integrator_key: '828f4192-0f3f-4f9f-9cff-56f0b6d61615'
     cla_github_app_id: '4449'
     cla_github_app_client_id: 'Iv1.3899cde846512a7e'
     cla_github_app_secret: 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
