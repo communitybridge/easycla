@@ -49,4 +49,5 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
         # Set the callback_url to the CLA instance.
         base_url = 'http://localhost:' + host_port(containers, 'workspace')
         callback_url = base_url + '/v1/signed'
+        containers['workspace']['environment']['CLA_BASE_URL'] = base_url
         containers['workspace']['environment']['CLA_SIGNED_CALLBACK_URL'] = callback_url
