@@ -207,3 +207,17 @@ Please follow up with the user as necessary.
     recipient = manager.get_user_email()
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
+
+def get_active_signature(user_id):
+    """
+    Returns information on the user's active signature - if there is one.
+
+    :param user_id: The ID of the user.
+    :type user_id: string
+    :return: A dictionary of all the active signature's metadata, along with the return_url.
+    :rtype: dict | None
+    """
+    metadata = cla.utils.get_active_signature_metadata(user_id)
+    return_url = cla.utils.get_active_signature_return_url(user_id, metadata)
+    metadata['return_url'] = return_url
+    return metadata

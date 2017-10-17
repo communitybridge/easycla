@@ -45,7 +45,7 @@ class DocuSign(signing_service_interface.SigningService):
                                                 password=password,
                                                 integrator_key=integrator_key)
 
-    def request_signature(self, project_id, user_id, return_url):
+    def request_signature(self, project_id, user_id, return_url=None):
         # Create new signature.
         cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
         signature = cla.utils.get_signature_instance()
@@ -58,26 +58,20 @@ class DocuSign(signing_service_interface.SigningService):
                           project_id)
             return {'errors': {'project_id': str(err)}}
         signature.set_signature_project_id(project_id)
-        # Get Installation ID
-        organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(project_id)
-        installation_id = organization.get_organization_installation_id()
-        # Get GitHub Repository and Pull Request ID
-        store = cla.utils.get_key_value_store_service()
-        key = 'active_signature:' + str(user_id) # Should have been set when user initiated the signature.
-        if store.exists(key):
-            value = store.get(key)
-            repository_id, pull_request_id = value.split('|')
-        else:
-            cla.log.error('Could not find active signature for user %s, signature request failed' %user_id)
-            return {'user_id': str(user_id),
-                    'project_id': project_id,
-                    'signature_id': None,
-                    'sign_url': None,
-                    'error': 'No active signature found for user - cannot generate callback_url without knowing where the user came from'}
-        # Save the callback_url
-        callback_url = cla.conf['SIGNED_CALLBACK_URL'] + '/' + str(installation_id) + '/' + str(repository_id) + '/' + str(pull_request_id)
+        signature_metadata = cla.utils.get_active_signature_metadata(user_id)
+        callback_url = cla.utils.get_active_signature_callback_url(user_id, signature_metadata)
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
+        # Requires us to know where the user came from.
+        if return_url is None:
+            return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
+        if return_url is None:
+            return {'user_id': str(user_id),
+                    'project_id': str(project_id),
+                    'signature_id': None,
+                    'sign_url': None,
+                    'error': 'No active signature found for user - cannot generate return_url \
+                              without knowing where the user came from'}
         # Assume ICLA only for now.
         try:
             document = project.get_project_individual_document()
@@ -207,6 +201,9 @@ class DocuSign(signing_service_interface.SigningService):
                 raise NotImplementedError()
             user = cla.utils.get_user_instance()
             user.load(signature.get_signature_reference_id())
+            # Remove the active signature metadata.
+            cla.utils.delete_active_signature_metadata(user.get_user_id())
+            # Send email with signed document.
             self.send_signed_document(envelope_id, user)
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)

@@ -161,11 +161,7 @@ class GitHub(repository_service_interface.RepositoryService):
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
         # Store repository and PR info so we can redirect the user back later.
-        store = cla.utils.get_key_value_store_service()
-        key = 'active_signature:' + str(user.get_user_id())
-        value = repository_id + '|' + pull_request_id
-        store.set(key, value)
-        cla.log.info('Stored active signature details for user %s: Key - %s  Value - %s', user.get_user_id(), key, value)
+        cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
         console_url = console_endpoint + \
                       '/cla/project/' + project_id + \
