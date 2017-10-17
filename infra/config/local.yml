@@ -18,8 +18,8 @@ containers:
 # Environment Variables to be injected in the container.
 environment:
   workspace:
-    cla_base_url: Ooops
-    cla_signed_callback_url: Ooops
+    cla_base_url: Should be populated by hooks
+    cla_signed_callback_url: Should be populated by hooks
     cla_database: 'DynamoDB'
     cla_database_host: 'http://dynamodb:8000'
     cla_keyvalue: 'DynamoDB'
@@ -38,8 +38,8 @@ environment:
     cla_github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
     cla_github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
     cla_github_main_installation_id: 49309
-    cla_keycloak_endpoint: Ooops
-    cla_cinco_endpoint: Ooops
+    cla_keycloak_endpoint: Should be populated by hooks
+    cla_cinco_endpoint: Should be populated by hooks
     cla_email_service: 'SMTP'
     cla_smtp_sender_email_address: 'donotreply@cla.system'
     cla_smtp_host: 'mailhog'
