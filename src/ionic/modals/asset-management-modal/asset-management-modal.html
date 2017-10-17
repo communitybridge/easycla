@@ -3,9 +3,9 @@
     <ion-toolbar>
       <ion-title >
         <ng-container *ngIf="selectedDirectory != 'root'">
-          <ion-icon name="arrow-dropleft" class="cursor-pointer" (click)="selectDirectory('root')"></ion-icon>
+          <ion-icon name="arrow-dropleft" class="clickable" (click)="selectDirectory('root')"></ion-icon>
         </ng-container>
-        <span (click)="selectDirectory('root')" class="cursor-pointer">{{ projectId }} Assets</span>
+        <span (click)="selectDirectory('root')" class="clickable">{{ projectId }} Assets</span>
         <ng-container *ngIf="selectedDirectory == 'logos'">
           <ion-icon name="arrow-dropright"></ion-icon> Logos
         </ng-container>
@@ -40,7 +40,7 @@
         <tbody>
 
           <ng-container *ngIf="selectedDirectory == 'root'">
-            <tr *ngFor="let folder of folders" (click)="selectDirectory(folder.value)" class="cursor-pointer">
+            <tr *ngFor="let folder of folders" (click)="selectDirectory(folder.value)" class="clickable">
               <td data-title="Type">
                 <ion-icon name="folder"></ion-icon>
               </td>
