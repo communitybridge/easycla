@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
-import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { KeycloakService } from './keycloak/keycloak.service';
 import { Observable } from 'rxjs/Rx';
 
 @Injectable()

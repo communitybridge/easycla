@@ -384,9 +384,8 @@ export class ContactUpdateModal {
   removeContact() {
     this.currentlySubmitting = true;
     this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
-      if(response) {
-        this.dismiss();
-      }
+      // Doesn't return anything. Resolves as 204
+      this.dismiss();
     });
   }
 

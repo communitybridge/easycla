@@ -54,9 +54,10 @@ export class MyApp {
 
   getDefaults() {
     this.userRoles = {
-      isAdmin: false,
-      isProgramManager: false,
       isUser: false,
+      isProgramManager: false,
+      isProgramManagerAdmin: false,
+      isAdmin: false,
     };
     this.pages = [];
   }
@@ -101,13 +102,15 @@ export class MyApp {
     this.keycloak.getTokenParsed().then(
       (tokenParsed) => {
         if(tokenParsed){
-          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'admin');
-          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'program_manager');
-          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'user');
+          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'PMC_USER');
+          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
+          let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
+          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_ADMIN');
           this.userRoles = {
-            isAdmin: isAdmin,
-            isProgramManager: isProgramManager,
             isUser: isUser,
+            isProgramManager: isProgramManager,
+            isProgramManagerAdmin: isProgramManagerAdmin,
+            isAdmin: isAdmin,
           };
           this.regeneratePagesMenu();
         }
