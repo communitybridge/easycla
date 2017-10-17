@@ -8,10 +8,10 @@ export class HttpClient {
 
   constructor(public http: Http, private keycloak: KeycloakService) {}
 
-  buildHeaders(){
+  buildCINCOHeaders(contentType: string = 'application/json') {
     let headers = new Headers({
       'Accept': 'application/json',
-      'Content-Type': 'application/json; charset=utf-8'
+      'Content-Type': contentType
     })
 
     return this.keycloak.getToken().then(
@@ -25,28 +25,51 @@ export class HttpClient {
 
   }
 
+  buildS3Headers(contentType) {
+    let headers = new Headers({
+      'Accept': 'application/json',
+      'Content-Type': contentType
+    })
+
+    return this.keycloak.getToken().then(
+      (token) => {
+        if(token){
+          return headers;
+        }
+      }
+    );
+
+  }
+
+
   get(url) {
     return Observable
-        .fromPromise(this.buildHeaders())
+        .fromPromise(this.buildCINCOHeaders())
         .switchMap((headers) => this.http.get(url, { headers: headers }));
   }
 
   post(url, data) {
     return Observable
-        .fromPromise(this.buildHeaders())
+        .fromPromise(this.buildCINCOHeaders())
         .switchMap((headers) => this.http.post(url, data, { headers: headers }));
   }
 
-  put(url, data) {
+  put(url, data, contentType: string = 'application/json') {
     return Observable
-        .fromPromise(this.buildHeaders())
+        .fromPromise(this.buildCINCOHeaders(contentType))
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
   }
 
   delete(url) {
     return Observable
-        .fromPromise(this.buildHeaders())
+        .fromPromise(this.buildCINCOHeaders())
         .switchMap((headers) => this.http.delete(url, { headers: headers }));
+  }
+
+  putS3(url, data, contentType) {
+    return Observable
+        .fromPromise(this.buildS3Headers(contentType))
+        .switchMap((headers) => this.http.put(url, data, { headers: headers }));
   }
 
 }

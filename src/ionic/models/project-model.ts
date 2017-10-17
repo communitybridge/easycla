@@ -25,6 +25,9 @@ export class ProjectModel {
     },
     type: string
   }
+  config: {
+    logoRef: string
+  }
 
   constructor() {
   }
