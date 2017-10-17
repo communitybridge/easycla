@@ -43,6 +43,7 @@
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
         <ion-card >
+          <img *ngIf="project.config.logoRef" (click)="viewProject(project.id)" src="{{project.config.logoRef}}" alt="{{project.name}} logo"/>
           <ion-card-content>
             <ion-card-title (click)="viewProject(project.id)">
               <span class="project-name">{{ project.name }}</span>

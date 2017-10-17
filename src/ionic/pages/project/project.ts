@@ -66,21 +66,9 @@ export class ProjectPage {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
       if(response) {
-        this.project.id = response.id;
-        this.project.name = response.name;
-        this.project.description = response.description;
-        this.project.managers = response.managers;
-        this.project.status = response.status;
-        this.project.category = response.category;
-        this.project.sector = response.sector;
-        this.project.url = response.url;
-        this.project.startDate = response.startDate;
-        this.project.logoRef = response.logoRef;
-        this.project.agreementRef = response.agreementRef;
-        this.project.mailingListType = response.mailingListType;
-        this.project.emailAliasType = response.emailAliasType;
-        this.project.address = response.address;
-        this.project.members = response.members;
+        this.project = response;
+        // This is to refresh an image that have same URL
+        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
         this.membersCount = this.project.members.length;
         this.loading.project = false;
       }
@@ -111,6 +99,11 @@ export class ProjectPage {
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
+    });
+    modal.onDidDismiss(newlogoRef => {
+      if(newlogoRef){
+        this.project.config.logoRef = newlogoRef;
+      }
     });
     modal.present();
   }
@@ -149,8 +142,8 @@ export class ProjectPage {
       category: "",
       sector: "",
       url: "",
-      startDate: "",
       logoRef: "",
+      startDate: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
@@ -163,6 +156,9 @@ export class ProjectPage {
           thoroughfare: ""
         },
         type: ""
+      },
+      config: {
+        logoRef: ""
       }
     };
     this.sort = {
