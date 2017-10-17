@@ -82,7 +82,7 @@ export class ProjectDetailsPage {
       if (response) {
         this.project = response;
         this.loading.project = false;
-
+        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
         this.form.patchValue({
           name:this.project.name,
           startDate:this.project.startDate,
@@ -155,6 +155,11 @@ export class ProjectDetailsPage {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
     });
+    modal.onDidDismiss(newlogoRef => {
+      if(newlogoRef){
+        this.project.config.logoRef = newlogoRef;
+      }
+    });
     modal.present();
   }
 
@@ -172,8 +177,8 @@ export class ProjectDetailsPage {
       category: "",
       sector: "",
       url: "",
-      startDate: "",
       logoRef: "",
+      startDate: "",
       agreementRef: "",
       mailingListType: "",
       emailAliasType: "",
@@ -186,6 +191,9 @@ export class ProjectDetailsPage {
           thoroughfare: ""
         },
         type: ""
+      },
+      config: {
+        logoRef: ""
       }
     };
   }
