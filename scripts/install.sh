@@ -12,11 +12,4 @@ echo '[default]
 aws_access_key_id=""
 aws_secret_access_key=""' > /root/.aws/credentials
 
-python3.6 /srv/app/helpers/create_database.py
-python3.6 /srv/app/helpers/create_project.py
-python3.6 /srv/app/helpers/create_document.py
-python3.6 /srv/app/helpers/create_organization.py
-python3.6 /srv/app/helpers/create_user.py
-python3.6 /srv/app/helpers/create_company.py
-python3.6 /srv/app/helpers/create_signature.py
-python3.6 /srv/app/helpers/create_new_active_signature.py
+python3.6 /srv/app/helpers/create_test_environment.py
