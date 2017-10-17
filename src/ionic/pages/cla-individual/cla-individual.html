@@ -39,7 +39,7 @@
               If a new tab with the document to sign did not open, you may use
               the button below:
             </p>
-            <button ion-button (click)="openClaAgreement()">
+            <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
               Open ICLA Agreement
             </button>
           </ion-card-content>

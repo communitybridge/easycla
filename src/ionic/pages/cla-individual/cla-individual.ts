@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/individual'
+  segment: 'cla/project/:projectId/user/:userId/individual'
 })
 @Component({
   selector: 'cla-individual',
@@ -10,54 +11,83 @@ import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-ang
 })
 export class ClaIndividualPage {
   projectId: string;
-  repositoryId: string;
   userId: string;
 
+  user: any;
   project: any;
-  agreementUrl: string;
+  signatureIntent: any;
+  signature: any;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    // private cincoService: CincoService,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
   }
 
   getDefaults() {
-
-  }
-
-  ngOnInit() {
-    this.getProject();
-    this.getAgreementUrl();
-  }
-
-  getProject() {
     this.project = {
-      id: '0000000001',
-      name: 'Project Name',
-      logoRef: 'https://dummyimage.com/225x102/d8d8d8/242424.png&text=Project+Logo',
+      project_name: "",
+    };
+    this.signature = {
+      sign_url: "",
     };
   }
 
-  getAgreementUrl() {
-    console.log('get agreement url');
-    console.log(this.projectId);
-    console.log(this.repositoryId);
-    console.log(this.userId);
-    this.agreementUrl = 'https://docusign.com';
-    this.openClaAgreement();
+  ngOnInit() {
+    this.getUser(this.userId);
+    this.getProject(this.projectId);
+    this.getUserSignatureIntent(this.userId);
   }
 
+  getUser(userId) {
+    this.claService.getUser(userId).subscribe(response => {
+      this.user = response;
+    });
+  }
+
+  getProject(projectId) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
+  }
+
+  getUserSignatureIntent(userId)  {
+    this.claService.getUserSignatureIntent(userId).subscribe(response => {
+      this.signatureIntent = response;
+      this.postSignatureRequest();
+    });
+  }
+
+  postSignatureRequest() {
+    let signatureRequest = {
+      'project_id': this.projectId,
+      'user_id': this.userId,
+      // Switch this to intermediary loading screen as docusign postback has delay
+      'return_url': this.signatureIntent.return_url,
+    };
+
+    this.claService.postSignatureRequest(signatureRequest).subscribe(response => {
+      // returns {
+      //   user_id:
+      //   signature_id:
+      //   project_id:
+      //   sign_url: docusign.com/some-docusign-url
+      // }
+      this.signature = response;
+    });
+  }
 
   openClaAgreement() {
-    console.log('info for docusign');
-    window.open(this.agreementUrl, '_blank');
+    if (!this.signature.sign_url) {
+      // Can't open agreement if we don't have a sign_url yet
+      return;
+    }
+    window.open(this.signature.sign_url, '_blank');
   }
 
 }
