@@ -24,7 +24,7 @@ data "terraform_remote_state" "production-tools" {
   backend = "consul"
   config {
     address = "consul.service.consul:8500"
-    path    = "terraform/production-tools"
+    path    = "terraform/infrastructure"
   }
 }
 
@@ -32,8 +32,8 @@ data "terraform_remote_state" "production-tools" {
 data "terraform_remote_state" "infrastructure" {
   backend = "consul"
   config {
-    address = "consul.service.consul:8500"
-    path    = "terraform/production/infrastructure"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure"
   }
 }
 // Provider for this infra, re-using the same credentials that asked for in the variables.
@@ -117,6 +117,19 @@ module "peering_infra" {
   tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
   tools_cidr                = "${data.terraform_remote_state.infrastructure.west_cidr}"
   tools_vpc_id              = "${data.terraform_remote_state.infrastructure.west_vpc_id}"
+}
+
+// Peering to Keycloak
+module "kc_peering" {
+  source                    = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
+  tools_cidr                = "10.32.7.0/24"
+  tools_vpc_id              = "vpc-5aa9d23c"
 }
 
 // The region in which the infra lives.

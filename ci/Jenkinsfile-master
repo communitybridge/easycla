@@ -35,21 +35,6 @@ node {
         }
       }
 
-      stage("Docker Artifact: NGINX") {
-        try {
-          dir("infra/nginx/production") {
-            sh "docker build -t pmc/nginx/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-            sh "docker tag pmc/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
-            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/pmc/nginx:${params.SHA}"
-          }
-        } catch (err) {
-          echo "Caught Exception: ${err}"
-          statusDockerNGINX = 1
-          currentBuild.result = 'FAILURE'
-        }
-
-      }
-
     }
 
     stage("Terraform Plan") {
@@ -84,7 +69,6 @@ node {
       sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/jenkins/cd_notif -d '{\
           \"steps\": {\
             \"Docker Image: PMC\": \"${statusDockerPMC}\",\
-            \"Docker Image: NGINX\": \"${statusDockerNGINX}\",\
             \"Terraform Plan\": \"${statusTerraformPlan}\"\
           },\
           \"job_name\": \"${env.JOB_NAME}\",\
