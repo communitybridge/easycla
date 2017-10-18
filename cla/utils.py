@@ -574,7 +574,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you! Please sign our [Contributor License Signature](' + \
+        text = 'Thank you! Please sign our [Contributor License Agreement](' + \
                sign_url + ') before we can accept your contribution:'
         # Group commits by author.
         committers = {}
