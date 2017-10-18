@@ -55,7 +55,7 @@ def create_organization(organization_name, # pylint: disable=too-many-arguments
     github_organization = get_github_organization_instance()
     github_organization.set_organization_name(organization_name)
     if organization_project_id:
-        github_organization.set_organization_company_id(organization_project_id)
+        github_organization.set_organization_company_id(str(organization_project_id))
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
     github_organization.save()
@@ -85,7 +85,7 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
         return {'errors': {'repository_id': str(err)}}
     github_organization.set_organization_name(organization_name)
     if organization_project_id:
-        github_organization.set_organization_company_id(organization_project_id)
+        github_organization.set_organization_company_id(str(organization_project_id))
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
     github_organization.save()

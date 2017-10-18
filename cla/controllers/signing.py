@@ -18,7 +18,7 @@ def request_signature(project_id, user_id, return_url=None):
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_signature(project_id, user_id, return_url)
+    return get_signing_service().request_signature(str(project_id), str(user_id), return_url)
 
 def post_signed(content, installation_id, github_repository_id, change_request_id):
     """

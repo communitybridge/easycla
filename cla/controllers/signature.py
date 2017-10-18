@@ -146,7 +146,7 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
         return {'errors': {'signature_id': str(err)}}
     if signature_project_id is not None:
         try:
-            signature.set_signature_project_id(signature_project_id)
+            signature.set_signature_project_id(str(signature_project_id))
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     # TODO: Ensure signature_reference_id exists.
@@ -259,5 +259,5 @@ def get_project_signatures(project_id):
     :param project_id: The ID of the project in question.
     :type project_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_project(project_id)
+    signatures = get_signature_instance().get_signatures_by_project(str(project_id))
     return [signature.to_dict() for signature in signatures]
