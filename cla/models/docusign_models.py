@@ -159,6 +159,7 @@ class DocuSign(signing_service_interface.SigningService):
                                            status=pydocusign.Envelope.STATUS_SENT, # Send now.
                                            recipients=[signer])
         envelope = self.prepare_sign_request(envelope)
+        cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
         recipient = envelope.recipients[0]
         # The URL the user will be redirected to after signing.
         # This route will be in charge of extracting the signature's return_url and redirecting.
@@ -324,5 +325,5 @@ class MockDocuSign(DocuSign):
 
 def update_repository_provider(installation_id, github_repository_id, change_request_id):
     """Helper method to notify the repository provider of successful signature."""
-    repo_service = utils.get_repository_service('github')
-    repo_provider.update_change_request(installation_id, github_repository_id, change_request_id)
+    repo_service = cla.utils.get_repository_service('github')
+    repo_service.update_change_request(installation_id, github_repository_id, change_request_id)
