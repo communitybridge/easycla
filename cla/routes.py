@@ -487,8 +487,12 @@ def get_projects():
 
     Returns all CLA projects.
     """
-    return cla.controllers.project.get_projects()
-
+    projects = cla.controllers.project.get_projects()
+    # For public endpoint, don't show the project_external_id.
+    for project in projects:
+        if 'project_external_id' in project:
+            del project['project_external_id']
+    return projects
 
 @hug.get('/project/{project_id}', versions=1)
 def get_project(project_id: hug.types.text):
@@ -497,8 +501,11 @@ def get_project(project_id: hug.types.text):
 
     Returns the CLA project requested by ID.
     """
-    return cla.controllers.project.get_project(project_id)
-
+    project = cla.controllers.project.get_project(project_id)
+    # For public endpoint, don't show the project_external_id.
+    if 'project_external_id' in project:
+        del project['project_external_id']
+    return project
 
 @hug.post('/project', versions=1,
           examples=" - {'project_name': 'Project Name'}")
