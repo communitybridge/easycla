@@ -302,6 +302,16 @@ module "rds-cluster" {
   instance_type        = "db.t2.small"
 }
 
+module "github-enterprise" {
+  source                 = "./github_enterprise"
+  vpc_id                 = "${module.vpc.id}"
+  replica_count          = "1"
+  ghe_sg                 = "${module.security_groups.ghe}"
+  elb_sg                 = "${module.security_groups.ghe-elb}"
+  internal_subnets       = "${module.vpc.internal_subnets}"
+  external_subnets       = "${module.vpc.external_subnets}"
+}
+
 /**
  * Outputs
  */
