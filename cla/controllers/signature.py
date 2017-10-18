@@ -211,7 +211,7 @@ def get_signature_approved_email_content(signature): # pylint: disable=invalid-n
     project = get_project_instance()
     project.load(signature.get_signature_project_id())
     recipients = [user.get_user_id()]
-    body = 'Hello %s. Your Contributor License Signature for %s has been approved!' \
+    body = 'Hello %s. Your Contributor License Agreement for %s has been approved!' \
            %(user.get_user_name(), project.get_project_name())
     return subject, body, recipients
 
