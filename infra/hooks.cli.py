@@ -55,5 +55,5 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
         containers['workspace']['environment']['CLA_SIGNED_CALLBACK_URL'] = callback_url
         lf.logger.warning('You public IP address (%s) was used as the base_url for the CLA system.' %ip)
         lf.logger.warning('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (%s -> %s)' %(port, port))
-        lf.logger.warning('The CLA system will work without the port forwading setup, but you will not be able to test the DocuSign callback (confirmation of completed signatures)')
+        lf.logger.warning('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
         lf.logger.warning('Tip: You can still access the CLA system locally via http://localhost:%s' %port)
