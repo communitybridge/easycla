@@ -47,7 +47,13 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
                 lf.logger.info('Keycloak: %s', kc_endpoint)
                 containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint
         # Set the callback_url to the CLA instance.
-        base_url = 'http://localhost:' + host_port(containers, 'workspace')
+        ip = public_ip()
+        port = host_port(containers, 'workspace')
+        base_url = 'http://' + ip + ':' + port
         callback_url = base_url + '/v1/signed'
         containers['workspace']['environment']['CLA_BASE_URL'] = base_url
         containers['workspace']['environment']['CLA_SIGNED_CALLBACK_URL'] = callback_url
+        lf.logger.warning('You public IP address (%s) was used as the base_url for the CLA system.' %ip)
+        lf.logger.warning('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (%s -> %s)' %(port, port))
+        lf.logger.warning('The CLA system will work without the port forwading setup, but you will not be able to test the DocuSign callback (confirmation of completed signatures)')
+        lf.logger.warning('Tip: You can still access the CLA system locally via http://localhost:%s' %port)
