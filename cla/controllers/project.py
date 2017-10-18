@@ -4,7 +4,8 @@ Controller related to project operations.
 
 import uuid
 import cla
-from cla.utils import get_project_instance, get_document_instance
+from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
+                      get_company_instance
 from cla.models import DoesNotExist
 
 
@@ -129,6 +130,31 @@ def get_project_repositories(project_id):
         return {'errors': {'project_id': str(err)}}
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
+
+
+def get_project_companies(project_id):
+    """
+    Get a project's associated companies (via CCLA link).
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+    project = get_project_instance()
+    try:
+        project.load(str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+    # Get all reference_ids of signatures that match the project_id AND are of type 'CCLA' AND have
+    # reference_type of 'company'. Return all the companies matching those reference_ids.
+    signature = get_signature_instance()
+    signatures = signature.get_signatures_by_project(str(project_id),
+                                                     signature_signed=True,
+                                                     signature_approved=True,
+                                                     signature_type='ccla',
+                                                     signature_reference_type='company')
+    company_ids = [signature.get_reference_id() for signature in signatures]
+    company = get_company_instance()
+    return [comp.to_dict() for comp in company.all(company_ids)]
 
 
 def get_project_document(project_id, document_type, major_version=None, minor_version=None):

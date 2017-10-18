@@ -930,7 +930,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return signatures
 
     def get_signatures_by_project(self, project_id, signature_signed=None,
-                                  signature_approved=None):
+                                  signature_approved=None, signature_type=None,
+                                  signature_reference_type=None):
+        # TODO: Need to optimize this on the DB end.
         signature_generator = self.model.signature_project_index.query(project_id)
         signatures = []
         for signature_model in signature_generator:
@@ -939,6 +941,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                 continue
             if signature_approved is not None and \
                signature_model.signature_approved != signature_approved:
+                continue
+            if signature_type is not None and \
+               signature_model.signature_type != signature_type:
+                continue
+            if signature_reference_type is not None and \
+               signature_model.signature_reference_type != signature_reference_type:
                 continue
             signature = Signature()
             signature.model = signature_model
