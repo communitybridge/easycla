@@ -58,7 +58,7 @@ def create_repository(repository_project_id, # pylint: disable=too-many-argument
     """
     repository = get_repository_instance()
     repository.set_repository_id(str(uuid.uuid4()))
-    repository.set_repository_project_id(repository_project_id)
+    repository.set_repository_project_id(str(repository_project_id))
     repository.set_repository_name(repository_name)
     repository.set_repository_type(repository_type)
     repository.set_repository_url(repository_url)
@@ -100,7 +100,7 @@ def update_repository(repository_id, # pylint: disable=too-many-arguments
         return {'errors': {'repository_id': str(err)}}
     # TODO: Ensure project_id exists.
     if repository_project_id is not None:
-        repository.set_repository_project_id(repository_project_id)
+        repository.set_repository_project_id(str(repository_project_id))
     if repository_external_id is not None:
         repository.set_repository_external_id(repository_external_id)
     if repository_name is not None:

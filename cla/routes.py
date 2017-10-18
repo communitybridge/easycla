@@ -200,7 +200,7 @@ def get_signature(signature_id: hug.types.uuid):
                         'signature_project_id': '<project-id>', \
                         'signature_reference_id': '<ref-id>', \
                         'signature_reference_type': 'individual'}")
-def post_signature(signature_project_id: hug.types.text, # pylint: disable=too-many-arguments
+def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
                    signature_reference_id: hug.types.text,
                    signature_reference_type: hug.types.one_of(['company', 'user']),
                    signature_type: hug.types.one_of(['cla', 'dco']),
@@ -300,7 +300,7 @@ def get_signatures_company(company_id: hug.types.uuid):
 
 
 @hug.get('/signatures/project/{project_id}', versions=1)
-def get_signatures_project(project_id: hug.types.text):
+def get_signatures_project(project_id: hug.types.uuid):
     """
     GET: /signatures/project/{project_id}
 
@@ -338,7 +338,7 @@ def get_repository(repository_id: hug.types.text):
                         'repository_name': 'Repo Name', \
                         'repository_type': 'github', \
                         'repository_url': 'http://url-to-repo.com'}")
-def post_repository(repository_project_id: hug.types.text, # pylint: disable=too-many-arguments
+def post_repository(repository_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
                     repository_name: hug.types.text,
                     repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
                     repository_url: cla.hug_types.url,
@@ -495,7 +495,7 @@ def get_projects():
     return projects
 
 @hug.get('/project/{project_id}', versions=1)
-def get_project(project_id: hug.types.text):
+def get_project(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}
 
@@ -523,7 +523,7 @@ def post_project(project_external_id: hug.types.text, project_name: hug.types.te
 @hug.put('/project', versions=1,
          examples=" - {'project_id': '<proj-id>', \
                        'project_name': 'New Project Name'}")
-def put_project(project_id: hug.types.text, project_name=None):
+def put_project(project_id: hug.types.uuid, project_name=None):
     """
     PUT: /project
 
@@ -536,7 +536,7 @@ def put_project(project_id: hug.types.text, project_name=None):
 
 
 @hug.delete('/project/{project_id}', versions=1)
-def delete_project(project_id: hug.types.text):
+def delete_project(project_id: hug.types.uuid):
     """
     DELETE: /project/{project_id}
 
@@ -546,7 +546,7 @@ def delete_project(project_id: hug.types.text):
 
 
 @hug.get('/project/{project_id}/repositories', versions=1)
-def get_project_repositories(project_id: hug.types.text):
+def get_project_repositories(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/repositories
 
@@ -556,7 +556,7 @@ def get_project_repositories(project_id: hug.types.text):
 
 
 @hug.get('/project/{project_id}/document/{document_type}', versions=1)
-def get_project_document(project_id: hug.types.text,
+def get_project_document(project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
     GET: /project/{project_id}/document/{document_type}
@@ -565,13 +565,21 @@ def get_project_document(project_id: hug.types.text,
     """
     return cla.controllers.project.get_project_document(project_id, document_type)
 
+@hug.get('/project/{project_id}/companies', versions=1)
+def get_project_companies(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/companies
+
+    Fetch all the companies that are associated with a project through a CCLA.
+    """
+    pass
 
 @hug.post('/project/{project_id}/document/{document_type}', versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \
                         'document_content_type': 'url+pdf', \
                         'document_content': 'http://url.com/doc.pdf'}")
 def post_project_document(
-        project_id: hug.types.text,
+        project_id: hug.types.uuid,
         document_type: hug.types.one_of(['individual', 'corporate']),
         document_name: hug.types.text,
         document_content_type: hug.types.one_of(get_supported_document_content_types()),
@@ -599,7 +607,7 @@ def post_project_document(
 
 
 @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
-def delete_project_document(project_id: hug.types.text,
+def delete_project_document(project_id: hug.types.uuid,
                             document_type: hug.types.one_of(['individual', 'corporate']),
                             major_version: hug.types.number,
                             minor_version: hug.types.number):
@@ -620,14 +628,14 @@ def delete_project_document(project_id: hug.types.text,
 @hug.post('/request-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'user_id': 'some-user-uuid'}")
-def request_signature(project_id: hug.types.text,
+def request_signature(project_id: hug.types.uuid,
                       user_id: hug.types.uuid,
                       return_url=None):
     """
     POST: /request-signature
 
     DATA: {'project_id': 'some-project-id',
-           'user_id': 'some-user-uuid',
+           'user_id': 'some-user-id',
            'return_url': <optional>}
 
     Creates a new signature given project and user IDs. The user will be redirected to the
@@ -776,7 +784,7 @@ def get_github_organization_repos(organization_name: hug.types.text):
 @hug.post('/github/organizations', versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
-def post_github_organization(organization_project_id: hug.types.text, # pylint: disable=too-many-arguments
+def post_github_organization(organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
                              organization_installation_id=None):
     """
