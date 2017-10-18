@@ -8,10 +8,11 @@ sys.path.append('../')
 
 if len(sys.argv) != 3:
     print('\nUsage: python3 %s <signature-id> <docusign-envelope-id>\n' %sys.argv[0])
-    print('You can find the signature ID using the /v1/signature endpoint')
+    print('This helper script should be used after the POST to /v1/request-signature endpoint')
+    print('You can find the signature ID in the response body, or by using the /v1/signature endpoint')
     print('You can find the envelope ID through the logs when creating the signature object, or through the DocuSign web UI if you have access')
-    print('\nThis helper script should be used after the POST to /v1/request-signature endpoint')
-    print('It will need to be run from inside the CLA container\n')
+    print('This script will need to be run from inside the CLA container\n')
+    print('Note that the updated PR will not contain working links to sign if you are using this script because your CLA instance is not web-accessible')
     exit()
 
 SIGNATURE_ID = sys.argv[1]
