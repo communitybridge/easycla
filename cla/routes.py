@@ -572,7 +572,7 @@ def get_project_companies(project_id: hug.types.uuid):
 
     Fetch all the companies that are associated with a project through a CCLA.
     """
-    pass
+    return cla.controllers.project.get_project_companies(project_id)
 
 @hug.post('/project/{project_id}/document/{document_type}', versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \
