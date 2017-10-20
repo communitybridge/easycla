@@ -68,13 +68,14 @@ export class AllProjectsLogosPage {
     });
   }
 
-  openAssetManagementModal(projectId) {
+  openAssetManagementModal(project) {
     let modal = this.modalCtrl.create('AssetManagementModal', {
-      projectId: projectId,
+      projectId: project.id,
     });
     modal.onDidDismiss(newlogoRef => {
       if(newlogoRef){
-        this.project.config.logoRef = newlogoRef;
+        project.config.logoRef = newlogoRef;
+        this.getAllProjectsLogos(project);
       }
     });
     modal.present();

@@ -24,7 +24,7 @@
                 </tr>
               </thead>
               <tbody >
-                <tr *ngFor="let project of allProjects" class="clickable text-center" (click)="openAssetManagementModal(project.id)">
+                <tr *ngFor="let project of allProjects" class="clickable text-center" (click)="openAssetManagementModal(project)">
                   <td data-title="Main Logo"> <img width="60px" src="{{ project.config.logoRef }}"> </td>
                   <td data-title="Project">{{ project.name }}</td>
                   <td data-title="Project Status">{{ project.status }}</td>
