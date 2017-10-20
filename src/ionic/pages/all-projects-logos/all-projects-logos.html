@@ -9,14 +9,6 @@
 
 <ion-content padding overflow-scroll="true">
 
-  <header>
-    <ion-grid>
-      <ion-row>
-        All Projects Logos
-      </ion-row>
-    </ion-grid>
-  </header>
-
   <ion-grid>
     <ion-row>
       <ion-col col-12>
@@ -24,42 +16,21 @@
             <table class="table table-hover">
               <thead>
                 <tr>
+                  <th>Main Logo</th>
                   <th>Project</th>
-                  <th>Company</th>
-                  <th>Tier</th>
-                  <th>Product</th>
-                  <th>Invoice Status</th>
-                  <th>Annual Dues</th>
-                  <th>Renewal Date</th>
+                  <th>Project Status</th>
+                  <th>Last Uploaded</th>
+                  <th>Logo Files</th>
                 </tr>
               </thead>
               <tbody >
-                <ng-container *ngFor="let project of allProjectsWithMembers">
-                  <ng-container *ngIf="project.members.length > 0" >
-                    <tr *ngFor="let member of project.members">
-                      <td data-title="Project">{{ project.name }}</td>
-                      <td data-title="Company">{{ member.org.name }}</td>
-                      <td data-title="Tier">{{ member.tier }}</td>
-                      <td data-title="Product">{{ member.product }}</td>
-                      <td data-title="Invoice Status">{{ member.invoices[0].status }}</td>
-                      <td data-title="Annual Dues">{{ member.annualDues | currency:'USD':true:'4.2-2' }}</td>
-                      <td data-title="Renewal Date">
-                        <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
-                      </td>
-                    </tr>
-                  </ng-container>
-                  <ng-container *ngIf="project.members.length == 0">
-                    <tr>
-                      <td data-title="Project">{{ project.name }}</td>
-                      <td data-title="Company">-</td>
-                      <td data-title="Tier"></td>
-                      <td data-title="Product">-</td>
-                      <td data-title="Invoice Status">-</td>
-                      <td data-title="Annual Dues">-</td>
-                      <td data-title="Renewal Date">-</td>
-                    </tr>
-                  </ng-container>
-                </ng-container>
+                <tr *ngFor="let project of allProjects" class="clickable text-center" (click)="openAssetManagementModal(project.id)">
+                  <td data-title="Main Logo"> <img width="60px" src="{{ project.config.logoRef }}"> </td>
+                  <td data-title="Project">{{ project.name }}</td>
+                  <td data-title="Project Status">{{ project.status }}</td>
+                  <td data-title="Last Uploaded"> - </td>
+                  <td data-title="Logo Files"> {{ project.logosCount }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
