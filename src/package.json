@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.linuxfoundation.org/engineering-npm-modules/cla-service.git"
+    "url": "git@github.linuxfoundation.org:engineering-npm-modules/cla-service.git"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.engineering.tux.rocks/repository/npm-private/"
   },
   "author": {
     "name": "zaclittleberry",
