@@ -1,0 +1,29 @@
+{
+  "name": "cla-service",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.linuxfoundation.org/engineering-npm-modules/cla-service.git"
+  },
+  "author": {
+    "name": "zaclittleberry",
+    "email": "zlittleberry@linuxfoundation.org"
+  },
+  "keywords": [
+    "angular"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.linuxfoundation.org/engineering-npm-modules/cla-service.git/issues"
+  },
+  "main": "cla-service.umd.js",
+  "module": "cla-service.js",
+  "jsnext:main": "cla-service.js",
+  "typings": "cla-service.d.ts",
+  "peerDependencies": {
+    "@angular/core": "^4.0.0",
+    "@angular/http": "^4.0.0",
+    "rxjs": "^5.1.0",
+    "zone.js": "^0.8.4"
+  }
+}
