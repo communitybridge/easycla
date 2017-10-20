@@ -12,6 +12,7 @@ node() {
               checkout scm
               sh "/srv/set_npmrc.sh"
             }
+            
 
             stage('Build') {
               sh "npm install"
