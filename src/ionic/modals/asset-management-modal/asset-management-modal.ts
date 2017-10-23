@@ -13,6 +13,7 @@ import { CincoService } from '../../services/cinco.service'
 export class AssetManagementModal {
 
   projectId: string; // Always Needed
+  projectName: string;
   logoClassifier: string; //can be anything, but it's meant to be something like "main" or "black-and-white" or "thumbnail".
   documentClassifier: string;
   image: any;
@@ -57,6 +58,7 @@ export class AssetManagementModal {
     public actionSheetCtrl: ActionSheetController
   ) {
     this.projectId = navParams.get('projectId');
+    this.projectName = navParams.get('projectName');
     this.selectedFiles = [];
     this.uploadTypes = 'jpg,jpeg,png,gif,tif,psd,ai,docx,pptx,pdf';
     this.uploadSizeMax = 50000000; // 50MB

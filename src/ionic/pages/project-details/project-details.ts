@@ -154,6 +154,7 @@ export class ProjectDetailsPage {
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
+      projectName: this.project.name
     });
     modal.onDidDismiss(newlogoRef => {
       if(newlogoRef){
