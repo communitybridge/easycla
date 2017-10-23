@@ -12,6 +12,13 @@
       "${DNS_SERVER_2}",
       "${DNS_SERVER_3}"
     ],
+    "ulimits": [
+      {
+        "softLimit": 5000,
+        "hardLimit": 5000,
+        "name": "nofile"
+      }
+    ],
     "environment": [
       {
         "name": "APP_DOMAINS",
