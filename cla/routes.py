@@ -653,6 +653,21 @@ def request_signature(project_id: hug.types.uuid,
     """
     return cla.controllers.signing.request_signature(project_id, user_id, return_url)
 
+@hug.post('/employee-signature', versions=1)
+def employee_signature(project_id, company_id, user_id):
+    """
+    POST: /employee-signature
+
+    DATA: {'project_id': <project-id>,
+           'company_id': <company-id>,
+           'user_id': <user-id>}
+
+    Creates a placeholder signature object that represents an employee of a company having confirmed
+    that they indeed work for company X which already has a CCLA with the project. This does not
+    require a full DocuSign signature process, which means the sign/return URLs and document
+    versions may not be populated or reliable.
+    """
+    return cla.controllers.signing.employee_signature(project_id, company_id, user_id)
 
 @hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
 def post_signed(body, installation_id: hug.types.text,

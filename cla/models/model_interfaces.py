@@ -250,6 +250,17 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_project_by_external_id(self, project_external_id):
+        """
+        Fetches the project that matches the external ID provided.
+
+        :param project_external_id: The project's external ID.
+        :type project_external_id: string
+        :return: The project that matches the external ID specified.
+        :rtype: cla.models.model_interfaces.Project
+        """
+        raise NotImplementedError()
+
     def all(self, project_ids=None):
         """
         Fetches all projects in the CLA system.
@@ -811,6 +822,18 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_signature_user_ccla_company_id(self):
+        """
+        Getter for the company ID of the user's CCLA. This is populated when a CCLA is signed by a
+        user stating that they work for a particular company that has a CCLA with a project.
+
+        This is not the same as a user signing a ICLA or a company signing a CCLA.
+
+        :return: The company ID associated with the user's CCLA.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def set_signature_id(self, signature_id):
         """
         Setter for an signature ID.
@@ -932,6 +955,18 @@ class Signature(object): # pylint: disable=too-many-public-methods
 
         :param callback_url: The URL that will hit once the user has signed.
         :type callback_url: string
+        """
+        raise NotImplementedError()
+
+    def set_signature_user_ccla_company_id(self, company_id):
+        """
+        Setter for the company ID of the user's CCLA. This is populated when a CCLA is signed by a
+        user stating that they work for a particular company that has a CCLA with a project.
+
+        This is not the same as a user signing a ICLA or a company signing a CCLA.
+
+        :param company_id: The company ID associated with the user's CCLA.
+        :type: string
         """
         raise NotImplementedError()
 
@@ -1203,6 +1238,17 @@ class Company(object): # pylint: disable=too-many-public-methods
         :param whitelist_pattern: A regex string to remove from the exluded patterns
             of this company.
         :type whitelist_pattern: string
+        """
+        raise NotImplementedError()
+
+    def get_company_by_external_id(self, company_external_id):
+        """
+        Fetches the company that matches the external ID provided.
+
+        :param company_external_id: The company's external ID.
+        :type company_external_id: string
+        :return: The company that matches the external ID specified.
+        :rtype: cla.models.model_interfaces.Company
         """
         raise NotImplementedError()
 

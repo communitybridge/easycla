@@ -124,6 +124,21 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     project_external_id = UnicodeAttribute(hash_key=True)
 
+class ExternalCompanyIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying companies by external ID.
+    """
+    class Meta:
+        """Meta class for external ID company index."""
+        index_name = 'external-company-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    company_external_id = UnicodeAttribute(hash_key=True)
+
 class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by project ID.
@@ -457,7 +472,6 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_signed=signature_signed)
 
     def get_project_by_external_id(self, project_external_id):
-        """Currently only returns the first one found."""
         project_generator = self.model.project_external_id_index.query(project_external_id)
         for project_model in project_generator:
             project = Project()
@@ -771,6 +785,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_sign_url = UnicodeAttribute(null=True)
     signature_return_url = UnicodeAttribute(null=True)
     signature_callback_url = UnicodeAttribute(null=True)
+    signature_user_ccla_company_id = UnicodeAttribute(null=True)
     signature_project_index = ProjectSignatureIndex()
     signature_reference_index = ReferenceSignatureIndex()
 
@@ -792,7 +807,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_approved=False,
                  signature_sign_url=None,
                  signature_return_url=None,
-                 signature_callback_url=None):
+                 signature_callback_url=None,
+                 signature_user_ccla_company_id=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -808,6 +824,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_sign_url = signature_sign_url
         self.model.signature_return_url = signature_return_url
         self.model.signature_callback_url = signature_callback_url
+        self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
 
     def to_dict(self):
         return dict(self.model)
@@ -864,6 +881,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_signature_reference_type(self):
         return self.model.signature_reference_type
 
+    def get_signature_user_ccla_company_id(self):
+        return self.model.signature_user_ccla_company_id
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -903,6 +923,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def set_signature_reference_type(self, reference_type):
         self.model.signature_reference_type = reference_type
 
+    def set_signature_user_ccla_company_id(self, company_id):
+        self.model.signature_user_ccla_company_id = company_id
+
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
                                     reference_type,
@@ -931,7 +954,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def get_signatures_by_project(self, project_id, signature_signed=None,
                                   signature_approved=None, signature_type=None,
-                                  signature_reference_type=None):
+                                  signature_reference_type=None, signature_reference_id=None,
+                                  signature_user_ccla_company_id=None):
         # TODO: Need to optimize this on the DB end.
         signature_generator = self.model.signature_project_index.query(project_id)
         signatures = []
@@ -947,6 +971,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                 continue
             if signature_reference_type is not None and \
                signature_model.signature_reference_type != signature_reference_type:
+                continue
+            if signature_reference_id is not None and \
+               signature_model.signature_reference_id != signature_reference_id:
+                continue
+            if signature_user_ccla_company_id is not None and \
+               signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id:
                 continue
             signature = Signature()
             signature.model = signature_model
@@ -983,6 +1013,7 @@ class CompanyModel(BaseModel):
     company_name = UnicodeAttribute()
     company_whitelist = ListAttribute()
     company_whitelist_patterns = ListAttribute()
+    company_external_id_index = ExternalCompanyIndex()
 
 
 class Company(model_interfaces.Company): # pylint: disable=too-many-public-methods
@@ -1083,6 +1114,14 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         return Signature().get_signatures_by_reference(self.get_company_id(), 'company',
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_company_by_external_id(self, company_external_id):
+        company_generator = self.model.company_external_id_index.query(company_external_id)
+        for company_model in company_generator:
+            company = Company()
+            company.model = company_model
+            return company
+        return None
 
     def all(self, ids=None):
         if ids is None:
