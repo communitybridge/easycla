@@ -28,7 +28,7 @@ export class AllProjectsLogosPage {
     private keycloak: KeycloakService,
     private sortService: SortService,
     public modalCtrl: ModalController) {
-    this.getDefaults();
+
   }
 
   ionViewCanEnter() {
@@ -48,6 +48,7 @@ export class AllProjectsLogosPage {
   }
 
   async ngOnInit(){
+    this.setSortProperties();
     this.getAllProjects();
   }
 
@@ -74,18 +75,19 @@ export class AllProjectsLogosPage {
   openAssetManagementModal(project) {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: project.id,
+      projectName: project.name
     });
     modal.onDidDismiss(newlogoRef => {
       if(newlogoRef){
         project.config.logoRef = newlogoRef;
-        this.getAllProjectsLogos(project);
       }
+      this.getAllProjectsLogos(project);
     });
     modal.present();
   }
 
 
-  getDefaults(){
+  setSortProperties(){
     this.sort = {
       project: {
         arrayProp: 'name',
@@ -112,7 +114,5 @@ export class AllProjectsLogosPage {
       this.allProjects,
     );
   }
-
-
 
 }
