@@ -32,6 +32,9 @@ DYNAMO_REGION = 'us-west-2' #: DynamoDB AWS region.
 DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
 DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
 
+# Endpoint where users end up to start the signing workflow.
+CLA_CONSOLE_ENDPOINT = 'http://change.me'
+
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 DOCUSIGN_ROOT_URL = 'https://demo.docusign.net/restapi/v2' #: DocuSign API root URL.
