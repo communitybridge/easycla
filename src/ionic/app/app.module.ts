@@ -5,7 +5,7 @@ import { CurrencyPipe } from '@angular/common';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-
+import { ClaService } from 'cla-service';
 import { MyApp } from './app.component';
 
 
@@ -26,6 +26,7 @@ import { MyApp } from './app.component';
     StatusBar,
     SplashScreen,
     CurrencyPipe,
+    ClaService,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
