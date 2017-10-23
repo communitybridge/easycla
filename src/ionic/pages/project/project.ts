@@ -91,7 +91,7 @@ export class ProjectPage {
   openProjectUserManagementModal() {
     let modal = this.modalCtrl.create('ProjectUserManagementModal', {
       projectId: this.projectId,
-      projectName: this.project.name,
+      projectName: this.project.name
     });
     modal.present();
   }
@@ -99,6 +99,7 @@ export class ProjectPage {
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
       projectId: this.projectId,
+      projectName: this.project.name
     });
     modal.onDidDismiss(newlogoRef => {
       if(newlogoRef){

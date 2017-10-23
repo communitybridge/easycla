@@ -136,6 +136,11 @@ export class MyApp {
         component: 'AllInvoicesPage'
       },
       {
+        title: 'All Projects Logos',
+        access: true,
+        component: 'AllProjectsLogosPage'
+      },
+      {
         icon: 'settings',
         title: 'Account Settings',
         access: true,
