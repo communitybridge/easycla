@@ -5,7 +5,7 @@
         <ng-container *ngIf="selectedDirectory != 'root'">
           <ion-icon name="arrow-dropleft" class="clickable" (click)="selectDirectory('root')"></ion-icon>
         </ng-container>
-        <span (click)="selectDirectory('root')" class="clickable">{{ projectId }} Assets</span>
+        <span (click)="selectDirectory('root')" class="clickable">{{ projectName }} Assets</span>
         <ng-container *ngIf="selectedDirectory == 'logos'">
           <ion-icon name="arrow-dropright"></ion-icon> Logos
         </ng-container>
