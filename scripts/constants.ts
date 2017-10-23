@@ -1,1 +1,1 @@
-export const CINCO_API_URL: string = "https://api.linuxfoundation.org/";
+export const CINCO_API_URL: string = "https://api.linuxfoundation.org";
