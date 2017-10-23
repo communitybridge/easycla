@@ -80,10 +80,12 @@ export class KeycloakService {
                         resolve(<string>KeycloakService.keycloakAuth.token);
                     })
                     .error(() => {
-                        reject('Failed to refresh token');
+                        this.login();
+                        return reject('Failed to refresh token');
                     });
             } else {
-                reject('Not logged in');
+              this.login();
+              return reject('Not logged in');
             }
         });
     }
@@ -97,10 +99,12 @@ export class KeycloakService {
                         resolve(KeycloakService.keycloakAuth.tokenParsed);
                     })
                     .error(() => {
-                        reject('Failed to refresh token');
+                        this.login();
+                        return reject('Failed to refresh token');
                     });
             } else {
-                reject('Not logged in');
+                this.login();
+                return reject('Not logged in');
             }
         });
     }
