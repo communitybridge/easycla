@@ -4,6 +4,7 @@ import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
 import { CincoService } from '../../services/cinco.service'
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { SortService } from '../../services/sort.service';
 
 import { ProjectModel } from '../../models/project-model';
 
@@ -19,13 +20,15 @@ export class AllProjectsLogosPage {
   project = new ProjectModel();
   allProjects: any;
   projectLogos: any;
+  sort: any;
 
   constructor(
     public navCtrl: NavController,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
+    private sortService: SortService,
     public modalCtrl: ModalController) {
-
+    this.getDefaults();
   }
 
   ionViewCanEnter() {
@@ -80,5 +83,36 @@ export class AllProjectsLogosPage {
     });
     modal.present();
   }
+
+
+  getDefaults(){
+    this.sort = {
+      project: {
+        arrayProp: 'name',
+        sortType: 'text',
+        sort: null,
+      },
+      status: {
+        arrayProp: 'status',
+        sortType: 'text',
+        sort: null,
+      },
+      logosCount: {
+        arrayProp: 'logosCount',
+        sortType: 'text',
+        sort: null,
+      }
+    };
+  }
+
+  sortLogosTable(prop) {
+    this.sortService.toggleSort(
+      this.sort,
+      prop,
+      this.allProjects,
+    );
+  }
+
+
 
 }
