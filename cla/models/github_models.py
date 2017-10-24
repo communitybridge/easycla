@@ -531,7 +531,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
                                               signed, missing)
         update_cla_comment(pull_request, body)
     if both or notification == 'status':
-        state = 'pending'
+        state = 'failure'
         for commit, author_name in missing:
             body = cla.utils.assemble_cla_status(author_name, signed=False)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
@@ -551,7 +551,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
             if last_commit.sha in signed_commits:
                 num_signed = len(signed)
                 total = num_signed + len(missing)
-                last_commit.create_status('pending', sign_url,
+                last_commit.create_status('failure', sign_url,
                                           'Missing CLA signatures (%s/%s)' %(num_signed, total))
 
 
