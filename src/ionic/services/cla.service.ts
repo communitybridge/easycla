@@ -3,16 +3,17 @@ import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
 
-import { CLA_API_URL } from './constants';
-
 @Injectable()
 export class ClaService {
   http: any;
-  claApiUrl: String;
+  claApiUrl: String = '';
 
   constructor(http: Http) {
     this.http = http;
-    this.claApiUrl = CLA_API_URL + '/v1';
+  }
+
+  public setApiUrl(claApiUrl: string) {
+    this.claApiUrl = claApiUrl + '/v1';
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -113,16 +114,15 @@ export class ClaService {
   * /user/{user_id}/request-company-whitelist/{company_id}
   **/
 
-  postUserMessageToCompanyManager(userId, companyId) {
-    return this.http.post(this.claApiUrl + '/user/' + userId + '/request-company-whitelist/' + companyId)
+  postUserMessageToCompanyManager(userId, companyId, message) {
+    /*
+      message: {
+        'message': 'custom message to manager'
+      }
+      */
+    return this.http.post(this.claApiUrl + '/user/' + userId + '/request-company-whitelist/' + companyId, message)
       .map((res) => res.json());
   }
-
-  // This endpoint should actually have a message object.
-  // postUserMessageToCompanyManager(userId, companyId, message) {
-  //   return this.http.post(this.claApiUrl + '/user/' + userId + '/request-company-whitelist/' + companyId, message)
-  //     .map((res) => res.json());
-  // }
 
   /**
   * /user/{user_id}/active-signature
@@ -397,7 +397,11 @@ export class ClaService {
   **/
 
   deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
-    return this.http.delete(this.claApiUrl + '/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion)
+    return this.http.delete(
+      this.claApiUrl + '/project/' + projectId +
+      '/document/' + documentType +
+      '/' + majorVersion + '/' + minorVersion
+    )
       .map((res) => res.json());
   }
 
@@ -441,7 +445,10 @@ export class ClaService {
   **/
 
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
-    return this.http.get(this.claApiUrl + '/repository-provider/' + provider + '/sign/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId)
+    return this.http.get(
+      this.claApiUrl + '/repository-provider/' + provider +
+      '/sign/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId
+    )
       .map((res) => res.json());
   }
 

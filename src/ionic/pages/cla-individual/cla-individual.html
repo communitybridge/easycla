@@ -15,7 +15,7 @@
           <img [src]="project.logoRef" alt="{{ project.name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
-          <h1>{{ project.name }}</h1>
+          <h1>{{ project.project_name }}</h1>
           <p>CLA</p>
         </ion-col>
       </ion-row>
@@ -30,18 +30,25 @@
             <ion-card-title>
               <span>Individual CLA</span>
             </ion-card-title>
-            <p>
-              We are generating a document to sign for the purposes of your
-              Individual Contributers License Agreement. Please fill out
-              accurately and complete the signing process.
-            </p>
-            <p>
-              If a new tab with the document to sign did not open, you may use
-              the button below:
-            </p>
-            <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
-              Open ICLA Agreement
-            </button>
+            <div *ngIf="activeSignatures">
+              <p>
+                We are generating a document to sign for the purposes of your
+                Individual Contributers License Agreement. Please fill out
+                accurately and complete the signing process.
+              </p>
+              <p>
+                If a new tab with the document to sign did not open, you may use
+                the button below:
+              </p>
+              <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
+                Open ICLA Agreement
+              </button>
+            </div>
+            <div *ngIf="!activeSignatures">
+              <p class="error">
+                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and restarting the signing process from your pull request if necessary.
+              </p>
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
