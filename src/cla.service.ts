@@ -13,7 +13,7 @@ export class ClaService {
   }
 
   public setApiUrl(claApiUrl: string) {
-    this.claApiUrl = claApiUrl;
+    this.claApiUrl = claApiUrl + '/v1';
   }
 
   //////////////////////////////////////////////////////////////////////////////
