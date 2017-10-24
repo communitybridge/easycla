@@ -1,6 +1,5 @@
 import { Component,  } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company'
@@ -9,7 +8,7 @@ import { CincoService } from '../../services/cinco.service';
   selector: 'cla-new-company-modal',
   templateUrl: 'cla-new-company-modal.html',
   providers: [
-    CincoService,
+
   ]
 })
 export class ClaNewCompanyModal {
@@ -23,7 +22,6 @@ export class ClaNewCompanyModal {
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    private cincoService: CincoService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
