@@ -670,9 +670,10 @@ def employee_signature(project_id, company_id, user_id):
     return cla.controllers.signing.employee_signature(project_id, company_id, user_id)
 
 @hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
-def post_signed(body, installation_id: hug.types.text,
-                      github_repository_id: hug.types.text,
-                      change_request_id: hug.types.text):
+def post_signed(body,
+                installation_id: hug.types.number,
+                github_repository_id: hug.types.number,
+                change_request_id: hug.types.number):
     """
     POST: /signed/{installation_id}/{github_repository_id}/{change_request_id}
 
