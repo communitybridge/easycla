@@ -6,6 +6,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { ClaService } from '../services/cla.service';
 import { CincoService } from '../services/cinco.service';
 import { SortService } from '../services/sort.service';
+import { CLA_API_URL } from '../services/constants';
 
 @Component({
   templateUrl: 'app.html',
@@ -29,6 +30,7 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
+    this.claService.setApiUrl(CLA_API_URL);
   }
 
   getDefaults() {

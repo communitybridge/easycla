@@ -16,6 +16,7 @@ export class ClaIndividualPage {
   user: any;
   project: any;
   signatureIntent: any;
+  activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
 
   constructor(
@@ -53,13 +54,20 @@ export class ClaIndividualPage {
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
+      if (!this.project.logoRef) {
+        this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
+      }
     });
   }
 
   getUserSignatureIntent(userId)  {
     this.claService.getUserSignatureIntent(userId).subscribe(response => {
       this.signatureIntent = response;
-      this.postSignatureRequest();
+      if(this.signatureIntent !== null) {
+        this.postSignatureRequest();
+      } else {
+        this.activeSignatures = false;
+      }
     });
   }
 

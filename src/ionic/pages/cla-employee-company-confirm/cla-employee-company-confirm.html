@@ -44,7 +44,7 @@
               <ion-item *ngIf="!form.controls.agree.valid && (form.controls.agree.touched || submitAttempt)" no-lines>
                 <p>* You must agree in order to submit this form.</p>
               </ion-item>
-              <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+              <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting || !form.controls.agree.valid">
                 Continue
               </button>
               <button ion-button (click)="goBackToPrevious()" [disabled]="currentlySubmitting">
