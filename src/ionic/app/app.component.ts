@@ -2,18 +2,12 @@ import { Component, ViewChild } from '@angular/core';
 import { Nav, Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-
-import { ClaService } from '../services/cla.service';
-import { CincoService } from '../services/cinco.service';
-import { SortService } from '../services/sort.service';
+import { ClaService } from 'cla-service';
 import { CLA_API_URL } from '../services/constants';
 
 @Component({
   templateUrl: 'app.html',
   providers: [
-    ClaService,
-    CincoService,
-    SortService,
   ]
 })
 export class MyApp {
@@ -25,8 +19,7 @@ export class MyApp {
     public platform: Platform,
     public statusBar: StatusBar,
     public splashScreen: SplashScreen,
-    private claService: ClaService,
-    private cincoService: CincoService
+    public claService: ClaService,
   ) {
     this.getDefaults();
     this.initializeApp();

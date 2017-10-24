@@ -1,6 +1,5 @@
 import { Component,  } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company'
@@ -9,7 +8,6 @@ import { CincoService } from '../../services/cinco.service';
   selector: 'cla-select-company-modal',
   templateUrl: 'cla-select-company-modal.html',
   providers: [
-    CincoService,
   ]
 })
 export class ClaSelectCompanyModal {
@@ -23,7 +21,6 @@ export class ClaSelectCompanyModal {
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    private cincoService: CincoService,
     private modalCtrl: ModalController,
   ) {
     this.getDefaults();
