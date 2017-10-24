@@ -20,7 +20,6 @@ export class ClaIndividualPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    // private cincoService: CincoService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-angular';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId'
@@ -17,7 +18,7 @@ export class ClaLandingPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    // private cincoService: CincoService,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
