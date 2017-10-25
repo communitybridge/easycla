@@ -7,8 +7,7 @@ import { KeycloakService } from '../services/keycloak/keycloak.service';
 
 enableProdMode();
 
-//KeycloakService.init({ onLoad: 'check-sso', checkLoginIframeInterval: 1 })
-KeycloakService.init({ onLoad: 'login-required' })
+KeycloakService.init({ onLoad: 'check-sso', checkLoginIframeInterval: 1 })
     .then(() => {
         platformBrowserDynamic().bootstrapModule(AppModule);
     })
