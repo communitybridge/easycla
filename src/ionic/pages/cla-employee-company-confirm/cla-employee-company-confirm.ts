@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from  '../../validators/checkbox';
-import { ClaService } from '../../services/cla.service';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'project/:projectId/user/:userId/employee/company/:companyId/confirm'
