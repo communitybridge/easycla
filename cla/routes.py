@@ -31,6 +31,18 @@ def process_data(request, response, resource):
       response.set_header('Access-Control-Allow-Headers', 'Content-Type')
 
 #
+# Health check route.
+#
+@hug.get('/health', versions=1)
+def get_health():
+    """
+    GET: /health
+
+    Returns a basic health check on the CLA system.
+    """
+    return {'status': 'up'}
+
+#
 # User routes.
 #
 @hug.get('/user', versions=1)
