@@ -4,10 +4,11 @@ import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId'
+  // TODO: there should also be a get parameter for 'redirect' at the end
 })
 @Component({
-  selector: 'cla-landing',
-  templateUrl: 'cla-landing.html'
+  selector: 'cla-loading',
+  templateUrl: 'cla-loading.html'
 })
 export class ClaLandingPage {
   projectId: string;
@@ -71,10 +72,11 @@ export class ClaLandingPage {
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
-      if (!this.project.logoRef) {
-        this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
-      }
     });
+  }
+
+  saveReturnUrl() {
+    // TODO: There should be a get parameter 'redirect' that has the return url
   }
 
 }

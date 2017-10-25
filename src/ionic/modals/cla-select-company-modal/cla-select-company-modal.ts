@@ -2,7 +2,7 @@ import { Component,  } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company'
+  segment: 'cla/project/:projectId/user/:userId/employee/company'
 })
 @Component({
   selector: 'cla-select-company-modal',
@@ -25,7 +25,6 @@ export class ClaSelectCompanyModal {
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
   }
 
