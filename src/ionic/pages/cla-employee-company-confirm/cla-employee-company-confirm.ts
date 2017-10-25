@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from  '../../validators/checkbox';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/:companyId/confirm'
+  segment: 'project/:projectId/user/:userId/employee/company/:companyId/confirm'
 })
 @Component({
   selector: 'cla-employee-company-confirm',
@@ -16,6 +17,7 @@ export class ClaEmployeeCompanyConfirmPage {
   userId: string;
   companyId: string;
 
+  user: any;
   project: any;
   company: any;
   gitService: string;
@@ -29,6 +31,7 @@ export class ClaEmployeeCompanyConfirmPage {
     private modalCtrl: ModalController,
     public navParams: NavParams,
     private formBuilder: FormBuilder,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -42,27 +45,36 @@ export class ClaEmployeeCompanyConfirmPage {
   }
 
   getDefaults() {
-
+    this.project = {
+      name: '',
+    };
+    this.company = {
+      name: '',
+    };
   }
 
   ngOnInit() {
-    this.getProject();
-    this.getCompany();
+    this.getUser(this.userId);
+    this.getProject(this.projectId);
+    this.getCompany(this.companyId);
   }
 
-  getProject() {
-    this.project = {
-      id: '0000000001',
-      name: 'Project Name',
-      logoRef: 'https://dummyimage.com/225x102/d8d8d8/242424.png&text=Project+Logo',
-    };
+  getUser(userId) {
+    this.claService.getUser(userId).subscribe(response => {
+      this.user = response;
+    });
   }
 
-  getCompany() {
-    this.company = {
-      name: 'Company Name',
-      id: '0000000001',
-    };
+  getProject(projectId) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
+  }
+
+  getCompany(companyId) {
+    this.claService.getCompany(companyId).subscribe(response => {
+      this.company = response;
+    });
   }
 
   submit() {
@@ -70,6 +82,11 @@ export class ClaEmployeeCompanyConfirmPage {
     // endpoint should return if they validate for that affiliation
     // if they do:
     //   Get remaining signatures needed for user
+    //   getProject() -> {
+    //     "project_ccla_requires_icla_signature": true|false,
+    //   }
+    //   if ("project_ccla_requires_icla_signature"):
+    //    get
     //   if icla needs signed:
     //     send to icla page
     //   else
