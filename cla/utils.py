@@ -4,6 +4,7 @@ Utility functions for the CLA project.
 
 import urllib.parse
 import json
+import re
 import falcon
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
@@ -812,3 +813,25 @@ def change_icon(provider, signed=False): # pylint: disable=unused-argument
     if signed:
         return 'cla/resources/cla-signed.svg'
     return 'cla/resources/cla-unsigned.svg'
+
+def email_whitelisted(email, company):
+    """
+    Helper function to determine whether an email address is whitelisted for a particular company.
+
+    :param email: The email address to check.
+    :type email: string
+    :param company: The company to check against.
+    :type company: cla.models.model_interfaces.Company
+    :return: True if email is whitelisted, False otherwise.
+    :rtype: bool
+    """
+    whitelist = company.get_company_whitelist()
+    if email in whitelist:
+        return True
+    patterns = company.get_company_whitelist_patterns()
+    for pattern in patterns:
+        preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
+        pat = re.compile(preprocessed_pattern)
+        if pat.match(email) != None:
+            return True
+    return False

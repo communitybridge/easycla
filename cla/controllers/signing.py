@@ -23,6 +23,16 @@ def request_signature(project_id, user_id, return_url=None):
     return get_signing_service().request_signature(str(project_id), str(user_id), return_url)
 
 def employee_signature(project_id, company_id, user_id):
+    """
+    Creates placeholder signature object that represents a user signing a CCLA as an employee.
+
+    :param project_id: The ID of the project the user is signing a CCLA for.
+    :type project_id: string
+    :param company_id: The ID of the company the employee belongs to.
+    :type company_id: string
+    :param user_id: The ID of the user.
+    :type user_id: string
+    """
     project = get_project_instance()
     try:
         project.load(str(project_id))
@@ -57,6 +67,11 @@ def employee_signature(project_id, company_id, user_id):
     )
     if len(existing_signatures) > 0:
         return {'errors': {'signature_id': 'User has already signed CCLA with this company'}}
+    # Ensure user is whitelisted for this company.
+    if not cla.utils.email_whitelisted(user.get_user_email(), company):
+        return {'errors': {'company_whitelist':
+                           'User email (%s) is not whitelisted for this company' \
+                            %user.get_user_email()}}
     # Create the new Signature.
     new_signature = get_signature_instance()
     new_signature.set_signature_id(str(uuid.uuid4()))
