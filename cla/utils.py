@@ -383,16 +383,16 @@ def get_user_latest_signature(user, project_id):
         if latest is None:
             latest = signature
             continue
-        if signature.get_signature_major_version() > latest.get_signature_major_version():
+        if signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
             latest = signature
             continue
-        if signature.get_signature_major_version() == latest.get_signature_major_version() and \
-           signature.get_signature_minor_version() > latest.get_signature_minor_version():
+        if signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+           signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
             latest = signature
             continue
     return latest
 
-def user_signed_project_signature(user, project_id):
+def user_signed_project_signature(user, project_id, latest_major_version=True):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
 
@@ -400,6 +400,8 @@ def user_signed_project_signature(user, project_id):
     :type user: cla.models.model_interfaces.User
     :param project_id: The project to check for.
     :type project_id: string
+    :param latest_major_version: True means only the latest document major version will be considered.
+    :type latest_major_version: bool
     :return: Whether or not the user has an signature that's signed and approved
         for this project.
     :rtype: boolean
@@ -408,6 +410,16 @@ def user_signed_project_signature(user, project_id):
     if signature is not None:
         cla.log.info('Signature found for this user on project %s: %s',
                      project_id, signature.get_signature_id())
+        if latest_major_version: # Ensure it's latest signature.
+            project = get_project_instance()
+            project.load(str(project_id))
+            document_models = project.get_project_individual_documents()
+            major, _ = get_last_version(document_models)
+            if signature.get_signature_document_major_version() != major:
+                cla.log.info('User (%s) only has old document version signed (v%s)',
+                             user.get_user_id(), signature.get_signature_document_major_version())
+                return False
+
         if signature.get_signature_signed() and signature.get_signature_approved():
             # Signature found and signed/approved.
             cla.log.info('User already has a signed and approved signature ' + \

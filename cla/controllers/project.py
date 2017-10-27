@@ -192,7 +192,8 @@ def post_project_document(project_id,
                           document_type,
                           document_name,
                           document_content_type,
-                          document_content):
+                          document_content,
+                          new_major_version=None):
     """
     Will create a new document for the project specified.
 
@@ -208,6 +209,8 @@ def post_project_document(project_id,
     :param document_content: The content of the document (or URL to content if content type
         starts with 'url+'.
     :type document_content: string or binary data
+    :param new_major_version: Whether or not to bump up the major version.
+    :type new_major_version: boolean
     """
     project = get_project_instance()
     try:
@@ -220,11 +223,19 @@ def post_project_document(project_id,
     document.set_document_content(document_content)
     if document_type == 'individual':
         major, minor = cla.utils.get_last_version(project.get_project_individual_documents())
-        document.set_document_minor_version(minor + 1)
+        if new_major_version:
+            document.set_document_major_version(major + 1)
+            document.set_document_minor_version(0)
+        else:
+            document.set_document_minor_version(minor + 1)
         project.add_project_individual_document(document)
     else:
         major, minor = cla.utils.get_last_version(project.get_project_corporate_documents())
-        document.set_document_minor_version(minor + 1)
+        if new_major_version:
+            document.set_document_major_version(major + 1)
+            document.set_document_minor_version(0)
+        else:
+            document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
     project.save()
     return project.to_dict()
