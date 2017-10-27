@@ -366,6 +366,32 @@ def get_last_version(documents):
             last_minor = current_minor
     return (last_major, last_minor)
 
+def get_user_latest_signature(user, project_id):
+    """
+    Helper function to get a user's latest signature for a project.
+
+    :param user: The user object to check for.
+    :type user: cla.models.model_interfaces.User
+    :param project_id: The ID of the project to check for.
+    :type project_id: string
+    :return: The latest versioned signature object if it exists.
+    :rtype: cla.models.model_interfaces.Signature or None
+    """
+    signatures = user.get_user_signatures(project_id=project_id)
+    latest = None
+    for signature in signatures:
+        if latest is None:
+            latest = signature
+            continue
+        if signature.get_signature_major_version() > latest.get_signature_major_version():
+            latest = signature
+            continue
+        if signature.get_signature_major_version() == latest.get_signature_major_version() and \
+           signature.get_signature_minor_version() > latest.get_signature_minor_version():
+            latest = signature
+            continue
+    return latest
+
 def user_signed_project_signature(user, project_id):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
@@ -378,10 +404,8 @@ def user_signed_project_signature(user, project_id):
         for this project.
     :rtype: boolean
     """
-    signatures = user.get_user_signatures(project_id=project_id)
-    num_signatures = len(signatures)
-    if num_signatures > 0:
-        signature = signatures[0]
+    signature = get_user_latest_signature(user, project_id)
+    if signature is not None:
         cla.log.info('Signature found for this user on project %s: %s',
                      project_id, signature.get_signature_id())
         if signature.get_signature_signed() and signature.get_signature_approved():
