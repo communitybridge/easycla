@@ -110,11 +110,13 @@ class CLATestCase(unittest.TestCase):
     def create_document(self, project_id, document_type='individual',
                         document_name='doc_name.pdf',
                         document_content_type='url+pdf',
-                        document_content='http://url.com/document.pdf'):
+                        document_content='http://url.com/document.pdf',
+                        new_major_version=False):
         """Helper method to create a document."""
         data = {'document_name': document_name,
                 'document_content_type': document_content_type,
-                'document_content': document_content}
+                'document_content': document_content,
+                'new_major_version': new_major_version}
         response = hug.test.post(routes,
                                  '/v1/project/' + project_id +
                                  '/document/' + document_type, data)

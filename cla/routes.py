@@ -321,15 +321,13 @@ def get_signatures_user_project(user_id: hug.types.uuid, project_id: hug.types.u
 @hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', versions=1)
 def get_signatures_user_project(user_id: hug.types.uuid,
                                 project_id: hug.types.uuid,
-                                signature_type: hug.types.one_of(['individual',
-                                                                  'corporate',
-                                                                  'employee']))
+                                signature_type: hug.types.one_of(['individual', 'employee'])):
     """
     GET: /signatures/user/{user_id}/project/{project_id}/type/[individual|corporate|employee]
 
     Get all signatures for user, filtered by project_id and signature type specified.
     """
-    return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
+    return cla.controllers.signature.get_user_project_signatures(user_id, project_id, signature_type)
 
 @hug.get('/signatures/company/{company_id}', versions=1)
 def get_signatures_company(company_id: hug.types.uuid):
@@ -619,23 +617,27 @@ def get_project_companies(project_id: hug.types.uuid):
 @hug.post('/project/{project_id}/document/{document_type}', versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \
                         'document_content_type': 'url+pdf', \
-                        'document_content': 'http://url.com/doc.pdf'}")
+                        'document_content': 'http://url.com/doc.pdf', \
+                        'new_major_version': true}")
 def post_project_document(
         project_id: hug.types.uuid,
         document_type: hug.types.one_of(['individual', 'corporate']),
         document_name: hug.types.text,
         document_content_type: hug.types.one_of(get_supported_document_content_types()),
-        document_content: hug.types.text):
+        document_content: hug.types.text,
+        new_major_version=None):
     """
     POST: /project/{project_id}/document/{document_type}
 
     DATA: {'document_name': 'doc_name.pdf',
            'document_content_type': 'url+pdf',
-           'document_content': 'http://url.com/doc.pdf'}
+           'document_content': 'http://url.com/doc.pdf',
+           'new_major_version': false}
 
     Creates a new CLA document for a specified project.
 
-    Will create a new revision of the individual or corporate document.
+    Will create a new revision of the individual or corporate document. if new_major_version is set,
+    the document will have a new major version and this will force users to re-sign.
 
     If document_content_type starts with 'storage+', the document_content is assumed to be base64
     encoded binary data that will be saved in the CLA system's configured storage service.
@@ -645,8 +647,8 @@ def post_project_document(
         document_type=document_type,
         document_name=document_name,
         document_content_type=document_content_type,
-        document_content=document_content)
-
+        document_content=document_content,
+        new_major_version=new_major_version)
 
 @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
 def delete_project_document(project_id: hug.types.uuid,

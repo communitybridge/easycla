@@ -29,5 +29,22 @@ class SignatureTestCase(CLATestCase):
                                 '/project/' + project2['project_id'])
         self.assertEqual(len(response.data), 2)
 
+    def test_various_major_versions(self):
+        """Test out-dated and invalidated signatures."""
+        user_data = self.create_user()
+        project = self.create_project('test-project')
+        self.create_document(project['project_id'])
+        self.create_signature(project['project_id'], user_data['user_id'], 'user')
+        user = cla.utils.get_user_instance()
+        user.load(user_data['user_id'])
+        signed = cla.utils.user_signed_project_signature(user, project['project_id'])
+        self.assertTrue(signed)
+        self.create_document(project['project_id'])
+        signed = cla.utils.user_signed_project_signature(user, project['project_id'])
+        self.assertTrue(signed)
+        self.create_document(project['project_id'], new_major_version=True)
+        signed = cla.utils.user_signed_project_signature(user, project['project_id'])
+        self.assertFalse(signed)
+
 if __name__ == '__main__':
     unittest.main()

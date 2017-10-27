@@ -444,7 +444,6 @@ def handle_commit_from_github_user(project_id, commit, author, signed, missing):
         else:
             missing.append((commit.sha, author.name))
 
-
 def handle_commit_from_git_author(project_id, commit, author, signed, missing):
     """
     Helper method to triage commits between signed and not-signed user signatures.
