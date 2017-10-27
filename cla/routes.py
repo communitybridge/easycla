@@ -182,6 +182,15 @@ def get_user_active_signature(user_id: hug.types.uuid):
     """
     return cla.controllers.user.get_active_signature(user_id)
 
+@hug.get('/user/{user_id}/project/{project_id}/last-signature', versions=1)
+def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/project/{project_id}/last-signature
+
+    Returns the user's signature for that project with the highest major/minor version.
+    """
+    return cla.controllers.user.get_user_project_last_signature(user_id, project_id)
+
 #
 # Signature Routes.
 #
@@ -300,6 +309,27 @@ def get_signatures_user(user_id: hug.types.uuid):
     """
     return cla.controllers.signature.get_user_signatures(user_id)
 
+@hug.get('/signatures/user/{user_id}/project/{project_id}', versions=1)
+def get_signatures_user_project(user_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+    GET: /signatures/user/{user_id}/project/{project_id}
+
+    Get all signatures for user, filtered by project_id specified.
+    """
+    return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
+
+@hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', versions=1)
+def get_signatures_user_project(user_id: hug.types.uuid,
+                                project_id: hug.types.uuid,
+                                signature_type: hug.types.one_of(['individual',
+                                                                  'corporate',
+                                                                  'employee']))
+    """
+    GET: /signatures/user/{user_id}/project/{project_id}/type/[individual|corporate|employee]
+
+    Get all signatures for user, filtered by project_id and signature type specified.
+    """
+    return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
 
 @hug.get('/signatures/company/{company_id}', versions=1)
 def get_signatures_company(company_id: hug.types.uuid):
