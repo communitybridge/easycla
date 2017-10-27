@@ -238,8 +238,37 @@ def get_user_signatures(user_id):
     :param user_id: The ID of the user in question.
     :type user_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_reference(user_id, 'user')
+    signatures = get_signature_instance().get_signatures_by_reference(str(user_id), 'user')
     return [signature.to_dict() for signature in signatures]
+
+def get_user_project_signatures(user_id, project_id, signature_type=None):
+    """
+    Get all signatures for user filtered by a project.
+
+    :param user_id: The ID of the user in question.
+    :type user_id: string
+    :param project_id: The ID of the project to filter by.
+    :type project_id: string
+    :param signature_type: The signature type to filter by.
+    :type signature_type: string (one of 'individual', 'employee')
+    :return: The list of signatures requested.
+    :rtype: [cla.models.model_interfaces.Signature]
+    """
+    sig = get_signature_instance()
+    signatures = sig.get_signatures_by_project(str(project_id),
+                                               signature_reference_type='user',
+                                               signature_reference_id=str(user_id))
+    ret = []
+    for signature in signatures:
+        if signature_type is not None:
+            if signature_type == 'individual' and \
+               signature.get_signature_reference_type() != 'icla':
+                continue
+            elif signature_type == 'employee' and \
+                 signature.get_signature_user_ccla_employee_id() is None:
+                continue
+        ret.append(signature.to_dict())
+    return ret
 
 def get_company_signatures(company_id):
     """
