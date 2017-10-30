@@ -41,6 +41,11 @@ export class AllProjectsPage {
     }>
   }>;
 
+  industryFilterValues: Array<{
+    key: string,
+    prettyValue: string
+  }> = [];
+
   @ViewChild('contractsCanvas') contractsCanvas;
   contractsChart: any;
 
@@ -73,6 +78,7 @@ export class AllProjectsPage {
   }
 
   async ngOnInit(){
+    this.getIndustries();
     this.getAllProjects();
     this.getCurrentUser();
     // this.keycloak.profile()
@@ -361,6 +367,21 @@ export class AllProjectsPage {
 
   openAccountSettings() {
     this.navCtrl.setRoot('AccountSettingsPage');
+  }
+
+  getIndustries() {
+    this.cincoService.getProjectSectors().subscribe(response => {
+      let projectSectors = response;
+      for (let key in projectSectors) {
+        if (projectSectors.hasOwnProperty(key)) {
+          let industry = {
+            key: key,
+            prettyValue: projectSectors[key]
+          };
+          this.industryFilterValues.push(industry);
+        }
+      }
+    });
   }
 
 }
