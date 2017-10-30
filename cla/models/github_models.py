@@ -160,6 +160,12 @@ class GitHub(repository_service_interface.RepositoryService):
         console_endpoint = cla.conf['CLA_CONSOLE_ENDPOINT']
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
+        # Ensure user actually requires a signature for this project.
+        signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
+        document = cla.utils.get_project_latest_individual_document(project_id)
+        if signature is not None and \
+           signature.get_signature_document_major_version() == document.get_document_major_version():
+            cla.utils.redirect_user_by_signature(user, signature)
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
@@ -183,11 +189,14 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.info('Initiating GitHub signing workflow for GitHub repo %s PR: %s',
                      github_repository_id, pull_request_number)
         user = self.get_or_create_user(request)
-        signature = cla.utils.get_user_signature_by_repository(installation_id, user)
-        if signature is not None:
+        signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
+        project_id = cla.utils.get_project_id_from_installation_id(installation_id)
+        document = cla.utils.get_project_latest_individual_document(project_id)
+        if signature is not None and \
+           signature.get_signature_document_major_version() == document.get_document_major_version():
             cla.utils.redirect_user_by_signature(user, signature)
         else:
-            # Signature not found, create new one and send user to sign.
+            # Signature not found or older version, create new one and send user to sign.
             cla.utils.request_signature(installation_id, github_repository_id, user, pull_request_number)
 
     def process_opened_pull_request(self, data):

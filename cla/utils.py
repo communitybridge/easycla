@@ -344,6 +344,21 @@ def get_project_document(project, document_type, major_version, minor_version):
             return document
     return None
 
+def get_project_latest_individual_document(project_id):
+    """
+    Helper function to return the latest individual document belonging to a project.
+
+    :param project_id: The project ID in question.
+    :type project_id: string
+    :return: Latest ICLA document object for this project.
+    :rtype: cla.models.model_instances.Document
+    """
+    project = get_project_instance()
+    project.load(str(project_id))
+    document_models = project.get_project_individual_documents()
+    major, minor = get_last_version(document_models)
+    return project.get_project_individual_document(major, minor)
+
 def get_last_version(documents):
     """
     Helper function to get the last version of the list of documents provided.
@@ -455,11 +470,8 @@ def get_user_signature_by_github_repository(installation_id, user):
     :rtype: cla.models.model_interfaces.Signature | None
     """
     project_id = get_project_id_from_installation_id(installation_id)
-    signatures = user.get_user_signatures(project_id=project_id)
-    num_signatures = len(signatures)
-    if num_signatures > 0:
-        return signatures[0]
-    return None
+    signature = get_user_latest_signature(user, project_id)
+    return signature
 
 def get_project_id_from_installation_id(installation_id):
     github_org = get_github_organization_instance()
