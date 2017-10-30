@@ -1,0 +1,26 @@
+project-members {
+
+  .circle-alert,
+  .circle-notice,
+  .circle-null {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 100%;
+    position: relative;
+    top: .2rem;
+  }
+
+  .circle-alert {
+    background-color: color($colors, danger);
+  }
+
+  .circle-notice {
+    background-color: orange;
+  }
+
+  .circle-null {
+    background-color: null;
+  }
+
+}
