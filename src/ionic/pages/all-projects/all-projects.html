@@ -41,6 +41,20 @@
   <loading-spinner [loading]="loading.projects"></loading-spinner>
   <ion-grid class="all-projects" [loading-display]="loading.projects">
     <ion-row>
+      <ion-col>
+        <ion-card>
+          <ion-card-content>
+            <ion-item>
+              <ion-label stacked>Project Sector</ion-label>
+              <ion-select interface="popover">
+                <ion-option value="industry.key" *ngFor="let industry of industryFilterValues">{{ industry.prettyValue }}</ion-option>
+              </ion-select>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
         <ion-card >
           <img *ngIf="project.config.logoRef" (click)="viewProject(project.id)" src="{{project.config.logoRef}}" alt="{{project.name}} logo"/>
