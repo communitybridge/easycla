@@ -138,7 +138,6 @@ def activity(body):
                 return {'status': 'Organization Enrollment Completed. CLA System is operational.'}
             else:
                 return {'status': 'Organization already exists in our system. Enrollment not completed.'}
-
     # Pull Requests
     if 'pull_request' in body:
 
@@ -146,14 +145,12 @@ def activity(body):
         if org_is_covered_by_cla(body['pull_request']['head']['repo']['owner']['login']):
 
             # New PR opened
-            if body['action'] == 'opened' or body['action'] == 'reopened':
-
+            if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
                 # Copied from repository_service.py
                 provider = 'github'
                 service = cla.utils.get_repository_service(provider)
                 result = service.received_activity(body)
                 return result
-
         # If the repo is not covered, post an annoying message on the Pull Request
         else:
             return {'status': 'Repo not covered under CLA System.'}
