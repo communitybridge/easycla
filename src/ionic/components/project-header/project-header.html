@@ -3,12 +3,14 @@
     <ion-col class="project-info" col-12 col-md-8>
       <ion-row><!-- Logo and description -->
         <ion-col col-12 col-md-4>
-          <div *ngIf="!project.config.logoRef" text-center>
-            <ion-icon class="no-logo-icon" name="image"></ion-icon>
-            <ion-label>Change logo in <a class="project-details-link" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label>
-          </div>
-          <div class="project-logo" *ngIf="project.config.logoRef">
-            <img src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
+          <div class="project-logo-wrapper">
+            <div *ngIf="!project.config.logoRef" text-center>
+              <ion-icon class="no-logo-icon" name="image"></ion-icon>
+              <ion-label>Change logo in <a class="project-details-link" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label>
+            </div>
+            <div class="project-logo" *ngIf="project.config.logoRef">
+              <img src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
+            </div>
           </div>
         </ion-col>
         <ion-col col-12 col-md-8>
@@ -45,7 +47,6 @@
       </ion-row>
     </ion-col>
     <ion-col col-12 col-md-4>
-      <h2>Coming Soon</h2>
       <ion-item (click)="openProjectUserManagementModal()">
         <ion-icon class="clickable" name="people" item-left large></ion-icon>
         <p class="add-pointer">

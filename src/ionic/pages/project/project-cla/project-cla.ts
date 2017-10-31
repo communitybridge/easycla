@@ -3,7 +3,6 @@ import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angu
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
-import { ProjectModel } from '../../../models/project-model';
 import { PopoverController } from 'ionic-angular';
 
 @IonicPage({
