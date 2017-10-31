@@ -1,11 +1,25 @@
 project-header {
-  .project-info {
-    border-right: 1px solid #dcdcdc;
+  @media screen and (min-width: 769px) {
+    .project-info {
+      border-right: 1px solid #dcdcdc;
+    }
+  }
+
+  .project-logo-wrapper {
+    height: 119px;
   }
 
   .project-logo {
+    height: 100%;
     border: 1px solid #dcdcdc;
     text-align: center;
+    img {
+      max-width: 100%;
+      height: auto;
+      max-height: 100%;
+      width: auto;
+    }
+  }
 
   .no-logo-icon {
     font-size: 90px;

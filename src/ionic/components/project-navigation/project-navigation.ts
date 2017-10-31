@@ -50,10 +50,6 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       this.generateNavItems();
     });
     this.rolesService.getUserRoles();
-
-    console.log("on init");
-    let index = this.navCtrl.indexOf(this.viewCtrl);
-    console.log(index);
   }
 
 
@@ -100,10 +96,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   }
 
   openPage(item) {
-    console.log("openpage");
     let index = this.navCtrl.indexOf(this.viewCtrl);
-    console.log(index);
-    console.log("navigating to " + item.page);
     if (index === 0) {
       this.navCtrl.setRoot(item.page, {
         projectId: this.projectId
@@ -111,6 +104,9 @@ export class ProjectNavigationComponent implements AfterViewChecked {
     } else {
       this.navCtrl.push(item.page, {
         projectId: this.projectId,
+      },
+      {
+        animate: false,
       }).then(() => {
         this.navCtrl.remove(index);
       });
