@@ -218,6 +218,21 @@ module "vault" "vault-master" {
   region                 = "${var.region}"
 }
 
+module "vault-ui" "vault-ui" {
+  source                 = "./vault-ui"
+
+  ecs_cluster_name       = "${module.tools-ecs-cluster.name}"
+  ecs_asg_name           = "${module.tools-ecs-cluster.asg_name}"
+  internal_subnets       = "${module.vpc.internal_subnets}"
+  internal_elb_sg        = "${module.security_groups.internal_elb}"
+  consul_endpoint        = "127.0.0.1:8500"
+  dns_servers            = "${module.consul-bind.dns_servers}"
+  region                 = "${var.region}"
+  vpc_id                 = "${module.vpc.id}"
+  route53_zone_id        = "Z1WGT54F777KX0"
+  ecs_role               = "${module.iams.service_role_arn}"
+}
+
 module "logstash" {
   source                 = "./logstash"
 

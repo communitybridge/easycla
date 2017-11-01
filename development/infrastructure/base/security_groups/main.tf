@@ -303,7 +303,10 @@ resource "aws_security_group" "ghe" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    security_groups = ["${aws_security_group.ghe_elb.id}"]
+    security_groups = [
+      "${aws_security_group.ghe_elb.id}",
+      "${aws_security_group.it-ghe-elb.id}"
+    ]
   }
 
   ingress {
@@ -317,14 +320,28 @@ resource "aws_security_group" "ghe" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    security_groups = ["${aws_security_group.ghe_elb.id}"]
+    security_groups = [
+      "${aws_security_group.ghe_elb.id}",
+      "${aws_security_group.it-ghe-elb.id}"
+    ]
   }
 
   ingress {
     from_port = 122
     to_port = 122
     protocol = "tcp"
-    cidr_blocks = ["10.32.0.0/12"]
+    cidr_blocks = [
+      "10.32.0.0/12"
+    ]
+  }
+
+  ingress {
+    from_port = 122
+    to_port = 122
+    protocol = "tcp"
+    security_groups = [
+      "sg-e5b2d098"
+    ]
   }
 
   ingress {
@@ -352,7 +369,10 @@ resource "aws_security_group" "ghe" {
     from_port = 443
     to_port = 443
     protocol = "tcp"
-    security_groups = ["${aws_security_group.ghe_elb.id}"]
+    security_groups = [
+      "${aws_security_group.ghe_elb.id}",
+      "${aws_security_group.it-ghe-elb.id}"
+    ]
   }
 
   ingress {
@@ -405,6 +425,33 @@ resource "aws_security_group" "ghe_elb" {
     cidr_blocks = ["10.32.0.0/12"]
   }
 
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    security_groups = [
+      "sg-e5b2d098"
+    ]
+  }
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    security_groups = [
+      "sg-e5b2d098"
+    ]
+  }
+
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    security_groups = [
+      "sg-e5b2d098"
+    ]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -421,6 +468,57 @@ resource "aws_security_group" "ghe_elb" {
   }
 }
 
+resource "aws_security_group" "it-ghe-elb" {
+  provider    = "aws.local"
+  name        = "it-github-enterprise"
+  description = "IT GHE Bridge"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32"
+    ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "IT GHE Bridge"
+  }
+}
+
 // Internal ELB allows traffic from the internal subnets.
 output "internal_elb" {
   value = "${aws_security_group.internal_elb.id}"
@@ -432,6 +530,10 @@ output "tools-ecs-cluster" {
 
 output "ghe-elb" {
   value = "${aws_security_group.ghe_elb.id}"
+}
+
+output "it-ghe-elb" {
+  value = "${aws_security_group.it-ghe-elb.id}"
 }
 
 output "vpn" {

@@ -274,16 +274,6 @@ module "it-managed-vpn" {
   route_tables      = "${module.vpc.raw_route_tables_id}"
 }
 
-module "cert-managed-vpn" {
-  source            = "./cert_vpn_tunnel"
-
-  vpc_id            = "${module.vpc.id}"
-  external_subnets  = "${module.vpc.external_subnets}"
-  cidr              = "10.32.0.0/12"
-  key_name          = "${var.key_name}"
-  route_tables      = "${module.vpc.raw_route_tables_id}"
-}
-
 # RDS Instance to use by some services, ie: Keycloak
 module "rds-cluster" {
   source               = "../../../modules/rds-cluster"
@@ -308,6 +298,7 @@ module "github-enterprise" {
   replica_count          = "1"
   ghe_sg                 = "${module.security_groups.ghe}"
   elb_sg                 = "${module.security_groups.ghe-elb}"
+  it_elb_sg              = "${module.security_groups.it-ghe-elb}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   external_subnets       = "${module.vpc.external_subnets}"
 }

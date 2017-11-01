@@ -4,6 +4,8 @@ variable "ghe_sg" {}
 
 variable "elb_sg" {}
 
+variable "it_elb_sg" {}
+
 variable "replica_count" {}
 
 variable "internal_subnets" {
@@ -112,6 +114,51 @@ resource "aws_elb" "ghe" {
   }
 }
 
+# Create a new load balancer
+resource "aws_elb" "it-ghe-bridge" {
+  name               = "it-github-enterprise"
+  security_groups    = ["${var.it_elb_sg}"]
+  subnets            = ["${var.external_subnets}"]
+
+  listener {
+    instance_port     = 22
+    instance_protocol = "tcp"
+    lb_port           = 22
+    lb_protocol       = "tcp"
+  }
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  listener {
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "arn:aws:acm:us-west-2:433610389961:certificate/43931226-dabf-4ad4-88e7-069f07e28edd"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTPS:443/status"
+    interval            = 30
+  }
+
+  instances                   = ["${aws_instance.ghe-master.id}"]
+  cross_zone_load_balancing   = true
+  idle_timeout                = 400
+
+  tags {
+    Name = "it-github-enterprise"
+  }
+}
+
 resource "aws_route53_record" "www" {
   provider= "aws.local"
   zone_id = "Z2MEXX9ZCWUHX6"
@@ -134,6 +181,19 @@ resource "aws_route53_record" "dot" {
   alias {
     name                   = "${aws_elb.ghe.dns_name}"
     zone_id                = "${aws_elb.ghe.zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "it" {
+  provider= "aws.local"
+  zone_id = "Z2MEXX9ZCWUHX6"
+  name    = "it-bridge"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.it-ghe-bridge.dns_name}"
+    zone_id                = "${aws_elb.it-ghe-bridge.zone_id}"
     evaluate_target_health = true
   }
 }

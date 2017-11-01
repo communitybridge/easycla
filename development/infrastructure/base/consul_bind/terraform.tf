@@ -53,6 +53,10 @@ resource "aws_instance" "bind_1" {
     Environment = "Production"
     consul-node = "true"
   }
+
+  lifecycle {
+    ignore_changes = ["ami"]
+  }
 }
 
 resource "aws_instance" "bind_2" {
@@ -74,6 +78,10 @@ resource "aws_instance" "bind_2" {
     Environment = "Production"
     consul-node = "true"
   }
+
+  lifecycle {
+    ignore_changes = ["ami"]
+  }
 }
 
 resource "aws_instance" "bind_3" {
@@ -94,6 +102,10 @@ resource "aws_instance" "bind_3" {
     Team        = "Engineering"
     Environment = "Production"
     consul-node = "true"
+  }
+
+  lifecycle {
+    ignore_changes = ["ami"]
   }
 }
 

@@ -60,8 +60,7 @@ resource "aws_ecs_service" "consul" {
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.consul.arn}"
   desired_count                      = "6"
-r exec -it 7c32c479b947 bash
-deployment_maximum_percent         = "200"
+  deployment_maximum_percent         = "200"
 
   placement_strategy {
     type = "spread"

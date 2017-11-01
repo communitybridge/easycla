@@ -159,6 +159,16 @@ module "project_cla" {
   peering_id = "pcx-0abf2563"
 }
 
+# Peering Request with Certification Bridge VPC
+module "cert_bridge" {
+  source = "./project_peering"
+
+  raw_route_tables_id = "${module.vpc_west.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc_west.external_rtb_id}"
+  project_cidr = "10.150.0.0/26"
+  peering_id = "pcx-8bd093e2"
+}
+
 output "account_number" {
   value = "433610389961"
 }
