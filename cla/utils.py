@@ -359,6 +359,21 @@ def get_project_latest_individual_document(project_id):
     major, minor = get_last_version(document_models)
     return project.get_project_individual_document(major, minor)
 
+def get_project_latest_corporate_document(project_id):
+    """
+    Helper function to return the latest corporate document belonging to a project.
+
+    :param project_id: The project ID in question.
+    :type project_id: string
+    :return: Latest CCLA document object for this project.
+    :rtype: cla.models.model_instances.Document
+    """
+    project = get_project_instance()
+    project.load(str(project_id))
+    document_models = project.get_project_corporate_documents()
+    major, minor = get_last_version(document_models)
+    return project.get_project_corporate_document(major, minor)
+
 def get_last_version(documents):
     """
     Helper function to get the last version of the list of documents provided.
@@ -473,7 +488,39 @@ def get_user_signature_by_github_repository(installation_id, user):
     signature = get_user_latest_signature(user, project_id)
     return signature
 
+def get_company_latest_signature(company, project_id):
+    """
+    Helper function to get a company's latest signature for a project.
+
+    :param company: The company object to check for.
+    :type company: cla.models.model_interfaces.Company
+    :param project_id: The ID of the project to check for.
+    :type project_id: string
+    :return: The latest versioned signature object if it exists.
+    :rtype: cla.models.model_interfaces.Signature or None
+    """
+    signatures = company.get_company_signatures(project_id=project_id)
+    latest = None
+    for signature in signatures:
+        if latest is None:
+            latest = signature
+            continue
+        if signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+            latest = signature
+            continue
+        if signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+           signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+            latest = signature
+            continue
+    return latest
+
 def get_project_id_from_installation_id(installation_id):
+    """
+    Helper function to get a project ID based on the installation ID on GitHub.
+
+    :param installation_id: The ID of the GitHub App installation.
+    :type installation_id: string
+    """
     github_org = get_github_organization_instance()
     github_org = github_org.get_organization_by_installation_id(int(installation_id))
     return github_org.get_organization_project_id()
@@ -788,7 +835,7 @@ def get_active_signature_return_url(user_id, metadata=None):
                                  metadata['pull_request_id'],
                                  installation_id)
 
-def get_active_signature_callback_url(user_id, metadata=None):
+def get_individual_signature_callback_url(user_id, metadata=None):
     """
     Helper function to get a user's active signature callback URL.
 
@@ -804,11 +851,24 @@ def get_active_signature_callback_url(user_id, metadata=None):
         return None
     organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
     installation_id = organization.get_organization_installation_id()
-    return cla.conf['SIGNED_CALLBACK_URL'] + '/' + str(installation_id) + '/' + \
-                                                   str(metadata['repository_id']) + '/' + \
-                                                   str(metadata['pull_request_id'])
+    return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
+                                                              str(metadata['repository_id']) + '/' + \
+                                                              str(metadata['pull_request_id'])
 
-def request_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
+def get_corporate_signature_callback_url(project_id, company_id):
+    """
+    Helper function to get the callback_url of a CCLA signature.
+
+    :param project_id: The ID of the project this CCLA is for.
+    :type project_id: string
+    :param company_id: The ID of the company signing the CCLA.
+    :type company_id: string
+    :return: The callback URL hit by the signing provider once the signature is complete.
+    :rtype: string
+    """
+    return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
+
+def request_individual_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
     Helper function send the user off to sign an signature based on the repository.
 
@@ -832,10 +892,10 @@ def request_signature(installation_id, github_repository_id, user, change_reques
         callback_url = cla.conf['SIGNED_CALLBACK_URL'] + \
                        '/' + str(installation_id) + '/' + str(change_request_id)
     signing_service = get_signing_service()
-    signature_data = signing_service.request_signature(project_id,
-                                                       user.get_user_id(),
-                                                       return_url,
-                                                       callback_url)
+    signature_data = signing_service.request_individual_signature(project_id,
+                                                                  user.get_user_id(),
+                                                                  return_url,
+                                                                  callback_url)
     if 'sign_url' in signature_data:
         raise falcon.HTTPFound(signature_data['sign_url'])
     cla.log.error('Could not get sign_url from signing service provider - sending user ' + \

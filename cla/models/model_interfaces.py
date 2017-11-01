@@ -927,7 +927,7 @@ class Signature(object): # pylint: disable=too-many-public-methods
     def set_signature_sign_url(self, sign_url):
         """
         Setter for an signature's signing URL. Optional on signature creation.
-        The signing provider's request_signatures() method will populate the field.
+        The signing provider's request_individual_signatures() method will populate the field.
 
         :param sign_url: The URL the user must visit in order to sign the signature.
         :type sign_url: string
@@ -1119,24 +1119,20 @@ class Company(object): # pylint: disable=too-many-public-methods
         raise NotImplementedError()
 
     def get_company_signatures(self,
-                                    signature_type=None,
-                                    signature_signed=None,
-                                    signature_corporate=None):
+                               project_id=None,
+                               signature_signed=None,
+                               signature_approved=None):
         """
         Simple abstraction around the supported ORMs to fetch signatures for
         an company.
 
-        :param signature_type: Filters the signatures by type ('cla' or 'dco')
-            None will return all available signature types.
-        :type signature_type: string or None
+        :param project_id: Filter signatures by project_id.
+        :type project_id: string or None
         :param signature_signed: Whether or not to return only signed/unsigned signatures.
             None will return all signatures for this company.
         :type signature_signed: bool or None
-        :param signature_corporate: Filter for corporate vs individual signature.
-            True will return just corporate CLAs.
-            False will return just individual CLAs.
-            None will return both individual and corporate.
-        :type signature_corporate: bool or None
+        :param signature_approved: Whether or not to return only approved signatures.
+        :type signature_approved: bool or None
         :return: The filtered signatures for this company.
         :rtype: [cla.models.model_interfaces.Signature]
         """

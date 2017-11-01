@@ -669,12 +669,12 @@ def delete_project_document(project_id: hug.types.uuid,
 #
 # Document Signing Routes.
 #
-@hug.post('/request-signature', versions=1,
+@hug.post('/request-individual-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'user_id': 'some-user-uuid'}")
-def request_signature(project_id: hug.types.uuid,
-                      user_id: hug.types.uuid,
-                      return_url=None):
+def request_individual_signature(project_id: hug.types.uuid,
+                                 user_id: hug.types.uuid,
+                                 return_url=None):
     """
     POST: /request-signature
 
@@ -695,12 +695,40 @@ def request_signature(project_id: hug.types.uuid,
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    return cla.controllers.signing.request_signature(project_id, user_id, return_url)
+    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
 
-@hug.post('/employee-signature', versions=1)
-def employee_signature(project_id, company_id, user_id):
+@hug.post('/request-corporate-signature', versions=1,
+          examples=" - {'project_id': 'some-proj-id', \
+                        'company_id': 'some-company-uuid'}")
+def request_corporate_signature(project_id: hug.types.uuid,
+                                company_id: hug.types.uuid,
+                                return_url=None):
     """
-    POST: /employee-signature
+    POST: /request-corporate-signature
+
+    DATA: {'project_id': 'some-project-id',
+           'company_id': 'some-company-id',
+           'return_url': <optional>}
+
+    Creates a new signature given project and company IDs. The manager will be redirected to the
+    return_url once signature is complete.
+
+    Returns a dict of the format:
+
+        {'company_id': <user_id>,
+         'signature_id': <signature_id>,
+         'project_id': <project_id>,
+         'sign_url': <sign_url>}
+
+    Manager should hit the provided URL to initiate the signing process through the
+    signing service provider.
+    """
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
+
+@hug.post('/request-employee-signature', versions=1)
+def request_employee_signature(project_id, company_id, user_id):
+    """
+    POST: /request-employee-signature
 
     DATA: {'project_id': <project-id>,
            'company_id': <company-id>,
@@ -711,21 +739,32 @@ def employee_signature(project_id, company_id, user_id):
     require a full DocuSign signature process, which means the sign/return URLs and document
     versions may not be populated or reliable.
     """
-    return cla.controllers.signing.employee_signature(project_id, company_id, user_id)
+    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id)
 
-@hug.post('/signed/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
-def post_signed(body,
-                installation_id: hug.types.number,
-                github_repository_id: hug.types.number,
-                change_request_id: hug.types.number):
+@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+def post_individual_signed(body,
+                           installation_id: hug.types.number,
+                           github_repository_id: hug.types.number,
+                           change_request_id: hug.types.number):
     """
-    POST: /signed/{installation_id}/{github_repository_id}/{change_request_id}
+    POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
 
-    Callback URL from signing service upon signature.
+    Callback URL from signing service upon ICLA signature.
     """
     content = body.read()
-    return cla.controllers.signing.post_signed(content, installation_id, github_repository_id, change_request_id)
+    return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
+@hug.post('/signed/corporate/{project_id}/{company_id}', versions=1)
+def post_corporate_signed(body,
+                          project_id: hug.types.uuid,
+                          company_id: hug.types.uuid):
+    """
+    POST: /signed/corporate/{project_id}/{company_id}
+
+    Callback URL from signing service upon CCLA signature.
+    """
+    content = body.read()
+    return cla.controllers.signing.post_corporate_signed(content, project_id, company_id)
 
 @hug.get('/return-url/{signature_id}', versions=1)
 def get_return_url(signature_id: hug.types.uuid, event=None):

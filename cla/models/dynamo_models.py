@@ -1109,9 +1109,11 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
             self.model.company_whitelist_patterns.remove(str(whitelist_pattern))
 
     def get_company_signatures(self, # pylint: disable=arguments-differ
+                               project_id=None,
                                signature_signed=None,
                                signature_approved=None):
         return Signature().get_signatures_by_reference(self.get_company_id(), 'company',
+                                                       project_id=project_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
 

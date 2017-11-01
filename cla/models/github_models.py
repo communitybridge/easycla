@@ -197,7 +197,7 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.utils.redirect_user_by_signature(user, signature)
         else:
             # Signature not found or older version, create new one and send user to sign.
-            cla.utils.request_signature(installation_id, github_repository_id, user, pull_request_number)
+            cla.utils.request_individual_signature(installation_id, github_repository_id, user, pull_request_number)
 
     def process_opened_pull_request(self, data):
         """

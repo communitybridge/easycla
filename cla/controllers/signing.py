@@ -9,9 +9,9 @@ from cla.utils import get_signing_service, get_signature_instance, get_project_i
                       get_company_instance, get_user_instance
 from cla.models import DoesNotExist
 
-def request_signature(project_id, user_id, return_url=None):
+def request_individual_signature(project_id, user_id, return_url=None):
     """
-    Handle POST request to send signature request to user.
+    Handle POST request to send ICLA signature request to user.
 
     :param project_id: The project to sign for.
     :type project_id: string
@@ -20,9 +20,21 @@ def request_signature(project_id, user_id, return_url=None):
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_signature(str(project_id), str(user_id), return_url)
+    return get_signing_service().request_individual_signature(str(project_id), str(user_id), return_url)
 
-def employee_signature(project_id, company_id, user_id):
+def request_corporate_signature(project_id, company_id, return_url=None):
+    """
+    Creates CCLA signature object that represents a company signing a CCLA.
+
+    :param project_id: The ID of the project the company is signing a CCLA for.
+    :type project_id: string
+    :param company_id: The ID of the company that is signing the CCLA.
+    :type company_id: string
+    :param return_url: The URL to return the user to after signing is complete.
+    :type return_url: string
+    """
+    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), return_url)
+def request_employee_signature(project_id, company_id, user_id):
     """
     Creates placeholder signature object that represents a user signing a CCLA as an employee.
 
@@ -87,11 +99,9 @@ def employee_signature(project_id, company_id, user_id):
     new_signature.save()
     return new_signature.to_dict()
 
-def post_signed(content, installation_id, github_repository_id, change_request_id):
+def post_individual_signed(content, installation_id, github_repository_id, change_request_id):
     """
-    Handle the posted callback from the signing service.
-
-    :TODO: Update comments.
+    Handle the posted callback from the signing service after ICLA signature.
 
     :param content: The POST body from the signing service callback.
     :type content: string
@@ -101,7 +111,20 @@ def post_signed(content, installation_id, github_repository_id, change_request_i
         initiated this signature.
     :type change_request_id: string
     """
-    get_signing_service().signed_callback(content, installation_id, github_repository_id, change_request_id)
+    get_signing_service().signed_individual_callback(content, installation_id, github_repository_id, change_request_id)
+
+def post_corporate_signed(content, project_id, company_id):
+    """
+    Handle the posted callback from the signing service after CCLA signature.
+
+    :param content: The POST body from the signing service callback.
+    :type content: string
+    :param project_id: The ID of the project that was signed.
+    :type project_id: string
+    :param company_id: The ID of the company that signed.
+    :type company_id: string
+    """
+    get_signing_service().signed_corporate_callback(content, project_id, company_id)
 
 def return_url(signature_id, event=None): # pylint: disable=unused-argument
     """
@@ -122,7 +145,7 @@ def return_url(signature_id, event=None): # pylint: disable=unused-argument
     # Ensure everything went well on the signing service provider's side.
     if event is not None:
         # Expired signing URL - the user was redirected back immediately but still needs to sign.
-        if event == 'ttl_expired' and signature.get_signature_signed() is False:
+        if event == 'ttl_expired' and not signature.get_signature_signed():
             # Need to re-generate a sign_url and try again.
             cla.log.info('DocuSign URL used was expired, re-generating sign_url')
             callback_url = signature.get_signature_callback_url()
@@ -130,4 +153,8 @@ def return_url(signature_id, event=None): # pylint: disable=unused-argument
             signature.save()
             raise falcon.HTTPFound(signature.get_signature_sign_url())
     ret_url = signature.get_signature_return_url()
-    raise falcon.HTTPFound(ret_url)
+    if ret_url is not None:
+        cla.log.info('Signature success - sending user to return_url: %s', ret_url)
+        raise falcon.HTTPFound(ret_url)
+    cla.log.info('No return_url set for signature - returning success message')
+    return {'success': 'Thank you for signing'}
