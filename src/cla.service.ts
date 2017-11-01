@@ -415,10 +415,10 @@ export class ClaService {
   }
 
   /**
-  * /request-signature
+  * /request-individual-signature
   **/
 
-  postSignatureRequest(signatureRequest) {
+  postIndividualSignatureRequest(signatureRequest) {
     /*
       {
         'project_id': 'some-project-id',
@@ -427,7 +427,23 @@ export class ClaService {
         'callback_url': 'http://cla.system/signed-callback'
       }
      */
-    return this.http.post(this.claApiUrl + '/request-signature', signatureRequest)
+    return this.http.post(this.claApiUrl + '/request-individual-signature', signatureRequest)
+      .map((res) => res.json());
+  }
+
+  /**
+  * /request-employee-signature
+  **/
+
+  postEmployeeSignatureRequest(signatureRequest) {
+    /*
+      {
+        'project_id': <project-id>,
+        'company_id': <company-id>,
+        'user_id': <user-id>
+      }
+     */
+    return this.http.post(this.claApiUrl + '/request-employee-signature', signatureRequest)
       .map((res) => res.json());
   }
 
