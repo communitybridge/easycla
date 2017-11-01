@@ -384,4 +384,8 @@ export class AllProjectsPage {
     });
   }
 
+  filterIndustry(industry){
+    console.log(industry);
+  }
+
 }
