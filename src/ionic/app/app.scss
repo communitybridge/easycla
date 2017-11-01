@@ -68,6 +68,10 @@ ion-content .scroll-content > header {
   cursor: pointer;
 }
 
+.transparent {
+  background-color: transparent;
+}
+
 .vertical-rule-right::after {
     content: "";
     display: block;
