@@ -163,7 +163,7 @@ class GitLab(repository_service_interface.RepositoryService):
             cla.utils.redirect_user_by_signature(user, signature)
         else:
             # Signature not found, create new one and send user to sign.
-            cla.utils.request_signature(repository, user, change_request_id)
+            cla.utils.request_individual_signature(repository, user, change_request_id)
 
     def process_opened_merge_request(self, data):
         """

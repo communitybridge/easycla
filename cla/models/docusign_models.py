@@ -45,7 +45,7 @@ class DocuSign(signing_service_interface.SigningService):
                                                 password=password,
                                                 integrator_key=integrator_key)
 
-    def request_signature(self, project_id, user_id, return_url=None):
+    def request_individual_signature(self, project_id, user_id, return_url=None):
         cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
         # Ensure this is a valid user.
         user_id = str(user_id)
@@ -57,11 +57,12 @@ class DocuSign(signing_service_interface.SigningService):
                             user_id)
             return {'errors': {'user_id': str(err)}}
         # Check for active signature object with this project.
-        latest_signature = cla.utils.get_user_latest_signature(user, project_id)
-        if latest_signature is not None:
+        latest_signature = cla.utils.get_user_latest_signature(user, str(project_id))
+        last_document = cla.utils.get_project_latest_individual_document(str(project_id))
+        if latest_signature is not None and \
+           last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('User already has a signatures with this project: %s', \
                          latest_signature.get_signature_id())
-            # TODO: Check versioning to determine whether to create new one or not.
             return {'user_id': user_id,
                     'project_id': project_id,
                     'signature_id': latest_signature.get_signature_id(),
@@ -78,7 +79,7 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'project_id': str(err)}}
         signature.set_signature_project_id(project_id)
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
-        callback_url = cla.utils.get_active_signature_callback_url(user_id, signature_metadata)
+        callback_url = cla.utils.get_individual_signature_callback_url(user_id, signature_metadata)
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
         # Requires us to know where the user came from.
@@ -92,7 +93,6 @@ class DocuSign(signing_service_interface.SigningService):
                     'error': 'No active signature found for user - cannot generate return_url \
                               without knowing where the user came from'}
 
-        # Assume ICLA only for now.
         try:
             document = project.get_project_individual_document()
         except DoesNotExist as err:
@@ -113,10 +113,66 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
+    def request_corporate_signature(self, project_id, company_id, return_url=None):
+        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
+        project = cla.utils.get_project_instance()
+        try:
+            project.load(str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+        company = cla.utils.get_company_instance()
+        try:
+            company.load(str(company_id))
+        except DoesNotExist as err:
+            return {'errors': {'company_id': str(err)}}
+        # Ensure the company doesn't already have a CCLA with this project.
+        latest_signature = cla.utils.get_company_latest_signature(company, str(project_id))
+        last_document = cla.utils.get_project_latest_corporate_document(str(project_id))
+        if latest_signature is not None and \
+           last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
+            cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
+            if latest_signature.get_signature_signed():
+                cla.log.info('CCLA signature object already signed')
+                return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
+            else:
+                cla.log.info('CCLA signature object still missing signature')
+                return {'company_id': str(company_id),
+                        'project_id': str(project_id),
+                        'signature_id': latest_signature.get_signature_id(),
+                        'sign_url': latest_signature.get_signature_sign_url()}
+        # Create the new Signature.
+        signature = cla.utils.get_signature_instance()
+        signature.set_signature_id(str(uuid.uuid4()))
+        signature.set_signature_project_id(str(project_id))
+        signature.set_signature_document_major_version(last_document.get_document_major_version())
+        signature.set_signature_document_minor_version(last_document.get_document_minor_version())
+        signature.set_signature_signed(False)
+        signature.set_signature_approved(True)
+        signature.set_signature_type('ccla')
+        signature.set_signature_reference_type('company')
+        signature.set_signature_reference_id(company_id)
+        callback_url = cla.utils.get_corporate_signature_callback_url(str(project_id), str(company_id))
+        cla.log.info('Setting callback_url: %s', callback_url)
+        signature.set_signature_callback_url(callback_url)
+        cla.log.info('Setting signature return_url to %s', return_url)
+        signature.set_signature_return_url(return_url)
+        self.populate_sign_url(signature, callback_url)
+        signature.save()
+        return {'company_id': str(company_id),
+                'project_id': str(project_id),
+                'signature_id': signature.get_signature_id(),
+                'sign_url': signature.get_signature_sign_url()}
+
     def populate_sign_url(self, signature, callback_url=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
+        sig_type = signature.get_signature_reference_type()
         user = cla.utils.get_user_instance()
-        user.load(signature.get_signature_reference_id())
+        if sig_type == 'company': # Assume the company manager is signing the CCLA.
+            company = cla.utils.get_company_instance()
+            company.load(signature.get_signature_reference_id())
+            user.load(company.get_company_manager_id())
+        else: # sig_type == 'user'
+            user.load(signature.get_signature_reference_id())
         name = user.get_user_name()
         if name is None:
             name = 'Unknown'
@@ -136,14 +192,20 @@ class DocuSign(signing_service_interface.SigningService):
                                    %user.get_user_email(),
                                    supportedLanguage='en')
         # Fetch the document to sign.
-        # TODO: Need to support corporate CLAs?
         project = cla.utils.get_project_instance()
         project.load(signature.get_signature_project_id())
-        document = project.get_project_individual_document()
-        if document is None:
-            cla.log.error('Could not get sign url for project %s: Project has no individual \
-                          CLA document set', project.get_project_id())
-            return
+        if sig_type == 'company':
+            document = project.get_project_corporate_document()
+            if document is None:
+                cla.log.error('Could not get sign url for project %s: Project has no corporate \
+                               CLA document set', project.get_project_id())
+                return
+        else: # sig_type == 'user'
+            document = project.get_project_individual_document()
+            if document is None:
+                cla.log.error('Could not get sign url for project %s: Project has no individual \
+                               CLA document set', project.get_project_id())
+                return
         content_type = document.get_document_content_type()
         if content_type.startswith('url+'):
             pdf_url = document.get_document_content()
@@ -179,12 +241,49 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting signature sign_url to %s', sign_url)
         signature.set_signature_sign_url(sign_url)
 
-    def signed_callback(self, content, installation_id, github_repository_id, change_request_id):
+    def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
-        Will be called on signature callback, but also when a document has been
+        Will be called on ICLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
-        cla.log.debug('Docusign signed callback POST data: %s', content)
+        cla.log.debug('Docusign ICLA signed callback POST data: %s', content)
+        tree = ET.fromstring(content)
+        # Get envelope ID.
+        envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
+        # Assume only one signature per signature.
+        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+        signature = cla.utils.get_signature_instance()
+        try:
+            signature.load(signature_id)
+        except DoesNotExist:
+            cla.log.error('DocuSign ICLA callback returned signed info on invalid signature: %s',
+                          content)
+            return
+        # Iterate through recipients and update the signature signature status if changed.
+        elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
+                         '/' + self.TAGS['recipient_status'])
+        status = elem.find(self.TAGS['status']).text
+        if status == 'Completed' and not signature.get_signature_signed():
+            cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
+                         signature_id)
+            signature.set_signature_signed(True)
+            signature.save()
+            # Send user their signed document.
+            user = cla.utils.get_user_instance()
+            user.load(signature.get_signature_reference_id())
+            # Remove the active signature metadata.
+            cla.utils.delete_active_signature_metadata(user.get_user_id())
+            # Send email with signed document.
+            self.send_signed_document(envelope_id, user)
+            # Update the repository provider with this change.
+            update_repository_provider(installation_id, github_repository_id, change_request_id)
+
+    def signed_corporate_callback(self, content, project_id, company_id):
+        """
+        Will be called on CCLA signature callback, but also when a document has been
+        opened by a user - no action required then.
+        """
+        cla.log.debug('Docusign CCLA signed callback POST data: %s', content)
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -201,26 +300,23 @@ class DocuSign(signing_service_interface.SigningService):
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
+        company = cla.utils.get_company_instance()
+        try:
+            company.load(str(company_id))
+        except DoesNotExist:
+            cla.log.error('Received CCLA signed callback from signing service provider for an unknown company: %s', company_id)
+            return
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info('CLA signature signed (%s) - Notifying repository service provider',
-                         signature_id)
+            cla.log.info('CCLA signature signed (%s)', signature_id)
             signature.set_signature_signed(True)
             signature.save()
-            # Send user their signed document.
-            # TODO: This currently only supports ICLAs.
-            if signature.get_signature_reference_type() != 'user':
-                cla.log.error('Trying to handle CCLA as a ICLA - not implemented yet')
-                raise NotImplementedError()
-            user = cla.utils.get_user_instance()
-            user.load(signature.get_signature_reference_id())
-            # Remove the active signature metadata.
-            cla.utils.delete_active_signature_metadata(user.get_user_id())
+            # Send manager their signed document.
+            manager = cla.utils.get_user_instance()
+            manager.load(company.get_company_manager_id())
             # Send email with signed document.
-            self.send_signed_document(envelope_id, user)
-            # Update the repository provider with this change.
-            update_repository_provider(installation_id, github_repository_id, change_request_id)
+            self.send_signed_document(envelope_id, manager, icla=False)
 
-    def send_signed_document(self, envelope_id, user):
+    def send_signed_document(self, envelope_id, user, icla=True):
         """Helper method to send the user their signed document."""
         # First, get the signed document from DocuSign.
         cla.log.debug('Fetching signed CLA document for envelope: %s', envelope_id)
