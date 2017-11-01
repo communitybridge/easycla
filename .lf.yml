@@ -1,0 +1,10 @@
+name: CLA Corporate Console
+machine_name: ccc
+stack: nodejs
+modes:
+  - default
+  - dev
+dependencies:
+  - cinco
+  - cla
+files:
