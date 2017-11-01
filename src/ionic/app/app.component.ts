@@ -5,6 +5,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { RolesService } from '../services/roles.service';
 
 @Component({
   templateUrl: 'app.html',
@@ -22,16 +23,33 @@ export class MyApp {
     component: any
   }>;
 
+  users: any[];
+
   constructor(
     public platform: Platform,
     public app: App,
     public statusBar: StatusBar,
     public splashScreen: SplashScreen,
     private cincoService: CincoService,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    private rolesService: RolesService,
   ) {
     this.getDefaults();
     this.initializeApp();
+  }
+
+  getDefaults() {
+    this.pages = [];
+    this.userRoles = this.rolesService.userRoleDefaults;
+    this.regeneratePagesMenu();
+  }
+
+  ngOnInit() {
+    this.rolesService.getData.subscribe((userRoles) => {
+      this.userRoles = userRoles;
+      this.regeneratePagesMenu();
+    });
+    this.rolesService.getUserRoles();
   }
 
   authenticated(): boolean {
@@ -50,20 +68,6 @@ export class MyApp {
 
   account() {
     this.keycloak.account();
-  }
-
-  getDefaults() {
-    this.userRoles = {
-      isUser: false,
-      isProgramManager: false,
-      isProgramManagerAdmin: false,
-      isAdmin: false,
-    };
-    this.pages = [];
-  }
-
-  ngOnInit() {
-    this.getUserRoles();
   }
 
   initializeApp() {
@@ -89,33 +93,6 @@ export class MyApp {
   openPage(page) {
     // Set the nav root so back button doesn't show
     this.nav.setRoot(page.component);
-  }
-
-  isInArray(roles, role) {
-    for(let i=0; i<roles.length; i++) {
-      if (roles[i].toLowerCase() === role.toLowerCase()) return true;
-    }
-    return false;
-  }
-
-  getUserRoles() {
-    this.keycloak.getTokenParsed().then(
-      (tokenParsed) => {
-        if(tokenParsed){
-          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'PMC_USER');
-          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
-          let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
-          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_ADMIN');
-          this.userRoles = {
-            isUser: isUser,
-            isProgramManager: isProgramManager,
-            isProgramManagerAdmin: isProgramManagerAdmin,
-            isAdmin: isAdmin,
-          };
-          this.regeneratePagesMenu();
-        }
-      }
-    )
   }
 
   regeneratePagesMenu() {

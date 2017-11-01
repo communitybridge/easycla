@@ -8,6 +8,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HttpClient } from '../services/http-client';
 import { CincoService } from '../services/cinco.service';
+import { RolesService } from '../services/roles.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp, KEYCLOAK_HTTP_PROVIDER } from '../services/keycloak/keycloak.http';
 import { SortService } from '../services/sort.service';
@@ -33,6 +34,7 @@ import { MyApp } from './app.component';
     CurrencyPipe,
     HttpClient,
     CincoService,
+    RolesService,
     KeycloakService,
     KEYCLOAK_HTTP_PROVIDER,
     SortService,

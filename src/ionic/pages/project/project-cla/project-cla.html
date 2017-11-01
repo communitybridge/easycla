@@ -3,70 +3,15 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>{{ project.name }}</ion-title>
+    <ion-title>LF Project</ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding headerspacing>
-
   <header>
-    <ion-grid>
-      <ion-row>
-        <ion-col col-12 col-md-9>
-          <ion-row>
-            <ion-col col-12 col-md-4>
-              <div *ngIf="!project.logoRef" text-center>
-                <ion-icon name="image"></ion-icon>
-              </div>
-              <div *ngIf="project.logoRef">
-                <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
-              </div>
-            </ion-col>
-            <ion-col col-12 col-md-8>
-              <h1>{{ project.name }}</h1>
-              <p>{{ project.description }}</p>
-            </ion-col>
-            <ion-col col-12>
-              <ion-row>
-                <ion-col col-12 col-md-4>
-
-                </ion-col>
-                <ion-col col-12 col-md-4>
-                  <ion-label>
-                    Categories: {{ project.sector }} <span *ngIf="!project.sector">N/A</span>
-                  </ion-label>
-                </ion-col>
-                <ion-col col-12 col-md-4>
-                  <ion-label>
-                    Launched:
-                      <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="project.startDate" ></ion-datetime>
-                      <span *ngIf="!project.startDate">N/A</span>
-                  </ion-label>
-                </ion-col>
-              </ion-row>
-            </ion-col>
-          </ion-row>
-        </ion-col>
-        <ion-col col-12 col-md-3>
-
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-
-    <ion-segment [(ngModel)]="tab" color="secondary">
-      <ion-segment-button value="membership" (click)="openProjectPage()">
-        Membership
-      </ion-segment-button>
-      <ion-segment-button value="repositories">
-        Repositories
-      </ion-segment-button>
-      <ion-segment-button value="support">
-        Support
-      </ion-segment-button>
-    </ion-segment>
+    <project-header [projectId]="projectId"></project-header>
+    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
   </header>
-
-  <loading-spinner [loading]="loading.project"></loading-spinner>
   <ion-grid>
     <ion-row class="contract-group" *ngFor="let contract of contracts">
       <ion-col col-12 class="header-row">
