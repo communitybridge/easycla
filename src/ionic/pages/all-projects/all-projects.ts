@@ -15,6 +15,7 @@ import { Chart } from 'chart.js';
 export class AllProjectsPage {
   loading: any;
   allProjects: any;
+  allFilteredProjects: any;
   numberOfContracts: {
     new: number,
     renewal: number,
@@ -102,6 +103,7 @@ export class AllProjectsPage {
           // This is to refresh an image that have same URL
           if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
         }
+        this.allFilteredProjects = JSON.parse(JSON.stringify(this.allProjects));
         this.loading.projects = false;
     });
   }
@@ -386,6 +388,23 @@ export class AllProjectsPage {
 
   filterIndustry(industry){
     console.log(industry);
+    if(industry == "NO_FILTER") {
+      this.resetFilter();
+    }
+    else {
+      this.filterProjects(industry);
+    }
+  }
+
+  resetFilter(){
+    this.allFilteredProjects = JSON.parse(JSON.stringify(this.allProjects));
+  }
+
+  filterProjects(industry){
+    console.log("filterProjects: ", industry);
+    this.allFilteredProjects = this.allFilteredProjects.filter((projects) => {
+      return projects.sector == industry;
+    });
   }
 
 }
