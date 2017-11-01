@@ -372,6 +372,15 @@ export class ClaService {
   }
 
   /**
+  * /project/{project_id}/companies
+  **/
+
+  getProjectCompanies(projectId) {
+    return this.http.get(this.claApiUrl + '/project/' + projectId + '/companies')
+      .map((res) => res.json());
+  }
+
+  /**
   * /project/{project_id}/document/{document_type}
   **/
 
