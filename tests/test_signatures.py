@@ -29,6 +29,21 @@ class SignatureTestCase(CLATestCase):
                                 '/project/' + project2['project_id'])
         self.assertEqual(len(response.data), 2)
 
+    def test_employee_signature(self):
+        """Test for creating an employee signature."""
+        user = self.create_user(user_email='test@test.org')
+        project = self.create_project('test-project')
+        company = self.create_company(company_whitelist=['test@test.org'])
+        self.create_document(project['project_id'], 'corporate')
+        # Create Corporate signature.
+        self.create_signature(project['project_id'], company['company_id'], 'company')
+        # Create Employee signature.
+        data = {'project_id': project['project_id'],
+                'company_id': company['company_id'],
+                'user_id': user['user_id']}
+        response = hug.test.post(cla.routes, '/v1/request-employee-signature', data)
+        print(response.data)
+
     def test_various_major_versions(self):
         """Test out-dated and invalidated signatures."""
         user_data = self.create_user()

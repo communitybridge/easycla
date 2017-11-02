@@ -692,7 +692,7 @@ def request_individual_signature(project_id: hug.types.uuid,
                                  user_id: hug.types.uuid,
                                  return_url=None):
     """
-    POST: /request-signature
+    POST: /request-individual-signature
 
     DATA: {'project_id': 'some-project-id',
            'user_id': 'some-user-id',
@@ -742,20 +742,24 @@ def request_corporate_signature(project_id: hug.types.uuid,
     return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
 
 @hug.post('/request-employee-signature', versions=1)
-def request_employee_signature(project_id, company_id, user_id):
+def request_employee_signature(project_id: hug.types.uuid,
+                               company_id: hug.types.uuid,
+                               user_id: hug.types.uuid,
+                               return_url=None):
     """
     POST: /request-employee-signature
 
     DATA: {'project_id': <project-id>,
            'company_id': <company-id>,
-           'user_id': <user-id>}
+           'user_id': <user-id>,
+           'return_url': <optional>}
 
     Creates a placeholder signature object that represents an employee of a company having confirmed
     that they indeed work for company X which already has a CCLA with the project. This does not
-    require a full DocuSign signature process, which means the sign/return URLs and document
+    require a full DocuSign signature process, which means the sign/callback URLs and document
     versions may not be populated or reliable.
     """
-    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id)
+    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
 
 @hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
 def post_individual_signed(body,
