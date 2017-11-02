@@ -8,4 +8,5 @@ gunicorn==19.7.1
 python-jose==1.4.0
 pydocusign==1.2.0
 requests_oauthlib==0.8.0
+python-dateutil==2.6.1
 git+https://github.com/ibotty/keycloak-python.git
