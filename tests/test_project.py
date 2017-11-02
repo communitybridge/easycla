@@ -21,6 +21,15 @@ class ProjectTestCase(CLATestCase):
         response = hug.test.get(cla.routes, '/v1/project')
         self.assertEqual(len(response.data), 2)
 
+    def test_get_project_by_external_id(self):
+        """Tests for getting projects by external ID."""
+        response = hug.test.get(cla.routes, '/v1/project/external/fake-external-id')
+        self.assertEqual(len(response.data), 0)
+        project = self.create_project()
+        response = hug.test.get(cla.routes, '/v1/project/external/external-id')
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['project_id'], project['project_id'])
+
     def test_get_project(self):
         """Tests for getting individual projects."""
         response = hug.test.get(cla.routes, '/v1/project/' + str(uuid.uuid4()))

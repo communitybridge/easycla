@@ -471,13 +471,14 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_approved=signature_approved,
                                                      signature_signed=signature_signed)
 
-    def get_project_by_external_id(self, project_external_id):
+    def get_projects_by_external_id(self, project_external_id):
         project_generator = self.model.project_external_id_index.query(project_external_id)
+        projects = []
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            return project
-        return None
+            projects.append(project)
+        return projects
 
     def all(self, project_ids=None):
         if project_ids is None:

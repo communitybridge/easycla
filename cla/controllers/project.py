@@ -36,9 +36,9 @@ def get_project(project_id):
     return project.to_dict()
 
 
-def get_project_by_external_id(project_external_id):
+def get_projects_by_external_id(project_external_id):
     """
-    Returns the CLA project requested by External ID.
+    Returns the CLA projects requested by External ID.
 
     :param project_external_id: The project's External ID.
     :type project_external_id: string
@@ -47,10 +47,10 @@ def get_project_by_external_id(project_external_id):
     """
     try:
         p_instance = get_project_instance()
-        project = p_instance.get_project_by_external_id(str(project_external_id))
+        projects = p_instance.get_projects_by_external_id(str(project_external_id))
     except DoesNotExist as err:
         return {'errors': {'project_external_id': str(err)}}
-    return project.to_dict()
+    return [project.to_dict() for project in projects]
 
 
 def create_project(project_external_id, project_name, project_ccla_requires_icla_signature):
