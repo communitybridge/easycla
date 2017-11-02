@@ -34,7 +34,8 @@ def request_corporate_signature(project_id, company_id, return_url=None):
     :type return_url: string
     """
     return get_signing_service().request_corporate_signature(str(project_id), str(company_id), return_url)
-def request_employee_signature(project_id, company_id, user_id):
+
+def request_employee_signature(project_id, company_id, user_id, return_url=None):
     """
     Creates placeholder signature object that represents a user signing a CCLA as an employee.
 
@@ -44,60 +45,9 @@ def request_employee_signature(project_id, company_id, user_id):
     :type company_id: string
     :param user_id: The ID of the user.
     :type user_id: string
+    :param return_url: The URL to return the user to after signing is complete.
     """
-    project = get_project_instance()
-    try:
-        project.load(str(project_id))
-    except DoesNotExist as err:
-        return {'errors': {'project_id': str(err)}}
-    company = get_company_instance()
-    try:
-        company.load(str(company_id))
-    except DoesNotExist as err:
-        return {'errors': {'company_id': str(err)}}
-    user = get_user_instance()
-    try:
-        user.load(str(user_id))
-    except DoesNotExist as err:
-        return {'errors': {'user_id': str(err)}}
-    # Ensure the company actually has a CCLA with this project.
-    existing_signatures = get_signature_instance().get_signatures_by_project(
-        project_id,
-        signature_type='ccla',
-        signature_reference_type='company',
-        signature_reference_id=company.get_company_id()
-    )
-    if len(existing_signatures) < 1:
-        return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-    # Ensure user hasn't already signed this signature.
-    existing_signatures = get_signature_instance().get_signatures_by_project(
-        project_id,
-        signature_type='ccla',
-        signature_reference_type='user',
-        signature_reference_id=user_id,
-        signature_user_ccla_company_id=company_id
-    )
-    if len(existing_signatures) > 0:
-        return {'errors': {'signature_id': 'User has already signed CCLA with this company'}}
-    # Ensure user is whitelisted for this company.
-    if not cla.utils.email_whitelisted(user.get_user_email(), company):
-        return {'errors': {'company_whitelist':
-                           'User email (%s) is not whitelisted for this company' \
-                            %user.get_user_email()}}
-    # Create the new Signature.
-    new_signature = get_signature_instance()
-    new_signature.set_signature_id(str(uuid.uuid4()))
-    new_signature.set_signature_project_id(str(project_id))
-    new_signature.set_signature_document_major_version(0)
-    new_signature.set_signature_document_minor_version(0)
-    new_signature.set_signature_signed(True)
-    new_signature.set_signature_approved(True)
-    new_signature.set_signature_type('ccla')
-    new_signature.set_signature_reference_type('user')
-    new_signature.set_signature_reference_id(user_id)
-    new_signature.set_signature_user_ccla_company_id(company_id)
-    new_signature.save()
-    return new_signature.to_dict()
+    return get_signing_service().request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
 
 def post_individual_signed(content, installation_id, github_repository_id, change_request_id):
     """

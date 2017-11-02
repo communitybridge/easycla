@@ -113,6 +113,74 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
+    def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
+        project = cla.utils.get_project_instance()
+        try:
+            project.load(str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+        company = cla.utils.get_company_instance()
+        try:
+            company.load(str(company_id))
+        except DoesNotExist as err:
+            return {'errors': {'company_id': str(err)}}
+        user = cla.utils.get_user_instance()
+        try:
+            user.load(str(user_id))
+        except DoesNotExist as err:
+            return {'errors': {'user_id': str(err)}}
+        # Ensure the company actually has a CCLA with this project.
+        existing_signatures = cla.utils.get_signature_instance().get_signatures_by_project(
+            project_id,
+            signature_reference_type='company',
+            signature_reference_id=company.get_company_id()
+        )
+        if len(existing_signatures) < 1:
+            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+        # Ensure user hasn't already signed this signature.
+        existing_signatures = cla.utils.get_signature_instance().get_signatures_by_project(
+            project_id,
+            signature_reference_type='user',
+            signature_reference_id=user_id,
+            signature_user_ccla_company_id=company_id
+        )
+        if len(existing_signatures) > 0:
+            return existing_signatures[0].to_dict()
+        # Ensure user is whitelisted for this company.
+        if not cla.utils.email_whitelisted(user.get_user_email(), company):
+            return {'errors': {'company_whitelist':
+                            'User email (%s) is not whitelisted for this company' \
+                                %user.get_user_email()}}
+        # Requires us to know where the user came from.
+        signature_metadata = cla.utils.get_active_signature_metadata(user_id)
+        if return_url is None:
+            return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
+        if return_url is None:
+            return {'user_id': str(user_id),
+                    'project_id': str(project_id),
+                    'company_id': str(company_id),
+                    'signature_id': None,
+                    'sign_url': None,
+                    'error': 'No active signature found for user - cannot generate return_url without knowing where the user came from'}
+        # Create the new Signature.
+        new_signature = cla.utils.get_signature_instance()
+        new_signature.set_signature_id(str(uuid.uuid4()))
+        new_signature.set_signature_project_id(str(project_id))
+        new_signature.set_signature_document_major_version(0)
+        new_signature.set_signature_document_minor_version(0)
+        new_signature.set_signature_signed(True)
+        new_signature.set_signature_approved(True)
+        new_signature.set_signature_type('ccla')
+        new_signature.set_signature_reference_type('user')
+        new_signature.set_signature_reference_id(user_id)
+        new_signature.set_signature_return_url(return_url)
+        new_signature.set_signature_user_ccla_company_id(company_id)
+        new_signature.save()
+        # If they don't require a ICLA to be signed, remove the active signature metadata.
+        if not project.get_project_ccla_requires_icla_signature():
+            cla.utils.delete_active_signature_metadata(user.get_user_id())
+        return new_signature.to_dict()
+
     def request_corporate_signature(self, project_id, company_id, return_url=None):
         cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
         project = cla.utils.get_project_instance()
