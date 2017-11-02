@@ -547,6 +547,22 @@ def get_project(project_id: hug.types.uuid):
         del project['project_external_id']
     return project
 
+@hug.get('/project/external/{project_external_id}', version=1)
+def get_external_project(project_external_id: hug.types.text):
+    """
+    GET: /project/external/{project_external_id}
+
+    Returns the list of CLA projects marching the requested external ID.
+    """
+    projects = cla.controllers.project.get_projects_by_external_id(project_external_id)
+    # For public endpoint, don't show the project_external_id.
+    ret = []
+    for project in projects:
+        if 'project_external_id' in project:
+            del project['project_external_id']
+        ret.append(project)
+    return ret
+
 @hug.post('/project', versions=1,
           examples=" - {'project_name': 'Project Name'}")
 def post_project(project_external_id: hug.types.text, project_name: hug.types.text, project_ccla_requires_icla_signature: hug.types.boolean):

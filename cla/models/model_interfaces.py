@@ -250,14 +250,14 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_project_by_external_id(self, project_external_id):
+    def get_projects_by_external_id(self, project_external_id):
         """
-        Fetches the project that matches the external ID provided.
+        Fetches the projects that matche the external ID provided.
 
         :param project_external_id: The project's external ID.
         :type project_external_id: string
-        :return: The project that matches the external ID specified.
-        :rtype: cla.models.model_interfaces.Project
+        :return: List of projects that matches the external ID specified.
+        :rtype: [cla.models.model_interfaces.Project]
         """
         raise NotImplementedError()
 
