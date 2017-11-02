@@ -197,7 +197,7 @@ If you are unsure about this request - it may be prudent to get in touch with th
 Please follow up with the user as necessary.
 
 - Linux Foundation CLA System
-''' %(company.get_company_name(), user.get_user_name(), user.get_user_email())
+''' %(company.get_company_name(), user.get_user_name(), user.get_user_email(), message)
     manager_id = company.get_company_manager_id()
     manager = get_user_instance()
     try:
