@@ -5,6 +5,7 @@ Easily access CLA models backed by DynamoDB using pynamodb.
 import uuid
 import base64
 import datetime
+import dateutil.parser
 from pynamodb.models import Model
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.attributes import UTCDateTimeAttribute, \
@@ -204,6 +205,8 @@ class DocumentModel(MapAttribute):
     document_major_version = NumberAttribute(default=1)
     document_minor_version = NumberAttribute(default=0)
     document_author_name = UnicodeAttribute()
+    # Not using UTCDateTimeAttribute due to https://github.com/pynamodb/PynamoDB/issues/162
+    document_creation_date = UnicodeAttribute(default=datetime.datetime.now().isoformat())
 
 
 class Document(model_interfaces.Document):
@@ -217,7 +220,8 @@ class Document(model_interfaces.Document):
                  document_content=None,
                  document_major_version=None,
                  document_minor_version=None,
-                 document_author_name=None):
+                 document_author_name=None,
+                 document_creation_date=None):
         super().__init__()
         self.model = DocumentModel()
         self.model.document_name = document_name
@@ -225,10 +229,13 @@ class Document(model_interfaces.Document):
         self.model.document_author_name = document_author_name
         self.model.document_content_type = document_content_type
         self.model.document_content = self.set_document_content(document_content)
+        # Use defaults if None is provided for the following attributes.
         if document_major_version is not None:
             self.model.document_major_version = document_major_version
         if document_minor_version is not None:
             self.model.document_minor_version = document_minor_version
+        if document_creation_date is not None:
+            self.model.document_creation_date = document_creation_date.isoformat()
 
     def to_dict(self):
         return {'document_name': self.model.document_name,
@@ -237,7 +244,8 @@ class Document(model_interfaces.Document):
                 'document_content': self.model.document_content,
                 'document_author_name': self.model.document_author_name,
                 'document_major_version': self.model.document_major_version,
-                'document_minor_version': self.model.document_minor_version}
+                'document_minor_version': self.model.document_minor_version,
+                'document_creation_date': self.model.document_creation_date}
 
     def get_document_name(self):
         return self.model.document_name
@@ -266,6 +274,9 @@ class Document(model_interfaces.Document):
 
     def get_document_minor_version(self):
         return self.model.document_minor_version
+
+    def get_document_creation_date(self):
+        return dateutil.parser.parse(self.model.document_creation_date)
 
     def set_document_author_name(self, document_author_name):
         self.model.document_author_name = document_author_name
@@ -299,6 +310,8 @@ class Document(model_interfaces.Document):
     def set_document_minor_version(self, version):
         self.model.document_minor_version = version
 
+    def set_document_creation_date(self, document_creation_date):
+        self.model.document_creation_date = document_creation_date.isoformat()
 
 class ProjectModel(BaseModel):
     """

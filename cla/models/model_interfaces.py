@@ -1316,6 +1316,15 @@ class Document(object):
         """
         raise NotImplementedError()
 
+    def get_document_author_name(self):
+        """
+        Getter for the document's author name.
+
+        :return: The document's author name.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def get_document_major_version(self):
         """
         Getter for the document's major version number.
@@ -1331,6 +1340,15 @@ class Document(object):
 
         :return: The document's minor version number.
         :rtype: integer
+        """
+        raise NotImplementedError()
+
+    def get_document_creation_date(self):
+        """
+        Getter for the document's creation date.
+
+        :return: The document's creation date.
+        :rtype: datetime
         """
         raise NotImplementedError()
 
@@ -1384,6 +1402,15 @@ class Document(object):
         """
         raise NotImplementedError()
 
+    def set_document_author_name(self, document_author_name):
+        """
+        Setter for the document's author name.
+
+        :param document_author_name: The name of the author.
+        :type document_author_name: string
+        """
+        raise NotImplementedError()
+
     def set_document_major_version(self, version):
         """
         Setter for the document's major version number.
@@ -1402,6 +1429,14 @@ class Document(object):
         """
         raise NotImplementedError()
 
+    def set_document_creation_date(self, document_creation_date):
+        """
+        Setter for the document's creation date.
+
+        :param document_creation_date: The document's creation date to set.
+        :type document_creation_date: datetime
+        """
+        raise NotImplementedError()
 
 class GitHubOrg(object):
     """

@@ -77,6 +77,7 @@ class ProjectTestCase(CLATestCase):
                                 '/v1/project/' + project_id + '/document/individual')
         self.assertEqual(response.data['document_major_version'], 1)
         self.assertEqual(response.data['document_minor_version'], 1)
+        self.assertTrue('document_creation_date' in response.data)
         response = hug.test.get(cla.routes,
                                 '/v1/project/' + project_id + '/document/corporate')
         self.assertEqual(response.data['document_major_version'], 1)
