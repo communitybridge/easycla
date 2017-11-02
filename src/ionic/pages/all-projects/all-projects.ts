@@ -4,6 +4,7 @@ import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
+import { FilterService } from '../../services/filter.service'
 
 @IonicPage({
   segment: 'projects'
@@ -57,7 +58,8 @@ export class AllProjectsPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     private sanitizer: DomSanitizer,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    private filterService: FilterService
   ) {
     this.getDefaults();
   }
@@ -103,7 +105,7 @@ export class AllProjectsPage {
           // This is to refresh an image that have same URL
           if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
         }
-        this.allFilteredProjects = JSON.parse(JSON.stringify(this.allProjects));
+        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
         this.loading.projects = false;
     });
   }
@@ -386,25 +388,13 @@ export class AllProjectsPage {
     });
   }
 
-  filterIndustry(industry){
-    console.log(industry);
-    if(industry == "NO_FILTER") {
-      this.resetFilter();
+  filterAllProjects(projectProperty, keyword){
+    if(keyword == "NO_FILTER") {
+      this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
     }
     else {
-      this.filterProjects(industry);
+      this.allFilteredProjects = this.filterService.filterAllProjects(this.allProjects, projectProperty, keyword);
     }
-  }
-
-  resetFilter(){
-    this.allFilteredProjects = JSON.parse(JSON.stringify(this.allProjects));
-  }
-
-  filterProjects(industry){
-    console.log("filterProjects: ", industry);
-    this.allFilteredProjects = this.allFilteredProjects.filter((projects) => {
-      return projects.sector == industry;
-    });
   }
 
 }
