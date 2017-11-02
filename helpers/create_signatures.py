@@ -14,7 +14,7 @@ COMPANY_EXTERNAL_ID = 'company-external-id'
 USER_GITHUB_ID = 123
 
 user = get_user_instance().get_user_by_github_id(USER_GITHUB_ID)
-project = get_project_instance().get_project_by_external_id(PROJECT_EXTERNAL_ID)
+project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID)[0]
 company = get_company_instance().get_company_by_external_id(COMPANY_EXTERNAL_ID)
 
 # Test ICLA Agreement.
