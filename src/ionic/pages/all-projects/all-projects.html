@@ -54,7 +54,7 @@
       <ion-col col-auto>
         <ion-item no-lines class="transparent">
           <ion-label>Industry</ion-label>
-          <ion-select [(ngModel)]="industry" interface="popover" (ionChange)="filterIndustry(industry)">
+          <ion-select [(ngModel)]="industry" interface="popover" (ionChange)="filterAllProjects('sector', industry)">
             <ion-option value="NO_FILTER">Show All</ion-option>
             <ion-option *ngFor="let industry of industryFilterValues" [value]="industry.key">{{ industry.prettyValue }}</ion-option>
           </ion-select>
