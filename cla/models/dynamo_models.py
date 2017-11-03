@@ -635,9 +635,10 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             return user
         return None
 
-    def get_user_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
+    def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
         return Signature().get_signatures_by_reference(self.get_user_id(), 'user',
                                                        project_id=project_id,
+                                                       user_ccla_company_id=company_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
 
@@ -944,6 +945,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                                     reference_id,
                                     reference_type,
                                     project_id=None,
+                                    user_ccla_company_id=None,
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
@@ -951,6 +953,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         signatures = []
         for signature_model in signature_generator:
             if signature_model.signature_reference_type != reference_type:
+                continue
+            if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 continue
             if project_id is not None and \
                signature_model.signature_project_id != project_id:

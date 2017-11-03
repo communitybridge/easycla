@@ -42,7 +42,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
                      signature_approved=False,
                      signature_signed=False,
                      signature_return_url=None,
-                     signature_sign_url=None):
+                     signature_sign_url=None,
+                     signature_user_ccla_company_id=None):
     """
     Creates an signature and returns the newly created signature in dict format.
 
@@ -62,6 +63,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     :type signature_return_url: string
     :param signature_sign_url: The URL the user must visit to sign the signature.
     :type signature_sign_url: string
+    :param signature_user_ccla_company_id: The company ID if creating an employee signature.
+    :type signature_user_ccla_company_id: string
     :return: A dict of a newly created signature.
     :rtype: dict
     """
@@ -102,6 +105,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     signature.set_signature_approved(signature_approved)
     signature.set_signature_return_url(signature_return_url)
     signature.set_signature_sign_url(signature_sign_url)
+    if signature_user_ccla_company_id is not None:
+        signature.set_signature_user_ccla_company_id(str(signature_user_ccla_company_id))
     signature.save()
     return signature.to_dict()
 
