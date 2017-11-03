@@ -14,13 +14,14 @@ from cla.utils import get_document_instance, get_github_organization_instance, g
 # Organisation
 github_org = get_github_organization_instance().get_organization_by_installation_id(GITHUB_INSTALLATION_ID)
 # Project
-github_project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
+github_project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
+github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '2')[0]
 # Document
 # Slower as the document is fetched every time a document signature is initiated.
 #document = Document(str(uuid.uuid4()), 'Test Document', 'url+pdf', TEST_DOCUMENT_URL)
 resource = urllib.request.urlopen(TEST_DOCUMENT_URL)
 data = base64.b64encode(resource.read()) # Document expects base64 encoded data.
-# ICLA
+# ICLA Project1
 individual_document = get_document_instance()
 individual_document.set_document_name('Test ICLA Document')
 individual_document.set_document_file_id(str(uuid.uuid4()))
@@ -29,7 +30,8 @@ individual_document.set_document_content(data)
 individual_document.set_document_major_version(1)
 individual_document.set_document_minor_version(0)
 cla.log.info('Adding ICLA document to project: %s', TEST_DOCUMENT_URL)
-github_project.add_project_individual_document(individual_document)
+github_project1.add_project_individual_document(individual_document)
+github_project2.add_project_individual_document(individual_document)
 # CCLA
 corporate_document = get_document_instance()
 corporate_document.set_document_name('Test CCLA Document')
@@ -39,5 +41,7 @@ corporate_document.set_document_content(data)
 corporate_document.set_document_major_version(1)
 corporate_document.set_document_minor_version(0)
 cla.log.info('Adding CCLA document to project: %s', TEST_DOCUMENT_URL)
-github_project.add_project_corporate_document(corporate_document)
-github_project.save()
+github_project1.add_project_corporate_document(corporate_document)
+github_project2.add_project_corporate_document(corporate_document)
+github_project1.save()
+github_project2.save()
