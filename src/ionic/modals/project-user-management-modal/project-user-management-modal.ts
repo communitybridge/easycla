@@ -76,9 +76,7 @@ export class ProjectUserManagementModal {
     let index = this.userIds.indexOf(userId);
     if(index !== -1) {
       this.userIds.splice(index, 1);
-      let updatedManagers = {
-        managers: JSON.stringify(this.userIds)
-      }
+      let updatedManagers = JSON.stringify(this.userIds);
       this.cincoService.updateProjectManagers(this.projectId, updatedManagers).subscribe(response => {
         if(response) {
           this.getProjectConfig();
@@ -97,9 +95,7 @@ export class ProjectUserManagementModal {
           let userId = data.selectedUsers[i].userId;
           this.userIds.push(userId);
         }
-        let updatedManagers = {
-          managers: JSON.stringify(this.userIds)
-        }
+        let updatedManagers = JSON.stringify(this.userIds);
         this.cincoService.updateProjectManagers(this.projectId, updatedManagers).subscribe(response => {
           if(response) {
             this.getProjectConfig();
