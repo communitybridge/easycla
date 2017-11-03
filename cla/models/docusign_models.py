@@ -155,13 +155,7 @@ class DocuSign(signing_service_interface.SigningService):
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
         if return_url is None:
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
-        if return_url is None:
-            return {'user_id': str(user_id),
-                    'project_id': str(project_id),
-                    'company_id': str(company_id),
-                    'signature_id': None,
-                    'sign_url': None,
-                    'error': 'No active signature found for user - cannot generate return_url without knowing where the user came from'}
+        # return_url may still be empty at this point - the console will deal with it.
         # Create the new Signature.
         new_signature = cla.utils.get_signature_instance()
         new_signature.set_signature_id(str(uuid.uuid4()))
