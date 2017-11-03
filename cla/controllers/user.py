@@ -244,3 +244,26 @@ def get_user_project_last_signature(user_id, project_id):
     if last_signature is not None:
         last_signature = last_signature.to_dict()
     return last_signature
+
+def get_user_project_company_last_signature(user_id, project_id, company_id):
+    """
+    Returns the user's last signature object for a project.
+
+    :param user_id: The ID of the user.
+    :type user_id: string
+    :param project_id: The project in question.
+    :type project_id: string
+    :param company_id: The ID of the company that this employee belongs to.
+    :type company_id: string
+    :return: The signature object that was last signed by the user for this project.
+    :rtype: cla.models.model_interfaces.Signature
+    """
+    user = get_user_instance()
+    try:
+        user.load(str(user_id))
+    except DoesNotExist as err:
+        return {'errors': {'user_id': str(err)}}
+    last_signature = cla.utils.get_user_latest_signature(user, str(project_id), company_id=str(company_id))
+    if last_signature is not None:
+        last_signature = last_signature.to_dict()
+    return last_signature

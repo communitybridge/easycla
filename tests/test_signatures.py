@@ -41,8 +41,27 @@ class SignatureTestCase(CLATestCase):
         data = {'project_id': project['project_id'],
                 'company_id': company['company_id'],
                 'user_id': user['user_id']}
-        response = hug.test.post(cla.routes, '/v1/request-employee-signature', data)
-        print(response.data)
+        hug.test.post(cla.routes, '/v1/request-employee-signature', data)
+
+    def test_get_user_signatures(self):
+        """Test getting ICLA and employee signatures."""
+        user = self.create_user()
+        project = self.create_project('test-project')
+        company = self.create_company()
+        self.create_document(project['project_id'], 'individual')
+        self.create_document(project['project_id'], 'corporate')
+        # Create Corporate signature.
+        self.create_signature(project['project_id'], company['company_id'], 'company')
+        # Create Employee signature.
+        emp_sig = self.create_signature(project['project_id'], user['user_id'], 'user', signature_user_ccla_company_id=company['company_id'])
+        response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'] + '/project/' + project['project_id'] + '/last-signature/' + company['company_id'])
+        self.assertEqual(response.data['signature_user_ccla_company_id'], company['company_id'])
+        response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'] + '/project/' + project['project_id'] + '/last-signature')
+        self.assertTrue(response.data is None)
+        # Create Individual signature.
+        indiv_sig = self.create_signature(project['project_id'], user['user_id'], 'user')
+        response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'] + '/project/' + project['project_id'] + '/last-signature')
+        self.assertEqual(response.data['signature_id'], indiv_sig['signature_id'])
 
     def test_various_major_versions(self):
         """Test out-dated and invalidated signatures."""

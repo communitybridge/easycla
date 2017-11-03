@@ -187,9 +187,20 @@ def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.typ
     """
     GET: /user/{user_id}/project/{project_id}/last-signature
 
-    Returns the user's signature for that project with the highest major/minor version.
+    Returns the user's latest ICLA signature for the project specified.
     """
     return cla.controllers.user.get_user_project_last_signature(user_id, project_id)
+
+@hug.get('/user/{user_id}/project/{project_id}/last-signature/{company_id}', versions=1)
+def get_user_project_company_last_signature(user_id: hug.types.uuid,
+                                            project_id: hug.types.uuid,
+                                            company_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/project/{project_id}/last-signature/{company_id}
+
+    Returns the user's latest employee signature for the project and company specified.
+    """
+    return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
 
 #
 # Signature Routes.
@@ -228,7 +239,8 @@ def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-m
                    signature_signed: hug.types.smart_boolean,
                    signature_approved: hug.types.smart_boolean,
                    signature_return_url: cla.hug_types.url,
-                   signature_sign_url: cla.hug_types.url):
+                   signature_sign_url: cla.hug_types.url,
+                   signature_user_ccla_company_id=None):
     """
     POST: /signature
 
@@ -238,6 +250,7 @@ def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-m
            'signature_sign_url': 'http://sign.com/here',
            'signature_return_url': 'http://cla-system.com/signed',
            'signature_project_id': '<project-id>',
+           'signature_user_ccla_company_id': '<company-id>',
            'signature_reference_id': '<ref-id>',
            'signature_reference_type': 'individual'}
 
@@ -250,6 +263,7 @@ def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-m
                                                       signature_reference_id,
                                                       signature_reference_type,
                                                       signature_type=signature_type,
+                                                      signature_user_ccla_company_id=signature_user_ccla_company_id,
                                                       signature_signed=signature_signed,
                                                       signature_approved=signature_approved,
                                                       signature_return_url=signature_return_url,

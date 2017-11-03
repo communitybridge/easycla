@@ -457,12 +457,15 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def get_user_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
+    def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
         """
         Fetches the signatures associated with this user.
 
         :param project_id: Filter for project IDs. None = no filter.
         :type project_id: string | None
+        :param company_id: Filter employee signatures by company_id. If not provided, an ICLA will
+            be retrieved instead of an employee signature.
+        :type company_id: string
         :param signature_signed: Whether or not to filter by signed signatures.
             None = no filter, True = only signed, False = only unsigned.
         :type signature_signed: boolean
