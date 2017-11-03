@@ -267,7 +267,7 @@ def get_user_project_signatures(user_id, project_id, signature_type=None):
     for signature in signatures:
         if signature_type is not None:
             if signature_type == 'individual' and \
-               signature.get_signature_reference_type() != 'icla':
+               signature.get_signature_user_ccla_employee_id() is not None:
                 continue
             elif signature_type == 'employee' and \
                  signature.get_signature_user_ccla_employee_id() is None:
