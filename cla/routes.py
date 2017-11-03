@@ -655,6 +655,8 @@ def post_project_document(
         document_name: hug.types.text,
         document_content_type: hug.types.one_of(get_supported_document_content_types()),
         document_content: hug.types.text,
+        document_preamble=None,
+        document_legal_entity_name=None,
         new_major_version=None):
     """
     POST: /project/{project_id}/document/{document_type}
@@ -662,6 +664,8 @@ def post_project_document(
     DATA: {'document_name': 'doc_name.pdf',
            'document_content_type': 'url+pdf',
            'document_content': 'http://url.com/doc.pdf',
+           'document_preamble': 'Preamble here',
+           'document_legal_entity_name': 'Legal entity name',
            'new_major_version': false}
 
     Creates a new CLA document for a specified project.
@@ -678,6 +682,8 @@ def post_project_document(
         document_name=document_name,
         document_content_type=document_content_type,
         document_content=document_content,
+        document_preamble=document_preamble,
+        document_legal_entity_name=document_legal_entity_name,
         new_major_version=new_major_version)
 
 @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
