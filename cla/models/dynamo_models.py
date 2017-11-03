@@ -811,7 +811,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_document_major_version = NumberAttribute()
     signature_reference_id = UnicodeAttribute()
     signature_reference_type = UnicodeAttribute()
-    signature_type = UnicodeAttribute(default='icla') # Only icla/ccla.
+    signature_type = UnicodeAttribute(default='cla')
     signature_signed = BooleanAttribute(default=False)
     signature_approved = BooleanAttribute(default=False)
     signature_sign_url = UnicodeAttribute(null=True)
