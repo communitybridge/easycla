@@ -61,7 +61,12 @@ class SignatureTestCase(CLATestCase):
         # Create Individual signature.
         indiv_sig = self.create_signature(project['project_id'], user['user_id'], 'user')
         response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'] + '/project/' + project['project_id'] + '/last-signature')
+        self.assertFalse(response.data['requires_resigning'])
         self.assertEqual(response.data['signature_id'], indiv_sig['signature_id'])
+        # Make employee signature stale.
+        self.create_document(project['project_id'], 'corporate', new_major_version=True)
+        response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'] + '/project/' + project['project_id'] + '/last-signature/' + company['company_id'])
+        self.assertTrue(response.data['requires_resigning'])
 
     def test_various_major_versions(self):
         """Test out-dated and invalidated signatures."""

@@ -243,6 +243,10 @@ def get_user_project_last_signature(user_id, project_id):
     last_signature = cla.utils.get_user_latest_signature(user, str(project_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
+        latest_doc = cla.utils.get_project_latest_individual_document(str(project_id))
+        last_signature['latest_document_major_version'] = str(latest_doc.get_document_major_version())
+        last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
+        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
     return last_signature
 
 def get_user_project_company_last_signature(user_id, project_id, company_id):
@@ -266,4 +270,8 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
     last_signature = cla.utils.get_user_latest_signature(user, str(project_id), company_id=str(company_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
+        latest_doc = cla.utils.get_project_latest_corporate_document(str(project_id))
+        last_signature['latest_document_major_version'] = str(latest_doc.get_document_major_version())
+        last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
+        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
     return last_signature
