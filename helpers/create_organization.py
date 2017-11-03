@@ -11,7 +11,7 @@ import cla
 from cla.utils import get_project_instance, get_github_organization_instance
 
 # Organisation
-project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID)[0]
+project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
 cla.log.info('Creating GitHub Organization: %s' %GITHUB_ORGANIZATION_NAME)
 github_org = get_github_organization_instance()
 github_org.set_organization_name(GITHUB_ORGANIZATION_NAME)
