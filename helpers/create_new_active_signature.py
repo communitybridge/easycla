@@ -19,7 +19,7 @@ user.set_user_github_id(234)
 user.save()
 
 user_id = user.get_user_id()
-project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID)[0]
+project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
 project_id = project.get_project_id()
 
 repository_id = '96820382'

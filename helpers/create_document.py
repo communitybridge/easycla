@@ -14,7 +14,7 @@ from cla.utils import get_document_instance, get_github_organization_instance, g
 # Organisation
 github_org = get_github_organization_instance().get_organization_by_installation_id(GITHUB_INSTALLATION_ID)
 # Project
-github_project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID)[0]
+github_project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
 # Document
 # Slower as the document is fetched every time a document signature is initiated.
 #document = Document(str(uuid.uuid4()), 'Test Document', 'url+pdf', TEST_DOCUMENT_URL)
