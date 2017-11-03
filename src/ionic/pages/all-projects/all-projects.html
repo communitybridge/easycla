@@ -41,13 +41,46 @@
   <loading-spinner [loading]="loading.projects"></loading-spinner>
   <ion-grid class="all-projects" [loading-display]="loading.projects">
     <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allProjects">
+      <ion-col>
+        <ion-item no-lines class="transparent">
+          <h2>All Projects</h2>
+        </ion-item>
+      </ion-col>
+      <ion-col col-auto>
+        <ion-item no-lines class="transparent">
+          <p>Project Filters</p>
+        </ion-item>
+      </ion-col>
+      <ion-col col-auto>
+        <ion-item no-lines class="transparent">
+          <ion-label>Industry</ion-label>
+          <ion-select [(ngModel)]="industry" interface="popover" (ionChange)="filterAllProjects('sector', industry)">
+            <ion-option value="NO_FILTER">Show All</ion-option>
+            <ion-option *ngFor="let industry of industryFilterValues" [value]="industry.key">{{ industry.prettyValue }}</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      <ion-col col-auto>
+        <ion-item no-lines class="transparent">
+          <ion-label>Program Manager</ion-label>
+          <ion-select interface="popover">
+            <ion-option value="NO_FILTER">Show All</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allFilteredProjects">
         <ion-card >
           <img *ngIf="project.config.logoRef" (click)="viewProject(project.id)" src="{{project.config.logoRef}}" alt="{{project.name}} logo"/>
           <ion-card-content>
             <ion-card-title (click)="viewProject(project.id)">
               <span class="project-name">{{ project.name }}</span>
             </ion-card-title>
+            <dl>
+              <dt> Industry </dt>
+              <dd>{{ project.sector }}</dd>
+            </dl>
             <dl>
               <dt> Type </dt>
               <dd>{{ project.category }}</dd>
