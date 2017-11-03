@@ -10,6 +10,7 @@ containers:
   mailhog:
     image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/mailhog:latest'
     expose: ['1025']
+    ports: ['%:8025']
   workspace:
     image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/cli/workspace/python:3'
     ports: ['%:5000']

@@ -48,7 +48,8 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
                 containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint
         # Set the callback_url to the CLA instance.
         ip = public_ip()
-        port = host_port(containers, 'workspace')
+        web_port = host_port(containers, 'workspace')
+        mailhog_port = host_port(containers, 'mailhog')
         base_url = 'http://' + ip
         callback_url = base_url + '/v1/signed'
         github_oauth_url = base_url + '/v1/github/installation'
@@ -57,6 +58,7 @@ def local_init_docker_compose_file(containers, config, dependencies, envs, mode,
         containers['workspace']['environment']['CLA_GITHUB_OAUTH_CALLBACK_URL'] = github_oauth_url
 
         lf.logger.warning('You public IP address (%s) was used as the base_url for the CLA system.' %ip)
-        lf.logger.warning('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (80 -> %s)' %port)
+        lf.logger.warning('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (80 -> %s)' %web_port)
         lf.logger.warning('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
-        lf.logger.warning('Tip: You can still access the CLA system locally via http://localhost:%s' %port)
+        lf.logger.warning('MailHog: http://localhost:%s' %mailhog_port)
+        lf.logger.warning('Web: http://localhost:%s' %web_port)
