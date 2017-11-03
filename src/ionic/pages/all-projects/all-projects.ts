@@ -4,6 +4,7 @@ import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
+import { FilterService } from '../../services/filter.service'
 
 @IonicPage({
   segment: 'projects'
@@ -15,6 +16,7 @@ import { Chart } from 'chart.js';
 export class AllProjectsPage {
   loading: any;
   allProjects: any;
+  allFilteredProjects: any;
   numberOfContracts: {
     new: number,
     renewal: number,
@@ -41,6 +43,11 @@ export class AllProjectsPage {
     }>
   }>;
 
+  industryFilterValues: Array<{
+    key: string,
+    prettyValue: string
+  }> = [];
+
   @ViewChild('contractsCanvas') contractsCanvas;
   contractsChart: any;
 
@@ -51,7 +58,8 @@ export class AllProjectsPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     private sanitizer: DomSanitizer,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    private filterService: FilterService
   ) {
     this.getDefaults();
   }
@@ -73,6 +81,7 @@ export class AllProjectsPage {
   }
 
   async ngOnInit(){
+    this.getIndustries();
     this.getAllProjects();
     this.getCurrentUser();
     // this.keycloak.profile()
@@ -96,6 +105,7 @@ export class AllProjectsPage {
           // This is to refresh an image that have same URL
           if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
         }
+        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
         this.loading.projects = false;
     });
   }
@@ -361,6 +371,30 @@ export class AllProjectsPage {
 
   openAccountSettings() {
     this.navCtrl.setRoot('AccountSettingsPage');
+  }
+
+  getIndustries() {
+    this.cincoService.getProjectSectors().subscribe(response => {
+      let projectSectors = response;
+      for (let key in projectSectors) {
+        if (projectSectors.hasOwnProperty(key)) {
+          let industry = {
+            key: key,
+            prettyValue: projectSectors[key]
+          };
+          this.industryFilterValues.push(industry);
+        }
+      }
+    });
+  }
+
+  filterAllProjects(projectProperty, keyword){
+    if(keyword == "NO_FILTER") {
+      this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
+    }
+    else {
+      this.allFilteredProjects = this.filterService.filterAllProjects(this.allProjects, projectProperty, keyword);
+    }
   }
 
 }
