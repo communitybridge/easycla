@@ -207,7 +207,8 @@ class DocumentModel(MapAttribute):
     document_author_name = UnicodeAttribute()
     # Not using UTCDateTimeAttribute due to https://github.com/pynamodb/PynamoDB/issues/162
     document_creation_date = UnicodeAttribute(default=datetime.datetime.now().isoformat())
-
+    document_preamble = UnicodeAttribute(null=True)
+    document_legal_entity_name = UnicodeAttribute(null=True)
 
 class Document(model_interfaces.Document):
     """
@@ -221,7 +222,9 @@ class Document(model_interfaces.Document):
                  document_major_version=None,
                  document_minor_version=None,
                  document_author_name=None,
-                 document_creation_date=None):
+                 document_creation_date=None,
+                 document_preamble=None,
+                 document_legal_entity_name=None):
         super().__init__()
         self.model = DocumentModel()
         self.model.document_name = document_name
@@ -229,6 +232,8 @@ class Document(model_interfaces.Document):
         self.model.document_author_name = document_author_name
         self.model.document_content_type = document_content_type
         self.model.document_content = self.set_document_content(document_content)
+        self.model.document_preamble = document_preamble
+        self.model.document_legal_entity_name = document_legal_entity_name
         # Use defaults if None is provided for the following attributes.
         if document_major_version is not None:
             self.model.document_major_version = document_major_version
@@ -278,6 +283,12 @@ class Document(model_interfaces.Document):
     def get_document_creation_date(self):
         return dateutil.parser.parse(self.model.document_creation_date)
 
+    def get_document_preamble(self):
+        return self.model.document_preamble
+
+    def get_document_legal_entity_name(self):
+        return self.model.document_legal_entity_name
+
     def set_document_author_name(self, document_author_name):
         self.model.document_author_name = document_author_name
 
@@ -312,6 +323,12 @@ class Document(model_interfaces.Document):
 
     def set_document_creation_date(self, document_creation_date):
         self.model.document_creation_date = document_creation_date.isoformat()
+
+    def set_document_preamble(self, document_preamble):
+        self.model.document_preamble = document_preamble
+
+    def set_document_legal_entity_name(self, entity_name):
+        self.model.document_legal_entity_name = entity_name
 
 class ProjectModel(BaseModel):
     """

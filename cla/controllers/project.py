@@ -193,6 +193,8 @@ def post_project_document(project_id,
                           document_name,
                           document_content_type,
                           document_content,
+                          document_preamble,
+                          document_legal_entity_name,
                           new_major_version=None):
     """
     Will create a new document for the project specified.
@@ -209,6 +211,10 @@ def post_project_document(project_id,
     :param document_content: The content of the document (or URL to content if content type
         starts with 'url+'.
     :type document_content: string or binary data
+    :param document_preamble: The document preamble.
+    :type document_preamble: string
+    :param document_legal_entity_name: The legal entity name on the document.
+    :type document_legal_entity_name: string
     :param new_major_version: Whether or not to bump up the major version.
     :type new_major_version: boolean
     """
@@ -221,6 +227,8 @@ def post_project_document(project_id,
     document.set_document_name(document_name)
     document.set_document_content_type(document_content_type)
     document.set_document_content(document_content)
+    document.set_document_preamble(document_preamble)
+    document.set_document_legal_entity_name(document_legal_entity_name)
     if document_type == 'individual':
         major, minor = cla.utils.get_last_version(project.get_project_individual_documents())
         if new_major_version:

@@ -113,11 +113,15 @@ class CLATestCase(unittest.TestCase):
                         document_name='doc_name.pdf',
                         document_content_type='url+pdf',
                         document_content='http://url.com/document.pdf',
+                        document_preamble='Test Preamble',
+                        document_legal_entity_name='Legal Entity Name Inc.',
                         new_major_version=False):
         """Helper method to create a document."""
         data = {'document_name': document_name,
                 'document_content_type': document_content_type,
                 'document_content': document_content,
+                'document_preamble': document_preamble,
+                'document_legal_entity_name': document_legal_entity_name,
                 'new_major_version': new_major_version}
         response = hug.test.post(routes,
                                  '/v1/project/' + project_id +

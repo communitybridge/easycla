@@ -1355,6 +1355,24 @@ class Document(object):
         """
         raise NotImplementedError()
 
+    def get_document_preamble(self):
+        """
+        Getter for the document's preamble text.
+
+        :return: The document's preamble text.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_document_legal_entity_name(self):
+        """
+        Getter for the legal entity name on the document.
+
+        :return: The legal entity name on this document.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def set_document_name(self, document_name):
         """
         Setter for the document's name.
@@ -1438,6 +1456,24 @@ class Document(object):
 
         :param document_creation_date: The document's creation date to set.
         :type document_creation_date: datetime
+        """
+        raise NotImplementedError()
+
+    def set_document_preamble(self, document_preamble):
+        """
+        Setter for the document's preamble text.
+
+        :param document_preamble: The preamble text for this document.
+        :type document_preamble: string
+        """
+        raise NotImplementedError()
+
+    def set_document_legal_entity_name(self, entity_name):
+        """
+        Setter for the legal entity name on the document.
+
+        :param entity_name: The legal entity name on the document.
+        :type entity_name: string
         """
         raise NotImplementedError()
 
