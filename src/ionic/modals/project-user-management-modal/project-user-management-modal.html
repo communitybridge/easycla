@@ -18,9 +18,10 @@
       <table class="table table-hover project-user-management-table">
         <tbody>
           <tr *ngFor="let user of users; let index = index;" [ngClass]="{'selected':user.selected}">
-            <td data-title="Name">{{ user.userId }}</td>
+            <td data-title="Name">{{ user.lfId }}</td>
+            <td data-title="Email">{{ user.email }}</td>
             <td data-title="Actions">
-              <span class="list_users-remove" (click)="removeUser(user.userId)">
+              <span class="list_users-remove clickable" (click)="removeUser(user.id)">
                 <ion-icon name="remove-circle"></ion-icon> Remove
               </span>
             </td>
