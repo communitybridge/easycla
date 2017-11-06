@@ -63,8 +63,9 @@
       <ion-col col-auto>
         <ion-item no-lines class="transparent">
           <ion-label>Program Manager</ion-label>
-          <ion-select interface="popover">
+          <ion-select interface="popover" [(ngModel)]="managers" interface="popover" (ionChange)="filterAllProjects('managers', managers)">
             <ion-option value="NO_FILTER">Show All</ion-option>
+            <ion-option *ngFor="let manager of managersFilterValues" [value]="manager">{{ manager }}</ion-option>
           </ion-select>
         </ion-item>
       </ion-col>
@@ -86,8 +87,8 @@
               <dd>{{ project.category }}</dd>
             </dl>
             <dl>
-              <dt> Status </dt>
-              <dd>{{ project.status }}</dd>
+              <dt> PM </dt>
+              <dd> <span  *ngFor="let manager of project.managers"> - {{ manager }} </span> </dd>
             </dl>
             <dl>
               <dt> ID </dt>
