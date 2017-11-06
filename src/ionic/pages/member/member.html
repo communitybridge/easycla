@@ -66,8 +66,8 @@
   </header>
 
   <ion-grid>
-    <ion-row responsive-md>
-      <ion-col width-33>
+    <ion-row>
+      <ion-col>
         <ion-card>
           <ion-card-header>
             <ion-row>
@@ -102,7 +102,7 @@
           <br>
         </ion-card>
       </ion-col>
-      <ion-col width-33>
+      <ion-col>
         <ion-card>
           <ion-card-header>
             <ion-row>
@@ -137,7 +137,7 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col width-33>
+      <ion-col *ngIf="!userRoles.isStaffInc">
         <ion-card>
           <ion-card-header>
             <ion-row>

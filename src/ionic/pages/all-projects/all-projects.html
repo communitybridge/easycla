@@ -60,7 +60,7 @@
           </ion-select>
         </ion-item>
       </ion-col>
-      <ion-col col-auto>
+      <ion-col col-auto *ngIf="!userRoles.isStaffInc">
         <ion-item no-lines class="transparent">
           <ion-label>Program Manager</ion-label>
           <ion-select interface="popover" [(ngModel)]="managers" interface="popover" (ionChange)="filterAllProjects('managers', managers)">
@@ -86,7 +86,7 @@
               <dt> Type </dt>
               <dd>{{ project.category }}</dd>
             </dl>
-            <dl>
+            <dl *ngIf="!userRoles.isStaffInc">
               <dt> PM </dt>
               <dd> <span  *ngFor="let manager of project.managers">{{ manager }} &nbsp;</span> </dd>
             </dl>
