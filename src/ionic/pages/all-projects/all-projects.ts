@@ -406,7 +406,7 @@ export class AllProjectsPage {
     });
   }
 
-  filterAllProjects(projectProperty, keyword){
+  filterAllProjects(projectProperty, keyword) {
     if(keyword == "NO_FILTER") {
       this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
     }
