@@ -23,8 +23,8 @@ project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID
 project_id = project.get_project_id()
 
 repository_id = '96820382'
-pull_request_id = '7'
-url = 'https://github.com/linuxfoundation/CLA-Test/pull/7'
+pull_request_id = '16'
+url = 'https://github.com/linuxfoundation/CLA-Test/pull/16'
 
 cla.log.info('Creating new active signature for project %s, user %s, repository %s, PR %s - %s',
              project_id, user_id, repository_id, pull_request_id, url)
