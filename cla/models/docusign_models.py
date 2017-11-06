@@ -170,15 +170,15 @@ class DocuSign(signing_service_interface.SigningService):
         new_signature.set_signature_return_url(return_url)
         new_signature.set_signature_user_ccla_company_id(company_id)
         new_signature.save()
-        # Update the PR.
-        organization = cla.utils.get_github_organization_instance()
-        organization = organization.get_organization_by_project_id(str(project_id))
-        installation_id = organization.get_organization_installation_id()
-        github_repository_id = signature_metadata['repository_id']
-        change_request_id = signature_metadata['pull_request_id']
-        update_repository_provider(installation_id, github_repository_id, change_request_id)
-        # If they don't require a ICLA to be signed, remove the active signature metadata.
+        # If they don't require a ICLA to be signed, update the pull request and remove the active
+        # signature metadata.
         if not project.get_project_ccla_requires_icla_signature():
+            organization = cla.utils.get_github_organization_instance()
+            organization = organization.get_organization_by_project_id(str(project_id))
+            installation_id = organization.get_organization_installation_id()
+            github_repository_id = signature_metadata['repository_id']
+            change_request_id = signature_metadata['pull_request_id']
+            update_repository_provider(installation_id, github_repository_id, change_request_id)
             cla.utils.delete_active_signature_metadata(user.get_user_id())
         return new_signature.to_dict()
 
