@@ -4,7 +4,6 @@
       <ion-title>
         {{ projectName }}
       </ion-title>
-
       <ion-buttons start>
         <button ion-button (click)="dismiss()">
           <ion-icon name="close"></ion-icon>
@@ -14,6 +13,20 @@
   </ion-header>
   <ion-content [ngClass]="{'selected':selectedUsers.length > 0}">
     <ion-grid>
+      <h2 class="table-heading">Project Managers for {{ projectName }}</h2>
+      <table class="table table-hover project-user-management-table">
+        <tbody>
+          <tr *ngFor="let user of users; let index = index;" [ngClass]="{'selected':user.selected}">
+            <td data-title="Name">{{ user.lfId }}</td>
+            <td data-title="Email">{{ user.email }}</td>
+            <td data-title="Actions">
+              <span class="list_users-remove clickable" (click)="removeUser(user.id)">
+                <ion-icon name="remove-circle"></ion-icon> Remove
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <h2 class="table-heading">Linux Foundation Users</h2>
       <ion-searchbar
         [(ngModel)]="userTerm"
@@ -27,19 +40,6 @@
             <td data-title="Actions">
               <span class="list_users-remove clickable" (click)="assignUserPM(user.id)">
                 <ion-icon name="add-circle"></ion-icon> Add
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <table class="table table-hover project-user-management-table">
-        <tbody>
-          <tr *ngFor="let user of users; let index = index;" [ngClass]="{'selected':user.selected}">
-            <td data-title="Name">{{ user.lfId }}</td>
-            <td data-title="Email">{{ user.email }}</td>
-            <td data-title="Actions">
-              <span class="list_users-remove clickable" (click)="removeUser(user.id)">
-                <ion-icon name="remove-circle"></ion-icon> Remove
               </span>
             </td>
           </tr>
