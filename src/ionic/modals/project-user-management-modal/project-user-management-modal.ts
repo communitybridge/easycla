@@ -17,6 +17,8 @@ export class ProjectUserManagementModal {
   users: any;
   selectedUsers: any;
   enteredUserId: string;
+  userResults: string[];
+  userTerm: any;
 
   constructor(
     public navCtrl: NavController,
@@ -104,6 +106,23 @@ export class ProjectUserManagementModal {
       }
     });
     modal.present();
+  }
+
+  searchUsers(ev: any) {
+    if(this.userTerm) {
+      this.cincoService.searchUserTerm(this.userTerm).subscribe(response => {
+        if(response) {
+          this.userResults = response;
+        }
+      });
+    }
+    else {
+      this.userResults = [];
+    }
+  }
+
+  assignUserPM(id) {
+    console.log(id);
   }
 
 }
