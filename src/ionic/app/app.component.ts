@@ -77,11 +77,12 @@ export class MyApp {
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
 
-      if(this.keycloak.authenticated()) {
-        this.rootPage = 'AllProjectsPage';
-      } else {
-        this.rootPage = 'LoginPage';
-      }
+      // if(this.keycloak.authenticated()) {
+      //   this.rootPage = 'CompaniesPage';
+      // } else {
+      //   this.rootPage = 'LoginPage';
+      // }
+      this.rootPage = 'LoginPage';
 
     });
   }

@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Linux Foundation Console</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing overflow-scroll="true">
+  <h2>Companies</h2>
+  <loading-spinner [loading]="loading.projects"></loading-spinner>
+  <ion-grid class="companies" [loading-display]="loading.companies">
+    <ion-row>
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let company of companies">
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title (click)="viewCompany(company.company_id)">
+              <span class="company-name">{{ company.company_name }}</span>
+            </ion-card-title>
+            <ion-item>
+              <button ion-button clear item-right (click)="viewCompany(company.company_id)">View</button>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- This will be ported and removed once CINCO API has the ability to return the full payload with all the information required -->
+  <!-- <ion-grid class="all-projects">
+    <ion-row>
+      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
+        <ion-card>
+          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>
+          <ion-card-content>
+            <ion-card-title (click)="projectSelected($event, project)">
+              {{project.title}}
+            </ion-card-title>
+            <dl>
+              <ng-container *ngFor="let data of project.datas">
+                <dt>{{data.label}}</dt>
+                <dd>{{data.value}} <span *ngIf="data.status == 'alert'" class="circle-alert"></span></dd>
+              </ng-container>
+            </dl>
+            <ion-item *ngFor="let meeting of project.meetings">
+              <ion-icon name="calendar" item-left large></ion-icon>
+              <h2>{{meeting.label}}</h2>
+              <p>{{meeting.value}}</p>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid> -->
+
+</ion-content>

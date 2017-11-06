@@ -6,8 +6,8 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
   segment: 'login'
 })
 @Component({
-  selector: 'login',
-  templateUrl: 'login.html'
+  selector: 'login-page',
+  templateUrl: 'login-page.html'
 })
 export class LoginPage {
 
@@ -17,7 +17,7 @@ export class LoginPage {
   ionViewWillEnter() {
     if(this.keycloak.authenticated())
     {
-      this.navCtrl.setRoot('AllProjectsPage');
+      this.navCtrl.setRoot('CompaniesPage');
       this.navCtrl.popToRoot();
     }
   }
@@ -28,7 +28,7 @@ export class LoginPage {
 
   login() {
     if (this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('AllProjectsPage');
+      this.navCtrl.setRoot('CompaniesPage');
     }
     else{
       this.keycloak.login();
