@@ -152,6 +152,9 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'company_whitelist':
                             'User email (%s) is not whitelisted for this company' \
                                 %user.get_user_email()}}
+        # Assume this company is the user's employer.
+        user.set_user_company_id(str(company_id))
+        user.save()
         # Requires us to know where the user came from.
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
         if return_url is None:
@@ -173,7 +176,9 @@ class DocuSign(signing_service_interface.SigningService):
         new_signature.save()
         # If they don't require a ICLA to be signed, update the pull request and remove the active
         # signature metadata.
-        if not project.get_project_ccla_requires_icla_signature():
+        if project.get_project_ccla_requires_icla_signature():
+            cla.log.info('Project requires ICLA signature from employee - PR has been left unchanged')
+        else:
             cla.log.info('Project does not requires ICLA signature from employee - updating PR')
             organization = cla.utils.get_github_organization_instance()
             organization = organization.get_organization_by_project_id(str(project_id))
@@ -182,7 +187,6 @@ class DocuSign(signing_service_interface.SigningService):
             change_request_id = signature_metadata['pull_request_id']
             update_repository_provider(installation_id, github_repository_id, change_request_id)
             cla.utils.delete_active_signature_metadata(user.get_user_id())
-        cla.log.info('Project requires ICLA signature from employee - PR has been left unchanged')
         return new_signature.to_dict()
 
     def request_corporate_signature(self, project_id, company_id, return_url=None):

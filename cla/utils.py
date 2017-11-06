@@ -427,6 +427,7 @@ def get_user_latest_signature(user, project_id, company_id=None):
 def user_signed_project_signature(user, project_id, latest_major_version=True):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
+    Will consider both ICLA and employee signatures.
 
     :param user: The user object to check for.
     :type user: cla.models.model_interfaces.User
@@ -438,6 +439,7 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
         for this project.
     :rtype: boolean
     """
+    # Check ICLA.
     signature = get_user_latest_signature(user, project_id)
     if signature is not None:
         cla.log.info('Signature found for this user on project %s: %s',
@@ -451,7 +453,6 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
                 cla.log.info('User (%s) only has old document version signed (v%s)',
                              user.get_user_id(), signature.get_signature_document_major_version())
                 return False
-
         if signature.get_signature_signed() and signature.get_signature_approved():
             # Signature found and signed/approved.
             cla.log.info('User already has a signed and approved signature ' + \
@@ -463,14 +464,21 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
                             signature.get_signature_id(),
                             user.get_user_email(),
                             project_id)
+            return False
         else: # Not signed or approved yet.
             cla.log.info('Signature (%s) has not been signed by %s for project %s', \
                          signature.get_signature_id(),
                          user.get_user_email(),
                          project_id)
-    else: # Signature not found for this user on this project.
-        cla.log.info('Signature not found for project %s and user %s',
-                     project_id, user.get_user_email())
+            return False
+    # Check employee signature.
+    company_id = user.get_user_company_id()
+    if company_id is not None:
+        signature = get_user_latest_signature(user, project_id, company_id=company_id)
+        # Don't check the version for employee signatures.
+        if signature is not None and signature.get_signature_signed() and signature.get_signature_approved():
+            cla.log.info('User has employee CLA signed and approved for project: %s', project_id)
+            return True
     return False
 
 def get_user_signature_by_github_repository(installation_id, user):
