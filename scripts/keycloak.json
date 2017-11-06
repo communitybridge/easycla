@@ -1,6 +1,6 @@
 {
   "realm": "LinuxFoundation",
-  "auth-server-url": "https://keycloak.linuxfoundation.org/auth",
+  "auth-server-url": "https://api.linuxfoundation.org/auth",
   "ssl-required": "external",
   "resource": "pmc",
   "public-client": true
