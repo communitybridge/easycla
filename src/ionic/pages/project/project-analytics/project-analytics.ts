@@ -15,8 +15,10 @@ import { DomSanitizer} from '@angular/platform-browser';
 export class ProjectAnalyticsPage {
 
   projectId: string;
+
   hasBitergia: boolean;
-  bitergiaUrl: any;
+  analyticsUrl: any;
+  sanitizedBitergiaUrl: any;
 
   constructor(
     public navCtrl: NavController,
@@ -46,13 +48,45 @@ export class ProjectAnalyticsPage {
   }
 
   ngOnInit() {
-
+    this.getProjectConfig(this.projectId);
   }
 
   getDefaults() {
     this.hasBitergia = true;
-    this.bitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl('https://opnfv.biterg.io/');
-console.log(this.bitergiaUrl);
+    this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+  }
+
+  addAnalyticsUrl() {
+    this.cincoService.getProjectConfig(this.projectId).subscribe(response => {
+      if (response) {
+        let updatedConfig = response;
+        updatedConfig.analyticsUrl = this.analyticsUrl;
+        this.cincoService.editProjectConfig(this.projectId, updatedConfig).subscribe(response => {
+          if (response) {
+            console.log(response);
+          }
+        });
+      }
+    });
+  }
+
+  getProjectConfig(projectId) {
+    this.cincoService.getProjectConfig(projectId).subscribe(response => {
+      if (response) {
+        let projectConfig = response;
+        if(projectConfig.analyticsUrl) {
+          this.analyticsUrl = projectConfig.analyticsUrl;
+          this.hasBitergia = true;
+        }
+        else{
+          this.hasBitergia = false;
+        }
+      }
+    });
+  }
+
+  openAnaylticsConfigModal(projectId) {
+
   }
 
 }
