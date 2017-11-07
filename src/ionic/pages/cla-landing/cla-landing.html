@@ -12,7 +12,7 @@
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-2>
-          <img src="https://www.linuxfoundation.org/sites/lfcorp/files/styles/logo_teaser_1x_tablet/public/2016-03/logo_lfcp_zephyr.png?itok=ebyOPmET" alt="{{ project.project_name }} Logo" />
+          <img src="{{ project.logoRef }}" alt="{{ project.project_name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
           <h1>{{ project.project_name }}</h1>
@@ -21,33 +21,30 @@
       </ion-row>
     </ion-grid>
   </header>
-
-  <ion-grid>
-    <ion-row>
-      <ion-col col-12 col-md-6 (click)="openClaIndividualPage()">
-        <ion-card>
+  <loading-spinner [loading]="(loading.individualDoc || loading.corporateDoc)"></loading-spinner>
+  <ion-grid [loading-display]="(loading.individualDoc || loading.corporateDoc)">
+    <ion-row justify-content-center>
+      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
+        <ion-card class="clickable" (click)="openClaIndividualPage()">
           <ion-card-content>
             <ion-card-title>
               <ion-icon name="person" item-left large ></ion-icon>
               <span>Individual</span>
             </ion-card-title>
-            <ion-item>
-              <p>Select this if you are signing the CLA on behalf of yourself.</p>
-            </ion-item>
+            <p>Select this if you are contributing code as an individual.</p>
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col col-12 col-md-6 (click)="openClaIndividualEmployeeModal()">
-        <ion-card>
+    </ion-row>
+    <ion-row justify-content-center>
+      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
+        <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
           <ion-card-content>
             <ion-card-title >
-              <ion-icon name="person" item-left large ></ion-icon>
               <ion-icon name="briefcase" item-left large ></ion-icon>
               <span>Employee</span>
             </ion-card-title>
-            <ion-item>
-              <p>Select this if you are signing the CLA on behalf of yourself.</p>
-            </ion-item>
+            <p>Select this if you are contributing code as an employee.</p>
           </ion-card-content>
         </ion-card>
       </ion-col>

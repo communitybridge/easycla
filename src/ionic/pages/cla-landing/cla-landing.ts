@@ -10,11 +10,15 @@ import { ClaService } from 'cla-service';
   templateUrl: 'cla-landing.html'
 })
 export class ClaLandingPage {
+  loading: any;
   projectId: string;
   userId: string;
 
   user: any;
   project: any;
+
+  hasIndividualCla: boolean;
+  hasCorporateCla: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -22,28 +26,28 @@ export class ClaLandingPage {
     private modalCtrl: ModalController,
     private claService: ClaService,
   ) {
-    this.getDefaults();
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
+    this.getDefaults();
   }
 
   getDefaults() {
+    this.loading = {
+      individualDoc: true,
+      corporateDoc: true,
+    }
     this.project = {
       project_name: "",
     }
 
+    this.hasCorporateCla = false;
+    this.hasIndividualCla = false;
   }
 
   ngOnInit() {
-    this.determineAppropriateAgreements();
     this.getUser(this.userId);
     this.getProject(this.projectId);
-  }
-
-  determineAppropriateAgreements() {
-    // pass along project and user info to determine appropriate agreements that
-    // the user could sign (ICLA, CCLA). If this project doesn't use CLAs then
-    // the user can be redirected to the ICLA
+    this.getProjectDocuments();
   }
 
   openClaIndividualPage() {
@@ -74,6 +78,21 @@ export class ClaLandingPage {
       if (!this.project.logoRef) {
         this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
       }
+    });
+  }
+
+  getProjectDocuments() {
+    this.claService.getProjectDocument(this.projectId, 'individual').subscribe(response => {
+      if (!response.hasOwnProperty('errors')) {
+        this.hasIndividualCla = true;
+      }
+      this.loading.individualDoc = false;
+    });
+    this.claService.getProjectDocument(this.projectId, 'corporate').subscribe(response => {
+      if (!response.hasOwnProperty('errors')) {
+        this.hasCorporateCla = true;
+      }
+      this.loading.corporateDoc = false;
     });
   }
 

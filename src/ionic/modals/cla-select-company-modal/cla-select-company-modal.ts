@@ -1,5 +1,6 @@
 import { Component,  } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company'
@@ -11,6 +12,7 @@ import { NavController, NavParams, ViewController, ModalController, IonicPage } 
   ]
 })
 export class ClaSelectCompanyModal {
+  loading: any;
   projectId: string;
   repositoryId: string;
   userId: string;
@@ -22,13 +24,17 @@ export class ClaSelectCompanyModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
+    private claService: ClaService,
   ) {
-    this.getDefaults();
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
+    this.getDefaults();
   }
 
   getDefaults() {
+    this.loading = {
+      companies: true,
+    };
     this.companies = [];
   }
 
@@ -36,58 +42,17 @@ export class ClaSelectCompanyModal {
     this.getCompanies();
   }
 
-  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
 
   getCompanies() {
-    this.companies = [
-      {
-        name: "Alphabet (Google)",
-        id: "0000000001",
-      },
-      {
-        name: "Apple",
-        id: "0000000002",
-      },
-      {
-        name: "Company Name",
-        id: "0000000003",
-      },
-      {
-        name: "Company Name",
-        id: "0000000004",
-      },
-      {
-        name: "Company Name",
-        id: "0000000005",
-      },
-      {
-        name: "Company Name",
-        id: "0000000006",
-      },
-      {
-        name: "Company Name",
-        id: "0000000007",
-      },
-      {
-        name: "Company Name",
-        id: "0000000008",
-      },
-      {
-        name: "Company Name",
-        id: "0000000009",
-      },
-      {
-        name: "Company Name",
-        id: "0000000010",
-      },
-      {
-        name: "Company Name",
-        id: "0000000011",
-      },
-    ];
+    this.claService.getProjectCompanies(this.projectId).subscribe(response => {
+      if (response) {
+        this.companies = response;
+      }
+      this.loading.companies = false;
+    });
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
@@ -95,15 +60,13 @@ export class ClaSelectCompanyModal {
       projectId: this.projectId,
       repositoryId: this.repositoryId,
       userId: this.userId,
-      companyId: company.id,
+      companyId: company.company_id,
     });
   }
 
   openClaNewCompanyModal() {
     let modal = this.modalCtrl.create('ClaNewCompanyModal', {
       projectId: this.projectId,
-      repositoryId: this.repositoryId,
-      userId: this.userId,
     });
     modal.present();
   }

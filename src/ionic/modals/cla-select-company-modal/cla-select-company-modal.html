@@ -12,26 +12,12 @@
 </ion-header>
 
 <ion-content>
-  <!-- <ion-grid>
-    <ion-row>
-      <ion-col col-10>
-        <ion-item>
-          <ion-label stacked>Enter Email Address</ion-label>
-          <ion-input type="email" [(ngModel)]="enteredEmail"></ion-input>
-        </ion-item>
-      </ion-col>
-      <ion-col col-2>
-        <button type="submit" ion-button class="input-forward-button" (click)="addContact({'contact':{'email':enteredEmail}})">
-          <ion-icon name="arrow-forward" large></ion-icon>
-        </button>
-      </ion-col>
-    </ion-row>
-  </ion-grid> -->
+<loading-spinner [loading]="loading.companies"></loading-spinner>
   <div>
-    <table id="table" class="table table-hover">
+    <table id="table" class="table table-hover" [loading-display]="loading.companies">
       <tbody>
         <tr *ngFor="let company of companies" (click)="openClaEmployeeCompanyConfirmPage(company)">
-          <td>{{ company.name }}</td>
+          <td>{{ company.company_name }}</td>
         </tr>
       </tbody>
     </table>
