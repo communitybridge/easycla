@@ -225,6 +225,16 @@ export class CincoService {
   * Resources to manage internal LF users and roles
   **/
 
+  searchUser(username) {
+    return this.http.get(this.cincoApiUrl + '/users/search/username/' + username)
+      .map(res => res.json());
+  }
+
+  searchUserTerm(term) {
+    return this.http.get(this.cincoApiUrl + '/users/search/' + term)
+      .map(res => res.json());
+  }
+
   getCurrentUser() {
     return this.http.get(this.cincoApiUrl + '/users/current')
       .map(res => res.json());
