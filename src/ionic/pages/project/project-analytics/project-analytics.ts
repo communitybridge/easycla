@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage } from 'ionic-angular';
+import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { DomSanitizer} from '@angular/platform-browser';
@@ -25,7 +25,8 @@ export class ProjectAnalyticsPage {
     public navParams: NavParams,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
-    private domSanitizer : DomSanitizer
+    private domSanitizer : DomSanitizer,
+    public modalCtrl: ModalController
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -52,22 +53,7 @@ export class ProjectAnalyticsPage {
   }
 
   getDefaults() {
-    this.hasBitergia = true;
-    this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
-  }
 
-  addAnalyticsUrl() {
-    this.cincoService.getProjectConfig(this.projectId).subscribe(response => {
-      if (response) {
-        let updatedConfig = response;
-        updatedConfig.analyticsUrl = this.analyticsUrl;
-        this.cincoService.editProjectConfig(this.projectId, updatedConfig).subscribe(response => {
-          if (response) {
-            console.log(response);
-          }
-        });
-      }
-    });
   }
 
   getProjectConfig(projectId) {
@@ -76,6 +62,7 @@ export class ProjectAnalyticsPage {
         let projectConfig = response;
         if(projectConfig.analyticsUrl) {
           this.analyticsUrl = projectConfig.analyticsUrl;
+          this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
           this.hasBitergia = true;
         }
         else{
@@ -86,7 +73,17 @@ export class ProjectAnalyticsPage {
   }
 
   openAnaylticsConfigModal(projectId) {
-
+    let modal = this.modalCtrl.create('AnalyticsConfigModal', {
+      projectId: projectId,
+    });
+    modal.onDidDismiss(analyticsUrl => {
+      if(analyticsUrl){
+        this.analyticsUrl = analyticsUrl;
+        this.hasBitergia = true;
+        this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+      }
+    });
+    modal.present();
   }
 
 }
