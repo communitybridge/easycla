@@ -4,6 +4,7 @@ import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 import { MemberModel } from '../../models/member-model';
+import { RolesService } from '../../services/roles.service';
 
 @IonicPage({
   segment: 'project/:projectId/member/:memberId'
@@ -25,12 +26,15 @@ export class MemberPage {
 
   member = new MemberModel();
 
+  userRoles: any;
+
   constructor(
     public navCtrl: NavController,
     public modalCtrl: ModalController,
     public navParams: NavParams,
     private sortService: SortService,
     private cincoService: CincoService,
+    private rolesService: RolesService,
     private keycloak: KeycloakService
   ) {
     // If we navigated to this page, we will have an item available as a nav param
@@ -40,6 +44,7 @@ export class MemberPage {
   }
 
   getDefaults() {
+    this.userRoles = this.rolesService.userRoleDefaults;
     this.loading = {
       member: true,
       projects: true,
@@ -106,10 +111,16 @@ export class MemberPage {
   }
 
   ngOnInit() {
-    // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
-    this.getMemberContactRoles();
-    this.getMember(this.projectId, this.memberId);
-    this.getMemberContacts(this.projectId, this.memberId);
+    this.rolesService.getData.subscribe((userRoles) => {
+      this.userRoles = userRoles;
+
+      // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
+      this.getMemberContactRoles();
+      this.getMember(this.projectId, this.memberId);
+      this.getMemberContacts(this.projectId, this.memberId);
+    });
+    this.rolesService.getUserRoles();
+
   }
 
   getMemberContactRoles() {
@@ -125,7 +136,7 @@ export class MemberPage {
       if(response) {
         this.member = response;
         this.loading.member = false;
-        this.getOrganizationProjectMemberships(this.member.org.id);
+        if(!this.userRoles.isStaffInc) { this.getOrganizationProjectMemberships(this.member.org.id); }
       }
     });
   }

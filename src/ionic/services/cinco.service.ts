@@ -42,6 +42,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  getMyProjects() {
+    return this.http.get(this.cincoApiUrl + '/project')
+      .map(res => res.json());
+  }
+
   getAllProjects() {
     return this.http.get(this.cincoApiUrl + '/projects')
       .map(res => res.json());
