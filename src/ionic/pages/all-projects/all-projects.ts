@@ -48,6 +48,8 @@ export class AllProjectsPage {
     prettyValue: string
   }> = [];
 
+  managersFilterValues: any = [];
+
   @ViewChild('contractsCanvas') contractsCanvas;
   contractsChart: any;
 
@@ -104,6 +106,22 @@ export class AllProjectsPage {
           // so a refresh to the image needs to be forced.
           // This is to refresh an image that have same URL
           if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
+          // Currently PMs are returned with their KC IDs
+          // This translates to LF IDs
+          if(eachProject.config.programManagers.length > 0) {
+            for(let eachManager of eachProject.config.programManagers) {
+              this.cincoService.getUser(eachManager).subscribe(response => {
+                if(response) {
+                  eachProject.managers.push(response.lfId);
+                  // Prevent dupes in PMs filter list
+                  if(!this.managersFilterValues.some(lfId => lfId == response.lfId)) {
+                      this.managersFilterValues.push(response.lfId);
+                  }
+                  this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
+                }
+              });
+            }
+          }
         }
         this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
         this.loading.projects = false;
@@ -388,7 +406,7 @@ export class AllProjectsPage {
     });
   }
 
-  filterAllProjects(projectProperty, keyword){
+  filterAllProjects(projectProperty, keyword) {
     if(keyword == "NO_FILTER") {
       this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
     }
