@@ -1,0 +1,25 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>LF Project</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <header>
+    <project-header [projectId]="projectId"></project-header>
+    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
+  </header>
+  <ion-grid>
+    <ion-row text-center class="vertical-align">
+      <ion-col>
+        <h2 *ngIf="!hasBitergia">Coming soon...</h2>
+        <div class="bitergia-wrapper">
+          <iframe *ngIf="hasBitergia" [attr.src]="bitergiaUrl"></iframe>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
