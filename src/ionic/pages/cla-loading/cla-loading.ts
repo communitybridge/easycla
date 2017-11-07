@@ -3,14 +3,14 @@ import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-ang
 import { ClaService } from 'cla-service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/user/:userId'
+  segment: 'cla-loading'
   // TODO: there should also be a get parameter for 'redirect' at the end
 })
 @Component({
   selector: 'cla-loading',
   templateUrl: 'cla-loading.html'
 })
-export class ClaLandingPage {
+export class ClaLoadingPage {
   projectId: string;
   userId: string;
 

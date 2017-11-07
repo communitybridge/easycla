@@ -32,13 +32,13 @@
           </ion-col>
           <ion-col class="link-management-copy-link-button" col-3>
             <!-- <button ion-button color="light" ngxClipboard [cbContent]="cclaLink"> -->
-            <button ion-button color="light">
+            <button ion-button color="light" (click)="copyText()">
               Copy link
             </button>
           </ion-col>
         </ion-row>
         <div class="link-management-url-container">
-          <input class="link-management-url-input" type="text" [value]="cclaLink" readonly>
+          <input #textArea class="link-management-url-input" type="text" [value]="cclaLink" readonly>
         </div>
       </ion-grid>
     </div>

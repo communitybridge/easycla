@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ClaLandingPage } from './cla-landing';
+import { ClaLoadingPage } from './cla-loading';
 
 @NgModule({
   declarations: [
-    ClaLandingPage,
+    ClaLoadingPage,
   ],
   imports: [
-    IonicPageModule.forChild(ClaLandingPage),
+    IonicPageModule.forChild(ClaLoadingPage),
   ],
   entryComponents: [
-    ClaLandingPage
+    ClaLoadingPage
   ]
 })
-export class ClaLandingPageModule {}
+export class ClaLoadingPageModule {}

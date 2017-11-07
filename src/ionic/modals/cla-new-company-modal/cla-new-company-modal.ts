@@ -1,8 +1,9 @@
-import { Component,  } from '@angular/core';
+import { Component, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
 
+
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company'
+  segment: 'cla/project/:projectId/new-company'
 })
 @Component({
   selector: 'cla-new-company-modal',
@@ -18,49 +19,46 @@ export class ClaNewCompanyModal {
 
   cclaLink: string;
 
+  @ViewChild('textArea') textArea: ElementRef;
+
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
   ) {
-    this.getDefaults();
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
+    this.getDefaults();
   }
 
   getDefaults() {
-    this.cclaLink = window.location.protocol + '//' + window.location.host + '/#/cla/project/' + this.projectId + '/repository/' + this.repositoryId + '/company-signup';
+    this.cclaLink = window.location.protocol + '//' + window.location.host + '/#/cla/project/' + this.projectId + '/company-signup';
   }
 
   ngOnInit() {
+
   }
 
-  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
-  }
-
-  openClaEmployeeCompanyPage(company) {
-    this.navCtrl.push('ClaEmployeeCompanyPage', {
-      projectId: this.projectId,
-      repositoryId: this.repositoryId,
-      userId: this.userId,
-      companyId: company.id,
-    });
   }
 
   openCclaLink() {
     window.open(this.cclaLink, '_blank');
   }
 
+  copyText() {
+    let copyTextarea = this.textArea.nativeElement;
+    copyTextarea.select();
 
-  // sortContacts(prop) {
-  //   this.sortService.toggleSort(
-  //     this.sort,
-  //     prop,
-  //     this.organizationContacts,
-  //   );
-  // }
+    try {
+      var successful = document.execCommand('copy');
+      var msg = successful ? 'successful' : 'unsuccessful';
+      console.log('Copying text command was ' + msg);
+    } catch (err) {
+      console.log('Exception thrown attempting to copy to clipboard');
+    }
+  }
 
 }

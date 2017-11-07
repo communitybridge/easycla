@@ -1,7 +1,9 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from  '../../validators/email';
+import { FormBuilder, FormGroup } from '@angular/forms';
+// import { Validators } from '@angular/forms';
+// import { EmailValidator } from  '../../validators/email';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -31,6 +33,7 @@ export class ClaEmployeeRequestAccessModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -38,8 +41,8 @@ export class ClaEmployeeRequestAccessModal {
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
     this.form = formBuilder.group({
-      email:['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      message:['', Validators.compose([Validators.required])],
+      // email:['', Validators.compose([EmailValidator.isValid])], // Validators.required,
+      message:[''], // Validators.compose([Validators.required])
     });
   }
 
@@ -56,7 +59,14 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   submit() {
-    this.openClaMessageSentPage();
+    console.log("message info");
+    console.log(this.userId);
+    console.log(this.companyId);
+    //  TODO: Do a validation check before sending next request
+    let message = this.form.value.message;
+    this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
+      this.openClaMessageSentPage();
+    });
   }
 
   openClaMessageSentPage() {
