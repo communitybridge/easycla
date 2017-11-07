@@ -60,6 +60,12 @@ export class HttpClient {
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
   }
 
+  patch(url, data, contentType: string = 'application/json') {
+    return Observable
+        .fromPromise(this.buildCINCOHeaders(contentType))
+        .switchMap((headers) => this.http.patch(url, data, { headers: headers }));
+  }
+
   delete(url) {
     return Observable
         .fromPromise(this.buildCINCOHeaders())

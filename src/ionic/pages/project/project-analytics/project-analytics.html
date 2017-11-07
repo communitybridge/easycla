@@ -13,11 +13,17 @@
     <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
   </header>
   <ion-grid>
-    <ion-row text-center class="vertical-align">
+    <ion-row *ngIf="!hasBitergia" text-center>
       <ion-col>
-        <h2 *ngIf="!hasBitergia">Coming soon...</h2>
+        <div class="configure-analytics">
+          <ion-label>Configure Analytics <a class="project-details-link clickable" (click)="openAnaylticsConfigModal(projectId)">here</a></ion-label>
+        </div>
+      </ion-col>
+    </ion-row>
+    <ion-row *ngIf="hasBitergia">
+      <ion-col>
         <div class="bitergia-wrapper">
-          <iframe *ngIf="hasBitergia" [attr.src]="bitergiaUrl"></iframe>
+          <iframe [attr.src]="sanitizedBitergiaUrl"></iframe>
         </div>
       </ion-col>
     </ion-row>
