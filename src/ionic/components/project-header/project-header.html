@@ -6,7 +6,7 @@
           <div class="project-logo-wrapper">
             <div *ngIf="!project.config.logoRef" text-center>
               <ion-icon class="no-logo-icon" name="image"></ion-icon>
-              <ion-label>Change logo in <a class="project-details-link" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label>
+              <ion-label>Change logo in <a class="project-details-link clickable" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label>
             </div>
             <div class="project-logo" *ngIf="project.config.logoRef">
               <img src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
