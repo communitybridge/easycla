@@ -7,7 +7,8 @@ export class FilterService {
 
   filterAllProjects(allProjects, projectProperty, keyword){
     return allProjects.filter((projects) => {
-      return projects[projectProperty] == keyword;
+      if (projectProperty == 'managers') { return projects[projectProperty].indexOf(keyword.toLowerCase()) > -1; }
+      else { return projects[projectProperty] == keyword; }
     });
   }
 
