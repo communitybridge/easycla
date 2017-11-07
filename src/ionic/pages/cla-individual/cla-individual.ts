@@ -79,7 +79,7 @@ export class ClaIndividualPage {
       'return_url': this.signatureIntent.return_url,
     };
 
-    this.claService.postSignatureRequest(signatureRequest).subscribe(response => {
+    this.claService.postIndividualSignatureRequest(signatureRequest).subscribe(response => {
       // returns {
       //   user_id:
       //   signature_id:

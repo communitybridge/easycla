@@ -20,19 +20,20 @@
         </ion-col>
       </ion-row>
       <ion-row>
-        <ion-col col-12>
+        <!-- <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Email:</ion-label>
+            <ion-label stacked>Your Email to Whitelist:</ion-label>
             <ion-input type="email" formControlName="email" required></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>
-        </ion-col>
+        </ion-col> -->
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Message:</ion-label>
             <ion-textarea formControlName="message"></ion-textarea>
+            <p>Give your cla manager some context on who you are and why you're making this request</p>
           </ion-item>
         </ion-col>
       </ion-row>

@@ -47,9 +47,7 @@
               <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting || !form.controls.agree.valid">
                 Continue
               </button>
-              <button ion-button (click)="goBackToPrevious()" [disabled]="currentlySubmitting">
-                Cancel
-              </button>
+              <loading-spinner class="submit" [loading]="currentlySubmitting"></loading-spinner>
             </form>
           </ion-card-content>
         </ion-card>

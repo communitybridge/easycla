@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from  '../../validators/email';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/company-signup'
+  segment: 'cla/project/:projectId/company-signup'
 })
 @Component({
   selector: 'cla-company-signup',

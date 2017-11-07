@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/:companyId'
+  segment: 'cla/project/:projectId/user/:userId/employee/company/:companyId/troubleshoot'
 })
 @Component({
   selector: 'cla-employee-company-troubleshoot',
@@ -22,6 +23,7 @@ export class ClaEmployeeCompanyTroubleshootPage {
     public navCtrl: NavController,
     private modalCtrl: ModalController,
     public navParams: NavParams,
+    private claService: ClaService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');

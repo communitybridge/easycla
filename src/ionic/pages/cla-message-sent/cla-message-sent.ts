@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact/sent'
+  segment: 'cla/project/:projectId/user/:userId/employee/company/:companyId/contact/sent'
 })
 @Component({
   selector: 'cla-message-sent',
