@@ -134,6 +134,15 @@ export class ClaService {
   }
 
   /**
+  * /user/{user_id}/project/{project_id}/last-signature
+  **/
+
+  getLastIndividualSignature(userId, projectId) {
+    return this.http.get(this.claApiUrl + '/user/' + userId + '/project/' + projectId + '/last-signature')
+      .map((res) => res.json());
+  }
+
+  /**
   * /signature
   **/
 
