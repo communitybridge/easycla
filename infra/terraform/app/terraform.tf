@@ -13,8 +13,8 @@ variable "build_hash" {
 # We are saving the state for this infra in Consul
 terraform {
   backend "consul" {
-    address = "consul.service.consul:8500"
-    path    = "terraform/applications/pmc/app"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/pmc/application"
   }
 }
 
@@ -22,8 +22,8 @@ terraform {
 data "terraform_remote_state" "pmc-env" {
   backend = "consul"
   config {
-    address = "consul.service.consul:8500"
-    path    = "terraform/applications/pmc/environment"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/pmc/environment"
   }
 }
 
@@ -73,7 +73,7 @@ module "registrator" {
   source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
 
   # Application Information
-  build_hash      = "${var.build_hash}"
+  project          = "pmc"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
@@ -86,37 +86,20 @@ module "consul" {
 
   # Consul
   encryption_key   = "9F2n4KWdxSj2Z4MMVqbHqg=="
-  datacenter       = "AWS"
+  datacenter       = "production"
+  endpoint         = "consul.service.production.consul"
 
   # Application Information
-  build_hash     = "${var.build_hash}"
+  project          = "pmc"
 
   region           = "${data.terraform_remote_state.pmc-env.region}"
   ecs_cluster_name = "${module.pmc-ecs-cluster.name}"
   dns_servers      = "${data.terraform_remote_state.pmc-env.dns_servers}"
 }
 
-# CINCO
+# PMC
 module "pmc" {
   source            = "./pmc"
-
-  # Application Information
-  build_hash      = "${var.build_hash}"
-  route53_zone_id   = "${data.terraform_remote_state.pmc-env.route53_zone_id}"
-
-  # ECS Information
-  internal_elb_sg   = "${data.terraform_remote_state.pmc-env.sg_internal_elb}"
-  internal_subnets  = "${data.terraform_remote_state.pmc-env.internal_subnets}"
-  region            = "${data.terraform_remote_state.pmc-env.region}"
-  vpc_id            = "${data.terraform_remote_state.pmc-env.vpc_id}"
-  ecs_cluster_name  = "${module.pmc-ecs-cluster.name}"
-  dns_servers       = "${data.terraform_remote_state.pmc-env.dns_servers}"
-  ecs_role          = "${data.terraform_remote_state.pmc-env.iam_role_ecsService}"
-}
-
-# NGINX Proxy
-module "nginx" {
-  source            = "./nginx"
 
   # Application Information
   build_hash      = "${var.build_hash}"

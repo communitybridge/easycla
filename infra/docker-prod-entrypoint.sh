@@ -1,18 +1,7 @@
 #!/bin/sh
 
-# get current instance ip
-INSTANCE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+export EC2_LOCAL_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
 
-consul-template \
-  -log-level warn \
-  -consul-addr ${INSTANCE_IP}:8500 \
-  -template "/srv/app/src/config/production.json.ctmpl:/srv/app/src/config/default.json" \
-  -once
+envsubst '\\$$APP_DOMAINS \\$$EC2_LOCAL_IP' < /etc/nginx/conf.d/production.conf.tpl > /etc/nginx/conf.d/production.conf
 
-consul-template \
-  -log-level warn \
-  -consul-addr ${INSTANCE_IP}:8500 \
-  -template "/srv/app/src/newrelic.js.ctmpl:/srv/app/src/newrelic.js" \
-  -once
-
-exec npm "$@"
+exec /usr/sbin/nginx "$@"

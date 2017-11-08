@@ -14,8 +14,8 @@ variable "cidr" {
 // We are using consul as our storage backend for the terraform state, it supports locking natively.
 terraform {
   backend "consul" {
-    address = "consul.service.consul:8500"
-    path    = "terraform/applications/pmc/environment"
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/pmc/environment"
   }
 }
 
@@ -24,10 +24,18 @@ data "terraform_remote_state" "production-tools" {
   backend = "consul"
   config {
     address = "consul.service.consul:8500"
-    path    = "terraform/production-tools"
+    path    = "terraform/infrastructure"
   }
 }
 
+// This allows me to pull the state of another environment, in this case production-tools and grab data from it.
+data "terraform_remote_state" "infrastructure" {
+  backend = "consul"
+  config {
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure"
+  }
+}
 // Provider for this infra, re-using the same credentials that asked for in the variables.
 provider "aws" {
   alias = "local"
@@ -53,7 +61,7 @@ module "dhcp" {
   source  = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/dhcp"
   name    = "pmc.engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "${join(",", data.terraform_remote_state.production-tools.west_dns_servers)}"
+  servers = "${join(",", data.terraform_remote_state.infrastructure.west_dns_servers)}"
 }
 
 // Holds all the security groups for this infra and the application. Edit with caution.
@@ -96,6 +104,32 @@ module "peering" {
   tools_account_number      = "${data.terraform_remote_state.production-tools.account_number}"
   tools_cidr                = "${data.terraform_remote_state.production-tools.west_cidr}"
   tools_vpc_id              = "${data.terraform_remote_state.production-tools.west_vpc_id}"
+}
+
+// Peering to Infrastructure
+module "peering_infra" {
+  source                    = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.infrastructure.west_cidr}"
+  tools_vpc_id              = "${data.terraform_remote_state.infrastructure.west_vpc_id}"
+}
+
+// Peering to Keycloak
+module "kc_peering" {
+  source                    = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
+  tools_cidr                = "10.32.7.0/24"
+  tools_vpc_id              = "vpc-5aa9d23c"
 }
 
 // The region in which the infra lives.
@@ -175,12 +209,12 @@ output "iam_profile_ecsInstance" {
 
 // NewRelic License Key
 output "newrelic_key" {
-  value = "${data.terraform_remote_state.production-tools.newrelic_key}"
+  value = "${data.terraform_remote_state.infrastructure.newrelic_key}"
 }
 
 // DNS Servers from Production-Tools
 output "dns_servers" {
-  value = "${data.terraform_remote_state.production-tools.west_dns_servers}"
+  value = "${data.terraform_remote_state.infrastructure.west_dns_servers}"
 }
 
 // DNS Servers from Production-Tools

@@ -1,0 +1,179 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>LF Project</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <header>
+    <project-header [projectId]="projectId"></project-header>
+    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
+  </header>
+  <ion-grid>
+    <ion-row class="contract-group" *ngFor="let contract of contracts">
+      <ion-col col-12 class="header-row">
+        <h2>
+          {{ contract.name }}
+        </h2>
+        <ion-buttons start>
+          <button ion-button icon-only clear round (click)="openClaContractConfigModal(contract)">
+            <ion-icon name="settings" item-right></ion-icon>
+          </button>
+        </ion-buttons>
+        <ion-buttons end>
+          <button ion-button (click)="openClaContractsContributorsPage(contract.id)" color="secondary">
+            View Signatures
+          </button>
+        </ion-buttons>
+      </ion-col>
+      <div class="contracts col-wrapper">
+
+        <ion-col col-12 col-md-6 *ngIf="contract.ccla">
+          <ion-card>
+            <ion-card-content>
+              <ion-card-title >
+                <ion-icon name="briefcase" item-left large></ion-icon>
+                <span>Corporate CLA</span>
+                <div class="contract-title-buttons" *ngIf="contract.contracts.ccla.src">
+                  <button ion-button icon-only clear round (click)="openClaContractUploadModal({})">
+                    <ion-icon name="cloud-upload"></ion-icon>
+                  </button>
+                  <button ion-button icon-only clear round (click)="openClaContractVersionModal()">
+                    <ion-icon name="time"></ion-icon>
+                  </button>
+                </div>
+              </ion-card-title>
+              <ng-container *ngIf="!contract.contracts.ccla.src">
+                <p>Upload the Corporate CLA pdf required for signature.</p>
+                <button ion-button (click)="openClaContractUploadModal({})" color="secondary">Upload PDF</button>
+              </ng-container>
+              <ng-container *ngIf="contract.contracts.ccla.src">
+                <ion-grid>
+                  <ion-row>
+                    <ion-col col-12 col-md-6>
+                      <span>
+                        <ion-icon name="document" item-left></ion-icon>
+                        {{ contract.contracts.ccla.name }}
+                      </span><br>
+                      <span>
+                        {{ contract.contracts.ccla.uploadDate }}
+                      </span><br>
+                      <span>
+                        Version {{ contract.contracts.ccla.version }}
+                      </span><br>
+                    </ion-col>
+                    <ion-col class="text-right" col-12 col-md-6>
+                      <button ion-button clear (click)="openClaOrganizationProviderModal()" color="secondary">
+                        View Companies
+                      </button>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ng-container>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col col-12 col-md-6 *ngIf="contract.icla">
+          <ion-card>
+            <ion-card-content>
+              <ion-card-title>
+                <ion-icon name="person" item-left large></ion-icon>
+                <span>Individual CLA</span>
+                <div class="contract-title-buttons" *ngIf="contract.contracts.icla.src">
+                  <button ion-button icon-only clear round (click)="openClaContractUploadModal({})">
+                    <ion-icon name="cloud-upload"></ion-icon>
+                  </button>
+                  <button ion-button icon-only clear round (click)="openClaContractVersionModal()">
+                    <ion-icon name="time"></ion-icon>
+                  </button>
+                </div>
+              </ion-card-title>
+              <ng-container *ngIf="!contract.contracts.icla.src">
+                <p>Upload the Individual CLA pdf required for signature.</p>
+                <button ion-button (click)="openClaContractUploadModal({})" color="secondary">Upload PDF</button>
+              </ng-container>
+              <ng-container *ngIf="contract.contracts.icla.src">
+                <ion-grid>
+                  <ion-row>
+                    <ion-col col-12 col-md-6>
+                      <span>
+                        <ion-icon name="document" item-left></ion-icon>
+                        {{ contract.contracts.icla.name }}
+                      </span><br>
+                      <span>
+                        {{ contract.contracts.icla.uploadDate }}
+                      </span><br>
+                      <span>
+                        Version {{ contract.contracts.icla.version }}
+                      </span><br>
+                    </ion-col>
+                    <ion-col class="text-right" col-12 col-md-6 >
+
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ng-container>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </div>
+      <ion-col col-12>
+        <h3>Organizations</h3>
+      </ion-col>
+      <div class="organizations col-wrapper">
+        <ion-col col-12 *ngFor="let organization of contract.organizations">
+          <ion-card>
+            <ion-grid>
+              <ion-row>
+                <ion-col class="vertical-rule-right" col-12 col-md-6>
+                  <ion-card-content>
+                    <ion-card-title>
+                      <ion-icon name="logo-github"></ion-icon>
+                      <span>{{ organization.name }}</span>
+                    </ion-card-title>
+                    <p><a target="_blank" href="{{ organization.gitUrl }}">{{ organization.gitUrl }}</a></p>
+                    <p>{{ organization.description }}</p>
+                  </ion-card-content>
+                </ion-col>
+                <ion-col col-12 col-md-6 >
+                  <ion-card-content>
+                    <h1>Repositories</h1>
+                    <button *ngIf="!organization.appConnected" ion-button (click)="openClaOrganizationAppModal()" color="secondary">Connect CLA App</button>
+                    <div class="repositories" *ngIf="organization.appConnected">
+                      <ion-row *ngFor="let repository of organization.repositories">
+                        <ion-col col-12 icon-left>
+                          <ion-icon name="checkmark"></ion-icon>
+                          {{ repository.name }}
+                        </ion-col>
+                      </ion-row>
+                    </div>
+                  </ion-card-content>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+            <div class="organization-actions">
+              <button ion-button icon-only clear round (click)="organizationPopover($event, organization)">
+                <ion-icon name="more"></ion-icon>
+              </button>
+            </div>
+          </ion-card>
+        </ion-col>
+      </div>
+      <div class="add-organizations">
+        <button ion-button (click)="openClaOrganizationProviderModal()" color="secondary">Add Organization</button>
+      </div>
+    </ion-row>
+  </ion-grid>
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="top">
+      <button ion-fab (click)="openClaContractConfigModal({})" title="Add Contract Group">
+        <ion-icon name="folder-open"></ion-icon>
+      </button>
+    </ion-fab-list>
+  </ion-fab>
+</ion-content>

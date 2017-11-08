@@ -2,13 +2,13 @@ variable "ecs_cluster_name" {
   description = "The name of the ECS Cluster"
 }
 
-variable "internal_subnets" {
-  description = "Internal VPC Subnets"
+variable "external_subnets" {
+  description = "External VPC Subnets"
   type = "list"
 }
 
-variable "internal_elb_sg" {
-  description = "Security Group for the internal ELB"
+variable "external_elb_sg" {
+  description = "Security Group for the external ELB"
 }
 
 variable "region" {
@@ -29,7 +29,7 @@ variable "build_hash" {
 }
 
 variable "ecs_role" {
-  description = "The ecsService Role for CINCO"
+  description = "The ecsService Role for pmc"
 }
 
 variable "route53_zone_id" {
@@ -42,6 +42,9 @@ data "template_file" "pmc_ecs_task" {
   vars {
     # Build Information
     build_hash              = "${var.build_hash}"
+
+    # NGINX Domains
+    APP_DOMAINS               = "projectconsole.linuxfoundation.org www.projectconsole.linuxfoundation.org"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
@@ -77,49 +80,82 @@ resource "aws_ecs_service" "pmc" {
   iam_role                           = "${var.ecs_role}"
 
   load_balancer {
-    target_group_arn   = "${aws_alb_target_group.pmc.arn}"
+    target_group_arn   = "${aws_alb_target_group.nginx.arn}"
     container_name     = "pmc"
-    container_port     = 8081
-  }
-
-  lifecycle {
-    create_before_destroy = true
+    container_port     = 80
   }
 }
 
-resource "aws_alb_target_group" "pmc" {
+resource "aws_alb_target_group" "nginx" {
   provider             = "aws.local"
-  name                 = "pmc-8081"
-  port                 = 8081
+  name                 = "pmc-nginx-80"
+  port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30
 
   health_check {
-    path = "/"
+    path = "/elb-status"
     protocol = "HTTP"
     interval = 15
-    matcher = "301,302"
   }
 }
 
-resource "aws_alb" "pmc" {
+resource "aws_alb" "nginx" {
   provider           = "aws.local"
-  name               = "pmc"
-  subnets            = ["${var.internal_subnets}"]
-  security_groups    = ["${var.internal_elb_sg}"]
+  name               = "pmc-nginx"
+  subnets            = ["${var.external_subnets}"]
+  security_groups    = ["${var.external_elb_sg}"]
+  internal           = false
 }
 
-resource "aws_alb_listener" "pmc" {
+resource "aws_alb_listener" "nginx_80" {
   provider           = "aws.local"
-  load_balancer_arn  = "${aws_alb.pmc.id}"
-  port               = "443"
-  protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/16db8afa-932a-4bc9-8da4-52c76f00952c"
+  load_balancer_arn  = "${aws_alb.nginx.id}"
+  port               = "80"
+  protocol           = "HTTP"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.pmc.id}"
+    target_group_arn = "${aws_alb_target_group.nginx.id}"
     type             = "forward"
   }
 }
 
+resource "aws_alb_listener" "nginx_443" {
+  provider           = "aws.local"
+  load_balancer_arn  = "${aws_alb.nginx.id}"
+  port               = "443"
+  protocol           = "HTTPS"
+  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/bfd6e237-3606-454f-ac4d-e57bf636b2f2"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.nginx.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_route53_record" "public" {
+  provider= "aws.local"
+  zone_id = "${var.route53_zone_id}"
+  name    = "."
+  type    = "A"
+
+  alias {
+    name                   = "${aws_alb.nginx.dns_name}"
+    zone_id                = "${aws_alb.nginx.zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "public_www" {
+  provider= "aws.local"
+  zone_id = "${var.route53_zone_id}"
+  name    = "www"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_alb.nginx.dns_name}"
+    zone_id                = "${aws_alb.nginx.zone_id}"
+    evaluate_target_health = true
+  }
+}
