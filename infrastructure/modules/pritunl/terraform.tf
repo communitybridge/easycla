@@ -55,7 +55,7 @@ resource "aws_instance" "mongodb" {
 
 resource "aws_launch_configuration" "main" {
   provider    = "aws.local"
-  name_prefix = "pritunl-cluster"
+  name_prefix = "pritunl-node-cluster"
 
   image_id                    = "${data.aws_ami.pritunl.id}"
   instance_type               = "c4.large"
@@ -76,7 +76,7 @@ resource "aws_launch_configuration" "main" {
 
 resource "aws_autoscaling_group" "main" {
   provider             = "aws.local"
-  name                 = "pritunl-cluster"
+  name                 = "pritunl-node-cluster"
 
   availability_zones   = ["us-west-2a", "us-west-2b", "us-west-2c"]
   vpc_zone_identifier  = ["${var.external_subnets}"]
@@ -92,7 +92,7 @@ resource "aws_autoscaling_group" "main" {
     propagate_at_launch = true
   }
 
-  load_balancers = ["${aws_elb.pritunl-cluster.name}"]
+  load_balancers = ["${aws_elb.pritunl-node-cluster.name}"]
 
   lifecycle {
     create_before_destroy = true
@@ -100,9 +100,9 @@ resource "aws_autoscaling_group" "main" {
 }
 
 # Create a new load balancer
-resource "aws_elb" "pritunl-cluster" {
+resource "aws_elb" "pritunl-node-cluster" {
   provider           = "aws.local"
-  name               = "pritunl-cluster"
+  name               = "pritunl-node-cluster"
   subnets            = ["${var.external_subnets}"]
   security_groups    = ["${var.elb_sg}"]
 
@@ -135,19 +135,19 @@ resource "aws_elb" "pritunl-cluster" {
   connection_draining_timeout = 400
 
   tags {
-    Name = "pritunl-cluster"
+    Name = "pritunl-node-cluster"
   }
 }
 
-resource "aws_route53_record" "pritunl-cluster" {
+resource "aws_route53_record" "pritunl-node-cluster" {
   provider = "aws.local"
   zone_id  = "${var.dns_zone_id}"
   name     = "galaxy.${var.dns_name}"
   type     = "A"
 
   alias {
-    name                   = "${aws_elb.pritunl-cluster.dns_name}"
-    zone_id                = "${aws_elb.pritunl-cluster.zone_id}"
+    name                   = "${aws_elb.pritunl-node-cluster.dns_name}"
+    zone_id                = "${aws_elb.pritunl-node-cluster.zone_id}"
     evaluate_target_health = true
   }
 }
