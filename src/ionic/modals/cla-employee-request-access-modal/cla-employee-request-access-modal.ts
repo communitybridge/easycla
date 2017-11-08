@@ -63,7 +63,9 @@ export class ClaEmployeeRequestAccessModal {
     console.log(this.userId);
     console.log(this.companyId);
     //  TODO: Do a validation check before sending next request
-    let message = this.form.value.message;
+    let message = {
+      message: this.form.value.message
+    };
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
       this.openClaMessageSentPage();
     });
