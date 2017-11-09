@@ -1,14 +1,20 @@
 import gossip
-import lf
-import os
+import lfcore
 
 
-@gossip.register('local.instance.init.docker-compose', tags=['cla-console'])
-def local_init_docker_compose_file(containers, config, dependencies, envs, mode, path):
+@gossip.register('lf.instance.compose.generation', tags=['cla-console'])
+def lf_instance_compose_generation(containers, config, dependencies, mode, path):
 
     cla = dependencies.get('cla')
 
-    if cla:
+    if cla.created:
         cla_endpoint = cla.endpoints.containers.get('workspace', 5000).formatted
         containers['workspace']['environment']['CLA_SERVER_URL'] = cla_endpoint
-        lf.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
+        lfcore.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
+
+        cinco = cla.instance.dependencies.get('cinco')
+
+        if cinco.created:
+            cinco_endpoint = cinco.endpoints.containers.get('workspace', 5000).formatted
+            containers['workspace']['environment']['CINCO_SERVER_URL'] = cinco_endpoint
+            lfcore.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
