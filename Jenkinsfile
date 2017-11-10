@@ -25,12 +25,6 @@ node {
         }
       }
 
-      stage ("Waiting for CINCO") {
-        timeout(10) {
-          sh 'lf run wait-for-cinco'
-        }
-      }
-
       def workspaceID = sh (script: "lf workspace", returnStdout: true).trim()
 
       stage ("NPM Installation") {
