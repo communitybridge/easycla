@@ -82,6 +82,23 @@ resource "aws_security_group" "tools" {
   }
 }
 
+resource "aws_security_group" "danvpn" {
+  provider    = "aws.local"
+  name        = "danvpn"
+  description = "Dan's OpenVPN Server"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port = 22
+    protocol = "tcp"
+    to_port = 22
+    cidr_blocks = ["67.160.133.122/32"] // dan's home IP. can be removed later
+  }
+  tags {
+    Name        = "Dan's OpenVPN Server"
+  }
+}
+
 resource "aws_security_group" "vpn" {
   provider    = "aws.local"
   name        = "${format("%s-vpn", var.name)}"
