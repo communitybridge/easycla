@@ -572,3 +572,7 @@ output "efs" {
 output "ghe" {
   value = "${aws_security_group.ghe.id}"
 }
+
+output "danvpn" {
+  value = "${aws_security_group.danvpn.id}"
+}
