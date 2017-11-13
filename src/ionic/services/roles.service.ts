@@ -20,6 +20,7 @@ export class RolesService {
       isProgramManager: false,
       isProgramManagerAdmin: false,
       isAdmin: false,
+      isStaffInc: false,
     };
     this.getDataObserver = null;
     this.getData = Observable.create(observer => {
@@ -55,11 +56,13 @@ export class RolesService {
           let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
           let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
           let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_ADMIN');
+          let isStaffInc = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC');
           this.userRoles = {
             isUser: isUser,
             isProgramManager: isProgramManager,
             isProgramManagerAdmin: isProgramManagerAdmin,
             isAdmin: isAdmin,
+            isStaffInc: isStaffInc
           };
           this.rolesFetched = true;
           this.getDataObserver.next(this.userRoles);
