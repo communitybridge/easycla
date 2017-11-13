@@ -5,6 +5,7 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 import { FilterService } from '../../services/filter.service'
+import { RolesService } from '../../services/roles.service';
 
 @IonicPage({
   segment: 'projects'
@@ -50,6 +51,8 @@ export class AllProjectsPage {
 
   managersFilterValues: any = [];
 
+  userRoles: any;
+
   @ViewChild('contractsCanvas') contractsCanvas;
   contractsChart: any;
 
@@ -61,6 +64,7 @@ export class AllProjectsPage {
     private cincoService: CincoService,
     private sanitizer: DomSanitizer,
     private keycloak: KeycloakService,
+    private rolesService: RolesService,
     private filterService: FilterService
   ) {
     this.getDefaults();
@@ -83,19 +87,28 @@ export class AllProjectsPage {
   }
 
   async ngOnInit(){
-    this.getIndustries();
-    this.getAllProjects();
-    this.getCurrentUser();
-    // this.keycloak.profile()
-    //   .then((profile: any) => {
-    //     console.log(profile);
-    //     // this.name = `${profile.lastName} ${profile.firstName}`;
-    //     // this.email = profile.email;
-    //     // this.username = profile.username;
-    //   })
-    //   .catch((error: any) => {
-    //     console.log(error)
-    //   });
+    this.rolesService.getData.subscribe((userRoles) => {
+      this.userRoles = userRoles;
+      this.getIndustries();
+      if(this.userRoles.isStaffInc) { this.getMyProjects(); }
+      else { this.getAllProjects(); }
+      this.getCurrentUser();
+    });
+    this.rolesService.getUserRoles();
+  }
+
+  getMyProjects(){
+    this.cincoService.getMyProjects().subscribe(response => {
+        this.allProjects = response;
+        for(let eachProject of this.allProjects) {
+          // After uploading a logo, Cinco will provide same name,
+          // so a refresh to the image needs to be forced.
+          // This is to refresh an image that have same URL
+          if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
+        }
+        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
+        this.loading.projects = false;
+    });
   }
 
   getAllProjects(){
@@ -242,6 +255,9 @@ export class AllProjectsPage {
   }
 
   getDefaults(){
+
+    this.userRoles = this.rolesService.userRoleDefaults;
+
     this.loading = {
       charts: true,
       projects: true,
