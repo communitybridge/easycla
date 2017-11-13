@@ -1,6 +1,6 @@
 variable "ami" {}
 variable "sg" {}
-variable "subnet" {type = "list"}
+variable "subnet" {}
 variable "name" {}
 
 resource "aws_instance" "danvpn" {
