@@ -1,23 +1,22 @@
 import gossip
-import lf
-import os
+import lfcore
 
 
-@gossip.register('local.instance.init.docker-compose', tags=['pmc'])
-def local_init_docker_compose_file(containers, config, dependencies, envs, mode, path):
+@gossip.register('lf.instance.compose.generation', tags=['pmc'])
+def local_init_docker_compose_file(containers, config, dependencies, mode, path):
     platform = dependencies.get('cinco')
 
-    if platform:
+    if platform.created:
         cinco_endpoint = platform.endpoints.containers.get('workspace', 5000).formatted
         containers['workspace']['environment']['CINCO_SERVER_URL'] = cinco_endpoint
-        lf.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
+        lfcore.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
 
         keycloak = platform.instance.dependencies.get('keycloak')
 
-        if keycloak:
+        if keycloak.created:
             kc_endpoint = keycloak.endpoints.containers.get('workspace', 8080).formatted
             containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = kc_endpoint
-            lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
+            lfcore.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
 
 
 @gossip.register('preprod_instance_task_build', tags=['pmc'])
@@ -38,5 +37,5 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
             'value': kc_endpoint
         })
 
-        lf.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'])
-        lf.logger.info('Setting KEYCLOAK_SERVER_URL to ' + kc_endpoint)
+        lfcore.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'])
+        lfcore.logger.info('Setting KEYCLOAK_SERVER_URL to ' + kc_endpoint)
