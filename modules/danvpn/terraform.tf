@@ -1,6 +1,6 @@
 variable "ami" {}
 variable "sg" {}
-variable "subnet" {}
+variable "subnet" {type = "list"}
 variable "name" {}
 
 resource "aws_instance" "danvpn" {
@@ -9,6 +9,7 @@ resource "aws_instance" "danvpn" {
   vpc_security_group_ids = ["${var.sg}"]
   subnet_id              = "${var.subnet}"
   instance_type          = "t2.small"
+  key_name               = "dan"
 
   ebs_block_device {
     device_name = "/dev/xvdf"
@@ -23,6 +24,7 @@ resource "aws_instance" "danvpn" {
 }
 
 resource "aws_eip" "danvpn" {
+  provider = "aws.local"
   instance = "${aws_instance.danvpn.id}"
   vpc = true
 }
