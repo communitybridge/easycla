@@ -1418,7 +1418,7 @@ class Document(object):
         """
         raise NotImplementedError()
 
-    def set_document_content(self, document_content):
+    def set_document_content(self, document_content, b64_encoded=True):
         """
         Setter for the document's content.
 
@@ -1427,17 +1427,13 @@ class Document(object):
         The value provided could be a URL (for content type such as 'url+pdf') or
         the raw binary data of the document content.
 
-        NOTE: If content type starts with 'storage+', the value of document_content will
-        be base64 encoded. Need to decode before sending to storage provider:
-
-            content = base64.b64decode(document_content)
-            cla.utils.get_storage_service().store(self, content)
-
         NOTE: document_file_id should be used as filename when storing with storage service.
         If document_file_id is None, one needs to be provided before saving (typically a UUID).
 
         :param document_content: The document's content.
         :type document_content: string
+        :param b64_encoded: Whether or not the contents should be base64 decoded before saving.
+        :type b64_encoded: boolean
         """
         raise NotImplementedError()
 

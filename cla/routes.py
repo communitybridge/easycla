@@ -686,6 +686,42 @@ def post_project_document(
         document_legal_entity_name=document_legal_entity_name,
         new_major_version=new_major_version)
 
+@hug.post('/project/{project_id}/document/template/{document_type}', versions=1,
+          examples=" - {'document_name': 'doc_name.pdf', \
+                        'document_preamble': 'Preamble here', \
+                        'document_legal_entity_name': 'Legal entity name', \
+                        'new_major_version': true}")
+def post_project_document_template(
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(['individual', 'corporate']),
+        document_name: hug.types.text,
+        document_preamble: hug.types.text,
+        document_legal_entity_name: hug.types.text,
+        new_major_version=None):
+    """
+    POST: /project/{project_id}/document/template/{document_type}
+
+    DATA: {'document_name': 'doc_name.pdf',
+           'document_preamble': 'Preamble here',
+           'document_legal_entity_name': 'Legal entity name',
+           'new_major_version': false}
+
+    Creates a new CLA document from a template for a specified project.
+
+    Will create a new revision of the individual or corporate document. if new_major_version is set,
+    the document will have a new major version and this will force users to re-sign.
+
+    The document_content_type is assumed to be 'storage+pdf', which means the document content will
+    be saved in the CLA system's configured storage service.
+    """
+    return cla.controllers.project.post_project_document_template(
+        project_id=project_id,
+        document_type=document_type,
+        document_name=document_name,
+        document_preamble=document_preamble,
+        document_legal_entity_name=document_legal_entity_name,
+        new_major_version=new_major_version)
+
 @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
 def delete_project_document(project_id: hug.types.uuid,
                             document_type: hug.types.one_of(['individual', 'corporate']),
