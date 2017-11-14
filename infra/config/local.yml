@@ -49,6 +49,10 @@ environment:
     cla_smtp_port: '1025'
     cla_storage_service: 'LocalStorage'
     cla_local_storage_folder: '/tmp/cla'
+    cla_pdf_service: 'DocRaptor'
+    cla_docraptor_debug_mode: false
+    cla_docraptor_test_mode: true
+    cla_docraptor_javascript: true
 
 modes:
   default:

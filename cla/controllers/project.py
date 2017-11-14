@@ -4,8 +4,9 @@ Controller related to project operations.
 
 import uuid
 import cla
+from cla.resources.contract_templates import TestTemplate
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
-                      get_company_instance
+                      get_company_instance, get_pdf_service
 from cla.models import DoesNotExist
 
 
@@ -247,6 +248,62 @@ def post_project_document(project_id,
     project.save()
     return project.to_dict()
 
+def post_project_document_template(project_id,
+                                   document_type,
+                                   document_name,
+                                   document_preamble,
+                                   document_legal_entity_name,
+                                   new_major_version=None):
+    """
+    Will create a new document for the project specified, using the existing template.
+
+    :param project_id: The ID of the project to add this document to.
+    :type project_id: string
+    :param document_type: The type of document (individual or corporate).
+    :type document_type: string
+    :param document_name: The name of this new document.
+    :type document_name: string
+    :param document_preamble: The document preamble.
+    :type document_preamble: string
+    :param document_legal_entity_name: The legal entity name on the document.
+    :type document_legal_entity_name: string
+    :param new_major_version: Whether or not to bump up the major version.
+    :type new_major_version: boolean
+    """
+    project = get_project_instance()
+    try:
+        project.load(str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+    # Need to take the template and inject the preamble and legal entity name.
+    template = TestTemplate() # TestTemplate for now.
+    content = template.get_html_contract(document_legal_entity_name, document_preamble)
+    pdf_generator = get_pdf_service()
+    pdf_content = pdf_generator.generate(content)
+    document = get_document_instance()
+    document.set_document_name(document_name)
+    document.set_document_content_type('storage+pdf')
+    document.set_document_content(pdf_content, b64_encoded=False)
+    document.set_document_preamble(document_preamble)
+    document.set_document_legal_entity_name(document_legal_entity_name)
+    if document_type == 'individual':
+        major, minor = cla.utils.get_last_version(project.get_project_individual_documents())
+        if new_major_version:
+            document.set_document_major_version(major + 1)
+            document.set_document_minor_version(0)
+        else:
+            document.set_document_minor_version(minor + 1)
+        project.add_project_individual_document(document)
+    else:
+        major, minor = cla.utils.get_last_version(project.get_project_corporate_documents())
+        if new_major_version:
+            document.set_document_major_version(major + 1)
+            document.set_document_minor_version(0)
+        else:
+            document.set_document_minor_version(minor + 1)
+        project.add_project_corporate_document(document)
+    project.save()
+    return project.to_dict()
 
 def delete_project_document(project_id, document_type, major_version, minor_version):
     """

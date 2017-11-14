@@ -102,3 +102,12 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage se
 S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
 S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
 S3_BUCKET = 'cla-system-bucket-name' #: AWS S3 bucket used to store CLA files - must be unique.
+
+# PDF Generation.
+PDF_SERVICE = 'DocRaptor'
+
+# DocRaptor Configuration.
+DOCRAPTOR_API_KEY = '' #: DocRaptopr API Key.
+DOCRAPTOR_DEBUG_MODE = False #: Whether or not to print debug information when generating PDF docs.
+DOCRAPTOR_TEST_MODE = False #: Test mode creates documents with watermarks at no charge.
+DOCRAPTOR_JAVASCRIPT = True #: Whether javascript processing is enabled for PDF generation.

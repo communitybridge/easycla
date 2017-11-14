@@ -216,7 +216,8 @@ class Document(model_interfaces.Document):
         self.model.document_file_id = document_file_id
         self.model.document_author_name = document_author_name
         self.model.document_content_type = document_content_type
-        self.model.document_content = self.set_document_content(document_content)
+        if self.model.document_content is not None:
+            self.model.document_content = self.set_document_content(document_content)
         self.model.document_preamble = document_preamble
         self.model.document_legal_entity_name = document_legal_entity_name
         # Use defaults if None is provided for the following attributes.
@@ -286,7 +287,9 @@ class Document(model_interfaces.Document):
     def set_document_content_type(self, document_content_type):
         self.model.document_content_type = document_content_type
 
-    def set_document_content(self, document_content):
+    def set_document_content(self, document_content, b64_encoded=True):
+        if b64_encoded:
+            document_content = base64.b64decode(document_content)
         content_type = self.get_document_content_type()
         if content_type is not None and content_type.startswith('storage+'):
             filename = self.get_document_file_id()
@@ -295,8 +298,7 @@ class Document(model_interfaces.Document):
                 self.set_document_file_id(filename)
             cla.log.info('Saving document content for %s to %s',
                          self.get_document_name(), filename)
-            content = base64.b64decode(document_content)
-            cla.utils.get_storage_service().store(filename, content)
+            cla.utils.get_storage_service().store(filename, document_content)
         else:
             self.model.document_content = document_content
 

@@ -236,6 +236,31 @@ def get_storage_service(conf=None, initialize=True):
         storage_instance.initialize(conf)
     return storage_instance
 
+def get_pdf_service(conf=None, initialize=True):
+    """
+    Helper function to get the configured PDF service instance.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :param initialize: Whether or not to run the initialize method on the instance.
+    :type initialize: boolean
+    :return: The PDF service instance based on configuration specified.
+    :rtype: PDFService
+    """
+    if conf is None:
+        conf = cla.conf
+    pdf_service = conf['PDF_SERVICE']
+    if pdf_service == 'DocRaptor':
+        from cla.models.docraptor_models import DocRaptor as pdf
+    elif pdf_service == 'MockDocRaptor':
+        from cla.models.docraptor_models import MockDocRaptor as pdf
+    else:
+        raise Exception('Invalid PDF service selected in configuration: %s' %pdf_service)
+    pdf_instance = pdf()
+    if initialize:
+        pdf_instance.initialize(conf)
+    return pdf_instance
+
 def get_key_value_store_service(conf=None):
     """
     Helper function to get the configured key-value store service instance.
