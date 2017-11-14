@@ -20,7 +20,7 @@ class DocuSignTestCase(CLATestCase):
         data = {'project_id': project['project_id'],
                 'user_id': user['user_id'],
                 'return_url': 'http://return-url.com/done'}
-        result = hug.test.post(cla.routes, '/v1/request-signature', data)
+        result = hug.test.post(cla.routes, '/v1/request-individual-signature', data)
         signature_id = result.data['signature_id']
         expected = {'user_id': user['user_id'],
                     'project_id': project['project_id'],

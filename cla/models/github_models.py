@@ -102,7 +102,7 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         Helper method to get the GitHub OAuth2 authorization URL and state.
 
-        This will be used to get the user email from GitHub.
+        This will be used to get the user's emails from GitHub.
 
         :TODO: Update comments.
 
@@ -116,7 +116,7 @@ class GitHub(repository_service_interface.RepositoryService):
         origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
         redirect_url = cla.conf['GITHUB_OAUTH_CALLBACK_URL']
-        return self._get_authorization_url_and_state(cla.conf['GITHUB_APP_CLIENT_ID'],
+        return self._get_authorization_url_and_state(cla.conf['GITHUB_OAUTH_CLIENT_ID'],
                                                      redirect_url,
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
@@ -148,13 +148,13 @@ class GitHub(repository_service_interface.RepositoryService):
         change_request_id = session.get('github_change_request_id', None)
         origin_url = session.get('github_origin_url', None)
         state = session.get('github_oauth2_state')
-        client_id = cla.conf['GITHUB_APP_CLIENT_ID']
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
-        client_secret = cla.conf['GITHUB_APP_SECRET']
+        client_id = cla.conf['GITHUB_OAUTH_CLIENT_ID']
+        client_secret = cla.conf['GITHUB_OAUTH_SECRET']
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
         cla.log.info('OAuth2 token received for state %s: %s', state, token)
         session['github_oauth2_token'] = token
-        self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
+        return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
         console_endpoint = cla.conf['CLA_CONSOLE_ENDPOINT']
@@ -165,7 +165,7 @@ class GitHub(repository_service_interface.RepositoryService):
         document = cla.utils.get_project_latest_individual_document(project_id)
         if signature is not None and \
            signature.get_signature_document_major_version() == document.get_document_major_version():
-            cla.utils.redirect_user_by_signature(user, signature)
+            return cla.utils.redirect_user_by_signature(user, signature)
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
@@ -194,7 +194,7 @@ class GitHub(repository_service_interface.RepositoryService):
         document = cla.utils.get_project_latest_individual_document(project_id)
         if signature is not None and \
            signature.get_signature_document_major_version() == document.get_document_major_version():
-            cla.utils.redirect_user_by_signature(user, signature)
+            return cla.utils.redirect_user_by_signature(user, signature)
         else:
             # Signature not found or older version, create new one and send user to sign.
             cla.utils.request_individual_signature(installation_id, github_repository_id, user, pull_request_number)
@@ -290,7 +290,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :type request: Request
         """
         session = self._get_request_session(request)
-        github_user = self.get_user_data(session, cla.conf['GITHUB_APP_CLIENT_ID'])
+        github_user = self.get_user_data(session, cla.conf['GITHUB_OAUTH_CLIENT_ID'])
         if 'error' in github_user:
             # Could not get GitHub user data - maybe user revoked CLA app permissions?
             session = self._get_request_session(request)
@@ -299,44 +299,52 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.warning('Deleted OAuth2 session data - retrying token exchange next time')
             raise falcon.HTTPError('400 Bad Request', 'github_oauth2_token',
                                    'Token permissions have been rejected, please try again')
-        if github_user['email'] is None:
-            cla.log.warning('GitHub user has no verified or public email address: %s (%s)',
+        emails = self.get_user_emails(session, cla.conf['GITHUB_OAUTH_CLIENT_ID'])
+        if len(emails) < 1:
+            cla.log.warning('GitHub user has no verified email address: %s (%s)',
                             github_user['name'], github_user['login'])
             raise falcon.HTTPError(
                 '412 Precondition Failed', 'email',
-                'Please verify and make public at least one email address with GitHub')
+                'Please verify at least one email address with GitHub')
         cla.log.debug('Trying to load GitHub user by GitHub ID: %s', github_user['id'])
         user = cla.utils.get_user_instance().get_user_by_github_id(github_user['id'])
         if user is not None:
             cla.log.info('Loaded GitHub user by GitHub ID: %s - %s (%s)',
                          user.get_user_name(),
-                         user.get_user_email(),
+                         user.get_user_emails(),
                          user.get_user_github_id())
+            user.set_user_emails(emails)
+            user.save()
             return user
         # User not found by GitHub ID, trying by email.
         cla.log.debug('Could not find GitHub user by GitHub ID: %s', github_user['id'])
-        user = cla.utils.get_user_instance().get_user_by_email(github_user['email'])
-        if user is not None:
+        # TODO: This is very slow and needs to be improved - may need a DB schema change.
+        found = None
+        user = cla.utils.get_user_instance()
+        for email in emails:
+            found = user.get_user_by_email(email)
+            if found is not None: break
+        if found is not None:
             # Found user by email, set the GitHub ID
-            user.set_user_github_id(github_user['id'])
-            user.save()
+            found.set_user_github_id(github_user['id'])
+            found.set_user_emails(emails)
+            found.save()
             cla.log.info('Loaded GitHub user by email: %s - %s (%s)',
-                         user.get_user_name(),
-                         user.get_user_email(),
-                         user.get_user_github_id())
-            return user
+                         found.get_user_name(),
+                         found.get_user_emails(),
+                         found.get_user_github_id())
+            return found
         # User not found, create.
-        cla.log.debug('Could not find GitHub user by email: %s', github_user['email'])
+        cla.log.debug('Could not find GitHub user by email: %s', emails)
         cla.log.info('Creating new GitHub user %s - %s (%s)',
                      github_user['name'],
-                     github_user['email'],
+                     emails,
                      github_user['id'])
         user = cla.utils.get_user_instance()
         user.set_user_id(str(uuid.uuid4()))
-        user.set_user_email(github_user['email'])
+        user.set_user_emails(emails)
         user.set_user_name(github_user['name'])
         user.set_user_github_id(github_user['id'])
-        user.save()
         return user
 
     def get_user_data(self, session, client_id): # pylint: disable=no-self-use
@@ -347,7 +355,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :param session: The current user session.
         :type session: dict
         :param client_id: The GitHub OAuth2 client ID.
-        :type session: string
+        :type client_id: string
         """
         token = session['github_oauth2_token']
         oauth2 = OAuth2Session(client_id, token=token)
@@ -358,6 +366,25 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.error('Could not get user data with OAuth2 token: %s', github_user['message'])
             return {'error': 'Could not get user data: %s' %github_user['message']}
         return github_user
+
+    def get_user_emails(self, session, client_id): # pylint: disable=no-self-use
+        """
+        Mockable method to get all user emails based on OAuth2 session.
+
+        :param session: The current user session.
+        :type session: dict
+        :param client_id: The GitHub OAuth2 client ID.
+        :type client_id: string
+        """
+        token = session['github_oauth2_token']
+        oauth2 = OAuth2Session(client_id, token=token)
+        request = oauth2.get('https://api.github.com/user/emails')
+        emails = request.json()
+        cla.log.debug('GitHub user emails: %s', emails)
+        if 'message' in emails:
+            cla.log.error('Could not get user emails with OAuth2 token: %s', emails['message'])
+            return {'error': 'Could not get user emails: %s' %emails['message']}
+        return [item['email'] for item in emails if item['verified']]
 
     def process_reopened_pull_request(self, data):
         """
@@ -447,7 +474,7 @@ def handle_commit_from_github_user(project_id, commit, author, signed, missing):
         missing.append((commit.sha, author.name))
     else:
         cla.log.info('GitHub user found (%s - %s)',
-                     user.get_user_email(), user.get_user_github_id())
+                     user.get_user_emails(), user.get_user_github_id())
         if cla.utils.user_signed_project_signature(user, project_id):
             signed.append((commit.sha, author.name))
         else:
@@ -474,7 +501,7 @@ def handle_commit_from_git_author(project_id, commit, author, signed, missing):
     """
     user = cla.utils.get_user_instance().get_user_by_email(author.email)
     if user is not None:
-        cla.log.info('Git commit user found %s', user.get_user_email())
+        cla.log.info('Git commit user found %s', user.get_user_emails())
         # For now, accept non-github users as legitimate users.
         if cla.utils.user_signed_project_signature(user, project_id):
             signed.append((commit.sha, author.name))
@@ -666,6 +693,9 @@ class MockGitHub(GitHub):
 
     def get_user_data(self, session, client_id):
         return {'email': 'test@user.com', 'name': 'Test User', 'id': 123}
+
+    def get_user_emails(self, session, client_id):
+        return [{'email': 'test@user.com', 'verified': True, 'primary': True, 'visibility': 'public'}]
 
 
 class MockGitHubClient(object): # pylint: disable=too-few-public-methods

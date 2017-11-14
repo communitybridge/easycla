@@ -46,10 +46,8 @@ DOCUSIGN_INTEGRATOR_KEY = 'key' #: DocuSign integrator key.
 AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on webhook.
 
 # GitHub Repository Service.
-GITHUB_USERNAME = 'username' #: GitHub account or organization username.
-GITHUB_TOKEN = 'token' #: GitHub personal access token for username account specified.
-GITHUB_CLIENT_ID = 'client_id' #: GitHub OAuth2 client ID.
-GITHUB_SECRET = 'secret' #: GitHub OAuth2 secret.
+GITHUB_OAUTH_CLIENT_ID = 'client_id' #: GitHub OAuth2 client ID.
+GITHUB_OAUTH_SECRET = 'secret' #: GitHub OAuth2 secret.
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 #: GitHub OAuth2 Token URL.
@@ -60,8 +58,6 @@ GITHUB_PR_NOTIFICATION = 'status+comment'
 # GitHub Application Service.
 GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
 GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
-GITHUB_APP_CLIENT_ID = 'app_client_id'
-GITHUB_APP_SECRET = 'app_secret'
 GITHUB_APP_ID = '0000'
 GITHUB_MAIN_INSTALLATION_ID = '00000' # App needs to be installed on the main organization.
 

@@ -148,10 +148,9 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('Employee signature already exists for this project')
             return existing_signatures[0].to_dict()
         # Ensure user is whitelisted for this company.
-        if not cla.utils.email_whitelisted(user.get_user_email(), company):
+        if not cla.utils.user_whitelisted(user, company):
             return {'errors': {'company_whitelist':
-                            'User email (%s) is not whitelisted for this company' \
-                                %user.get_user_email()}}
+                            'No user email whitelisted for this company'}}
         # Assume this company is the user's employer.
         user.set_user_company_id(str(company_id))
         user.save()
@@ -492,7 +491,7 @@ class MockDocuSign(DocuSign):
             recip = lambda: None
             recip.clientUserId = recipient.clientUserId
             recipients.append(recip)
-        envelope = lambda: None
+        envelope = MockRecipient()
         envelope.recipients = recipients
         return envelope
 
@@ -505,6 +504,11 @@ class MockDocuSign(DocuSign):
     def send_signed_document(self, envelope_id, user):
         """Mock method to send a signed DocuSign document to the user's email."""
         pass
+
+class MockRecipient(object):
+    def __init__(self):
+        self.recipients = None
+        self.envelopeId = None
 
 def update_repository_provider(installation_id, github_repository_id, change_request_id):
     """Helper method to notify the repository provider of successful signature."""

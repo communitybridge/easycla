@@ -32,12 +32,12 @@ DOCUSIGN_PASSWORD = '' # Account Password.
 DOCUSIGN_INTEGRATOR_KEY = '' # Integrator Key UUID.
 
 # GitHub Application Service.
-GITHUB_APP_WEBHOOK_SECRET = '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
-GITHUB_APP_PRIVATE_KEY_PATH = './contributor-license-agreement.2017-08-24.private-key.pem'
-GITHUB_APP_CLIENT_ID = 'Iv1.3899cde846512a7e'
-GITHUB_APP_SECRET = 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
-GITHUB_APP_ID = '4449'
-GITHUB_MAIN_INSTALLATION_ID = 49309
+GITHUB_OAUTH_CLIENT_ID = 'client_id'
+GITHUB_OAUTH_SECRET = 'secret'
+GITHUB_APP_WEBHOOK_SECRET = 'secret'
+GITHUB_APP_PRIVATE_KEY_PATH = 'private-key-path'
+GITHUB_APP_ID = 'app_id'
+GITHUB_MAIN_INSTALLATION_ID = 'main_installation_id'
 
 # KeyCloak Authentication
 KEYCLOAK_ENDPOINT = ''

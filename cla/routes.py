@@ -934,8 +934,8 @@ def post_github_organization(organization_project_id: hug.types.uuid, # pylint: 
 
     Returns the CLA GitHub Organization that was just created.
     """
-    return cla.controllers.github.create_organization(organization_project_id,
-                                                      organization_name,
+    return cla.controllers.github.create_organization(organization_name,
+                                                      organization_project_id,
                                                       organization_installation_id)
 
 

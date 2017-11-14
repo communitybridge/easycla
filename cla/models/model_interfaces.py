@@ -329,10 +329,19 @@ class User(object):
 
     def get_user_email(self):
         """
-        Getter for the user's email address.
+        Getter for the user's first email address.
 
-        :return: The user's email.
+        :return: The user's first email.
         :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_user_emails(self):
+        """
+        Getter for a list of the user's email addresses.
+
+        :return: List of emails for this user.
+        :rtype: [string]
         """
         raise NotImplementedError()
 
@@ -392,10 +401,19 @@ class User(object):
 
     def set_user_email(self, user_email):
         """
-        Setter for the user's email address.
+        Will add a new email address for this user and ensure no duplicates.
 
-        :param user_email: The email for this user.
+        :param user_email: The new email for this user.
         :type user_email: string
+        """
+        raise NotImplementedError()
+
+    def set_user_emails(self, user_emails):
+        """
+        Will explicitly set the user's email address list.
+
+        :param user_emails: The list of emails to set for this user.
+        :type user_emails: [string]
         """
         raise NotImplementedError()
 

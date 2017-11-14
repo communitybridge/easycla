@@ -3,7 +3,10 @@ gossip==2.2.0
 pylint==1.5.2
 coverage==4.3.4
 pygithub==1.34.0
-pynamodb==2.1.5
+pynamodb==3.2.1
+# TODO: Need to deprecated boto
+boto==2.48.0
+boto3==1.4.7
 gunicorn==19.7.1
 python-jose==1.4.0
 pydocusign==1.2.0

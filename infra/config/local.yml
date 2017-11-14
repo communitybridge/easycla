@@ -34,12 +34,12 @@ environment:
     cla_docusign_username: 'fa239181-b14a-489d-85c1-3cac52d58884'
     cla_docusign_password: 'k3Y7Q5zot%ZD@i3W'
     cla_docusign_integrator_key: '828f4192-0f3f-4f9f-9cff-56f0b6d61615'
+    cla_github_oauth_callback_url: Should be populated by hooks
+    cla_github_oauth_client_id: '527a71a1f12e710d93ec'
+    cla_github_oauth_secret: '9272a1a0c09e21bd89e30f88a2994c985aede26e'
     cla_github_app_id: '4449'
-    cla_github_app_client_id: 'Iv1.3899cde846512a7e'
-    cla_github_app_secret: 'c3fd6268f75752dc0dac8dc87aa64d8a8e28b633'
     cla_github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
     cla_github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
-    cla_github_oauth_callback_url: Should be populated by hooks
     cla_github_main_installation_id: 49309
     cla_keycloak_endpoint: Should be populated by hooks
     cla_cinco_endpoint: Should be populated by hooks
