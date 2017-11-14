@@ -227,3 +227,15 @@ def check_namespace(namespace):
     """
     main_installation = GitHubInstallation()
     return main_installation.namespace_exists(namespace)
+
+def get_namespace(namespace):
+    """
+    Gets info on the GitHub account/organization provided.
+
+    :param namespace: The namespace to get.
+    :type namespace: string
+    :return: Dict of info on the account in question.
+    :rtype: dict
+    """
+    main_installation = GitHubInstallation()
+    return main_installation.get_namespace(namespace)

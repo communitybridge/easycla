@@ -44,6 +44,28 @@ class GitHubInstallation(object):
             cla.log.info('Github User/Organization %s does not exist', namespace)
             return False
 
+    def get_namespace(self, namespace):
+        """
+        :param namespace: The name of the Github account.
+        :type namespace: string
+        :return: Dict of information on the account/organization.
+        :rtype: dict
+        """
+        try:
+            named_user = self.api_object.get_user(namespace)
+            data = {'bio': named_user.bio,
+                    'company': named_user.company,
+                    'email': named_user.email,
+                    'created_at': named_user.created_at,
+                    'location': named_user.location,
+                    'login': named_user.login,
+                    'type': named_user.type}
+            cla.log.info('Github User/Organization %s data: %s', namespace, data)
+            return data
+        except UnknownObjectException:
+            cla.log.info('Github User/Organization %s does not exist - could not get data', namespace)
+            return {'errors': {'namespace': 'Invalid GitHub account namespace'}}
+
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
     def create_jwt(self):
