@@ -27,13 +27,10 @@ class UserTestCase(CLATestCase):
         self.assertEqual(response.data, {'errors': {'user_id': 'User not found'}})
         user = self.create_user()
         response = hug.test.get(cla.routes, '/v1/user/' + user['user_id'])
-        self.assertEqual(response.data, {'user_email': 'user@email.com',
-                                         'user_github_id': '12345',
-                                         'user_id': response.data['user_id'],
-                                         'user_ldap_id': None,
-                                         'user_name': 'User Name',
-                                         'user_external_id': None,
-                                         'user_company_id': None})
+        data = response.data
+        del data['date_created']
+        del data['date_modified']
+        self.assertEqual(response.data, data)
 
     def test_post_user(self):
         self.create_user(user_email='user1@email.com', user_github_id=11111)
@@ -70,7 +67,7 @@ class UserTestCase(CLATestCase):
 
     def test_get_user_by_email(self):
         user = self.create_user()
-        response = hug.test.get(cla.routes, '/v1/user/email/' + user['user_email'])
+        response = hug.test.get(cla.routes, '/v1/user/email/' + user['user_emails'][0])
         self.assertEqual(response.data['user_id'], user['user_id'])
 
     def test_get_user_by_github_id(self):

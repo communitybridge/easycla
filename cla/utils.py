@@ -462,13 +462,13 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
             cla.log.warning('Signature (%s) has not been approved yet for ' + \
                             'user %s on project %s', \
                             signature.get_signature_id(),
-                            user.get_user_email(),
+                            user.get_user_emails(),
                             project_id)
             return False
         else: # Not signed or approved yet.
             cla.log.info('Signature (%s) has not been signed by %s for project %s', \
                          signature.get_signature_id(),
-                         user.get_user_email(),
+                         user.get_user_emails(),
                          project_id)
             return False
     # Check employee signature.
@@ -713,7 +713,8 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     :param authorize_url: The URL to submit the OAuth2 request.
     :type authorize_url: string
     """
-    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
+    #oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
+    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri)
     authorization_url, state = oauth.authorization_url(authorize_url)
     return authorization_url, state
 
@@ -733,9 +734,9 @@ def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=N
     :type redirect_uri: string
     """
     if redirect_uri is not None:
-        oauth2 = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
+        oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'], redirect_uri=redirect_uri)
     else:
-        oauth2 = OAuth2Session(client_id, state=state)
+        oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'])
     return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
 
 def redirect_user_by_signature(user, signature):
@@ -752,16 +753,24 @@ def redirect_user_by_signature(user, signature):
         # Signature already signed and approved.
         # TODO: Notify user of signed and approved signature somehow.
         cla.log.info('Signature already signed and approved for user: %s, %s',
-                     user.get_user_email(), signature.get_signature_id())
-        cla.log.info('Redirecting user back to %s', return_url)
-        raise falcon.HTTPFound(return_url)
+                     user.get_user_emails(), signature.get_signature_id())
+        if return_url is None:
+            cla.log.info('No return_url set in signature object - serving success message')
+            return {'status': 'signed and approved'}
+        else:
+            cla.log.info('Redirecting user back to %s', return_url)
+            raise falcon.HTTPFound(return_url)
     elif signature.get_signature_signed():
         # Awaiting approval.
         # TODO: Notify user of pending approval somehow.
         cla.log.info('Signature signed but not approved yet: %s',
                      signature.get_signature_id())
-        cla.log.info('Redirecting user back to %s', return_url)
-        raise falcon.HTTPFound(return_url)
+        if return_url is None:
+            cla.log.info('No return_url set in signature object - serving pending message')
+            return {'status': 'pending approval'}
+        else:
+            cla.log.info('Redirecting user back to %s', return_url)
+            raise falcon.HTTPFound(return_url)
     else:
         # Signature awaiting signature.
         sign_url = signature.get_signature_sign_url()
@@ -932,24 +941,28 @@ def change_icon(provider, signed=False): # pylint: disable=unused-argument
         return 'cla/resources/cla-signed.svg'
     return 'cla/resources/cla-unsigned.svg'
 
-def email_whitelisted(email, company):
+def user_whitelisted(user, company):
     """
-    Helper function to determine whether an email address is whitelisted for a particular company.
+    Helper function to determine whether at least one of the user's email
+    addresses are whitelisted for a particular company.
 
-    :param email: The email address to check.
-    :type email: string
+    :param user: The user to check.
+    :type user: cla.models.model_interfaces.User
     :param company: The company to check against.
     :type company: cla.models.model_interfaces.Company
-    :return: True if email is whitelisted, False otherwise.
+    :return: True if at least one email is whitelisted, False otherwise.
     :rtype: bool
     """
+    emails = user.get_user_emails()
     whitelist = company.get_company_whitelist()
-    if email in whitelist:
-        return True
     patterns = company.get_company_whitelist_patterns()
+    for email in emails:
+        if email in whitelist:
+            return True
     for pattern in patterns:
         preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
         pat = re.compile(preprocessed_pattern)
-        if pat.match(email) != None:
-            return True
+        for email in emails:
+            if pat.match(email) != None:
+                return True
     return False

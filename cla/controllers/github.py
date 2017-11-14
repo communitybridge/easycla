@@ -43,10 +43,10 @@ def create_organization(organization_name, # pylint: disable=too-many-arguments
     """
     Creates a github organization and returns the newly created github organization in dict format.
 
-    :param organization_project_id: The ID of the github organization project.
-    :type organization_project_id: string/None
     :param organization_name: The github organization name.
     :type organization_name: string
+    :param organization_project_id: The ID of the github organization project.
+    :type organization_project_id: string/None
     :param organization_installation_id: The github app installation id.
     :type organization_installation_id: string/None
     :return: dict representation of the new github organization object.
@@ -55,7 +55,7 @@ def create_organization(organization_name, # pylint: disable=too-many-arguments
     github_organization = get_github_organization_instance()
     github_organization.set_organization_name(organization_name)
     if organization_project_id:
-        github_organization.set_organization_company_id(str(organization_project_id))
+        github_organization.set_organization_project_id(str(organization_project_id))
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
     github_organization.save()

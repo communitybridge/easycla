@@ -30,7 +30,10 @@ class SigningTestCase(CLATestCase):
         docusign_payload = fhandle.read()
         fhandle.close()
         data = docusign_payload %signature['signature_id']
-        signed_route = '/v1/signed/%s/%s' %(repo['repository_id'], change_id)
+        installation_id = 123
+        signed_route = '/v1/signed/individual/%s/%s/%s' %(installation_id,
+                                                          repo['repository_external_id'],
+                                                          change_id)
         response = hug.test.post(cla.routes, signed_route, data)
         agr = get_signature_instance()
         agr.load(signature['signature_id'])
@@ -52,18 +55,17 @@ class SigningTestCase(CLATestCase):
 
     def test_request_signature(self):
         """Tests for the request signature endpoint."""
-        response = hug.test.post(cla.routes, '/v1/request-signature', {'bad-data'})
+        response = hug.test.post(cla.routes, '/v1/request-individual-signature', {'bad-data'})
         self.assertEqual(response.data, {
             'errors': {
                 'project_id': "Required parameter 'project_id' not supplied",
-                'user_id': "Required parameter 'user_id' not supplied",
-                'return_url': "Required parameter 'return_url' not supplied"}})
+                'user_id': "Required parameter 'user_id' not supplied"}})
         project = self.create_project()
         document = self.create_document(project['project_id'])
         user = self.create_user()
         repository = self.create_repository(project['project_id'])
         response = hug.test.post(cla.routes,
-                                 '/v1/request-signature',
+                                 '/v1/request-individual-signature',
                                  {'project_id': project['project_id'],
                                   'user_id': user['user_id'],
                                   'return_url': 'http://return.url/here'})

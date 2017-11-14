@@ -9,6 +9,7 @@ import dateutil.parser
 from pynamodb.models import Model
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.attributes import UTCDateTimeAttribute, \
+                                UnicodeSetAttribute, \
                                 UnicodeAttribute, \
                                 BooleanAttribute, \
                                 NumberAttribute, \
@@ -45,22 +46,6 @@ def delete_database():
     for table in tables:
         if table.exists():
             table.delete_table()
-
-
-class EmailUserIndex(GlobalSecondaryIndex):
-    """
-    This class represents a global secondary index for querying users by email.
-    """
-    class Meta:
-        """Meta class for email User index."""
-        index_name = 'email-user-index'
-        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
-        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
-        # All attributes are projected - not sure if this is necessary.
-        projection = AllProjection()
-
-    # This attribute is the hash key for the index.
-    user_email = UnicodeAttribute(hash_key=True)
 
 
 class GitHubUserIndex(GlobalSecondaryIndex):
@@ -552,12 +537,11 @@ class UserModel(BaseModel):
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
     user_external_id = UnicodeAttribute(null=True)
-    user_email = UnicodeAttribute()
+    user_emails = UnicodeSetAttribute(default=set())
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
-    user_email_index = EmailUserIndex()
     user_github_id_index = GitHubUserIndex()
 
 
@@ -565,10 +549,11 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_external_id=None, user_email=None, user_github_id=None, user_ldap_id=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None):
         super(User).__init__()
         self.model = UserModel()
-        self.model.user_email = user_email
+        if user_email is not None:
+            self.set_user_email(user_email)
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
@@ -601,7 +586,13 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         return self.model.user_id
 
     def get_user_email(self):
-        return self.model.user_email
+        if len(self.model.user_emails) > 0:
+            # Ordering not guaranteed, better to use get_user_emails.
+            return next(iter(self.model.user_emails))
+        return None
+
+    def get_user_emails(self):
+        return self.model.user_emails
 
     def get_user_name(self):
         return self.model.user_name
@@ -622,7 +613,15 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_external_id = user_external_id
 
     def set_user_email(self, user_email):
-        self.model.user_email = user_email
+        # Standard set/list operations (add or append) don't work as expected.
+        # Seems to apply the operations on the class attribute which means that
+        # all future user objects have all the other user's emails as well.
+        # Explicitly creating new list and casting to set seems to work as expected.
+        self.model.user_emails = list(self.model.user_emails) + [user_email]
+        self.model.user_emails = set(self.model.user_emails)
+
+    def set_user_emails(self, user_emails):
+        self.model.user_emails = user_emails
 
     def set_user_name(self, user_name):
         self.model.user_name = user_name
@@ -637,7 +636,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_ldap_id = user_ldap_id
 
     def get_user_by_email(self, user_email):
-        user_generator = self.model.user_email_index.query(user_email)
+        user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
         for user_model in user_generator:
             user = User()
             user.model = user_model
