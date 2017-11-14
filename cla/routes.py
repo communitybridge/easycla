@@ -973,7 +973,7 @@ def github_app_activity(body, request, response):
     """
     POST: /github/activity
 
-    Acts upon any events triggered by our app installed in someone's organisation.
+    Acts upon any events triggered by our app installed in someone's organization.
     """
     # Verify that Webhook Signature is valid
     # if cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request._wrap_stream()):
@@ -986,9 +986,7 @@ def github_app_activity(body, request, response):
 @hug.post('/github/validate', versions=1)
 def github_organization_validation(body):
     """
-    POST: /github/activity
-
-    Acts upon any events triggered by our app installed in someone's organisation.
+    POST: /github/validate
     """
     return cla.controllers.github.validate_organization(body)
 
@@ -1001,3 +999,12 @@ def github_check_namespace(namespace):
     Returns True if the namespace provided is a valid GitHub account.
     """
     return cla.controllers.github.check_namespace(namespace)
+
+@hug.get('/github/get/namespace/{namespace}', versions=1)
+def github_get_namespace(namespace):
+    """
+    GET: /github/get/namespace/{namespace}
+
+    Returns info on the GitHub account provided.
+    """
+    return cla.controllers.github.get_namespace(namespace)
