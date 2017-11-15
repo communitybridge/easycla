@@ -14,6 +14,8 @@ variable "container_name" {}
 
 variable "public" {}
 
+variable "subnets" {}
+
 data "terraform_remote_state" "sandbox-env" {
   backend = "consul"
   config {
@@ -57,7 +59,7 @@ resource "aws_alb_target_group" "sandbox-main-port" {
 
 resource "aws_alb" "sandbox-main" {
   name               = "${var.project_name}-${var.instance_name}"
-  subnets            = ["${split(",", var.public ? join(",", data.terraform_remote_state.sandbox-env.external_subnets) : join(",", data.terraform_remote_state.sandbox-env.internal_subnets))}"]
+  subnets            = ["${join(",", var.subnets)}"]
   security_groups    = ["${var.public == true ? data.terraform_remote_state.sandbox-env.external_elb_sg : data.terraform_remote_state.sandbox-env.internal_elb_sg}"]
   internal           = "${var.public}"
 }
