@@ -8,8 +8,6 @@ variable "instance_name" {}
 
 variable "ecs_task_definition" {}
 
-variable "sandbox_environment_key" {}
-
 variable "container_port" {}
 
 variable "container_name" {}
@@ -20,7 +18,7 @@ data "terraform_remote_state" "sandbox-env" {
   backend = "consul"
   config {
     address = "consul.service.development.consul:8500"
-    path    = "${var.sandbox_environment_key}"
+    path    = "terraform/sandboxes"
   }
 }
 
