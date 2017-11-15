@@ -149,3 +149,23 @@ output "cidr" {
 output "vpc_id" {
   value = "${module.vpc.id}"
 }
+
+output "ecs_cluster_name" {
+  value = "${module.engineering-sandboxes-ecs-cluster.name}"
+}
+
+output "internal_elb_sg" {
+  value = "${module.security_groups.engineering_sandboxes_elb}"
+}
+
+output "external_elb_sg" {
+  value = "${module.security_groups.engineering_sandboxes_elb}"
+}
+
+output "sandbox_cert_arn" {
+  value = "arn:aws:acm:us-west-2:433610389961:certificate/bb946be4-a4f4-4f91-a786-60eddbd055b6"
+}
+
+output "ecs_role" {
+  value = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
+}

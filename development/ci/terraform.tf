@@ -49,7 +49,7 @@ data "terraform_remote_state" "prod_infrastructure" {
 }
 
 module "vpc" {
-  source             = "../modules/vpc"
+  source             = "../../modules/vpc"
   name               = "CI"
   cidr               = "${var.cidr}"
   internal_subnets   = ["10.32.2.128/27", "10.32.2.160/27", "10.32.2.192/27"]
@@ -58,7 +58,7 @@ module "vpc" {
 }
 
 module "dhcp" {
-  source  = "../modules/dhcp"
+  source  = "../../modules/dhcp"
   name    = "ci.engineering.internal"
   vpc_id  = "${module.vpc.id}"
   servers = "10.32.0.140, 10.32.0.180, 10.32.0.220"

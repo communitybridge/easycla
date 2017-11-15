@@ -82,7 +82,7 @@ resource "aws_instance" "jenkins" {
   provider               = "aws.local"
   ami                    = "${data.aws_ami.amazon-linux-ami.id}"
   source_dest_check      = false
-  instance_type          = "t2.small"
+  instance_type          = "t2.large"
   subnet_id              = "${element(var.internal_subnets, 0)}"
   key_name               = "production-shared-tools"
   vpc_security_group_ids = ["${var.sg_jenkins}"]
