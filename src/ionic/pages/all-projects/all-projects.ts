@@ -16,6 +16,7 @@ import { RolesService } from '../../services/roles.service';
 })
 export class AllProjectsPage {
   loading: any;
+  userHasCalendar: boolean;
   allProjects: any;
   allFilteredProjects: any;
   numberOfContracts: {
@@ -144,7 +145,8 @@ export class AllProjectsPage {
   getCurrentUser(){
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
-      if (response.calendar !== null) {
+      if (response.hasOwnProperty('calendar') && response.calendar) {
+        this.userHasCalendar = true;
         this.user.calendar = this.sanitizer.bypassSecurityTrustResourceUrl(response.calendar);
       }
     });
@@ -257,6 +259,8 @@ export class AllProjectsPage {
   getDefaults(){
 
     this.userRoles = this.rolesService.userRoleDefaults;
+
+    this.userHasCalendar = false;
 
     this.loading = {
       charts: true,
