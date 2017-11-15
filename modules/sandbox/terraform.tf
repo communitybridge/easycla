@@ -14,8 +14,6 @@ variable "container_name" {}
 
 variable "public" {}
 
-variable "subnets" {}
-
 data "terraform_remote_state" "sandbox-env" {
   backend = "consul"
   config {
