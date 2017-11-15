@@ -68,6 +68,3 @@ module "pritunl" {
   dns_zone_id       = "${var.external_dns_zoneid}"
 }
 
-module "salt-server" {
-  source = "modules/salt-server"
-}
