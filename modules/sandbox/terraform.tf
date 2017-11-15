@@ -25,7 +25,6 @@ data "terraform_remote_state" "sandbox-env" {
 }
 
 resource "aws_ecs_service" "sandbox" {
-  provider                           = "aws.local"
   name                               = "${var.project_name}-${var.instance_name}"
   cluster                            = "${data.terraform_remote_state.sandbox-env.ecs_cluster_name}"
   task_definition                    = "${var.ecs_task_definition}"
@@ -43,7 +42,6 @@ resource "aws_ecs_service" "sandbox" {
 }
 
 resource "aws_alb_target_group" "sandbox-main-port" {
-  provider             = "aws.local"
   name                 = "${var.project_name}-${var.instance_name}"
   port                 = "${var.container_port}"
   protocol             = "HTTP"
@@ -60,7 +58,6 @@ resource "aws_alb_target_group" "sandbox-main-port" {
 }
 
 resource "aws_alb" "sandbox-main" {
-  provider           = "aws.local"
   name               = "${var.project_name}-${var.instance_name}"
   subnets            = ["${var.public == true ? data.terraform_remote_state.sandbox-env.external_subnets : data.terraform_remote_state.sandbox-env.internal_subnets}"]
   security_groups    = ["${var.public == true ? data.terraform_remote_state.sandbox-env.external_elb_sg : data.terraform_remote_state.sandbox-env.internal_elb_sg}"]
@@ -68,7 +65,6 @@ resource "aws_alb" "sandbox-main" {
 }
 
 resource "aws_alb_listener" "sandbox" {
-  provider           = "aws.local"
   load_balancer_arn  = "${aws_alb.sandbox-main.id}"
   port               = "443"
   protocol           = "HTTPS"
@@ -81,7 +77,6 @@ resource "aws_alb_listener" "sandbox" {
 }
 
 resource "aws_route53_record" "sandbox" {
-  provider= "aws.local"
   zone_id = "${var.route53_zone}"
   name    = "${var.subdomain}"
   type    = "A"
@@ -94,7 +89,6 @@ resource "aws_route53_record" "sandbox" {
 }
 
 resource "aws_route53_record" "sandbox_www" {
-  provider= "aws.local"
   zone_id = "${var.route53_zone}"
   name    = "www.${var.subdomain}"
   type    = "A"
