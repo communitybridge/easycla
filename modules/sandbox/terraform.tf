@@ -59,7 +59,7 @@ resource "aws_alb_target_group" "sandbox-main-port" {
 
 resource "aws_alb" "sandbox-main" {
   name               = "${var.project_name}-${var.instance_name}"
-  subnets            = ["${join(",", var.subnets)}"]
+  subnets            = ["${split(",", var.subnets)}"]
   security_groups    = ["${var.public == true ? data.terraform_remote_state.sandbox-env.external_elb_sg : data.terraform_remote_state.sandbox-env.internal_elb_sg}"]
   internal           = "${var.public}"
 }
