@@ -18,6 +18,14 @@ variable "external_dns_zoneid" {
   default = "Z1CCIH5LOWNGEU"
 }
 
+terraform {
+  backend "consul" {
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure2.0"
+  }
+}
+
+
 provider "aws" {
   region     = "${var.region}"
   alias      = "local"
