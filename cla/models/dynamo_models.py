@@ -288,10 +288,10 @@ class Document(model_interfaces.Document):
         self.model.document_content_type = document_content_type
 
     def set_document_content(self, document_content, b64_encoded=True):
-        if b64_encoded:
-            document_content = base64.b64decode(document_content)
         content_type = self.get_document_content_type()
         if content_type is not None and content_type.startswith('storage+'):
+            if b64_encoded:
+                document_content = base64.b64decode(document_content)
             filename = self.get_document_file_id()
             if filename is None:
                 filename = str(uuid.uuid4())
@@ -333,7 +333,9 @@ class ProjectModel(BaseModel):
     project_name = UnicodeAttribute()
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
-    project_ccla_requires_icla_signature = BooleanAttribute()
+    project_icla_enabled = BooleanAttribute(default=True)
+    project_ccla_enabled = BooleanAttribute(default=True)
+    project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
@@ -341,12 +343,15 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     ORM-agnostic wrapper for the DynamoDB Project model.
     """
     def __init__(self, project_id=None, project_external_id=None, project_name=None,
-                 project_ccla_requires_icla_signature=None):
+                 project_icla_enabled=True, project_ccla_enabled=True,
+                 project_ccla_requires_icla_signature=False):
         super(Project).__init__()
         self.model = ProjectModel()
         self.model.project_id = project_id
         self.model.project_external_id = project_external_id
         self.model.project_name = project_name
+        self.model.project_icla_enabled = project_icla_enabled
+        self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
 
     def to_dict(self):
@@ -386,6 +391,12 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
 
     def get_project_name(self):
         return self.model.project_name
+
+    def get_project_icla_enabled(self):
+        return self.model.project_icla_enabled
+
+    def get_project_ccla_enabled(self):
+        return self.model.project_ccla_enabled
 
     def get_project_individual_documents(self):
         documents = []
@@ -446,6 +457,12 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
 
     def set_project_name(self, project_name):
         self.model.project_name = project_name
+
+    def set_project_icla_enabled(self, project_icla_enabled):
+        self.model.project_icla_enabled = project_icla_enabled
+
+    def set_project_ccla_enabled(self, project_ccla_enabled):
+        self.model.project_ccla_enabled = project_ccla_enabled
 
     def add_project_individual_document(self, document):
         self.model.project_individual_documents.append(document.model)

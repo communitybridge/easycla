@@ -70,6 +70,24 @@ class Project(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_project_icla_enabled(self):
+        """
+        Getter to determine whether or not this project has an ICLA.
+
+        :return: The project's ICLA state.
+        :rtype: boolean
+        """
+        raise NotImplementedError()
+
+    def get_project_ccla_enabled(self):
+        """
+        Getter to determine whether or not this project has an CCLA.
+
+        :return: The project's CCLA state.
+        :rtype: boolean
+        """
+        raise NotImplementedError()
+
     def get_project_individual_documents(self):
         """
         Getter for the project's individual signature documents.

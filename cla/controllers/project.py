@@ -54,7 +54,8 @@ def get_projects_by_external_id(project_external_id):
     return [project.to_dict() for project in projects]
 
 
-def create_project(project_external_id, project_name, project_ccla_requires_icla_signature):
+def create_project(project_external_id, project_name, project_icla_enabled, project_ccla_enabled,
+                   project_ccla_requires_icla_signature):
     """
     Creates a project and returns the newly created project in dict format.
 
@@ -62,6 +63,10 @@ def create_project(project_external_id, project_name, project_ccla_requires_icla
     :type project_external_id: string
     :param project_name: The project's name.
     :type project_name: string
+    :param project_icla_enabled: Whether or not the project supports ICLAs.
+    :type project_icla_enabled: bool
+    :param project_ccla_enabled: Whether or not the project supports CCLAs.
+    :type project_ccla_enabled: bool
     :param project_ccla_requires_icla_signature: Whether or not the project requires ICLA with CCLA.
     :type project_ccla_requires_icla_signature: bool
     :return: dict representation of the project object.
@@ -71,12 +76,15 @@ def create_project(project_external_id, project_name, project_ccla_requires_icla
     project.set_project_id(str(uuid.uuid4()))
     project.set_project_external_id(str(project_external_id))
     project.set_project_name(project_name)
+    project.set_project_icla_enabled(project_icla_enabled)
+    project.set_project_ccla_enabled(project_ccla_enabled)
     project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
     project.save()
     return project.to_dict()
 
 
-def update_project(project_id, project_name=None):
+def update_project(project_id, project_name=None, project_icla_enabled=None,
+                   project_ccla_enabled=None, project_ccla_requires_icla_signature=None):
     """
     Updates a project and returns the newly updated project in dict format.
     A value of None means the field should not be updated.
@@ -85,6 +93,12 @@ def update_project(project_id, project_name=None):
     :type project_id: string
     :param project_name: New project name.
     :type project_name: string | None
+    :param project_icla_enabled: Whether or not the project supports ICLAs.
+    :type project_icla_enabled: bool | None
+    :param project_ccla_enabled: Whether or not the project supports CCLAs.
+    :type project_ccla_enabled: bool | None
+    :param project_ccla_requires_icla_signature: Whether or not the project requires ICLA with CCLA.
+    :type project_ccla_requires_icla_signature: bool | None
     :return: dict representation of the project object.
     :rtype: dict
     """
@@ -95,6 +109,12 @@ def update_project(project_id, project_name=None):
         return {'errors': {'project_id': str(err)}}
     if project_name is not None:
         project.set_project_name(project_name)
+    if project_icla_enabled is not None:
+        project.set_project_icla_enabled(project_icla_enabled)
+    if project_ccla_enabled is not None:
+        project.set_project_ccla_enabled(project_ccla_enabled)
+    if project_ccla_requires_icla_signature is not None:
+        project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
     project.save()
     return project.to_dict()
 
