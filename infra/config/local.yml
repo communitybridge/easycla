@@ -50,16 +50,16 @@ environment:
     cla_storage_service: 'LocalStorage'
     cla_local_storage_folder: '/tmp/cla'
     cla_pdf_service: 'DocRaptor'
-    cla_docraptor_debug_mode: false
-    cla_docraptor_test_mode: true
-    cla_docraptor_javascript: true
+    cla_docraptor_debug_mode: no
+    cla_docraptor_test_mode: yes
+    cla_docraptor_javascript: yes
 
 modes:
   default:
     description: "Only the workspace container will have have an external port mappings. App will autorun in workspace."
     containers:
       workspace:
-        command: '/srv/app/scripts/run.sh'
+        command: '/srv/app/scripts/run_dev.sh'
         environment:
           OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
 
