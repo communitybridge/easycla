@@ -649,6 +649,32 @@ def get_project_document(project_id: hug.types.uuid,
     """
     return cla.controllers.project.get_project_document(project_id, document_type)
 
+@hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
+                         document_type: hug.types.one_of(['individual', 'corporate'])):
+    """
+    GET: /project/{project_id}/document/{document_type}/pdf
+
+    Returns the PDF document matching the latest individual or corporate contract for that project.
+    """
+    response.set_header('Content-Type', 'application/pdf')
+    return cla.controllers.project.get_project_document_raw(project_id, document_type)
+
+@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
+                         document_type: hug.types.one_of(['individual', 'corporate']),
+                         document_major_version: hug.types.number,
+                         document_minor_version: hug.types.number):
+    """
+    GET: /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
+
+    Returns the PDF document version matching the individual or corporate contract for that project.
+    """
+    response.set_header('Content-Type', 'application/pdf')
+    return cla.controllers.project.get_project_document_raw(project_id, document_type,
+                                                            document_major_version=document_major_version,
+                                                            document_minor_version=document_minor_version)
+
 @hug.get('/project/{project_id}/companies', versions=1)
 def get_project_companies(project_id: hug.types.uuid):
     """
