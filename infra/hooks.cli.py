@@ -1,6 +1,9 @@
 import gossip
 import lfcore
 
+def info(msg): print(msg)
+def notice(msg): print('\033[93m%s\033[0m' %msg)
+def success(msg): print('\033[92m%s\033[0m' %msg)
 
 @gossip.register('lf.instance.compose.generation', tags=['cla'])
 def lf_instance_compose_generation(containers, config, dependencies, mode, path):
@@ -11,23 +14,23 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
     configured the appropriate dependencies.
     """
     if mode == 'dev':
-        lfcore.logger.info('No workspace container provisioned in dev mode')
-        lfcore.logger.info('Ensure the cla_config.py file has the appropriate configuration for your \
+        notice('No workspace container provisioned in dev mode')
+        notice('Ensure the cla_config.py file has the appropriate configuration for your \
                        external dependencies')
         del containers['workspace']
     else:
-        lfcore.logger.info('Automatically setting CLA dependency endpoints')
+        info('Automatically setting CLA dependency endpoints')
         platform = dependencies.get('cinco')
 
         if platform.created:
             cinco_endpoint = platform.endpoints.containers.get('workspace', 5000).formatted
-            lfcore.logger.info('CINCO: %s', cinco_endpoint)
+            success('CINCO: %s', cinco_endpoint)
             containers['workspace']['environment']['CLA_CINCO_ENDPOINT'] = cinco_endpoint
             keycloak = platform.instance.dependencies.get('keycloak')
 
             if keycloak.created:
                 kc_endpoint = keycloak.endpoints.containers.get('workspace', 8080).formatted
-                lfcore.logger.info('Keycloak: %s', kc_endpoint)
+                success('Keycloak: %s', kc_endpoint)
                 containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint
 
         # Set the callback_url to the CLA instance.
@@ -41,8 +44,8 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
         containers['workspace']['environment']['CLA_SIGNED_CALLBACK_URL'] = callback_url
         containers['workspace']['environment']['CLA_GITHUB_OAUTH_CALLBACK_URL'] = github_oauth_url
 
-        lfcore.logger.warning('You public IP address (%s) was used as the base_url for the CLA system.' % ip)
-        lfcore.logger.warning('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (80 -> %s)' % web_port)
-        lfcore.logger.warning('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
-        lfcore.logger.warning('MailHog: http://localhost:%s' % mailhog_port)
-        lfcore.logger.warning('Web: http://localhost:%s' % web_port)
+        notice('You public IP address (%s) was used as the base_url for the CLA system.' % ip)
+        notice('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (80 -> %s)' % web_port)
+        notice('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
+        success('MailHog: http://localhost:%s' % mailhog_port)
+        success('Web: http://localhost:%s' % web_port)
