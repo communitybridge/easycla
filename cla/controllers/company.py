@@ -97,6 +97,28 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     company.save()
     return company.to_dict()
 
+def update_company_whitelist_csv(content, company_id):
+    """
+    Adds the CSV of email addresse to this company's whitelist.
+
+    :param content: The content posted to this endpoint (CSV data).
+    :type content: string
+    :param company_id: The ID of the company to add to the whitelist.
+    :type company_id: UUID
+    """
+    company = get_company_instance()
+    try:
+        company.load(str(company_id))
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+    # Ready email addresses.
+    emails = content.split('\n')
+    emails = [email for email in emails if '@' in email]
+    current_whitelist = company.get_company_whitelist()
+    new_whitelist = list(set(current_whitelist + emails))
+    company.set_company_whitelist(new_whitelist)
+    company.save()
+    return company.to_dict()
 
 def delete_company(company_id):
     """
