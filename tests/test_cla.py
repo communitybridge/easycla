@@ -129,11 +129,12 @@ class CLATestCase(unittest.TestCase):
         return response.data
 
     def create_project(self, project_external_id='external-id', project_name='Project Name',
+                       project_icla_enabled=True, project_ccla_enabled=True,
                        project_ccla_requires_icla_signature=True):
         """Helper method to create a project."""
-        project_id = str(uuid.uuid4())
-        data = {'project_id': project_id,
-                'project_external_id': project_external_id,
+        data = {'project_external_id': project_external_id,
+                'project_icla_enabled': project_icla_enabled,
+                'project_ccla_enabled': project_ccla_enabled,
                 'project_ccla_requires_icla_signature': project_ccla_requires_icla_signature,
                 'project_name': project_name}
         response = hug.test.post(routes, '/v1/project', data)

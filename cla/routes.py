@@ -579,32 +579,32 @@ def get_external_project(project_external_id: hug.types.text):
 
     Returns the list of CLA projects marching the requested external ID.
     """
-    projects = cla.controllers.project.get_projects_by_external_id(project_external_id)
-    # For public endpoint, don't show the project_external_id.
-    ret = []
-    for project in projects:
-        if 'project_external_id' in project:
-            del project['project_external_id']
-        ret.append(project)
-    return ret
+    return cla.controllers.project.get_projects_by_external_id(project_external_id)
 
 @hug.post('/project', versions=1,
           examples=" - {'project_name': 'Project Name'}")
-def post_project(project_external_id: hug.types.text, project_name: hug.types.text, project_ccla_requires_icla_signature: hug.types.boolean):
+def post_project(project_external_id: hug.types.text, project_name: hug.types.text,
+                 project_icla_enabled: hug.types.boolean, project_ccla_enabled: hug.types.boolean,
+                 project_ccla_requires_icla_signature: hug.types.boolean):
     """
     POST: /project
 
-    DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name', 'project_ccla_requires_icla_signature': True}
+    DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name',
+           'project_icla_enabled': True, 'project_ccla_enabled': True,
+           'project_ccla_requires_icla_signature': True}
 
     Returns the CLA project that was just created.
     """
-    return cla.controllers.project.create_project(project_external_id, project_name, project_ccla_requires_icla_signature)
+    return cla.controllers.project.create_project(project_external_id, project_name,
+                                                  project_icla_enabled, project_ccla_enabled,
+                                                  project_ccla_requires_icla_signature)
 
 
 @hug.put('/project', versions=1,
          examples=" - {'project_id': '<proj-id>', \
                        'project_name': 'New Project Name'}")
-def put_project(project_id: hug.types.uuid, project_name=None):
+def put_project(project_id: hug.types.uuid, project_name=None, project_icla_enabled=None,
+                project_ccla_enabled=None, project_ccla_requires_icla_signature=None):
     """
     PUT: /project
 
@@ -613,7 +613,10 @@ def put_project(project_id: hug.types.uuid, project_name=None):
 
     Returns the CLA project that was just updated.
     """
-    return cla.controllers.project.update_project(project_id, project_name=project_name)
+    return cla.controllers.project.update_project(project_id, project_name=project_name,
+                                                  project_icla_enabled=project_icla_enabled,
+                                                  project_ccla_enabled=project_ccla_enabled,
+                                                  project_ccla_requires_icla_signature=project_ccla_requires_icla_signature)
 
 
 @hug.delete('/project/{project_id}', versions=1)
