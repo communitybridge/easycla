@@ -22,15 +22,15 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
         info('Automatically setting CLA dependency endpoints')
         platform = dependencies.get('cinco')
 
-        if platform.created:
+        if platform is not None and platform.created:
             cinco_endpoint = platform.endpoints.containers.get('workspace', 5000).formatted
-            success('CINCO: %s', cinco_endpoint)
+            success('CINCO: %s' %cinco_endpoint)
             containers['workspace']['environment']['CLA_CINCO_ENDPOINT'] = cinco_endpoint
             keycloak = platform.instance.dependencies.get('keycloak')
 
-            if keycloak.created:
+            if keycloak is not None and keycloak.created:
                 kc_endpoint = keycloak.endpoints.containers.get('workspace', 8080).formatted
-                success('Keycloak: %s', kc_endpoint)
+                success('Keycloak: %s' %kc_endpoint)
                 containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint
 
         # Set the callback_url to the CLA instance.
@@ -47,5 +47,5 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
         notice('You public IP address (%s) was used as the base_url for the CLA system.' % ip)
         notice('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine (80 -> %s)' % web_port)
         notice('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
-        success('MailHog: http://localhost:%s' % mailhog_port)
-        success('Web: http://localhost:%s' % web_port)
+        success('MailHog: http://localhost:%s' %mailhog_port)
+        success('Web: http://localhost:%s' %web_port)
