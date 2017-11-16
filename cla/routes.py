@@ -530,6 +530,16 @@ def delete_company(company_id: hug.types.text):
     """
     return cla.controllers.company.delete_company(company_id)
 
+@hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
+def put_company_whitelist_csv(body, company_id: hug.types.uuid):
+    """
+    PUT: /company/{company_id}/import/whitelist/csv
+
+    Imports a CSV file of whitelisted user emails.
+    Expects the first column to have a header in the first row and contain email addresses.
+    """
+    content = body.read().decode()
+    return cla.controllers.company.update_company_whitelist_csv(content, company_id)
 
 #
 # Project Routes.
