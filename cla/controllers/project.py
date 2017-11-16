@@ -3,6 +3,8 @@ Controller related to project operations.
 """
 
 import uuid
+import urllib
+import io
 import cla
 from cla.resources.contract_templates import TestTemplate
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
@@ -176,19 +178,9 @@ def get_project_companies(project_id):
     company = get_company_instance()
     return [comp.to_dict() for comp in company.all(company_ids)]
 
-
-def get_project_document(project_id, document_type, major_version=None, minor_version=None):
+def _get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
-    Returns the specified project's document based on type (ICLA or CCLA) and version.
-
-    :param project_id: The ID of the project to fetch the document from.
-    :type project_id: string
-    :param document_type: The type of document (individual or corporate).
-    :type document_type: string
-    :param major_version: The major version number.
-    :type major_version: integer
-    :param minor_version: The minor version number.
-    :type minor_version: integer
+    See documentation for get_project_document().
     """
     project = get_project_instance()
     try:
@@ -205,8 +197,41 @@ def get_project_document(project_id, document_type, major_version=None, minor_ve
             document = project.get_project_corporate_document(major_version, minor_version)
         except DoesNotExist as err:
             return {'errors': {'document': str(err)}}
+    return document
+
+def get_project_document(project_id, document_type, major_version=None, minor_version=None):
+    """
+    Returns the specified project's document based on type (ICLA or CCLA) and version.
+
+    :param project_id: The ID of the project to fetch the document from.
+    :type project_id: string
+    :param document_type: The type of document (individual or corporate).
+    :type document_type: string
+    :param major_version: The major version number.
+    :type major_version: integer
+    :param minor_version: The minor version number.
+    :type minor_version: integer
+    """
+    document = _get_project_document(project_id, document_type, major_version, minor_version)
+    if isinstance(document, dict):
+        return document
     return document.to_dict()
 
+def get_project_document_raw(project_id, document_type, document_major_version=None, document_minor_version=None):
+    """
+    Same as get_project_document() except that it returns the raw PDF document instead.
+    """
+    document = _get_project_document(project_id, document_type, document_major_version, document_minor_version)
+    if isinstance(document, dict):
+        return document
+    content_type = document.get_document_content_type()
+    if content_type.startswith('url+'):
+        pdf_url = document.get_document_content()
+        pdf = urllib.request.urlopen(pdf_url)
+    else:
+        content = document.get_document_content()
+        pdf = io.BytesIO(content)
+    return pdf
 
 def post_project_document(project_id,
                           document_type,
