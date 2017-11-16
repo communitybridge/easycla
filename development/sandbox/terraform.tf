@@ -167,5 +167,5 @@ output "sandbox_cert_arn" {
 }
 
 output "ecs_role" {
-  value = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
+  value = "arn:aws:iam::433610389961:role/ecsServiceRole"
 }
