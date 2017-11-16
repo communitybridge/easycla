@@ -157,7 +157,7 @@ def get_users_company(user_company_id):
     users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]
 
-def request_company_whitelist(user_id, company_id, message=None):
+def request_company_whitelist(user_id, company_id, user_email, message=None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
     added to their whitelist.
@@ -166,6 +166,9 @@ def request_company_whitelist(user_id, company_id, message=None):
     :type user_id: string
     :param company_id: The ID of the company that the request is going to.
     :type company_id: string
+    :param user_email: The email address that this user wants to be whitelisted. Must exist in the
+        user's list of emails.
+    :type user_email: string
     :param messsage: A custom message to add to the email sent out to the manager.
     :type message: string
     """
@@ -174,6 +177,9 @@ def request_company_whitelist(user_id, company_id, message=None):
         user.load(user_id)
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
+    emails = user.get_user_emails()
+    if user_email not in emails:
+        return {'errors': {'user_email': 'Must provide one of the user\'s existing emails'}}
     company = get_company_instance()
     try:
         company.load(company_id)
@@ -197,7 +203,7 @@ If you are unsure about this request - it may be prudent to get in touch with th
 Please follow up with the user as necessary.
 
 - Linux Foundation CLA System
-''' %(company.get_company_name(), user.get_user_name(), user.get_user_email(), message)
+''' %(company.get_company_name(), user.get_user_name(), user_email, message)
     manager_id = company.get_company_manager_id()
     manager = get_user_instance()
     try:
