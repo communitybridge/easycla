@@ -37,7 +37,7 @@ def get_organization(organization_name):
     return github_organization.to_dict()
 
 
-def create_organization(organization_name, # pylint: disable=too-many-arguments
+def create_organization(organization_name,
                         organization_project_id=None,
                         organization_installation_id=None):
     """
@@ -53,13 +53,17 @@ def create_organization(organization_name, # pylint: disable=too-many-arguments
     :rtype: dict
     """
     github_organization = get_github_organization_instance()
-    github_organization.set_organization_name(organization_name)
-    if organization_project_id:
-        github_organization.set_organization_project_id(str(organization_project_id))
-    if organization_installation_id:
-        github_organization.set_organization_installation_id(organization_installation_id)
-    github_organization.save()
-    return github_organization.to_dict()
+    try:
+        github_organization.load(str(organization_name))
+    except DoesNotExist as err:
+        github_organization.set_organization_name(organization_name)
+        if organization_project_id:
+            github_organization.set_organization_project_id(str(organization_project_id))
+        if organization_installation_id:
+            github_organization.set_organization_installation_id(organization_installation_id)
+        github_organization.save()
+        return github_organization.to_dict()
+    return {'errors': {'organization_name': 'This organization already exists'}}
 
 
 def update_organization(organization_name, # pylint: disable=too-many-arguments
