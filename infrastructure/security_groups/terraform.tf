@@ -101,6 +101,38 @@ resource "aws_security_group" "pritunl-mongodb" {
   }
 }
 
+resource "aws_security_group" "danvpn" {
+  provider    = "aws.local"
+  name        = "danvpn"
+  description = "Dans OpenVPN Server"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port = 22
+    protocol = "tcp"
+    to_port = 22
+    cidr_blocks = ["67.160.133.122/32"] // dan's home IP. can be removed later
+  }
+
+  ingress {
+    from_port = 2112
+    to_port = 2112
+    protocol = "tcp"
+    cidr_blocks = ["67.160.133.122/32"]
+  }
+
+    ingress {
+    from_port = 2112
+    to_port = 2112
+    protocol = "udp"
+    cidr_blocks = ["67.160.133.122/32"]
+  }
+
+  tags {
+    Name        = "Dans OpenVPN Server"
+  }
+}
+
 output "pritunl_elb" {
   value = "${aws_security_group.pritunl-elb.id}"
 }
@@ -111,4 +143,8 @@ output "pritunl_node" {
 
 output "pritunl_mongodb" {
   value = "${aws_security_group.pritunl-mongodb.id}"
+}
+
+output "danvpn" {
+  value = "${aws_security_group.danvpn.id}"
 }
