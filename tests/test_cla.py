@@ -140,6 +140,18 @@ class CLATestCase(unittest.TestCase):
         response = hug.test.post(routes, '/v1/project', data)
         return response.data
 
+    def create_organization(self, organization_name='organization-name',
+                            organization_project_id=None,
+                            organization_installation_id=None):
+        """Helper method to create a GitHub organization."""
+        data = {'organization_name': organization_name}
+        if organization_project_id is not None:
+            data['organization_project_id'] = organization_project_id
+        if organization_installation_id is not None:
+            data['organization_installation_id'] = organization_installation_id
+        response = hug.test.post(routes, '/v1/github/organizations', data)
+        return response.data
+
     def tearDown(self):
         """Tear down method executes after each test."""
         delete_database()

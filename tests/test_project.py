@@ -30,6 +30,14 @@ class ProjectTestCase(CLATestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['project_id'], project['project_id'])
 
+    def test_get_project_by_organization_id(self):
+        """Tests for getting projects by github organization ID."""
+        project = self.create_project()
+        organization = self.create_organization(organization_project_id=project['project_id'])
+        response = hug.test.get(cla.routes, '/v1/project/' + project['project_id'] + '/organizations')
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['organization_project_id'], project['project_id'])
+
     def test_get_project(self):
         """Tests for getting individual projects."""
         response = hug.test.get(cla.routes, '/v1/project/' + str(uuid.uuid4()))

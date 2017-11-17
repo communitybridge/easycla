@@ -1325,11 +1325,12 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
 
     def get_organization_by_project_id(self, project_id):
         organization_generator = self.model.scan(organization_project_id__eq=str(project_id))
+        orgs = []
         for org_model in organization_generator:
             org = GitHubOrg()
             org.model = org_model
-            return org
-        return None
+            orgs.append(org)
+        return orgs
 
     def get_organization_by_installation_id(self, installation_id):
         organization_generator = self.model.scan(organization_installation_id__eq=installation_id)

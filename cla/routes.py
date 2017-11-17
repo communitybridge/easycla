@@ -638,6 +638,14 @@ def get_project_repositories(project_id: hug.types.uuid):
     """
     return cla.controllers.project.get_project_repositories(project_id)
 
+@hug.get('/project/{project_id}/organizations', version=1)
+def get_project_organizations(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/organizations.
+
+    Gets the specified project's tied GitHub organizations.
+    """
+    return cla.controllers.project.get_project_organizations(project_id)
 
 @hug.get('/project/{project_id}/document/{document_type}', versions=1)
 def get_project_document(project_id: hug.types.uuid,
