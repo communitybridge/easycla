@@ -8,7 +8,7 @@ import io
 import cla
 from cla.resources.contract_templates import TestTemplate
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
-                      get_company_instance, get_pdf_service
+                      get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
 
 
@@ -153,6 +153,22 @@ def get_project_repositories(project_id):
         return {'errors': {'project_id': str(err)}}
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
+
+
+def get_project_organizations(project_id):
+    """
+    Get a project's tied organizations.
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+    project = get_project_instance()
+    try:
+        project.load(str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+    organizations = get_github_organization_instance().get_organization_by_project_id(str(project_id))
+    return [organization.to_dict() for organization in organizations]
 
 
 def get_project_companies(project_id):
