@@ -66,7 +66,6 @@ module "s3_buckets" {
 
 module "pritunl" {
   source            = "modules/pritunl"
-
   external_subnets  = "${module.vpc.external_subnets}"
   internal_subnets  = "${module.vpc.internal_subnets}"
   sg                = "${module.security_groups.pritunl_node}"
@@ -79,7 +78,8 @@ module "pritunl" {
 module "danvpn" {
   source                 = "../modules/danvpn"
   ami                    = "ami-32d8124a" // Amazon Linux AMI 2017.09.1 (HVM), SSD Volume Type
-  sg                     = "${module.security_groups.danvpn}"
   subnet                 = "${module.vpc.external_subnets[0]}"
   name                   = "danvpn.e.tux.rocks"
+  dns_zone_id            = "${var.external_dns_zoneid}"
+  vpc_id                 = "${module.vpc.id}"
 }

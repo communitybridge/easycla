@@ -306,9 +306,10 @@ module "github-enterprise" {
 module "danvpn" {
   source                 = "../../../modules/danvpn"
   ami                    = "ami-32d8124a" // Amazon Linux AMI 2017.09.1 (HVM), SSD Volume Type
-  sg                     = "${module.security_groups.danvpn}"
   subnet                 = "${module.vpc.external_subnets[0]}"
   name                   = "danvpn.engineering.tux.rocks"
+  dns_zone_id            = "Z2MDT77FL23F9B"
+  vpc_id                 = "${module.vpc.id}"
 }
 
 /**
