@@ -163,9 +163,9 @@ def activity(body):
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
     try:
-        org = github_organization.load(str(organization_name))
-        if org.get_organization_installation_id() is not None:
-            installation = GitHubInstallation(org.get_organization_installation_id())
+        github_organization.load(str(organization_name))
+        if github_organization.get_organization_installation_id() is not None:
+            installation = GitHubInstallation(github_organization.get_organization_installation_id())
             if installation.repos:
                 repos = []
                 for repo in installation.repos:
