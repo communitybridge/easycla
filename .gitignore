@@ -1,11 +1,11 @@
 __pycache__
 build/
-tests/.coverage
-tests/cover/
 DynamoDBLocal_lib/
 DynamoDBLocal.jar
 docker-compose.yml
 cla_config.py
+htmlcov/
+.coverage
 *.egg*
 .lf
 *.swp
