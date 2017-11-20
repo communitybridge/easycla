@@ -191,7 +191,7 @@ class DocumentModel(MapAttribute):
     document_minor_version = NumberAttribute(default=0)
     document_author_name = UnicodeAttribute()
     # Not using UTCDateTimeAttribute due to https://github.com/pynamodb/PynamoDB/issues/162
-    document_creation_date = UnicodeAttribute(default=datetime.datetime.now().isoformat())
+    document_creation_date = UnicodeAttribute()
     document_preamble = UnicodeAttribute(null=True)
     document_legal_entity_name = UnicodeAttribute(null=True)
 
@@ -226,7 +226,9 @@ class Document(model_interfaces.Document):
         if document_minor_version is not None:
             self.model.document_minor_version = document_minor_version
         if document_creation_date is not None:
-            self.model.document_creation_date = document_creation_date.isoformat()
+            self.set_document_creation_date(document_creation_date)
+        else:
+            self.set_document_creation_date(datetime.datetime.now())
 
     def to_dict(self):
         return {'document_name': self.model.document_name,
