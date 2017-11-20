@@ -991,3 +991,6 @@ def user_whitelisted(user, company):
             if pat.match(email) != None:
                 return True
     return False
+
+def get_oauth_client():
+    return OAuth2Session(cla.conf['GITHUB_OAUTH_CLIENT_ID'])
