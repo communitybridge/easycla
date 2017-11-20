@@ -40,7 +40,6 @@ environment:
     cla_github_app_id: '4449'
     cla_github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
     cla_github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
-    cla_github_main_installation_id: 49309
     cla_keycloak_endpoint: Should be populated by hooks
     cla_cinco_endpoint: Should be populated by hooks
     cla_email_service: 'SMTP'

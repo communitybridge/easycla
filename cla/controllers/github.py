@@ -5,7 +5,7 @@ import requests
 import hmac
 import cla
 from pprint import pprint
-from cla.utils import get_github_organization_instance, get_repository_service
+from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
 from cla.models import DoesNotExist
 from cla.controllers.github_application import GitHubInstallation
 
@@ -229,8 +229,9 @@ def check_namespace(namespace):
     :return: Whether or not the namespace is valid.
     :rtype: bool
     """
-    main_installation = GitHubInstallation()
-    return main_installation.namespace_exists(namespace)
+    oauth = get_oauth_client()
+    response = oauth.get('https://api.github.com/users/' + namespace)
+    return response.ok
 
 def get_namespace(namespace):
     """
@@ -241,5 +242,9 @@ def get_namespace(namespace):
     :return: Dict of info on the account in question.
     :rtype: dict
     """
-    main_installation = GitHubInstallation()
-    return main_installation.get_namespace(namespace)
+    oauth = get_oauth_client()
+    response = oauth.get('https://api.github.com/users/' + namespace)
+    if response.ok:
+        return response.json()
+    else:
+        return {'errors': {'namespace': 'Invalid GitHub account namespace'}}
