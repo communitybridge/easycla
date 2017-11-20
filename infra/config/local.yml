@@ -50,6 +50,7 @@ environment:
     cla_storage_service: 'LocalStorage'
     cla_local_storage_folder: '/tmp/cla'
     cla_pdf_service: 'DocRaptor'
+    cla_docraptor_api_key: 'QgWaRzRESop5buSbARt'
     cla_docraptor_debug_mode: no
     cla_docraptor_test_mode: yes
     cla_docraptor_javascript: yes
