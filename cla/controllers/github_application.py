@@ -59,6 +59,7 @@ class GitHubInstallation(object):
                     'created_at': named_user.created_at,
                     'location': named_user.location,
                     'login': named_user.login,
+                    'name': named_user.name,
                     'type': named_user.type}
             cla.log.info('Github User/Organization %s data: %s', namespace, data)
             return data
