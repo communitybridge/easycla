@@ -15,6 +15,7 @@ class GitLabTestCase(CLATestCase):
     """GitLab test cases."""
     def test_received_activity(self):
         """Tests for requesting signature."""
+        return # Disable tests for GitLab until we support it again.
         data = {}
         gitlab = MockGitLab()
         # Test non-merge request.
@@ -28,6 +29,7 @@ class GitLabTestCase(CLATestCase):
 
     def test_sign_request(self):
         """Tests for a request to sign a document."""
+        return # Disable tests for GitLab until we support it again.
         gitlab = MockGitLab(oauth2_token=True)
         gitlab.initialize({'GITLAB_DOMAIN': 'https://domain.name', 'GITLAB_TOKEN': 'token'})
         request = None
@@ -41,6 +43,7 @@ class GitLabTestCase(CLATestCase):
 
     def test_oauth2_redirect(self):
         """Tests for the OAuth2 redirect from our repository provider."""
+        return # Disable tests for GitLab until we support it again.
         gitlab = MockGitLab(oauth2_token=True)
         gitlab.initialize({'GITLAB_DOMAIN': 'https://domain.name', 'GITLAB_TOKEN': 'token'})
         state = 'wrong-state'
@@ -62,6 +65,7 @@ class GitLabTestCase(CLATestCase):
 
     def test_update_change_request(self):
         """Tests for the update_change_request method."""
+        return # Disable tests for GitLab until we support it again.
         gitlab = MockGitLab(oauth2_token=True)
         gitlab.initialize({'GITLAB_DOMAIN': 'https://domain.name', 'GITLAB_TOKEN': 'token'})
         user_data = self.create_user(user_email='user@gitlab.com')
@@ -85,6 +89,7 @@ class GitLabTestCase(CLATestCase):
 
     def test_get_or_create_user(self):
         """Tests for the get_or_create_user() method."""
+        return # Disable tests for GitLab until we support it again.
         gitlab = MockGitLab(oauth2_token=True)
         gitlab.initialize({'GITLAB_DOMAIN': 'https://domain.name', 'GITLAB_TOKEN': 'token'})
         # All other tests assume missing user. Check for user found here.
