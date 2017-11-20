@@ -164,10 +164,13 @@ def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
     try:
         org = github_organization.load(str(organization_name))
-        if org['organization_installation_id']:
-            installation = GitHubInstallation(org['organization_installation_id'])
+        if org.get_organization_installation_id() is not None:
+            installation = GitHubInstallation(org.get_organization_installation_id())
             if installation.repos:
-                return installation.repos
+                repos = []
+                for repo in installation.repos:
+                    repos.append(repo.full_name)
+                return repos
             else:
                 return []
     except DoesNotExist as err:
