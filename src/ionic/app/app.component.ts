@@ -6,6 +6,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { RolesService } from '../services/roles.service';
+import { ClaService } from 'cla-service';
+import { CLA_API_URL } from '../services/constants';
 
 @Component({
   templateUrl: 'app.html',
@@ -33,9 +35,11 @@ export class MyApp {
     private cincoService: CincoService,
     private keycloak: KeycloakService,
     private rolesService: RolesService,
+    public claService: ClaService,
   ) {
     this.getDefaults();
     this.initializeApp();
+    this.claService.setApiUrl(CLA_API_URL);
   }
 
   getDefaults() {
