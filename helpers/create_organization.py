@@ -16,5 +16,6 @@ cla.log.info('Creating GitHub Organization: %s' %GITHUB_ORGANIZATION_NAME)
 github_org = get_github_organization_instance()
 github_org.set_organization_name(GITHUB_ORGANIZATION_NAME)
 github_org.set_organization_project_id(project.get_project_id())
-github_org.set_organization_installation_id(GITHUB_INSTALLATION_ID)
+# This will be different everytime the CLA app is installed.
+#github_org.set_organization_installation_id(GITHUB_INSTALLATION_ID)
 github_org.save()
