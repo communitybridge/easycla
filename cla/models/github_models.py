@@ -345,6 +345,7 @@ class GitHub(repository_service_interface.RepositoryService):
         user.set_user_emails(emails)
         user.set_user_name(github_user['name'])
         user.set_user_github_id(github_user['id'])
+        user.save()
         return user
 
     def get_user_data(self, session, client_id): # pylint: disable=no-self-use
