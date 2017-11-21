@@ -336,15 +336,8 @@ def post_project_document_template(project_id,
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    # Need to take the template and inject the preamble and legal entity name.
-    template = TestTemplate() # TestTemplate for now.
-    content = template.get_html_contract(document_legal_entity_name, document_preamble)
-    pdf_generator = get_pdf_service()
-    pdf_content = pdf_generator.generate(content)
     document = get_document_instance()
     document.set_document_name(document_name)
-    document.set_document_content_type('storage+pdf')
-    document.set_document_content(pdf_content, b64_encoded=False)
     document.set_document_preamble(document_preamble)
     document.set_document_legal_entity_name(document_legal_entity_name)
     if document_type == 'individual':
@@ -363,6 +356,15 @@ def post_project_document_template(project_id,
         else:
             document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
+    # Need to take the template and inject the preamble and legal entity name.
+    template = TestTemplate(document_type=document_type.capitalize(),
+                            major_version=document.get_document_major_version(),
+                            minor_version=document.get_document_minor_version()) # TestTemplate for now.
+    content = template.get_html_contract(document_legal_entity_name, document_preamble)
+    pdf_generator = get_pdf_service()
+    pdf_content = pdf_generator.generate(content)
+    document.set_document_content_type('storage+pdf')
+    document.set_document_content(pdf_content, b64_encoded=False)
     project.save()
     return project.to_dict()
 
