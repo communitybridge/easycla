@@ -238,7 +238,9 @@ class Document(model_interfaces.Document):
                 'document_author_name': self.model.document_author_name,
                 'document_major_version': self.model.document_major_version,
                 'document_minor_version': self.model.document_minor_version,
-                'document_creation_date': self.model.document_creation_date}
+                'document_creation_date': self.model.document_creation_date,
+                'document_preamble': self.model.document_preamble,
+                'document_legal_entity_name': self.model.document_legal_entity_name}
 
     def get_document_name(self):
         return self.model.document_name
