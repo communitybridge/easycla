@@ -13,8 +13,8 @@ class ContractTemplate(object):
         html = self.body
         if html is not None:
             html = html.replace('{{document_type}}', self.document_type)
-            html = html.replace('{{major_version}}', self.major_version)
-            html = html.replace('{{minor_version}}', self.minor_version)
+            html = html.replace('{{major_version}}', str(self.major_version))
+            html = html.replace('{{minor_version}}', str(self.minor_version))
             html = html.replace('{{legal_entity_name}}', legal_entity_name)
             html = html.replace('{{preamble}}', preamble)
         return html
