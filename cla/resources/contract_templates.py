@@ -33,13 +33,9 @@ class TestTemplate(ContractTemplate):
         <div class="preamble">
             {{preamble}}
         </div>
-        <div>
-            If you have not already done so, please complete and sign, then scan and email a pdf file of this Agreement to cla@cncf.io.
-            If necessary, send an original signed Agreement to The Linux Foundation: 1 Letterman Drive, Building D, Suite D4700, San Francisco CA 94129, U.S.A.
-            Please read this document carefully before signing and keep a copy for your records.
-        </div>
-        <div>
-            You accept and agree to the following terms and conditions for Your present and future Contributions submitted to the Foundation. In return, the Foundation shall not use Your Contributions in a way that is contrary to the public benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the Contribution. Except for the license granted herein to the Foundation and recipients of software distributed by the Foundation, You reserve all right, title, and interest in and to Your Contributions
-        </div>
+        <p>If you have not already done so, please complete and sign, then scan and email a pdf file of this Agreement to cla@cncf.io.<br />If necessary, send an original signed Agreement to The Linux Foundation: 1 Letterman Drive, Building D, Suite D4700, San Francisco CA 94129, U.S.A.<br />Please read this document carefully before signing and keep a copy for your records.
+        </p>
+        <p>You accept and agree to the following terms and conditions for Your present and future Contributions submitted to the Foundation. In return, the Foundation shall not use Your Contributions in a way that is contrary to the public benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the Contribution. Except for the license granted herein to the Foundation and recipients of software distributed by the Foundation, You reserve all right, title, and interest in and to Your Contributions
+        </p>
     </body>
 </html>"""
