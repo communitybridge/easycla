@@ -151,9 +151,10 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  openClaContractsContributorsPage(contractId) {
+  openClaContractsContributorsPage(claProjectId) {
+    console.log(claProjectId);
     this.navCtrl.push('ClaContractsContributorsPage', {
-      contractId: contractId,
+      claProjectId: claProjectId,
     });
   }
 
