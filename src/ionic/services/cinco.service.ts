@@ -60,7 +60,7 @@ export class CincoService {
 
   getProject(projectId, getMembers) {
     if (getMembers) { projectId = projectId + '?members=true'; }
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId)
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId)
       .map(res => res.json());
   }
 

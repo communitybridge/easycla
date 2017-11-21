@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
 import { PopoverController } from 'ionic-angular';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla-contract-version-modal'
@@ -9,9 +9,14 @@ import { PopoverController } from 'ionic-angular';
 @Component({
   selector: 'cla-contract-version-modal',
   templateUrl: 'cla-contract-version-modal.html',
-  providers: [CincoService]
 })
 export class ClaContractVersionModal {
+
+  claProjectId: string;
+  documentType: string; // individual | corporate
+  documents: any;
+  currentDocument: any;
+  previousDocuments: any;
 
   constructor(
     public navCtrl: NavController,
@@ -19,26 +24,40 @@ export class ClaContractVersionModal {
     public viewCtrl: ViewController,
     private popoverCtrl: PopoverController,
     public modalCtrl: ModalController,
+    private claService: ClaService,
   ) {
+    this.claProjectId = this.navParams.get('claProjectId');
+    this.documentType = this.navParams.get('documentType');
+    this.documents = this.navParams.get('documents').reverse();
+    if (this.documents.length > 0) {
+      this.currentDocument = this.documents.slice(0, 1);
+      console.log("currentDoc");
+      console.log(this.currentDocument);
+      if (this.documents.length > 1) {
+        this.previousDocuments = this.documents.slice(1);
+      }
+    }
+
+    console.log(this.documents);
     this.getDefaults();
-  }
-
-  ngOnInit() {
-
   }
 
   getDefaults() {
 
   }
 
-  contractPopover(ev, index) {
+  ngOnInit() {
+
+  }
+
+  contractPopover(ev, document) {
     let currentContractActions = {
       items: [
         {
-          label: 'Download',
-          callback: 'contractDownload',
+          label: 'View PDF',
+          callback: 'contractView',
           callbackData: {
-            index: index,
+            document: document,
           }
         },
       ]
@@ -70,16 +89,14 @@ export class ClaContractVersionModal {
     }
   }
 
-  contractMakeCurrent(data) {
-    console.log('contract make current');
-  }
-
-  contractDownload(data) {
-    console.log('contract download');
-  }
-
-  contractDelete(data) {
-    console.log('contract delete');
+  contractView(data) {
+    console.log('contract view');
+    console.log(data);
+    let majorVersion = data.document.document_major_version;
+    let minorVersion = data.document.document_minor_version;
+    let url = this.claService.getProjectDocumentRevisionPdf(this.claProjectId, this.documentType, majorVersion, minorVersion);
+    console.log(url);
+    window.open(url, '_blank');
   }
 
   openClaContractUploadModal(uploadInfo) {

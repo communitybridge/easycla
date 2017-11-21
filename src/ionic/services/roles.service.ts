@@ -52,10 +52,11 @@ export class RolesService {
     } else {
       this.keycloak.getTokenParsed().then((tokenParsed) => {
         if (tokenParsed) {
+          console.log(tokenParsed);
           let isUser = this.isInArray(tokenParsed.realm_access.roles, 'PMC_USER');
           let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
           let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
-          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_ADMIN');
+          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN');
           let isStaffInc = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC');
           this.userRoles = {
             isUser: isUser,
