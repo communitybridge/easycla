@@ -339,7 +339,9 @@ export class ClaService {
       {
         'project_external_id': '<proj-external-id>',
         'project_name': 'Project Name',
-        'project_ccla_requires_icla_signature': True
+        'project_ccla_enabled': True,
+        'project_ccla_requires_icla_signature': True,
+        'project_icla_enabled': True
       }
      */
     return this.http.post(this.claApiUrl + '/project', project)
@@ -366,6 +368,11 @@ export class ClaService {
       .map((res) => res.json());
   }
 
+  getProjectsByExternalId(externalId) {
+    return this.http.get(this.claApiUrl + '/project/external/' + externalId)
+      .map((res) => res.json());
+  }
+
   deleteProject(projectId) {
     return this.http.delete(this.claApiUrl + '/project/' + projectId)
       .map((res) => res.json());
@@ -377,6 +384,15 @@ export class ClaService {
 
   getProjectRepositories(projectId) {
     return this.http.get(this.claApiUrl + '/project/' + projectId + '/repositories')
+      .map((res) => res.json());
+  }
+
+  /**
+  * /project/{project_id}/organizations
+  **/
+
+  getProjectOrganizations(projectId) {
+    return this.http.get(this.claApiUrl + '/project/' + projectId + '/organizations')
       .map((res) => res.json());
   }
 
@@ -410,17 +426,36 @@ export class ClaService {
       .map((res) => res.json());
   }
 
+  postProjectDocumentTemplate(projectId, documentType, document) {
+    /*
+      {
+        'document_name': 'project-name_ccla_2017-11-16',
+        'document_preamble': '<p>Some <strong>html</strong> content</p>',
+        'document_legal_entity_name': 'Some Project Inc.',
+        'new_major_version': true|false,
+      }
+     */
+    return this.http.post(this.claApiUrl + '/project/' + projectId + '/document/template/' + documentType, document)
+      .map((res) => res.json());
+  }
+
   /**
   * /project/{project_id}/document/{document_type}/{major_version}/{minor_version}
   **/
 
   deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
     return this.http.delete(
-      this.claApiUrl + '/project/' + projectId +
-      '/document/' + documentType +
-      '/' + majorVersion + '/' + minorVersion
+      this.claApiUrl + '/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion
     )
       .map((res) => res.json());
+  }
+
+  /*
+   * /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
+   */
+
+  getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
+     return this.claApiUrl + '/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion;
   }
 
   /**
@@ -526,16 +561,34 @@ export class ClaService {
   }
 
   /**
+  * /github/get/namespace/{namespace}
+  **/
+
+  getGithubGetNamespace(namespace) {
+    return this.http.get(this.claApiUrl + '/github/get/namespace/' + namespace)
+      .map((res) => res.json());
+  }
+
+  /**
+  * /github/check/namespace/{namespace}
+  **/
+
+  getGithubCheckNamespace(namespace) {
+    return this.http.get(this.claApiUrl + '/github/check/namespace/' + namespace)
+      .map((res) => res.json());
+  }
+
+  /**
   * /github/organizations/{organization_name}
   **/
 
   getGithubOrganization(organizationName) {
-    return this.http.get(this.claApiUrl + '/github/organizations' + organizationName)
+    return this.http.get(this.claApiUrl + '/github/organizations/' + organizationName)
       .map((res) => res.json());
   }
 
   deleteGithubOrganization(organizationName) {
-    return this.http.delete(this.claApiUrl + '/github/organizations' + organizationName)
+    return this.http.delete(this.claApiUrl + '/github/organizations/' + organizationName)
       .map((res) => res.json());
   }
 
@@ -544,7 +597,7 @@ export class ClaService {
   **/
 
   getGithubOrganizationRepositories(organizationName) {
-    return this.http.get(this.claApiUrl + '/github/organizations' + organizationName + '/repositories')
+    return this.http.get(this.claApiUrl + '/github/organizations/' + organizationName + '/repositories')
       .map((res) => res.json());
   }
 
