@@ -872,8 +872,8 @@ def get_active_signature_return_url(user_id, metadata=None):
     if metadata is None:
         cla.log.error('Could not find active signature for user %s, return URL request failed' %user_id)
         return None
-    organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
-    installation_id = organization.get_organization_installation_id()
+    organizations = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
+    installation_id = organizations[0].get_organization_installation_id()
     github = cla.utils.get_repository_service('github')
     return github.get_return_url(metadata['repository_id'],
                                  metadata['pull_request_id'],
@@ -893,8 +893,8 @@ def get_individual_signature_callback_url(user_id, metadata=None):
     if metadata is None:
         cla.log.error('Could not find active signature for user %s, callback URL request failed' %user_id)
         return None
-    organization = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
-    installation_id = organization.get_organization_installation_id()
+    organizations = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
+    installation_id = organizations[0].get_organization_installation_id()
     return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])

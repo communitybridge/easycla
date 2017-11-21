@@ -2,7 +2,7 @@
 PROJECT_EXTERNAL_ID = 'salesforce-id-here'
 # The GitHub user/org used for testing purposes.
 GITHUB_ORGANIZATION_NAME = 'linuxfoundation'
-GITHUB_INSTALLATION_ID = 49309 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
+GITHUB_INSTALLATION_ID = 68875 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
 sys.path.append('../')
@@ -17,5 +17,5 @@ github_org = get_github_organization_instance()
 github_org.set_organization_name(GITHUB_ORGANIZATION_NAME)
 github_org.set_organization_project_id(project.get_project_id())
 # This will be different everytime the CLA app is installed.
-#github_org.set_organization_installation_id(GITHUB_INSTALLATION_ID)
+github_org.set_organization_installation_id(GITHUB_INSTALLATION_ID)
 github_org.save()
