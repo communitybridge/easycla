@@ -122,11 +122,11 @@ def user_authorization_callback(body):
 def activity(body):
     # GitHub Application
     if 'installation' in body:
-
         # New Installations
         if 'action' in body and body['action'] == 'created':
             existing = get_organization(body['installation']['account']['login'])
             if 'errors' in existing:
+                # TODO: Need a way of keeping track of new organizations that don't have projects yet.
                 org = create_organization(
                     body['installation']['account']['login'],
                     None,
@@ -139,15 +139,18 @@ def activity(body):
                     existing['organization_company_id'],
                     body['installation']['id']
                 )
-                return {'status': 'Organization Enrollment Completed. CLA System is operational.'}
+                cla.log.info('Organization enrollment completed: %s', existing['organization_name'])
+                return {'status': 'Organization Enrollment Completed. CLA System is operational'}
             else:
-                return {'status': 'Organization already exists in our system. Enrollment not completed.'}
+                cla.log.info('Organization already enrolled: %s', existing['organization_name'])
+                return {'status': 'Organization already enrolled in the CLA system'}
+        else: # TODO: Handle action == 'deleted'
+            pass
     # Pull Requests
     if 'pull_request' in body:
-
         # Makes sure that the repo is known to us
-        if org_is_covered_by_cla(body['pull_request']['head']['repo']['owner']['login']):
-
+        org_login = body['pull_request']['head']['repo']['owner']['login']
+        if org_is_covered_by_cla(org_login):
             # New PR opened
             if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
                 # Copied from repository_service.py
@@ -157,6 +160,7 @@ def activity(body):
                 return result
         # If the repo is not covered, post an annoying message on the Pull Request
         else:
+            cla.log.error('App posted GitHub activity from repository that we do not have in the system: %s', org_login)
             return {'status': 'Repo not covered under CLA System.'}
 
 
@@ -182,10 +186,9 @@ def org_is_covered_by_cla(owner):
     for org in orgs:
         # Org urls have to match and full enrollment has to be completed.
         if org['organization_name'] == owner and \
-                org['organization_project_id'] and \
-                org['organization_installation_id']:
+           org['organization_project_id'] and \
+           org['organization_installation_id']:
             return True
-
     return False
 
 
