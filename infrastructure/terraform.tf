@@ -83,3 +83,13 @@ module "danvpn" {
   dns_zone_id            = "${var.external_dns_zoneid}"
   vpc_id                 = "${module.vpc.id}"
 }
+
+module "salt" {
+  source                 = "../modules/salt"
+  ami                    = "ami-32d8124a" // Amazon Linux AMI 2017.09.1 (HVM), SSD Volume Type
+  subnet                 = "${module.vpc.external_subnets[0]}"
+  name                   = "salt.e.tux.rocks"
+  dns_zone_id            = "${var.external_dns_zoneid}"
+  vpc_id                 = "${module.vpc.id}"
+  ec2type                = "m4.large"
+}
