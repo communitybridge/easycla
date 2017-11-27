@@ -44,11 +44,15 @@ export class CincoService {
 
   getMyProjects() {
     return this.http.get(this.cincoApiUrl + '/project')
-      .map(res => res.json());
+      .map(res => {
+        console.log(res.json());
+        return res.json();
+        }
+      );
   }
 
   getAllProjects() {
-    return this.http.get(this.cincoApiUrl + '/projects')
+    return this.http.get(this.cincoApiUrl + '/project') // CINCO changes
       .map(res => res.json());
   }
 
@@ -60,27 +64,27 @@ export class CincoService {
 
   getProject(projectId, getMembers) {
     if (getMembers) { projectId = projectId + '?members=true'; }
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId)
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId)
       .map(res => res.json());
   }
 
   editProject(projectId, editProject) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId, editProject)
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId, editProject)
       .map((res) => res.json());
   }
 
   getProjectConfig(projectId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/config')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/config')
       .map(res => res.json());
   }
 
   updateProjectManagers(projectId, updatedManagers) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/managers', updatedManagers)
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/managers', updatedManagers)
       .map((res) => res.json());
   }
 
   getProjectLogos(projectId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/logos')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/logos')
       .map(res => res.json());
   }
 
@@ -90,12 +94,12 @@ export class CincoService {
   * The expiresOn property is an ISO-8601 timestamp indicating the last millisecond the URL will be valid to issue a GET request to.
   **/
   getProjectDocuments(projectId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/documents')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/documents')
       .map(res => res.json());
   }
 
   /**
-  * PUT /projects/{projectId}/logos/{classifier}/
+  * PUT /project/{projectId}/logos/{classifier}/
   * For logos, any program manager/admin should be able to submit a PUT to `/projects/{projectId}/logos/{classifier}`.
   * The request must have a Content-Type header of `image/**` (e.g. `image/png` or `image/jpeg`)
   * and can optionally include the image bytes in the body.
@@ -105,12 +109,12 @@ export class CincoService {
   * That will actually upload the image.
   **/
   obtainLogoS3URL(projectId, classifier, image) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/logos/' + classifier, image, image.contentType)
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/logos/' + classifier, image, image.contentType)
       .map((res) => res );
   }
 
   /**
-  * PUT /projects/{projectId}/documents/{classifier}/{filename}/
+  * PUT /project/{projectId}/documents/{classifier}/{filename}/
   * Accepts a request whose body is optionally blank (the body will be ignored).
   * The request headers must specify the Content-Type of the document.
   * The classifier path parameter corresponds as a single word class of this logo.
@@ -121,7 +125,7 @@ export class CincoService {
   * The putUrl.expiresOn property is an ISO-8601 timestamp indicating the last millisecond the putURL will be valid.
   **/
   obtainDocumentS3URL(projectId, classifier, file, filename, contentType) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
       .map((res) => res );
   }
 
@@ -138,12 +142,12 @@ export class CincoService {
   **/
 
   getProjectMembers(projectId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/members')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/members')
       .map(res => res.json());
   }
 
   getMember(projectId, memberId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/members/' + memberId)
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId)
       .map(res => res.json());
   }
 
@@ -160,22 +164,22 @@ export class CincoService {
   }
 
   getMemberContacts(projectId, memberId) {
-    return this.http.get(this.cincoApiUrl + '/projects/' + projectId + '/members/' + memberId + '/contacts')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts')
       .map(res => res.json());
   }
 
   addMemberContact(projectId, memberId, contactId, newContact) {
-    return this.http.post(this.cincoApiUrl + '/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId, newContact)
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts/' + contactId, newContact)
       .map((res) => res.json());
   }
 
   removeMemberContact(projectId, memberId, contactId, roleId) {
-    return this.http.delete(this.cincoApiUrl + '/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId)
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId)
       .map((res) => res.json());
   }
 
   updateMemberContact(projectId, memberId, contactId, roleId, updatedContact) {
-    return this.http.put(this.cincoApiUrl + '/projects/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, updatedContact)
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts/' + contactId + '/roles/' + roleId, updatedContact)
       .map((res) => res.json());
   }
 
@@ -226,62 +230,57 @@ export class CincoService {
   //////////////////////////////////////////////////////////////////////////////
 
   /**
-  * Users
+  * User
   * Resources to manage internal LF users and roles
   **/
 
   searchUser(username) {
-    return this.http.get(this.cincoApiUrl + '/users/search/username/' + username)
+    return this.http.get(this.cincoApiUrl + '/user/search/username/' + username)
       .map(res => res.json());
   }
 
   searchUserTerm(term) {
-    return this.http.get(this.cincoApiUrl + '/users/search/' + term)
+    return this.http.get(this.cincoApiUrl + '/user/search/' + term)
       .map(res => res.json());
   }
 
   getCurrentUser() {
-    return this.http.get(this.cincoApiUrl + '/users/current')
-      .map(res => res.json());
-  }
-
-  getAllUsers() {
-    return this.http.get(this.cincoApiUrl + '/users')
+    return this.http.get(this.cincoApiUrl + '/user')
       .map(res => res.json());
   }
 
   createUser(user) {
-    return this.http.post(this.cincoApiUrl + '/users', user)
+    return this.http.post(this.cincoApiUrl + '/user', user)
       .map(res => res.json());
   }
 
   removeUser(userId) {
-    return this.http.delete(this.cincoApiUrl + '/users/' + userId)
+    return this.http.delete(this.cincoApiUrl + '/user/' + userId)
       .map(res => res.json());
   }
 
   getUser(userId) {
-    return this.http.get(this.cincoApiUrl + '/users/' + userId)
+    return this.http.get(this.cincoApiUrl + '/user/' + userId)
       .map(res => res.json());
   }
 
   getUserRoles() {
-    return this.http.get(this.cincoApiUrl + '/users/roles')
+    return this.http.get(this.cincoApiUrl + '/user/roles')
       .map(res => res.json());
   }
 
   updateUser(userId, user) {
-    return this.http.put(this.cincoApiUrl + '/users/' + userId, user)
+    return this.http.put(this.cincoApiUrl + '/user/' + userId, user)
       .map(res => res.json());
   }
 
   addUserRole(userId, role) {
-    return this.http.put(this.cincoApiUrl + '/users/' + userId + '/role/' + role, null)
+    return this.http.put(this.cincoApiUrl + '/user/' + userId + '/role/' + role, null)
       .map(res => res.json());
   }
 
   removeUserRole(userId, role) {
-    return this.http.delete(this.cincoApiUrl + '/users/' + userId + '/role/' + role)
+    return this.http.delete(this.cincoApiUrl + '/user/' + userId + '/role/' + role)
       .map(res => res.json());
   }
 
