@@ -66,7 +66,7 @@ export class ProjectAnalyticsPage {
           this.hasBitergia = true;
         }
         else{
-          this.hasBitergia = false;
+          this.hasBitergia = true;
         }
       }
     });
