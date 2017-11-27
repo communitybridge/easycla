@@ -138,7 +138,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       {
         label: "Analytics",
         page: "ProjectAnalyticsPage",
-        access: true,
+        access: false,
       },
       {
         label: "Marketing",
