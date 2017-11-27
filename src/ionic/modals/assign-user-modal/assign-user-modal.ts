@@ -47,7 +47,7 @@ export class AssignUserModal {
   }
 
   ngOnInit() {
-    this.getAllUsers();
+    // this.getAllUsers();
   }
 
   getDefaults() {
@@ -64,14 +64,14 @@ export class AssignUserModal {
     ];
   }
 
-  getAllUsers() {
-    this.cincoService.getAllUsers().subscribe(response => {
-      if(response) {
-        this.users = response;
-        this.loading.users = false;
-      }
-    });
-  }
+  // getAllUsers() {
+  //   this.cincoService.getAllUsers().subscribe(response => {
+  //     if(response) {
+  //       this.users = response;
+  //       this.loading.users = false;
+  //     }
+  //   });
+  // }
 
   // ContactUpdateModal modal dismiss
   dismiss() {
