@@ -52,7 +52,7 @@ export class ConsoleUsersPage {
 
   ngOnInit(){
     this.getUserRoles();
-    this.getAllUsers();
+    // this.getAllUsers();
   }
 
   getUserRoles() {
@@ -63,14 +63,16 @@ export class ConsoleUsersPage {
     });
   }
 
-  getAllUsers() {
-    this.cincoService.getAllUsers().subscribe(response => {
-      if(response) {
-        this.users = response;
-        this.loading.users = false;
-      }
-    });
-  }
+// TODO: Get all Users is not avaiable anymore in CINCO.
+// We need logic for search users instead now.
+  // getAllUsers() {
+  //   this.cincoService.getAllUsers().subscribe(response => {
+  //     if(response) {
+  //       this.users = response;
+  //       this.loading.users = false;
+  //     }
+  //   });
+  // }
 
   userSelected(user) {
     let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {
@@ -78,7 +80,7 @@ export class ConsoleUsersPage {
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
-      this.getAllUsers();
+      // this.getAllUsers();
     });
     modal.present();
   }
@@ -88,7 +90,7 @@ export class ConsoleUsersPage {
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
-      this.getAllUsers();
+      // this.getAllUsers();
     });
     modal.present();
   }
