@@ -78,6 +78,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  editProjectConfig(projectId, updatedConfig) {
+    return this.http.patch(this.cincoApiUrl + '/projects/' + projectId + '/config', updatedConfig)
+      .map(res => res.json());
+  }
+
   updateProjectManagers(projectId, updatedManagers) {
     return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/managers', updatedManagers)
       .map((res) => res.json());
