@@ -4,6 +4,7 @@ import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
 import { PopoverController } from 'ionic-angular';
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'project/:projectId/cla'
@@ -11,12 +12,13 @@ import { PopoverController } from 'ionic-angular';
 @Component({
   selector: 'project-cla',
   templateUrl: 'project-cla.html',
-  providers: [CincoService]
 })
 export class ProjectClaPage {
+  loading: any;
+
   projectId: string;
 
-  contracts: any;
+  claProjects: any;
 
   iclaUploadInfo: any;
   cclaUploadInfo: any;
@@ -29,6 +31,7 @@ export class ProjectClaPage {
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
     private popoverCtrl: PopoverController,
+    public claService: ClaService,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -36,94 +39,14 @@ export class ProjectClaPage {
 
   getDefaults() {
 
-    this.contracts = [
-      {
-        id: '000001',
-        name: 'Zephyr Contract',
-        ccla: true,
-        cclaAndIcla: true,
-        icla: true,
-        contracts: {
-          ccla: {
-            name: 'zephyr_CLA_corporate.pdf',
-            src: 'https://example.com/something.pdf',
-            uploadDate: '6/30/2017, 11:31 PST',
-            version: '1.0',
-          },
-          icla: {
-            name: 'zephyr_CLA_corporate.pdf',
-            src: 'https://example.com/something.pdf',
-            uploadDate: '6/30/2017, 11:31 PST',
-            version: '1.0',
-          }
-        },
-        organizations: [
-          {
-            id: "000001",
-            name: "Zephyr Project",
-            gitUrl: "https://github.com/zephyrproject-rtos",
-            description: "https://www.zephyrproject.org",
-            appConnected: true,
-            repositories: [
-              {
-                name: "zephyr",
-              },
-              {
-                name: "zephyr-bluetooth",
-              },
-              {
-                name: "zephyr-wifi",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: '000001',
-        name: 'Zephyr Contract',
-        ccla: true,
-        cclaAndIcla: true,
-        icla: true,
-        contracts: {
-          ccla: {
-            name: 'zephyr_CLA_corporate.pdf',
-            src: 'https://example.com/something.pdf',
-            uploadDate: '6/30/2017, 11:31 PST',
-            version: '1.0',
-          },
-          icla: {
-            name: 'zephyr_CLA_corporate.pdf',
-            src: 'https://example.com/something.pdf',
-            uploadDate: '6/30/2017, 11:31 PST',
-            version: '1.0',
-          }
-        },
-        organizations: [
-          {
-            id: "000001",
-            name: "Zephyr Project",
-            gitUrl: "https://github.com/zephyrproject-rtos",
-            description: "https://www.zephyrproject.org",
-            appConnected: false,
-            repositories: [
-              {
-                name: "zephyr",
-              },
-              {
-                name: "zephyr-bluetooth",
-              },
-              {
-                name: "zephyr-wifi",
-              },
-            ],
-          },
-        ],
-      },
-    ];
+    this.loading = {
+      claProjects: true,
+    };
+    this.claProjects = [];
   }
 
   ngOnInit() {
-
+    this.getClaProjects();
   }
 
   ionViewCanEnter() {
@@ -140,28 +63,80 @@ export class ProjectClaPage {
     }
   }
 
-  openClaContractConfigModal(contract) {
-    let modal = this.modalCtrl.create('ClaContractConfigModal', {
-      contract: contract,
+  getClaProjects() {
+    this.loading.claProjects = true;
+    this.claService.getProjectsByExternalId(this.projectId).subscribe((projects) => {
+      console.log("claProjects");
+      console.log(projects);
+      this.claProjects = projects;
+      this.loading.claProjects = false;
+      for (let project of projects) {
+        this.claService.getProjectOrganizations(project.project_id).subscribe((organizations) => {
+          console.log("organizations:");
+          console.log(organizations);
+          project.organizations = organizations;
+          for (let organization of organizations) {
+            this.claService.getGithubGetNamespace(organization.organization_name).subscribe((providerInfo) => {
+              console.log("info from github");
+              console.log(providerInfo);
+              organization.providerInfo = providerInfo;
+              console.log("claProjects:");
+              console.log(this.claProjects);
+            });
+            if (organization.organization_installation_id) {
+              this.claService.getGithubOrganizationRepositories(organization.organization_name).subscribe((repositories) => {
+                organization.repositories = repositories;
+              });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  openClaContractConfigModal(claProject) {
+    let modal;
+    if (claProject) {
+      modal = this.modalCtrl.create('ClaContractConfigModal', {
+        claProject: claProject,
+      });
+    } else {
+      modal = this.modalCtrl.create('ClaContractConfigModal', {
+        projectId: this.projectId,
+      });
+    }
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
     });
     modal.present();
   }
 
-  openClaContractUploadModal(uploadInfo) {
+  openClaContractUploadModal(claProjectId, documentType) {
     let modal = this.modalCtrl.create('ClaContractUploadModal', {
-      uploadInfo: uploadInfo,
+      claProjectId: claProjectId,
+      documentType: documentType,
+    });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
     });
     modal.present();
   }
 
-  openClaContractVersionModal(uploadInfo) {
+  openClaContractVersionModal(claProjectId, documentType, documents) {
     let modal = this.modalCtrl.create('ClaContractVersionModal', {
+      claProjectId: claProjectId,
+      documentType: documentType,
+      documents: documents,
     });
     modal.present();
   }
 
-  openClaOrganizationProviderModal() {
+  openClaOrganizationProviderModal(claProjectId) {
     let modal = this.modalCtrl.create('ClaOrganizationProviderModal', {
+      claProjectId: claProjectId,
+    });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
     });
     modal.present();
   }
@@ -170,12 +145,16 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {
       orgName: orgName,
     });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
+    });
     modal.present();
   }
 
-  openClaContractsContributorsPage(contractId) {
+  openClaContractsContributorsPage(claProjectId) {
+    console.log(claProjectId);
     this.navCtrl.push('ClaContractsContributorsPage', {
-      contractId: contractId,
+      claProjectId: claProjectId,
     });
   }
 
@@ -184,7 +163,7 @@ export class ProjectClaPage {
       items: [
         {
           label: 'Delete',
-          callback: 'organizationDelete',
+          callback: 'deleteClaGithubOrganization',
           callbackData: {
             organization: organization,
           }
@@ -207,6 +186,12 @@ export class ProjectClaPage {
     });
   }
 
+  deleteClaGithubOrganization(data) {
+    this.claService.deleteGithubOrganization(data.organization.organization_name).subscribe((response) => {
+      this.getClaProjects();
+    });
+  }
+
   /**
    * Called if popover dismissed with data. Passes data to a callback function
    * @param  {object} popoverData should contain .callback and .callbackData
@@ -216,11 +201,6 @@ export class ProjectClaPage {
     if(this[callback]) {
       this[callback](popoverData.callbackData);
     }
-  }
-
-  organizationDelete(data) {
-    console.log('organization delete');
-    console.log(data.organization);
   }
 
 }

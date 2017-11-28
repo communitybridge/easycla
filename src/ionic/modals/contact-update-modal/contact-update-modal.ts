@@ -94,13 +94,13 @@ export class ContactUpdateModal {
       email:[this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
       givenName:[this.contact.contact.givenName, Validators.required],
       familyName:[this.contact.contact.familyName, Validators.required],
-      phone:[this.contact.contact.phone, Validators.compose([Validators.required, PhoneNumberValidator.isValid])],
-      title:[this.contact.contact.title, Validators.required],
-      type:[this.contact.contact.type, Validators.required],
+      phone:[this.contact.contact.phone, Validators.compose([PhoneNumberValidator.isValid])],
+      title:[this.contact.contact.title],
+      type:[this.contact.contact.type],
       role:[this.contact.type, Validators.required],
       primaryContact:[this.contact.primaryContact, Validators.required],
       boardMember:[this.contact.boardMember, Validators.required],
-      bio:[this.contact.contact.bio, Validators.required],
+      bio:[this.contact.contact.bio],
     });
 
 

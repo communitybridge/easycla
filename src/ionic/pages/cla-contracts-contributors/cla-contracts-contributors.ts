@@ -1,24 +1,20 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
+import { ClaService } from 'cla-service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
-import { ProjectModel } from '../../models/project-model';
 import { PopoverController } from 'ionic-angular';
 
 @IonicPage({
-  segment: 'cla-contracts-contributors/:contractId'
+  segment: 'cla-contracts-contributors/:claProjectId'
 })
 @Component({
   selector: 'cla-contracts-contributors',
   templateUrl: 'cla-contracts-contributors.html',
-  providers: [CincoService]
 })
 export class ClaContractsContributorsPage {
   selectedProject: any;
-  projectId: string;
-
-  project = new ProjectModel();
+  claProjectId: string;
 
   loading: any;
   sort: any;
@@ -27,13 +23,13 @@ export class ClaContractsContributorsPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService,
+    private claService: ClaService,
     private sortService: SortService,
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
     private keycloak: KeycloakService
   ) {
-
+    this.claProjectId = this.navParams.get('claProjectId');
     this.getDefaults();
   }
 
@@ -54,7 +50,10 @@ export class ClaContractsContributorsPage {
   }
 
   ngOnInit() {
-
+    this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
+      console.log("signatures");
+      console.log(signatures);
+    });
   }
 
   getDefaults() {
