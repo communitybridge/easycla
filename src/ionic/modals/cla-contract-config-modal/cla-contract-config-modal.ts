@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import {ClaService } from 'cla-service'
+import { ClaService } from 'cla-service'
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
