@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
-import { SortService } from '../../services/sort.service';
-import { MemberModel } from '../../models/member-model';
-import { RolesService } from '../../services/roles.service';
+import { CincoService } from '../../../services/cinco.service';
+import { KeycloakService } from '../../../services/keycloak/keycloak.service';
+import { SortService } from '../../../services/sort.service';
+import { MemberModel } from '../../../models/member-model';
+import { RolesService } from '../../../services/roles.service';
 
 @IonicPage({
   segment: 'project/:projectId/member/:memberId'
@@ -12,7 +12,6 @@ import { RolesService } from '../../services/roles.service';
 @Component({
   selector: 'member',
   templateUrl: 'member.html',
-  providers: [CincoService],
 })
 export class MemberPage {
   projectId: any;
@@ -136,7 +135,6 @@ export class MemberPage {
       if(response) {
         this.member = response;
         this.loading.member = false;
-        if(!this.userRoles.isStaffInc) { this.getOrganizationProjectMemberships(this.member.org.id); }
       }
     });
   }
@@ -173,24 +171,6 @@ export class MemberPage {
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
       this.getMemberContacts(this.projectId, this.memberId);
-    });
-    modal.present();
-  }
-
-  getOrganizationProjectMemberships(organizationId) {
-    this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
-      if(response) {
-        this.orgProjectMemberships = response;
-        this.loading.projects = false;
-        this.orgProjectMembershipsFiltered = this.orgProjectMemberships.filter((item, index) => index < 4 );
-      }
-    });
-  }
-
-  openMembershipsModal() {
-    let modal = this.modalCtrl.create('MembershipsModal', {
-      orgName: this.member.org.name,
-      memberships: this.orgProjectMemberships,
     });
     modal.present();
   }

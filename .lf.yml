@@ -6,4 +6,5 @@ modes:
   - dev
 dependencies:
   - cinco
+  - cla
 files:
