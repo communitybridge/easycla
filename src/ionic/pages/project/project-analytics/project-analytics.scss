@@ -23,4 +23,20 @@ project-analytics {
   .configure-analytics {
     margin: 40px;
   }
+
+  .container {
+      position: relative;
+      width: 50%;
+      height: 0;
+      padding-bottom: 28.13%;
+      display:inline-block;
+      margin:0;
+  }
+  .video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+  }
 }
