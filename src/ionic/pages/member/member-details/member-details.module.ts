@@ -1,26 +1,26 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ProjectDetailsPage } from './project-details';
+import { MemberDetailsPage } from './member-details';
 import { LoadingSpinnerComponentModule } from '../../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../../directives/loading-display/loading-display.module';
 import { SortingDisplayComponentModule } from '../../../components/sorting-display/sorting-display.module';
-import { ProjectHeaderComponentModule } from '../../../components/project-header/project-header.module';
-import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
+import { MemberHeaderComponentModule } from '../../../components/member-header/member-header.module';
+import { MemberNavigationComponentModule } from '../../../components/member-navigation/member-navigation.module';
 
 @NgModule({
   declarations: [
-    ProjectDetailsPage,
+    MemberDetailsPage,
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
-    ProjectHeaderComponentModule,
-    ProjectNavigationComponentModule,
-    IonicPageModule.forChild(ProjectDetailsPage)
+    MemberHeaderComponentModule,
+    MemberNavigationComponentModule,
+    IonicPageModule.forChild(MemberDetailsPage)
   ],
   entryComponents: [
-    ProjectDetailsPage,
+    MemberDetailsPage,
   ]
 })
-export class ProjectDetailsPageModule {}
+export class MemberDetailsPageModule {}

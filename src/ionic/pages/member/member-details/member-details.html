@@ -7,14 +7,13 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing>
-  <header>
-    <project-header [projectId]="projectId"></project-header>
-    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
+<ion-content headerspacing>
+  <header padding>
+    <member-header [projectId]="projectId" [memberId]="memberId"></member-header>
+    <member-navigation [context]="__proto__.constructor.name" [projectId]="projectId" [memberId]="memberId"></member-navigation>
   </header>
-
   <loading-spinner [loading]="loading.details"></loading-spinner>
-  <ion-grid [loading-display]="loading.details">
+  <ion-grid [loading-display]="loading.details" class="main-content">
     <ion-row>
       <ion-col col-12>
         <h2>Member Details</h2>
