@@ -698,6 +698,8 @@ class MockGitHub(GitHub):
     def get_user_emails(self, session, client_id):
         return [{'email': 'test@user.com', 'verified': True, 'primary': True, 'visibility': 'public'}]
 
+    def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
+        return MockGitHubPullRequest(pull_request_number)
 
 class MockGitHubClient(object): # pylint: disable=too-few-public-methods
     """

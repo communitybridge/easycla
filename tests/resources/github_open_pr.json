@@ -1,6 +1,9 @@
 {
   "action":"opened",
   "number":1,
+  "installation":{
+    "id":999
+  },
   "pull_request":{
     "_links":{
       "comments":{
