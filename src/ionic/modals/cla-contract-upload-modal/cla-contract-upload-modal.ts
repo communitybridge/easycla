@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CincoService } from '../../services/cinco.service'
+import { ClaService } from 'cla-service';
 
 @IonicPage({
   segment: 'cla-contract-upload-modal'
@@ -9,35 +10,54 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'cla-contract-upload-modal',
   templateUrl: 'cla-contract-upload-modal.html',
-  providers: [CincoService]
 })
 export class ClaContractUploadModal {
+  loading: any;
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
 
-  uploadInfo: any;
+  claProjectId: any;
+  documentType: string; // individual | corporate
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
+    public claService: ClaService,
+    private datePipe: DatePipe,
   ) {
-    this.getDefaults();
-    this.uploadInfo = this.navParams.get('uploadInfo');
+    this.documentType = this.navParams.get('documentType');
+    this.claProjectId = this.navParams.get('claProjectId');
     this.form = formBuilder.group({
-      file:['', Validators.compose([Validators.required])],
+      legalEntityName:['', Validators.compose([Validators.required])],
+      preamble:['', Validators.compose([Validators.required])],
       newSignature:[false],
     });
-  }
-
-  ngOnInit() {
-
+    this.getDefaults();
   }
 
   getDefaults() {
+    this.loading = {
+      document: true,
+    };
+  }
 
+  ngOnInit() {
+    this.getProjectDocument();
+  }
+
+  getProjectDocument() {
+    this.claService.getProjectDocument(this.claProjectId, this.documentType).subscribe((document) => {
+      console.log("document");
+      console.log(document);
+      this.form.patchValue({
+        legalEntityName: document.document_legal_entity_name,
+        preamble: document.document_preamble,
+      });
+      this.loading.document = false;
+    });
   }
 
   submit() {
@@ -48,13 +68,32 @@ export class ClaContractUploadModal {
       // prevent submit
       return;
     }
-    // let data = this.form.value.field;
-    // do any pre-processing of data
-    // this.dataService.sendData(data).subscribe(response => {
-    //   this.currentlySubmitting = false;
-    //   // call any success messaging
-    //   // navigate to previous page, root, or destination
-    // });
+    this.postProjectDocumentTemplate();
+  }
+
+  postProjectDocumentTemplate() {
+    let simplifiedEntityName = this.form.value.legalEntityName.replace(/[ ]/g, '-');
+    let docType = 'cla';
+    if (this.documentType == 'individual') {
+      docType = 'icla'
+    } else if (this.documentType == 'corporate') {
+      docType = 'ccla';
+    }
+    let date = this.datePipe.transform(Date(), 'yyyy-MM-dd');
+    let documentName = simplifiedEntityName + '_' + docType + '_' + date;
+
+    let document = {
+      document_name: documentName,
+      document_preamble: this.form.value.preamble,
+      document_legal_entity_name: this.form.value.legalEntityName,
+      new_major_version: this.form.value.newSignature,
+    };
+    console.log(this.documentType);
+    console.log(document);
+
+     this.claService.postProjectDocumentTemplate(this.claProjectId, this.documentType, document).subscribe((response) => {
+       this.dismiss();
+     });
   }
 
   dismiss() {

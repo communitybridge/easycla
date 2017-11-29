@@ -3,8 +3,8 @@ import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 
 @IonicPage({
-  segment: 'login',
   name: 'LoginPage',
+  segment: 'login'
 })
 @Component({
   selector: 'login',

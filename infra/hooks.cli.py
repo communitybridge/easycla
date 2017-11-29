@@ -18,6 +18,13 @@ def local_init_docker_compose_file(containers, config, dependencies, mode, path)
             containers['workspace']['environment']['KEYCLOAK_SERVER_URL'] = kc_endpoint
             lfcore.logger.info('Setting KEYCLOAK_SERVER_URL to ' + containers['workspace']['environment']['KEYCLOAK_SERVER_URL'])
 
+    cla = dependencies.get('cla')
+
+    if cla.created:
+        cla_endpoint = cla.endpoints.containers.get('workspace', 5000).formatted
+        containers['workspace']['environment']['CLA_SERVER_URL'] = cla_endpoint
+        lfcore.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
+
 
 @gossip.register('preprod_instance_task_build', tags=['pmc'])
 def preprod_instance_task_build(containers, instance_config, dependencies, domains, envs):

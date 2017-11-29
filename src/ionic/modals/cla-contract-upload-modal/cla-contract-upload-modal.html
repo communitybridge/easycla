@@ -23,11 +23,16 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>File:</ion-label>
-            <input type="file" #input/>
+            <ion-label stacked>Legal Entity Name:</ion-label>
+            <ion-input formControlName="legalEntityName"></ion-input>
           </ion-item>
         </ion-col>
-
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Preamble:</ion-label>
+            <ion-textarea formControlName="preamble"></ion-textarea>
+          </ion-item>
+        </ion-col>
         <ion-col col-12>
           <ion-item no-lines>
             <ion-label>Require new signature</ion-label>
