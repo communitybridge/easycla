@@ -7,15 +7,15 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from  '../../../validators/checkbox';
 
 @IonicPage({
-  segment: 'project/:projectId/details'
+  segment: 'project/:projectId/member/:memberId/details'
 })
 @Component({
-  selector: 'project-details',
-  templateUrl: 'project-details.html',
+  selector: 'member-details',
+  templateUrl: 'member-details.html',
 })
-export class ProjectDetailsPage {
-  projectId: string;
-
+export class MemberDetailsPage {
+  projectId: any;
+  memberId: any;
   details: any;
 
   loading: any;
@@ -40,8 +40,9 @@ export class ProjectDetailsPage {
     private keycloak: KeycloakService
   ) {
     this.projectId = navParams.get('projectId');
+    this.memberId = navParams.get('memberId');
     this.form = formBuilder.group({
-      confirm:[false, Validators.compose([CheckboxValidator.isChecked])],
+      confirm: [false, Validators.compose([CheckboxValidator.isChecked])],
     });
     this.getDefaults();
   }
@@ -63,11 +64,11 @@ export class ProjectDetailsPage {
   }
 
   ngOnInit() {
-    this.getProjectDetails();
+    this.getMemberDetails();
   }
 
-  getProjectDetails() {
-    // this.cincoService.getProjectDetails(this.projectId).subscribe(response => {
+  getMemberDetails() {
+    // this.cincoService.getMemberDetails(this.projectId).subscribe(response => {
     //   if (response) {
     //     this.details = response;
     //   }
