@@ -1,0 +1,75 @@
+<loading-spinner [loading]="loading.member"></loading-spinner>
+<ion-grid [loading-display]="loading.member">
+  <ion-row>
+    <ion-col class="info" col-12 col-md-8>
+      <ion-row><!-- Logo and description -->
+        <ion-col col-12 col-md-4>
+          <div class="logo-wrapper">
+            <div *ngIf="!member.org.logoRef" text-center>
+              <ion-icon class="no-logo-icon" name="image"></ion-icon>
+              <p>No Logo Set</p>
+            </div>
+            <div class="logo" *ngIf="member.org.logoRef">
+              <img src="{{ member.org.logoRef }}" alt="{{ member.org.name }} logo"/>
+            </div>
+          </div>
+        </ion-col>
+        <ion-col col-12 col-md-8>
+          <h1>
+            {{ member.org.name }}
+            <!-- <ion-icon class="clickable" name="md-create" item-right (click)="viewMemberDetails(memberId)"></ion-icon> -->
+          </h1>
+          <p>{{ member.org.description }}</p>
+        </ion-col>
+      </ion-row>
+      <ion-row><!-- Tags/Data Points -->
+        <ion-col col-12 col-md-4>
+          <ion-label>
+            LF Member: To Be Added
+          </ion-label>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <ion-label>
+            Status: To Be Added
+          </ion-label>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <ion-label>
+            Board: To Be Added
+          </ion-label>
+        </ion-col>
+      </ion-row>
+    </ion-col>
+    <ion-col col-12 col-md-4 *ngIf="can.viewPartnerships">
+      <ion-row>
+        <ion-col col-10>
+          Participation
+        </ion-col>
+        <ion-col col-2 class="clickable" (click)="openMembershipsModal()">
+          (
+            <span *ngIf="orgProjectMemberships; else loadingMemberships">{{ orgProjectMemberships.length }}</span>
+            <ng-template #loadingMemberships>...</ng-template>
+          )
+        </ion-col>
+      </ion-row>
+
+      <loading-spinner [loading]="loading.memberships"></loading-spinner>
+      <div no-padding class="participation clickable" *ngFor="let membership of orgProjectMembershipsFiltered" (click)="openProjectPage(membership.projectId)" [loading-display]="loading.memberships">
+        <h2>{{ membership.projectName }}</h2>
+        <ion-row responsive-md class="project-info">
+          <ion-col width-25>
+            <p>{{ membership.product }}, {{ membership.invoices[0].status }}</p>
+          </ion-col>
+          <ion-col width-40>
+            <p>Joined: </p>
+            <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="membership.startDate"></ion-datetime>
+          </ion-col>
+          <ion-col width-45>
+            <p>Expires:</p>
+            <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="membership.renewalDate"></ion-datetime>
+          </ion-col>
+        </ion-row>
+      </div>
+    </ion-col>
+  </ion-row>
+</ion-grid>
