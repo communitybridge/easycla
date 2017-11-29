@@ -165,6 +165,11 @@ export class ProjectNavigationComponent implements AfterViewChecked {
         page: "ProjectClaPage",
         access: this.userRoles.isAdmin,
       },
+      {
+        label: "Details",
+        page: "ProjectDetailsPage",
+        access: this.userRoles.isAdmin,
+      },
     ];
   }
 

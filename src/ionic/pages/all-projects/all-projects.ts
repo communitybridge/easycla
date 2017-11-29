@@ -8,7 +8,8 @@ import { FilterService } from '../../services/filter.service'
 import { RolesService } from '../../services/roles.service';
 
 @IonicPage({
-  segment: 'projects'
+  segment: 'projects',
+  name: 'AllProjectsPage',
 })
 @Component({
   selector: 'all-projects',
