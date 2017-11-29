@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
 import { PopoverController } from 'ionic-angular';
 
 @IonicPage({
@@ -9,7 +8,6 @@ import { PopoverController } from 'ionic-angular';
 @Component({
   selector: 'cla-organization-app-modal',
   templateUrl: 'cla-organization-app-modal.html',
-  providers: [CincoService]
 })
 export class ClaOrganizationAppModal {
 
@@ -29,6 +27,12 @@ export class ClaOrganizationAppModal {
 
   getDefaults() {
 
+  }
+
+  // TODO: Do we want a call to cla that polls for the installation status?
+
+  openAppPage() {
+    window.open('https://github.com/apps/contributor-license-agreement', '_blank');
   }
 
   dismiss() {

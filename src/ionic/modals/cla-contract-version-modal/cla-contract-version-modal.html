@@ -25,25 +25,47 @@
 
       </thead>
       <tbody>
-        <tr>
-          <th><ion-icon name="checkmark"></ion-icon></th>
-          <th colspan="5">Current Version</th>
-        </tr>
-        <tr>
-          <td>
-            <ion-icon name="document"></ion-icon>
-          </td>
-          <td data-title="Name">my_icla_pdf_vXX.pdf</td>
-          <td>v2.1</td>
-          <td>May 31, 2017 7:42, PST</td>
-          <td>Sarah Programmanager</td>
-          <td class="actions-cell">
-            <button ion-button icon-only clear round (click)="contractPopover($event, 0)">
-              <ion-icon name="more"></ion-icon>
-            </button>
-          </td>
-        </tr>
-        <tr>
+        <ng-container *ngIf="currentDocument">
+          <tr>
+            <th><ion-icon name="checkmark"></ion-icon></th>
+            <th colspan="5">Current Version</th>
+          </tr>
+          <tr *ngFor="let document of currentDocument">
+            <td>
+              <ion-icon name="document"></ion-icon>
+            </td>
+            <td data-title="Name">{{ document.document_name }}</td>
+            <td>v{{ document.document_major_version }}.{{ document.document_minor_version }}</td>
+            <td>{{ document.document_creation_date }}</td>
+            <td class="actions-cell">
+              <button ion-button icon-only clear round (click)="contractPopover($event, document)">
+                <ion-icon name="more"></ion-icon>
+              </button>
+            </td>
+          </tr>
+        </ng-container>
+
+        <ng-container *ngIf="previousDocuments">
+          <tr>
+            <th><ion-icon name="checkmark"></ion-icon></th>
+            <th colspan="5">Previous Versions</th>
+          </tr>
+          <tr *ngFor="let document of previousDocuments">
+            <td>
+              <ion-icon name="document"></ion-icon>
+            </td>
+            <td data-title="Name">{{ document.document_name }}</td>
+            <td>v{{ document.document_major_version }}.{{ document.document_minor_version }}</td>
+            <td>{{ document.document_creation_date }}</td>
+            <td class="actions-cell">
+              <button ion-button icon-only clear round (click)="contractPopover($event, document)">
+                <ion-icon name="more"></ion-icon>
+              </button>
+            </td>
+          </tr>
+        </ng-container>
+
+        <!-- <tr>
           <th colspan="6">Previous</th>
         </tr>
         <tr *ngFor="let item of [1,2,3,4,5]">
@@ -59,7 +81,7 @@
               <ion-icon name="more"></ion-icon>
             </button>
           </td>
-        </tr>
+        </tr> -->
       </tbody>
     </table>
   </ion-grid>
