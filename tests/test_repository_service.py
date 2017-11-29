@@ -31,7 +31,7 @@ class RepositoryServiceTestCase(CLATestCase):
         project = self.create_project()
         repository = self.create_repository(project['project_id'])
         change_request_id = 1
-        url = '/v1/repository-provider/mock_github/sign/' + repository['repository_id'] + '/' + str(change_request_id)
+        url = '/v1/repository-provider/mock_github/sign/999/' + repository['repository_id'] + '/' + str(change_request_id)
         response = hug.test.get(cla.routes, url)
         self.assertEqual(response.status, '302 Found')
         self.assertEqual(response.headers_dict['location'], 'http://authorization.url')

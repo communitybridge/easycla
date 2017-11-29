@@ -38,8 +38,13 @@ class GitHubTestCase(CLATestCase):
         change_request_id = 1
         github_org = self.create_github_organization(project['project_id'])
         with self.assertRaises(falcon.redirects.HTTPFound) as context:
-            github.sign_request(github_org['organization_installation_id'], repository['repository_id'], change_request_id, request)
-        self.assertTrue('http://signing-service.com/send-user-here' in str(context.exception))
+            github.sign_request(github_org['organization_installation_id'],
+                                repository['repository_id'], change_request_id, request)
+        # Should have automatically created a new user.
+        user = get_user_instance().all()[0]
+        uri = '/#/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
+              '?redirect=http://test-github.com/user/repo/' + repository['repository_external_id']
+        self.assertTrue(uri in str(context.exception))
 
     def test_oauth2_redirect(self):
         """Tests for the OAuth2 redirect from our repository provider."""
@@ -59,7 +64,11 @@ class GitHubTestCase(CLATestCase):
         state = 'random-state'
         with self.assertRaises(falcon.HTTPFound) as context:
             github.oauth2_redirect(state, code, request)
-        self.assertTrue('http://signing-service.com/send-user-here' in str(context.exception))
+        # Should have automatically created a new user.
+        user = get_user_instance().all()[0]
+        uri = '/#/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
+              '?redirect=http://github/origin/url'
+        self.assertTrue(uri in str(context.exception))
 
     def test_get_pull_request_commit_authors(self): # pylint: disable=invalid-name
         """Tests the get_pull_request_commit_authors() function."""
@@ -93,16 +102,15 @@ class GitHubTestCase(CLATestCase):
                                                signature_reference_type='user',
                                                signature_approved=False)
         change_request_id = 1
-        github.update_change_request(repository, change_request_id)
+        github.update_change_request(999, repository, change_request_id)
 
     def test_get_or_create_user(self):
         """Tests for the get_or_create_user() method."""
         github = MockGitHub(oauth2_token=True)
         github.initialize({'GITHUB_USERNAME': 'username', 'GITHUB_TOKEN': 'token'})
         # All other tests assume missing user. Check for user found here.
-        user_data = self.create_user(user_email='test@user.com', user_github_id=1)
+        user_data = self.create_user(user_email='test@user.com', user_github_id=123)
         github.get_or_create_user(None)
-        # Ensure the GitHub ID was updated to the 123 that the mock data uses.
         user = get_user_instance()
         user.load(user_data['user_id'])
         self.assertEqual(user.get_user_github_id(), 123)

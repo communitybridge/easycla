@@ -793,6 +793,7 @@ class Repository(model_interfaces.Repository):
         self.model.repository_external_id = str(repository_external_id)
 
     def get_repository_by_external_id(self, repository_external_id, repository_type):
+        # TODO: Optimize this on the DB end.
         repository_generator = \
             self.model.repository_external_index.query(str(repository_external_id))
         for repository_model in repository_generator:

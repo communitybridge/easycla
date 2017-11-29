@@ -29,7 +29,6 @@ class LocalStorageTestCase(CLATestCase):
                                        document_content=content)
         document = ret['project_individual_documents'][0]
         filename = document['document_file_id']
-        self.assertTrue(os.path.exists(local_storage_folder + filename))
         path = '/v1/project/' + project['project_id'] + '/document/individual'
         response = hug.test.get(cla.routes, path)
         self.assertEqual(response.data, document)
