@@ -289,6 +289,16 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  /**
+  * Event Source
+  * Resources for tracking events
+  **/
+
+  getEvents() {
+    return this.http.get(this.cincoApiUrl + '/events/')
+      .map(res => res.json());
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
 }
