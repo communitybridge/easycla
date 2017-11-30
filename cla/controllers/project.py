@@ -296,6 +296,9 @@ def post_project_document(project_id,
             document.set_document_major_version(major + 1)
             document.set_document_minor_version(0)
         else:
+            if major == 0:
+                major = 1
+            document.set_document_major_version(major)
             document.set_document_minor_version(minor + 1)
         project.add_project_individual_document(document)
     else:
@@ -304,6 +307,9 @@ def post_project_document(project_id,
             document.set_document_major_version(major + 1)
             document.set_document_minor_version(0)
         else:
+            if major == 0:
+                major = 1
+            document.set_document_major_version(major)
             document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
     project.save()
