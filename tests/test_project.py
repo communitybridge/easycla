@@ -100,6 +100,15 @@ class ProjectTestCase(CLATestCase):
                                 '/v1/project/' + project_id + '/document/individual')
         self.assertEqual(response.data['document_major_version'], 1)
         self.assertEqual(response.data['document_minor_version'], 0)
+        self.create_document(project_id, 'individual', new_major_version=True)
+        response = hug.test.get(cla.routes,
+                                '/v1/project/' + project_id + '/document/individual')
+        self.assertEqual(response.data['document_major_version'], 2)
+        self.assertEqual(response.data['document_minor_version'], 0)
+        response = hug.test.get(cla.routes,
+                                '/v1/project/' + project_id + '/document/individual')
+        self.assertEqual(response.data['document_major_version'], 2)
+        self.assertEqual(response.data['document_minor_version'], 1)
         path = '/v1/project/' + project_id + '/document/corporate/1/0'
         response = hug.test.delete(cla.routes, path)
         self.assertEqual(response.data, {'success': True})
