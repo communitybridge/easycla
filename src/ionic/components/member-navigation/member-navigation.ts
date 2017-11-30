@@ -135,6 +135,11 @@ export class MemberNavigationComponent implements AfterViewChecked {
         page: "",
         access: this.userRoles.isAdmin,
       },
+      {
+        label: "Details",
+        page: "MemberDetailsPage",
+        access: this.userRoles.isAdmin,
+      },
     ];
   }
 
