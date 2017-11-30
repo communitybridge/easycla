@@ -131,7 +131,12 @@ export class MyApp {
         title: 'Linux Console Users',
         access: this.userRoles.isAdmin,
         component: 'ConsoleUsersPage'
-      }
+      },
+      {
+        title: 'Activity Log',
+        access: this.userRoles.isAdmin,
+        component: 'ActivityLogPage'
+      },
     ];
   }
 }
