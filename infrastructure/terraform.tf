@@ -86,7 +86,7 @@ module "danvpn" {
 
 module "salt" {
   source                 = "../modules/salt"
-  ami                    = "ami-32d8124a" // Amazon Linux AMI 2017.09.1 (HVM), SSD Volume Type
+  ami                    = "ami-0c2aba6c" // CentOS Linux 7 x86_64 hvm ebs us-west-2
   subnet                 = "${module.vpc.external_subnets[0]}"
   name                   = "salt.e.tux.rocks"
   dns_zone_id            = "${var.external_dns_zoneid}"
