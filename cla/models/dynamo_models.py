@@ -179,6 +179,106 @@ class BaseModel(Model):
                 yield name, attr.serialize(getattr(self, name))
 
 
+class DocumentTabModel(MapAttribute):
+    """
+    Represents a document tab in the document model.
+    """
+    document_tab_type = UnicodeAttribute(default='text')
+    document_tab_id = UnicodeAttribute()
+    document_tab_name = UnicodeAttribute()
+    document_tab_page = NumberAttribute(default=1)
+    document_tab_position_x = NumberAttribute()
+    document_tab_position_y = NumberAttribute()
+    document_tab_width = NumberAttribute(default=200)
+    document_tab_height = NumberAttribute(default=20)
+
+class DocumentTab(model_interfaces.DocumentTab):
+    """
+    ORM-agnostic wrapper for the DynamoDB DocumentTab model.
+    """
+    def __init__(self, # pylint: disable=too-many-arguments
+                 document_tab_type=None,
+                 document_tab_id=None,
+                 document_tab_name=None,
+                 document_tab_page=None,
+                 document_tab_position_x=None,
+                 document_tab_position_y=None,
+                 document_tab_width=None,
+                 document_tab_height=None):
+        super().__init__()
+        self.model = DocumentTabModel()
+        self.model.document_tab_id = document_tab_id
+        self.model.document_tab_name = document_tab_name
+        self.model.document_tab_position_x = document_tab_position_x
+        self.model.document_tab_position_y = document_tab_position_y
+        # Use defaults if None is provided for the following attributes.
+        if document_tab_type is not None:
+            self.model.document_tab_type = document_tab_type
+        if document_tab_page is not None:
+            self.model.document_major_version = document_tab_page
+        if document_tab_width is not None:
+            self.model.document_tab_width = document_tab_width
+        if document_tab_height is not None:
+            self.model.document_tab_height = document_tab_height
+
+    def to_dict(self):
+        return {'document_tab_type': self.model.document_tab_type,
+                'document_tab_id': self.model.document_tab_id,
+                'document_tab_name': self.model.document_tab_name,
+                'document_tab_page': self.model.document_tab_page,
+                'document_tab_position_x': self.model.document_tab_position_x,
+                'document_tab_position_y': self.model.document_tab_position_y,
+                'document_tab_width': self.model.document_tab_width,
+                'document_tab_height': self.model.document_tab_height}
+
+    def get_document_tab_type(self):
+        return self.model.document_tab_type
+
+    def get_document_tab_id(self):
+        return self.model.document_tab_id
+
+    def get_document_tab_name(self):
+        return self.model.document_tab_name
+
+    def get_document_tab_page(self):
+        return self.model.document_tab_page
+
+    def get_document_tab_position_x(self):
+        return self.model.document_tab_position_x
+
+    def get_document_tab_position_y(self):
+        return self.model.document_tab_position_y
+
+    def get_document_tab_width(self):
+        return self.model.document_tab_width
+
+    def get_document_tab_height(self):
+        return self.model.document_tab_height
+
+    def set_document_tab_type(self, tab_type):
+        self.model.document_tab_type = tab_type
+
+    def set_document_tab_id(self, tab_id):
+        self.model.document_tab_id = tab_id
+
+    def set_document_tab_name(self, tab_name):
+        self.model.document_tab_name = tab_name
+
+    def set_document_tab_page(self, tab_page):
+        self.model.document_tab_page = tab_page
+
+    def set_document_tab_position_x(self, tab_position_x):
+        self.model.document_tab_position_x = tab_position_x
+
+    def set_document_tab_position_y(self, tab_position_y):
+        self.model.document_tab_position_y = tab_position_y
+
+    def set_document_tab_width(self, tab_width):
+        self.model.document_tab_width = tab_width
+
+    def set_document_tab_height(self, tab_height):
+        self.model.document_tab_height = tab_height
+
 class DocumentModel(MapAttribute):
     """
     Represents a document in the project model.
@@ -194,6 +294,7 @@ class DocumentModel(MapAttribute):
     document_creation_date = UnicodeAttribute()
     document_preamble = UnicodeAttribute(null=True)
     document_legal_entity_name = UnicodeAttribute(null=True)
+    document_tabs = ListAttribute(of=DocumentTabModel, default=[])
 
 class Document(model_interfaces.Document):
     """
@@ -240,7 +341,8 @@ class Document(model_interfaces.Document):
                 'document_minor_version': self.model.document_minor_version,
                 'document_creation_date': self.model.document_creation_date,
                 'document_preamble': self.model.document_preamble,
-                'document_legal_entity_name': self.model.document_legal_entity_name}
+                'document_legal_entity_name': self.model.document_legal_entity_name,
+                'document_tabs': self.model.document_tabs}
 
     def get_document_name(self):
         return self.model.document_name
@@ -278,6 +380,14 @@ class Document(model_interfaces.Document):
 
     def get_document_legal_entity_name(self):
         return self.model.document_legal_entity_name
+
+    def get_document_tabs(self):
+        tabs = []
+        for tab in self.model.document_tabs:
+            tab_obj = DocumentTab()
+            tab_obj.model = tab
+            tabs.append(tab_obj)
+        return tabs
 
     def set_document_author_name(self, document_author_name):
         self.model.document_author_name = document_author_name
@@ -320,6 +430,29 @@ class Document(model_interfaces.Document):
 
     def set_document_legal_entity_name(self, entity_name):
         self.model.document_legal_entity_name = entity_name
+
+    def set_document_tabs(self, tabs):
+        self.model.document_tabs = tabs
+
+    def add_document_tab(self, tab):
+        self.model.document_tabs.append(tab.model)
+
+    def set_raw_document_tabs(self, tabs_data):
+        self.model.document_tabs = []
+        for tab_data in tabs_data:
+            self.add_raw_document_tab(tab_data)
+
+    def add_raw_document_tab(self, tab_data):
+        tab = DocumentTab()
+        tab.set_document_tab_type(tab_data['type'])
+        tab.set_document_tab_id(tab_data['id'])
+        tab.set_document_tab_name(tab_data['name'])
+        tab.set_document_tab_position_x(tab_data['position_x'])
+        tab.set_document_tab_position_y(tab_data['position_y'])
+        tab.set_document_tab_width(tab_data['width'])
+        tab.set_document_tab_height(tab_data['height'])
+        tab.set_document_tab_page(tab_data['page'])
+        self.add_document_tab(tab)
 
 class ProjectModel(BaseModel):
     """

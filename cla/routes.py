@@ -739,6 +739,7 @@ def post_project_document(
           examples=" - {'document_name': 'doc_name.pdf', \
                         'document_preamble': 'Preamble here', \
                         'document_legal_entity_name': 'Legal entity name', \
+                        'template_name': 'CNCFTemplate', \
                         'new_major_version': true}")
 def post_project_document_template(
         project_id: hug.types.uuid,
@@ -746,6 +747,7 @@ def post_project_document_template(
         document_name: hug.types.text,
         document_preamble: hug.types.text,
         document_legal_entity_name: hug.types.text,
+        template_name: hug.types.one_of(['CNCFTemplate']),
         new_major_version=None):
     """
     POST: /project/{project_id}/document/template/{document_type}
@@ -753,6 +755,7 @@ def post_project_document_template(
     DATA: {'document_name': 'doc_name.pdf',
            'document_preamble': 'Preamble here',
            'document_legal_entity_name': 'Legal entity name',
+           'template_name': 'CNCFTemplate',
            'new_major_version': false}
 
     Creates a new CLA document from a template for a specified project.
@@ -769,6 +772,7 @@ def post_project_document_template(
         document_name=document_name,
         document_preamble=document_preamble,
         document_legal_entity_name=document_legal_entity_name,
+        template_name=template_name,
         new_major_version=new_major_version)
 
 @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)

@@ -251,21 +251,6 @@ class DocuSign(signing_service_interface.SigningService):
         name = user.get_user_name()
         if name is None:
             name = 'Unknown'
-        # Not sure what should be put in as documentId.
-        document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
-        tab = pydocusign.SignHereTab(documentId=document_id,
-                                     pageNumber=1,
-                                     xPosition=280,
-                                     yPosition=700)
-        signer = pydocusign.Signer(email=user.get_user_email(),
-                                   name=name,
-                                   recipientId=1,
-                                   clientUserId=signature.get_signature_id(),
-                                   tabs=[tab], # Can be placed in DocuSign UI
-                                   emailSubject='CLA Sign Request',
-                                   emailBody='CLA Sign Request for %s'
-                                   %user.get_user_email(),
-                                   supportedLanguage='en')
         # Fetch the document to sign.
         project = cla.utils.get_project_instance()
         project.load(signature.get_signature_project_id())
@@ -281,6 +266,18 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.error('Could not get sign url for project %s: Project has no individual \
                                CLA document set', project.get_project_id())
                 return
+        # Not sure what should be put in as documentId.
+        document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
+        tabs = get_docusign_tabs_from_document(document, document_id)
+        signer = pydocusign.Signer(email=user.get_user_email(),
+                                   name=name,
+                                   recipientId=1,
+                                   clientUserId=signature.get_signature_id(),
+                                   tabs=tabs,
+                                   emailSubject='CLA Sign Request',
+                                   emailBody='CLA Sign Request for %s'
+                                   %user.get_user_email(),
+                                   supportedLanguage='en')
         content_type = document.get_document_content_type()
         if content_type.startswith('url+'):
             pdf_url = document.get_document_content()
@@ -514,3 +511,41 @@ def update_repository_provider(installation_id, github_repository_id, change_req
     """Helper method to notify the repository provider of successful signature."""
     repo_service = cla.utils.get_repository_service('github')
     repo_service.update_change_request(installation_id, github_repository_id, change_request_id)
+
+def get_docusign_tabs_from_document(document, document_id):
+    """
+    Helper function to extract the DocuSign tabs out of a document object.
+
+    :param document: The document to extract the tabs from.
+    :type document: cla.models.model_interfaces.Document
+    :param document_id: The ID of the document to use for grouping of the tabs.
+    :type document_id: int
+    :return: List of formatted tabs for consumption by pydocusign.
+    :rtype: [pydocusign.Tab]
+    """
+    tabs = []
+    for tab in document.get_document_tabs():
+        tab_type = tab.get_document_tab_type()
+        if tab_type == 'text':
+            tab_class = pydocusign.TextTab
+        elif tab_type == 'number':
+            tab_class = pydocusign.NumberTab
+        elif tab_type == 'sign':
+            tab_class = pydocusign.SignHereTab
+        elif tab_type == 'date':
+            tab_class = pydocusign.DateSignedTab
+        else:
+            cla.log.warning('Invalid tab type specified (%s) in document file ID %s',
+                            tab_type, document.get_document_file_id())
+            continue
+        tab_obj = tab_class(documentId=document_id,
+                            pageNumber=tab.get_document_tab_page(),
+                            xPosition=tab.get_document_tab_position_x(),
+                            yPosition=tab.get_document_tab_position_y(),
+                            width=tab.get_document_tab_width(),
+                            height=tab.get_document_tab_height(),
+                            customTabId=tab.get_document_tab_id(),
+                            tabLabel=tab.get_document_tab_id(),
+                            name=tab.get_document_tab_name())
+        tabs.append(tab_obj)
+    return tabs

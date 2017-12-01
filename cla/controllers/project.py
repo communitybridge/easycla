@@ -6,7 +6,7 @@ import uuid
 import urllib
 import io
 import cla
-from cla.resources.contract_templates import TestTemplate
+import cla.resources.contract_templates
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
@@ -320,6 +320,7 @@ def post_project_document_template(project_id,
                                    document_name,
                                    document_preamble,
                                    document_legal_entity_name,
+                                   template_name,
                                    new_major_version=None):
     """
     Will create a new document for the project specified, using the existing template.
@@ -334,6 +335,8 @@ def post_project_document_template(project_id,
     :type document_preamble: string
     :param document_legal_entity_name: The legal entity name on the document.
     :type document_legal_entity_name: string
+    :param template_name: The name of the template object to use.
+    :type template_name: string
     :param new_major_version: Whether or not to bump up the major version.
     :type new_major_version: boolean
     """
@@ -362,15 +365,17 @@ def post_project_document_template(project_id,
         else:
             document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
-    # Need to take the template and inject the preamble and legal entity name.
-    template = TestTemplate(document_type=document_type.capitalize(),
-                            major_version=document.get_document_major_version(),
-                            minor_version=document.get_document_minor_version()) # TestTemplate for now.
+    # Need to take the template, inject the preamble and legal entity name, and add the tabs.
+    tmplt = getattr(cla.resources.contract_templates, template_name)
+    template = tmplt(document_type=document_type.capitalize(),
+                     major_version=document.get_document_major_version(),
+                     minor_version=document.get_document_minor_version())
     content = template.get_html_contract(document_legal_entity_name, document_preamble)
     pdf_generator = get_pdf_service()
     pdf_content = pdf_generator.generate(content)
     document.set_document_content_type('storage+pdf')
     document.set_document_content(pdf_content, b64_encoded=False)
+    document.set_raw_document_tabs(template.get_tabs())
     project.save()
     return project.to_dict()
 

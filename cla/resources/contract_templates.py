@@ -2,6 +2,9 @@
 Holds various HTML contract templates.
 """
 
+import os
+import cla
+
 class ContractTemplate(object):
     def __init__(self, document_type='Individual', major_version=1, minor_version=0, body=None):
         self.document_type = 'Individual'
@@ -19,9 +22,12 @@ class ContractTemplate(object):
             html = html.replace('{{preamble}}', preamble)
         return html
 
+    def get_tabs(self):
+        return []
+
 class TestTemplate(ContractTemplate):
     def __init__(self, document_type='Individual', major_version=1, minor_version=0, body=None):
-        super().__init__(body)
+        super().__init__(document_type, major_version, minor_version, body)
         if self.body is None:
             self.body = """
 <html>
@@ -39,3 +45,86 @@ class TestTemplate(ContractTemplate):
         </p>
     </body>
 </html>"""
+
+class CNCFTemplate(ContractTemplate):
+    def __init__(self, document_type='Individual', major_version=1, minor_version=0):
+        super().__init__(document_type, major_version, minor_version)
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        fname = '%s/cncf-%s-cla.html' %(cwd, document_type.lower())
+        self.body = open(fname).read()
+
+    def get_tabs(self):
+        return [
+            {'type': 'text',
+             'id': 'full_name',
+             'name': 'Full Name',
+             'position_x': 105,
+             'position_y': 302,
+             'width': 360,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'public_name',
+             'name': 'Public Name',
+             'position_x': 120,
+             'position_y': 330,
+             'width': 345,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'mailing_address_1',
+             'name': 'Mailing Address1',
+             'position_x': 140,
+             'position_y': 358,
+             'width': 325,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'mailing_address_2',
+             'name': 'Mailing Address2',
+             'position_x': 55,
+             'position_y': 386,
+             'width': 420,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'country',
+             'name': 'Country',
+             'position_x': 100,
+             'position_y': 414,
+             'width': 370,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'telephone',
+             'name': 'Telephone',
+             'position_x': 115,
+             'position_y': 442,
+             'width': 350,
+             'height': 20,
+             'page': 1},
+            {'type': 'text',
+             'id': 'email',
+             'name': 'Email',
+             'position_x': 90,
+             'position_y': 470,
+             'width': 380,
+             'height': 20,
+             'page': 1},
+            {'type': 'sign',
+             'id': 'sign',
+             'name': 'Please Sign',
+             'position_x': 180,
+             'position_y': 140,
+             'width': 0,
+             'height': 0,
+             'page': 3},
+            {'type': 'date',
+             'id': 'date',
+             'name': 'Date',
+             'position_x': 350,
+             'position_y': 182,
+             'width': 0,
+             'height': 0,
+             'page': 3}
+        ]
