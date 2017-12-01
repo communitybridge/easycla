@@ -16,9 +16,9 @@ export class ProjectAnalyticsPage {
 
   projectId: string;
 
-  hasBitergia: boolean;
+  hasAnalyticsUrl: boolean;
   analyticsUrl: any;
-  sanitizedBitergiaUrl: any;
+  sanitizedAnalyticsUrl: any;
 
   constructor(
     public navCtrl: NavController,
@@ -62,11 +62,11 @@ export class ProjectAnalyticsPage {
         let projectConfig = response;
         if(projectConfig.analyticsUrl) {
           this.analyticsUrl = projectConfig.analyticsUrl;
-          this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
-          this.hasBitergia = true;
+          this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+          this.hasAnalyticsUrl = true;
         }
         else{
-          this.hasBitergia = true;
+          this.hasAnalyticsUrl = true;
         }
       }
     });
@@ -79,8 +79,8 @@ export class ProjectAnalyticsPage {
     modal.onDidDismiss(analyticsUrl => {
       if(analyticsUrl){
         this.analyticsUrl = analyticsUrl;
-        this.hasBitergia = true;
-        this.sanitizedBitergiaUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+        this.hasAnalyticsUrl = true;
+        this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
       }
     });
     modal.present();
