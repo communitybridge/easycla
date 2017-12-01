@@ -12,8 +12,30 @@ from cla.utils import get_user_instance, get_signing_service
 
 class DocuSignTestCase(CLATestCase):
     """DocuSign test cases."""
+    def test_request_cncf_signature(self):
+        """Tests for requesting a signature. Communicates with the signing service provider."""
+
+        #return # Only enabled temporarily when testing out new templates.
+
+        test_signing_service = cla.conf['SIGNING_SERVICE']
+        cla.conf['SIGNING_SERVICE'] = 'DocuSign'
+        project = self.create_project()
+
+        data = {'document_name': 'test.pdf',
+                'document_preamble': 'Preamble here',
+                'document_legal_entity_name': 'Legal Entity Name',
+                'template_name': 'CNCFTemplate'}
+        hug.test.post(cla.routes, '/v1/project/' + project['project_id'] + '/document/template/individual', data)
+        user = self.create_user()
+        data = {'project_id': project['project_id'],
+                'user_id': user['user_id'],
+                'return_url': 'http://return-url.com/done'}
+        result = hug.test.post(cla.routes, '/v1/request-individual-signature', data)
+        print(result.data)
+        cla.conf['SIGNING_SERVICE'] = test_signing_service
+
     def test_request_signature(self):
-        """Tests for requesting signature."""
+        """Tests for requesting signature. Uses mock objects."""
         project = self.create_project()
         document = self.create_document(project['project_id'])
         user = self.create_user()

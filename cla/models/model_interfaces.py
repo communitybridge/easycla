@@ -1409,6 +1409,16 @@ class Document(object):
         """
         raise NotImplementedError()
 
+    def get_document_tabs(self):
+        """
+        Getter for the document's field metadata information.
+        This information is used to generate documents with fields that will capture user data.
+
+        :return: The list of tabs for this document.
+        :rtype: [cla.models.model_interfaces.DocumentTab]
+        """
+        raise NotImplementedError()
+
     def set_document_name(self, document_name):
         """
         Setter for the document's name.
@@ -1508,6 +1518,183 @@ class Document(object):
         :type entity_name: string
         """
         raise NotImplementedError()
+
+    def set_document_tabs(self, tabs):
+        """
+        Setter for the document's field metadata information.
+
+        :param tabs: List of tabs to set for this document.
+        :type tabs: [cla.models.model_interfaces.DocumentTab]
+        """
+        raise NotImplementedError()
+
+    def set_raw_document_tabs(self, tabs_data):
+        """
+        Same as set_document_tabs except it accepts a list of dict of values instead.
+
+        :param tabs: List of dict of tab data to set for this document.
+        :type tabs: [dict]
+        """
+        raise NotImplementedError()
+
+    def add_document_tab(self, tab):
+        """
+        Adds another tab to the list of tabs in this document.
+
+        :param tab: The tab to add.
+        :type tab: cla.models.model_interfaces.DocumentTab
+        """
+        raise NotImplementedError()
+
+    def add_raw_document_tab(self, tab_data):
+        """
+        Same as add_document_tab except it accepts a dict of values instead.
+
+        :param tab: Data on the tab to add.
+        :type tab: dict
+        """
+        raise NotImplementedError()
+
+class DocumentTab(object):
+    """
+    Interface to a Document tab.
+    """
+
+    def to_dict(self):
+        """
+        Converts a DocumentTab into a python dict for json serialization.
+
+        :return: A dict representation of the DocumentTab.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_type(self):
+        """
+        Getter for the document tab type.
+
+        :return: The document tab type.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_name(self):
+        """
+        Getter for the document tab name.
+
+        :return: The document tab name.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_page(self):
+        """
+        Getter for the document tab's page number.
+
+        :return: The document tab's page number.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_position_x(self):
+        """
+        Getter for the document tab's X position.
+
+        :return: The document tab's X position.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_position_y(self):
+        """
+        Getter for the document tab's Y position.
+
+        :return: The document tab's Y position.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_width(self):
+        """
+        Getter for the document tab's width.
+
+        :return: The document tab's width.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
+    def get_document_tab_height(self):
+        """
+        Getter for the document tab's height.
+
+        :return: The document tab's height.
+        :rtype: int
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_type(self, tab_type):
+        """
+        Setter for the document tab type.
+
+        :param tab_type: The document tab type.
+        :type tab_type: string
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_name(self, tab_name):
+        """
+        Setter for the document tab name.
+
+        :param tab_name: The document tab name.
+        :type tab_name: string
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_page(self, tab_page):
+        """
+        Setter for the document tab's page number.
+
+        :param tab_page: The document tab's page number.
+        :type tab_page: int
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_position_x(self, tab_position_x):
+        """
+        Setter for the document tab's X position.
+
+        :param position_x: The document tab's X position.
+        :type position_x: int
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_position_y(self, tab_position_y):
+        """
+        Setter for the document tab's Y position.
+
+        :param position_y: The document tab's Y position.
+        :type position_y: int
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_width(self, tab_width):
+        """
+        Setter for the document tab's width.
+
+        :param tab_width: The document tab's width.
+        :type tab_width: int
+        """
+        raise NotImplementedError()
+
+    def set_document_tab_height(self, tab_height):
+        """
+        Setter for the document tab's height.
+
+        :param tab_height: The document tab's height.
+        :type tab_height: int
+        """
+        raise NotImplementedError()
+
 
 class GitHubOrg(object):
     """
