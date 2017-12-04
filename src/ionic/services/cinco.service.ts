@@ -296,10 +296,27 @@ export class CincoService {
   * Resources for tracking events
   **/
 
-  getEvents() {
-    return this.http.get(this.cincoApiUrl + '/events/')
+  // getEvents() {
+  //   return this.http.get(this.cincoApiUrl + '/events')
+  //     .map(res => res.json());
+  // }
+
+  getEventsForProject(projectId) {
+    return this.http.get(this.cincoApiUrl + '/events/projects/' + projectId)
       .map(res => res.json());
   }
+
+  getEventsForOrg(orgId) {
+    return this.http.get(this.cincoApiUrl + '/events/organizations/' + orgId)
+      .map(res => res.json());
+  }
+
+  getEventsForUser(userId) {
+    return this.http.get(this.cincoApiUrl + '/events/users/' + userId)
+      .map(res => res.json());
+  }
+
+
 
   //////////////////////////////////////////////////////////////////////////////
 
