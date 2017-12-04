@@ -47,6 +47,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  getEvents() {
+    return this.http.get(this.cincoApiUrl + '/events')
+      .map(res => res.json());
+  }
+
   getAllProjects() {
     return this.http.get(this.cincoApiUrl + '/project') // CINCO changes
       .map(res => res.json());
