@@ -62,7 +62,7 @@
             <ion-input type="text" formControlName="phone"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.phone.valid && (form.controls.phone.touched || submitAttempt)" no-lines>
-            <p>* A valid phone number is required.</p>
+            <p>* Phone number must be valid if entered.</p>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -78,6 +78,7 @@
           <ion-item>
             <ion-label stacked>Type *</ion-label>
             <ion-select formControlName="type">
+              <ion-option value="">None</ion-option>
               <ion-option *ngFor="let role of keysGetter(orgContactRoles)" value="{{ role }}">{{ orgContactRoles[role] }}</ion-option>
             </ion-select>
           </ion-item>
@@ -97,6 +98,7 @@
           <ion-item>
             <ion-label stacked>Role</ion-label>
             <ion-select formControlName="role">
+              <ion-option value="">None</ion-option>
               <ion-option *ngFor="let role of keysGetter(memberContactRoles)" value="{{ role }}">{{ memberContactRoles[role] }}</ion-option>
             </ion-select>
           </ion-item>

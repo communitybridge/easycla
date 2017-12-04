@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>LF Project</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <header>
+    <project-header [projectId]="projectId"></project-header>
+    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
+  </header>
+  <!-- <ion-grid> -->
+    <ion-row>
+      <div class="container">
+        <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&from=1495384630045&to=1511282230045&panelId=1" frameborder="0" class="video"></iframe>
+      </div>
+      <div class="container">
+        <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&panelId=2&from=1495381830365&to=1511279430365" frameborder="0" class="video"></iframe>
+      </div>
+    </ion-row>
+    <ion-row *ngIf="hasBitergia">
+      <ion-col>
+        <!-- <div class="bitergia-wrapper"> -->
+          <!-- <iframe [attr.src]="sanitizedBitergiaUrl"></iframe> -->
+        <!-- </div> -->
+        <div class="bitergia-wrapper">
+          <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&panelId=3&from=1495381528516&to=1511279128516" frameborder="0"></iframe>
+        </div>
+      </ion-col>
+    </ion-row>
+  <!-- </ion-grid> -->
+  <!-- <ion-row text-center>
+    <ion-col>
+      <div class="configure-analytics">
+        <ion-label>Configure Analytics <a class="project-details-link clickable" (click)="openAnaylticsConfigModal(projectId)">here</a></ion-label>
+      </div>
+    </ion-col>
+  </ion-row> -->
+</ion-content>

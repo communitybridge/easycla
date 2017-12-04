@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormControl } from '@angular/forms';
-import { CincoService } from '../../services/cinco.service';
+import { ClaService } from 'cla-service';
 import { Http } from '@angular/http';
 
 @IonicPage({
@@ -11,14 +11,13 @@ import { Http } from '@angular/http';
 @Component({
   selector: 'cla-organization-provider-modal',
   templateUrl: 'cla-organization-provider-modal.html',
-  providers: [CincoService]
 })
 export class ClaOrganizationProviderModal {
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
 
-  uploadInfo: any;
+  claProjectId: any;
 
   constructor(
     public navCtrl: NavController,
@@ -26,13 +25,14 @@ export class ClaOrganizationProviderModal {
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
     public http: Http,
+    public claService: ClaService,
   ) {
-    this.getDefaults();
-    // this.uploadInfo = this.navParams.get('uploadInfo');
+    this.claProjectId = this.navParams.get('claProjectId');
     this.form = formBuilder.group({
-      provider: ['', Validators.required],
-      organization: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
+      // provider: ['', Validators.required],
+      orgName: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
     });
+    // this.getDefaults();
   }
 
   // urlCheck(control: FormControl) {
@@ -41,13 +41,28 @@ export class ClaOrganizationProviderModal {
   //     let json = res.json();
   //     return json;
   //   });
+  //
+  //   CLA Service
+  //   GET /github/check/namespace/<namespace>
+  //    Will return true if namespace exists in GitHub, false otherwise
+  //    Example: true
+  //    Example: false
+  //
+  // GET /github/get/namespace/<namespace>
+  //    Will return an object of data on the account requested
+  //    Example: {"bio": "The Linux Foundation is a non-profit consortium dedicated to fostering the growth of Linux.", "company": null, "email": null, "created_at": <datetime object>, "location": null, "login": "linuxfoundation", "type": "Organization"}
+  //    Example: {"errors": {"namespace": "Invalid GitHub account namespace"}}
+  //
+  //  getGithubOrganizations()
+  //    will return if there is already a github org in the cla with this name
+  //
   // }
-
-  ngOnInit() {
+  //
+  getDefaults() {
 
   }
 
-  getDefaults() {
+  ngOnInit() {
 
   }
 
@@ -59,15 +74,17 @@ export class ClaOrganizationProviderModal {
       // prevent submit
       return;
     }
-    // let data = this.form.value.field;
-    // do any pre-processing of data
-    // this.dataService.sendData(data).subscribe(response => {
-    //   this.currentlySubmitting = false;
-    //   // call any success messaging
-    //   // navigate to previous page, root, or destination
-    // });
+    this.postClaGithubOrganization();
+  }
 
-    // After submitting for the organization
+  postClaGithubOrganization() {
+    let organization = {
+      organization_project_id: this.claProjectId,
+      organization_name: this.form.value.orgName,
+    };
+    this.claService.postGithubOrganization(organization).subscribe((response) => {
+      this.dismiss()
+    });
   }
 
   dismiss() {

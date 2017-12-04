@@ -3,10 +3,10 @@ import { ViewController, NavController } from 'ionic-angular';
 import { RolesService } from '../../services/roles.service';
 
 @Component({
-  selector: 'project-navigation',
-  templateUrl: 'project-navigation.html',
+  selector: 'member-navigation',
+  templateUrl: 'member-navigation.html',
 })
-export class ProjectNavigationComponent implements AfterViewChecked {
+export class MemberNavigationComponent implements AfterViewChecked {
 
   userRoles: any;
   navItems: any;
@@ -17,6 +17,9 @@ export class ProjectNavigationComponent implements AfterViewChecked {
 
   @Input('context')
   private context: string;
+
+  @Input('memberId')
+  private memberId: any;
 
   @Input('projectId')
   private projectId: any;
@@ -99,10 +102,12 @@ export class ProjectNavigationComponent implements AfterViewChecked {
     let index = this.navCtrl.indexOf(this.viewCtrl);
     if (index === 0) {
       this.navCtrl.setRoot(item.page, {
-        projectId: this.projectId
+        memberId: this.memberId,
+        projectId: this.projectId,
       });
     } else {
       this.navCtrl.push(item.page, {
+        memberId: this.memberId,
         projectId: this.projectId,
       },
       {
@@ -116,39 +121,9 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   generateNavItems() {
     this.navItems = [
       {
-        label: "Project",
-        page: "ProjectPage",
+        label: "Contacts",
+        page: "MemberPage",
         access: true,
-      },
-      {
-        label: "Sub-Projects",
-        page: "",
-        access: this.userRoles.isAdmin,
-      },
-      {
-        label: "Members",
-        page: "ProjectMembersPage",
-        access: this.userRoles.isAdmin,
-      },
-      {
-        label: "Collaboration",
-        page: "",
-        access: this.userRoles.isAdmin,
-      },
-      {
-        label: "Analytics",
-        page: "ProjectAnalyticsPage",
-        access: false,
-      },
-      {
-        label: "Marketing",
-        page: "",
-        access: this.userRoles.isAdmin,
-      },
-      {
-        label: "Sales",
-        page: "",
-        access: this.userRoles.isAdmin,
       },
       {
         label: "Financials",
@@ -157,12 +132,12 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       },
       {
         label: "Files",
-        page: "ProjectFilesPage",
+        page: "",
         access: this.userRoles.isAdmin,
       },
       {
-        label: "CLA",
-        page: "ProjectClaPage",
+        label: "Details",
+        page: "MemberDetailsPage",
         access: this.userRoles.isAdmin,
       },
     ];

@@ -1,22 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { MemberPage } from './member';
+import { AnalyticsConfigModal } from './analytics-config-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
   declarations: [
-    MemberPage
+    AnalyticsConfigModal
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    SortingDisplayComponentModule,
-    IonicPageModule.forChild(MemberPage)
+    IonicPageModule.forChild(AnalyticsConfigModal)
   ],
   entryComponents: [
-    MemberPage
+    AnalyticsConfigModal
   ]
 })
-export class MemberPageModule {}
+export class AnalyticsConfigModalModule {}

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CincoService } from '../../services/cinco.service'
+import { ClaService } from 'cla-service'
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
@@ -9,36 +9,51 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'cla-contract-config-modal',
   templateUrl: 'cla-contract-config-modal.html',
-  providers: [CincoService]
 })
 export class ClaContractConfigModal {
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
 
-  contract: any;
+  projectId: string;
+  claProject: any;
+  newClaProject: boolean;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
+    private claService: ClaService,
   ) {
+    this.projectId = this.navParams.get('projectId');
+    console.log("projectId" + this.projectId);
+    this.claProject = this.navParams.get('claProject');
     this.getDefaults();
-    this.contract = this.navParams.get('contract');
     this.form = formBuilder.group({
-      name:[this.contract.name, Validators.compose([Validators.required])],
-      ccla:[this.contract.ccla, Validators.compose([Validators.required])],
-      cclaAndIcla:[this.contract.cclaAndIcla, Validators.compose([Validators.required])],
-      icla:[this.contract.icla, Validators.compose([Validators.required])],
+      name:[this.claProject.project_name, Validators.compose([Validators.required])],
+      ccla:[this.claProject.project_ccla_enabled],
+      cclaAndIcla:[this.claProject.project_ccla_requires_icla_signature],
+      icla:[this.claProject.project_icla_enabled],
     });
   }
 
-  ngOnInit() {
-
+  getDefaults() {
+    this.newClaProject = false; // we assume we have an existing cla project
+    // if claProject is not passed
+    if (!this.claProject) {
+      this.newClaProject = true; // change to creating new project
+      this.claProject = {
+        project_external_id: this.projectId,
+        project_name: '',
+        project_ccla_enabled: false,
+        project_ccla_requires_icla_signature: false,
+        project_icla_enabled: false,
+      };
+    }
   }
 
-  getDefaults() {
+  ngOnInit() {
 
   }
 
@@ -50,13 +65,41 @@ export class ClaContractConfigModal {
       // prevent submit
       return;
     }
-    // let data = this.form.value.field;
-    // do any pre-processing of data
-    // this.dataService.sendData(data).subscribe(response => {
-    //   this.currentlySubmitting = false;
-    //   // call any success messaging
-    //   // navigate to previous page, root, or destination
-    // });
+    if (this.newClaProject) {
+      console.log('post');
+      this.postProject();
+    } else {
+      console.log('put');
+      this.putProject();
+    }
+  }
+
+  postProject() {
+    let claProject = {
+      project_external_id: this.claProject.project_external_id,
+      project_name: this.form.value.name,
+      project_ccla_enabled: this.form.value.ccla,
+      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
+      project_icla_enabled: this.form.value.icla,
+    };
+    this.claService.postProject(claProject).subscribe((response) => {
+      this.dismiss();
+    });
+  }
+
+  putProject() {
+    // rebuild the claProject object from existing data and form data
+    let claProject = {
+      project_id: this.claProject.project_id,
+      project_external_id: this.claProject.project_external_id,
+      project_name: this.form.value.name,
+      project_ccla_enabled: this.form.value.ccla,
+      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
+      project_icla_enabled: this.form.value.icla,
+    };
+    this.claService.putProject(claProject).subscribe((response) => {
+      this.dismiss();
+    });
   }
 
   dismiss() {
