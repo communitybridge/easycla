@@ -15,9 +15,13 @@ import { ProjectModel } from '../../models/project-model';
 })
 export class ProjectDetailsPage {
 
+  keysGetter;
   projectId: string;
 
   project = new ProjectModel();
+  projectStatuses: any;
+  projectCategories: any;
+  projectSectors: any;
 
   membershipsCount: number;
 
@@ -36,8 +40,6 @@ export class ProjectDetailsPage {
     private formBuilder: FormBuilder,
     private keycloak: KeycloakService
   ) {
-
-    this.editProject = {};
     this.projectId = navParams.get('projectId');
     this.getDefaults();
     this.form = formBuilder.group({
@@ -74,6 +76,9 @@ export class ProjectDetailsPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
+    this.getProjectStatuses();
+    this.getProjectCategories();
+    this.getProjectSectors();
   }
 
   getProject(projectId) {
@@ -98,6 +103,24 @@ export class ProjectDetailsPage {
           description:this.project.description,
         });
       }
+    });
+  }
+
+  getProjectStatuses() {
+    this.cincoService.getProjectStatuses().subscribe(response => {
+      this.projectStatuses = response;
+    });
+  }
+
+  getProjectCategories() {
+    this.cincoService.getProjectCategories().subscribe(response => {
+      this.projectCategories = response;
+    });
+  }
+
+  getProjectSectors() {
+    this.cincoService.getProjectSectors().subscribe(response => {
+      this.projectSectors = response;
     });
   }
 
@@ -165,9 +188,14 @@ export class ProjectDetailsPage {
   }
 
   getDefaults() {
+    this.keysGetter = Object.keys;
+    this.editProject = {};
     this.loading = {
       project: true,
     };
+    this.projectStatuses = {};
+    this.projectCategories = {};
+    this.projectSectors = {};
     this.project = {
       id: "",
       name: "",

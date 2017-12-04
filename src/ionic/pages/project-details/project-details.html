@@ -56,9 +56,7 @@
           <ion-item>
             <ion-label stacked>Membership Status</ion-label>
             <ion-select formControlName="status" interface="popover">
-              <ion-option value="ACTIVE">Active</ion-option>
-              <ion-option value="PLANNED">Planned</ion-option>
-              <ion-option value="COMPLETE">Complete</ion-option>
+              <ion-option *ngFor="let status of keysGetter(projectStatuses)" value="{{ status }}">{{ projectStatuses[status] }}</ion-option>
             </ion-select>
           </ion-item>
         </ion-col>
@@ -66,8 +64,7 @@
           <ion-item>
             <ion-label stacked>Project Type</ion-label>
             <ion-select formControlName="category" interface="popover">
-              <ion-option value="DIRECT_FUNDED">Direct Funded</ion-option>
-              <ion-option value="INCORPORATED">Incorporated</ion-option>
+              <ion-option *ngFor="let category of keysGetter(projectCategories)" value="{{ category }}">{{ projectCategories[category] }}</ion-option>
             </ion-select>
           </ion-item>
         </ion-col>
@@ -75,16 +72,7 @@
           <ion-item>
             <ion-label stacked>Project Sector</ion-label>
             <ion-select formControlName="sector" interface="popover">
-              <ion-option value="APP_PLATFORMS">Application Platforms</ion-option>
-              <ion-option value="BLOCKCHAIN">Blockchain</ion-option>
-              <ion-option value="CLOUD_AND_VIRTUAL">Cloud & Virtualization</ion-option>
-              <ion-option value="CORE_AND_OS">Core & Operating Systems</ion-option>
-              <ion-option value="DATA_AND_ANALYTICS">Data & Analytics</ion-option>
-              <ion-option value="EMBED_AND_IOT">Embedded and IoT</ion-option>
-              <ion-option value="NETWORKING_AND_COMM">Networking and Communications Infrastructure</ion-option>
-              <ion-option value="OS_COMPLIANCE_AND_BP">Open Source Compliance & Best Practices</ion-option>
-              <ion-option value="SECURITY">Security</ion-option>
-              <ion-option value="STORAGE">Storage</ion-option>
+              <ion-option *ngFor="let sector of keysGetter(projectSectors)" value="{{ sector }}">{{ projectSectors[sector] }}</ion-option>
             </ion-select>
           </ion-item>
         </ion-col>
