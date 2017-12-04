@@ -46,7 +46,7 @@ export class ActivityLogPage {
   }
 
   getEvents() {
-    this.cincoService.getEvents().subscribe(response => {
+    this.cincoService.getEventsForProject('a0941000002wByYAAU').subscribe(response => {
       if (response) {
         console.log(response);
       }
