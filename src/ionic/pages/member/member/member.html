@@ -7,16 +7,16 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding class="member-wrapper" overflow-scroll="true">
+<ion-content class="member-wrapper" overflow-scroll="true">
   <ion-fab right bottom>
     <button ion-fab mini><ion-icon name="add"></ion-icon></button>
     <ion-fab-list side="left">
       <button ion-fab (click)="addMemberContact()"><ion-icon name="person-add"></ion-icon></button>
     </ion-fab-list>
   </ion-fab>
-  <header>
+  <header padding>
     <member-header [projectId]="projectId" [memberId]="memberId"></member-header>
-    <member-navigation [context]="__proto__.constructor.name" [memberId]="memberId"></member-navigation>
+    <member-navigation [context]="__proto__.constructor.name" [projectId]="projectId" [memberId]="memberId"></member-navigation>
   </header>
 
   <ion-grid>
