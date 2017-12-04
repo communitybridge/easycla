@@ -56,23 +56,23 @@ export class MyApp {
     this.rolesService.getUserRoles();
   }
 
-  authenticated(): boolean {
-    return this.keycloak.authenticated();
-  }
-
-  login() {
-    this.keycloak.login();
-  }
-
-  logout() {
-    this.nav.setRoot('LoginPage');
-    this.nav.popToRoot();
-    this.keycloak.logout();
-  }
-
-  account() {
-    this.keycloak.account();
-  }
+  // authenticated(): boolean {
+  //   return this.keycloak.authenticated();
+  // }
+  //
+  // login() {
+  //   this.keycloak.login();
+  // }
+  //
+  // logout() {
+  //   this.nav.setRoot('LoginPage');
+  //   this.nav.popToRoot();
+  //   this.keycloak.logout();
+  // }
+  //
+  // account() {
+  //   this.keycloak.account();
+  // }
 
   initializeApp() {
     this.platform.ready().then(() => {
@@ -80,12 +80,12 @@ export class MyApp {
       // Here you can do any higher level native things you might need.
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
-
-      if(this.keycloak.authenticated()) {
-        this.rootPage = 'AllProjectsPage';
-      } else {
-        this.rootPage = 'LoginPage';
-      }
+      // console.log('initialize app');
+      // if(this.keycloak.authenticated()) {
+      //   this.rootPage = 'AllProjectsPage';
+      // } else {
+      //   this.rootPage = 'LoginPage';
+      // }
 
     });
   }
@@ -131,7 +131,12 @@ export class MyApp {
         title: 'Linux Console Users',
         access: this.userRoles.isAdmin,
         component: 'ConsoleUsersPage'
-      }
+      },
+      {
+        title: 'Sign Out',
+        access: this.userRoles.isAuthenticated,
+        component: 'LoginPage'
+      },
     ];
   }
 }
