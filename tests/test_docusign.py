@@ -15,7 +15,7 @@ class DocuSignTestCase(CLATestCase):
     def test_request_cncf_signature(self):
         """Tests for requesting a signature. Communicates with the signing service provider."""
 
-        #return # Only enabled temporarily when testing out new templates.
+        return # Only enabled temporarily when testing out new templates.
 
         test_signing_service = cla.conf['SIGNING_SERVICE']
         cla.conf['SIGNING_SERVICE'] = 'DocuSign'

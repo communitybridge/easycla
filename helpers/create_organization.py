@@ -2,7 +2,7 @@
 PROJECT_EXTERNAL_ID = 'salesforce-id-here'
 # The GitHub user/org used for testing purposes.
 GITHUB_ORGANIZATION_NAME = 'linuxfoundation'
-GITHUB_INSTALLATION_ID = 68875 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
+GITHUB_INSTALLATION_ID = 68890 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
 sys.path.append('../')
