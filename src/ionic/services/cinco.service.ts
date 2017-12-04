@@ -44,11 +44,7 @@ export class CincoService {
 
   getMyProjects() {
     return this.http.get(this.cincoApiUrl + '/project')
-      .map(res => {
-        console.log(res.json());
-        return res.json();
-        }
-      );
+      .map(res => res.json());
   }
 
   getAllProjects() {
@@ -65,7 +61,13 @@ export class CincoService {
   getProject(projectId, getMembers) {
     if (getMembers) { projectId = projectId + '?members=true'; }
     return this.http.get(this.cincoApiUrl + '/project/' + projectId)
-      .map(res => res.json());
+      .map(res => {
+        let project = res.json();
+        if (project.config.logoRef) {
+          project.config.logoRef += "?" + new Date().getTime();
+        }
+        return project;
+      });
   }
 
   editProject(projectId, editProject) {
