@@ -7,4 +7,15 @@ project-analytics {
   .configure-analytics {
     margin: 40px;
   }
+  .analytics-title {
+    margin-top: 20px;
+  }
+  .analytics-card {
+    background-color: #4e92df;
+    color: #fff !important;
+  }
+  .chart {
+    width: 100%;
+    min-height: 450px;
+  }
 }
