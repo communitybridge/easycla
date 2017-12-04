@@ -5,6 +5,7 @@ import { KeycloakService } from './keycloak/keycloak.service';
 @Injectable()
 export class RolesService {
 
+  public userAuthenticated: boolean;
   public userRoleDefaults: any;
   private userRoles: any;
   private getDataObserver: any;
@@ -16,6 +17,7 @@ export class RolesService {
   ) {
     this.rolesFetched = false;
     this.userRoleDefaults = {
+      isAuthenticated: this.keycloak.authenticated(),
       isUser: false,
       isProgramManager: false,
       isProgramManagerAdmin: false,
@@ -58,6 +60,7 @@ export class RolesService {
           let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN');
           let isStaffInc = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC');
           this.userRoles = {
+            isAuthenticated: this.keycloak.authenticated(),
             isUser: isUser,
             isProgramManager: isProgramManager,
             isProgramManagerAdmin: isProgramManagerAdmin,

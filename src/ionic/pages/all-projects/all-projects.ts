@@ -1,4 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
@@ -6,7 +7,15 @@ import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 import { FilterService } from '../../services/filter.service'
 import { RolesService } from '../../services/roles.service';
+// import { Restricted } from '../../decorators/restricted.ts';
+// import { deprecate } from '../../decorators/restricted.ts';
 
+
+// @deprecate('Now using Angular 5 with HttpClientModule.See Angular official doc for more infos:  https://angular.io/guide/http')
+// @Restricted({
+//   roles: ['user'],
+//   perms: ['viewProject'],
+// })
 @IonicPage({
   name: 'AllProjectsPage',
   segment: 'projects',
@@ -69,12 +78,27 @@ export class AllProjectsPage {
     private rolesService: RolesService,
     private filterService: FilterService
   ) {
+    this.rolesService.getData.subscribe((userRoles) => {
+      this.userRoles = userRoles;
+    });
+    this.rolesService.getUserRoles();
     this.getDefaults();
   }
 
+  // ionViewCanEnter() {
+  //   console.log('all-projects can enter');
+  //   if (!this.userRoles.isAuthenticated || !this.userRoles.isUser) {
+  //     console.log('not authenticated');
+  //     this.navCtrl.setRoot('LoginPage');
+  //     this.navCtrl.popToRoot();
+  //   }
+  //   console.log("authenticated");
+  //   return this.userRoles.isAuthenticated;
+  // }
+  //
+
   ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
+    if (!this.keycloak.authenticated()) {
       this.navCtrl.setRoot('LoginPage');
       this.navCtrl.popToRoot();
     }
@@ -82,38 +106,18 @@ export class AllProjectsPage {
   }
 
   ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
+    if (!this.keycloak.authenticated()) {
       this.navCtrl.push('LoginPage');
     }
   }
 
-  async ngOnInit(){
-    this.rolesService.getData.subscribe((userRoles) => {
-      this.userRoles = userRoles;
-      this.getIndustries();
-      if(this.userRoles.isStaffInc) { this.getMyProjects(); }
-      else { this.getAllProjects(); }
-      this.getCurrentUser();
-    });
-    this.rolesService.getUserRoles();
+  async ngOnInit() {
+    this.getIndustries();
+    this.getCurrentUser();
+    this.getAllProjects();
   }
 
-  getMyProjects(){
-    this.cincoService.getMyProjects().subscribe(response => {
-        this.allProjects = response;
-        for(let eachProject of this.allProjects) {
-          // After uploading a logo, Cinco will provide same name,
-          // so a refresh to the image needs to be forced.
-          // This is to refresh an image that have same URL
-          if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
-        }
-        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
-        this.loading.projects = false;
-    });
-  }
-
-  getAllProjects(){
+  getAllProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
         this.allProjects = response;
         for(let eachProject of this.allProjects) {
@@ -143,7 +147,7 @@ export class AllProjectsPage {
     });
   }
 
-  getCurrentUser(){
+  getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       if (response.hasOwnProperty('calendar') && response.calendar) {
@@ -153,7 +157,17 @@ export class AllProjectsPage {
     });
   }
 
-  viewProject(projectId){
+  getEvents() {
+    this.cincoService.getCurrentUser().subscribe(response => {
+      this.user = response;
+      if (response.hasOwnProperty('calendar') && response.calendar) {
+        this.userHasCalendar = true;
+        this.user.calendar = this.sanitizer.bypassSecurityTrustResourceUrl(response.calendar);
+      }
+    });
+  }
+
+  viewProject(projectId) {
     this.navCtrl.setRoot('ProjectPage', {
       projectId: projectId
     });

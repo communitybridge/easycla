@@ -35,6 +35,7 @@ export class ProjectPage {
   }
 
   ionViewCanEnter() {
+    console.log('project can enter');
     if(!this.keycloak.authenticated())
     {
       this.navCtrl.setRoot('LoginPage');
@@ -44,6 +45,7 @@ export class ProjectPage {
   }
 
   ionViewWillEnter() {
+    console.log('project will enter');
     if(!this.keycloak.authenticated())
     {
       this.navCtrl.push('LoginPage');

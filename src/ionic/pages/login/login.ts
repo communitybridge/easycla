@@ -13,9 +13,11 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 export class LoginPage {
 
   constructor(public navCtrl: NavController, private keycloak: KeycloakService) {
+
   }
 
   ionViewWillEnter() {
+    console.log('login will enter');
     if(this.keycloak.authenticated())
     {
       this.navCtrl.setRoot('AllProjectsPage');
@@ -24,10 +26,12 @@ export class LoginPage {
   }
 
   ionViewCanLeave() {
+    console.log('login can leave');
     return (this.keycloak.authenticated());
   }
 
   login() {
+    console.log('login function called');
     if (this.keycloak.authenticated()) {
       this.navCtrl.setRoot('AllProjectsPage');
     }
