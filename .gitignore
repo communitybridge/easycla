@@ -71,6 +71,7 @@ src/temp/
 src/hooks/
 src/platforms/
 src/plugins/
+src/.sourcemaps/
 $RECYCLE.BIN/
 
 # Config file

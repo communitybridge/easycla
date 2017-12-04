@@ -13,17 +13,24 @@
     <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
   </header>
   <ion-grid>
-    <ion-row>
-
+    <ion-row class="analytics-title">
+      <ion-col>
+        <ion-title>Analytics</ion-title>
+      </ion-col>
     </ion-row>
-  </ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Commit Activity</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="columnChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
 
-  <!-- <ion-row text-center>
-    <ion-col>
-      <div class="configure-analytics">
-        <ion-label>Configure Analytics <a class="project-details-link clickable" (click)="openAnaylticsConfigModal(projectId)">here</a></ion-label>
-      </div>
-    </ion-col>
-  </ion-row> -->
+  </ion-grid>
 
 </ion-content>

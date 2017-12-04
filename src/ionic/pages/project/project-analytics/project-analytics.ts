@@ -20,6 +20,7 @@ export class ProjectAnalyticsPage {
   analyticsUrl: any;
   sanitizedAnalyticsUrl: any;
 
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -31,6 +32,27 @@ export class ProjectAnalyticsPage {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
+
+  public columnChartData:any =  {
+    chartType: 'ColumnChart',
+    dataTable: [
+      ['Date', 'Commits'],
+      ['11/10', 700],
+      ['11/11', 300],
+      ['11/12', 400],
+      ['11/13', 500],
+      ['11/14', 600],
+      ['11/15', 800]
+    ],
+    options: {
+      hAxis: {title: 'Age', minValue: 0, maxValue: 15, textStyle:{ color: '#ffffff'} },
+      vAxis: {title: '# of commits', minValue: 0, maxValue: 15, color: '#ffffff' },
+      colors: ['#7f97b2'],
+      backgroundColor: '#4e92df',
+      legend: 'none',
+      // is3D: true
+    }
+  };
 
   ionViewCanEnter() {
     if(!this.keycloak.authenticated())
