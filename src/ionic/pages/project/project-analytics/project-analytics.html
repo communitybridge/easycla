@@ -30,7 +30,50 @@
         </ion-card>
       </ion-col>
     </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Distribution of Commits</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="pieChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-8>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Pull Request Activity</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="areaChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col col-4>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Pull Request - Pipeline</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="gaugeChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-8>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Project Page Views</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="area2ChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
 
   </ion-grid>
-
 </ion-content>
