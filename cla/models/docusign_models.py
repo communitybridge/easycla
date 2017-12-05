@@ -245,7 +245,11 @@ class DocuSign(signing_service_interface.SigningService):
         if sig_type == 'company': # Assume the company manager is signing the CCLA.
             company = cla.utils.get_company_instance()
             company.load(signature.get_signature_reference_id())
-            user.load(company.get_company_manager_id())
+            try:
+                user.load(company.get_company_manager_id())
+            except DoesNotExist:
+                cla.log.error('No CLA manager associated with this company - can not sign CCLA')
+                return
         else: # sig_type == 'user'
             user.load(signature.get_signature_reference_id())
         name = user.get_user_name()
