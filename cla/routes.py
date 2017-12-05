@@ -482,23 +482,27 @@ def get_company(company_id: hug.types.text):
 @hug.post('/company', versions=1,
           examples=" - {'company_name': 'Company Name', \
                         'company_whitelist': ['user@safe.org'], \
-                        'company_whitelist_patterns': ['*@safe.org']}")
+                        'company_whitelist_patterns': ['*@safe.org'], \
+                        'company_manager_id': 'user-id'}")
 def post_company(company_name: hug.types.text,
                  company_whitelist: hug.types.multiple,
-                 company_whitelist_patterns: hug.types.multiple):
+                 company_whitelist_patterns: hug.types.multiple,
+                 company_manager_id=None):
     """
     POST: /company
 
     DATA: {'company_name': 'Org Name',
            'company_whitelist': ['safe@email.org'],
-           'company_whitelist': ['*@email.org']}
+           'company_whitelist': ['*@email.org'],
+           'company_manager_id': <user-id>}
 
     Returns the CLA company that was just created.
     """
     return cla.controllers.company.create_company(
         company_name=company_name,
         company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns)
+        company_whitelist_patterns=company_whitelist_patterns,
+        company_manager_id=company_manager_id)
 
 
 @hug.put('/company', versions=1,
@@ -507,7 +511,8 @@ def post_company(company_name: hug.types.text,
 def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
                 company_name=None,
                 company_whitelist=None,
-                company_whitelist_patterns=None):
+                company_whitelist_patterns=None,
+                company_manager_id=None):
     """
     PUT: /company
 
@@ -520,7 +525,8 @@ def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
         company_id,
         company_name=company_name,
         company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns)
+        company_whitelist_patterns=company_whitelist_patterns,
+        company_manager_id=company_manager_id)
 
 
 @hug.delete('/company/{company_id}', versions=1)

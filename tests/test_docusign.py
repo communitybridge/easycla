@@ -12,8 +12,11 @@ from cla.utils import get_user_instance, get_signing_service
 
 class DocuSignTestCase(CLATestCase):
     """DocuSign test cases."""
-    def test_request_cncf_signature(self):
-        """Tests for requesting a signature. Communicates with the signing service provider."""
+    def test_request_individual_cncf_signature(self):
+        """
+        Tests for requesting a individual signature.
+        Communicates with the signing service provider.
+        """
 
         return # Only enabled temporarily when testing out new templates.
 
@@ -31,6 +34,31 @@ class DocuSignTestCase(CLATestCase):
                 'user_id': user['user_id'],
                 'return_url': 'http://return-url.com/done'}
         result = hug.test.post(cla.routes, '/v1/request-individual-signature', data)
+        print(result.data)
+        cla.conf['SIGNING_SERVICE'] = test_signing_service
+
+    def test_request_corporate_cncf_signature(self):
+        """
+        Tests for requesting a corporate signature.
+        Communicates with the signing service provider.
+        """
+
+        #return # Only enabled temporarily when testing out new templates.
+
+        test_signing_service = cla.conf['SIGNING_SERVICE']
+        cla.conf['SIGNING_SERVICE'] = 'DocuSign'
+        project = self.create_project()
+        manager = self.create_user()
+        company = self.create_company(manager['user_id'])
+        data = {'document_name': 'test.pdf',
+                'document_preamble': 'Preamble here',
+                'document_legal_entity_name': 'Legal Entity Name',
+                'template_name': 'CNCFTemplate'}
+        hug.test.post(cla.routes, '/v1/project/' + project['project_id'] + '/document/template/corporate', data)
+        data = {'project_id': project['project_id'],
+                'company_id': company['company_id'],
+                'return_url': 'http://return-url.com/done'}
+        result = hug.test.post(cla.routes, '/v1/request-corporate-signature', data)
         print(result.data)
         cla.conf['SIGNING_SERVICE'] = test_signing_service
 

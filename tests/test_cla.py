@@ -90,11 +90,13 @@ class CLATestCase(unittest.TestCase):
         return response.data
 
     def create_company(self,
+                       company_manager_id=None,
                        company_name='Org Name',
                        company_whitelist=['whitelisted@safe.org'],
                        company_whitelist_patterns=['safe.org']):
         """Helper method to create companys."""
-        data = {'company_name': company_name,
+        data = {'company_manager_id': company_manager_id,
+                'company_name': company_name,
                 'company_whitelist': company_whitelist,
                 'company_whitelist_patterns': company_whitelist_patterns}
         response = hug.test.post(routes, '/v1/company', data)
