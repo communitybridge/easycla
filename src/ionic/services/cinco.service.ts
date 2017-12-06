@@ -230,7 +230,7 @@ export class CincoService {
   **/
 
   getOrganizationProjectMemberships(organizationId) {
-    return this.http.get(this.cincoApiUrl + '/organizations/' + organizationId + '/projects_member')
+    return this.http.get(this.cincoApiUrl + '/organizations/' + organizationId + '/project_members')
       .map(res => res.json());
   }
 
