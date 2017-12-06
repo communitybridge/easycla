@@ -14,10 +14,34 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
     configured the appropriate dependencies.
     """
     if mode == 'dev':
-        notice('No workspace container provisioned in dev mode')
-        notice('Ensure the cla_config.py file has the appropriate configuration for your \
-                       external dependencies')
         del containers['workspace']
+        notice('No workspace container provisioned in dev mode')
+        notice('Ensure the cla_config.py file has the appropriate configuration for your external dependencies')
+        base_url = 'http://' + lfcore.utils.public_ip()
+        callback_url = base_url + '/v1/signed'
+        github_oauth_url = base_url + '/v1/github/installation'
+        mailhog_port = lfcore.utils.host_port(containers, 'mailhog')
+        mailhog_web_port = lfcore.utils.host_port(containers, 'mailhog', 1)
+        dynamodb_port = lfcore.utils.host_port(containers, 'dynamodb')
+        notice('Example: BASE_URL = %s' %base_url)
+        notice('Example: SIGNED_CALLBACK_URL = %s' %callback_url)
+        notice('Example: GITHUB_OAUTH_CALLBACK_URL = %s' %github_oauth_url)
+        notice('Example: DATABASE_HOST = http://localhost:%s' %dynamodb_port)
+        notice('Example: KEYVALUE_HOST = http://localhost:%s' %dynamodb_port)
+        notice('Example: EMAIL_SERVICE = SMTP')
+        notice('Example: SMTP_HOST = localhost')
+        notice('Example: SMTP_PORT = %s' %mailhog_port)
+        notice('Example: KEYCLOAK_ENDPOINT = http://localhost:<port>')
+        notice('Example: CINCO_ENDPOINT = http://localhost:<port>')
+        notice('Example: CLA_CONSOLE_ENDPOINT = http://localhost:<port>/#')
+        notice('Example: DOCRAPTOR_API_KEY = <key>')
+        notice('Example: DOCUSIGN_INTEGRATOR_KEY = 828f4192-0f3f-4f9f-9cff-56f0b6d61615')
+        notice('Example: DOCUSIGN_USERNAME = <username>')
+        notice('Example: DOCUSIGN_PASSWORD = <password>')
+        notice('If you are behind a NAT/firewall, you will need to add port forwarding from the edge of your network to you local machine')
+        notice('The CLA system will work without the port forwading setup, but you will not be able to test GitHub integration (starting flow from GitHub) and DocuSign callbacks (confirmation of completed signatures)')
+        success('MailHog: http://localhost:%s' %mailhog_web_port)
+        notice('You will need to initialize the DB manually by running the create_database.py script in the helpers/ folder')
     else:
         info('Automatically setting CLA dependency endpoints')
         platform = dependencies.get('cinco')
