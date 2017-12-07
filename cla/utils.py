@@ -506,7 +506,7 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
             return True
     return False
 
-def get_user_signature_by_github_repository(installation_id, user):
+def get_user_signature_by_github_repository(installation_id, user, company_id=None):
     """
     Helper function to get a user's signature for a specified repository.
 
@@ -516,11 +516,13 @@ def get_user_signature_by_github_repository(installation_id, user):
     :type repository: cla.models.model_interfaces.Repository
     :param user: The user object that represents the signature signer.
     :type user: cla.models.model_interfaces.User
+    :param company_id: The ID of the company to filter by (for CCLAs).
+    :type company_id: string
     :return: The signature for this user on this repository, or None if not found.
     :rtype: cla.models.model_interfaces.Signature | None
     """
     project_id = get_project_id_from_installation_id(installation_id)
-    signature = get_user_latest_signature(user, project_id)
+    signature = get_user_latest_signature(user, project_id, company_id=company_id)
     return signature
 
 def get_company_latest_signature(company, project_id):
@@ -738,8 +740,7 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     :param authorize_url: The URL to submit the OAuth2 request.
     :type authorize_url: string
     """
-    #oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri)
+    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
     return authorization_url, state
 
