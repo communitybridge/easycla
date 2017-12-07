@@ -1,6 +1,6 @@
 PROJECT_EXTERNAL_ID = 'salesforce-id-here'
 TEST_DOCUMENT_URL = 'https://github.com/cncf/cla/raw/master/individual-cla.pdf'
-GITHUB_INSTALLATION_ID = 49309 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
+GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
 sys.path.append('../')

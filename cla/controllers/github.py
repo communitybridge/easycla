@@ -161,6 +161,7 @@ def activity(body):
         # If the repo is not covered, post an annoying message on the Pull Request
         else:
             cla.log.error('App posted GitHub activity from repository that we do not have in the system: %s', org_login)
+            cla.log.error('Ensure the GitHub organization has a project_id and installation_id')
             return {'status': 'Repo not covered under CLA System.'}
 
 
