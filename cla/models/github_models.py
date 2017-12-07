@@ -68,6 +68,10 @@ class GitHub(repository_service_interface.RepositoryService):
             return self.process_synchronized_pull_request(data)
 
     def sign_request(self, installation_id, github_repository_id, change_request_id, request):
+        """
+        This method gets called when the OAuth2 app (NOT the GitHub App) needs to get info on the
+        user trying to sign. In this case we begin an OAuth2 exchange with the 'user:email' scope.
+        """
         cla.log.info('Initiating GitHub sign request for repository %s', github_repository_id)
         # Not sure if we need a different token for each installation ID...
         session = self._get_request_session(request)
@@ -113,11 +117,11 @@ class GitHub(repository_service_interface.RepositoryService):
         :param scope: The list of OAuth2 scopes to request from GitHub.
         :type scope: [string]
         """
-        origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
+        # Get the PR's html_url property.
+        #origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
-        redirect_url = cla.conf['GITHUB_OAUTH_CALLBACK_URL']
         return self._get_authorization_url_and_state(cla.conf['GITHUB_OAUTH_CLIENT_ID'],
-                                                     redirect_url,
+                                                     cla.conf['GITHUB_OAUTH_CALLBACK_URL'],
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
 
@@ -161,11 +165,19 @@ class GitHub(repository_service_interface.RepositoryService):
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
-        signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
-        document = cla.utils.get_project_latest_individual_document(project_id)
-        if signature is not None and \
-           signature.get_signature_document_major_version() == document.get_document_major_version():
-            return cla.utils.redirect_user_by_signature(user, signature)
+        # TODO: Skipping this for now - we can do this for ICLAs but there's no easy way of doing
+        # the check for CCLAs as we need to know in advance what the company_id is that we're checking
+        # the CCLA signature for.
+        # We'll have to create a function that fetches the latest CCLA regardless of company_id.
+        #icla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
+        #ccla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user, company_id=?)
+        #try:
+            #document = cla.utils.get_project_latest_individual_document(project_id)
+        #except DoesNotExist:
+            #cla.log.info('No ICLA for project %s' %project_id)
+        #if signature is not None and \
+            #signature.get_signature_document_major_version() == document.get_document_major_version():
+            #return cla.utils.redirect_user_by_signature(user, signature)
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
