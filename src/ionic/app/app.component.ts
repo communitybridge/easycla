@@ -49,41 +49,12 @@ export class MyApp {
   }
 
   ngOnInit() {
-    console.log('inital roles');
-    console.log(this.rolesService.userRoles);
-    // this.rolesService.getData.subscribe((userRoles) => {
-    //   this.userRoles = userRoles;
-    //   console.log('roles after subscribe');
-    //   console.log(this.rolesService.userRoles);
-    //   this.regeneratePagesMenu();
-    // });
-    // this.rolesService.getUserRoles();
     this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = this.rolesService.userRoles;
-      console.log('roles after subscribe');
-      console.log(this.rolesService.userRoles);
+      this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
 
   }
-
-  // authenticated(): boolean {
-  //   return this.keycloak.authenticated();
-  // }
-  //
-  // login() {
-  //   this.keycloak.login();
-  // }
-  //
-  // logout() {
-  //   this.nav.setRoot('LoginPage');
-  //   this.nav.popToRoot();
-  //   this.keycloak.logout();
-  // }
-  //
-  // account() {
-  //   this.keycloak.account();
-  // }
 
   initializeApp() {
     this.platform.ready().then(() => {
@@ -91,13 +62,6 @@ export class MyApp {
       // Here you can do any higher level native things you might need.
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
-      // console.log('initialize app');
-      // if(this.keycloak.authenticated()) {
-      //   this.rootPage = 'AllProjectsPage';
-      // } else {
-      //   this.rootPage = 'LoginPage';
-      // }
-
     });
   }
 
@@ -114,38 +78,43 @@ export class MyApp {
     this.pages = [
       {
         title: 'All Projects',
-        access: this.userRoles.user,
+        access: this.userRoles.isPmcUser,
         component: 'AllProjectsPage'
       },
       {
         title: 'Member Companies',
-        access: this.userRoles.user,
+        access: this.userRoles.isPmcUser,
         component: 'AllMembersPage'
       },
       {
         title: 'All Invoices Status',
-        access: this.userRoles.user,
+        access: this.userRoles.isPmcUser,
         component: 'AllInvoicesPage'
       },
       {
         title: 'All Projects Logos',
-        access: this.userRoles.user,
+        access: this.userRoles.isPmcUser,
         component: 'AllProjectsLogosPage'
       },
       {
         icon: 'settings',
         title: 'Account Settings',
-        access: this.userRoles.user,
+        access: this.userRoles.isPmcUser,
         component: 'AccountSettingsPage'
       },
       {
         title: 'Linux Console Users',
-        access: this.userRoles.admin,
+        access: this.userRoles.isAdmin,
         component: 'ConsoleUsersPage'
       },
       {
         title: 'Sign Out',
-        access: this.userRoles.authenticated,
+        access: this.userRoles.isAuthenticated,
+        component: 'LoginPage'
+      },
+      {
+        title: 'Sign In',
+        access: !this.userRoles.isAuthenticated,
         component: 'LoginPage'
       },
     ];

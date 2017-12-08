@@ -8,7 +8,7 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted.ts';
 
 @Restricted({
-  roles: ['user'],
+  roles: ['isAuthenticated', 'isPmcUser'],
 })
 @IonicPage({
   segment: 'project/:projectId',

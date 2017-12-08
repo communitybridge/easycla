@@ -11,14 +11,7 @@
     "module": "es2015",
     "moduleResolution": "node",
     "sourceMap": true,
-    "target": "es5",
-    "baseUrl": ".",
-    "paths": {
-      "@services/*": ["ionic/services/*"],
-      "@decorators/*": ["ionic/decorators/*"],
-      "@models/*": ["ionic/models/*"],
-      "@validators/*": ["ionic/validators/*"]
-    }
+    "target": "es5"
   },
   "include": [
     "ionic/**/*.ts"

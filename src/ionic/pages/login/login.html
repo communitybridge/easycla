@@ -9,14 +9,14 @@
 <ion-content padding headerspacing overflow-scroll="true">
   <div class="login-container">
     <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
-    <p class="error" *ngIf="userRoles.authenticated && !canAccess">
-      Sorry, You don't have access to the resource you tried to access.
+    <p class="error" *ngIf="userRoles.isAuthenticated && !canAccess">
+      Sorry, You don't have access to the resource you tried to reach.
     </p>
-    <button *ngIf="!userRoles.authenticated" ion-button (click)="login()">
+    <button *ngIf="!userRoles.isAuthenticated" ion-button (click)="login()">
       <span class="icon icon-login"></span>
       <span class="btn-label">Sign in</span>
     </button>
-    <button *ngIf="userRoles.authenticated" ion-button (click)="logout()">
+    <button *ngIf="userRoles.isAuthenticated" ion-button (click)="logout()">
       <span class="icon icon-logout"></span>
       <span class="btn-label">Sign out</span>
     </button>

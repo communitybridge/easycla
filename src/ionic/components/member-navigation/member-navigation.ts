@@ -39,8 +39,7 @@ export class MemberNavigationComponent implements AfterViewChecked {
   }
 
   getDefaults() {
-    this.userRoles = this.rolesService.userRoleDefaults;
-    this.generateNavItems();
+    this.userRoles = this.rolesService.userRoles;
   }
 
   ngOnInit() {
@@ -48,11 +47,10 @@ export class MemberNavigationComponent implements AfterViewChecked {
       this.checkScroll();
     }).bind(this);
 
-    this.rolesService.getData.subscribe((userRoles) => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.generateNavItems();
     });
-    this.rolesService.getUserRoles();
   }
 
 
@@ -123,7 +121,7 @@ export class MemberNavigationComponent implements AfterViewChecked {
       {
         label: "Contacts",
         page: "MemberPage",
-        access: true,
+        access: this.userRoles.isPmcUser,
       },
       {
         label: "Financials",
