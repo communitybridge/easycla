@@ -24,10 +24,7 @@ export class LoginPage {
     private keycloak: KeycloakService,
     public rolesService: RolesService,
   ) {
-    // console.log('login page loaded');
     let dataString = this.navParams.get('return');
-    // console.log('data');
-    // console.log(dataString);
     try {
       this.data = JSON.parse(dataString);
       this.returnData = true;
@@ -35,21 +32,14 @@ export class LoginPage {
       this.returnData = false;
     }
     this.userRoles = this.rolesService.userRoles;
-    console.log('login page userroles');
-    console.log(this.userRoles);
-    this.checkPageReturn();
-    // this.rolesService.getData.subscribe((userRoles) => {
-    //   this.userRoles = userRoles;
-    //   this.checkPageReturn();
-    // });
-    // this.rolesService.getUserRoles();
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
+      this.userRoles = userRoles;
+      this.checkPageReturn();
+    });
   }
 
   checkPageReturn() {
-    console.log('check page return');
     this.canAccess = this.hasAccess();
-    console.log(this.canAccess);
-    console.log(this.data);
     if (this.canAccess && this.returnData) {
       if (this.data.page) {
         if (this.data.params) {
@@ -63,13 +53,8 @@ export class LoginPage {
 
   hasAccess() {
     if (this.data && this.data.roles) {
-      console.log('hasAccess: roles required for page:');
-      console.log(this.data.roles);
       for (let role of this.data.roles) {
-        console.log('restricted role in userRoles:');
-        console.log(this.userRoles[role]);
         if (!this.userRoles[role]) {
-          console.log('false');
           return false;
         }
       }
