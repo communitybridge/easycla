@@ -7,10 +7,10 @@ import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 import { FilterService } from '../../services/filter.service'
 import { RolesService } from '../../services/roles.service';
-import { Restricted } from '../../decorators/restricted.ts';
+import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: [ 'authenticated', 'user'],
+  roles: ['isAuthenticated', 'isPmcUser'],
 })
 @IonicPage({
   name: 'AllProjectsPage',
@@ -74,21 +74,6 @@ export class AllProjectsPage {
     private rolesService: RolesService,
     private filterService: FilterService,
   ) {
-    // this.rolesService.getData.subscribe((userRoles) => {
-    //   this.userRoles = userRoles;
-    // });
-    // this.rolesService.getUserRoles();
-    // let navObject = {
-    //   page: 'ProjectPage',
-    //   params: {
-    //     projectId: "something",
-    //   }
-    // };
-    // let navString = JSON.stringify(navObject);
-    // console.log('/#/login/' + navString);
-    // window.location.href = '/#/login/' + encodeURIComponent(navString);
-    console.log('roles from allprojects:');
-    console.log(this.rolesService.userRoles);
     this.getDefaults();
   }
 

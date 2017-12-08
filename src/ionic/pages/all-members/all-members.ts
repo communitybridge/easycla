@@ -4,7 +4,12 @@ import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
 import { CincoService } from '../../services/cinco.service'
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'all-members'
 })
@@ -24,7 +29,8 @@ export class AllMembersPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     public modalCtrl: ModalController,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.getDefaults();
     this.keysGetter = Object.keys;
@@ -34,22 +40,6 @@ export class AllMembersPage {
     this.membersList = {};
     this.membersSelected = {};
     this.projectSectors = [];
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit(){
