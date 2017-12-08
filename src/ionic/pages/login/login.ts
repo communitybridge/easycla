@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
-import { NavController, IonicPage } from 'ionic-angular';
+import { NavController, IonicPage, NavParams } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { RolesService } from '../../services/roles.service';
 
 @IonicPage({
   name: 'LoginPage',
-  segment: 'login'
+  segment: 'login/:return'
 })
 @Component({
   selector: 'login',
@@ -12,32 +13,76 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 })
 export class LoginPage {
 
-  constructor(public navCtrl: NavController, private keycloak: KeycloakService) {
+  returnData: boolean;
+  data: any;
+  userRoles: any;
+  canAccess: boolean;
 
+  constructor(
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
+  ) {
+    // console.log('login page loaded');
+    let dataString = this.navParams.get('return');
+    // console.log('data');
+    // console.log(dataString);
+    try {
+      this.data = JSON.parse(dataString);
+      this.returnData = true;
+    } catch (e) {
+      this.returnData = false;
+    }
+    this.userRoles = this.rolesService.userRoles;
+    console.log('login page userroles');
+    console.log(this.userRoles);
+    this.checkPageReturn();
+    // this.rolesService.getData.subscribe((userRoles) => {
+    //   this.userRoles = userRoles;
+    //   this.checkPageReturn();
+    // });
+    // this.rolesService.getUserRoles();
   }
 
-  ionViewWillEnter() {
-    console.log('login will enter');
-    if(this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('AllProjectsPage');
-      this.navCtrl.popToRoot();
+  checkPageReturn() {
+    console.log('check page return');
+    this.canAccess = this.hasAccess();
+    console.log(this.canAccess);
+    console.log(this.data);
+    if (this.canAccess && this.returnData) {
+      if (this.data.page) {
+        if (this.data.params) {
+          this.navCtrl.setRoot(this.data.page, this.data.params);
+        } else {
+          this.navCtrl.setRoot(this.data.page);
+        }
+      }
     }
   }
 
-  ionViewCanLeave() {
-    console.log('login can leave');
-    return (this.keycloak.authenticated());
+  hasAccess() {
+    if (this.data && this.data.roles) {
+      console.log('hasAccess: roles required for page:');
+      console.log(this.data.roles);
+      for (let role of this.data.roles) {
+        console.log('restricted role in userRoles:');
+        console.log(this.userRoles[role]);
+        if (!this.userRoles[role]) {
+          console.log('false');
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   login() {
-    console.log('login function called');
-    if (this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('AllProjectsPage');
-    }
-    else{
-      this.keycloak.login();
-    }
+    this.keycloak.login();
+  }
+
+  logout() {
+    this.keycloak.logout();
   }
 
 }

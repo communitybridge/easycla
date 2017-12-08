@@ -1,14 +1,24 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>CLA Corporate Console</ion-title>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Project Management Console</ion-title>
   </ion-navbar>
 </ion-header>
 <ion-content padding headerspacing overflow-scroll="true">
   <div class="login-container">
     <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
-    <button ion-button class="login-button" (click)="login()">
+    <p class="error" *ngIf="userRoles.authenticated && !canAccess">
+      Sorry, You don't have access to the resource you tried to access.
+    </p>
+    <button *ngIf="!userRoles.authenticated" ion-button (click)="login()">
       <span class="icon icon-login"></span>
       <span class="btn-label">Sign in</span>
+    </button>
+    <button *ngIf="userRoles.authenticated" ion-button (click)="logout()">
+      <span class="icon icon-logout"></span>
+      <span class="btn-label">Sign out</span>
     </button>
   </div>
 </ion-content>

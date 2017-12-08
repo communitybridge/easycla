@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Injector, Inject } from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
@@ -7,15 +7,11 @@ import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 import { FilterService } from '../../services/filter.service'
 import { RolesService } from '../../services/roles.service';
-// import { Restricted } from '../../decorators/restricted.ts';
-// import { deprecate } from '../../decorators/restricted.ts';
+import { Restricted } from '../../decorators/restricted.ts';
 
-
-// @deprecate('Now using Angular 5 with HttpClientModule.See Angular official doc for more infos:  https://angular.io/guide/http')
-// @Restricted({
-//   roles: ['user'],
-//   perms: ['viewProject'],
-// })
+@Restricted({
+  roles: [ 'authenticated', 'user'],
+})
 @IonicPage({
   name: 'AllProjectsPage',
   segment: 'projects',
@@ -76,39 +72,24 @@ export class AllProjectsPage {
     private sanitizer: DomSanitizer,
     private keycloak: KeycloakService,
     private rolesService: RolesService,
-    private filterService: FilterService
+    private filterService: FilterService,
   ) {
-    this.rolesService.getData.subscribe((userRoles) => {
-      this.userRoles = userRoles;
-    });
-    this.rolesService.getUserRoles();
+    // this.rolesService.getData.subscribe((userRoles) => {
+    //   this.userRoles = userRoles;
+    // });
+    // this.rolesService.getUserRoles();
+    // let navObject = {
+    //   page: 'ProjectPage',
+    //   params: {
+    //     projectId: "something",
+    //   }
+    // };
+    // let navString = JSON.stringify(navObject);
+    // console.log('/#/login/' + navString);
+    // window.location.href = '/#/login/' + encodeURIComponent(navString);
+    console.log('roles from allprojects:');
+    console.log(this.rolesService.userRoles);
     this.getDefaults();
-  }
-
-  // ionViewCanEnter() {
-  //   console.log('all-projects can enter');
-  //   if (!this.userRoles.isAuthenticated || !this.userRoles.isUser) {
-  //     console.log('not authenticated');
-  //     this.navCtrl.setRoot('LoginPage');
-  //     this.navCtrl.popToRoot();
-  //   }
-  //   console.log("authenticated");
-  //   return this.userRoles.isAuthenticated;
-  // }
-  //
-
-  ionViewCanEnter() {
-    if (!this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if (!this.keycloak.authenticated()) {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   async ngOnInit() {

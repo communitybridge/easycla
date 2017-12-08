@@ -7,7 +7,7 @@ export class RolesService {
 
   public userAuthenticated: boolean;
   public userRoleDefaults: any;
-  private userRoles: any;
+  public userRoles: any;
   private getDataObserver: any;
   public getData: any;
   private rolesFetched: boolean;
@@ -17,17 +17,23 @@ export class RolesService {
   ) {
     this.rolesFetched = false;
     this.userRoleDefaults = {
-      isAuthenticated: this.keycloak.authenticated(),
-      isUser: false,
-      isProgramManager: false,
-      isProgramManagerAdmin: false,
-      isAdmin: false,
-      isStaffInc: false,
+      authenticated: this.keycloak.authenticated(),
+      user: false,
+      staffInc: false,
+      directorInc: false,
+      staffDirect: false,
+      directorDirect: false,
+      exec: false,
+      admin: false,
     };
-    this.getDataObserver = null;
-    this.getData = Observable.create(observer => {
-        this.getDataObserver = observer;
-    });
+
+    this.userRoles = this.userRoleDefaults;
+    console.log('rolesService userRoles defaults set:');
+    console.log(this.userRoles);
+    // this.getDataObserver = null;
+    // this.getData = Observable.create(observer => {
+    //     this.getDataObserver = observer;
+    // });
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -52,25 +58,56 @@ export class RolesService {
     if (this.rolesFetched) {
       this.getDataObserver.next(this.userRoles);
     } else {
-      this.keycloak.getTokenParsed().then((tokenParsed) => {
-        if (tokenParsed) {
-          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'PMC_LOGIN');
-          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
-          let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
-          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN');
-          let isStaffInc = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC');
+      if (this.keycloak.authenticated()) {
+        this.keycloak.getTokenParsed().then((tokenParsed) => {
+          if (tokenParsed && tokenParsed.realm_access && tokenParsed.realm_access.roles) {
+            console.log('tokenParsed:');
+            console.log(tokenParsed);
+            this.userRoles = {
+              authenticated: this.keycloak.authenticated(),
+              user: this.isInArray(tokenParsed.realm_access.roles, 'PMC_LOGIN'),
+              staffInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC'),
+              directorInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_INC'),
+              staffDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_DIRECT'),
+              directorDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_DIRECT'),
+              exec: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_EXEC'),
+              admin: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN'),
+            };
+            this.rolesFetched = true;
+            this.getDataObserver.next(this.userRoles);
+          }
+        });
+      }
+      // else {
+      //   console.log('passing back userRoleDefaults');
+      //   this.getDataObserver.next(this.userRoleDefaults); // pass back defaults
+      // }
+
+    }
+  }
+
+  getUserRolesPromise() {
+    if (this.keycloak.authenticated()) {
+      return this.keycloak.getTokenParsed().then((tokenParsed) => {
+        if (tokenParsed && tokenParsed.realm_access && tokenParsed.realm_access.roles) {
+          console.log('getUserRolesPromise tokenParsed:');
+          console.log(tokenParsed);
           this.userRoles = {
-            isAuthenticated: this.keycloak.authenticated(),
-            isUser: isUser,
-            isProgramManager: isProgramManager,
-            isProgramManagerAdmin: isProgramManagerAdmin,
-            isAdmin: isAdmin,
-            isStaffInc: isStaffInc
+            authenticated: this.keycloak.authenticated(),
+            user: this.isInArray(tokenParsed.realm_access.roles, 'PMC_LOGIN'),
+            staffInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC'),
+            directorInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_INC'),
+            staffDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_DIRECT'),
+            directorDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_DIRECT'),
+            exec: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_EXEC'),
+            admin: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN'),
           };
-          this.rolesFetched = true;
-          this.getDataObserver.next(this.userRoles);
+          return this.userRoles;
         }
+        return this.userRoleDefaults;
       });
+    } else {
+      return Promise.resolve({});
     }
   }
 
