@@ -1,5 +1,4 @@
 import { Component, ViewChild } from '@angular/core';
-import { Injectable, Injector, Inject } from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
@@ -114,16 +113,6 @@ export class AllProjectsPage {
   }
 
   getCurrentUser() {
-    this.cincoService.getCurrentUser().subscribe(response => {
-      this.user = response;
-      if (response.hasOwnProperty('calendar') && response.calendar) {
-        this.userHasCalendar = true;
-        this.user.calendar = this.sanitizer.bypassSecurityTrustResourceUrl(response.calendar);
-      }
-    });
-  }
-
-  getEvents() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       if (response.hasOwnProperty('calendar') && response.calendar) {
