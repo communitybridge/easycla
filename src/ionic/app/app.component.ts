@@ -15,7 +15,7 @@ import { CLA_API_URL } from '../services/constants';
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'LoginPage';
+  rootPage: any = 'AllProjectsPage';
 
   userRoles: any;
   pages: Array<{
@@ -44,16 +44,27 @@ export class MyApp {
 
   getDefaults() {
     this.pages = [];
-    this.userRoles = this.rolesService.userRoleDefaults;
+    this.userRoles = this.rolesService.userRoles;
     this.regeneratePagesMenu();
   }
 
   ngOnInit() {
-    this.rolesService.getData.subscribe((userRoles) => {
-      this.userRoles = userRoles;
+    console.log('inital roles');
+    console.log(this.rolesService.userRoles);
+    // this.rolesService.getData.subscribe((userRoles) => {
+    //   this.userRoles = userRoles;
+    //   console.log('roles after subscribe');
+    //   console.log(this.rolesService.userRoles);
+    //   this.regeneratePagesMenu();
+    // });
+    // this.rolesService.getUserRoles();
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
+      this.userRoles = this.rolesService.userRoles;
+      console.log('roles after subscribe');
+      console.log(this.rolesService.userRoles);
       this.regeneratePagesMenu();
     });
-    this.rolesService.getUserRoles();
+
   }
 
   // authenticated(): boolean {
@@ -103,38 +114,38 @@ export class MyApp {
     this.pages = [
       {
         title: 'All Projects',
-        access: true,
+        access: this.userRoles.user,
         component: 'AllProjectsPage'
       },
       {
         title: 'Member Companies',
-        access: true,
+        access: this.userRoles.user,
         component: 'AllMembersPage'
       },
       {
         title: 'All Invoices Status',
-        access: true,
+        access: this.userRoles.user,
         component: 'AllInvoicesPage'
       },
       {
         title: 'All Projects Logos',
-        access: true,
+        access: this.userRoles.user,
         component: 'AllProjectsLogosPage'
       },
       {
         icon: 'settings',
         title: 'Account Settings',
-        access: true,
+        access: this.userRoles.user,
         component: 'AccountSettingsPage'
       },
       {
         title: 'Linux Console Users',
-        access: this.userRoles.isAdmin,
+        access: this.userRoles.admin,
         component: 'ConsoleUsersPage'
       },
       {
         title: 'Sign Out',
-        access: this.userRoles.isAuthenticated,
+        access: this.userRoles.authenticated,
         component: 'LoginPage'
       },
     ];
