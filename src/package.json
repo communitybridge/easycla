@@ -59,6 +59,7 @@
     }
   ],
   "config": {
+    "ionic_purge_decorators": false,
     "ionic_src_dir": "ionic"
   },
   "description": "project-management-console"

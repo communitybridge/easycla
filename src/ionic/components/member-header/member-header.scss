@@ -31,4 +31,20 @@ member-header {
     opacity: 1 !important;
   }
 
+  .membership-project-name {
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+
+  .participation {
+    margin-top: 1rem;
+    .project-info {
+      ion-datetime {
+        display: inline-block;
+        vertical-align: middle;
+      }
+    }
+  }
+
 }
