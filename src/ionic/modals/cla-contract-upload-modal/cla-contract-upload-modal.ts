@@ -86,6 +86,7 @@ export class ClaContractUploadModal {
       document_name: documentName,
       document_preamble: this.form.value.preamble,
       document_legal_entity_name: this.form.value.legalEntityName,
+      template_name: 'CNCFTemplate', // only template supported for now
       new_major_version: this.form.value.newSignature,
     };
     console.log(this.documentType);

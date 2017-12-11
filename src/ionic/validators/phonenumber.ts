@@ -8,12 +8,10 @@ export class PhoneNumberValidator {
 
       let number = control.value;
       let phoneProto;
-      if(number == null) {
-        return {
-          'empty': true
-        }
+      if(number == null || number == '') {
+        return null;
       }
-      
+
       let countryCode = 'US';
       if(number.charAt(0)==='+') {
         countryCode = 'ZZ';
