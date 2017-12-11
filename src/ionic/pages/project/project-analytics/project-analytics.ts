@@ -6,6 +6,7 @@ import { AnalyticsService } from '../../../services/analytics.service';
 import { DomSanitizer} from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
+import { HostListener } from '@angular/core'
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
@@ -186,6 +187,7 @@ export class ProjectAnalyticsPage {
   getDefaults() {
     this.getCommitActivity();
     this.getWebsiteDuration();
+    this.redrawCharts();
   }
 
   getProjectConfig(projectId) {
@@ -227,7 +229,10 @@ export class ProjectAnalyticsPage {
       if (metrics) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            if(value) this.columnChartData.dataTable.push([key, value]);
+            if(value) {
+              this.columnChartData.dataTable.push([key, value]);
+              this.columnChartData = Object.create(this.columnChartData);
+            }
           }
         );
       }
@@ -241,15 +246,30 @@ export class ProjectAnalyticsPage {
     let tsTo=   '1514764800000';
     this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
-console.log(metrics);
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            console.log(key, value);
-            if(value) this.area2ChartData.dataTable.push([key, value]);
+            if(value) {
+              this.area2ChartData.dataTable.push([key, value]);
+              this.area2ChartData = Object.create(this.area2ChartData);
+            }
           }
         );
       }
     });
+  }
+
+  redrawCharts() {
+    this.columnChartData = Object.create(this.columnChartData);
+    this.area2ChartData = Object.create(this.area2ChartData);
+    this.pieChartData = Object.create(this.pieChartData);
+    this.areaChartData = Object.create(this.areaChartData);
+    this.gaugeChartData = Object.create(this.gaugeChartData);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event) {
+    event.target.innerWidth;
+    this.redrawCharts();
   }
 
 }
