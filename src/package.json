@@ -38,7 +38,7 @@
     "cla-service":"^1.0.0"
   },
   "devDependencies": {
-    "@ionic/app-scripts": "1.3.7",
+    "@ionic/app-scripts": "3.1.2",
     "typescript": "2.3.3"
   },
   "cordovaPlugins": [
@@ -58,6 +58,7 @@
     }
   ],
   "config": {
+    "ionic_purge_decorators": false,
     "ionic_src_dir": "ionic"
   },
   "description": "project-management-console"

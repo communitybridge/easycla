@@ -4,7 +4,12 @@ import { CalendarLinkValidator } from  '../../validators/calendarlink';
 import { NavController, IonicPage, Content, ToastController, } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'account-settings'
 })
@@ -27,7 +32,8 @@ export class AccountSettingsPage {
     private cincoService: CincoService,
     public formBuilder: FormBuilder,
     public toastCtrl: ToastController,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.getDefaults();
 
@@ -46,22 +52,6 @@ export class AccountSettingsPage {
       roles: [],
       calendar: null,
     };
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit() {

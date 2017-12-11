@@ -1,44 +1,24 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Integration Console</title>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <base href=".">
-    <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
-    <style>
-      body {
-        background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
-        -webkit-background-size: cover;
-        -moz-background-size: cover;
-        -o-background-size: cover;
-        background-size: cover;
-      }
-    </style>
-  </head>
-  <body>
-    <div padding headerspacing overflow-scroll="true">
-      <div padding>
-        <div class="login-container">
-          <div class="gray-rectangle">
-            <div class="white-rectangle"></div>
-            <div class="login-content">
-              <img src="/assets/img/lf_logo.png" alt="" class="img-responsive" style="width: 200px;  display: block; margin-left: auto; margin-right: auto;"/>
-              <br />
-              <br />
-              <br />
-              <br />
-              <div (click)="login()">
-                <button class="btn btn-primary btn-login" type="submit" >
-                  <span class="icon icon-login"></span>
-                  <span class="btn-label">Sign in</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Project Management Console</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content padding headerspacing overflow-scroll="true">
+  <div class="login-container">
+    <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
+    <p class="error" *ngIf="userRoles.isAuthenticated && !canAccess">
+      Sorry, You don't have access to the resource you tried to reach.
+    </p>
+    <button *ngIf="!userRoles.isAuthenticated" ion-button (click)="login()">
+      <span class="icon icon-login"></span>
+      <span class="btn-label">Sign in</span>
+    </button>
+    <button *ngIf="userRoles.isAuthenticated" ion-button (click)="logout()">
+      <span class="icon icon-logout"></span>
+      <span class="btn-label">Sign out</span>
+    </button>
+  </div>
+</ion-content>
