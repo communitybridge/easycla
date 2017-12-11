@@ -11,6 +11,10 @@ def local_init_docker_compose_file(containers, config, dependencies, mode, path)
         containers['workspace']['environment']['CINCO_SERVER_URL'] = cinco_endpoint
         lfcore.logger.info('Setting CINCO_SERVER_URL to ' + containers['workspace']['environment']['CINCO_SERVER_URL'])
 
+        analytics_endpoint = 'http://ec2-34-210-67-189.us-west-2.compute.amazonaws.com'
+        containers['workspace']['environment']['ANALYTICS_SERVER_URL'] = analytics_endpoint
+        lfcore.logger.info('Setting ANALYTICS_SERVER_URL to ' + containers['workspace']['environment']['ANALYTICS_SERVER_URL'])
+
         keycloak = platform.instance.dependencies.get('keycloak')
 
         if keycloak.created:
