@@ -109,7 +109,7 @@ export class ProjectAnalyticsPage {
         baselineColor: '#FFFFFF'
       },
       vAxis: {title: '# of PRs', minValue: 0, maxValue: 15},
-      colors: ['#9b9b9b'],
+      colors: ['#004421','#429b21'],
       backgroundColor: '#4e92df',
       legend: 'none',
       // is3D: true
