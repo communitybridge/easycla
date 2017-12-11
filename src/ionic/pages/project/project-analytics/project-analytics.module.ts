@@ -6,12 +6,14 @@ import { LoadingDisplayDirectiveModule } from '../../../directives/loading-displ
 import { SortingDisplayComponentModule } from '../../../components/sorting-display/sorting-display.module';
 import { ProjectHeaderComponentModule } from '../../../components/project-header/project-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
+import { Ng2GoogleChartsModule } from 'ng2-google-charts';
 
 @NgModule({
   declarations: [
     ProjectAnalyticsPage,
   ],
   imports: [
+    Ng2GoogleChartsModule,
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
