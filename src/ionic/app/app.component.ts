@@ -15,7 +15,7 @@ import { CLA_API_URL } from '../services/constants';
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'LoginPage';
+  rootPage: any = 'AllProjectsPage';
 
   userRoles: any;
   pages: Array<{
@@ -44,34 +44,16 @@ export class MyApp {
 
   getDefaults() {
     this.pages = [];
-    this.userRoles = this.rolesService.userRoleDefaults;
+    this.userRoles = this.rolesService.userRoles;
     this.regeneratePagesMenu();
   }
 
   ngOnInit() {
-    this.rolesService.getData.subscribe((userRoles) => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
-    this.rolesService.getUserRoles();
-  }
 
-  authenticated(): boolean {
-    return this.keycloak.authenticated();
-  }
-
-  login() {
-    this.keycloak.login();
-  }
-
-  logout() {
-    this.nav.setRoot('LoginPage');
-    this.nav.popToRoot();
-    this.keycloak.logout();
-  }
-
-  account() {
-    this.keycloak.account();
   }
 
   initializeApp() {
@@ -80,13 +62,6 @@ export class MyApp {
       // Here you can do any higher level native things you might need.
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
-
-      if(this.keycloak.authenticated()) {
-        this.rootPage = 'AllProjectsPage';
-      } else {
-        this.rootPage = 'LoginPage';
-      }
-
     });
   }
 
@@ -103,35 +78,45 @@ export class MyApp {
     this.pages = [
       {
         title: 'All Projects',
-        access: true,
+        access: this.userRoles.isPmcUser,
         component: 'AllProjectsPage'
       },
       {
         title: 'Member Companies',
-        access: true,
+        access: this.userRoles.isPmcUser,
         component: 'AllMembersPage'
       },
       {
         title: 'All Invoices Status',
-        access: true,
+        access: this.userRoles.isPmcUser,
         component: 'AllInvoicesPage'
       },
       {
         title: 'All Projects Logos',
-        access: true,
+        access: this.userRoles.isPmcUser,
         component: 'AllProjectsLogosPage'
       },
       {
         icon: 'settings',
         title: 'Account Settings',
-        access: true,
+        access: this.userRoles.isPmcUser,
         component: 'AccountSettingsPage'
       },
       {
         title: 'Linux Console Users',
         access: this.userRoles.isAdmin,
         component: 'ConsoleUsersPage'
-      }
+      },
+      {
+        title: 'Sign Out',
+        access: this.userRoles.isAuthenticated,
+        component: 'LoginPage'
+      },
+      {
+        title: 'Sign In',
+        access: !this.userRoles.isAuthenticated,
+        component: 'LoginPage'
+      },
     ];
   }
 }

@@ -5,8 +5,9 @@ import { KeycloakService } from './keycloak/keycloak.service';
 @Injectable()
 export class RolesService {
 
+  public userAuthenticated: boolean;
   public userRoleDefaults: any;
-  private userRoles: any;
+  public userRoles: any;
   private getDataObserver: any;
   public getData: any;
   private rolesFetched: boolean;
@@ -16,16 +17,16 @@ export class RolesService {
   ) {
     this.rolesFetched = false;
     this.userRoleDefaults = {
-      isUser: false,
-      isProgramManager: false,
-      isProgramManagerAdmin: false,
-      isAdmin: false,
+      isAuthenticated: this.keycloak.authenticated(),
+      isPmcUser: false,
       isStaffInc: false,
+      isDirectorInc: false,
+      isStaffDirect: false,
+      isDirectorDirect: false,
+      isExec: false,
+      isAdmin: false,
     };
-    this.getDataObserver = null;
-    this.getData = Observable.create(observer => {
-        this.getDataObserver = observer;
-    });
+    this.userRoles = this.userRoleDefaults;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -46,28 +47,26 @@ export class RolesService {
     return false;
   }
 
-  getUserRoles() {
-    if (this.rolesFetched) {
-      this.getDataObserver.next(this.userRoles);
-    } else {
-      this.keycloak.getTokenParsed().then((tokenParsed) => {
-        if (tokenParsed) {
-          let isUser = this.isInArray(tokenParsed.realm_access.roles, 'PMC_LOGIN');
-          let isProgramManager = this.isInArray(tokenParsed.realm_access.roles, 'PROGRAM_MANAGER');
-          let isProgramManagerAdmin = this.isInArray(tokenParsed.realm_access.roles, 'PMC_PROGRAM_MANAGER_ADMIN');
-          let isAdmin = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN');
-          let isStaffInc = this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC');
+  getUserRolesPromise() {
+    if (this.keycloak.authenticated()) {
+      return this.keycloak.getTokenParsed().then((tokenParsed) => {
+        if (tokenParsed && tokenParsed.realm_access && tokenParsed.realm_access.roles) {
           this.userRoles = {
-            isUser: isUser,
-            isProgramManager: isProgramManager,
-            isProgramManagerAdmin: isProgramManagerAdmin,
-            isAdmin: isAdmin,
-            isStaffInc: isStaffInc
+            isAuthenticated: this.keycloak.authenticated(),
+            isPmcUser: this.isInArray(tokenParsed.realm_access.roles, 'PMC_LOGIN'),
+            isStaffInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_INC'),
+            isDirectorInc: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_INC'),
+            isStaffDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_STAFF_DIRECT'),
+            isDirectorDirect: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_DIRECTOR_DIRECT'),
+            isExec: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_EXEC'),
+            isAdmin: this.isInArray(tokenParsed.realm_access.roles, 'STAFF_SUPER_ADMIN'),
           };
-          this.rolesFetched = true;
-          this.getDataObserver.next(this.userRoles);
+          return this.userRoles;
         }
+        return this.userRoleDefaults;
       });
+    } else { // not authenticated. can't decode token. just return defaults
+      return Promise.resolve(this.userRoleDefaults);
     }
   }
 

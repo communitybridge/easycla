@@ -39,11 +39,11 @@ export class MemberHeaderComponent {
   ngOnInit() {
     this.getMember();
 
-    this.rolesService.getData.subscribe((userRoles) => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.can.viewPartnerships = !userRoles.isStaffInc;
+      this.getMember();
     });
-    this.rolesService.getUserRoles();
   }
 
   getDefaults() {
@@ -97,12 +97,18 @@ export class MemberHeaderComponent {
     modal.present();
   }
 
+  openProjectPage(projectId) {
+    this.navCtrl.push('ProjectPage', {
+      projectId: projectId,
+    });
+  }
+
   getOrganizationProjectMemberships(organizationId) {
     this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
       if(response) {
         this.memberships = response;
         this.loading.memberships = false;
-        this.membershipsFiltered = this.memberships.filter((item, index) => index < 4 );
+        this.membershipsFiltered = this.memberships.filter((item, index) => index < 2 );
       }
     });
   }
