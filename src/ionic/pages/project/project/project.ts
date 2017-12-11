@@ -5,7 +5,7 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
 import { ProjectModel } from '../../../models/project-model';
 import { RolesService } from '../../../services/roles.service';
-import { Restricted } from '../../../decorators/restricted.ts';
+import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
