@@ -7,7 +7,7 @@ variable "ec2type" {}
 
 resource "aws_instance" "salt" {
   provider               = "aws.local"
-  ami                    = "${var.ami}" // Amazon Linux 2017.09.1 (HVM) SSD Volume Type
+  ami                    = "${var.ami}" 
   vpc_security_group_ids = ["${aws_security_group.salt-sg.id}"]
   subnet_id              = "${var.subnet}"
   instance_type          = "${var.ec2type}"
@@ -43,7 +43,7 @@ resource "aws_security_group" "salt-sg" {
     from_port = 22
     protocol = "tcp"
     to_port = 22
-    cidr_blocks = ["10.0.0.0/8"] // dan's home IP. can be removed later
+    cidr_blocks = ["10.0.0.0/8"] 
   }
 
   ingress { // ports needed for salt minions to talk to salt master
