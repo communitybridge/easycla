@@ -1,51 +1,36 @@
 login {
-  
-  .login-container{
-    text-align: center;
-    margin-top: 60px;
-  }
 
-  .gray-rectangle {
-    position: relative;
-    display: inline-block;
-    float: center;
-    width: 400px;
-    background: url("../assets/img/gray.png") no-repeat center center fixed #000;
+  .scroll-content {
+    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
   }
 
-  .white-rectangle {
-    float: center;
-    width: 400px;
-    height: 10px;
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    background-color: #ffffff;
+  .login-container {
+    text-align: center;
+    margin-top: 60px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 50px 20px;
+    background-color: #ececec;
+    max-width: 400px;
+    button {
+      margin-top: 25px;
+      width: 250px;
+      max-width: 100%;
+    }
   }
 
-  .login-content{
-    margin-top: 50px;
-    margin-bottom: 70px;
+  .logo {
+    display: block;
+    width: 250px;
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 25px;
   }
 
-  .btn-login{
-    width: 240px;
-    height: 50px;
-    background-color: white;
-    color: gray;
-    border-color: #cccccc;
-    font-family: HelveticaNeue;
-    font-size: 13px;
-    font-weight: 400;
-    box-shadow: 1px 2px 3px #888888;
-  }
-
-  .btn-label{
-    font-family: HelveticaNeue;
-    font-size: 14px;
-    font-weight: 400;
-  }
 }

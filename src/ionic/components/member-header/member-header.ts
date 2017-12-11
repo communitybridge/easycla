@@ -39,11 +39,11 @@ export class MemberHeaderComponent {
   ngOnInit() {
     this.getMember();
 
-    this.rolesService.getData.subscribe((userRoles) => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.can.viewPartnerships = !userRoles.isStaffInc;
+      this.getMember();
     });
-    this.rolesService.getUserRoles();
   }
 
   getDefaults() {

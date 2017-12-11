@@ -7,7 +7,12 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 
 import { ProjectModel } from '../../models/project-model';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'all-projects-logos'
 })
@@ -27,24 +32,10 @@ export class AllProjectsLogosPage {
     private cincoService: CincoService,
     private keycloak: KeycloakService,
     private sortService: SortService,
-    public modalCtrl: ModalController) {
+    public modalCtrl: ModalController,
+    public rolesService: RolesService,
+  ) {
 
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   async ngOnInit(){
