@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
+import { AnalyticsService } from '../../../services/analytics.service';
 import { DomSanitizer} from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
@@ -15,7 +16,7 @@ import { Restricted } from '../../../decorators/restricted';
 @Component({
   selector: 'project-analytics',
   templateUrl: 'project-analytics.html',
-  providers: [CincoService]
+  providers: [CincoService, AnalyticsService]
 })
 export class ProjectAnalyticsPage {
 
@@ -30,24 +31,20 @@ export class ProjectAnalyticsPage {
     public navParams: NavParams,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
+    private analyticsService: AnalyticsService,
     private domSanitizer : DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
-    this.getDefaults();
+
   }
 
   public columnChartData:any =  {
     chartType: 'ColumnChart',
     dataTable: [
       ['Date', 'Commits'],
-      ['11/10', 700],
-      ['11/11', 300],
-      ['11/12', 400],
-      ['11/13', 500],
-      ['11/14', 600],
-      ['11/15', 800]
+      ['', 0]
     ],
     options: {
       hAxis: {
@@ -58,7 +55,8 @@ export class ProjectAnalyticsPage {
         baselineColor: '#FFFFFF'
       },
       vAxis: {title: '# of commits', minValue: 0, maxValue: 15},
-      colors: ['#7f97b2'],
+      // colors: ['#7f97b2'],
+      colors: ['#fff'],
       backgroundColor: '#4e92df',
       legend: 'none',
       // is3D: true
@@ -121,12 +119,7 @@ export class ProjectAnalyticsPage {
     chartType: 'AreaChart',
     dataTable: [
       ['Date', 'Page Views'],
-      ['11/10', 20],
-      ['11/11', 60],
-      ['11/12', 70],
-      ['11/13', 20],
-      ['11/14', 40],
-      ['11/15', 90]
+      ['', 0]
     ],
     options: {
       hAxis: {
@@ -168,30 +161,6 @@ export class ProjectAnalyticsPage {
     options: {title: 'Countries', allowHtml: true}
   };
 
-
-  // public gaugeChartData:any =  {
-  //   chartType: 'Gauge',
-  //   dataTable: [
-  //     ['Date', 'PR'],
-  //     ['11/10', 32],
-  //   ],
-  //   options: {
-  //     hAxis: {
-  //       textStyle:{ color: '#ffffff'},
-  //       gridlines: {
-  //         color: "#FFFFFF"
-  //       },
-  //       baselineColor: '#FFFFFF'
-  //     },
-  //     vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
-  //     colors: ['#95c2e2'],
-  //     backgroundColor: '#4e92df',
-  //     legend: 'none',
-  //     // is3D: true
-  //   }
-  // };
-
-
   public gaugeChartData:any =  {
     chartType: 'Gauge',
     dataTable: [
@@ -209,29 +178,14 @@ export class ProjectAnalyticsPage {
     }
   };
 
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
-  }
-
   ngOnInit() {
     this.getProjectConfig(this.projectId);
+    this.getDefaults();
   }
 
   getDefaults() {
-
+    this.getCommitActivity();
+    this.getWebsiteDuration();
   }
 
   getProjectConfig(projectId) {
@@ -262,6 +216,40 @@ export class ProjectAnalyticsPage {
       }
     });
     modal.present();
+  }
+
+  getCommitActivity() {
+    let metricType= 'code.commits';
+    let groupBy= 'day';
+    let tsFrom= '1510430520000';
+    let tsTo=   '1514764800000';
+    this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value) this.columnChartData.dataTable.push([key, value]);
+          }
+        );
+      }
+    });
+  }
+
+  getWebsiteDuration() {
+    let metricType= 'website.duration';
+    let groupBy= 'week';
+    let tsFrom= '1510430520000';
+    let tsTo=   '1514764800000';
+    this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+console.log(metrics);
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            console.log(key, value);
+            if(value) this.area2ChartData.dataTable.push([key, value]);
+          }
+        );
+      }
+    });
   }
 
 }
