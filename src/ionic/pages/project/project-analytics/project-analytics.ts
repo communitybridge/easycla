@@ -3,7 +3,12 @@ import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angu
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { DomSanitizer} from '@angular/platform-browser';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'project/:projectId/analytics'
 })
@@ -26,7 +31,8 @@ export class ProjectAnalyticsPage {
     private cincoService: CincoService,
     private keycloak: KeycloakService,
     private domSanitizer : DomSanitizer,
-    public modalCtrl: ModalController
+    public modalCtrl: ModalController,
+    public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();

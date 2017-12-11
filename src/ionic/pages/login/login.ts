@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
-import { NavController, IonicPage } from 'ionic-angular';
+import { NavController, IonicPage, NavParams } from 'ionic-angular';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { RolesService } from '../../services/roles.service';
 
 @IonicPage({
   name: 'LoginPage',
-  segment: 'login'
+  segment: 'login/:return'
 })
 @Component({
   selector: 'login',
@@ -12,28 +13,61 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 })
 export class LoginPage {
 
-  constructor(public navCtrl: NavController, private keycloak: KeycloakService) {
+  returnData: boolean;
+  data: any;
+  userRoles: any;
+  canAccess: boolean;
+
+  constructor(
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
+  ) {
+    let dataString = this.navParams.get('return');
+    try {
+      this.data = JSON.parse(dataString);
+      this.returnData = true;
+    } catch (e) {
+      this.returnData = false;
+    }
+    this.userRoles = this.rolesService.userRoles;
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
+      this.userRoles = userRoles;
+      this.checkPageReturn();
+    });
   }
 
-  ionViewWillEnter() {
-    if(this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('AllProjectsPage');
-      this.navCtrl.popToRoot();
+  checkPageReturn() {
+    this.canAccess = this.hasAccess();
+    if (this.canAccess && this.returnData) {
+      if (this.data.page) {
+        if (this.data.params) {
+          this.navCtrl.setRoot(this.data.page, this.data.params);
+        } else {
+          this.navCtrl.setRoot(this.data.page);
+        }
+      }
     }
   }
 
-  ionViewCanLeave() {
-    return (this.keycloak.authenticated());
+  hasAccess() {
+    if (this.data && this.data.roles) {
+      for (let role of this.data.roles) {
+        if (!this.userRoles[role]) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   login() {
-    if (this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('AllProjectsPage');
-    }
-    else{
-      this.keycloak.login();
-    }
+    this.keycloak.login();
+  }
+
+  logout() {
+    this.keycloak.logout();
   }
 
 }
