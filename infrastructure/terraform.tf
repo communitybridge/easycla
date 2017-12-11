@@ -93,3 +93,13 @@ module "salt" {
   vpc_id                 = "${module.vpc.id}"
   ec2type                = "m4.large"
 }
+
+module "consul" {
+  source                 = "../modules/consul"
+  ami                    = "ami-0c2aba6c" // CentOS Linux 7 x86_64 hvm ebs us-west-2
+  dns_zone_id            = "${var.external_dns_zoneid}"
+  vpc_id                 = "${module.vpc.id}"
+  ec2type                = "t2.medium"
+  subnet-a               = "${module.vpc.external_subnets[0]}"
+  subnet-b               = "${module.vpc.external_subnets[1]}"
+}
