@@ -6,7 +6,11 @@ import { CincoService } from '../../services/cinco.service'
 import { Chart } from 'chart.js';
 import { FilterService } from '../../services/filter.service'
 import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   name: 'AllProjectsPage',
   segment: 'projects',
@@ -67,53 +71,18 @@ export class AllProjectsPage {
     private sanitizer: DomSanitizer,
     private keycloak: KeycloakService,
     private rolesService: RolesService,
-    private filterService: FilterService
+    private filterService: FilterService,
   ) {
     this.getDefaults();
   }
 
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
+  async ngOnInit() {
+    this.getIndustries();
+    this.getCurrentUser();
+    this.getAllProjects();
   }
 
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
-  }
-
-  async ngOnInit(){
-    this.rolesService.getData.subscribe((userRoles) => {
-      this.userRoles = userRoles;
-      this.getIndustries();
-      if(this.userRoles.isStaffInc) { this.getMyProjects(); }
-      else { this.getAllProjects(); }
-      this.getCurrentUser();
-    });
-    this.rolesService.getUserRoles();
-  }
-
-  getMyProjects(){
-    this.cincoService.getMyProjects().subscribe(response => {
-        this.allProjects = response;
-        for(let eachProject of this.allProjects) {
-          // After uploading a logo, Cinco will provide same name,
-          // so a refresh to the image needs to be forced.
-          // This is to refresh an image that have same URL
-          if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
-        }
-        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
-        this.loading.projects = false;
-    });
-  }
-
-  getAllProjects(){
+  getAllProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
         this.allProjects = response;
         for(let eachProject of this.allProjects) {
@@ -143,7 +112,7 @@ export class AllProjectsPage {
     });
   }
 
-  getCurrentUser(){
+  getCurrentUser() {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       if (response.hasOwnProperty('calendar') && response.calendar) {
@@ -153,7 +122,7 @@ export class AllProjectsPage {
     });
   }
 
-  viewProject(projectId){
+  viewProject(projectId) {
     this.navCtrl.setRoot('ProjectPage', {
       projectId: projectId
     });

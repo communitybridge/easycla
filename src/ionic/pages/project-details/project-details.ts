@@ -5,7 +5,12 @@ import { UrlValidator } from  '../../validators/url';
 import { CincoService } from '../../services/cinco.service'
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { ProjectModel } from '../../models/project-model';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'project-details/:projectId'
 })
@@ -38,7 +43,8 @@ export class ProjectDetailsPage {
     private cincoService: CincoService,
     public modalCtrl: ModalController,
     private formBuilder: FormBuilder,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -56,22 +62,6 @@ export class ProjectDetailsPage {
       addressCountry:[this.project.address.address.country],
       description:[this.project.description],
     });
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit() {

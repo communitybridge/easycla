@@ -4,7 +4,12 @@ import { ClaService } from 'cla-service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 import { PopoverController } from 'ionic-angular';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'cla-contracts-contributors/:claProjectId'
 })
@@ -27,26 +32,11 @@ export class ClaContractsContributorsPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.getDefaults();
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit() {

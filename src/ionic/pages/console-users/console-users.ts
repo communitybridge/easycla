@@ -4,7 +4,12 @@ import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
 import { CincoService } from '../../services/cinco.service'
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser', 'isAdmin'],
+})
 @IonicPage({
   segment: 'console-users'
 })
@@ -21,7 +26,8 @@ export class ConsoleUsersPage {
     public navCtrl: NavController,
     private cincoService: CincoService,
     public modalCtrl: ModalController,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.getDefaults();
   }
@@ -32,22 +38,6 @@ export class ConsoleUsersPage {
     };
     this.users = [];
     this.userRoles = {};
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit(){
