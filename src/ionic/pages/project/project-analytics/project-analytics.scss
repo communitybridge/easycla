@@ -18,4 +18,39 @@ project-analytics {
     width: 100%;
     min-height: 450px;
   }
+
+  .cssHeaderRow {
+    background-color: #4e92df;
+  }
+  .cssTableRow {
+      background-color: #4e92df;
+  }
+  .cssOddTableRow {
+      background-color: #4e92df;
+  }
+  .cssSelectedTableRow {
+      font-size: 16px;
+      font-weight:bold;
+  }
+  .cssHoverTableRow {
+      background: #ccc;
+  }
+  .cssHeaderCell {
+      color: #FFFFFF;
+      font-size: 14px;
+      padding: 10px !important;
+      border: solid 1px #4e92df;
+      text-align: center;
+  }
+  .cssTableCell {
+      font-size: 14px;
+      padding: 10px !important;
+      border: solid 1px #4e92df;
+      text-align: center;
+  }
+  .cssRowNumberCell {
+      text-align: center;
+  }
+
+
 }
