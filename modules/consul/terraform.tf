@@ -6,6 +6,15 @@ variable "subnet-a" {}
 variable "subnet-b" {}
 variable "subnet-c" {}
 
+resource "aws_route53_record" "consul" {
+  provider = "aws.local"
+  zone_id  = "${var.dns_zone_id}"
+  name     = "consul.e.tux.rocks"
+  type     = "NS"
+  ttl      = 300
+  records = [ "${aws_route53_record.consul-a.name}.", "${aws_route53_record.consul-b.name}.", "${aws_route53_record.consul-c.name}." ]
+}
+
 resource "aws_instance" "consul-a" {
   provider               = "aws.local"
   ami                    = "${var.ami}" 
@@ -18,7 +27,6 @@ resource "aws_instance" "consul-a" {
     volume_type = "gp2"
     volume_size = "20"
   }
-
   tags {
     Name = "consul-a.e.tux.rocks"
     Owner = "dparsons@linuxfoundation.org"
