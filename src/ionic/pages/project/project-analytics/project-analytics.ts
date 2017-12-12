@@ -55,26 +55,22 @@ export class ProjectAnalyticsPage {
         },
         baselineColor: '#FFFFFF'
       },
-      vAxis: {title: '# of commits', minValue: 0, maxValue: 15},
-      // colors: ['#7f97b2'],
+      vAxis: {title: '# of commits'},
       colors: ['#fff'],
       backgroundColor: '#4e92df',
       legend: 'none',
-      // is3D: true
     }
   };
 
 
-  public areaChartData:any =  {
-    chartType: 'AreaChart',
+  public issuesStatusChart:any =  {
+    chartType: 'BarChart',
     dataTable: [
-      ['Date', 'PR1', 'PR2'],
-      ['11/10', 70, 30],
-      ['11/11', 30, 40],
-      ['11/12', 40, 70],
-      ['11/13', 50, 20],
-      ['11/14', 60, 50],
-      ['11/15', 80, 10]
+      ['Status', 'Issues'],
+      ['News', 1],
+      ['Open Reviewed', 2],
+      ['Closed', 3],
+      ['Invalid', 4]
     ],
     options: {
       hAxis: {
@@ -84,11 +80,32 @@ export class ProjectAnalyticsPage {
         },
         baselineColor: '#FFFFFF'
       },
-      vAxis: {title: '# of PRs', minValue: 0, maxValue: 15},
-      colors: ['#9344dd', '#abab45'],
+      vAxis: {title: '# of commits'},
+      colors: ['#fff'],
       backgroundColor: '#4e92df',
       legend: 'none',
-      // is3D: true
+    }
+  };
+
+
+  public areaChartData:any =  {
+    chartType: 'AreaChart',
+    dataTable: [
+      ['Date', 'PRs Open', 'PRs Merged'],
+      ['0', 0, 0]
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#ffffff'},
+        gridlines: {
+          color: "#FFFFFF"
+        },
+        baselineColor: '#FFFFFF'
+      },
+      vAxis: {title: '# of PRs'},
+      colors: ['#9344dd', '#abab45'],
+      backgroundColor: '#4e92df',
+      legend: 'none'
     }
   };
 
@@ -111,8 +128,7 @@ export class ProjectAnalyticsPage {
       vAxis: {title: '# of PRs', minValue: 0, maxValue: 15},
       colors: ['#004421','#429b21'],
       backgroundColor: '#4e92df',
-      legend: 'none',
-      // is3D: true
+      legend: 'none'
     }
   };
 
@@ -133,8 +149,7 @@ export class ProjectAnalyticsPage {
       vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
       colors: ['#95c2e2'],
       backgroundColor: '#4e92df',
-      legend: 'none',
-      // is3D: true
+      legend: 'none'
     }
   };
 
@@ -187,6 +202,7 @@ export class ProjectAnalyticsPage {
   getDefaults() {
     this.getCommitActivity();
     this.getWebsiteDuration();
+    this.getPrsOpenMerged();
     this.redrawCharts();
   }
 
@@ -221,11 +237,12 @@ export class ProjectAnalyticsPage {
   }
 
   getCommitActivity() {
-    let metricType= 'code.commits';
-    let groupBy= 'day';
-    let tsFrom= '1510430520000';
-    let tsTo=   '1514764800000';
-    this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+    let index = 'hyperledger';
+    let metricType = 'code.commits';
+    let groupBy = 'day';
+    let tsFrom = '1510430520000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
@@ -240,11 +257,12 @@ export class ProjectAnalyticsPage {
   }
 
   getWebsiteDuration() {
-    let metricType= 'website.duration';
-    let groupBy= 'week';
-    let tsFrom= '1510430520000';
-    let tsTo=   '1514764800000';
-    this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+    let index = 'hyperledger';
+    let metricType = 'website.duration';
+    let groupBy = 'week';
+    let tsFrom = '1510430520000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
@@ -252,6 +270,41 @@ export class ProjectAnalyticsPage {
               this.area2ChartData.dataTable.push([key, value]);
               this.area2ChartData = Object.create(this.area2ChartData);
             }
+          }
+        );
+      }
+    });
+  }
+
+  getPrsOpenMerged() {
+    let index = 'hyperledger';
+    let metricType = 'prs.open';
+    let groupBy = 'month';
+    let tsFrom = '1388534400000';
+    let tsTo =   '1514764800000';
+    // let prsOpen;
+    // this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+    //   if (metrics) {
+    //     Object.entries(metrics.value).forEach(
+    //       ([key, value]) => {
+    //         if(value) {
+    //           prsOpen.push(value);
+    //         }
+    //       }
+    //     );
+    //   }
+    // });
+
+    metricType = 'prs.open';
+    let i = 0;
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            console.log(key, value);
+              this.areaChartData.dataTable.push([key, value, 0]);
+              this.areaChartData = Object.create(this.areaChartData);
+              i++;
           }
         );
       }
