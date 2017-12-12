@@ -38,10 +38,165 @@ export class ProjectAnalyticsPage {
     public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
+  }
+
+  ngOnInit() {
+    this.getProjectConfig(this.projectId);
+    this.getDefaults();
+  }
+
+  getDefaults() {
+
+    this.getCommitActivity();
+    this.getcommitsDistribution();
+    this.getIssuesStatus();
+    this.getPrsPipeline();
+    this.getIssuesActivity();
+    this.getPrsActivity();
+    this.getPageViews();
+
+    this.redrawCharts();
 
   }
 
-  public columnChartData:any =  {
+  getProjectConfig(projectId) {
+    this.cincoService.getProjectConfig(projectId).subscribe(response => {
+      if (response) {
+        let projectConfig = response;
+        if(projectConfig.analyticsUrl) {
+          this.analyticsUrl = projectConfig.analyticsUrl;
+          this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+          this.hasAnalyticsUrl = true;
+        }
+        else{
+          this.hasAnalyticsUrl = true;
+        }
+      }
+    });
+  }
+
+  openAnaylticsConfigModal(projectId) {
+    let modal = this.modalCtrl.create('AnalyticsConfigModal', {
+      projectId: projectId,
+    });
+    modal.onDidDismiss(analyticsUrl => {
+      if(analyticsUrl){
+        this.analyticsUrl = analyticsUrl;
+        this.hasAnalyticsUrl = true;
+        this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
+      }
+    });
+    modal.present();
+  }
+
+  getCommitActivity() {
+    let index = 'hyperledger';
+    let metricType = 'code.commits';
+    let groupBy = 'day';
+    let tsFrom = '1510430520000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              this.commitsActivityChart.dataTable.push([key, value]);
+              this.commitsActivityChart = Object.create(this.commitsActivityChart);
+            }
+          }
+        );
+      }
+    });
+  }
+
+  getcommitsDistribution() {
+    console.log("TODO");
+  }
+
+  getIssuesStatus() {
+    console.log("TODO");
+  }
+
+  getPrsPipeline() {
+    let index = 'hyperledger';
+    let metricType = 'prs.open';
+    let groupBy = 'day';
+    let tsFrom = '1510430520000';
+    let tsTo =   '1514764800000';
+    let sumOpenPRs = 0;
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            sumOpenPRs = sumOpenPRs + value;
+          }
+        );
+        this.prsPipelineChart.dataTable.push(['PRs', sumOpenPRs]);
+        this.prsPipelineChart = Object.create(this.prsPipelineChart);
+      }
+    });
+  }
+
+  getIssuesActivity() {
+    console.log("TODO");
+  }
+
+  getPrsActivity() {
+    let index = 'hyperledger';
+    let metricType = 'prs.open';
+    let groupBy = 'month';
+    let tsFrom = '1388534400000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            this.prsActivityChart.dataTable.push([key, value, 0]);
+            this.prsActivityChart = Object.create(this.prsActivityChart);
+          }
+        );
+      }
+    });
+  }
+
+  getPageViews() {
+    let index = 'hyperledger';
+    let metricType = 'website.duration';
+    let groupBy = 'week';
+    let tsFrom = '1510430520000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              this.pageViewsChart.dataTable.push([key, value]);
+              this.pageViewsChart = Object.create(this.pageViewsChart);
+            }
+          }
+        );
+      }
+    });
+  }
+
+  redrawCharts() {
+    this.commitsActivityChart = Object.create(this.commitsActivityChart);
+    this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
+    this.issuesStatusChart = Object.create(this.issuesStatusChart);
+    this.prsPipelineChart = Object.create(this.prsPipelineChart);
+    this.issuesActivityChart = Object.create(this.issuesActivityChart);
+    this.prsActivityChart = Object.create(this.prsActivityChart);
+    this.pageViewsChart = Object.create(this.pageViewsChart);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event) {
+    event.target.innerWidth;
+    this.redrawCharts();
+  }
+
+
+  public commitsActivityChart:any =  {
     chartType: 'ColumnChart',
     dataTable: [
       ['Date', 'Commits'],
@@ -68,7 +223,7 @@ export class ProjectAnalyticsPage {
     dataTable: [
       ['Status', 'Issues'],
       ['News', 1],
-      ['Open Reviewed', 2],
+      ['Open', 2],
       ['Closed', 3],
       ['Invalid', 4]
     ],
@@ -81,14 +236,14 @@ export class ProjectAnalyticsPage {
         baselineColor: '#FFFFFF'
       },
       vAxis: {title: '# of commits'},
-      colors: ['#fff'],
+      colors: ['#ff88ff'],
       backgroundColor: '#4e92df',
       legend: 'none',
     }
   };
 
 
-  public areaChartData:any =  {
+  public prsActivityChart:any =  {
     chartType: 'AreaChart',
     dataTable: [
       ['Date', 'PRs Open', 'PRs Merged'],
@@ -110,7 +265,35 @@ export class ProjectAnalyticsPage {
   };
 
 
-  public pieChartData:any =  {
+  public issuesActivityChart:any =  {
+    chartType: 'AreaChart',
+    dataTable: [
+      ['Date', 'PRs Open', 'PRs Merged'],
+      ['11/5', 3, 1],
+      ['11/6', 7, 3],
+      ['11/7', 3, 4],
+      ['11/8', 8, 6],
+      ['11/9', 6, 3],
+      ['11/10', 2, 1],
+      ['11/11', 8, 5]
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#ffffff'},
+        gridlines: {
+          color: "#FFFFFF"
+        },
+        baselineColor: '#FFFFFF'
+      },
+      vAxis: {title: '# of PRs'},
+      colors: ['#9344dd', '#abab45'],
+      backgroundColor: '#4e92df',
+      legend: 'none'
+    }
+  };
+
+
+  public commitsDistributionChart:any =  {
     chartType: 'PieChart',
     dataTable: [
       ['Date', 'Commits'],
@@ -132,7 +315,7 @@ export class ProjectAnalyticsPage {
     }
   };
 
-  public area2ChartData:any =  {
+  public pageViewsChart:any =  {
     chartType: 'AreaChart',
     dataTable: [
       ['Date', 'Page Views'],
@@ -177,11 +360,10 @@ export class ProjectAnalyticsPage {
     options: {title: 'Countries', allowHtml: true}
   };
 
-  public gaugeChartData:any =  {
+  public prsPipelineChart:any =  {
     chartType: 'Gauge',
     dataTable: [
-      ['Label', 'Value'],
-      ['PRs', 32]
+      ['Label', 'Value']
     ],
     options: {
       animation: {easing: 'out'},
@@ -193,136 +375,5 @@ export class ProjectAnalyticsPage {
       greenColor: '#d0e9c6'
     }
   };
-
-  ngOnInit() {
-    this.getProjectConfig(this.projectId);
-    this.getDefaults();
-  }
-
-  getDefaults() {
-    this.getCommitActivity();
-    this.getWebsiteDuration();
-    this.getPrsOpenMerged();
-    this.redrawCharts();
-  }
-
-  getProjectConfig(projectId) {
-    this.cincoService.getProjectConfig(projectId).subscribe(response => {
-      if (response) {
-        let projectConfig = response;
-        if(projectConfig.analyticsUrl) {
-          this.analyticsUrl = projectConfig.analyticsUrl;
-          this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
-          this.hasAnalyticsUrl = true;
-        }
-        else{
-          this.hasAnalyticsUrl = true;
-        }
-      }
-    });
-  }
-
-  openAnaylticsConfigModal(projectId) {
-    let modal = this.modalCtrl.create('AnalyticsConfigModal', {
-      projectId: projectId,
-    });
-    modal.onDidDismiss(analyticsUrl => {
-      if(analyticsUrl){
-        this.analyticsUrl = analyticsUrl;
-        this.hasAnalyticsUrl = true;
-        this.sanitizedAnalyticsUrl = this.domSanitizer.bypassSecurityTrustResourceUrl(this.analyticsUrl);
-      }
-    });
-    modal.present();
-  }
-
-  getCommitActivity() {
-    let index = 'hyperledger';
-    let metricType = 'code.commits';
-    let groupBy = 'day';
-    let tsFrom = '1510430520000';
-    let tsTo =   '1514764800000';
-    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              this.columnChartData.dataTable.push([key, value]);
-              this.columnChartData = Object.create(this.columnChartData);
-            }
-          }
-        );
-      }
-    });
-  }
-
-  getWebsiteDuration() {
-    let index = 'hyperledger';
-    let metricType = 'website.duration';
-    let groupBy = 'week';
-    let tsFrom = '1510430520000';
-    let tsTo =   '1514764800000';
-    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              this.area2ChartData.dataTable.push([key, value]);
-              this.area2ChartData = Object.create(this.area2ChartData);
-            }
-          }
-        );
-      }
-    });
-  }
-
-  getPrsOpenMerged() {
-    let index = 'hyperledger';
-    let metricType = 'prs.open';
-    let groupBy = 'month';
-    let tsFrom = '1388534400000';
-    let tsTo =   '1514764800000';
-    // let prsOpen;
-    // this.analyticsService.getMetrics(metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-    //   if (metrics) {
-    //     Object.entries(metrics.value).forEach(
-    //       ([key, value]) => {
-    //         if(value) {
-    //           prsOpen.push(value);
-    //         }
-    //       }
-    //     );
-    //   }
-    // });
-
-    metricType = 'prs.open';
-    let i = 0;
-    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            console.log(key, value);
-              this.areaChartData.dataTable.push([key, value, 0]);
-              this.areaChartData = Object.create(this.areaChartData);
-              i++;
-          }
-        );
-      }
-    });
-  }
-
-  redrawCharts() {
-    this.columnChartData = Object.create(this.columnChartData);
-    this.area2ChartData = Object.create(this.area2ChartData);
-    this.pieChartData = Object.create(this.pieChartData);
-    this.areaChartData = Object.create(this.areaChartData);
-    this.gaugeChartData = Object.create(this.gaugeChartData);
-  }
-
-  @HostListener('window:resize', ['$event'])
-  onResize(event) {
-    event.target.innerWidth;
-    this.redrawCharts();
-  }
 
 }
