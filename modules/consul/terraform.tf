@@ -4,6 +4,7 @@ variable "vpc_id" {}
 variable "ec2type" {}
 variable "subnet-a" {}
 variable "subnet-b" {}
+variable "subnet-c" {}
 
 resource "aws_instance" "consul-a" {
   provider               = "aws.local"
@@ -59,6 +60,34 @@ resource "aws_route53_record" "consul-b" {
   type     = "A"
   ttl      = 300
   records = [ "${aws_instance.consul-b.private_ip}" ]
+}
+
+resource "aws_instance" "consul-c" {
+  provider               = "aws.local"
+  ami                    = "${var.ami}" 
+  vpc_security_group_ids = ["${aws_security_group.consul-server.id}"]
+  subnet_id              = "${var.subnet-c}"
+  instance_type          = "${var.ec2type}"
+  key_name               = "dan"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = "20"
+  }
+
+  tags {
+    Name = "consul-c.e.tux.rocks"
+    Owner = "dparsons@linuxfoundation.org"
+  }
+}
+
+resource "aws_route53_record" "consul-c" {
+  provider = "aws.local"
+  zone_id  = "${var.dns_zone_id}"
+  name     = "consul-c.e.tux.rocks"
+  type     = "A"
+  ttl      = 300
+  records = [ "${aws_instance.consul-c.private_ip}" ]
 }
 
 resource "aws_security_group" "consul-server" {
