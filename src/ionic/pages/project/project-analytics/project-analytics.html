@@ -18,18 +18,32 @@
         <ion-title>Analytics</ion-title>
       </ion-col>
     </ion-row>
+
     <ion-row>
-      <ion-col col-8>
+      <ion-col col-12>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Commit Activity</span>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="columnChartData"></google-chart>
+            <google-chart [data]="commitsActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col col-4>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-3>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Distribution of Commits</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="commitsDistributionChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-6>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Issues - Status</span>
@@ -39,47 +53,52 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-    </ion-row>
-    <ion-row>
-      <ion-col col-3>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Distribution of Commits</span>
-          </ion-card-header>
-          <ion-card-content>
-            <google-chart [data]="pieChartData"></google-chart>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col col-9>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Pull Request Activity</span>
-          </ion-card-header>
-          <ion-card-content>
-            <google-chart [data]="areaChartData"></google-chart>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-    <ion-row>
       <ion-col col-3>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Pull Request - Pipeline</span>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="gaugeChartData"></google-chart>
+            <google-chart [data]="prsPipelineChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col col-9>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Issues Activity</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="issuesActivityChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Pull Request Activity</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="prsActivityChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Project Page Views</span>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="area2ChartData"></google-chart>
+            <google-chart [data]="pageViewsChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
