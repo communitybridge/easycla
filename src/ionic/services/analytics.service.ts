@@ -36,11 +36,16 @@ export class AnalyticsService {
   * issues.open
   * website.duration
   * code.commits
+  * prs
+  * prs.submitted
+  * prs.open
+  * prs.merged
+  * prs.closed
   *
   * Further details https://github.linuxfoundation.org/Engineering/analytics-service/blob/develop/docs/analytics.api.md
   **/
 
-  getMetrics(metricType, groupBy, tsFrom, tsTo)
+  getMetrics(index, metricType, groupBy, tsFrom, tsTo)
   {
     return this.http.get(
       this.analyticsApiUrl +
@@ -48,7 +53,8 @@ export class AnalyticsService {
       '/projects/*/metrics/' + metricType +
       '?groupby=' + groupBy +
       '&tsFrom=' + tsFrom +
-      '&tsTo='+ tsTo)
+      '&tsTo='+ tsTo +
+      '&index=/'+ index + '/docs/')
       .map(res => res.json());
   }
 
