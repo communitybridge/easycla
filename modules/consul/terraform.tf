@@ -13,7 +13,7 @@ resource "aws_instance" "consul-a" {
   subnet_id              = "${var.subnet-a}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
-
+  iam_instance_profile = "${aws_iam_instance_profile.consul-server-profile.name}"
   root_block_device {
     volume_type = "gp2"
     volume_size = "20"
@@ -22,6 +22,7 @@ resource "aws_instance" "consul-a" {
   tags {
     Name = "consul-a.e.tux.rocks"
     Owner = "dparsons@linuxfoundation.org"
+    consul = "usw2"
   }
 }
 
@@ -41,7 +42,7 @@ resource "aws_instance" "consul-b" {
   subnet_id              = "${var.subnet-b}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
-
+  iam_instance_profile = "${aws_iam_instance_profile.consul-server-profile.name}"
   root_block_device {
     volume_type = "gp2"
     volume_size = "20"
@@ -50,6 +51,7 @@ resource "aws_instance" "consul-b" {
   tags {
     Name = "consul-b.e.tux.rocks"
     Owner = "dparsons@linuxfoundation.org"
+    consul = "usw2"
   }
 }
 
@@ -69,7 +71,7 @@ resource "aws_instance" "consul-c" {
   subnet_id              = "${var.subnet-c}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
-
+  iam_instance_profile = "${aws_iam_instance_profile.consul-server-profile.name}"
   root_block_device {
     volume_type = "gp2"
     volume_size = "20"
@@ -78,6 +80,7 @@ resource "aws_instance" "consul-c" {
   tags {
     Name = "consul-c.e.tux.rocks"
     Owner = "dparsons@linuxfoundation.org"
+    consul = "usw2"
   }
 }
 
@@ -163,3 +166,66 @@ resource "aws_security_group" "consul-server" {
     Name        = "consul-server"
   }
 }
+
+resource "aws_iam_role" "consul-server-role" {
+  provider = "aws.local"
+  name = "consul-server-role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "consul-autojoin-policy" {
+  provider = "aws.local"
+  name = "consul-autojoin-policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ec2:DescribeInstances",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "consul-autojoin-attachment" {
+  provider = "aws.local"
+  name = "consul-autojoin-attachment"
+  roles = ["${aws_iam_role.consul-server-role.name}"]
+  policy_arn = "${aws_iam_policy.consul-autojoin-policy.arn}"
+}
+
+resource "aws_iam_instance_profile" "consul-server-profile" {
+  provider = "aws.local"
+  name = "consul-server-profile"
+  role = "${aws_iam_role.consul-server-role.name}"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
