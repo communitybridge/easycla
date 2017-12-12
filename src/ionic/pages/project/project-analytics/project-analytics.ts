@@ -19,6 +19,7 @@ import { HostListener } from '@angular/core'
   templateUrl: 'project-analytics.html',
   providers: [CincoService, AnalyticsService]
 })
+
 export class ProjectAnalyticsPage {
 
   projectId: string;
@@ -108,7 +109,44 @@ export class ProjectAnalyticsPage {
   }
 
   getcommitsDistribution() {
-    console.log("TODO");
+    let index = 'hyperledger2';
+    let metricType = 'maintainers';
+    let groupBy = 'month,author';
+    let tsFrom = '1512150915000';
+    let tsTo =   '1514764800000';
+    let maintainers;
+    let maintainersCommitsTop10 = 0;
+    let maintainersCommitsTotal = 0;
+    let top10Percentage = 0;
+    let restPercentage = 0;
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              maintainers = value;
+            }
+          }
+        );
+        let i = 0;
+        Object.entries(maintainers.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              if(i<10){
+                maintainersCommitsTop10 = maintainersCommitsTop10 + value;
+              }
+              maintainersCommitsTotal = maintainersCommitsTotal + value;
+              i++
+            }
+          }
+        );
+        top10Percentage = Math.round( maintainersCommitsTop10 * 100 / maintainersCommitsTotal );
+        restPercentage = 100 - top10Percentage;
+        this.commitsDistributionChart.dataTable.push(['Top 10', top10Percentage])
+        this.commitsDistributionChart.dataTable.push(['Rest', restPercentage]);
+        this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
+      }
+    });
   }
 
   getIssuesStatus() {
@@ -159,7 +197,7 @@ export class ProjectAnalyticsPage {
     let index = 'hyperledger2';
     let metricType = 'issues';
     let groupBy = 'day,issue_status';
-    let tsFrom = '1512150915000';
+    let tsFrom = '1511150915000';
     let tsTo =   '1514764800000';
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
@@ -223,18 +261,26 @@ export class ProjectAnalyticsPage {
     let index = 'hyperledger2';
     let metricType = 'maintainers';
     let groupBy = 'month,author';
-    let tsFrom = '1388534400000';
+    let tsFrom = '1512150915000';
     let tsTo =   '1514764800000';
+    let maintainers;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
-        // console.log(metrics.value)
-        // Object.entries(metrics.value).forEach(
-        //   ([key, value]) => {
-        //     if(value) {
-        //
-        //     }
-        //   }
-        // );
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              maintainers = value;
+            }
+          }
+        );
+        Object.entries(maintainers.value).forEach(
+          ([key, value]) => {
+            if(value) {
+              this.maintainersTable.dataTable.push([key, value]);
+            }
+          }
+        );
+        this.maintainersTable = Object.create(this.maintainersTable);
       }
     });
   }
@@ -278,20 +324,17 @@ export class ProjectAnalyticsPage {
   public commitsDistributionChart:any =  {
     chartType: 'PieChart',
     dataTable: [
-      ['Date', 'Commits'],
-      ['11/10', 82],
-      ['11/11', 18]
+      ['Date', 'Commits']
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#888888'},
         gridlines: {
           color: "#FFFFFF"
         },
         baselineColor: '#FFFFFF'
       },
-      vAxis: {title: '# of PRs', minValue: 0, maxValue: 15},
-      colors: ['#004421','#429b21'],
+      colors: ['#cccccc','#eeeeee'],
       backgroundColor: '#4e92df',
       legend: 'none'
     }
@@ -345,7 +388,7 @@ export class ProjectAnalyticsPage {
         },
         baselineColor: '#FFFFFF'
       },
-      vAxis: {title: '# of PRs'},
+      vAxis: {title: '# of Issues'},
       colors: ['#9344dd', '#abab45'],
       backgroundColor: '#4e92df',
       legend: 'none'
@@ -392,27 +435,31 @@ export class ProjectAnalyticsPage {
     }
   };
 
-  public tableChartData:any =  {
+  public cssClassNames:any = {
+    'headerRow': 'cssHeaderRow',
+    'tableRow': 'cssTableRow',
+    'oddTableRow': 'cssOddTableRow',
+    'selectedTableRow': 'cssSelectedTableRow',
+    'hoverTableRow': 'cssHoverTableRow',
+    'headerCell': 'cssHeaderCell',
+    'tableCell': 'cssTableCell',
+    'rowNumberCell': 'cssRowNumberCell'
+  };
+
+  public maintainersTable:any =  {
     chartType: 'Table',
     dataTable: [
-      ['Name', 'Email Address', 'PR submit date'],
-      ['Nick Young', 'nick@dubs.com', 11/29/17],
-      ['Patrick MacCaw', 'patrick@dubs.com', 11/29/17],
-      ['David West', 'david@dubs.com', 11/28/17],
-      ['Javale MacGee', 'javale@dubs.com', 11/27/17],
-      ['Shaun Livingston', 'shaun@dubs.com', 11/26/17],
-      ['Andre Iguodala', 'andre@dubs.com', 11/25/17]
+      ['Name <Email Address>', 'Commits'],
     ],
-    formatters: [
-      {
-        columns: [1, 2],
-        type: 'NumberFormat',
-        options: {
-          prefix: '&euro;', negativeColor: 'red', negativeParens: true
-        }
-      }
-    ],
-    options: {title: 'Countries', allowHtml: true}
+    options: {
+      title: 'Maintainers',
+      allowHtml: true,
+      alternatingRowStyle: false,
+      width: '100%',
+      cssClassNames: this.cssClassNames,
+      sortColumn: 1,
+      sortAscending: false,
+    }
   };
 
 }
