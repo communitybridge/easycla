@@ -102,4 +102,5 @@ module "consul" {
   ec2type                = "t2.medium"
   subnet-a               = "${module.vpc.external_subnets[0]}"
   subnet-b               = "${module.vpc.external_subnets[1]}"
+  subnet-c               = "${module.vpc.external_subnets[2]}"
 }
