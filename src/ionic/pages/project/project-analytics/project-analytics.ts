@@ -46,7 +46,6 @@ export class ProjectAnalyticsPage {
   }
 
   getDefaults() {
-
     this.getCommitActivity();
     this.getcommitsDistribution();
     this.getIssuesStatus();
@@ -54,9 +53,8 @@ export class ProjectAnalyticsPage {
     this.getIssuesActivity();
     this.getPrsActivity();
     this.getPageViews();
-
+    this.getMaintainers();
     this.redrawCharts();
-
   }
 
   getProjectConfig(projectId) {
@@ -90,7 +88,7 @@ export class ProjectAnalyticsPage {
   }
 
   getCommitActivity() {
-    let index = 'hyperledger';
+    let index = 'hyperledger2';
     let metricType = 'code.commits';
     let groupBy = 'day';
     let tsFrom = '1510430520000';
@@ -114,14 +112,34 @@ export class ProjectAnalyticsPage {
   }
 
   getIssuesStatus() {
-    console.log("TODO");
+    let index = 'hyperledger2';
+    let metricType = 'issues';
+    let groupBy = 'month,issue_status';
+    let tsFrom = '1512150915000';
+    let tsTo =   '1514764800000';
+    let issuesStatus;
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            issuesStatus = value;
+          }
+        );
+        Object.entries(issuesStatus.value).forEach(
+          ([key, value]) => {
+            this.issuesStatusChart.dataTable.push([key, value]);
+          }
+        );
+        this.issuesStatusChart = Object.create(this.issuesStatusChart);
+      }
+    });
   }
 
   getPrsPipeline() {
-    let index = 'hyperledger';
-    let metricType = 'prs.open';
+    let index = 'hyperledger2';
+    let metricType = 'prs.submitted';
     let groupBy = 'day';
-    let tsFrom = '1510430520000';
+    let tsFrom = '1512490997000';
     let tsTo =   '1514764800000';
     let sumOpenPRs = 0;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
@@ -138,31 +156,53 @@ export class ProjectAnalyticsPage {
   }
 
   getIssuesActivity() {
-    console.log("TODO");
+    let index = 'hyperledger2';
+    let metricType = 'issues';
+    let groupBy = 'day,issue_status';
+    let tsFrom = '1512150915000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            if(value.value['To Do'] && !value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], 0]);
+            if(!value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, 0, value.value['Done']]);
+            if(value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], value.value['Done']]);
+          }
+        );
+        this.issuesActivityChart = Object.create(this.issuesActivityChart);
+      }
+    });
   }
 
   getPrsActivity() {
-    let index = 'hyperledger';
-    let metricType = 'prs.open';
-    let groupBy = 'month';
+    let index = 'hyperledger2';
+    let metricType = 'prs';
+    let groupBy = 'month,issue_status';
     let tsFrom = '1388534400000';
     let tsTo =   '1514764800000';
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       if (metrics) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            this.prsActivityChart.dataTable.push([key, value, 0]);
-            this.prsActivityChart = Object.create(this.prsActivityChart);
+            if(value.value.open && !value.value.merged && !value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, 0, 0]);
+            if(value.value.merged  && !value.value.open && !value.value.closed) this.prsActivityChart.dataTable.push([key, 0, value.value.merged, 0]);
+            if(value.value.closed && !value.value.open && !value.value.merged) this.prsActivityChart.dataTable.push([key, 0, 0, value.value.closed]);
+            if(value.value.open && value.value.merged && !value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, 0]);
+            if(value.value.merged  && !value.value.open && value.value.closed) this.prsActivityChart.dataTable.push([key, 0, value.value.merged, value.value.closed]);
+            if(value.value.closed && value.value.open && !value.value.merged) this.prsActivityChart.dataTable.push([key, value.value.open, 0, value.value.closed]);
+            if(value.value.open && value.value.merged && value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, value.value.closed]);
           }
         );
+        this.prsActivityChart = Object.create(this.prsActivityChart);
       }
     });
   }
 
   getPageViews() {
-    let index = 'hyperledger';
+    let index = 'hyperledger2';
     let metricType = 'website.duration';
-    let groupBy = 'week';
+    let groupBy = 'day';
     let tsFrom = '1510430520000';
     let tsTo =   '1514764800000';
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
@@ -175,6 +215,26 @@ export class ProjectAnalyticsPage {
             }
           }
         );
+      }
+    });
+  }
+
+  getMaintainers() {
+    let index = 'hyperledger2';
+    let metricType = 'maintainers';
+    let groupBy = 'month,author';
+    let tsFrom = '1388534400000';
+    let tsTo =   '1514764800000';
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      if (metrics) {
+        // console.log(metrics.value)
+        // Object.entries(metrics.value).forEach(
+        //   ([key, value]) => {
+        //     if(value) {
+        //
+        //     }
+        //   }
+        // );
       }
     });
   }
@@ -195,12 +255,10 @@ export class ProjectAnalyticsPage {
     this.redrawCharts();
   }
 
-
   public commitsActivityChart:any =  {
     chartType: 'ColumnChart',
     dataTable: [
-      ['Date', 'Commits'],
-      ['', 0]
+      ['Date', 'Commits']
     ],
     options: {
       hAxis: {
@@ -211,87 +269,11 @@ export class ProjectAnalyticsPage {
         baselineColor: '#FFFFFF'
       },
       vAxis: {title: '# of commits'},
-      colors: ['#fff'],
+      colors: ['#eeeeee'],
       backgroundColor: '#4e92df',
       legend: 'none',
     }
   };
-
-
-  public issuesStatusChart:any =  {
-    chartType: 'BarChart',
-    dataTable: [
-      ['Status', 'Issues'],
-      ['News', 1],
-      ['Open', 2],
-      ['Closed', 3],
-      ['Invalid', 4]
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#ffffff'},
-        gridlines: {
-          color: "#FFFFFF"
-        },
-        baselineColor: '#FFFFFF'
-      },
-      vAxis: {title: '# of commits'},
-      colors: ['#ff88ff'],
-      backgroundColor: '#4e92df',
-      legend: 'none',
-    }
-  };
-
-
-  public prsActivityChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'PRs Open', 'PRs Merged'],
-      ['0', 0, 0]
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#ffffff'},
-        gridlines: {
-          color: "#FFFFFF"
-        },
-        baselineColor: '#FFFFFF'
-      },
-      vAxis: {title: '# of PRs'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
-      legend: 'none'
-    }
-  };
-
-
-  public issuesActivityChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'PRs Open', 'PRs Merged'],
-      ['11/5', 3, 1],
-      ['11/6', 7, 3],
-      ['11/7', 3, 4],
-      ['11/8', 8, 6],
-      ['11/9', 6, 3],
-      ['11/10', 2, 1],
-      ['11/11', 8, 5]
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#ffffff'},
-        gridlines: {
-          color: "#FFFFFF"
-        },
-        baselineColor: '#FFFFFF'
-      },
-      vAxis: {title: '# of PRs'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
-      legend: 'none'
-    }
-  };
-
 
   public commitsDistributionChart:any =  {
     chartType: 'PieChart',
@@ -315,11 +297,85 @@ export class ProjectAnalyticsPage {
     }
   };
 
+  public issuesStatusChart:any =  {
+    chartType: 'BarChart',
+    dataTable: [
+      ['Status', 'Issues']
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#ffffff'},
+        gridlines: {
+          color: "#FFFFFF"
+        },
+        baselineColor: '#FFFFFF'
+      },
+      vAxis: {},
+      colors: ['#eeeeee'],
+      backgroundColor: '#4e92df',
+      legend: 'none',
+    }
+  };
+
+  public prsPipelineChart:any =  {
+    chartType: 'Gauge',
+    dataTable: [
+      ['Label', 'Value']
+    ],
+    options: {
+      animation: {easing: 'out'},
+      greenFrom: 0, greenTo: 32,
+      minorTicks: 1,
+      min: 0, max: 100,
+      majorTicks: ['0', '20', '40', '60', '80', '100'],
+      greenColor: '#4e92df'
+    }
+  };
+
+  public issuesActivityChart:any =  {
+    chartType: 'AreaChart',
+    dataTable: [
+      ['Date', 'Issues Open', 'Issues Closed']
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#ffffff'},
+        gridlines: {
+          color: "#FFFFFF"
+        },
+        baselineColor: '#FFFFFF'
+      },
+      vAxis: {title: '# of PRs'},
+      colors: ['#9344dd', '#abab45'],
+      backgroundColor: '#4e92df',
+      legend: 'none'
+    }
+  };
+
+  public prsActivityChart:any =  {
+    chartType: 'AreaChart',
+    dataTable: [
+      ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed']
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#ffffff'},
+        gridlines: {
+          color: "#FFFFFF"
+        },
+        baselineColor: '#FFFFFF'
+      },
+      vAxis: {title: '# of PRs'},
+      colors: ['#9344dd', '#abab45'],
+      backgroundColor: '#4e92df',
+      legend: 'none'
+    }
+  };
+
   public pageViewsChart:any =  {
     chartType: 'AreaChart',
     dataTable: [
-      ['Date', 'Page Views'],
-      ['', 0]
+      ['Date', 'Page Views']
     ],
     options: {
       hAxis: {
@@ -335,7 +391,6 @@ export class ProjectAnalyticsPage {
       legend: 'none'
     }
   };
-
 
   public tableChartData:any =  {
     chartType: 'Table',
@@ -358,22 +413,6 @@ export class ProjectAnalyticsPage {
       }
     ],
     options: {title: 'Countries', allowHtml: true}
-  };
-
-  public prsPipelineChart:any =  {
-    chartType: 'Gauge',
-    dataTable: [
-      ['Label', 'Value']
-    ],
-    options: {
-      animation: {easing: 'out'},
-      // width: 150, height: 150,
-      greenFrom: 0, greenTo: 32,
-      minorTicks: 1,
-      min: 0, max: 100,
-      majorTicks: ['0', '20', '40', '60', '80', '100'],
-      greenColor: '#d0e9c6'
-    }
   };
 
 }
