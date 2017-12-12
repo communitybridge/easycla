@@ -19,13 +19,23 @@
       </ion-col>
     </ion-row>
     <ion-row>
-      <ion-col>
+      <ion-col col-8>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Commit Activity</span>
           </ion-card-header>
           <ion-card-content>
             <google-chart [data]="columnChartData"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-4>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Issues - Status</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="issuesStatusChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
