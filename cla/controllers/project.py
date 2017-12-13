@@ -190,7 +190,7 @@ def get_project_companies(project_id):
                                                      signature_signed=True,
                                                      signature_approved=True,
                                                      signature_reference_type='company')
-    company_ids = [signature.get_signature_reference_id() for signature in signatures]
+    company_ids = list(set([signature.get_signature_reference_id() for signature in signatures]))
     company = get_company_instance()
     return [comp.to_dict() for comp in company.all(company_ids)]
 
