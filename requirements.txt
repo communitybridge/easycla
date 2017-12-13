@@ -6,6 +6,10 @@ boto3==1.4.7
 gossip==2.2.0
 gunicorn==19.7.1
 hug==2.2.0
+
+# Not a public package yet.
+lf-keycloak==2.0.4
+
 nose2==0.7.2
 
 # Use custom fork until PR #109 gets merged.

@@ -12,6 +12,8 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
+from cla.auth import token_authentication
+from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
@@ -46,8 +48,8 @@ def get_health():
 #
 # User routes.
 #
-@hug.get('/user', versions=1)
-def get_users():
+@hug.get('/user', requires=token_authentication, versions=1)
+def get_users(user: cla_user):
     """
     GET: /user
 

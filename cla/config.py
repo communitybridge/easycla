@@ -61,7 +61,10 @@ GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
 GITHUB_APP_ID = '0000'
 
 # KeyCloak Authentication
-KEYCLOAK_ENDPOINT = 'url'
+KEYCLOAK_ENDPOINT = 'https://<keycloak-domain>'
+KEYCLOAK_CLIENT_ID = '<client-id>'
+KEYCLOAK_REALM = '<realm>'
+KEYCLOAK_CLIENT_SECRET = 'secret'
 
 # GitLab Repository Service.
 GITLAB_DOMAIN = 'https://<gitlab-domain>' #: URL to GitLab instance.
