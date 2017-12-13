@@ -39,7 +39,10 @@ GITHUB_APP_PRIVATE_KEY_PATH = 'private-key-path'
 GITHUB_APP_ID = 'app_id'
 
 # KeyCloak Authentication
-KEYCLOAK_ENDPOINT = ''
+KEYCLOAK_ENDPOINT = 'https://id.linuxfoundation.org'
+KEYCLOAK_REALM = 'LinuxFoundation'
+KEYCLOAK_CLIENT_ID = 'cla'
+KEYCLOAK_CLIENT_SECRET = 'secret'
 
 # CINCO (SFDC) Authentication
 CINCO_ENDPOINT = ''
