@@ -35,6 +35,7 @@ setup(
     ],
     keywords='cla',
     packages=find_packages(),
+    package_data={'cla': ['resources/*.html']},
     install_requires=['boto>=2.48.0,<3.0',
                       'boto3>=1.4.4,<2.0',
                       'gossip>=2.2.0,<3.0',
