@@ -49,5 +49,6 @@ setup(
                       'python-jose>=1.4.0'],
                       #'git+https://github.com/ibotty/keycloak-python.git'],
     extras_require={'dev': ['pylint'], 'test': ['nose', 'coverage']},
+    dependency_links=['https://nexus.engineering.tux.rocks/repository/pypi-engineering/packages/lf-keycloak/2.0.4/lf-keycloak-2.0.4.tar.gz'],
     entry_points={'console_scripts': []},
 )
