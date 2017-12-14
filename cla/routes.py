@@ -68,8 +68,8 @@ def get_user(user_id: hug.types.uuid):
     return cla.controllers.user.get_user(user_id=user_id)
 
 
-@hug.get('/user/email/{user_email}', versions=1)
-def get_user_email(user_email: cla.hug_types.email):
+@hug.get('/user/email/{user_email}', requires=token_authentication, versions=1)
+def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     """
     GET: /user/email/{user_email}
 
@@ -78,8 +78,8 @@ def get_user_email(user_email: cla.hug_types.email):
     return cla.controllers.user.get_user(user_email=user_email)
 
 
-@hug.get('/user/github/{user_github_id}', versions=1)
-def get_user_github(user_github_id: hug.types.number):
+@hug.get('/user/github/{user_github_id}', requires=token_authentication, versions=1)
+def get_user_github(user_github_id: hug.types.number, user: cla_user):
     """
     GET: /user/github/{user_github_id}
 
@@ -88,10 +88,10 @@ def get_user_github(user_github_id: hug.types.number):
     return cla.controllers.user.get_user(user_github_id=user_github_id)
 
 
-@hug.post('/user', versions=1,
+@hug.post('/user', requires=token_authentication, versions=1,
           examples=" - {'user_email': 'user@email.com', 'user_name': 'User Name', \
                    'user_company_id': '<org-id>', 'user_github_id': 12345)")
-def post_user(user_email: cla.hug_types.email, user_name=None,
+def post_user(user: cla_user, user_email: cla.hug_types.email, user_name=None,
               user_company_id=None, user_github_id=None):
     """
     POST: /user
@@ -107,9 +107,9 @@ def post_user(user_email: cla.hug_types.email, user_name=None,
                                             user_github_id=user_github_id)
 
 
-@hug.put('/user', versions=1,
+@hug.put('/user', requires=token_authentication, versions=1,
          examples=" - {'user_id': '<user-id>', 'user_github_id': 23456)")
-def put_user(user_id: hug.types.uuid, user_email=None, user_name=None,
+def put_user(user: cla_user, user_id: hug.types.uuid, user_email=None, user_name=None,
              user_company_id=None, user_github_id=None):
     """
     PUT: /user
@@ -127,8 +127,8 @@ def put_user(user_id: hug.types.uuid, user_email=None, user_name=None,
                                             user_github_id=user_github_id)
 
 
-@hug.delete('/user/{user_id}', versions=1)
-def delete_user(user_id: hug.types.uuid):
+@hug.delete('/user/{user_id}', requires=token_authentication, versions=1)
+def delete_user(user: cla_user, user_id: hug.types.uuid):
     """
     DELETE: /user/{user_id}
 
@@ -137,8 +137,8 @@ def delete_user(user_id: hug.types.uuid):
     return cla.controllers.user.delete_user(user_id)
 
 
-@hug.get('/user/{user_id}/signatures', versions=1)
-def get_user_signatures(user_id: hug.types.uuid):
+@hug.get('/user/{user_id}/signatures', requires=token_authentication, versions=1)
+def get_user_signatures(user: cla_user, user_id: hug.types.uuid):
     """
     GET: /user/{user_id}/signatures
 
@@ -147,8 +147,8 @@ def get_user_signatures(user_id: hug.types.uuid):
     return cla.controllers.user.get_user_signatures(user_id)
 
 
-@hug.get('/users/company/{user_company_id}', versions=1)
-def get_users_company(user_company_id: hug.types.uuid):
+@hug.get('/users/company/{user_company_id}', requires=token_authentication, versions=1)
+def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
     """
     GET: /users/company/{user_company_id}
 
@@ -156,8 +156,8 @@ def get_users_company(user_company_id: hug.types.uuid):
     """
     return cla.controllers.user.get_users_company(user_company_id)
 
-@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
-def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
+@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', requires=token_authentication, versions=1)
+def request_company_whitelist(user: cla_user, user_id: hug.types.uuid, company_id: hug.types.uuid,
                               user_email: cla.hug_types.email,message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
@@ -209,8 +209,8 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
 #
 # Signature Routes.
 #
-@hug.get('/signature', versions=1)
-def get_signatures():
+@hug.get('/signature', requires=token_authentication, versions=1)
+def get_signatures(user: cla_user):
     """
     GET: /signature
 
@@ -219,8 +219,8 @@ def get_signatures():
     return cla.controllers.signature.get_signatures()
 
 
-@hug.get('/signature/{signature_id}', versions=1)
-def get_signature(signature_id: hug.types.uuid):
+@hug.get('/signature/{signature_id}', requires=token_authentication, versions=1)
+def get_signature(user: cla_user, signature_id: hug.types.uuid):
     """
     GET: /signature/{signature_id}
 
@@ -229,14 +229,15 @@ def get_signature(signature_id: hug.types.uuid):
     return cla.controllers.signature.get_signature(signature_id)
 
 
-@hug.post('/signature', versions=1,
+@hug.post('/signature', requires=token_authentication, versions=1,
           examples=" - {'signature_type': 'cla', 'signature_signed': true, \
                         'signature_approved': true, 'signature_sign_url': 'http://sign.com/here', \
                         'signature_return_url': 'http://cla-system.com/signed', \
                         'signature_project_id': '<project-id>', \
                         'signature_reference_id': '<ref-id>', \
                         'signature_reference_type': 'individual'}")
-def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def post_signature(user: cla_user, # pylint: disable=too-many-arguments
+                   signature_project_id: hug.types.uuid,
                    signature_reference_id: hug.types.text,
                    signature_reference_type: hug.types.one_of(['company', 'user']),
                    signature_type: hug.types.one_of(['cla', 'dco']),
@@ -274,10 +275,11 @@ def post_signature(signature_project_id: hug.types.uuid, # pylint: disable=too-m
                                                       signature_sign_url=signature_sign_url)
 
 
-@hug.put('/signature', versions=1,
+@hug.put('/signature', requires=token_authentication, versions=1,
          examples=" - {'signature_id': '01620259-d202-4350-8264-ef42a861922d', \
                        'signature_type': 'cla', 'signature_signed': true}")
-def put_signature(signature_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def put_signature(user: cla_user, # pylint: disable=too-many-arguments
+                  signature_id: hug.types.uuid,
                   signature_project_id=None,
                   signature_reference_id=None,
                   signature_reference_type=None,
@@ -308,8 +310,8 @@ def put_signature(signature_id: hug.types.uuid, # pylint: disable=too-many-argum
         signature_sign_url=signature_sign_url)
 
 
-@hug.delete('/signature/{signature_id}', versions=1)
-def delete_signature(signature_id: hug.types.uuid):
+@hug.delete('/signature/{signature_id}', requires=token_authentication, versions=1)
+def delete_signature(user: cla_user, signature_id: hug.types.uuid):
     """
     DELETE: /signature/{signature_id}
 
@@ -318,8 +320,8 @@ def delete_signature(signature_id: hug.types.uuid):
     return cla.controllers.signature.delete_signature(signature_id)
 
 
-@hug.get('/signatures/user/{user_id}', versions=1)
-def get_signatures_user(user_id: hug.types.uuid):
+@hug.get('/signatures/user/{user_id}', requires=token_authentication, versions=1)
+def get_signatures_user(user: cla_user, user_id: hug.types.uuid):
     """
     GET: /signatures/user/{user_id}
 
@@ -327,8 +329,8 @@ def get_signatures_user(user_id: hug.types.uuid):
     """
     return cla.controllers.signature.get_user_signatures(user_id)
 
-@hug.get('/signatures/user/{user_id}/project/{project_id}', versions=1)
-def get_signatures_user_project(user_id: hug.types.uuid, project_id: hug.types.uuid):
+@hug.get('/signatures/user/{user_id}/project/{project_id}', requires=token_authentication, versions=1)
+def get_signatures_user_project(user: cla_user, user_id: hug.types.uuid, project_id: hug.types.uuid):
     """
     GET: /signatures/user/{user_id}/project/{project_id}
 
@@ -336,8 +338,9 @@ def get_signatures_user_project(user_id: hug.types.uuid, project_id: hug.types.u
     """
     return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
 
-@hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', versions=1)
-def get_signatures_user_project(user_id: hug.types.uuid,
+@hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', requires=token_authentication, versions=1)
+def get_signatures_user_project(user: cla_user,
+                                user_id: hug.types.uuid,
                                 project_id: hug.types.uuid,
                                 signature_type: hug.types.one_of(['individual', 'employee'])):
     """
@@ -347,8 +350,8 @@ def get_signatures_user_project(user_id: hug.types.uuid,
     """
     return cla.controllers.signature.get_user_project_signatures(user_id, project_id, signature_type)
 
-@hug.get('/signatures/company/{company_id}', versions=1)
-def get_signatures_company(company_id: hug.types.uuid):
+@hug.get('/signatures/company/{company_id}', requires=token_authentication, versions=1)
+def get_signatures_company(user: cla_user, company_id: hug.types.uuid):
     """
     GET: /signatures/company/{company_id}
 
@@ -357,8 +360,8 @@ def get_signatures_company(company_id: hug.types.uuid):
     return cla.controllers.signature.get_company_signatures(company_id)
 
 
-@hug.get('/signatures/project/{project_id}', versions=1)
-def get_signatures_project(project_id: hug.types.uuid):
+@hug.get('/signatures/project/{project_id}', requires=token_authentication, versions=1)
+def get_signatures_project(user: cla_user, project_id: hug.types.uuid):
     """
     GET: /signatures/project/{project_id}
 
@@ -370,8 +373,8 @@ def get_signatures_project(project_id: hug.types.uuid):
 #
 # Repository Routes.
 #
-@hug.get('/repository', versions=1)
-def get_repositories():
+@hug.get('/repository', requires=token_authentication, versions=1)
+def get_repositories(user: cla_user):
     """
     GET: /repository
 
@@ -380,8 +383,8 @@ def get_repositories():
     return cla.controllers.repository.get_repositories()
 
 
-@hug.get('/repository/{repository_id}', versions=1)
-def get_repository(repository_id: hug.types.text):
+@hug.get('/repository/{repository_id}', requires=token_authentication, versions=1)
+def get_repository(user: cla_user, repository_id: hug.types.text):
     """
     GET: /repository/{repository_id}
 
@@ -390,13 +393,14 @@ def get_repository(repository_id: hug.types.text):
     return cla.controllers.repository.get_repository(repository_id)
 
 
-@hug.post('/repository', versions=1,
+@hug.post('/repository', requires=token_authentication, versions=1,
           examples=" - {'repository_project_id': '<project-id>', \
                         'repository_external_id': 'repo1', \
                         'repository_name': 'Repo Name', \
                         'repository_type': 'github', \
                         'repository_url': 'http://url-to-repo.com'}")
-def post_repository(repository_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def post_repository(user: cla_user, # pylint: disable=too-many-arguments
+                    repository_project_id: hug.types.uuid,
                     repository_name: hug.types.text,
                     repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
                     repository_url: cla.hug_types.url,
@@ -422,10 +426,11 @@ def post_repository(repository_project_id: hug.types.uuid, # pylint: disable=too
                                                         repository_external_id)
 
 
-@hug.put('/repository', versions=1,
+@hug.put('/repository', requires=token_authentication, versions=1,
          examples=" - {'repository_id': '<repo-id>', \
                        'repository_url': 'http://new-url-to-repository.com'}")
-def put_repository(repository_id: hug.types.text, # pylint: disable=too-many-arguments
+def put_repository(user: cla_user, # pylint: disable=too-many-arguments
+                   repository_id: hug.types.text,
                    repository_project_id=None,
                    repository_name=None,
                    repository_type=None,
@@ -448,8 +453,8 @@ def put_repository(repository_id: hug.types.text, # pylint: disable=too-many-arg
         repository_external_id=repository_external_id)
 
 
-@hug.delete('/repository/{repository_id}', versions=1)
-def delete_repository(repository_id: hug.types.text):
+@hug.delete('/repository/{repository_id}', requires=token_authentication, versions=1)
+def delete_repository(user: cla_user, repository_id: hug.types.text):
     """
     DELETE: /repository/{repository_id}
 
@@ -481,12 +486,13 @@ def get_company(company_id: hug.types.text):
     return cla.controllers.company.get_company(company_id)
 
 
-@hug.post('/company', versions=1,
+@hug.post('/company', requires=token_authentication, versions=1,
           examples=" - {'company_name': 'Company Name', \
                         'company_whitelist': ['user@safe.org'], \
                         'company_whitelist_patterns': ['*@safe.org'], \
                         'company_manager_id': 'user-id'}")
-def post_company(company_name: hug.types.text,
+def post_company(user: cla_user,
+                 company_name: hug.types.text,
                  company_whitelist: hug.types.multiple,
                  company_whitelist_patterns: hug.types.multiple,
                  company_manager_id=None):
@@ -507,10 +513,11 @@ def post_company(company_name: hug.types.text,
         company_manager_id=company_manager_id)
 
 
-@hug.put('/company', versions=1,
+@hug.put('/company', requires=token_authentication, versions=1,
          examples=" - {'company_id': '<company-id>', \
                        'company_name': 'New Company Name'}")
-def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def put_company(user: cla_user, # pylint: disable=too-many-arguments
+                company_id: hug.types.uuid,
                 company_name=None,
                 company_whitelist=None,
                 company_whitelist_patterns=None,
@@ -531,8 +538,8 @@ def put_company(company_id: hug.types.uuid, # pylint: disable=too-many-arguments
         company_manager_id=company_manager_id)
 
 
-@hug.delete('/company/{company_id}', versions=1)
-def delete_company(company_id: hug.types.text):
+@hug.delete('/company/{company_id}', requires=token_authentication, versions=1)
+def delete_company(user: cla_user, company_id: hug.types.text):
     """
     DELETE: /company/{company_id}
 
@@ -540,7 +547,7 @@ def delete_company(company_id: hug.types.text):
     """
     return cla.controllers.company.delete_company(company_id)
 
-@hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
+@hug.put('/company/{company_id}/import/whitelist/csv', requires=token_authentication, versions=1)
 def put_company_whitelist_csv(body, company_id: hug.types.uuid):
     """
     PUT: /company/{company_id}/import/whitelist/csv
@@ -554,8 +561,8 @@ def put_company_whitelist_csv(body, company_id: hug.types.uuid):
 #
 # Project Routes.
 #
-@hug.get('/project', versions=1)
-def get_projects():
+@hug.get('/project', requires=token_authentication, versions=1)
+def get_projects(user: cla_user):
     """
     GET: /project
 
@@ -581,8 +588,8 @@ def get_project(project_id: hug.types.uuid):
         del project['project_external_id']
     return project
 
-@hug.get('/project/external/{project_external_id}', version=1)
-def get_external_project(project_external_id: hug.types.text):
+@hug.get('/project/external/{project_external_id}', requires=token_authentication, version=1)
+def get_external_project(user: cla_user, project_external_id: hug.types.text):
     """
     GET: /project/external/{project_external_id}
 
@@ -590,9 +597,9 @@ def get_external_project(project_external_id: hug.types.text):
     """
     return cla.controllers.project.get_projects_by_external_id(project_external_id)
 
-@hug.post('/project', versions=1,
+@hug.post('/project', requires=token_authentication, versions=1,
           examples=" - {'project_name': 'Project Name'}")
-def post_project(project_external_id: hug.types.text, project_name: hug.types.text,
+def post_project(user: cla_user, project_external_id: hug.types.text, project_name: hug.types.text,
                  project_icla_enabled: hug.types.boolean, project_ccla_enabled: hug.types.boolean,
                  project_ccla_requires_icla_signature: hug.types.boolean):
     """
@@ -609,11 +616,12 @@ def post_project(project_external_id: hug.types.text, project_name: hug.types.te
                                                   project_ccla_requires_icla_signature)
 
 
-@hug.put('/project', versions=1,
+@hug.put('/project', requires=token_authentication, versions=1,
          examples=" - {'project_id': '<proj-id>', \
                        'project_name': 'New Project Name'}")
-def put_project(project_id: hug.types.uuid, project_name=None, project_icla_enabled=None,
-                project_ccla_enabled=None, project_ccla_requires_icla_signature=None):
+def put_project(user: cla_user, project_id: hug.types.uuid, project_name=None,
+                project_icla_enabled=None, project_ccla_enabled=None,
+                project_ccla_requires_icla_signature=None):
     """
     PUT: /project
 
@@ -628,8 +636,8 @@ def put_project(project_id: hug.types.uuid, project_name=None, project_icla_enab
                                                   project_ccla_requires_icla_signature=project_ccla_requires_icla_signature)
 
 
-@hug.delete('/project/{project_id}', versions=1)
-def delete_project(project_id: hug.types.uuid):
+@hug.delete('/project/{project_id}', requires=token_authentication, versions=1)
+def delete_project(user: cla_user, project_id: hug.types.uuid):
     """
     DELETE: /project/{project_id}
 
@@ -638,8 +646,8 @@ def delete_project(project_id: hug.types.uuid):
     return cla.controllers.project.delete_project(project_id)
 
 
-@hug.get('/project/{project_id}/repositories', versions=1)
-def get_project_repositories(project_id: hug.types.uuid):
+@hug.get('/project/{project_id}/repositories', requires=token_authentication, versions=1)
+def get_project_repositories(user: cla_user, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/repositories
 
@@ -647,8 +655,8 @@ def get_project_repositories(project_id: hug.types.uuid):
     """
     return cla.controllers.project.get_project_repositories(project_id)
 
-@hug.get('/project/{project_id}/organizations', version=1)
-def get_project_organizations(project_id: hug.types.uuid):
+@hug.get('/project/{project_id}/organizations', requires=token_authentication, version=1)
+def get_project_organizations(user: cla_user, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/organizations.
 
@@ -666,8 +674,8 @@ def get_project_document(project_id: hug.types.uuid,
     """
     return cla.controllers.project.get_project_document(project_id, document_type)
 
-@hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
-def get_project_document(response, project_id: hug.types.uuid,
+@hug.get('/project/{project_id}/document/{document_type}/pdf', requires=token_authentication, version=1)
+def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
     GET: /project/{project_id}/document/{document_type}/pdf
@@ -677,8 +685,8 @@ def get_project_document(response, project_id: hug.types.uuid,
     response.set_header('Content-Type', 'application/pdf')
     return cla.controllers.project.get_project_document_raw(project_id, document_type)
 
-@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
-def get_project_document(response, project_id: hug.types.uuid,
+@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', requires=token_authentication, version=1)
+def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate']),
                          document_major_version: hug.types.number,
                          document_minor_version: hug.types.number):
@@ -701,20 +709,20 @@ def get_project_companies(project_id: hug.types.uuid):
     """
     return cla.controllers.project.get_project_companies(project_id)
 
-@hug.post('/project/{project_id}/document/{document_type}', versions=1,
+@hug.post('/project/{project_id}/document/{document_type}', requires=token_authentication, versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \
                         'document_content_type': 'url+pdf', \
                         'document_content': 'http://url.com/doc.pdf', \
                         'new_major_version': true}")
-def post_project_document(
-        project_id: hug.types.uuid,
-        document_type: hug.types.one_of(['individual', 'corporate']),
-        document_name: hug.types.text,
-        document_content_type: hug.types.one_of(get_supported_document_content_types()),
-        document_content: hug.types.text,
-        document_preamble=None,
-        document_legal_entity_name=None,
-        new_major_version=None):
+def post_project_document(user: cla_user,
+                          project_id: hug.types.uuid,
+                          document_type: hug.types.one_of(['individual', 'corporate']),
+                          document_name: hug.types.text,
+                          document_content_type: hug.types.one_of(get_supported_document_content_types()),
+                          document_content: hug.types.text,
+                          document_preamble=None,
+                          document_legal_entity_name=None,
+                          new_major_version=None):
     """
     POST: /project/{project_id}/document/{document_type}
 
@@ -743,20 +751,20 @@ def post_project_document(
         document_legal_entity_name=document_legal_entity_name,
         new_major_version=new_major_version)
 
-@hug.post('/project/{project_id}/document/template/{document_type}', versions=1,
+@hug.post('/project/{project_id}/document/template/{document_type}', requires=token_authentication, versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \
                         'document_preamble': 'Preamble here', \
                         'document_legal_entity_name': 'Legal entity name', \
                         'template_name': 'CNCFTemplate', \
                         'new_major_version': true}")
-def post_project_document_template(
-        project_id: hug.types.uuid,
-        document_type: hug.types.one_of(['individual', 'corporate']),
-        document_name: hug.types.text,
-        document_preamble: hug.types.text,
-        document_legal_entity_name: hug.types.text,
-        template_name: hug.types.one_of(['CNCFTemplate']),
-        new_major_version=None):
+def post_project_document_template(user: cla_user,
+                                   project_id: hug.types.uuid,
+                                   document_type: hug.types.one_of(['individual', 'corporate']),
+                                   document_name: hug.types.text,
+                                   document_preamble: hug.types.text,
+                                   document_legal_entity_name: hug.types.text,
+                                   template_name: hug.types.one_of(['CNCFTemplate']),
+                                   new_major_version=None):
     """
     POST: /project/{project_id}/document/template/{document_type}
 
@@ -886,6 +894,8 @@ def post_individual_signed(body,
     """
     POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
 
+    TODO: Need to protect this endpoint somehow.
+
     Callback URL from signing service upon ICLA signature.
     """
     content = body.read()
@@ -897,6 +907,8 @@ def post_corporate_signed(body,
                           company_id: hug.types.uuid):
     """
     POST: /signed/corporate/{project_id}/{company_id}
+
+    TODO: Need to protect this endpoint somehow.
 
     Callback URL from signing service upon CCLA signature.
     """
@@ -945,6 +957,8 @@ def change_icon(provider: hug.types.one_of(get_supported_repository_providers().
     """
     GET: /repository-provider/{provider}/icon.svg
 
+    TODO: This should probably be cached and web-accessible outside of the CLA.
+
     Returns the CLA status image for the provider requested.
     """
     return cla.controllers.repository_service.change_icon(provider, signed)
@@ -960,7 +974,7 @@ def oauth2_redirect(provider: hug.types.one_of(get_supported_repository_provider
     """
     GET: /repository-provider/{provider}/oauth2_redirect
 
-    FIXME: This has been deprecated in favor of GET:/github/installation for GitHub Apps.
+    TODO: This has been deprecated in favor of GET:/github/installation for GitHub Apps.
 
     Handles the redirect from an OAuth2 provider when initiating a signature.
     """
@@ -978,6 +992,8 @@ def received_activity(body,
     """
     POST: /repository-provider/{provider}/activity
 
+    TODO: Need to secure this endpoint somehow - maybe use GitHub's Webhook secret option.
+
     Acts upon a code repository provider's activity.
     """
     return cla.controllers.repository_service.received_activity(provider,
@@ -987,8 +1003,8 @@ def received_activity(body,
 #
 # GitHub Routes.
 #
-@hug.get('/github/organizations', versions=1)
-def get_github_organizations():
+@hug.get('/github/organizations', requires=token_authentication, versions=1)
+def get_github_organizations(user: cla_user):
     """
     GET: /github/organizations
 
@@ -997,8 +1013,8 @@ def get_github_organizations():
     return cla.controllers.github.get_organizations()
 
 
-@hug.get('/github/organizations/{organization_name}', versions=1)
-def get_github_organization(organization_name: hug.types.text):
+@hug.get('/github/organizations/{organization_name}', requires=token_authentication, versions=1)
+def get_github_organization(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}
 
@@ -1007,8 +1023,8 @@ def get_github_organization(organization_name: hug.types.text):
     return cla.controllers.github.get_organization(organization_name)
 
 
-@hug.get('/github/organizations/{organization_name}/repositories', versions=1)
-def get_github_organization_repos(organization_name: hug.types.text):
+@hug.get('/github/organizations/{organization_name}/repositories', requires=token_authentication, versions=1)
+def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}/repositories
 
@@ -1017,10 +1033,11 @@ def get_github_organization_repos(organization_name: hug.types.text):
     return cla.controllers.github.get_organization_repositories(organization_name)
 
 
-@hug.post('/github/organizations', versions=1,
+@hug.post('/github/organizations', requires=token_authentication, versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
-def post_github_organization(organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def post_github_organization(user: cla_user,
+                             organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
                              organization_installation_id=None):
     """
@@ -1036,8 +1053,8 @@ def post_github_organization(organization_project_id: hug.types.uuid, # pylint: 
                                                       organization_installation_id)
 
 
-@hug.delete('/github/organizations/{organization_name}', versions=1)
-def delete_repository(organization_name: hug.types.text):
+@hug.delete('/github/organizations/{organization_name}', requires=token_authentication, versions=1)
+def delete_repository(user: cla_user, organization_name: hug.types.text):
     """
     DELETE: /github/organizations/{organization_name}
 
@@ -1050,6 +1067,8 @@ def github_oauth2_callback(code, state, request):
     """
     GET: /github/installation
 
+    TODO: Need to secure this endpoint - possibly with GitHub's Webhook secrets.
+
     GitHub will send the user to this endpoint when new OAuth2 handshake occurs.
     This needs to match the callback used when users install the app as well (below).
     """
@@ -1060,6 +1079,8 @@ def github_app_installation(body):
     """
     POST: /github/installation
 
+    TODO: Need to secure this endpoint - possibly with GitHub's Webhook secret.
+
     GitHub will fire off this webhook when new installation of our CLA app occurs.
     """
     return cla.controllers.github.user_authorization_callback(body)
@@ -1069,6 +1090,8 @@ def github_app_installation(body):
 def github_app_activity(body, request, response):
     """
     POST: /github/activity
+
+    TODO: Need to secure this endpoint with GitHub's Webhook secret.
 
     Acts upon any events triggered by our app installed in someone's organization.
     """
@@ -1084,6 +1107,8 @@ def github_app_activity(body, request, response):
 def github_organization_validation(body):
     """
     POST: /github/validate
+
+    TODO: Need to secure this endpoint with GitHub's Webhook secret.
     """
     return cla.controllers.github.validate_organization(body)
 
