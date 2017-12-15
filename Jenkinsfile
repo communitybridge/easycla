@@ -33,6 +33,7 @@ node {
 
       stage ("Automated Tests") {
         try {
+          sh "docker exec ${workspaceID} bash -c \"/srv/app/scripts/generate_dummy_credentials.sh\""
           sh "docker exec ${workspaceID} bash -c \"~/.local/bin/nose2 --coverage=cla --coverage-report=html\""
         } finally {
           step([$class: "JUnitResultArchiver", testResults: "test-results.xml"])
