@@ -9,7 +9,7 @@ import falcon
 from test_cla import CLATestCase
 import cla
 from cla.utils import get_repository_instance
-from cla.models.gitlab_models import MockGitLab
+#from cla.models.gitlab_models import MockGitLab
 
 class GitLabTestCase(CLATestCase):
     """GitLab test cases."""

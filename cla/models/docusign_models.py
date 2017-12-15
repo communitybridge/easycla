@@ -481,7 +481,7 @@ class MockDocuSign(DocuSign):
         """
         Need to implement fake resource here.
         """
-        return open('resources/test.pdf', 'rb')
+        return open('/srv/app/tests/resources/test.pdf', 'rb')
 
     def prepare_sign_request(self, envelope):
         """
