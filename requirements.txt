@@ -1,4 +1,4 @@
-coverage==4.3.4
+coverage==4.4.2
 docraptor==1.2.0
 boto3==1.4.7
 gossip==2.2.0
