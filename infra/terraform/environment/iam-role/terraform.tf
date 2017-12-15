@@ -68,10 +68,27 @@ resource "aws_iam_role_policy" "container_instance_policy" {
       "Resource": "*"
     },
     {
-      "Sid": "Stmt1495566019000",
       "Effect": "Allow",
       "Action": [
         "dynamodb:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ses:*"
       ],
       "Resource": [
         "*"
