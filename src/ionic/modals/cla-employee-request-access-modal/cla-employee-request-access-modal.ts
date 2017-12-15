@@ -47,7 +47,6 @@ export class ClaEmployeeRequestAccessModal {
 
   getDefaults() {
     this.userEmails = [];
-    console.log('employee request access modal');
   }
 
   ngOnInit() {
@@ -56,7 +55,6 @@ export class ClaEmployeeRequestAccessModal {
 
   getUser() {
     this.claService.getUser(this.userId).subscribe(user => {
-      console.log(user);
       this.userEmails = user.user_emails;
     });
   }
@@ -66,9 +64,6 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   submit() {
-    console.log("message info");
-    console.log(this.userId);
-    console.log(this.companyId);
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     if (!this.form.valid) {
