@@ -79,22 +79,23 @@ resource "aws_ecs_service" "cla" {
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.cla.arn}"
     container_name     = "cla"
-    container_port     = 8000
+    container_port     = 5000
   }
 }
 
 resource "aws_alb_target_group" "cla" {
   provider             = "aws.local"
-  name                 = "cla-5001"
-  port                 = 80
+  name                 = "cla-5000"
+  port                 = 5000
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30
 
   health_check {
-    path = "/"
+    path = "/v1/health"
     protocol = "HTTP"
     interval = 15
+    matcher = "200,202"
   }
 }
 
@@ -104,17 +105,4 @@ resource "aws_alb" "cla" {
   subnets            = ["${var.internal_subnets}"]
   security_groups    = ["${var.internal_elb_sg}"]
   internal           = true
-}
-
-resource "aws_alb_listener" "cla" {
-  provider           = "aws.local"
-  load_balancer_arn  = "${aws_alb.cla.id}"
-  port               = "443"
-  protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/16db8afa-932a-4bc9-8da4-52c76f00952c"
-
-  default_action {
-    target_group_arn = "${aws_alb_target_group.cla.id}"
-    type             = "forward"
-  }
 }

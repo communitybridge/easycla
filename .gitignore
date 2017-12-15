@@ -11,3 +11,7 @@ htmlcov/
 *.swp
 *.pyc
 *.db
+*.tfstate
+*.tfstate.backup
+.terraform/
+.idea/
