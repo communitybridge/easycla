@@ -86,7 +86,7 @@ resource "aws_ecs_service" "cla" {
 resource "aws_alb_target_group" "cla" {
   provider             = "aws.local"
   name                 = "cla-5000"
-  port                 = 5000
+  port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30
@@ -105,4 +105,16 @@ resource "aws_alb" "cla" {
   subnets            = ["${var.internal_subnets}"]
   security_groups    = ["${var.internal_elb_sg}"]
   internal           = true
+}
+
+resource "aws_alb_listener" "cla_80" {
+  provider           = "aws.local"
+  load_balancer_arn  = "${aws_alb.cla.id}"
+  port               = "80"
+  protocol           = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.cla.id}"
+    type             = "forward"
+  }
 }
