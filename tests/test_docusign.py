@@ -82,7 +82,7 @@ class DocuSignTestCase(CLATestCase):
         """Tests for the DocusSign signed callback."""
         # TODO: Implement this test.
         return
-        content = open('resources/docusign_callback_payload.xml').read()
+        content = open('/srv/app/tests/resources/docusign_callback_payload.xml').read()
         get_signing_service().signed_callback(content, None, None)
 
     def test_send_signed_document(self):
