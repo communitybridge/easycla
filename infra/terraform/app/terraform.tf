@@ -73,7 +73,6 @@ module "registrator" {
   source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
 
   # Application Information
-  build_hash       = "${var.build_hash}"
   project          = "cla"
 
   region           = "${data.terraform_remote_state.cla-env.region}"
@@ -91,7 +90,6 @@ module "consul" {
   endpoint         = "consul.service.consul"
 
   # Application Information
-  build_hash       = "${var.build_hash}"
   project          = "cla"
 
   region           = "${data.terraform_remote_state.cla-env.region}"
