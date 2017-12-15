@@ -28,12 +28,12 @@ node {
       def workspaceID = sh (script: "lf workspace", returnStdout: true).trim()
 
       stage ("Application Installation") {
-        sh "docker exec ${workspaceID} bash -c \"python3 setup.py install\""
+        sh "docker exec ${workspaceID} bash -c \"pip3 install -r requirements.txt --user\""
       }
 
       stage ("Automated Tests") {
         try {
-          sh "docker exec ${workspaceID} bash -c \"nose2\""
+          sh "docker exec ${workspaceID} bash -c \"./run_tests.sh\""
         } finally {
           step([$class: "JUnitResultArchiver", testResults: "test-results.xml"])
         }
