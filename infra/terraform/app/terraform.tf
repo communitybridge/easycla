@@ -26,14 +26,6 @@ data "terraform_remote_state" "cla-env" {
   }
 }
 
-data "terraform_remote_state" "cla-app" {
-  backend = "consul"
-  config {
-    address = "consul.service.production.consul:8500"
-    path    = "terraform/cla/application"
-  }
-}
-
 # Provider for this infra
 provider "aws" {
   alias = "local"
@@ -46,24 +38,6 @@ provider "aws" {
 # CLA console
 module "cla-console" {
   source            = "console"
-
-  # Application Information
-  build_hash        = "${var.build_hash}"
-  route53_zone_id   = "${data.terraform_remote_state.cla-env.route53_zone_id}"
-
-  # ECS Information
-  internal_elb_sg   = "${data.terraform_remote_state.cla-env.sg_internal_elb}"
-  internal_subnets  = "${data.terraform_remote_state.cla-env.internal_subnets}"
-  region            = "${data.terraform_remote_state.cla-env.region}"
-  vpc_id            = "${data.terraform_remote_state.cla-env.vpc_id}"
-  ecs_cluster_name  = "production-cla"
-  dns_servers       = "${data.terraform_remote_state.cla-env.dns_servers}"
-  ecs_role          = "${data.terraform_remote_state.cla-env.iam_role_ecsService}"
-}
-
-# NGINX Proxy
-module "nginx" {
-  source            = "./nginx"
 
   # Application Information
   build_hash        = "${var.build_hash}"
