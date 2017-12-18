@@ -41,7 +41,7 @@ module "cla-console" {
 
   # Application Information
   build_hash        = "${var.build_hash}"
-  route53_zone_id   = "cla_route53"
+  route53_zone_id   = "${data.terraform_remote_state.cla-env.cla_route53}"
 
   # ECS Information
   external_elb_sg   = "${data.terraform_remote_state.cla-env.sg_external_elb}"

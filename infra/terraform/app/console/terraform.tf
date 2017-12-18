@@ -84,7 +84,7 @@ resource "aws_ecs_service" "nginx" {
 
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.nginx.arn}"
-    container_name     = "nginx"
+    container_name     = "cla-console"
     container_port     = 80
   }
 }
