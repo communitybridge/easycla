@@ -143,6 +143,13 @@ export class ProjectClaPage {
     modal.present();
   }
 
+  openClaContractCompaniesModal(claProjectId) {
+    let modal = this.modalCtrl.create('ClaContractCompaniesModal', {
+      claProjectId: claProjectId,
+    });
+    modal.present();
+  }
+
   openClaContractsContributorsPage(claProjectId) {
     console.log(claProjectId);
     this.navCtrl.push('ClaContractsContributorsPage', {
