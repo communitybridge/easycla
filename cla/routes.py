@@ -15,7 +15,7 @@ import cla.controllers.github
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
-from falcon import HTTP_403
+from falcon import status, HTTP_403
 
 #
 # Middleware
@@ -30,6 +30,17 @@ def process_data(request, response, resource):
       response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
       response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
       response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+#
+# Custom 404.
+#
+@hug.not_found()
+def not_found():
+    """Custom 404 handler to hide the default hug behaviour of displaying all available routes."""
+    return {'error': {'status': status.HTTP_NOT_FOUND,
+                      'description': 'URL is invalid.'
+                     }
+           }
 
 #
 # Health check route.
