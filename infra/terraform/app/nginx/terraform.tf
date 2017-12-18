@@ -101,6 +101,7 @@ resource "aws_alb_target_group" "nginx" {
     path = "/elb-status"
     protocol = "HTTP"
     interval = 15
+    matcher = "200,201,202"
   }
 }
 
