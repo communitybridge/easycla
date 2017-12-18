@@ -14,7 +14,7 @@ variable "build_hash" {
 terraform {
   backend "consul" {
     address = "consul.service.production.consul:8500"
-    path    = "terraform/cla/application"
+    path    = "terraform/cla-console/application"
   }
 }
 
