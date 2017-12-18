@@ -27,7 +27,6 @@ COPY infra/nginx/production/nginx.conf /etc/nginx/nginx.conf
 COPY infra/docker-prod-entrypoint.sh /srv/entrypoint.sh
 COPY src /srv/app/src/
 COPY scripts/constants.ts /srv/app/src/app/src/services/constants.ts
-COPY scripts/keycloak.json /srv/app/src/app/src/assets/keycloak.json
 RUN rm -rf /srv/app/src/node_modules /srv/app/src/www
 
 WORKDIR '/srv/app/src'
