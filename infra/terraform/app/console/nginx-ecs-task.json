@@ -14,6 +14,10 @@
     ],
     "environment": [
       {
+        "name": "APP_DOMAINS",
+        "value": "${APP_DOMAINS}"
+      },
+      {
         "name": "SERVICE_80_NAME",
         "value": "CLA_CONSOLE_${build_hash}"
       },
