@@ -16,6 +16,10 @@ export class ClaService {
     this.claApiUrl = claApiUrl + '/v1';
   }
 
+  public setHttp(http: any) {
+    this.http = http; // allow configuration for alternate http library
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   /**
