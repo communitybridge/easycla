@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, ModalController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
+import { IonicPage,  ModalController, NavController, NavParams, ViewController, } from 'ionic-angular';
 import { PopoverController } from 'ionic-angular';
 import { ClaService } from 'cla-service';
 
@@ -99,9 +99,10 @@ export class ClaContractVersionModal {
     window.open(url, '_blank');
   }
 
-  openClaContractUploadModal(uploadInfo) {
+  openClaContractUploadModal() {
     let modal = this.modalCtrl.create('ClaContractUploadModal', {
-      uploadInfo: uploadInfo,
+      claProjectId: this.claProjectId,
+      documentType: this.documentType,
     });
     modal.present();
   }
