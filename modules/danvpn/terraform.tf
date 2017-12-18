@@ -11,6 +11,7 @@ resource "aws_instance" "danvpn" {
   subnet_id              = "${var.subnet}"
   instance_type          = "t2.small"
   key_name               = "dan"
+  iam_instance_profile = "consul-server-profile"
 
   ebs_block_device {
     device_name = "/dev/xvdf"
