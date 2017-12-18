@@ -88,8 +88,8 @@ SMTP_PORT = '0' #: Port of the SMTP service.
 # AWS SES Configuration.
 SES_SENDER_EMAIL_ADDRESS = 'test@cla.system' #: SES sender email address - must be verified in SES.
 SES_REGION = 'us-east-1' #: The AWS region out of which the emails will be sent.
-SES_ACCESS_KEY = '' #: AWS Access Key ID for the SES service.
-SES_SECRET_KEY = '' #: AWS Secret Access Key for the SES service.
+SES_ACCESS_KEY = None #: AWS Access Key ID for the SES service.
+SES_SECRET_KEY = None #: AWS Secret Access Key for the SES service.
 
 # Storage Service.
 STORAGE_SERVICE = 'LocalStorage' #: The storage service to use for storing CLAs.
@@ -98,8 +98,8 @@ STORAGE_SERVICE = 'LocalStorage' #: The storage service to use for storing CLAs.
 LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage service.
 
 # S3Storage Configuration.
-S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
-S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
+S3_ACCESS_KEY = None #: AWS Access Key ID for the S3 service.
+S3_SECRET_KEY = None #: AWS Secret Access Key for the S3 service.
 S3_BUCKET = 'cla-system-bucket-name' #: AWS S3 bucket used to store CLA files - must be unique.
 
 # PDF Generation.

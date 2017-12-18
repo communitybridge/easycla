@@ -97,6 +97,22 @@ resource "aws_ecr_repository" "console_nginx" {
   name = "cla-console/nginx"
 }
 
+resource "aws_s3_bucket" "assets_bucket" {
+  provider  = "aws.local"
+  bucket    = "lf-cla-artifacts"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "GET", "DELETE"]
+    allowed_origins = ["*"]
+    max_age_seconds = 3000
+  }
+
+  versioning {
+    enabled = true
+  }
+}
+
 // IAM Profiles, Roles & Policies for ECS
 module "ecs-iam-profile" {
   source = "./iam-role"
@@ -216,7 +232,10 @@ output "dns_servers" {
   value = "${data.terraform_remote_state.infrastructure.west_dns_servers}"
 }
 
-// DNS Servers from Production-Tools
-output "route53_zone_id" {
+output "api_route53" {
+  value = "Z2RO1I6G276B3X"
+}
+
+output "cla_route53" {
   value = "Z3I9LUXIPY6WWD"
 }

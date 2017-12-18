@@ -1,11 +1,14 @@
-coverage==4.3.4
+coverage==4.4.2
 docraptor==1.2.0
-# TODO: Need to deprecated boto
-boto==2.48.0
 boto3==1.4.7
 gossip==2.2.0
 gunicorn==19.7.1
 hug==2.2.0
+
+# Not a public package yet.
+#lf-keycloak==2.0.4
+https://nexus.engineering.tux.rocks/repository/pypi-engineering/packages/lf-keycloak/2.0.4/lf-keycloak-2.0.4.tar.gz
+
 nose2==0.7.2
 
 # Use custom fork until PR #109 gets merged.
@@ -18,4 +21,4 @@ pynamodb==3.2.1
 python-jose==1.4.0
 python-dateutil==2.6.1
 requests_oauthlib==0.8.0
-git+https://github.com/ibotty/keycloak-python.git
+newrelic
