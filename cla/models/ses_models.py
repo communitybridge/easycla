@@ -2,8 +2,7 @@
 Holds the AWS SES email service that can be used to send emails.
 """
 
-# TODO: Need to use boto3 instead and remove boto dependency.
-import boto.ses
+import boto3
 import cla
 from cla.models import email_service_interface
 
@@ -30,8 +29,6 @@ class SES(email_service_interface.EmailService):
         # Send the email.
         try:
             self._send(connection, msg)
-        except boto.ses.exceptions.SESAddressNotVerifiedError as err:
-            cla.log.error('AWS SES email address not verified: %s', str(err))
         except Exception as err:
             cla.log.error('Error while sending AWS SES email to %s: %s', recipient, str(err))
 
@@ -39,9 +36,9 @@ class SES(email_service_interface.EmailService):
         """
         Mockable method to get a connection to the SES service.
         """
-        return boto.ses.connect_to_region(self.region,
-                                          aws_access_key_id=self.access_key,
-                                          aws_secret_access_key=self.secret_key)
+        return boto3.client('ses',
+                            aws_access_key_id=self.access_key,
+                            aws_secret_access_key=self.secret_key)
 
     def _send(self, connection, msg): # pylint: disable=no-self-use
         """
