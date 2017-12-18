@@ -34,22 +34,6 @@ node {
           currentBuild.result = 'FAILURE'
         }
       }
-
-      stage("Docker Artifact: NGINX") {
-        try {
-          dir("infra/nginx/production") {
-            sh "docker build -t cla-console/nginx/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-            sh "docker tag cla-console/nginx/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${params.SHA}"
-            sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${params.SHA}"
-          }
-        } catch (err) {
-          echo "Caught Exception: ${err}"
-          statusDockerNGINX = 1
-          currentBuild.result = 'FAILURE'
-        }
-
-      }
-
     }
 
     stage("Terraform Plan") {
