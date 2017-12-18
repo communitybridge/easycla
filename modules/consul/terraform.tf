@@ -225,6 +225,7 @@ resource "aws_iam_instance_profile" "consul-server-profile" {
   role = "${aws_iam_role.consul-server-role.name}"
 }
 
-output "consul_iam_instance_profile" {
-  value = "${aws_iam_instance_profile.consul-server-profile.name}"
+output "consul-server-profile" {
+#  value = "${aws_iam_instance_profile.consul-server-profile.name}"
+  value = "yo"
 }
