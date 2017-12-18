@@ -99,7 +99,7 @@ resource "aws_alb_target_group" "pmc" {
     path = "/"
     protocol = "HTTP"
     interval = 15
-    matcher = "301,302"
+    matcher = "301,302,200,201"
   }
 }
 
