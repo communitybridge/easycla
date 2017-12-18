@@ -1,9 +1,9 @@
 [
   {
     "essential": true,
-    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/nginx:${build_hash}",
-    "memoryReservation": 258,
-    "name": "nginx",
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-console/production:${build_hash}",
+    "memoryReservation": 512,
+    "name": "cla-console",
     "portMappings": [{
       "containerPort": 80
     }],
@@ -14,16 +14,8 @@
     ],
     "environment": [
       {
-        "name": "APP_DOMAINS",
-        "value": "${APP_DOMAINS}"
-      },
-      {
-        "name": "CONSUL_SERVICE",
-        "value": "${CONSUL_SERVICE}"
-      },
-      {
         "name": "SERVICE_80_NAME",
-        "value": "CLA_CONSOLE_NGINX_${build_hash}"
+        "value": "CLA_CONSOLE_${build_hash}"
       },
       {
         "name": "SERVICE_80_TAGS",
@@ -39,11 +31,11 @@
     },
     "dockerLabels": {
       "realm": "cla",
-      "application": "console-nginx",
+      "application": "console",
       "version": "${build_hash}",
       "environment": "production",
       "region": "${TAG_REGION}",
-      "tags": "application, nginx, proxy"
+      "tags": "application, cla-console, ionic"
     }
   }
 ]
