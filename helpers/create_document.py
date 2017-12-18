@@ -1,5 +1,4 @@
 PROJECT_EXTERNAL_ID = 'salesforce-id-here'
-TEST_DOCUMENT_URL = 'https://github.com/cncf/cla/raw/master/individual-cla.pdf'
 GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
@@ -9,7 +8,18 @@ import cla
 import uuid
 import base64
 import urllib.request
-from cla.utils import get_document_instance, get_github_organization_instance, get_project_instance
+from cla.utils import get_document_instance, get_github_organization_instance, get_project_instance, get_pdf_service
+
+from cla.resources.contract_templates import CNCFTemplate
+template = CNCFTemplate(document_type='Corporate',
+                 major_version=1,
+                 minor_version=0)
+individual_template = CNCFTemplate(document_type='Individual',
+                 major_version=1,
+                 minor_version=0)
+content = template.get_html_contract("", "")
+pdf_generator = get_pdf_service()
+pdf_content = pdf_generator.generate(content)
 
 # Organisation
 github_org = get_github_organization_instance().get_organization_by_installation_id(GITHUB_INSTALLATION_ID)
@@ -19,29 +29,34 @@ github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXT
 # Document
 # Slower as the document is fetched every time a document signature is initiated.
 #document = Document(str(uuid.uuid4()), 'Test Document', 'url+pdf', TEST_DOCUMENT_URL)
-resource = urllib.request.urlopen(TEST_DOCUMENT_URL)
-data = base64.b64encode(resource.read()) # Document expects base64 encoded data.
 # ICLA Project1
 individual_document = get_document_instance()
 individual_document.set_document_name('Test ICLA Document')
 individual_document.set_document_file_id(str(uuid.uuid4()))
 individual_document.set_document_content_type('storage+pdf')
-individual_document.set_document_content(data)
+individual_document.set_document_content(pdf_content, b64_encoded=False)
 individual_document.set_document_major_version(1)
 individual_document.set_document_minor_version(0)
-cla.log.info('Adding ICLA document to project: %s', TEST_DOCUMENT_URL)
+document.set_raw_document_tabs(template.get_tabs())
 github_project1.add_project_individual_document(individual_document)
 github_project2.add_project_individual_document(individual_document)
+
+document.set_document_content_type('storage+pdf')
+document.set_document_content(pdf_content, b64_encoded=False)
+document.set_raw_document_tabs(template.get_tabs())
+project.save()
+
 # CCLA
 corporate_document = get_document_instance()
 corporate_document.set_document_name('Test CCLA Document')
 corporate_document.set_document_file_id(str(uuid.uuid4()))
 corporate_document.set_document_content_type('storage+pdf')
-corporate_document.set_document_content(data)
+corporate_document.set_document_content(pdf_content, b64_encoded=False)
 corporate_document.set_document_major_version(1)
 corporate_document.set_document_minor_version(0)
-cla.log.info('Adding CCLA document to project: %s', TEST_DOCUMENT_URL)
+document.set_raw_document_tabs(template.get_tabs())
 github_project1.add_project_corporate_document(corporate_document)
+
 github_project2.add_project_corporate_document(corporate_document)
 github_project1.save()
 github_project2.save()
