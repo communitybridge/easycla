@@ -8,6 +8,7 @@ import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { RolesService } from '../services/roles.service';
 import { ClaService } from 'cla-service';
 import { CLA_API_URL } from '../services/constants';
+import { HttpClient } from '../services/http-client';
 
 @Component({
   templateUrl: 'app.html',
@@ -36,10 +37,12 @@ export class MyApp {
     private keycloak: KeycloakService,
     private rolesService: RolesService,
     public claService: ClaService,
+    public httpClient: HttpClient,
   ) {
     this.getDefaults();
     this.initializeApp();
     this.claService.setApiUrl(CLA_API_URL);
+    this.claService.setHttp(httpClient);
   }
 
   getDefaults() {

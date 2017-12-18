@@ -40,95 +40,79 @@ export class ClaContractsContributorsPage {
   }
 
   ngOnInit() {
-    this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
-      console.log("signatures");
-      console.log(signatures);
-    });
+    this.getSignatures();
   }
 
   getDefaults() {
     this.loading = {
-      // project: true,
+      signatures: true,
     };
     this.sort = {
-      entity: {
-        arrayProp: 'entity',
-        sortType: 'text',
-        sort: null,
-      },
-      company: {
-        arrayProp: 'company',
+      signatureType: {
+        arrayProp: 'signatureType',
         sortType: 'text',
         sort: null,
       },
       name: {
-        arrayProp: 'name',
+        arrayProp: 'referenceEntity.user_name',
         sortType: 'text',
         sort: null,
       },
-      email: {
-        arrayProp: 'email',
+      company: {
+        arrayProp: 'signature_user_ccla_company_id',
         sortType: 'text',
+        sort: null,
+      },
+      githubId: {
+        arrayProp: 'referenceEntity.user_github_id',
+        sortType: 'number',
         sort: null,
       },
       version: {
-        arrayProp: 'version',
+        arrayProp: 'documentVersion',
         sortType: 'semver',
         sort: null,
       },
+      date: {
+        arrayProp: 'date_modified',
+        sortType: 'date',
+        sort: null,
+      },
     };
+    this.signatures = [];
+  }
 
-    this.signatures = [
-      {
-        entity: "corporate",
-        company: "E Corp.",
-        name: "Aname Lastname",
-        email: "cname@example.com",
-        version: "1.0",
-      },
-      {
-        entity: "individual",
-        company: "F Corp.",
-        name: "Bname Lastname",
-        email: "gname@example.com",
-        version: "1.1",
-      },
-      {
-        entity: "employee",
-        company: "A Corp.",
-        name: "Cname Lastname",
-        email: "bname@example.com",
-        version: "1.5",
-      },
-      {
-        entity: "employee",
-        company: "G Corp.",
-        name: "Dname Lastname",
-        email: "fname@example.com",
-        version: "1.10",
-      },
-      {
-        entity: "individual",
-        company: "D Corp.",
-        name: "Ename Lastname",
-        email: "bname@example.com",
-        version: "2.0",
-      },
-      {
-        entity: "individual",
-        company: "B Corp.",
-        name: "Gname Lastname",
-        email: "aname@example.com",
-        version: "2.5",
-      },
-      {
-        entity: "employee",
-        company: "C Corp.",
-        name: "Fname Lastname",
-        email: "dname@example.com",
-        version: "2.10",
-      },
-    ];
+  getSignatures() {
+    this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
+      console.log("signatures");
+      console.log(signatures);
+      let userSignatures = signatures.filter(item => item.signature_reference_type == 'user')
+      for (let signature of userSignatures) {
+        // extend fields
+        // create singular version field
+        signature.documentVersion = signature.signature_document_major_version + '.' + signature.signature_document_minor_version;
+        // create simplified signature type
+        signature.signatureType = this.determineSignatureType(signature);
+        // embed reference_entity
+        // TODO: pass this off to a function that builds an object of users keyed
+        //       by ID, and will only run new GET if we haven't already gotten user.
+        //       This value must still be set in the signature object however for
+        //       array sorting purposes.
+        this.claService.getUser(signature.signature_reference_id).subscribe(user => {
+          user.name = user.user_name;
+          signature.referenceEntity = user;
+        });
+      }
+      this.signatures = userSignatures;
+      this.loading.signatures = false;
+    });
+  }
+
+  determineSignatureType(signature) {
+    if (signature.signature_user_ccla_company_id) {
+      return 'employee';
+    }
+    return 'individual';
   }
 
   sortMembers(prop) {
