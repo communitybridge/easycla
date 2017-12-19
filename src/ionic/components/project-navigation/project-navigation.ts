@@ -130,7 +130,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       },
       {
         label: "Collaboration",
-        page: "",
+        page: "ProjectGroupsPage",
         access: this.userRoles.isAdmin,
       },
       {
