@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>LF Project</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <header>
+    <project-header [projectId]="projectId"></project-header>
+    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
+  </header>
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-title class="groups-title">Collaboration - Email Groups</ion-title>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-23>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span item-start>Email Groups</span>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+              <ion-grid>
+                <ion-row>
+                  <ion-col col-12>
+                    <ion-item>
+                      <ion-label stacked>Email Alias</ion-label>
+                      <ion-input type="text" formControlName="emailAlias"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-col col-12>
+                    <ion-item>
+                      <ion-label stacked>Email Alias</ion-label>
+                      <ion-input type="text" formControlName="description"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-item>
+                    <ion-label stacked>Privacy</ion-label>
+                    <ion-select formControlName="privacy" interface="popover">
+                      <ion-option *ngFor="let privacy of keysGetter(projectPrivacy)" value="{{ privacy }}">{{ projectPrivacy[privacy] }}</ion-option>
+                    </ion-select>
+                  </ion-item>
+                </ion-row>
+              </ion-grid>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
+</ion-content>

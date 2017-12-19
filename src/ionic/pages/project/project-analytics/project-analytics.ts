@@ -240,8 +240,9 @@ export class ProjectAnalyticsPage {
   }
 
   getPrsPipeline(span) {
+    span = 'year';
     let index = 'hyperledger2';
-    let metricType = 'prs.submitted';
+    let metricType = 'prs.open';
     let groupBy = 'year';
     let tsFrom = this.calculateTsFrom(span);
     let tsTo = this.timeNow;
