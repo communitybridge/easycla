@@ -15,14 +15,14 @@ class RepositoryServiceTestCase(CLATestCase):
     def test_github_webhook(self):
         """Tests for the GitHub webhook."""
         # Opened PR.
-        fhandle = open('/srv/app/tests/resources/github_open_pr.json')
+        fhandle = open(cla.utils.get_cla_path() + '/tests/resources/github_open_pr.json')
         github_payload = json.load(fhandle)
         fhandle.close()
         response = hug.test.post(cla.routes, '/v1/repository-provider/mock_github/activity', github_payload)
         self.assertEqual(response.status, '200 OK')
         # TODO: Check if things were handled properly in DB.
         # Re-opened PR.
-        fhandle = open('/srv/app/tests/resources/github_reopen_pr.json')
+        fhandle = open(cla.utils.get_cla_path() + '/tests/resources/github_reopen_pr.json')
         github_payload = json.load(fhandle)
         fhandle.close()
         response = hug.test.post(cla.routes, '/v1/repository-provider/mock_github/activity', github_payload)
