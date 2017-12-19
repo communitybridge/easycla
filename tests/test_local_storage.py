@@ -22,7 +22,7 @@ class LocalStorageTestCase(CLATestCase):
         except: pass
         os.makedirs(local_storage_folder)
         project = self.create_project()
-        with open('/srv/app/tests/resources/test.pdf', 'rb') as fhandle:
+        with open(cla.utils.get_cla_path() + '/tests/resources/test.pdf', 'rb') as fhandle:
             content = fhandle.read()
             ret = self.create_document(project['project_id'],
                                        document_content_type='storage+pdf',

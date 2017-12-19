@@ -481,7 +481,7 @@ class MockDocuSign(DocuSign):
         """
         Need to implement fake resource here.
         """
-        return open('/srv/app/tests/resources/test.pdf', 'rb')
+        return open(cla.utils.get_cla_path() + '/tests/resources/test.pdf', 'rb')
 
     def prepare_sign_request(self, envelope):
         """

@@ -21,7 +21,7 @@ class S3StorageTestCase(CLATestCase):
     def test_s3_storage(self):
         """Tests for S3 storage of documents."""
         project = self.create_project()
-        with open('/srv/app/tests/resources/test.pdf', 'rb') as fhandle:
+        with open(cla.utils.get_cla_path() + '/tests/resources/test.pdf', 'rb') as fhandle:
             content = fhandle.read()
             ret = self.create_document(project['project_id'],
                                        document_content_type='storage+pdf',
@@ -37,7 +37,7 @@ class S3StorageTestCase(CLATestCase):
         doc.set_document_minor_version(document['document_minor_version'])
         doc.set_document_file_id(document['document_file_id'])
         content = doc.get_document_content()
-        with open('/srv/app/tests/resources/test.pdf', 'rb') as fhandle:
+        with open(cla.utils.get_cla_path() + '/tests/resources/test.pdf', 'rb') as fhandle:
             self.assertEqual(content, fhandle.read())
         proj = get_project_instance()
         proj.load(project['project_id'])

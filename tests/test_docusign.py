@@ -43,7 +43,7 @@ class DocuSignTestCase(CLATestCase):
         Communicates with the signing service provider.
         """
 
-        #return # Only enabled temporarily when testing out new templates.
+        return # Only enabled temporarily when testing out new templates.
 
         test_signing_service = cla.conf['SIGNING_SERVICE']
         cla.conf['SIGNING_SERVICE'] = 'DocuSign'
@@ -59,7 +59,6 @@ class DocuSignTestCase(CLATestCase):
                 'company_id': company['company_id'],
                 'return_url': 'http://return-url.com/done'}
         result = hug.test.post(cla.routes, '/v1/request-corporate-signature', data)
-        print(result.data)
         cla.conf['SIGNING_SERVICE'] = test_signing_service
 
     def test_request_signature(self):
@@ -82,7 +81,7 @@ class DocuSignTestCase(CLATestCase):
         """Tests for the DocusSign signed callback."""
         # TODO: Implement this test.
         return
-        content = open('/srv/app/tests/resources/docusign_callback_payload.xml').read()
+        content = open(cla.utils.get_cla_path() + '/tests/resources/docusign_callback_payload.xml').read()
         get_signing_service().signed_callback(content, None, None)
 
     def test_send_signed_document(self):
