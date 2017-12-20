@@ -28,6 +28,7 @@ export class ProjectAnalyticsPage {
   analyticsUrl: any;
   sanitizedAnalyticsUrl: any;
 
+  index:any;
   timeNow:any;
   span:any;
 
@@ -52,6 +53,7 @@ export class ProjectAnalyticsPage {
   getDefaults() {
     this.setTimeNow();
     this.span = 'month';
+    this.index = 'hyperledger4';
     this.getCommitActivity(this.span);
     this.getcommitsDistribution(this.span);
     this.getIssuesStatus(this.span);
@@ -113,7 +115,7 @@ export class ProjectAnalyticsPage {
   }
 
   getCommitActivity(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'code.commits';
     let groupBy = 'day';
     let tsFrom = this.calculateTsFrom(span);
@@ -137,7 +139,7 @@ export class ProjectAnalyticsPage {
   }
 
   getcommitsDistribution(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'maintainers';
     let groupBy = 'year,author';
     let tsFrom = this.calculateTsFrom(span);
@@ -184,7 +186,7 @@ export class ProjectAnalyticsPage {
   }
 
   getIssuesStatus(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'issues';
     let groupBy = 'year,issue_status';
     let tsFrom = this.calculateTsFrom(span);
@@ -214,7 +216,7 @@ export class ProjectAnalyticsPage {
   }
 
   getIssuesActivity(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'issues';
     let groupBy = 'day,issue_status';
     let tsFrom = this.calculateTsFrom(span);
@@ -226,9 +228,9 @@ export class ProjectAnalyticsPage {
       if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            if(value.value['To Do'] && !value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], 0]);
-            if(!value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, 0, value.value['Done']]);
-            if(value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], value.value['Done']]);
+            if(value.value['open'] && !value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], 0]);
+            if(!value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, 0, value.value['closed']]);
+            if(value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], value.value['closed']]);
           }
         );
       }
@@ -240,8 +242,9 @@ export class ProjectAnalyticsPage {
   }
 
   getPrsPipeline(span) {
-    let index = 'hyperledger2';
-    let metricType = 'prs.submitted';
+    span = 'year';
+    let index = this.index;
+    let metricType = 'prs.open';
     let groupBy = 'year';
     let tsFrom = this.calculateTsFrom(span);
     let tsTo = this.timeNow;
@@ -266,7 +269,7 @@ export class ProjectAnalyticsPage {
   }
 
   getPrsActivity(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'prs';
     let groupBy = 'day,issue_status';
     let tsFrom = this.calculateTsFrom(span);
@@ -296,7 +299,7 @@ export class ProjectAnalyticsPage {
   }
 
   getPageViews() {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'website.duration';
     let groupBy = 'day';
     let tsFrom = '1510430520000';
@@ -316,7 +319,7 @@ export class ProjectAnalyticsPage {
   }
 
   getMaintainers(span) {
-    let index = 'hyperledger2';
+    let index = this.index;
     let metricType = 'maintainers';
     let groupBy = 'year,author';
     let tsFrom = this.calculateTsFrom(span);
