@@ -103,15 +103,11 @@
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Pull Request - Pipeline</span>
-            <br>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('day')">1 D</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('week')">1 W</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('month')">1 M</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('quarter')">1 Q</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('year')">1 Y</button>
           </ion-card-header>
-          <ion-card-content>
-            <google-chart [data]="prsPipelineChart"></google-chart>
+          <ion-card-content class="pipeline-content">
+            <div class='pipeline-chart'>
+              <google-chart [data]="prsPipelineChart"></google-chart>
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
