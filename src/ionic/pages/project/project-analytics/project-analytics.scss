@@ -18,9 +18,12 @@ project-analytics {
     width: 100%;
     min-height: 450px;
   }
-  .pipeline-chart{
-    display: block;
-    margin: 0 auto;
+  .pipeline-chart {
+    display: inline-block;
+    margin-top: 25px;
+  }
+  .pipeline-content {
+    text-align: center;
   }
   .cssHeaderRow {
     background-color: #4e92df;
