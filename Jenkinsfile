@@ -36,7 +36,7 @@ node {
           sh "docker exec ${workspaceID} bash -c \"/srv/app/scripts/generate_dummy_credentials.sh\""
           sh "docker exec ${workspaceID} bash -c \"cd tests/ && ~/.local/bin/nose2 --coverage=cla\""
         } finally {
-          step([$class: "JUnitResultArchiver", testResults: "test-results.xml"])
+          step([$class: "JUnitResultArchiver", testResults: "tests/test-results.xml"])
         }
       }
 
