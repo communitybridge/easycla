@@ -66,6 +66,11 @@
                     </ion-item>
                   </ion-col>
                 </ion-row>
+                <ion-row>
+                  <ion-col col-12>
+                    <button ion-button (click)="submitGroup()" color="secondary" [disabled]="currentlySubmitting">Create Group</button>
+                  </ion-col>
+                </ion-row>
               </ion-grid>
             </form>
           </ion-card-content>

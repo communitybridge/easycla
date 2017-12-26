@@ -27,12 +27,14 @@ export class ProjectGroupsPage {
 
   groupName: string;
   groupDescription: string;
-  groupPrivacy;
-  subgroupPermissions;
+  groupPrivacy = [];
+  subgroupPermissions = [];
 
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
+
+  group: any;
 
   constructor(
     public navCtrl: NavController,
@@ -48,8 +50,8 @@ export class ProjectGroupsPage {
 
     this.form = formBuilder.group({
       groupName:[this.groupName, Validators.compose([Validators.required])],
-      groupPrivacy:[this.groupPrivacy],
       groupDescription:[this.groupDescription],
+      groupPrivacy:[this.groupPrivacy],
       subgroupPermissions:[this.subgroupPermissions],
     });
 
@@ -75,16 +77,42 @@ export class ProjectGroupsPage {
   }
 
   getGroupPrivacy() {
-    this.groupPrivacy = ['membersVisible'];
-    // TODO Implement CINCO side
-    // this.cincoService.getProjectGroupPrivacy().subscribe(response => {
-    //   this.groupPrivacy = response;
-    // });
+    this.groupPrivacy = [];
+    this.cincoService.getGroupPrivacy(this.projectId).subscribe(response => {
+      this.groupPrivacy = response;
+    });
   }
 
   getSubgroupPermissions() {
-    this.subgroupPermissions = ['ownersOnly'];
+    this.subgroupPermissions = ['To_implement_CINCO_side'];
     // TODO Implement CINCO side
+    // this.cincoService.getSubgroupPermissions(this.projectId).subscribe(response => {
+    //   this.subgroupPermissions = response;
+    // });
+  }
+
+  submitGroup() {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    if (!this.form.valid) {
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    this.group = {
+      projectId: this.projectId,
+      name: this.form.value.groupName,
+      description: this.form.value.groupDescription,
+      privacy: this.groupPrivacy[this.form.value.groupPrivacy],
+    };
+    console.log("this.group");
+    console.log(this.group);
+    this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
+      this.currentlySubmitting = false;
+      this.navCtrl.setRoot('ProjectPage', {
+        projectId: this.projectId
+      });
+    });
   }
 
 }

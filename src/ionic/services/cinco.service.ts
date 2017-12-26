@@ -159,6 +159,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  getGroupPrivacy(projectId) {  // Retrieve privacy groups
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/privacy')
+      .map(res => res.json());
+  }
+
   createProjectGroup(projectId, group) {
     return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailinglists', group)
       .map(res => res.json());
