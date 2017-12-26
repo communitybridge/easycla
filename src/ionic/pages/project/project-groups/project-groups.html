@@ -33,26 +33,38 @@
                 <ion-row>
                   <ion-col col-12>
                     <ion-item>
-                      <ion-label stacked>Email Alias</ion-label>
-                      <ion-input type="text" formControlName="emailAlias"></ion-input>
+                      <ion-label stacked>Group Name</ion-label>
+                      <ion-input type="text" formControlName="groupName"></ion-input>
                     </ion-item>
                   </ion-col>
                 </ion-row>
                 <ion-row>
                   <ion-col col-12>
                     <ion-item>
-                      <ion-label stacked>Email Alias</ion-label>
-                      <ion-input type="text" formControlName="description"></ion-input>
+                      <ion-label stacked>Description</ion-label>
+                      <ion-input type="text" formControlName="groupDescription"></ion-input>
                     </ion-item>
                   </ion-col>
                 </ion-row>
                 <ion-row>
-                  <ion-item>
-                    <ion-label stacked>Privacy</ion-label>
-                    <ion-select formControlName="privacy" interface="popover">
-                      <ion-option *ngFor="let privacy of keysGetter(projectPrivacy)" value="{{ privacy }}">{{ projectPrivacy[privacy] }}</ion-option>
-                    </ion-select>
-                  </ion-item>
+                  <ion-col col-12>
+                    <ion-item>
+                      <ion-label stacked>Privacy</ion-label>
+                      <ion-select formControlName="groupPrivacy" interface="popover">
+                        <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}">{{ groupPrivacy[privacy] }}</ion-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-col col-12>
+                    <ion-item>
+                      <ion-label stacked>Subgroups Config (Who can create)</ion-label>
+                      <ion-select formControlName="subgroupPermissions" interface="popover">
+                        <ion-option *ngFor="let permission of keysGetter(subgroupPermissions)" value="{{ permission }}">{{ subgroupPermissions[permission] }}</ion-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
                 </ion-row>
               </ion-grid>
             </form>

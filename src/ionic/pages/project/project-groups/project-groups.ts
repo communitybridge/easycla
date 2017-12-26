@@ -25,6 +25,15 @@ export class ProjectGroupsPage {
   keysGetter;
   projectPrivacy;
 
+  groupName: string;
+  groupDescription: string;
+  groupPrivacy;
+  subgroupPermissions;
+
+  form: FormGroup;
+  submitAttempt: boolean = false;
+  currentlySubmitting: boolean = false;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -33,8 +42,17 @@ export class ProjectGroupsPage {
     private domSanitizer : DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
+    private formBuilder: FormBuilder,
   ) {
     this.projectId = navParams.get('projectId');
+
+    this.form = formBuilder.group({
+      groupName:[this.groupName, Validators.compose([Validators.required])],
+      groupPrivacy:[this.groupPrivacy],
+      groupDescription:[this.groupDescription],
+      subgroupPermissions:[this.subgroupPermissions],
+    });
+
   }
 
   ngOnInit() {
@@ -44,7 +62,8 @@ export class ProjectGroupsPage {
 
   getDefaults() {
     this.keysGetter = Object.keys;
-    this.getProjectPrivacy();
+    this.getGroupPrivacy();
+    this.getSubgroupPermissions();
   }
 
   getProjectConfig(projectId) {
@@ -55,12 +74,17 @@ export class ProjectGroupsPage {
     });
   }
 
-  getProjectPrivacy() {
-    this.projectPrivacy = ['membersVisible'];
+  getGroupPrivacy() {
+    this.groupPrivacy = ['membersVisible'];
     // TODO Implement CINCO side
-    // this.cincoService.getProjectPrivacy().subscribe(response => {
-    //   this.projectPrivacy = response;
+    // this.cincoService.getProjectGroupPrivacy().subscribe(response => {
+    //   this.groupPrivacy = response;
     // });
+  }
+
+  getSubgroupPermissions() {
+    this.subgroupPermissions = ['ownersOnly'];
+    // TODO Implement CINCO side
   }
 
 }
