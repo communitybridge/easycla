@@ -35,6 +35,7 @@ export class ProjectGroupsPage {
   currentlySubmitting: boolean = false;
 
   group: any;
+  projectGroups: any;
 
   constructor(
     public navCtrl: NavController,
@@ -64,6 +65,7 @@ export class ProjectGroupsPage {
 
   getDefaults() {
     this.keysGetter = Object.keys;
+    this.getProjectGroups();
     this.getGroupPrivacy();
     this.getSubgroupPermissions();
   }
@@ -73,6 +75,13 @@ export class ProjectGroupsPage {
       if (response) {
         console.log(response)
       }
+    });
+  }
+
+  getProjectGroups() {
+    this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
+      console.log(response);
+      this.projectGroups = response;
     });
   }
 
@@ -105,11 +114,11 @@ export class ProjectGroupsPage {
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy],
     };
-    console.log("this.group");
+    console.log("t3his.group");
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
       this.currentlySubmitting = false;
-      this.navCtrl.setRoot('ProjectPage', {
+      this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
       });
     });
