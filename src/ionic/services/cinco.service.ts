@@ -159,7 +159,7 @@ export class CincoService {
       .map(res => res.json());
   }
 
-  getGroupPrivacy(projectId) {  // Retrieve privacy groups
+  getGroupPrivacy(projectId) {  // Retrieve privacy groups enum list in general, no project specific.
     return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/privacy')
       .map(res => res.json());
   }
@@ -170,7 +170,7 @@ export class CincoService {
   }
 
   getProjectGroup(projectId, groupId) {
-    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists' + groupId)
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId)
       .map(res => res.json());
   }
 
