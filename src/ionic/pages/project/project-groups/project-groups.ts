@@ -73,15 +73,29 @@ export class ProjectGroupsPage {
   getProjectConfig(projectId) {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
-        console.log(response)
+        console.log(response);
+        if (!response.domain) console.log("no domain");
       }
     });
   }
 
   getProjectGroups() {
     this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
-      console.log(response);
       this.projectGroups = response;
+      console.log(response);
+      //testing
+      let participant = {
+          address: "test@test.com"
+      }
+      console.log(participant);
+      // this.cincoService.addGroupParticipant(this.projectId, response[3].name, participant).subscribe(response => {
+        // console.log(response)
+        // this.cincoService.getProjectGroup(this.projectId, response[3].name).subscribe(response => {
+        //   console.log(response)
+        // });
+      // });
+
+      //
     });
   }
 
@@ -114,13 +128,19 @@ export class ProjectGroupsPage {
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy],
     };
-    console.log("t3his.group");
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
       this.currentlySubmitting = false;
       this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
       });
+    });
+  }
+
+  getGroupDetails(groupName) {
+    this.navCtrl.setRoot('ProjectGroupDetailsPage', {
+      projectId: this.projectId,
+      groupName: groupName
     });
   }
 

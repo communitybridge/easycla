@@ -15,7 +15,7 @@
   <ion-grid>
     <ion-row>
       <ion-col>
-        <ion-title class="groups-title">Collaboration - Email Groups</ion-title>
+        <ion-title class="groups-title">Collaboration - Group Details</ion-title>
       </ion-col>
     </ion-row>
 
@@ -24,7 +24,7 @@
         <ion-card>
           <ion-card-header>
             <ion-item>
-              <span item-start>Email Groups</span>
+              <span item-start>Group Details</span>
             </ion-item>
           </ion-card-header>
           <ion-card-content>
@@ -83,7 +83,7 @@
     <ion-grid>
       <ion-row margin-top>
         <ion-col col-12>
-          <h3>Groups</h3>
+          <h3>Group Participants</h3>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -94,16 +94,12 @@
                 <table id="table" class="table table-hover">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Description</th>
-                      <th>Privacy</th>
+                      <th>Address</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let group of projectGroups" (click)="getGroupDetails(group.name)" class="clickable">
-                      <td data-title="Name">{{ group.name }}</td>
-                      <td data-title="Description">{{ group.description }}</td>
-                      <td data-title="Privacy">{{ group.privacy }}</td>
+                    <tr *ngFor="let participant of groupParticipants">
+                      <td data-title="Address">{{ participant.address }}</td>
                     </tr>
                   </tbody>
                 </table>
