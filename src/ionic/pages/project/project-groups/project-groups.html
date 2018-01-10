@@ -49,7 +49,7 @@
                 <ion-row>
                   <ion-col col-12>
                     <ion-item>
-                      <ion-label stacked>Privacy</ion-label>
+                      <ion-label stacked>Group and Archive Privacy</ion-label>
                       <ion-select formControlName="groupPrivacy" interface="popover">
                         <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}">{{ groupPrivacy[privacy] }}</ion-option>
                       </ion-select>
@@ -59,9 +59,9 @@
                 <ion-row>
                   <ion-col col-12>
                     <ion-item>
-                      <ion-label stacked>Subgroups Config (Who can create)</ion-label>
-                      <ion-select formControlName="subgroupPermissions" interface="popover">
-                        <ion-option *ngFor="let permission of keysGetter(subgroupPermissions)" value="{{ permission }}">{{ subgroupPermissions[permission] }}</ion-option>
+                      <ion-label stacked>Moderator approval required to join?</ion-label>
+                      <ion-select formControlName="groupRequiresApproval" interface="popover">
+                        <ion-option *ngFor="let permission of keysGetter(groupRequiresApproval)" value="{{ permission }}">{{ groupRequiresApproval[permission] }}</ion-option>
                       </ion-select>
                     </ion-item>
                   </ion-col>
