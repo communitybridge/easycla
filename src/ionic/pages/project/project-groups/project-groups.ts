@@ -28,6 +28,7 @@ export class ProjectGroupsPage {
   groupName: string;
   groupDescription: string;
   groupPrivacy = [];
+  groupRequiresApproval = [];
   subgroupPermissions = [];
 
   form: FormGroup;
@@ -53,7 +54,7 @@ export class ProjectGroupsPage {
       groupName:[this.groupName, Validators.compose([Validators.required])],
       groupDescription:[this.groupDescription],
       groupPrivacy:[this.groupPrivacy],
-      subgroupPermissions:[this.subgroupPermissions],
+      groupRequiresApproval:[this.groupRequiresApproval],
     });
 
   }
@@ -101,13 +102,24 @@ export class ProjectGroupsPage {
 
   getGroupPrivacy() {
     this.groupPrivacy = [];
-    this.cincoService.getGroupPrivacy(this.projectId).subscribe(response => {
-      this.groupPrivacy = response;
-    });
+    // TODO Implement CINCO side
+    // this.cincoService.getGroupPrivacy(this.projectId).subscribe(response => {
+    //   this.groupPrivacy = response;
+    // });
+    this.groupPrivacy = [
+      {
+        value: "sub_group_privacy_none",
+        description: "Listed in parent group, archives publicly viewable."
+      },
+      {
+        value: "sub_group_privacy_archives",
+        description: "Listed in parent group, archives viewable by supgroup members only."
+      }
+    ];
   }
 
   getSubgroupPermissions() {
-    this.subgroupPermissions = ['To_implement_CINCO_side'];
+    this.groupRequiresApproval = ['true', 'false'];
     // TODO Implement CINCO side
     // this.cincoService.getSubgroupPermissions(this.projectId).subscribe(response => {
     //   this.subgroupPermissions = response;
@@ -127,6 +139,7 @@ export class ProjectGroupsPage {
       name: this.form.value.groupName,
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy],
+      requires_approval: this.groupRequiresApproval[this.form.value.groupRequiresApproval],
     };
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {

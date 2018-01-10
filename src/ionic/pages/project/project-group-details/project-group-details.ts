@@ -74,6 +74,19 @@ export class ProjectGroupDetailsPage {
       }
     ]
 
+    //testing
+
+    let participant = {
+        address: "test@test.com"
+    }
+    console.log(participant);
+    this.cincoService.addGroupParticipant(this.projectId, this.groupName, participant).subscribe(response => {
+      console.log(response)
+      this.cincoService.getProjectGroup(this.projectId, this.groupName).subscribe(response => {
+        console.log(response)
+      });
+    });
+
   }
 
   getProjectConfig(projectId) {
