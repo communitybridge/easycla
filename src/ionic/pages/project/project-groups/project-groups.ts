@@ -75,7 +75,14 @@ export class ProjectGroupsPage {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
         console.log(response);
-        if (!response.domain) console.log("no domain");
+        if (!response.mailingGroup) {
+          console.log("no mailingGroup");
+          console.log("creating a new mailingGroup");
+          this.cincoService.createMainProjectGroup(this.projectId).subscribe(response => {
+            console.log("new mailingGroup");
+            console.log(response);
+          });
+        }
       }
     });
   }
@@ -85,10 +92,10 @@ export class ProjectGroupsPage {
       this.projectGroups = response;
       console.log(response);
       //testing
-      let participant = {
-          address: "test@test.com"
-      }
-      console.log(participant);
+      // let participant = {
+      //     address: "test@test.com"
+      // }
+      // console.log(participant);
       // this.cincoService.addGroupParticipant(this.projectId, response[3].name, participant).subscribe(response => {
         // console.log(response)
         // this.cincoService.getProjectGroup(this.projectId, response[3].name).subscribe(response => {
