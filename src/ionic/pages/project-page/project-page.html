@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Project Signatures</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing>
+  <!-- <header>
+    <h1>{{ company.company_name }}</h1>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-4>
+          <h3>Manager</h3>
+          <div *ngIf="manager">{{ manager.user_name }}</div>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <h3>Whitelist Domains</h3>
+          <div class="list-container">
+            <div *ngFor="let whitelist of company.company_whitelist">
+              {{ whitelist }}
+            </div>
+          </div>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <h3>Whitelist Emails</h3>
+          <div class="list-container">
+            <div *ngFor="let pattern of company.company_whitelist_patterns">
+              {{ pattern }}
+            </div>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header> -->
+
+  <loading-spinner [loading]="loading.signatures"></loading-spinner>
+  <ion-grid [loading-display]="loading.signatures">
+    <ion-row justify-content-center>
+      <ion-col col-6>
+        <ion-list>
+          <button ion-item *ngFor="let signature of signatures">
+            <ion-label>
+              Signature
+            </ion-label>
+          </button>
+        </ion-list>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
