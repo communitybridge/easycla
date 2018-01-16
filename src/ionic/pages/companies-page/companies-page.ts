@@ -1,7 +1,6 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
-import { CincoService } from '../../services/cinco.service'
+import { ClaService } from 'cla-service'
 
 @IonicPage({
   segment: 'companies'
@@ -16,13 +15,13 @@ export class CompaniesPage {
 
   constructor(
     public navCtrl: NavController,
-    private cincoService: CincoService,
-    private keycloak: KeycloakService
+    private claService: ClaService,
   ) {
     this.getDefaults();
   }
 
-  getDefaults(){
+  getDefaults() {
+    console.log('companies page');
     this.loading = {
       companies: true,
     };
@@ -34,34 +33,13 @@ export class CompaniesPage {
     this.getCompanies();
   }
 
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
-  }
-
   getCompanies() {
-    // this.cincoclaService.getCompaniesByUser().subscribe(response => {
-    //     this.companies = response;
-    //     this.loading.companies = false;
-    // });
-    this.companies = [
-      {
-        company_name: "abc",
-        company_id: "123",
-      }
-    ];
-    this.loading.companies = false;
+    console.log('get companies called');
+    this.claService.getCompanies().subscribe(response => {
+        this.companies = response;
+        console.log(this.companies);
+        this.loading.companies = false;
+    });
   }
 
   viewCompany(companyId){

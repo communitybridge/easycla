@@ -9,20 +9,15 @@
 
 <ion-content padding headerspacing overflow-scroll="true">
   <h2>Companies</h2>
-  <loading-spinner [loading]="loading.projects"></loading-spinner>
+  <loading-spinner [loading]="loading.companies"></loading-spinner>
   <ion-grid class="companies" [loading-display]="loading.companies">
-    <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let company of companies">
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title (click)="viewCompany(company.company_id)">
-              <span class="company-name">{{ company.company_name }}</span>
-            </ion-card-title>
-            <ion-item>
-              <button ion-button clear item-right (click)="viewCompany(company.company_id)">View</button>
-            </ion-item>
-          </ion-card-content>
-        </ion-card>
+    <ion-row justify-content-center>
+      <ion-col col-6>
+        <ion-list>
+          <button ion-item *ngFor="let company of companies" (click)="viewCompany(company.company_id)">
+            <ion-label class="company-name">{{ company.company_name }}</ion-label>
+          </button>
+        </ion-list>
       </ion-col>
     </ion-row>
   </ion-grid>
