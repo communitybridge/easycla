@@ -2,6 +2,6 @@
   "realm": "LinuxFoundation",
   "auth-server-url": "https://keycloak.linuxfoundation.org/auth",
   "ssl-required": "external",
-  "resource": "ccc",
+  "resource": "pmc",
   "public-client": true
 }

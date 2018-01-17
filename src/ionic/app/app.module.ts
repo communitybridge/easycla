@@ -12,6 +12,7 @@ import { RolesService } from '../services/roles.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp, KEYCLOAK_HTTP_PROVIDER } from '../services/keycloak/keycloak.http';
 import { SortService } from '../services/sort.service';
+import { ClaService } from 'cla-service';
 
 import { MyApp } from './app.component';
 
@@ -38,6 +39,7 @@ import { MyApp } from './app.component';
     KeycloakService,
     KEYCLOAK_HTTP_PROVIDER,
     SortService,
+    ClaService,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
