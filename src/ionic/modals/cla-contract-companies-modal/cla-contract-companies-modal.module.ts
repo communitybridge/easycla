@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
-import { ClaCorporateMemberModal } from './cla-corporate-member-modal';
+import { ClaContractCompaniesModal } from './cla-contract-companies-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
   declarations: [
-    ClaCorporateMemberModal
+    ClaContractCompaniesModal
   ],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ClaCorporateMemberModal)
+    IonicPageModule.forChild(ClaContractCompaniesModal)
   ],
   entryComponents: [
-    ClaCorporateMemberModal
+    ClaContractCompaniesModal
   ]
 })
-export class ClaCorporateMemberModalModule {}
+export class ClaContractCompaniesModalModule {}
