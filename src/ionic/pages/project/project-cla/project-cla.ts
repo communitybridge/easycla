@@ -5,7 +5,12 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
 import { PopoverController } from 'ionic-angular';
 import { ClaService } from 'cla-service';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'project/:projectId/cla'
 })
@@ -32,6 +37,7 @@ export class ProjectClaPage {
     private keycloak: KeycloakService,
     private popoverCtrl: PopoverController,
     public claService: ClaService,
+    public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -47,20 +53,6 @@ export class ProjectClaPage {
 
   ngOnInit() {
     this.getClaProjects();
-  }
-
-  ionViewCanEnter() {
-    if (!this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if (!this.keycloak.authenticated()) {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   getClaProjects() {
@@ -147,6 +139,13 @@ export class ProjectClaPage {
     });
     modal.onDidDismiss(data => {
       this.getClaProjects();
+    });
+    modal.present();
+  }
+
+  openClaContractCompaniesModal(claProjectId) {
+    let modal = this.modalCtrl.create('ClaContractCompaniesModal', {
+      claProjectId: claProjectId,
     });
     modal.present();
   }

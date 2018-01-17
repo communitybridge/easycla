@@ -4,39 +4,59 @@ project-analytics {
     display: block;
     vertical-align: middle;
   }
-
-  .bitergia-wrapper {
-  	position: relative;
-  	padding-bottom: 56.25%; /* 16:9 */
-  	padding-top: 25px;
-  	height: 0;
-  }
-
-  .bitergia-wrapper iframe {
-  	position: absolute;
-  	top: 0;
-  	left: 0;
-  	width: 100%;
-  	height: 100%;
-  }
-
   .configure-analytics {
     margin: 40px;
   }
+  .analytics-title {
+    margin-top: 20px;
+  }
+  .analytics-card {
+    background-color: #4e92df;
+    color: #fff !important;
+  }
+  .chart {
+    width: 100%;
+    min-height: 450px;
+  }
+  .pipeline-chart {
+    display: inline-block;
+    margin-top: 25px;
+  }
+  .pipeline-content {
+    text-align: center;
+  }
+  .cssHeaderRow {
+    background-color: #4e92df;
+  }
+  .cssTableRow {
+      background-color: #4e92df;
+  }
+  .cssOddTableRow {
+      background-color: #4e92df;
+  }
+  .cssSelectedTableRow {
+      font-size: 16px;
+      font-weight:bold;
+  }
+  .cssHoverTableRow {
+      background: #ccc;
+  }
+  .cssHeaderCell {
+      color: #FFFFFF;
+      font-size: 14px;
+      padding: 10px !important;
+      border: solid 1px #4e92df;
+      text-align: center;
+  }
+  .cssTableCell {
+      font-size: 14px;
+      padding: 10px !important;
+      border: solid 1px #4e92df;
+      text-align: center;
+  }
+  .cssRowNumberCell {
+      text-align: center;
+  }
 
-  .container {
-      position: relative;
-      width: 50%;
-      height: 0;
-      padding-bottom: 28.13%;
-      display:inline-block;
-      margin:0;
-  }
-  .video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-  }
+
 }

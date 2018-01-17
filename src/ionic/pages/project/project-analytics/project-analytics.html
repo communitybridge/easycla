@@ -12,31 +12,166 @@
     <project-header [projectId]="projectId"></project-header>
     <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
   </header>
-  <!-- <ion-grid> -->
-    <ion-row>
-      <div class="container">
-        <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&from=1495384630045&to=1511282230045&panelId=1" frameborder="0" class="video"></iframe>
-      </div>
-      <div class="container">
-        <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&panelId=2&from=1495381830365&to=1511279430365" frameborder="0" class="video"></iframe>
-      </div>
-    </ion-row>
-    <ion-row *ngIf="hasBitergia">
+  <ion-grid>
+    <ion-row class="analytics-title">
       <ion-col>
-        <!-- <div class="bitergia-wrapper"> -->
-          <!-- <iframe [attr.src]="sanitizedBitergiaUrl"></iframe> -->
-        <!-- </div> -->
-        <div class="bitergia-wrapper">
-          <iframe src="http://localhost:3000/dashboard-solo/db/lf-test?orgId=1&panelId=3&from=1495381528516&to=1511279128516" frameborder="0"></iframe>
-        </div>
+        <ion-title>Analytics</ion-title>
       </ion-col>
     </ion-row>
-  <!-- </ion-grid> -->
-  <!-- <ion-row text-center>
-    <ion-col>
-      <div class="configure-analytics">
-        <ion-label>Configure Analytics <a class="project-details-link clickable" (click)="openAnaylticsConfigModal(projectId)">here</a></ion-label>
-      </div>
-    </ion-col>
-  </ion-row> -->
+
+    <ion-row>
+      <ion-col col-9>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card" item-start>Commit Activity</span>
+              <ion-buttons item-end>
+                <button ion-button color="light" clear small (click)="getCommitActivity('day')">1 D</button>
+                <button ion-button color="light" clear small (click)="getCommitActivity('week')">1 W</button>
+                <button ion-button color="light" clear small (click)="getCommitActivity('month')">1 M</button>
+                <button ion-button color="light" clear small (click)="getCommitActivity('quarter')">1 Q</button>
+                <button ion-button color="light" clear small (click)="getCommitActivity('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="commitsActivityChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-3>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Distribution of Commits</span>
+            <br>
+            <button ion-button color="light" clear small (click)="getcommitsDistribution('day')">1 D</button>
+            <button ion-button color="light" clear small (click)="getcommitsDistribution('week')">1 W</button>
+            <button ion-button color="light" clear small (click)="getcommitsDistribution('month')">1 M</button>
+            <button ion-button color="light" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
+            <button ion-button color="light" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="commitsDistributionChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-6>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Issues - Status</span>
+              <ion-buttons item-end>
+                <button ion-button color="light" clear small (click)="getIssuesStatus('day')">1 D</button>
+                <button ion-button color="light" clear small (click)="getIssuesStatus('week')">1 W</button>
+                <button ion-button color="light" clear small (click)="getIssuesStatus('month')">1 M</button>
+                <button ion-button color="light" clear small (click)="getIssuesStatus('quarter')">1 Q</button>
+                <button ion-button color="light" clear small (click)="getIssuesStatus('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="issuesStatusChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-6>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Issues Activity</span>
+              <ion-buttons item-end>
+                <button ion-button color="light" clear small (click)="getIssuesActivity('day')">1 D</button>
+                <button ion-button color="light" clear small (click)="getIssuesActivity('week')">1 W</button>
+                <button ion-button color="light" clear small (click)="getIssuesActivity('month')">1 M</button>
+                <button ion-button color="light" clear small (click)="getIssuesActivity('quarter')">1 Q</button>
+                <button ion-button color="light" clear small (click)="getIssuesActivity('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="issuesActivityChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-3>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Pull Request - Pipeline</span>
+            <br>
+            <button ion-button color="light" clear small (click)="getPrsPipeline('day')">1 D</button>
+            <button ion-button color="light" clear small (click)="getPrsPipeline('week')">1 W</button>
+            <button ion-button color="light" clear small (click)="getPrsPipeline('month')">1 M</button>
+            <button ion-button color="light" clear small (click)="getPrsPipeline('quarter')">1 Q</button>
+            <button ion-button color="light" clear small (click)="getPrsPipeline('year')">1 Y</button>
+          </ion-card-header>
+          <ion-card-content class="pipeline-content">
+            <div class='pipeline-chart'>
+              <google-chart [data]="prsPipelineChart"></google-chart>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-9>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Pull Request Activity</span>
+              <ion-buttons item-end>
+                <button ion-button color="light" clear small (click)="getPrsActivity('day')">1 D</button>
+                <button ion-button color="light" clear small (click)="getPrsActivity('week')">1 W</button>
+                <button ion-button color="light" clear small (click)="getPrsActivity('month')">1 M</button>
+                <button ion-button color="light" clear small (click)="getPrsActivity('quarter')">1 Q</button>
+                <button ion-button color="light" clear small (click)="getPrsActivity('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="prsActivityChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Project Page Views</span>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="pageViewsChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-12>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Top Contributors</span>
+              <ion-buttons item-end>
+                <button ion-button color="light" clear small (click)="getMaintainers('day')">1 D</button>
+                <button ion-button color="light" clear small (click)="getMaintainers('week')">1 W</button>
+                <button ion-button color="light" clear small (click)="getMaintainers('month')">1 M</button>
+                <button ion-button color="light" clear small (click)="getMaintainers('quarter')">1 Q</button>
+                <button ion-button color="light" clear small (click)="getMaintainers('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <google-chart [data]="maintainersTable"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
 </ion-content>

@@ -5,7 +5,11 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
 import { MemberModel } from '../../../models/member-model';
 import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'project/:projectId/member/:memberId'
 })
@@ -43,7 +47,7 @@ export class MemberPage {
   }
 
   getDefaults() {
-    this.userRoles = this.rolesService.userRoleDefaults;
+    this.userRoles = this.rolesService.userRoles;
     this.loading = {
       member: true,
       projects: true,
@@ -93,24 +97,8 @@ export class MemberPage {
     };
   }
 
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
-  }
-
   ngOnInit() {
-    this.rolesService.getData.subscribe((userRoles) => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
 
       // use selectedProject and selectedMember to get data from CINCO and populate this.contacts
@@ -118,8 +106,6 @@ export class MemberPage {
       this.getMember(this.projectId, this.memberId);
       this.getMemberContacts(this.projectId, this.memberId);
     });
-    this.rolesService.getUserRoles();
-
   }
 
   getMemberContactRoles() {

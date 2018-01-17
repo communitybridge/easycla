@@ -8,71 +8,82 @@
 </ion-header>
 
 <ion-content padding headerspacing>
-  <!-- <loading-spinner [loading]="loading.project"></loading-spinner> -->
   <div>
-    <ion-grid>
+    <h2>User Signatures</h2>
+    <loading-spinner [loading]="loading.signatures"></loading-spinner>
+    <ion-grid [loading-display]="loading.signatures">
       <ion-row>
         <ion-col col-12>
           <div class="table-responsive-vertical">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th class="clickable" (click)="sortMembers('entity')">
+                  <th class="clickable" (click)="sortMembers('signatureType')">
                     Entity Type
-                    <sorting-display [sorting]='sort.entity.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('company')">
-                    Company
-                    <sorting-display [sorting]='sort.company.sort'></sorting-display>
+                    <sorting-display [sorting]='sort.signatureType.sort'></sorting-display>
                   </th>
                   <th class="clickable" (click)="sortMembers('name')">
                     Name
                     <sorting-display [sorting]='sort.name.sort'></sorting-display>
                   </th>
-                  <th class="clickable" (click)="sortMembers('email')">
-                    Email
-                    <sorting-display [sorting]='sort.email.sort'></sorting-display>
+                  <th class="clickable" (click)="sortMembers('company')">
+                    Company
+                    <sorting-display [sorting]='sort.company.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('githubId')">
+                    Github ID
+                    <sorting-display [sorting]='sort.githubId.sort'></sorting-display>
                   </th>
                   <th class="clickable" (click)="sortMembers('version')">
                     Version
                     <sorting-display [sorting]='sort.version.sort'></sorting-display>
                   </th>
-                  <th>
-                    Actions
+                  <th class="clickable" (click)="sortMembers('date')">
+                    Date
+                    <sorting-display [sorting]='sort.date.sort'></sorting-display>
                   </th>
+                  <!-- <th>
+                    Actions
+                  </th> -->
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let signature of signatures">
                   <td data-title="Entity Type">
-                    <span *ngIf="signature.entity == 'corporate'">
-                      <ion-icon name="briefcase"></ion-icon>
-                    </span>
-                    <span *ngIf="signature.entity == 'individual'">
+                    <span *ngIf="signature.signatureType == 'individual'">
                       <ion-icon name="person"></ion-icon>
                     </span>
-                    <span *ngIf="signature.entity == 'employee'">
+                    <span *ngIf="signature.signatureType == 'employee'">
                       <ion-icon name="briefcase"></ion-icon>
                       <ion-icon name="person"></ion-icon>
+                    </span>
+                  </td>
+                  <td data-title="Name">
+                    <span *ngIf="signature.referenceEntity">
+                      {{ signature.referenceEntity.user_name }}
                     </span>
                   </td>
                   <td data-title="Company">
-                    <strong>{{ signature.company }}</strong>
+                    <span *ngIf="signature.signature_user_ccla_company_id">
+                      {{ signature.signature_user_ccla_company_id }}
+                    </span>
                   </td>
-                  <td data-title="Name">
-                    {{ signature.name }}
-                  </td>
-                  <td data-title="Email">
-                    {{ signature.email }}
+                  <td data-title="GitHub ID">
+                    <span *ngIf="signature.referenceEntity">
+                      {{ signature.referenceEntity.user_github_id }}
+                    </span>
                   </td>
                   <td data-title="Version">
-                    {{ signature.version }}
+                    v{{ signature.documentVersion }}
                   </td>
-                  <td data-title="Actions" class="actions-cell">
-                    <button ion-button icon-only clear round (click)="signaturePopover($event, 0)">
+                  <td data-title="Date">
+                    {{ signature.date_modified }}
+                  </td>
+                  <!-- <td data-title="Actions" class="actions-cell">
+                    <button ion-button icon-only clear round (click)="signaturePopover($event, signature)">
                       <ion-icon name="more"></ion-icon>
                     </button>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>

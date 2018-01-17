@@ -5,7 +5,12 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { SortService } from '../../../services/sort.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from  '../../../validators/checkbox';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'project/:projectId/member/:memberId/details'
 })
@@ -37,7 +42,8 @@ export class MemberDetailsPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private formBuilder: FormBuilder,
-    private keycloak: KeycloakService
+    private keycloak: KeycloakService,
+    public rolesService: RolesService,
   ) {
     this.projectId = navParams.get('projectId');
     this.memberId = navParams.get('memberId');
@@ -45,22 +51,6 @@ export class MemberDetailsPage {
       confirm: [false, Validators.compose([CheckboxValidator.isChecked])],
     });
     this.getDefaults();
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit() {
