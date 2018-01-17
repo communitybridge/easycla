@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service'
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { CincoService } from '../../services/cinco.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAdmin'],
+})
 @IonicPage({
   segment: 'activity-log'
 })
@@ -16,29 +20,13 @@ export class ActivityLogPage {
   constructor(
     public navCtrl: NavController,
     private cincoService: CincoService,
-    private keycloak: KeycloakService
+    private rolesService: RolesService, // for @Restricted
   ) {
     this.getDefaults();
   }
 
   getDefaults() {
     this.events = [];
-  }
-
-  ionViewCanEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('LoginPage');
-      this.navCtrl.popToRoot();
-    }
-    return this.keycloak.authenticated();
-  }
-
-  ionViewWillEnter() {
-    if(!this.keycloak.authenticated())
-    {
-      this.navCtrl.push('LoginPage');
-    }
   }
 
   ngOnInit(){
