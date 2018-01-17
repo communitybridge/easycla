@@ -12,16 +12,20 @@ export class HttpClient {
     let headers = new Headers({
       'Accept': 'application/json',
       'Content-Type': contentType
-    })
+    });
 
-    return this.keycloak.getToken().then(
-      (token) => {
-        if(token){
-          headers.append('Authorization', 'Bearer ' + token);
-          return headers;
+    if (this.keycloak.authenticated()) {
+      return this.keycloak.getToken().then(
+        (token) => {
+          if (token){
+            headers.append('Authorization', 'Bearer ' + token);
+            return headers;
+          }
         }
-      }
-    );
+      );
+    } else {
+      return Promise.resolve(headers);
+    }
 
   }
 
@@ -29,15 +33,11 @@ export class HttpClient {
     let headers = new Headers({
       'Accept': 'application/json',
       'Content-Type': contentType
-    })
+    });
 
-    return this.keycloak.getToken().then(
-      (token) => {
-        if(token){
-          return headers;
-        }
-      }
-    );
+    if (this.keycloak.authenticated()) {
+      return Promise.resolve(headers);
+    }
 
   }
 
@@ -58,6 +58,12 @@ export class HttpClient {
     return Observable
         .fromPromise(this.buildCINCOHeaders(contentType))
         .switchMap((headers) => this.http.put(url, data, { headers: headers }));
+  }
+
+  patch(url, data, contentType: string = 'application/json') {
+    return Observable
+        .fromPromise(this.buildCINCOHeaders(contentType))
+        .switchMap((headers) => this.http.patch(url, data, { headers: headers }));
   }
 
   delete(url) {

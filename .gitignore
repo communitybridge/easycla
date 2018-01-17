@@ -71,7 +71,9 @@ src/temp/
 src/hooks/
 src/platforms/
 src/plugins/
+src/.sourcemaps/
 $RECYCLE.BIN/
+src/.sourcemaps
 
 # Config file
 src/ionic/assets/keycloak.json
