@@ -47,6 +47,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  getEvents() {
+    return this.http.get(this.cincoApiUrl + '/events')
+      .map(res => res.json());
+  }
+
   getAllProjects() {
     return this.http.get(this.cincoApiUrl + '/project') // CINCO changes
       .map(res => res.json());
@@ -144,6 +149,43 @@ export class CincoService {
   //////////////////////////////////////////////////////////////////////////////
 
   /**
+  * Projects - Mailing List - groups.io
+  * Resources for getting details about project members
+  **/
+
+
+  getAllProjectGroups(projectId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists')
+      .map(res => res.json());
+  }
+
+  createProjectGroup(projectId, group) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailinglists', group)
+      .map(res => res.json());
+  }
+
+  getProjectGroup(projectId, groupId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists' + groupId)
+      .map(res => res.json());
+  }
+
+  removeProjectGroup(projectId, groupId) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId)
+      .map(res => res.json());
+  }
+
+  addGroupParticipant(projectId, groupId, participant) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId + '/participants', participant)
+      .map(res => res.json());
+  }
+
+  removeGroupParticipant(projectId, groupId, participantEmail) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId +  '/participants/' + participantEmail)
+      .map(res => res.json());
+  }
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
   * Projects - Members
   * Resources for getting details about project members
   **/
@@ -230,7 +272,7 @@ export class CincoService {
   **/
 
   getOrganizationProjectMemberships(organizationId) {
-    return this.http.get(this.cincoApiUrl + '/organizations/' + organizationId + '/projects_member')
+    return this.http.get(this.cincoApiUrl + '/organizations/' + organizationId + '/project_members')
       .map(res => res.json());
   }
 
