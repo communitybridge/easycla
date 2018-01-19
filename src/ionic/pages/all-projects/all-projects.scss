@@ -17,6 +17,15 @@ all-projects {
     dd {
       margin-left: 0;
     }
+    .manager {
+      &::after {
+        display: inline;
+        content: ", ";
+      }
+      &:last-child::after {
+        content: none;
+      }
+    }
   }
 
   .card-header {
