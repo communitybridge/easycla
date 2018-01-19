@@ -100,17 +100,6 @@ export class MyApp {
         component: 'AllProjectsLogosPage'
       },
       {
-        icon: 'settings',
-        title: 'Account Settings',
-        access: this.userRoles.isPmcUser,
-        component: 'AccountSettingsPage'
-      },
-      {
-        title: 'Linux Console Users',
-        access: this.userRoles.isAdmin,
-        component: 'ConsoleUsersPage'
-      },
-      {
         title: 'Activity Log',
         access: this.userRoles.isAdmin,
         component: 'ActivityLogPage'
