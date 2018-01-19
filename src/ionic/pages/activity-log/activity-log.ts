@@ -62,7 +62,6 @@ export class ActivityLogPage {
   getEvents(projectId) {
     this.cincoService.getEventsForProject(projectId).subscribe(response => {
       if (response) {
-        console.log(response);
         this.events = response;
         for (let event of this.events) {
           this.getUser(event.userId);
@@ -78,7 +77,6 @@ export class ActivityLogPage {
       this.cincoService.getUser(userId).subscribe(response => {
         if (response) {
           this.users[userId] = response;
-          console.log(this.users);
         }
       });
     }
@@ -86,7 +84,6 @@ export class ActivityLogPage {
 
   toggle(index) {
     this.expand[index] = !this.expand[index];
-    console.log(this.expand);
   }
 
 }
