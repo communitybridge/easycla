@@ -249,12 +249,12 @@ export class AllProjectsPage {
     //   paidLast30Days: 15,
     // };
 
-    this.user = {
-      userId: "",
-      email: "",
-      roles: [],
-      calendar: null,
-    }
+    // this.user = {
+    //   userId: "",
+    //   email: "",
+    //   roles: [],
+    //   calendar: null,
+    // }
 
     this.projects = [
       {
