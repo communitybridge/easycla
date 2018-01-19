@@ -5,41 +5,46 @@ all-projects {
   -ms-user-select: text;
   user-select: text;
 
-  .main-headers {
-    color: rgba(0, 0, 0, 0.54);
-    font-size: 24px;
-    font-family: "Roboto" !important;
-    src: url("../assets/fonts/roboto-light.ttf");
-  }
-
-  .project-name {
-    cursor:pointer;
-  }
-
   ion-card {
-    dl {
-      display: flex;
-      flex-wrap: wrap;
+    dt {
+      font-weight: 500;
+      text-transform: capitalize;
     }
-    dt, dd {
-      flex: 0 0 50%;
-      margin: 0;
+    dt,
+    dd {
+      display: inline;
     }
-    .circle-alert {
-      display: inline-block;
-      width: 1.25rem;
-      height: 1.25rem;
-      border-radius: 100%;
-      background-color: color($colors, danger);
-      position: relative;
-      top: .2rem;
+    dd {
+      margin-left: 0;
     }
-    img{
-      padding-top: 10px;
-      height: 90px;
-      width: auto;
-      margin: auto;
+  }
+
+  .card-header {
+    height: 140px;
+    padding: 13px 16px;
+    position: relative;
+    &::after {
+      content: "";
       display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, .5);
+    }
+    img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      margin: auto;
+    }
+    ion-card-title {
+      color: white;
+      z-index: 2;
+      position: absolute;
+      bottom: 0;
     }
   }
 
