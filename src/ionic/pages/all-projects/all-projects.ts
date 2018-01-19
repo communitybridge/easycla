@@ -22,6 +22,7 @@ import { Restricted } from '../../decorators/restricted';
 export class AllProjectsPage {
   loading: any;
   expand: any;
+  projectSectors: any;
   // userHasCalendar: boolean;
   allProjects: any;
   allFilteredProjects: any;
