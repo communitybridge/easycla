@@ -70,6 +70,7 @@
         </ion-item>
       </ion-col>
     </ion-row>
+
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allFilteredProjects">
         <ion-card>
@@ -87,51 +88,20 @@
             <dl *ngIf="!userRoles.isStaffInc">
               <dt>PM:</dt>
               <dd>
-                <span *ngFor="let manager of project.managers" class="manager">{{ manager }} &nbsp;</span>
+                <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
                 <span *ngIf="!project.managers.length">none</span>
               </dd>
             </dl>
           </ion-card-content>
           <div class="explore-collapse">
             <button ion-button clear (click)="viewProject(project.id)">Explore</button>
-
             <button ion-button color="light" float-right round icon-only (click)="toggleExpand(project.id)">
               <ion-icon [name]="expand[project.id] ? 'arrow-dropup' : 'arrow-dropdown'"></ion-icon>
-              <!-- *ngIf="expand[project.id]" name="arrow-dropup"
-              <ion-icon *ngIf="!expand[project.id]" name="arrow-dropdown"></ion-icon> -->
             </button>
-
           </div>
         </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
-
-  <!-- This will be ported and removed once CINCO API has the ability to return the full payload with all the information required -->
-  <!-- <ion-grid class="all-projects">
-    <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
-        <ion-card>
-          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>
-          <ion-card-content>
-            <ion-card-title (click)="projectSelected($event, project)">
-              {{project.title}}
-            </ion-card-title>
-            <dl>
-              <ng-container *ngFor="let data of project.datas">
-                <dt>{{data.label}}</dt>
-                <dd>{{data.value}} <span *ngIf="data.status == 'alert'" class="circle-alert"></span></dd>
-              </ng-container>
-            </dl>
-            <ion-item *ngFor="let meeting of project.meetings">
-              <ion-icon name="calendar" item-left large></ion-icon>
-              <h2>{{meeting.label}}</h2>
-              <p>{{meeting.value}}</p>
-            </ion-item>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid> -->
 
 </ion-content>
