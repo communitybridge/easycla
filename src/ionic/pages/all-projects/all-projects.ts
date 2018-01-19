@@ -21,6 +21,7 @@ import { Restricted } from '../../decorators/restricted';
 })
 export class AllProjectsPage {
   loading: any;
+  expand: any;
   // userHasCalendar: boolean;
   allProjects: any;
   allFilteredProjects: any;
@@ -127,11 +128,11 @@ export class AllProjectsPage {
     });
   }
 
-  projectSelected(event, project) {
-    this.navCtrl.push('ProjectPage', {
-      project: project
-    });
-  }
+  // projectSelected(event, project) {
+  //   this.navCtrl.push('ProjectPage', {
+  //     project: project
+  //   });
+  // }
 
   // ionViewDidLoad() {
   //   let barOptions = this.getBarOptions();
@@ -255,125 +256,7 @@ export class AllProjectsPage {
     //   roles: [],
     //   calendar: null,
     // }
-
-    this.projects = [
-      {
-        icon: "assets/test/zephyr-logo.png",
-        title: "Zephyr",
-        datas: [
-          {
-            label: "Upcoming",
-            value: "2",
-          },
-          {
-            label: "Contracts",
-            value: "1",
-          },
-          {
-            label: "Invoices",
-            value: "3 (2)",
-            status: "alert"
-          },
-          {
-            label: "Paid",
-            value: "2"
-          },
-        ],
-        meetings: [
-          {
-            label: "Zeph Board Meeting",
-            value: "3/18/2017, 4:00 - 5:00 pst"
-          },
-        ],
-      },
-      {
-        icon: "assets/test/todo-logo.png",
-        title: "TODO",
-        datas: [
-          {
-            label: "Upcoming",
-            value: "2",
-          },
-          {
-            label: "Contracts",
-            value: "1",
-          },
-          {
-            label: "Invoices",
-            value: "3 (2)",
-            status: "alert"
-          },
-          {
-            label: "Paid",
-            value: "2"
-          },
-        ],
-        meetings: [
-          {
-            label: "Board Meeting",
-            value: "3/18/2017, 4:00 - 5:00 pst"
-          }
-        ],
-      },
-      {
-        icon: "assets/test/openswitch-logo.png",
-        title: "OpenSwitch",
-        datas: [
-          {
-            label: "Upcoming",
-            value: "2",
-          },
-          {
-            label: "Contracts",
-            value: "1",
-          },
-          {
-            label: "Invoices",
-            value: "3 (2)",
-            status: "alert"
-          },
-          {
-            label: "Paid",
-            value: "2"
-          },
-        ],
-        meetings: [
-          {
-            label: "Board Meeting",
-            value: "3/18/2017, 4:00 - 5:00 pst"
-          }
-        ],
-      },
-      {
-        icon: "assets/test/openchain-logo.png",
-        title: "OpenChain",
-        datas: [
-          {
-            label: "Upcoming",
-            value: "9",
-          },
-          {
-            label: "Contracts",
-            value: "1",
-          },
-          {
-            label: "Invoices",
-            value: "3 (2)",
-            status: "alert"
-          },
-          {
-            label: "Paid",
-            value: "2"
-          },
-        ],
-        meetings: [
-          {
-            label: "Board Meeting",
-            value: "3/18/2017, 4:00 - 5:00 pst"
-          }
-        ],
-      },
-    ];
+    this.expand = {};
   }
 
   // openAccountSettings() {
@@ -382,12 +265,12 @@ export class AllProjectsPage {
 
   getIndustries() {
     this.cincoService.getProjectSectors().subscribe(response => {
-      let projectSectors = response;
-      for (let key in projectSectors) {
-        if (projectSectors.hasOwnProperty(key)) {
+      this.projectSectors = response;
+      for (let key in this.projectSectors) {
+        if (this.projectSectors.hasOwnProperty(key)) {
           let industry = {
             key: key,
-            prettyValue: projectSectors[key]
+            prettyValue: this.projectSectors[key]
           };
           this.industryFilterValues.push(industry);
         }
@@ -402,6 +285,10 @@ export class AllProjectsPage {
     else {
       this.allFilteredProjects = this.filterService.filterAllProjects(this.allProjects, projectProperty, keyword);
     }
+  }
+
+  toggleExpand(index) {
+    this.expand[index] = !this.expand[index];
   }
 
 }
