@@ -40,7 +40,6 @@ export class ActivityLogPage {
   }
 
   ngOnInit(){
-    this.getEvents();
     this.getProjects();
   }
 
