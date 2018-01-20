@@ -31,15 +31,15 @@ $colors: (
   white:      #ffffff,
   dark:       #222,
   gray:       gray,
-  green:      green
+  green:      green,
+  dark_blue:  #0b4e73
 );
 
 
 // App iOS Variables
 // --------------------------------------------------
 // iOS only Sass variables can go here
-
-
+$alert-min-width: 500px !default;
 
 
 // App Material Design Variables

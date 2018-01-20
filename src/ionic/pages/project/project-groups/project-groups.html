@@ -19,71 +19,13 @@
       </ion-col>
     </ion-row>
 
-    <ion-row>
-      <ion-col col-23>
-        <ion-card>
-          <ion-card-header>
-            <ion-item>
-              <span item-start>Email Groups</span>
-            </ion-item>
-          </ion-card-header>
-          <ion-card-content>
-            <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
-              <ion-grid>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Group Name</ion-label>
-                      <ion-input type="text" formControlName="groupName"></ion-input>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Description</ion-label>
-                      <ion-input type="text" formControlName="groupDescription"></ion-input>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Group and Archive Privacy</ion-label>
-                      <ion-select formControlName="groupPrivacy" interface="popover">
-                        <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}">{{ groupPrivacy[privacy] }}</ion-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Moderator approval required to join?</ion-label>
-                      <ion-select formControlName="groupRequiresApproval" interface="popover">
-                        <ion-option *ngFor="let permission of keysGetter(groupRequiresApproval)" value="{{ permission }}">{{ groupRequiresApproval[permission] }}</ion-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <button ion-button (click)="submitGroup()" color="secondary" [disabled]="currentlySubmitting">Create Group</button>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-              </ion-grid>
-            </form>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-
     <ion-grid>
       <ion-row margin-top>
-        <ion-col col-12>
+        <ion-col col-8>
           <h3>Groups</h3>
+        </ion-col>
+        <ion-col col-4 right>
+          <button ion-button (click)="goCreateGroupsPage()" color="secondary">+Create</button>
         </ion-col>
       </ion-row>
       <ion-row>

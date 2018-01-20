@@ -1,0 +1,17 @@
+project-groups-create {
+  .vertical-align {
+    height: 100%;
+    display: block;
+    vertical-align: middle;
+  }
+  .groups-title {
+    margin-top: 20px;
+  }
+  tr {
+    background-color: #fff !important;
+  }
+  ion-select{
+    min-width: 75%;
+  }
+  $alert-min-width: 500px !default;
+}

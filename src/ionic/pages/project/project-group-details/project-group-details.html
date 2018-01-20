@@ -24,52 +24,28 @@
         <ion-card>
           <ion-card-header>
             <ion-item>
-              <span item-start>Group Details</span>
+              <span item-start>Participant Details</span>
             </ion-item>
           </ion-card-header>
           <ion-card-content>
             <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
               <ion-grid>
                 <ion-row>
-                  <ion-col col-12>
+                  <ion-col col-5>
                     <ion-item>
-                      <ion-label stacked>Group Name</ion-label>
-                      <ion-input type="text" formControlName="groupName"></ion-input>
+                      <ion-label stacked>Name</ion-label>
+                      <ion-input type="text" formControlName="participantName"></ion-input>
                     </ion-item>
                   </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
+                  <ion-col col-5>
                     <ion-item>
-                      <ion-label stacked>Description</ion-label>
-                      <ion-input type="text" formControlName="groupDescription"></ion-input>
+                      <ion-label stacked>Email Address</ion-label>
+                      <ion-input type="text" formControlName="participantEmail"></ion-input>
                     </ion-item>
                   </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
+                  <ion-col col-2>
                     <ion-item>
-                      <ion-label stacked>Privacy</ion-label>
-                      <ion-select formControlName="groupPrivacy" interface="popover">
-                        <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}">{{ groupPrivacy[privacy] }}</ion-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Subgroups Config (Who can create)</ion-label>
-                      <ion-select formControlName="subgroupPermissions" interface="popover">
-                        <ion-option *ngFor="let permission of keysGetter(subgroupPermissions)" value="{{ permission }}">{{ subgroupPermissions[permission] }}</ion-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <button ion-button (click)="submitGroup()" color="secondary" [disabled]="currentlySubmitting">Create Group</button>
+                      <button ion-button (click)="submitParticipant()" color="secondary" [disabled]="currentlySubmitting">Add</button>
                     </ion-item>
                   </ion-col>
                 </ion-row>
@@ -94,11 +70,13 @@
                 <table id="table" class="table table-hover">
                   <thead>
                     <tr>
+                      <th>Name</th>
                       <th>Address</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let participant of groupParticipants">
+                      <td data-title="Name">{{ participant.name }}</td>
                       <td data-title="Address">{{ participant.address }}</td>
                     </tr>
                   </tbody>

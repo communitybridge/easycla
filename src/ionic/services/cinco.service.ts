@@ -188,6 +188,11 @@ export class CincoService {
       .map(res => res.json());
   }
 
+  getAllGroupParticipants(projectId, groupId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants')
+      .map(res => res.json());
+  }
+
   addGroupParticipant(projectId, groupId, participant) {
     return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants', participant)
       .map(res => res.json());

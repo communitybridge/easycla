@@ -11,15 +11,15 @@ import { Restricted } from '../../../decorators/restricted';
   roles: ['isAuthenticated', 'isPmcUser'],
 })
 @IonicPage({
-  segment: 'project/:projectId/groups'
+  segment: 'project/:projectId/groups/create'
 })
 @Component({
-  selector: 'project-groups',
-  templateUrl: 'project-groups.html',
+  selector: 'project-groups-create',
+  templateUrl: 'project-groups-create.html',
   providers: [CincoService]
 })
 
-export class ProjectGroupsPage {
+export class ProjectGroupsCreatePage {
 
   projectId: string;
   keysGetter;
@@ -103,15 +103,15 @@ export class ProjectGroupsPage {
     this.groupPrivacy = [
       {
         value: "sub_group_privacy_none",
-        description: "Listed in parent group, archives publicly viewable."
+        description: "Group listed and archive publicly viewable"
       },
       {
         value: "sub_group_privacy_archives",
-        description: "Listed in parent group, archives viewable by supgroup members only."
+        description: "Group listed and archive privately viewable by members"
       },
       {
         value: "sub_group_privacy_unlisted",
-        description: "Not listed in parent group, archives viewable by supgroup members only."
+        description: "Group hidden and archive privately viewable by members"
       }
     ];
   }
@@ -164,13 +164,5 @@ export class ProjectGroupsPage {
       groupName: groupName
     });
   }
-
-  goCreateGroupsPage() {
-    this.navCtrl.setRoot('ProjectGroupsCreatePage', {
-      projectId: this.projectId
-    });
-  }
-
-
 
 }
