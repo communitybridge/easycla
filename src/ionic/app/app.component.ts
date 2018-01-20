@@ -100,6 +100,11 @@ export class MyApp {
         component: 'AllProjectsLogosPage'
       },
       {
+        title: 'Activity Log',
+        access: this.userRoles.isAdmin,
+        component: 'ActivityLogPage'
+      },
+      {
         title: 'Sign Out',
         access: this.userRoles.isAuthenticated,
         component: 'LoginPage'
