@@ -53,14 +53,14 @@ export class ProjectAnalyticsPage {
   getDefaults() {
     this.setTimeNow();
     this.span = 'month';
-    this.index = 'hyperledger4';
+    this.index = 'hyperledger';
     this.getCommitActivity(this.span);
     this.getcommitsDistribution(this.span);
     this.getIssuesStatus(this.span);
     this.getIssuesActivity(this.span);
     this.getPrsPipeline(this.span);
     this.getPrsActivity(this.span);
-    this.getPageViews();
+    this.getPageViews(this.span);
     this.getMaintainers(this.span);
     this.redrawCharts();
   }
@@ -298,24 +298,50 @@ export class ProjectAnalyticsPage {
     });
   }
 
-  getPageViews() {
+  getPageViews(span) {
+    // let index = this.index;
+    //
+    // let metricType = 'code.commits';
+    // let groupBy = 'day';
+    // let tsFrom = this.calculateTsFrom(span);
+    // let tsTo = this.timeNow;
+    // this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+    //   if (metrics) {
+    //     Object.entries(metrics.value).forEach(
+    //       ([key, value]) => {
+    //         if(value) {
+    //           this.pageViewsChart.dataTable.push([key, value]);
+    //           this.pageViewsChart = Object.create(this.pageViewsChart);
+    //         }
+    //       }
+    //     );
+    //   }
+    // });
+
+
     let index = this.index;
-    let metricType = 'website.duration';
+    //TODO: To query actual Page Views. EP doens't exist yet.
+    let metricType = 'code.commits';
     let groupBy = 'day';
-    let tsFrom = '1510430520000';
+    let tsFrom = this.calculateTsFrom(span);
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.pageViewsChart.dataTable = [
+        ['Date', 'Views'] // Clean Array
+      ];
+      if(Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            if(value) {
-              this.pageViewsChart.dataTable.push([key, value]);
-              this.pageViewsChart = Object.create(this.pageViewsChart);
-            }
+            this.pageViewsChart.dataTable.push([key, value]);
           }
         );
       }
+      else {
+        this.pageViewsChart.dataTable.push(['No page views for a ' + span + ' now', 0]);
+      }
+      this.pageViewsChart = Object.create(this.pageViewsChart);
     });
+
   }
 
   getMaintainers(span) {
@@ -375,15 +401,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {title: '# of commits'},
-      colors: ['#eeeeee'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none',
     }
   };
@@ -395,14 +421,14 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#888888'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
-      colors: ['#cccccc','#eeeeee'],
-      backgroundColor: '#4e92df',
+      colors: ['#0b4e73','#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
@@ -414,15 +440,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {},
-      colors: ['#eeeeee'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none',
     }
   };
@@ -434,15 +460,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
         baselineColor: '#FFFFFF'
       },
       vAxis: {title: '# of Issues'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2', '#0b4e73'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
@@ -458,7 +484,7 @@ export class ProjectAnalyticsPage {
       minorTicks: 1,
       min: 0, max: 100,
       majorTicks: ['0', '20', '40', '60', '80', '100'],
-      greenColor: '#4e92df'
+      greenColor: '#ffffff'
     }
   };
 
@@ -469,15 +495,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {title: '# of PRs'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2', '#0b4e73'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
@@ -489,15 +515,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
-      colors: ['#95c2e2'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };

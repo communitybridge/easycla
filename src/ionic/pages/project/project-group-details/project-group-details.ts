@@ -11,7 +11,7 @@ import { Restricted } from '../../../decorators/restricted';
   roles: ['isAuthenticated', 'isPmcUser'],
 })
 @IonicPage({
-  segment: 'project/:projectId/group-details'
+  segment: 'project/:projectId/group-details/:groupName'
 })
 @Component({
   selector: 'project-group-details',
@@ -26,6 +26,7 @@ export class ProjectGroupDetailsPage {
   projectPrivacy;
 
   groupName: string;
+  mailingGroup: any;
   groupDescription: string;
   groupPrivacy = [];
   subgroupPermissions = [];
@@ -37,6 +38,9 @@ export class ProjectGroupDetailsPage {
   group: any;
   projectGroups: any;
   groupParticipants: any;
+
+  participantName: any;
+  participantEmail: any;
 
   constructor(
     public navCtrl: NavController,
@@ -52,10 +56,8 @@ export class ProjectGroupDetailsPage {
     this.groupName = navParams.get('groupName');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.required])],
-      groupDescription:[this.groupDescription],
-      groupPrivacy:[this.groupPrivacy],
-      subgroupPermissions:[this.subgroupPermissions],
+      participantName:[this.participantName, Validators.compose([Validators.required])],
+      participantEmail:[this.participantEmail],
     });
 
   }
@@ -63,6 +65,7 @@ export class ProjectGroupDetailsPage {
   ngOnInit() {
     this.getProjectConfig(this.projectId);
     this.getDefaults();
+    this.getAllGroupParticipants();
   }
 
   getDefaults() {
@@ -70,22 +73,9 @@ export class ProjectGroupDetailsPage {
     //TODO: Get participants via CINCO
     this.groupParticipants = [
       {
-        address: "todo@todo.com"
+        address: ""
       }
     ]
-
-    //testing
-
-    let participant = {
-        address: "test@test.com"
-    }
-    console.log(participant);
-    this.cincoService.addGroupParticipant(this.projectId, this.groupName, participant).subscribe(response => {
-      console.log(response)
-      this.cincoService.getProjectGroup(this.projectId, this.groupName).subscribe(response => {
-        console.log(response)
-      });
-    });
 
   }
 
@@ -93,7 +83,8 @@ export class ProjectGroupDetailsPage {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
         console.log(response);
-        if (!response.domain) console.log("no domain");
+        if (response.mailingGroup) this.mailingGroup = response.mailingGroup;
+        else console.log("no domain");
       }
     });
   }
@@ -103,5 +94,39 @@ export class ProjectGroupDetailsPage {
       console.log(response)
     });
   }
+
+  getAllGroupParticipants(){
+    this.cincoService.getAllGroupParticipants(this.projectId, this.groupName).subscribe(response => {
+      console.log("getAllGroupParticipants");
+      console.log(response);
+      this.groupParticipants = response;
+    });
+  }
+
+  submitParticipant() {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    if (!this.form.valid) {
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    let participant = [{
+        address: this.form.value.participantEmail,
+        name: this.form.value.participantName
+    }];
+    console.log(participant);
+    this.cincoService.addGroupParticipant(this.projectId, this.groupName, participant).subscribe(response => {
+      console.log("addGroupParticipant")
+      console.log(response)
+      this.currentlySubmitting = false;
+      this.cincoService.getAllGroupParticipants(this.projectId, this.groupName).subscribe(response => {
+        console.log("getAllGroupParticipants");
+        console.log(response);
+        this.groupParticipants = response;
+      });
+    });
+  }
+
 
 }
