@@ -1,4 +1,5 @@
 project-groups-create {
+
   .vertical-align {
     height: 100%;
     display: block;
@@ -13,5 +14,7 @@ project-groups-create {
   ion-select{
     min-width: 75%;
   }
-  $alert-min-width: 500px !default;
+  button{
+    text-transform: none !important;
+  }
 }
