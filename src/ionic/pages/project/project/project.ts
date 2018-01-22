@@ -41,6 +41,13 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
+
+      this.cincoService.getEventsForProject(this.projectId).subscribe(response => {
+        if (response) {
+          console.log(response);
+        }
+      });
+
   }
 
   getProject(projectId) {
