@@ -165,4 +165,10 @@ export class ProjectGroupsCreatePage {
     });
   }
 
+  getGroupsList() {
+    this.navCtrl.setRoot('ProjectGroupsPage', {
+      projectId: this.projectId
+    });
+  }
+
 }
