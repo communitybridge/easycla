@@ -9,7 +9,7 @@ variable "subnet-c" {}
 resource "aws_instance" "vault-a" {
   provider               = "aws.local"
   ami                    = "${var.ami}" 
-  vpc_security_group_ids = ["${aws_security_group.vault-server.id}"]
+  vpc_security_group_ids = ["${aws_security_group.vault-server.id}", "${aws_security_group.vault-server-to-server.id}" ]
   subnet_id              = "${var.subnet-a}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
@@ -37,7 +37,7 @@ resource "aws_route53_record" "vault-a" {
 resource "aws_instance" "vault-b" {
   provider               = "aws.local"
   ami                    = "${var.ami}" 
-  vpc_security_group_ids = ["${aws_security_group.vault-server.id}"]
+  vpc_security_group_ids = ["${aws_security_group.vault-server.id}", "${aws_security_group.vault-server-to-server.id}" ]
   subnet_id              = "${var.subnet-b}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
@@ -66,7 +66,7 @@ resource "aws_route53_record" "vault-b" {
 resource "aws_instance" "vault-c" {
   provider               = "aws.local"
   ami                    = "${var.ami}" 
-  vpc_security_group_ids = ["${aws_security_group.vault-server.id}"]
+  vpc_security_group_ids = ["${aws_security_group.vault-server.id}", "${aws_security_group.vault-server-to-server.id}" ]
   subnet_id              = "${var.subnet-c}"
   instance_type          = "${var.ec2type}"
   key_name               = "dan"
@@ -129,6 +129,23 @@ resource "aws_security_group" "vault-server" {
   tags {
     Name        = "vault-server"
   }
+}
+
+resource "aws_security_group" "vault-server-to-server" {
+  name = "vault-server-to-server"
+  provider = "aws.local"
+  description = "vault server to server communication"
+  vpc_id = "${var.vpc_id}"
+}
+
+resource "aws_security_group_rule" "allow_8201" {
+  security_group_id = "${aws_security_group.vault-server-to-server.id}"
+  provider = "aws.local"
+  type = "ingress"
+  protocol = "tcp"
+  from_port = 8201
+  to_port = 8201
+  cidr_blocks = ["${aws_instance.vault-a.private_ip}/32", "${aws_instance.vault-b.private_ip}/32", "${aws_instance.vault-c.private_ip}/32"]
 }
 
 resource "aws_elb" "vault" {
