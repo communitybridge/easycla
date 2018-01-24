@@ -183,8 +183,8 @@ export class CincoService {
       .map(res => res.json());
   }
 
-  removeProjectGroup(projectId, groupId) {
-    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId)
+  removeProjectGroup(projectId, groupName) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName)
       .map(res => res.json());
   }
 
