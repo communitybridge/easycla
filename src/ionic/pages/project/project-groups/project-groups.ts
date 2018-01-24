@@ -6,6 +6,7 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { DomSanitizer} from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
+import { AlertController } from 'ionic-angular';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
@@ -22,14 +23,11 @@ import { Restricted } from '../../../decorators/restricted';
 export class ProjectGroupsPage {
 
   projectId: string;
-  keysGetter;
-  projectPrivacy;
 
   groupName: string;
   groupDescription: string;
   groupPrivacy = [];
   groupRequiresApproval = [];
-  subgroupPermissions = [];
 
   form: FormGroup;
   submitAttempt: boolean = false;
@@ -44,6 +42,7 @@ export class ProjectGroupsPage {
   participantEmail: any;
 
   expand: any;
+  isTrue:boolean = null;
 
   constructor(
     public navCtrl: NavController,
@@ -54,6 +53,7 @@ export class ProjectGroupsPage {
     public modalCtrl: ModalController,
     public rolesService: RolesService,
     private formBuilder: FormBuilder,
+    private alertCtrl: AlertController
   ) {
     this.projectId = navParams.get('projectId');
 
@@ -81,10 +81,7 @@ export class ProjectGroupsPage {
     this.projectGroups = [];
     this.allGroupsWithParticipants = [];
     this.form.reset();
-    this.keysGetter = Object.keys;
     this.getProjectGroups();
-    this.getGroupPrivacy();
-    this.getSubgroupPermissions();
   }
 
   getProjectConfig(projectId) {
@@ -123,46 +120,6 @@ export class ProjectGroupsPage {
         this.allGroupsWithParticipants.push(group);
       });
     });
-  }
-
-  getGroupPrivacy() {
-    this.groupPrivacy = [];
-    // TODO Implement CINCO side
-    // this.cincoService.getGroupPrivacy(this.projectId).subscribe(response => {
-    //   this.groupPrivacy = response;
-    // });
-    this.groupPrivacy = [
-      {
-        value: "sub_group_privacy_none",
-        description: "Listed in parent group, archives publicly viewable."
-      },
-      {
-        value: "sub_group_privacy_archives",
-        description: "Listed in parent group, archives viewable by supgroup members only."
-      },
-      {
-        value: "sub_group_privacy_unlisted",
-        description: "Not listed in parent group, archives viewable by supgroup members only."
-      }
-    ];
-  }
-
-  getSubgroupPermissions() {
-    this.groupRequiresApproval = [];
-    // TODO Implement CINCO side
-    // this.cincoService.getSubgroupPermissions(this.projectId).subscribe(response => {
-    //   this.groupRequiresApproval = response;
-    // });
-    this.groupRequiresApproval = [
-      {
-        value: "true",
-        description: "Yes"
-      },
-      {
-        value: "false",
-        description: "No"
-      }
-    ];
   }
 
   submitGroup() {
@@ -225,9 +182,54 @@ export class ProjectGroupsPage {
   }
 
   removeGroupParticipant(groupName, participantId){
-    this.cincoService.removeGroupParticipant(this.projectId, groupName, participantId).subscribe(response => {
-      this.getDefaults();
+    this.presentRemoveConfirm((confirm) => {
+      if(confirm) {
+        this.cincoService.removeGroupParticipant(this.projectId, groupName, participantId).subscribe(response => {
+          // CINCO and Groups.io sync takes a while
+          let refreshData = setTimeout( () => {
+            this.getDefaults()
+          }, 2000);
+        });
+      }
+
     });
+  }
+
+  removeProjectGroup(groupName){
+    this.presentRemoveConfirm((confirm) => {
+      if(confirm) {
+        this.cincoService.removeProjectGroup(this.projectId, groupName).subscribe(response => {
+          console.log(response);
+          // CINCO and Groups.io sync takes a while
+          let refreshData = setTimeout( () => {
+            this.getDefaults()
+          }, 2000);
+        });
+      }
+    });
+  }
+
+  presentRemoveConfirm(callback) {
+    let alert = this.alertCtrl.create({
+      title: 'Please Confirm',
+      message: 'Are you sure you want to remove this?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            callback(false);
+          }
+        },
+        {
+          text: 'Remove',
+          handler: () => {
+            callback(true);
+          }
+        }
+      ]
+    });
+    alert.present();
   }
 
 }
