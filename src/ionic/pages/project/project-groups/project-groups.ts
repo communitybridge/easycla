@@ -65,8 +65,8 @@ export class ProjectGroupsPage {
     });
 
     this.form = formBuilder.group({
-      participantName:[this.participantName, Validators.compose([Validators.required])],
-      participantEmail:[this.participantEmail],
+      participantName:[this.participantName],
+      participantEmail:[this.participantEmail, Validators.compose([Validators.required])],
     });
 
   }
