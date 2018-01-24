@@ -238,6 +238,8 @@ export class AllProjectsPage {
       projects: true,
     }
 
+    this.expand = {};
+
     // this.numberOfContracts = {
     //   new: 15,
     //   renewal: 50
@@ -257,7 +259,7 @@ export class AllProjectsPage {
     //   roles: [],
     //   calendar: null,
     // }
-    this.expand = {};
+
   }
 
   // openAccountSettings() {
