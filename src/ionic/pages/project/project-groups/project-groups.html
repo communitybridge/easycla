@@ -122,7 +122,7 @@
                             {{ participant.address }}
                           </ion-col>
                           <ion-col col-2 text-center>
-                            <ion-icon padding-left name="close-circle" class="clickable"></ion-icon>
+                            <ion-icon padding-left name="close-circle" class="clickable" (click)="removeGroupParticipant(group.info.name, participant.id)"></ion-icon>
                           </ion-col>
                         </ion-row>
                       </ion-grid>

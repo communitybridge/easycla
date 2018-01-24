@@ -80,6 +80,7 @@ export class ProjectGroupsPage {
     this.expand = {};
     this.projectGroups = [];
     this.allGroupsWithParticipants = [];
+    this.form.reset();
     this.keysGetter = Object.keys;
     this.getProjectGroups();
     this.getGroupPrivacy();
@@ -119,9 +120,7 @@ export class ProjectGroupsPage {
       group.info = response;
       this.cincoService.getAllGroupParticipants(this.projectId, groupName).subscribe(response => {
         group.participants = response;
-        console.log(group);
         this.allGroupsWithParticipants.push(group);
-        console.log(this.allGroupsWithParticipants);
       });
     });
   }
@@ -219,19 +218,15 @@ export class ProjectGroupsPage {
         address: this.form.value.participantEmail,
         name: this.form.value.participantName
     }];
-    console.log(participant);
     this.cincoService.addGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
-      console.log("addGroupParticipant")
-      console.log(response)
       this.currentlySubmitting = false;
       this.getDefaults();
+    });
+  }
 
-      // this.cincoService.getAllGroupParticipants(this.projectId, groupName).subscribe(response => {
-      //   console.log("getAllGroupParticipants");
-      //   console.log(response);
-      //   this.groupParticipants = response;
-      // });
-
+  removeGroupParticipant(groupName, participantId){
+    this.cincoService.removeGroupParticipant(this.projectId, groupName, participantId).subscribe(response => {
+      this.getDefaults();
     });
   }
 
