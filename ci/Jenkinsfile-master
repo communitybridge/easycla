@@ -96,6 +96,7 @@ if (statusTerraformPlan == "2" && statusDockerPMC == 0 && statusDockerNGINX == 0
 
             if (apply) {
               unstash 'plan'
+              sh "terraform init"
               sh "set +e; terraform apply plan.out; echo \$? &> status.apply"
 
               def applyExitCode = readFile('status.apply').trim()

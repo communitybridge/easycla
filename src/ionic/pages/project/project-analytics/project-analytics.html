@@ -20,17 +20,121 @@
     </ion-row>
 
     <ion-row>
+
+      <ion-col col-6>
+        <ion-card class="analytics-card first-row">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Project - Checklist</span>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-row text-center>
+              <ion-col col-12>
+                <div class="progress-cla-bar">
+                  <div class="progress-one">
+                  </div>
+                  <div class="progress-two">
+                  </div>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+          <ion-card-content>
+            <ion-row text-center>
+              <ion-col col-6>
+                <div class="checklist-button clickable">
+                  <ion-icon name="checkmark-circle" color="white"></ion-icon>
+                  Contributor License Agreement
+                </div>
+              </ion-col>
+              <ion-col col-6>
+                <div class="checklist-button clickable">
+                  <ion-icon name="checkmark-circle" color="white"></ion-icon>
+                  Readme
+                </div>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col col-6>
+                <div class="checklist-button clickable">
+                  <ion-row>
+                    <ion-col col-2 class="row">
+                      <ion-icon name="alert" color="white"></ion-icon>
+                    </ion-col>
+                    <ion-col col-8>
+                      Code of Conduct
+                      <br>
+                      <small><a href="#">Code of Conduct Guide</a></small>
+                    </ion-col>
+                  </ion-row>
+
+                </div>
+              </ion-col>
+              <ion-col col-6>
+                <div class="checklist-button clickable">
+                  <ion-icon name="checkmark-circle" color="white"></ion-icon>
+                  Contributing Guideline
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col col-6>
+        <ion-card class="analytics-card first-row">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">PR Submitted by Contributors with Outstanding CLA</span>
+              <ion-buttons item-end>
+                <button ion-button color="dark_blue" clear small>SEE ALL</button>
+              </ion-buttons>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid padding>
+              <ion-row left>
+                <ion-col col-4>
+                  <strong>Name</strong>
+                </ion-col>
+                <ion-col col-4>
+                  <strong>Emaill Address</strong>
+                </ion-col>
+                <ion-col col-4>
+                  <strong>PR Submit Date</strong>
+                </ion-col>
+              </ion-row>
+              <ion-row *ngFor="let contributor of claContributors" text-left>
+                <ion-col col-4>
+                  {{ contributor.name }}
+                </ion-col>
+                <ion-col col-4>
+                  {{ contributor.email }}
+                </ion-col>
+                <ion-col col-4>
+                  {{ contributor.date }}
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+    </ion-row>
+
+    <ion-row>
       <ion-col col-9>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
             <ion-item class="analytics-card">
               <span class="analytics-card" item-start>Commit Activity</span>
               <ion-buttons item-end>
-                <button ion-button color="light" clear small (click)="getCommitActivity('day')">1 D</button>
-                <button ion-button color="light" clear small (click)="getCommitActivity('week')">1 W</button>
-                <button ion-button color="light" clear small (click)="getCommitActivity('month')">1 M</button>
-                <button ion-button color="light" clear small (click)="getCommitActivity('quarter')">1 Q</button>
-                <button ion-button color="light" clear small (click)="getCommitActivity('year')">1 Y</button>
+                <button ion-button color="dark_blue" clear small (click)="getCommitActivity('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getCommitActivity('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getCommitActivity('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getCommitActivity('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getCommitActivity('year')">1 Y</button>
               </ion-buttons>
             </ion-item>
           </ion-card-header>
@@ -44,11 +148,11 @@
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Distribution of Commits</span>
             <br>
-            <button ion-button color="light" clear small (click)="getcommitsDistribution('day')">1 D</button>
-            <button ion-button color="light" clear small (click)="getcommitsDistribution('week')">1 W</button>
-            <button ion-button color="light" clear small (click)="getcommitsDistribution('month')">1 M</button>
-            <button ion-button color="light" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
-            <button ion-button color="light" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('day')">1 D</button>
+            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('week')">1 W</button>
+            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('month')">1 M</button>
+            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
+            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('year')">1 Y</button>
           </ion-card-header>
           <ion-card-content>
             <google-chart [data]="commitsDistributionChart"></google-chart>
@@ -64,11 +168,11 @@
             <ion-item class="analytics-card">
               <span class="analytics-card">Issues - Status</span>
               <ion-buttons item-end>
-                <button ion-button color="light" clear small (click)="getIssuesStatus('day')">1 D</button>
-                <button ion-button color="light" clear small (click)="getIssuesStatus('week')">1 W</button>
-                <button ion-button color="light" clear small (click)="getIssuesStatus('month')">1 M</button>
-                <button ion-button color="light" clear small (click)="getIssuesStatus('quarter')">1 Q</button>
-                <button ion-button color="light" clear small (click)="getIssuesStatus('year')">1 Y</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('year')">1 Y</button>
               </ion-buttons>
             </ion-item>
           </ion-card-header>
@@ -83,11 +187,11 @@
             <ion-item class="analytics-card">
               <span class="analytics-card">Issues Activity</span>
               <ion-buttons item-end>
-                <button ion-button color="light" clear small (click)="getIssuesActivity('day')">1 D</button>
-                <button ion-button color="light" clear small (click)="getIssuesActivity('week')">1 W</button>
-                <button ion-button color="light" clear small (click)="getIssuesActivity('month')">1 M</button>
-                <button ion-button color="light" clear small (click)="getIssuesActivity('quarter')">1 Q</button>
-                <button ion-button color="light" clear small (click)="getIssuesActivity('year')">1 Y</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('year')">1 Y</button>
               </ion-buttons>
             </ion-item>
           </ion-card-header>
@@ -123,11 +227,11 @@
             <ion-item class="analytics-card">
               <span class="analytics-card">Pull Request Activity</span>
               <ion-buttons item-end>
-                <button ion-button color="light" clear small (click)="getPrsActivity('day')">1 D</button>
-                <button ion-button color="light" clear small (click)="getPrsActivity('week')">1 W</button>
-                <button ion-button color="light" clear small (click)="getPrsActivity('month')">1 M</button>
-                <button ion-button color="light" clear small (click)="getPrsActivity('quarter')">1 Q</button>
-                <button ion-button color="light" clear small (click)="getPrsActivity('year')">1 Y</button>
+                <button ion-button color="dark_blue" clear small (click)="getPrsActivity('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getPrsActivity('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getPrsActivity('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getPrsActivity('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getPrsActivity('year')">1 Y</button>
               </ion-buttons>
             </ion-item>
           </ion-card-header>
@@ -142,7 +246,16 @@
       <ion-col col-12>
         <ion-card class="analytics-card">
           <ion-card-header class="analytics-card">
-            <span class="analytics-card">Project Page Views</span>
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Project Page Views</span>
+              <ion-buttons item-end>
+                <button ion-button color="dark_blue" clear small (click)="getPageViews('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getPageViews('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getPageViews('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getPageViews('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getPageViews('year')">1 Y</button>
+              </ion-buttons>
+            </ion-item>
           </ion-card-header>
           <ion-card-content>
             <google-chart [data]="pageViewsChart"></google-chart>
@@ -158,11 +271,11 @@
             <ion-item class="analytics-card">
               <span class="analytics-card">Top Contributors</span>
               <ion-buttons item-end>
-                <button ion-button color="light" clear small (click)="getMaintainers('day')">1 D</button>
-                <button ion-button color="light" clear small (click)="getMaintainers('week')">1 W</button>
-                <button ion-button color="light" clear small (click)="getMaintainers('month')">1 M</button>
-                <button ion-button color="light" clear small (click)="getMaintainers('quarter')">1 Q</button>
-                <button ion-button color="light" clear small (click)="getMaintainers('year')">1 Y</button>
+                <button ion-button color="dark_blue" clear small (click)="getMaintainers('day')">1 D</button>
+                <button ion-button color="dark_blue" clear small (click)="getMaintainers('week')">1 W</button>
+                <button ion-button color="dark_blue" clear small (click)="getMaintainers('month')">1 M</button>
+                <button ion-button color="dark_blue" clear small (click)="getMaintainers('quarter')">1 Q</button>
+                <button ion-button color="dark_blue" clear small (click)="getMaintainers('year')">1 Y</button>
               </ion-buttons>
             </ion-item>
           </ion-card-header>

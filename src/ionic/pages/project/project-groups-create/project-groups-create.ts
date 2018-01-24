@@ -6,28 +6,30 @@ import { KeycloakService } from '../../../services/keycloak/keycloak.service';
 import { DomSanitizer} from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
-import { AlertController } from 'ionic-angular';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
 @IonicPage({
-  segment: 'project/:projectId/groups'
+  segment: 'project/:projectId/groups/create'
 })
 @Component({
-  selector: 'project-groups',
-  templateUrl: 'project-groups.html',
+  selector: 'project-groups-create',
+  templateUrl: 'project-groups-create.html',
   providers: [CincoService]
 })
 
-export class ProjectGroupsPage {
+export class ProjectGroupsCreatePage {
 
   projectId: string;
+  keysGetter;
+  projectPrivacy;
 
   groupName: string;
   groupDescription: string;
   groupPrivacy = [];
   groupRequiresApproval = [];
+  subgroupPermissions = [];
 
   form: FormGroup;
   submitAttempt: boolean = false;
@@ -35,14 +37,6 @@ export class ProjectGroupsPage {
 
   group: any;
   projectGroups: any;
-  allGroupsWithParticipants: any[] = [];
-  groupParticipants: any;
-
-  participantName: any;
-  participantEmail: any;
-
-  expand: any;
-  isTrue:boolean = null;
 
   constructor(
     public navCtrl: NavController,
@@ -53,7 +47,6 @@ export class ProjectGroupsPage {
     public modalCtrl: ModalController,
     public rolesService: RolesService,
     private formBuilder: FormBuilder,
-    private alertCtrl: AlertController
   ) {
     this.projectId = navParams.get('projectId');
 
@@ -64,29 +57,24 @@ export class ProjectGroupsPage {
       groupRequiresApproval:[this.groupRequiresApproval],
     });
 
-    this.form = formBuilder.group({
-      participantName:[this.participantName],
-      participantEmail:[this.participantEmail, Validators.compose([Validators.required])],
-    });
-
   }
 
-  async ngOnInit() {
+  ngOnInit() {
     this.getProjectConfig(this.projectId);
     this.getDefaults();
   }
 
   getDefaults() {
-    this.expand = {};
-    this.projectGroups = [];
-    this.allGroupsWithParticipants = [];
-    this.form.reset();
+    this.keysGetter = Object.keys;
     this.getProjectGroups();
+    this.getGroupPrivacy();
+    this.getSubgroupPermissions();
   }
 
   getProjectConfig(projectId) {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
+        console.log(response);
         if (!response.mailingGroup) {
           console.log("no mailingGroup");
           console.log("creating a new mailingGroup");
@@ -102,24 +90,48 @@ export class ProjectGroupsPage {
   getProjectGroups() {
     this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
       this.projectGroups = response;
-      for(let eachProject of this.projectGroups) {
-        this.getAllGroupParticipants(eachProject.name);
-      }
+      console.log(response);
     });
   }
 
-  getAllGroupParticipants(groupName){
-    let group = {
-      info: [],
-      participants: []
-    };
-    this.cincoService.getProjectGroup(this.projectId, groupName).subscribe(response => {
-      group.info = response;
-      this.cincoService.getAllGroupParticipants(this.projectId, groupName).subscribe(response => {
-        group.participants = response;
-        this.allGroupsWithParticipants.push(group);
-      });
-    });
+  getGroupPrivacy() {
+    this.groupPrivacy = [];
+    // TODO Implement CINCO side
+    // this.cincoService.getGroupPrivacy(this.projectId).subscribe(response => {
+    //   this.groupPrivacy = response;
+    // });
+    this.groupPrivacy = [
+      {
+        value: "sub_group_privacy_none",
+        description: "Group listed and archive publicly viewable"
+      },
+      {
+        value: "sub_group_privacy_archives",
+        description: "Group listed and archive privately viewable by members"
+      },
+      {
+        value: "sub_group_privacy_unlisted",
+        description: "Group hidden and archive privately viewable by members"
+      }
+    ];
+  }
+
+  getSubgroupPermissions() {
+    this.groupRequiresApproval = [];
+    // TODO Implement CINCO side
+    // this.cincoService.getSubgroupPermissions(this.projectId).subscribe(response => {
+    //   this.groupRequiresApproval = response;
+    // });
+    this.groupRequiresApproval = [
+      {
+        value: "true",
+        description: "Yes"
+      },
+      {
+        value: "false",
+        description: "No"
+      }
+    ];
   }
 
   submitGroup() {
@@ -153,83 +165,10 @@ export class ProjectGroupsPage {
     });
   }
 
-  goCreateGroupsPage() {
-    this.navCtrl.setRoot('ProjectGroupsCreatePage', {
+  getGroupsList() {
+    this.navCtrl.setRoot('ProjectGroupsPage', {
       projectId: this.projectId
     });
-  }
-
-  toggle(index) {
-    this.expand[index] = !this.expand[index];
-  }
-
-  submitParticipant(groupName) {
-    this.submitAttempt = true;
-    this.currentlySubmitting = true;
-    if (!this.form.valid) {
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
-    let participant = [{
-        address: this.form.value.participantEmail,
-        name: this.form.value.participantName
-    }];
-    this.cincoService.addGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
-      this.currentlySubmitting = false;
-      this.getDefaults();
-    });
-  }
-
-  removeGroupParticipant(groupName, participantId){
-    this.presentRemoveConfirm((confirm) => {
-      if(confirm) {
-        this.cincoService.removeGroupParticipant(this.projectId, groupName, participantId).subscribe(response => {
-          // CINCO and Groups.io sync takes a while
-          let refreshData = setTimeout( () => {
-            this.getDefaults()
-          }, 2000);
-        });
-      }
-
-    });
-  }
-
-  removeProjectGroup(groupName){
-    this.presentRemoveConfirm((confirm) => {
-      if(confirm) {
-        this.cincoService.removeProjectGroup(this.projectId, groupName).subscribe(response => {
-          console.log(response);
-          // CINCO and Groups.io sync takes a while
-          let refreshData = setTimeout( () => {
-            this.getDefaults()
-          }, 2000);
-        });
-      }
-    });
-  }
-
-  presentRemoveConfirm(callback) {
-    let alert = this.alertCtrl.create({
-      title: 'Please Confirm',
-      message: 'Are you sure you want to remove this?',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          handler: () => {
-            callback(false);
-          }
-        },
-        {
-          text: 'Remove',
-          handler: () => {
-            callback(true);
-          }
-        }
-      ]
-    });
-    alert.present();
   }
 
 }
