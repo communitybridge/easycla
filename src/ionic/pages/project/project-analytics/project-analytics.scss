@@ -1,4 +1,47 @@
 project-analytics {
+
+  .checklist-button {
+    border-radius: 15px;
+    padding-left: 15px;
+    background-color: #2bb3e2;
+    color: #ffffff;
+    font-size: 15px;
+    text-align: left;
+    color: #ffffff;
+    display: table-cell;
+    vertical-align: middle;
+    height: 70px;
+    width: 300px;
+  }
+  ion-icon {
+    font-size: 30px;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .first-row {
+    height: 350px;
+  }
+  .row{
+    align-items: center;
+  }
+  .progress-cla-bar{
+    background-color: #ebebeb;
+    height: 25px;
+    width: 100% !important;
+    overflow: hidden;
+  }
+  .progress-one{
+    background-color: #044d74;
+    height: 25px;
+    float:left;
+    width: 40% !important;
+  }
+  .progress-two{
+    background-color: #1cb2e4;
+    height: 25px;
+    float: left;
+    width: 35% !important;
+  }
   .vertical-align {
     height: 100%;
     display: block;
