@@ -37,6 +37,13 @@ export class ProjectGroupsPage {
 
   group: any;
   projectGroups: any;
+  allGroupsWithParticipants: any[] = [];
+  groupParticipants: any;
+
+  participantName: any;
+  participantEmail: any;
+
+  expand: any;
 
   constructor(
     public navCtrl: NavController,
@@ -57,14 +64,22 @@ export class ProjectGroupsPage {
       groupRequiresApproval:[this.groupRequiresApproval],
     });
 
+    this.form = formBuilder.group({
+      participantName:[this.participantName, Validators.compose([Validators.required])],
+      participantEmail:[this.participantEmail],
+    });
+
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.getProjectConfig(this.projectId);
     this.getDefaults();
   }
 
   getDefaults() {
+    this.expand = {};
+    this.projectGroups = [];
+    this.allGroupsWithParticipants = [];
     this.keysGetter = Object.keys;
     this.getProjectGroups();
     this.getGroupPrivacy();
@@ -74,7 +89,6 @@ export class ProjectGroupsPage {
   getProjectConfig(projectId) {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
-        console.log(response);
         if (!response.mailingGroup) {
           console.log("no mailingGroup");
           console.log("creating a new mailingGroup");
@@ -90,7 +104,25 @@ export class ProjectGroupsPage {
   getProjectGroups() {
     this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
       this.projectGroups = response;
-      console.log(response);
+      for(let eachProject of this.projectGroups) {
+        this.getAllGroupParticipants(eachProject.name);
+      }
+    });
+  }
+
+  getAllGroupParticipants(groupName){
+    let group = {
+      info: [],
+      participants: []
+    };
+    this.cincoService.getProjectGroup(this.projectId, groupName).subscribe(response => {
+      group.info = response;
+      this.cincoService.getAllGroupParticipants(this.projectId, groupName).subscribe(response => {
+        group.participants = response;
+        console.log(group);
+        this.allGroupsWithParticipants.push(group);
+        console.log(this.allGroupsWithParticipants);
+      });
     });
   }
 
@@ -171,6 +203,36 @@ export class ProjectGroupsPage {
     });
   }
 
+  toggle(index) {
+    this.expand[index] = !this.expand[index];
+  }
 
+  submitParticipant(groupName) {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    if (!this.form.valid) {
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    let participant = [{
+        address: this.form.value.participantEmail,
+        name: this.form.value.participantName
+    }];
+    console.log(participant);
+    this.cincoService.addGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
+      console.log("addGroupParticipant")
+      console.log(response)
+      this.currentlySubmitting = false;
+      this.getDefaults();
+
+      // this.cincoService.getAllGroupParticipants(this.projectId, groupName).subscribe(response => {
+      //   console.log("getAllGroupParticipants");
+      //   console.log(response);
+      //   this.groupParticipants = response;
+      // });
+
+    });
+  }
 
 }
