@@ -153,34 +153,53 @@ export class CincoService {
   * Resources for getting details about project members
   **/
 
+  createMainProjectGroup(projectId) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups', null)
+      .map(res => res.json());
+  }
+
+  associateMainProjectGroup(projectId, groupId) {
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups' + groupId, null)
+      .map(res => res.json());
+  }
 
   getAllProjectGroups(projectId) {
-    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists')
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists')
+      .map(res => res.json());
+  }
+
+  getGroupPrivacy(projectId) {  // Retrieve privacy groups enum list in general, no project specific.
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/privacy')
       .map(res => res.json());
   }
 
   createProjectGroup(projectId, group) {
-    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailinglists', group)
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists', group)
       .map(res => res.json());
   }
 
   getProjectGroup(projectId, groupId) {
-    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailinglists' + groupId)
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId)
       .map(res => res.json());
   }
 
-  removeProjectGroup(projectId, groupId) {
-    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId)
+  removeProjectGroup(projectId, groupName) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName)
+      .map(res => res.json());
+  }
+
+  getAllGroupParticipants(projectId, groupId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants')
       .map(res => res.json());
   }
 
   addGroupParticipant(projectId, groupId, participant) {
-    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId + '/participants', participant)
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants', participant)
       .map(res => res.json());
   }
 
-  removeGroupParticipant(projectId, groupId, participantEmail) {
-    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailinglists/' + groupId +  '/participants/' + participantEmail)
+  removeGroupParticipant(projectId, groupName, participantId) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName +  '/participants/' + participantId)
       .map(res => res.json());
   }
   //////////////////////////////////////////////////////////////////////////////
