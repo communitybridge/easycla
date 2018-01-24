@@ -80,7 +80,7 @@
               {{ project.name }}
             </ion-card-title>
           </div>
-          <ion-card-content *ngIf="expand[project.id]">
+          <ion-card-content *ngIf="expand && expand[project.id]">
             <dl>
               <dt>Industry:</dt>
               <dd>{{ projectSectors[project.sector] }}</dd>
