@@ -13,7 +13,7 @@ containers:
 # Environment Variables to be injected in the container.
 environment:
   nginx:
-    web_docroot: '/srv/app/src'
+    web_docroot: '/srv/app/src/www'
     custom_config_file: '/srv/app/infra/nginx/sandbox.conf'
     server_name: ''
     domain_hash: ''
