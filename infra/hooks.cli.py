@@ -45,7 +45,7 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
         })
         envs.append({
             'name': 'KEYCLOAK_SERVER_URL',
-            'value': kc_endpoint
+            'value': kc_endpoint.replace('/auth', '')
         })
 
         lfcore.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'])
