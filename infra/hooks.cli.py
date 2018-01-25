@@ -30,7 +30,7 @@ def local_init_docker_compose_file(containers, config, dependencies, mode, path)
         lfcore.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
 
 
-@gossip.register('preprod_instance_task_build', tags=['pmc'])
+@gossip.register('lfs.instance.generate.ecs.definition', tags=['pmc'])
 def preprod_instance_task_build(containers, instance_config, dependencies, domains, envs):
     if len(dependencies) >= 1:
         platform = dependencies.get('cinco')
