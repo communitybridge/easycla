@@ -149,6 +149,62 @@ export class CincoService {
   //////////////////////////////////////////////////////////////////////////////
 
   /**
+  * Projects - Mailing List - groups.io
+  * Resources for getting details about project members
+  **/
+
+  createMainProjectGroup(projectId) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups', null)
+      .map(res => res.json());
+  }
+
+  associateMainProjectGroup(projectId, groupId) {
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups' + groupId, null)
+      .map(res => res.json());
+  }
+
+  getAllProjectGroups(projectId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists')
+      .map(res => res.json());
+  }
+
+  getGroupPrivacy(projectId) {  // Retrieve privacy groups enum list in general, no project specific.
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/privacy')
+      .map(res => res.json());
+  }
+
+  createProjectGroup(projectId, group) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists', group)
+      .map(res => res.json());
+  }
+
+  getProjectGroup(projectId, groupId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId)
+      .map(res => res.json());
+  }
+
+  removeProjectGroup(projectId, groupName) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName)
+      .map(res => res.json());
+  }
+
+  getAllGroupParticipants(projectId, groupId) {
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants')
+      .map(res => res.json());
+  }
+
+  addGroupParticipant(projectId, groupId, participant) {
+    return this.http.post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants', participant)
+      .map(res => res.json());
+  }
+
+  removeGroupParticipant(projectId, groupName, participantId) {
+    return this.http.delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName +  '/participants/' + participantId)
+      .map(res => res.json());
+  }
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
   * Projects - Members
   * Resources for getting details about project members
   **/
@@ -295,6 +351,33 @@ export class CincoService {
     return this.http.delete(this.cincoApiUrl + '/user/' + userId + '/role/' + role)
       .map(res => res.json());
   }
+
+  /**
+  * Event Source
+  * Resources for tracking events
+  **/
+
+  // getEvents() {
+  //   return this.http.get(this.cincoApiUrl + '/events')
+  //     .map(res => res.json());
+  // }
+
+  getEventsForProject(projectId) {
+    return this.http.get(this.cincoApiUrl + '/events/projects/' + projectId)
+      .map(res => res.json());
+  }
+
+  getEventsForOrg(orgId) {
+    return this.http.get(this.cincoApiUrl + '/events/organizations/' + orgId)
+      .map(res => res.json());
+  }
+
+  getEventsForUser(userId) {
+    return this.http.get(this.cincoApiUrl + '/events/users/' + userId)
+      .map(res => res.json());
+  }
+
+
 
   //////////////////////////////////////////////////////////////////////////////
 
