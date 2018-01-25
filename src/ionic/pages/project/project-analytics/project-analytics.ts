@@ -28,6 +28,12 @@ export class ProjectAnalyticsPage {
   analyticsUrl: any;
   sanitizedAnalyticsUrl: any;
 
+  index:any;
+  timeNow:any;
+  span:any;
+
+  claContributors:any = [];
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -47,15 +53,62 @@ export class ProjectAnalyticsPage {
   }
 
   getDefaults() {
-    this.getCommitActivity();
-    this.getcommitsDistribution();
-    this.getIssuesStatus();
-    this.getPrsPipeline();
-    this.getIssuesActivity();
-    this.getPrsActivity();
-    this.getPageViews();
-    this.getMaintainers();
+    this.setTimeNow();
+    this.span = 'month';
+    this.index = 'hyperledger';
+    this.getCommitActivity(this.span);
+    this.getcommitsDistribution(this.span);
+    this.getIssuesStatus(this.span);
+    this.getIssuesActivity(this.span);
+    this.getPrsPipeline(this.span);
+    this.getPrsActivity(this.span);
+    this.getPageViews(this.span);
+    this.getMaintainers(this.span);
     this.redrawCharts();
+    this.claContributors = [{
+      name: "Nick Young",
+      email: "swaggyp@dubs.com",
+      date: "11/29/17",
+    },{
+      name: "Patrick McCaw",
+      email: "pmccaw@unlv.edu",
+      date: "11/29/17",
+    },{
+      name: "David West",
+      email: "david@west.com",
+      date: "11/28/17",
+    },{
+      name: "Javale McGee	",
+      email: "javale@fools.com",
+      date: "11/27/17",
+    },{
+      name: "Shaun Livingston",
+      email: "shaun@living.net",
+      date: "11/27/17",
+    },{
+      name: "Andre Iguodala",
+      email: "iggie@dubs.com",
+      date: "11/27/17",
+    }];
+  }
+
+  setTimeNow() {
+    this.timeNow = new Date().getTime();
+  }
+
+  calculateTsFrom(span) {
+    let rest;
+    if(span == 'year') { rest = 365; }
+    else if(span == 'quarter') { rest = 90; }
+    else if(span == 'month') { rest = 30; }
+    else if(span == 'week') { rest = 7; }
+    else if(span == 'day') { rest = 1; }
+    else { rest = 30; } // otherwise query to a month
+    let date = new Date();
+    let previousDate = date.getDate() - rest;
+    date.setDate(previousDate);
+    let tsFrom = date.getTime();
+    return tsFrom;
   }
 
   getProjectConfig(projectId) {
@@ -88,39 +141,56 @@ export class ProjectAnalyticsPage {
     modal.present();
   }
 
-  getCommitActivity() {
-    let index = 'hyperledger2';
+  formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+    return [month, day].join('-');
+  }
+
+  getCommitActivity(span) {
+    let index = this.index;
     let metricType = 'code.commits';
     let groupBy = 'day';
-    let tsFrom = '1510430520000';
-    let tsTo =   '1514764800000';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.commitsActivityChart.dataTable = [
+        ['Date', 'Commits'] // Clean Array
+      ];
+      if(Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            if(value) {
-              this.commitsActivityChart.dataTable.push([key, value]);
-              this.commitsActivityChart = Object.create(this.commitsActivityChart);
-            }
+            this.commitsActivityChart.dataTable.push([this.formatDate(key), value]);
           }
         );
       }
+      else {
+        this.commitsActivityChart.dataTable.push(['No commits for a ' + span + ' now', 0]);
+      }
+      this.commitsActivityChart = Object.create(this.commitsActivityChart);
     });
   }
 
-  getcommitsDistribution() {
-    let index = 'hyperledger2';
+  getcommitsDistribution(span) {
+    let index = this.index;
     let metricType = 'maintainers';
-    let groupBy = 'month,author';
-    let tsFrom = '1512150915000';
-    let tsTo =   '1514764800000';
+    let groupBy = 'year,author';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     let maintainers;
     let maintainersCommitsTop10 = 0;
     let maintainersCommitsTotal = 0;
     let top10Percentage = 0;
     let restPercentage = 0;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.commitsDistributionChart.dataTable = [
+        ['Date', 'Commits'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             if(value) {
@@ -132,7 +202,7 @@ export class ProjectAnalyticsPage {
         Object.entries(maintainers.value).forEach(
           ([key, value]) => {
             if(value) {
-              if(i<10){
+              if(i < 10) {
                 maintainersCommitsTop10 = maintainersCommitsTop10 + value;
               }
               maintainersCommitsTotal = maintainersCommitsTotal + value;
@@ -144,20 +214,26 @@ export class ProjectAnalyticsPage {
         restPercentage = 100 - top10Percentage;
         this.commitsDistributionChart.dataTable.push(['Top 10', top10Percentage])
         this.commitsDistributionChart.dataTable.push(['Rest', restPercentage]);
-        this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
       }
+      else {
+        this.commitsDistributionChart.dataTable.push(['No commits for a ' + span + ' now', 100]);
+      }
+      this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
     });
   }
 
-  getIssuesStatus() {
-    let index = 'hyperledger2';
+  getIssuesStatus(span) {
+    let index = this.index;
     let metricType = 'issues';
-    let groupBy = 'month,issue_status';
-    let tsFrom = '1512150915000';
-    let tsTo =   '1514764800000';
+    let groupBy = 'year,issue_status';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     let issuesStatus;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.issuesStatusChart.dataTable = [
+        ['Status', 'Issues'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             issuesStatus = value;
@@ -168,61 +244,82 @@ export class ProjectAnalyticsPage {
             this.issuesStatusChart.dataTable.push([key, value]);
           }
         );
-        this.issuesStatusChart = Object.create(this.issuesStatusChart);
       }
+      else {
+        this.issuesStatusChart.dataTable.push(['No issues for a ' + span + ' now', 0]);
+      }
+      this.issuesStatusChart = Object.create(this.issuesStatusChart);
     });
   }
 
-  getPrsPipeline() {
-    let index = 'hyperledger2';
-    let metricType = 'prs.submitted';
-    let groupBy = 'day';
-    let tsFrom = '1512490997000';
-    let tsTo =   '1514764800000';
+  getIssuesActivity(span) {
+    let index = this.index;
+    let metricType = 'issues';
+    let groupBy = 'day,issue_status';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
+    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
+      this.issuesActivityChart.dataTable = [
+        ['Date', 'Issues Open', 'Issues Closed'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
+        Object.entries(metrics.value).forEach(
+          ([key, value]) => {
+            key = this.formatDate(key);
+            if(value.value['open'] && !value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], 0]);
+            if(!value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, 0, value.value['closed']]);
+            if(value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], value.value['closed']]);
+          }
+        );
+      }
+      else {
+        this.issuesActivityChart.dataTable.push(['No issues for a ' + span + ' now', 0, 0]);
+      }
+      this.issuesActivityChart = Object.create(this.issuesActivityChart);
+    });
+  }
+
+  getPrsPipeline(span) {
+    span = 'year';
+    let index = this.index;
+    let metricType = 'prs.open';
+    let groupBy = 'year';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     let sumOpenPRs = 0;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.prsPipelineChart.dataTable = [
+        ['Label', 'Value'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             sumOpenPRs = sumOpenPRs + value;
           }
         );
         this.prsPipelineChart.dataTable.push(['PRs', sumOpenPRs]);
-        this.prsPipelineChart = Object.create(this.prsPipelineChart);
       }
+      else {
+        this.prsPipelineChart.dataTable.push(['No PRs for a ' + span + ' now', 0]);
+      }
+      this.prsPipelineChart = Object.create(this.prsPipelineChart);
     });
   }
 
-  getIssuesActivity() {
-    let index = 'hyperledger2';
-    let metricType = 'issues';
-    let groupBy = 'day,issue_status';
-    let tsFrom = '1511150915000';
-    let tsTo =   '1514764800000';
-    this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            if(value.value['To Do'] && !value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], 0]);
-            if(!value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, 0, value.value['Done']]);
-            if(value.value['To Do']  && value.value['Done']) this.issuesActivityChart.dataTable.push([key, value.value['To Do'], value.value['Done']]);
-          }
-        );
-        this.issuesActivityChart = Object.create(this.issuesActivityChart);
-      }
-    });
-  }
-
-  getPrsActivity() {
-    let index = 'hyperledger2';
+  getPrsActivity(span) {
+    let index = this.index;
     let metricType = 'prs';
-    let groupBy = 'month,issue_status';
-    let tsFrom = '1388534400000';
-    let tsTo =   '1514764800000';
+    let groupBy = 'day,issue_status';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.prsActivityChart.dataTable = [
+        ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
+            key = this.formatDate(key);
             if(value.value.open && !value.value.merged && !value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, 0, 0]);
             if(value.value.merged  && !value.value.open && !value.value.closed) this.prsActivityChart.dataTable.push([key, 0, value.value.merged, 0]);
             if(value.value.closed && !value.value.open && !value.value.merged) this.prsActivityChart.dataTable.push([key, 0, 0, value.value.closed]);
@@ -232,40 +329,53 @@ export class ProjectAnalyticsPage {
             if(value.value.open && value.value.merged && value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, value.value.closed]);
           }
         );
-        this.prsActivityChart = Object.create(this.prsActivityChart);
       }
+      else {
+        this.prsActivityChart.dataTable.push(['No PRs for a ' + span + ' now', 0, 0, 0]);
+      }
+      this.prsActivityChart = Object.create(this.prsActivityChart);
     });
   }
 
-  getPageViews() {
-    let index = 'hyperledger2';
-    let metricType = 'website.duration';
+  getPageViews(span) {
+    let index = this.index;
+    //TODO: To query actual Page Views. EP doens't exist yet.
+    let metricType = 'code.commits';
     let groupBy = 'day';
-    let tsFrom = '1510430520000';
-    let tsTo =   '1514764800000';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.pageViewsChart.dataTable = [
+        ['Date', 'Views'] // Clean Array
+      ];
+      if(Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            if(value) {
-              this.pageViewsChart.dataTable.push([key, value]);
-              this.pageViewsChart = Object.create(this.pageViewsChart);
-            }
+            key = this.formatDate(key);
+            this.pageViewsChart.dataTable.push([key, value]);
           }
         );
       }
+      else {
+        this.pageViewsChart.dataTable.push(['No page views for a ' + span + ' now', 0]);
+      }
+      this.pageViewsChart = Object.create(this.pageViewsChart);
     });
+
   }
 
-  getMaintainers() {
-    let index = 'hyperledger2';
+  getMaintainers(span) {
+    let index = this.index;
     let metricType = 'maintainers';
-    let groupBy = 'month,author';
-    let tsFrom = '1512150915000';
-    let tsTo =   '1514764800000';
+    let groupBy = 'year,author';
+    let tsFrom = this.calculateTsFrom(span);
+    let tsTo = this.timeNow;
     let maintainers;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      if (metrics) {
+      this.maintainersTable.dataTable = [
+        ['Name <Email Address>', 'Commits'] // Clean Array
+      ];
+      if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             if(value) {
@@ -280,8 +390,11 @@ export class ProjectAnalyticsPage {
             }
           }
         );
-        this.maintainersTable = Object.create(this.maintainersTable);
       }
+      else {
+        this.maintainersTable.dataTable.push(['No maintainers for a ' + span + ' now', 0]);
+      }
+      this.maintainersTable = Object.create(this.maintainersTable);
     });
   }
 
@@ -308,15 +421,16 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73',
+        format: 'h:mm a',
       },
       vAxis: {title: '# of commits'},
-      colors: ['#eeeeee'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none',
     }
   };
@@ -328,14 +442,14 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#888888'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
-      colors: ['#cccccc','#eeeeee'],
-      backgroundColor: '#4e92df',
+      colors: ['#0b4e73','#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
@@ -347,16 +461,36 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
+        },
+        baselineColor: '#0b4e73'
+      },
+      vAxis: {},
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
+      legend: 'none',
+    }
+  };
+
+  public issuesActivityChart:any =  {
+    chartType: 'AreaChart',
+    dataTable: [
+      ['Date', 'Issues Open', 'Issues Closed']
+    ],
+    options: {
+      hAxis: {
+        textStyle:{ color: '#0b4e73'},
+        gridlines: {
+          color: "#0b4e73"
         },
         baselineColor: '#FFFFFF'
       },
-      vAxis: {},
-      colors: ['#eeeeee'],
-      backgroundColor: '#4e92df',
-      legend: 'none',
+      vAxis: {title: '# of Issues'},
+      colors: ['#2bb3e2', '#0b4e73'],
+      backgroundColor: '#ffffff',
+      legend: 'none'
     }
   };
 
@@ -371,27 +505,7 @@ export class ProjectAnalyticsPage {
       minorTicks: 1,
       min: 0, max: 100,
       majorTicks: ['0', '20', '40', '60', '80', '100'],
-      greenColor: '#4e92df'
-    }
-  };
-
-  public issuesActivityChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'Issues Open', 'Issues Closed']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#ffffff'},
-        gridlines: {
-          color: "#FFFFFF"
-        },
-        baselineColor: '#FFFFFF'
-      },
-      vAxis: {title: '# of Issues'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
-      legend: 'none'
+      greenColor: '#ffffff'
     }
   };
 
@@ -402,15 +516,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {title: '# of PRs'},
-      colors: ['#9344dd', '#abab45'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2', '#0b4e73'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
@@ -422,15 +536,15 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#ffffff'},
+        textStyle:{ color: '#0b4e73'},
         gridlines: {
-          color: "#FFFFFF"
+          color: "#0b4e73"
         },
-        baselineColor: '#FFFFFF'
+        baselineColor: '#0b4e73'
       },
       vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
-      colors: ['#95c2e2'],
-      backgroundColor: '#4e92df',
+      colors: ['#2bb3e2'],
+      backgroundColor: '#ffffff',
       legend: 'none'
     }
   };
