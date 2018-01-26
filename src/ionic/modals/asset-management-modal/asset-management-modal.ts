@@ -372,8 +372,8 @@ export class AssetManagementModal {
               contentType: contentType
             }
             this.cincoService.obtainLogoS3URL(this.projectId, this.logoClassifier, this.image).subscribe(response => {
-              if(response.url) {
-                let S3URL = response.url;
+              if(response.putUrl.url) {
+                let S3URL = response.putUrl.url;
                 this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
                    // This is to refresh an Main Logo image that have same URL as its previous upload. E.g. main.png.
                    if(this.logoClassifier == 'main') {
@@ -392,8 +392,8 @@ export class AssetManagementModal {
           else if (uploadMode == 'document') {
             const docBytes = (<any>event).target.result;
             this.cincoService.obtainDocumentS3URL(this.projectId, this.documentClassifier, docBytes, file.name, contentType).subscribe(response => {
-              if(response.url) {
-                let S3URL = response.url;
+              if(response.putUrl.url) {
+                let S3URL = response.putUrl.url;
                 this.cincoService.uploadToS3(S3URL, file, file.type).subscribe(response => {
                    this.getAllProjectLogosDocuments();
                    this.selectDirectory('documents');
