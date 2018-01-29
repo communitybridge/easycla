@@ -122,7 +122,7 @@ export class CincoService {
   **/
   obtainLogoS3URL(projectId, classifier, image) {
     return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/logos/' + classifier, image, image.contentType)
-      .map((res) => res );
+      .map((res) => res.json());
   }
 
   /**
@@ -138,7 +138,7 @@ export class CincoService {
   **/
   obtainDocumentS3URL(projectId, classifier, file, filename, contentType) {
     return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
-      .map((res) => res );
+      .map((res) => res.json());
   }
 
   uploadToS3(S3URL, file, contentType) {
