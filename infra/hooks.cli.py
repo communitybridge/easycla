@@ -30,7 +30,7 @@ def local_init_docker_compose_file(containers, config, dependencies, mode, path)
         lfcore.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])
 
 
-@gossip.register('preprod_instance_task_build', tags=['pmc'])
+@gossip.register('lfs.instance.generate.ecs.definition', tags=['pmc'])
 def preprod_instance_task_build(containers, instance_config, dependencies, domains, envs):
     if len(dependencies) >= 1:
         platform = dependencies.get('cinco')
@@ -45,7 +45,7 @@ def preprod_instance_task_build(containers, instance_config, dependencies, domai
         })
         envs.append({
             'name': 'KEYCLOAK_SERVER_URL',
-            'value': kc_endpoint
+            'value': kc_endpoint.replace('/auth', '')
         })
 
         lfcore.logger.info('Setting CINCO_SERVER_URL to ' + 'https://' + domains['primary'])
