@@ -54,31 +54,21 @@
                   </ion-col>
                 </ion-row>
                 <ion-row>
-                  <ion-col col-12>
-                    <ion-item>
-                      <ion-label stacked>Moderator approval required to join?</ion-label>
-                      <ion-select formControlName="groupRequiresApproval" interface="popover">
-                        <ion-option *ngFor="let permission of keysGetter(groupRequiresApproval)" value="{{ permission }}">{{ groupRequiresApproval[permission].description }}</ion-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
-                <ion-row>
                   <ion-item>
                     <ion-label>Members require approval before being allowed to join the group.</ion-label>
-                    <ion-checkbox></ion-checkbox>
+                    <ion-checkbox formControlName="approve_members"></ion-checkbox>
                   </ion-item>
                   <ion-item>
                     <ion-label>Only moderators are allowed to post.</ion-label>
-                    <ion-checkbox></ion-checkbox>
+                    <ion-checkbox formControlName="restrict_posts"></ion-checkbox>
                   </ion-item>
                   <ion-item>
                     <ion-label>All posts require approval before being sent to the group.</ion-label>
-                    <ion-checkbox></ion-checkbox>
+                    <ion-checkbox formControlName="approve_posts"></ion-checkbox>
                   </ion-item>
                   <ion-item>
                     <ion-label>Posts by non-subscribers will be moderated, instead of being rejected.</ion-label>
-                    <ion-checkbox></ion-checkbox>
+                    <ion-checkbox formControlName="allow_unsubscribed"></ion-checkbox>
                   </ion-item>
                 </ion-row>
                 <ion-row>
