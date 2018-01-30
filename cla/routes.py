@@ -76,7 +76,6 @@ def get_user(user_id: hug.types.uuid):
     """
     return cla.controllers.user.get_user(user_id=user_id)
 
-
 @hug.get('/user/email/{user_email}', versions=1)
 def get_user_email(user_email: cla.hug_types.email):
     """
@@ -164,6 +163,7 @@ def get_users_company(user_company_id: hug.types.uuid):
     Returns a list of users associated with an company.
     """
     return cla.controllers.user.get_users_company(user_company_id)
+
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
@@ -549,6 +549,7 @@ def delete_company(company_id: hug.types.text):
     """
     return cla.controllers.company.delete_company(company_id)
 
+
 @hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
 def put_company_whitelist_csv(body, company_id: hug.types.uuid):
     """
@@ -560,6 +561,15 @@ def put_company_whitelist_csv(body, company_id: hug.types.uuid):
     content = body.read().decode()
     return cla.controllers.company.update_company_whitelist_csv(content, company_id)
 
+
+@hug.get('/companies/{manager_id}', version=1)
+def get_manager_companies(manager_id: hug.types.uuid):
+    """
+    GET: /companies/{manager_id}
+
+    Returns a list of companies a manager is associated with
+    """
+    return cla.controllers.company.get_manager_companies(manager_id)
 #
 # Project Routes.
 #

@@ -1328,6 +1328,16 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
             ret.append(org)
         return ret
 
+    def get_companies_by_manager(self, manager_id):
+        company_generator = self.model.scan(company_manager_id__eq=str(manager_id))
+        companies = []
+        for company_model in company_generator:
+            company = Company()
+            company.model = company_model
+            companies.append(company)
+        companies_dict = [company_model.to_dict() for company_model in companies]
+        return companies_dict
+
 
 class StoreModel(Model):
     """

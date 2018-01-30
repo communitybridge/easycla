@@ -72,6 +72,17 @@ company.set_company_whitelist([])
 company.set_company_whitelist_patterns(['*@listed.org'])
 company.save()
 
+## Add another company with same manager ID
+cla.log.info('Creating new company with manager ID: %s', manager.get_user_id())
+company = get_company_instance()
+company.set_company_id(str(uuid.uuid4()))
+company.set_company_external_id('company-external-id')
+company.set_company_manager_id(manager.get_user_id())
+company.set_company_name('Test Company 2')
+company.set_company_whitelist([])
+company.set_company_whitelist_patterns(['*@listed.org'])
+company.save()
+
 ## Signature: Corporate
 corporate_signature_id = str(uuid.uuid4())
 cla.log.info('Creating CCLA signature for company %s and project %s: %s' \
