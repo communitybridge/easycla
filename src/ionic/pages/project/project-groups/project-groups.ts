@@ -16,8 +16,7 @@ import { AlertController } from 'ionic-angular';
 })
 @Component({
   selector: 'project-groups',
-  templateUrl: 'project-groups.html',
-  providers: [CincoService]
+  templateUrl: 'project-groups.html'
 })
 
 export class ProjectGroupsPage {

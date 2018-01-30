@@ -15,8 +15,7 @@ import { Restricted } from '../../../decorators/restricted';
 })
 @Component({
   selector: 'project-groups-create',
-  templateUrl: 'project-groups-create.html',
-  providers: [CincoService]
+  templateUrl: 'project-groups-create.html'
 })
 
 export class ProjectGroupsCreatePage {
