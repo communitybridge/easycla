@@ -34,6 +34,11 @@ export class ProjectAnalyticsPage {
 
   claContributors:any = [];
 
+  firstResponseTimeCurrent: any;
+  firstResponseTimeGoal: any;
+  closeTimeCurrent: any;
+  closeTimeGoal: any;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -65,6 +70,7 @@ export class ProjectAnalyticsPage {
     this.getPageViews(this.span);
     this.getMaintainers(this.span);
     this.redrawCharts();
+
     this.claContributors = [{
       name: "Nick Young",
       email: "swaggyp@dubs.com",
@@ -90,6 +96,10 @@ export class ProjectAnalyticsPage {
       email: "iggie@dubs.com",
       date: "11/27/17",
     }];
+    this.firstResponseTimeCurrent = "1.6";
+    this.firstResponseTimeGoal = 1.5;
+    this.closeTimeCurrent = 9.2;
+    this.closeTimeGoal = 10;
   }
 
   setTimeNow() {
