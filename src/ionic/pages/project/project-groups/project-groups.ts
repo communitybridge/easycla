@@ -146,13 +146,6 @@ export class ProjectGroupsPage {
     });
   }
 
-  getGroupDetails(groupName) {
-    this.navCtrl.setRoot('ProjectGroupDetailsPage', {
-      projectId: this.projectId,
-      groupName: groupName
-    });
-  }
-
   goCreateGroupsPage() {
     this.navCtrl.setRoot('ProjectGroupsCreatePage', {
       projectId: this.projectId
