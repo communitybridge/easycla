@@ -52,7 +52,7 @@ export class ProjectGroupsCreatePage {
     this.projectId = navParams.get('projectId');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.required])],
+      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.pattern(/^\S*$/), Validators.required])],
       groupDescription:[this.groupDescription, Validators.compose([Validators.minLength(9), Validators.required])],
       groupPrivacy:[this.groupPrivacy, Validators.compose([Validators.required])],
       approveMembers: [this.approveMembers],
