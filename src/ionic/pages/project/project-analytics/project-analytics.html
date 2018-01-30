@@ -166,25 +166,41 @@
       </ion-col>
     </ion-row>
 
-    <ion-row class="firs-row">
+    <ion-row>
       <ion-col col-3>
-        <ion-card class="analytics-card">
+        <ion-card class="analytics-card  first-row">
           <ion-card-header class="analytics-card">
-            <span class="analytics-card">Distribution of Commits</span>
-            <br>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('day')">1 D</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('week')">1 W</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('month')">1 M</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+            <span class="analytics-card">Issues - Performance</span>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="commitsDistributionChart"></google-chart>
+            <ion-row text-center padding>
+              Time to First Response
+            </ion-row>
+            <ion-row text-center>
+              <ion-col>
+                Current
+                {{ firstResponseTimeCurrent }} days
+              </ion-col>
+              <ion-col>
+                Goal
+                {{ firstResponseTimeGoal }} days
+              </ion-col>
+            </ion-row>
+            <ion-row text-center padding>
+              Time to Close
+            </ion-row>
+            <ion-row text-center>
+              Current
+              {{ closeTimeCurrent }} days
+
+              Goal
+              {{ closeTimeGoal }} days
+            </ion-row>
           </ion-card-content>
         </ion-card>
       </ion-col>
       <ion-col col-5>
-        <ion-card class="analytics-card">
+        <ion-card class="analytics-card first-row">
           <ion-card-header class="analytics-card">
             <ion-item class="analytics-card">
               <span class="analytics-card">Issues Activity</span>
@@ -203,7 +219,7 @@
         </ion-card>
       </ion-col>
       <ion-col col-4>
-        <ion-card class="analytics-card">
+        <ion-card class="analytics-card first-row">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Distribution of Commits</span>
             <br>
