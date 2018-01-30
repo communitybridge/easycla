@@ -1287,6 +1287,17 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_companies_by_manager(self, manager_id):
+        """
+        Fetches the companies a manager is part of given manager_id.
+
+        :param manager_id: The managers id.
+        :type manager_id: string
+        :return: The companies that match that manager_id specified.
+        :rtype: cla.models.model_interfaces.Company
+        """
+        raise NotImplementedError()
+
     def all(self, ids=None):
         """
         Fetches all companies in the CLA system.
