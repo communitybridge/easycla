@@ -15,8 +15,7 @@ import { Restricted } from '../../../decorators/restricted';
 })
 @Component({
   selector: 'project-groups-create',
-  templateUrl: 'project-groups-create.html',
-  providers: [CincoService]
+  templateUrl: 'project-groups-create.html'
 })
 
 export class ProjectGroupsCreatePage {
@@ -28,8 +27,6 @@ export class ProjectGroupsCreatePage {
   groupName: string;
   groupDescription: string;
   groupPrivacy = [];
-  groupRequiresApproval = [];
-  subgroupPermissions = [];
 
   form: FormGroup;
   submitAttempt: boolean = false;
@@ -37,6 +34,10 @@ export class ProjectGroupsCreatePage {
 
   group: any;
   projectGroups: any;
+  approveMembers: boolean;
+  restrictPosts: boolean;
+  approvePosts: boolean;
+  allowUnsubscribed: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -51,10 +52,13 @@ export class ProjectGroupsCreatePage {
     this.projectId = navParams.get('projectId');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.required])],
-      groupDescription:[this.groupDescription],
-      groupPrivacy:[this.groupPrivacy],
-      groupRequiresApproval:[this.groupRequiresApproval],
+      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.pattern(/^\S*$/), Validators.required])],
+      groupDescription:[this.groupDescription, Validators.compose([Validators.minLength(9), Validators.required])],
+      groupPrivacy:[this.groupPrivacy, Validators.compose([Validators.required])],
+      approveMembers: [this.approveMembers],
+      restrictPosts: [this.restrictPosts],
+      approvePosts: [this.approvePosts],
+      allowUnsubscribed: [this.allowUnsubscribed]
     });
 
   }
@@ -68,7 +72,6 @@ export class ProjectGroupsCreatePage {
     this.keysGetter = Object.keys;
     this.getProjectGroups();
     this.getGroupPrivacy();
-    this.getSubgroupPermissions();
   }
 
   getProjectConfig(projectId) {
@@ -116,24 +119,6 @@ export class ProjectGroupsCreatePage {
     ];
   }
 
-  getSubgroupPermissions() {
-    this.groupRequiresApproval = [];
-    // TODO Implement CINCO side
-    // this.cincoService.getSubgroupPermissions(this.projectId).subscribe(response => {
-    //   this.groupRequiresApproval = response;
-    // });
-    this.groupRequiresApproval = [
-      {
-        value: "true",
-        description: "Yes"
-      },
-      {
-        value: "false",
-        description: "No"
-      }
-    ];
-  }
-
   submitGroup() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
@@ -142,12 +127,20 @@ export class ProjectGroupsCreatePage {
       // prevent submit
       return;
     }
+    // CINCO / Groups.io Flags
+    // allow_unsubscribed - Allow unsubscribed members to post
+    // approve_members    - Members required approval to join
+    // approve_posts      - Posts require approval
+    // restrict_posts     - Posts are restricted to moderators only
     this.group = {
       projectId: this.projectId,
       name: this.form.value.groupName,
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy].value,
-      requires_approval: this.groupRequiresApproval[this.form.value.groupRequiresApproval].value,
+      allow_unsubscribed: this.form.value.allowUnsubscribed,
+      approve_members: this.form.value.approveMembers,
+      approve_posts: this.form.value.approvePosts,
+      restrict_posts: this.form.value.restrictPosts
     };
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
@@ -155,13 +148,6 @@ export class ProjectGroupsCreatePage {
       this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
       });
-    });
-  }
-
-  getGroupDetails(groupName) {
-    this.navCtrl.setRoot('ProjectGroupDetailsPage', {
-      projectId: this.projectId,
-      groupName: groupName
     });
   }
 
