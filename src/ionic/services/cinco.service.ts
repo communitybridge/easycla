@@ -3,22 +3,19 @@ import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
 
-// import { CINCO_API_URL } from './constants'; // TODO: Make sure CINCO_API_URL maps to CINCO URL
-
 @Injectable()
 export class CincoService {
-
-  cincoApiUrl: string;
+  cincoApiUrl: string = '';
 
   constructor(public http: Http) {
-    // this.cincoApiUrl = CINCO_API_URL;
+
   }
 
-  public setHttp(http: any) {
+  public setHttp(http: Http) {
     this.http = http;
   }
 
-  public setApiUrl(apiUrl) {
+  public setApiUrl(apiUrl: string) {
     this.cincoApiUrl = apiUrl;
   }
 
