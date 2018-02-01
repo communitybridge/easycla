@@ -11,7 +11,7 @@ export class CincoService {
 
   }
 
-  public setHttp(http: Http) {
+  public setHttp(http: any) {
     this.http = http;
   }
 

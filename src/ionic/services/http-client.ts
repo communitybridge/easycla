@@ -3,7 +3,7 @@ import { Http, Headers } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 
 @Injectable()
-export class HttpClient extends Http {
+export class HttpClient {
 
   constructor(
     private http: Http,
