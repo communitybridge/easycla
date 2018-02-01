@@ -3,17 +3,15 @@ import { Nav, Platform, App } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
+import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp } from '../services/keycloak/keycloak.http';
-
 import { RolesService } from '../services/roles.service';
-import { HttpClient } from '../services/http-client';
-
-import { CincoService } from '../services/cinco.service';
 import { S3Service } from '../services/s3.service';
 import { ClaService } from 'cla-service';
 import { CLA_API_URL } from '../services/constants';
 import { CINCO_API_URL } from '../services/constants';
+import { HttpClient } from '../services/http-client';
 
 @Component({
   templateUrl: 'app.html',
@@ -61,8 +59,6 @@ export class MyApp {
 
     this.cincoService.setApiUrl(CINCO_API_URL);
     this.cincoService.setHttp(kcHttpClient);
-    // this.cincoService.setHttp(httpClient);
-
 
   }
 
