@@ -8,10 +8,10 @@ export class S3Service {
   http: any;
 
   constructor(public http: Http) {
-    this.http = http;
+
   }
 
-  public setHttp(http: any) {
+  public setHttp(http: Http) {
     this.http = http; // allow configuration for alternate http library
   }
 
