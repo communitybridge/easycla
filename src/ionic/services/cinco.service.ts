@@ -1,17 +1,25 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from './http-client';
+import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
 
-import { CINCO_API_URL } from './constants'; // TODO: Make sure CINCO_API_URL maps to CINCO URL
+// import { CINCO_API_URL } from './constants'; // TODO: Make sure CINCO_API_URL maps to CINCO URL
 
 @Injectable()
 export class CincoService {
 
-  cincoApiUrl: String;
+  cincoApiUrl: string;
 
-  constructor(public http: HttpClient) {
-    this.cincoApiUrl = CINCO_API_URL;
+  constructor(public http: Http) {
+    // this.cincoApiUrl = CINCO_API_URL;
+  }
+
+  public setHttp(http: any) {
+    this.http = http;
+  }
+
+  public setApiUrl(apiUrl) {
+    this.cincoApiUrl = apiUrl;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -139,11 +147,6 @@ export class CincoService {
   obtainDocumentS3URL(projectId, classifier, file, filename, contentType) {
     return this.http.put(this.cincoApiUrl + '/project/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
       .map((res) => res.json());
-  }
-
-  uploadToS3(S3URL, file, contentType) {
-    return this.http.putS3(S3URL, file, contentType)
-      .map((res) => res );
   }
 
   //////////////////////////////////////////////////////////////////////////////
