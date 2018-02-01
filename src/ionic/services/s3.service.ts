@@ -5,13 +5,12 @@ import 'rxjs/Rx';
 
 @Injectable()
 export class S3Service {
-  http: any;
 
   constructor(public http: Http) {
 
   }
 
-  public setHttp(http: Http) {
+  public setHttp(http: any) {
     this.http = http; // allow configuration for alternate http library
   }
 
