@@ -5,9 +5,12 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { KeycloakHttp } from '../services/keycloak/keycloak.http';
 import { RolesService } from '../services/roles.service';
+import { S3Service } from '../services/s3.service';
 import { ClaService } from 'cla-service';
 import { CLA_API_URL } from '../services/constants';
+import { CINCO_API_URL } from '../services/constants';
 import { HttpClient } from '../services/http-client';
 
 @Component({
@@ -35,14 +38,28 @@ export class MyApp {
     public splashScreen: SplashScreen,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
+    private keycloakHttp: KeycloakHttp,
     private rolesService: RolesService,
     public claService: ClaService,
+    public s3service: S3Service,
     public httpClient: HttpClient,
   ) {
     this.getDefaults();
     this.initializeApp();
+
+    // initialize s3service with dependency injected version of httpClient
+    this.s3service.setHttp(httpClient);
+
+    // manually create new httpClient with keycloakHttp
+    let kcHttpClient = new HttpClient(keycloakHttp);
+
+    // set authd services to use kcHttpClient
     this.claService.setApiUrl(CLA_API_URL);
-    this.claService.setHttp(httpClient);
+    this.claService.setHttp(kcHttpClient);
+
+    this.cincoService.setApiUrl(CINCO_API_URL);
+    this.cincoService.setHttp(kcHttpClient);
+
   }
 
   getDefaults() {
