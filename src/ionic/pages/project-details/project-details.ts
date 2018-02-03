@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, Content } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UrlValidator } from  '../../validators/url';
+import { forbiddenValidator } from '../../validators/forbidden';
 import { CincoService } from '../../services/cinco.service'
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { ProjectModel } from '../../models/project-model';
@@ -53,7 +54,7 @@ export class ProjectDetailsPage {
       startDate:[this.project.startDate],
       status:[this.project.status],
       category:[this.project.category],
-      sector:[this.project.sector],
+      sector:[this.project.sector, Validators.compose([forbiddenValidator(/INVALID/i)])],
       url:[this.project.url, Validators.compose([UrlValidator.isValid])],
       addressThoroughfare:[this.project.address.address.thoroughfare],
       addressPostalCode:[this.project.address.address.postalCode],
@@ -132,24 +133,33 @@ export class ProjectDetailsPage {
         country: this.form.value.addressCountry,
       },
       type: "BILLING",
-    }
+    };
+
+    let sector = (this.form.value.sector || undefined);
     this.editProject = {
       name: this.form.value.name,
       description: this.form.value.description,
       url: this.form.value.url,
-      sector: this.form.value.sector,
       address: address,
+      sector: sector,
       status: this.form.value.status,
       category: this.form.value.category,
       startDate: this.form.value.startDate,
     };
 
-    this.cincoService.editProject(this.projectId, this.editProject).subscribe(response => {
-      this.currentlySubmitting = false;
-      this.navCtrl.setRoot('ProjectPage', {
-        projectId: this.projectId
-      });
-    });
+    this.cincoService.editProject(this.projectId, this.editProject).subscribe(
+      response => {
+        this.currentlySubmitting = false;
+        this.navCtrl.setRoot('ProjectPage', {
+          projectId: this.projectId
+        });
+      },
+      error => {
+        console.log('Project Save Error: ' + error);
+        // allow recovery from error
+        this.currentlySubmitting = false;
+      }
+    );
   }
 
   cancelEditProject() {
@@ -157,12 +167,6 @@ export class ProjectDetailsPage {
       projectId: this.projectId
     });
   }
-
-  changeLogo() {
-    // TODO: WIP
-    alert("Change Logo");
-  }
-
 
   openAssetManagementModal() {
     let modal = this.modalCtrl.create('AssetManagementModal', {
