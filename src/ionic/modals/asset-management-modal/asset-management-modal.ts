@@ -1,6 +1,7 @@
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage, ActionSheetController  } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service'
+import { S3Service } from '../../services/s3.service'
 
 @IonicPage({
   segment: 'asset-management-modal/:projectId'
@@ -8,7 +9,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'asset-management-modal',
   templateUrl: 'asset-management-modal.html',
-  providers: [CincoService]
 })
 export class AssetManagementModal {
 
@@ -55,7 +55,8 @@ export class AssetManagementModal {
     public toastCtrl: ToastController,
     private renderer: Renderer,
     public alertCtrl: AlertController,
-    public actionSheetCtrl: ActionSheetController
+    public actionSheetCtrl: ActionSheetController,
+    public s3Service: S3Service,
   ) {
     this.projectId = navParams.get('projectId');
     this.projectName = navParams.get('projectName');
@@ -374,7 +375,7 @@ export class AssetManagementModal {
             this.cincoService.obtainLogoS3URL(this.projectId, this.logoClassifier, this.image).subscribe(response => {
               if(response.putUrl.url) {
                 let S3URL = response.putUrl.url;
-                this.cincoService.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
+                this.s3Service.uploadToS3(S3URL, file, this.image.contentType).subscribe(response => {
                    // This is to refresh an Main Logo image that have same URL as its previous upload. E.g. main.png.
                    if(this.logoClassifier == 'main') {
                      this.newLogoRef = response.url.split("?", 1)[0] + "?" + new Date().getTime();
@@ -394,7 +395,7 @@ export class AssetManagementModal {
             this.cincoService.obtainDocumentS3URL(this.projectId, this.documentClassifier, docBytes, file.name, contentType).subscribe(response => {
               if(response.putUrl.url) {
                 let S3URL = response.putUrl.url;
-                this.cincoService.uploadToS3(S3URL, file, file.type).subscribe(response => {
+                this.s3Service.uploadToS3(S3URL, file, file.type).subscribe(response => {
                    this.getAllProjectLogosDocuments();
                    this.selectDirectory('documents');
                  });
