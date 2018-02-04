@@ -15,8 +15,7 @@ import { Restricted } from '../../../decorators/restricted';
 })
 @Component({
   selector: 'project-groups-create',
-  templateUrl: 'project-groups-create.html',
-  providers: [CincoService]
+  templateUrl: 'project-groups-create.html'
 })
 
 export class ProjectGroupsCreatePage {
@@ -35,10 +34,10 @@ export class ProjectGroupsCreatePage {
 
   group: any;
   projectGroups: any;
-  approve_members: boolean;
-  restrict_posts: boolean;
-  approve_posts: boolean;
-  allow_unsubscribed: boolean;
+  approveMembers: boolean;
+  restrictPosts: boolean;
+  approvePosts: boolean;
+  allowUnsubscribed: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -53,13 +52,13 @@ export class ProjectGroupsCreatePage {
     this.projectId = navParams.get('projectId');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.required])],
+      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.pattern(/^\S*$/), Validators.required])],
       groupDescription:[this.groupDescription, Validators.compose([Validators.minLength(9), Validators.required])],
       groupPrivacy:[this.groupPrivacy, Validators.compose([Validators.required])],
-      approve_members: [this.approve_members],
-      restrict_posts: [this.restrict_posts],
-      approve_posts: [this.approve_posts],
-      allow_unsubscribed: [this.allow_unsubscribed]
+      approveMembers: [this.approveMembers],
+      restrictPosts: [this.restrictPosts],
+      approvePosts: [this.approvePosts],
+      allowUnsubscribed: [this.allowUnsubscribed]
     });
 
   }
@@ -138,10 +137,10 @@ export class ProjectGroupsCreatePage {
       name: this.form.value.groupName,
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy].value,
-      allow_unsubscribed: this.form.value.allow_unsubscribed,
-      approve_members: this.form.value.approve_members,
-      approve_posts: this.form.value.approve_posts,
-      restrict_posts: this.form.value.restrict_posts
+      allow_unsubscribed: this.form.value.allowUnsubscribed,
+      approve_members: this.form.value.approveMembers,
+      approve_posts: this.form.value.approvePosts,
+      restrict_posts: this.form.value.restrictPosts
     };
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
@@ -149,13 +148,6 @@ export class ProjectGroupsCreatePage {
       this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
       });
-    });
-  }
-
-  getGroupDetails(groupName) {
-    this.navCtrl.setRoot('ProjectGroupDetailsPage', {
-      projectId: this.projectId,
-      groupName: groupName
     });
   }
 
