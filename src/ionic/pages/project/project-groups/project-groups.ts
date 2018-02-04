@@ -16,8 +16,7 @@ import { AlertController } from 'ionic-angular';
 })
 @Component({
   selector: 'project-groups',
-  templateUrl: 'project-groups.html',
-  providers: [CincoService]
+  templateUrl: 'project-groups.html'
 })
 
 export class ProjectGroupsPage {
@@ -143,13 +142,6 @@ export class ProjectGroupsPage {
       this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
       });
-    });
-  }
-
-  getGroupDetails(groupName) {
-    this.navCtrl.setRoot('ProjectGroupDetailsPage', {
-      projectId: this.projectId,
-      groupName: groupName
     });
   }
 
