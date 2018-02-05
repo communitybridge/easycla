@@ -29,22 +29,25 @@ variable "build_hash" {
 }
 
 variable "ecs_role" {
-  description = "The ecsService Role for ccc"
+  description = "The ecsService Role for CINCO"
 }
 
 variable "route53_zone_id" {
   description = "The Route53 Zone ID we need to add an entry to for the ALB/ELB."
 }
 
-data "template_file" "ccc_ecs_task" {
-  template = "${file("${path.module}/ccc-ecs-task.json")}"
+data "template_file" "nginx_ecs_task" {
+  template = "${file("${path.module}/nginx-ecs-task.json")}"
 
   vars {
-    # Build Information
-    build_hash              = "${var.build_hash}"
+    # Information for Consul-Template
+    CONSUL_SERVICE            = "CLA_CORPORATE_CONSOLE_${var.build_hash}"
 
     # NGINX Domains
-    APP_DOMAINS               = "projectconsole.linuxfoundation.org www.projectconsole.linuxfoundation.org"
+    APP_DOMAINS               = "ccla.linuxfoundation.org www.ccla.linuxfoundation.org"
+
+    # Build Information
+    build_hash                = "${var.build_hash}"
 
     # DNS Servers for Container Resolution
     DNS_SERVER_1              = "${var.dns_servers[0]}"
@@ -57,23 +60,23 @@ data "template_file" "ccc_ecs_task" {
   }
 }
 
-resource "aws_ecs_task_definition" "ccc" {
-  provider                = "aws.local"
-  family                  = "ccc"
+resource "aws_ecs_task_definition" "nginx" {
+  provider = "aws.local"
+  family = "cla-corporate-console-nginx"
 
   lifecycle {
     ignore_changes        = ["image"]
     create_before_destroy = true
   }
 
-  container_definitions   = "${data.template_file.ccc_ecs_task.rendered}"
+  container_definitions = "${data.template_file.nginx_ecs_task.rendered}"
 }
 
-resource "aws_ecs_service" "ccc" {
+resource "aws_ecs_service" "nginx" {
   provider                           = "aws.local"
-  name                               = "ccc"
+  name                               = "cla-corporate-console-nginx"
   cluster                            = "${var.ecs_cluster_name}"
-  task_definition                    = "${aws_ecs_task_definition.ccc.arn}"
+  task_definition                    = "${aws_ecs_task_definition.nginx.arn}"
   desired_count                      = "3"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
@@ -81,14 +84,14 @@ resource "aws_ecs_service" "ccc" {
 
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.nginx.arn}"
-    container_name     = "ccc"
+    container_name     = "cla-console"
     container_port     = 80
   }
 }
 
 resource "aws_alb_target_group" "nginx" {
   provider             = "aws.local"
-  name                 = "ccc-nginx-80"
+  name                 = "cla-corporate-console-nginx-80"
   port                 = 80
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
@@ -98,12 +101,13 @@ resource "aws_alb_target_group" "nginx" {
     path = "/elb-status"
     protocol = "HTTP"
     interval = 15
+    matcher = "200,201,202"
   }
 }
 
 resource "aws_alb" "nginx" {
   provider           = "aws.local"
-  name               = "ccc-nginx"
+  name               = "cla-corporate-console-nginx"
   subnets            = ["${var.external_subnets}"]
   security_groups    = ["${var.external_elb_sg}"]
   internal           = false
@@ -126,7 +130,7 @@ resource "aws_alb_listener" "nginx_443" {
   load_balancer_arn  = "${aws_alb.nginx.id}"
   port               = "443"
   protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/bfd6e237-3606-454f-ac4d-e57bf636b2f2"
+  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/cd8b8dbd-dfc4-4417-bee9-b27868d47234"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.nginx.id}"

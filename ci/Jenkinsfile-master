@@ -26,8 +26,8 @@ node {
       stage("Docker Artifact: CCC") {
         try {
           sh "docker build -t ccc/production/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} --no-cache ."
-          sh "docker tag ccc/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/ccc/production:${params.SHA}"
-          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/ccc/production:${params.SHA}"
+          sh "docker tag ccc/production/${params.SHA} 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-corporate-console/production:${params.SHA}"
+          sh "docker push 643009352547.dkr.ecr.us-west-2.amazonaws.com/cla-corporate-console/production:${params.SHA}"
         } catch (err) {
           echo "Caught Exception: ${err}"
           statusDockerCCC = 1
@@ -73,7 +73,7 @@ node {
           },\
           \"job_name\": \"${env.JOB_NAME}\",\
           \"build\": \"${env.BUILD_NUMBER}\",\
-          \"channel\": \"#lfplatform-ccc\"}'"
+          \"channel\": \"#lfplatform-cla\"}'"
     }
   }
 }
@@ -105,14 +105,14 @@ if (statusTerraformPlan == "2" && statusDockerCCC == 0 && statusDockerNGINX == 0
                   sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
                       \"color\": \"#008000\",\
                       \"message\": \"[CCC] Deployment of Build #${env.BUILD_NUMBER} (${params.SHA}) was successful. Services will be updated within 5 minutes.\",\
-                      \"channel\": \"#lfplatform-ccc\"}'"
+                      \"channel\": \"#lfplatform-cla\"}'"
                 }
               } else {
                 withCredentials([string(credentialsId: 'workflow-api-key', variable: 'API_KEY')]) {
                   sh "curl -s -H \"x-api-key: $API_KEY\" https://workflow.eng.linuxfoundation.org/trigger/slack/message -d '{\
                       \"color\": \"#cc0000\",\
                       \"message\": \"[CCC] Deployment of Build #${env.BUILD_NUMBER} failed. Details here: ${env.BUILD_URL}\", \
-                      \"channel\": \"#lfplatform-ccc\"}'"
+                      \"channel\": \"#lfplatform-cla\"}'"
                 }
                 currentBuild.result = 'FAILURE'
               }
