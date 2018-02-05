@@ -1055,6 +1055,19 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_signatures_by_company_project(self, company_id, project_id):
+        """
+        Simple abstraction around the supported ORMs to get signatures based on projects and company.
+
+        :param: company_id: The company ID we'll be fetching signatures for.
+        :param: project_id: The project ID we'll be fetching signatures for.
+        :type:  company_id: string
+        :type:  project_id: string
+        :return: Dictionary of signatures.
+        :rtype: [cla.models.model_interfaces.Signature]
+        """
+        raise NotImplementedError()
+
     def all(self, ids=None):
         """
         Fetches all signatures in the CLA system.
