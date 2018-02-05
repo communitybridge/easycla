@@ -19,15 +19,9 @@ node {
 
     try {
 
-      stage ("Launching CCC Instance") {
+      stage ("Launching CCC Console Instance") {
         sshagent(['d78c94c4-9179-4765-9851-9907b5ef2cc4']) {
           sh "lf init -d --mode=ci --create-deps -y"
-        }
-      }
-
-      stage ("Waiting for CINCO") {
-        timeout(10) {
-          sh 'lf run wait-for-cinco'
         }
       }
 
