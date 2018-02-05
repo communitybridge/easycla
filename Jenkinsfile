@@ -8,7 +8,7 @@ node {
 
   dir ("ccc") {
     stage ("Checkout") {
-      git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/project-management-console.git", branch: "${env.BRANCH_NAME}"
+      git pool: true, credentialsId: 'd78c94c4-9179-4765-9851-9907b5ef2cc4', url: "git@github.linuxfoundation.org:Engineering/cla-corporate-console.git", branch: "${env.BRANCH_NAME}"
     }
 
     def project = "ccc"
@@ -45,10 +45,8 @@ node {
         sh "lf rm -y --delete-deps"
       }
 
-      if (env.BRANCH_NAME == 'develop') {
-        build job: 'CCC - Sandbox', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
-      } else if (env.BRANCH_NAME == 'master') {
-        build job: 'CCC - Production', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
+      if (env.BRANCH_NAME == 'master') {
+        build job: 'CLA Corporate Console - Production', parameters: [string(name: 'SHA', value: "${shortCommit}")], wait: false
       }
 
     } catch(err) {

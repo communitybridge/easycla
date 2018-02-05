@@ -14,16 +14,15 @@ variable "build_hash" {
 terraform {
   backend "consul" {
     address = "consul.service.production.consul:8500"
-    path    = "terraform/ccc/application"
+    path    = "terraform/cla-corporate-console/application"
   }
 }
 
-# We take the State of production-tools to grab some data form there for VPC Peering Connection
-data "terraform_remote_state" "ccc-env" {
+data "terraform_remote_state" "cla-env" {
   backend = "consul"
   config {
     address = "consul.service.production.consul:8500"
-    path    = "terraform/ccc/environment"
+    path    = "terraform/cla/environment"
   }
 }
 
@@ -35,82 +34,21 @@ provider "aws" {
   secret_key = "${var.secret_key}"
 }
 
-# User Data for the ECS Container Instances
-data "template_file" "user_data_ccc" {
-  template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
-  vars {
-    env               = "${terraform.env == "default" ? "production" : terraform.env}"
-    build             = "${var.build_hash}"
-    ecs_cluster_name  = "${terraform.env == "default" ? "production" : terraform.env}-ccc"
-    region            = "${data.terraform_remote_state.ccc-env.region}"
-    newrelic_key      = "${data.terraform_remote_state.ccc-env.newrelic_key}"
-  }
-}
-
-# ECS Cluster
-module "ccc-ecs-cluster" {
-  source                 = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/ecs-cluster"
-  environment            = "${terraform.env == "default" ? "production" : terraform.env}-ccc"
-  team                   = "Engineering"
-  name                   = "${terraform.env == "default" ? "production" : terraform.env}-ccc"
-  vpc_id                 = "${data.terraform_remote_state.ccc-env.vpc_id}"
-  subnet_ids             = "${data.terraform_remote_state.ccc-env.internal_subnets}"
-  key_name               = "production-ccc"
-  iam_instance_profile   = "${data.terraform_remote_state.ccc-env.iam_profile_ecsInstance}"
-  region                 = "${data.terraform_remote_state.ccc-env.region}"
-  availability_zones     = "${data.terraform_remote_state.ccc-env.availability_zones}"
-  instance_type          = "t2.medium"
-  security_group         = "${data.terraform_remote_state.ccc-env.sg_ecs_cluster}"
-  instance_ebs_optimized = false
-  desired_capacity       = "3"
-  min_size               = "3"
-  cloud_config_content   = "${data.template_file.user_data_ccc.rendered}"
-}
-
-# Registrator
-module "registrator" {
-  source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
+# CLA Corporate console
+module "cla-corporate-console" {
+  source            = "console"
 
   # Application Information
-  project          = "ccc"
-
-  region           = "${data.terraform_remote_state.ccc-env.region}"
-  ecs_cluster_name = "${module.ccc-ecs-cluster.name}"
-  dns_servers      = "${data.terraform_remote_state.ccc-env.dns_servers}"
-}
-
-# Consul Agent
-module "consul" {
-  source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-consul-agent"
-
-  # Consul
-  encryption_key   = "9F2n4KWdxSj2Z4MMVqbHqg=="
-  datacenter       = "production"
-  endpoint         = "consul.service.production.consul"
-
-  # Application Information
-  project          = "ccc"
-
-  region           = "${data.terraform_remote_state.ccc-env.region}"
-  ecs_cluster_name = "${module.ccc-ecs-cluster.name}"
-  dns_servers      = "${data.terraform_remote_state.ccc-env.dns_servers}"
-}
-
-# CCC
-module "ccc" {
-  source            = "./ccc"
-
-  # Application Information
-  build_hash      = "${var.build_hash}"
-  route53_zone_id   = "${data.terraform_remote_state.ccc-env.route53_zone_id}"
+  build_hash        = "${var.build_hash}"
+  route53_zone_id   = "${data.terraform_remote_state.cla-env.cla_route53}"
 
   # ECS Information
-  external_elb_sg   = "${data.terraform_remote_state.ccc-env.sg_external_elb}"
-  external_subnets  = "${data.terraform_remote_state.ccc-env.external_subnets}"
-  region            = "${data.terraform_remote_state.ccc-env.region}"
-  vpc_id            = "${data.terraform_remote_state.ccc-env.vpc_id}"
-  ecs_cluster_name  = "${module.ccc-ecs-cluster.name}"
-  dns_servers       = "${data.terraform_remote_state.ccc-env.dns_servers}"
-  ecs_role          = "${data.terraform_remote_state.ccc-env.iam_role_ecsService}"
+  external_elb_sg   = "${data.terraform_remote_state.cla-env.sg_external_elb}"
+  external_subnets  = "${data.terraform_remote_state.cla-env.external_subnets}"
+  region            = "${data.terraform_remote_state.cla-env.region}"
+  vpc_id            = "${data.terraform_remote_state.cla-env.vpc_id}"
+  ecs_cluster_name  = "production-cla"
+  dns_servers       = "${data.terraform_remote_state.cla-env.dns_servers}"
+  ecs_role          = "${data.terraform_remote_state.cla-env.iam_role_ecsService}"
 }
