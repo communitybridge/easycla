@@ -173,10 +173,13 @@ export class ProjectGroupsPage {
     });
   }
 
-  removeGroupParticipant(groupName, participantId){
+  removeGroupParticipant(groupName, participantEmail){
+    let participant = [{
+        address: participantEmail
+    }];
     this.presentRemoveConfirm((confirm) => {
       if(confirm) {
-        this.cincoService.removeGroupParticipant(this.projectId, groupName, participantId).subscribe(response => {
+        this.cincoService.removeGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
           // CINCO and Groups.io sync takes a while
           let refreshData = setTimeout( () => {
             this.getDefaults()
