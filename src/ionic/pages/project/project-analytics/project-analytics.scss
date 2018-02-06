@@ -21,6 +21,14 @@ project-analytics {
     height: 54px;
     border: solid 1px #1cb2e4;
   }
+  .contributors-tile-index-separator {
+    margin-left:auto;
+    margin-right:auto;
+    display:block;
+    max-width: 250px;
+    height: 1px;
+    border: solid 1px #1cb2e4;
+  }
   .checklist-button {
     border-radius: 15px;
     padding-left: 15px;
@@ -34,13 +42,32 @@ project-analytics {
     height: 70px;
     width: 300px;
   }
+  .contributor-index {
+    font-size: 48px;
+    font-weight: 500;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: left;
+    color: #1cb2e4;
+  }
   ion-icon {
     font-size: 30px;
     vertical-align: middle;
     margin-right: 10px;
   }
+  .contributor-icon{
+    font-size: 50px;
+    vertical-align: middle;
+    margin-bottom: 30px;
+    color: #ebebeb;
+  }
   .same-height {
     height: 350px;
+  }
+  .double-height {
+    height: 710px;
   }
   .row{
     align-items: center;
