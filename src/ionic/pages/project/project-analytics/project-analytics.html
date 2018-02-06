@@ -358,5 +358,43 @@
       </ion-col>
     </ion-row>
 
+    <ion-row>
+      <ion-col col-6>
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-card">
+            <ion-item class="analytics-card">
+              <span class="analytics-card">Activity by Organizations (# of Commits)</span>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid padding>
+              <ion-row left>
+                <ion-col col-4>
+                  <strong>Organization</strong>
+                </ion-col>
+                <ion-col col-4 text-center>
+                  <strong># of Commits</strong>
+                </ion-col>
+                <ion-col col-4 text-center>
+                  <strong>Distribution</strong>
+                </ion-col>
+              </ion-row>
+              <ion-row *ngFor="let contributor of organizationContributors">
+                <ion-col col-4>
+                  {{ contributor.name }}
+                </ion-col>
+                <ion-col col-4 text-center class="contributor-data">
+                  {{ contributor.commits }}
+                </ion-col>
+                <ion-col col-4 text-center class="contributor-data">
+                  {{ contributor.distribution }}
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
   </ion-grid>
 </ion-content>
