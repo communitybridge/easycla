@@ -172,29 +172,42 @@
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Issues - Performance</span>
           </ion-card-header>
-          <ion-card-content>
-            <ion-row text-center padding>
-              Time to First Response
+          <ion-card-content class="issues-tile" padding>
+            <ion-row >
+              <ion-col col-12>
+                Time to First Response
+              </ion-col>
             </ion-row>
-            <ion-row text-center>
-              <ion-col>
+            <ion-row>
+              <ion-col col-5>
                 Current
-                {{ firstResponseTimeCurrent }} days
+                <div class="issues-tile-index">{{ firstResponseTimeCurrent }} days</div>
               </ion-col>
-              <ion-col>
+              <ion-col col-2>
+                <div class="issues-tile-index-separator"></div>
+              </ion-col>
+              <ion-col col-5>
                 Goal
-                {{ firstResponseTimeGoal }} days
+                <div class="issues-tile-index">{{ firstResponseTimeGoal }} days</div>
               </ion-col>
             </ion-row>
-            <ion-row text-center padding>
-              Time to Close
+            <ion-row padding-top>
+              <ion-col col-12>
+                Time to Close
+              </ion-col>
             </ion-row>
-            <ion-row text-center>
-              Current
-              {{ closeTimeCurrent }} days
-
-              Goal
-              {{ closeTimeGoal }} days
+            <ion-row>
+              <ion-col col-5>
+                Current
+                <div class="issues-tile-index">{{ closeTimeCurrent }} days</div>
+              </ion-col>
+              <ion-col col-2>
+                <div class="issues-tile-index-separator"></div>
+              </ion-col>
+              <ion-col col-5>
+                Goal
+                <div class="issues-tile-index">{{ closeTimeGoal }} days</div>
+              </ion-col>
             </ion-row>
           </ion-card-content>
         </ion-card>
