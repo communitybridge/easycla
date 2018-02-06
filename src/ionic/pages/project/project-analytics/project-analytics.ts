@@ -34,6 +34,7 @@ export class ProjectAnalyticsPage {
   span:any;
 
   claContributors:any = [];
+  organizationContributors:any = [];
 
   firstResponseTimeCurrent: any;
   firstResponseTimeGoal: any;
@@ -115,6 +116,48 @@ export class ProjectAnalyticsPage {
     this.closeTimeGoal = 10;
     this.newContributors = 28;
     this.totalContributors = 826;
+
+    this.organizationContributors= [{
+      name: "Google",
+      commits: "2,745,342",
+      distribution: "21.21%",
+    },{
+      name: "Intel",
+      commits: "811,861",
+      distribution: "6.33%",
+    },{
+      name: "Red Hat",
+      commits: "447,876",
+      distribution: "3.49%",
+    },{
+      name: "Code Aurora Forum",
+      commits: "327,851",
+      distribution: "2.56%",
+    },{
+      name: "SUSE",
+      commits: "303,751",
+      distribution: "2.37%",
+    },{
+      name: "Linux Foundation",
+      commits: "268,299",
+      distribution: "2.09%",
+    },{
+      name: "Linaro",
+      commits: "253,494",
+      distribution: "1.98%",
+    },{
+      name: "IBM",
+      commits: "227,232",
+      distribution: "1.73%",
+    },{
+      name: "Samsung",
+      commits: "186,446",
+      distribution: "1.45%",
+    },{
+      name: "Other",
+      commits: "156,256",
+      distribution: "1.36%",
+    }];
 
   }
 
@@ -390,7 +433,7 @@ export class ProjectAnalyticsPage {
     let maintainers;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.maintainersTable.dataTable = [
-        ['Name <Email Address>', 'Commits'] // Clean Array
+        ['Contributor', 'Commits'] // Clean Array
       ];
       if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
@@ -565,7 +608,7 @@ export class ProjectAnalyticsPage {
   public maintainersTable:any =  {
     chartType: 'Table',
     dataTable: [
-      ['Name <Email Address>', 'Commits'],
+      ['Contributor', 'Commits'],
     ],
     options: {
       title: 'Maintainers',
