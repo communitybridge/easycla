@@ -236,15 +236,6 @@
           <ion-card-header>
             <ion-item>
               <span>Pull Request - Pipeline</span>
-              <!-- <ion-buttons item-end>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('day')">1 D</button>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('week')">1 W</button>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('month')">1 M</button>
-                <br>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('quarter')">1 Q</button>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('year')">1 Y</button>
-                <button ion-button color="dark_blue" clear small (click)="getPrsPipeline('year')">ALL</button>
-              </ion-buttons> -->
             </ion-item>
           </ion-card-header>
           <ion-card-content class="pipeline-content">
@@ -308,6 +299,21 @@
 
     <ion-row>
       <ion-col col-3>
+
+        <ion-card class="analytics-card same-height">
+          <ion-card-header class="analytics-card">
+            <span class="analytics-card">Distribution of Commits</span>
+          </ion-card-header>
+          <ion-card-content>
+            <div text-center>
+              <span>% of Commits Made by</span>
+              <br>
+              <span>Top 10 Contributors</span>
+            </div>
+            <google-chart padding [data]="commitsDistributionChart"></google-chart>
+          </ion-card-content>
+        </ion-card>
+
         <ion-card class="analytics-card same-height">
           <ion-card-header class="analytics-card">
             <span class="analytics-card">Distribution of Commits</span>

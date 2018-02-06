@@ -73,7 +73,7 @@ export class ProjectAnalyticsPage {
     this.span = 'month';
     this.index = 'hyperledger';
     this.getCommitActivity(this.span);
-    this.getcommitsDistribution(this.span);
+    this.getcommitsDistribution('year');
     this.getIssuesStatus(this.span);
     this.getIssuesActivity(this.span);
     this.getPrsPipeline(this.span);
@@ -457,13 +457,14 @@ export class ProjectAnalyticsPage {
     ],
     options: {
       hAxis: {
-        textStyle:{ color: '#0b4e73'},
+        textStyle:{ color: '#1cb2e4'},
         gridlines: {
-          color: "#0b4e73"
+          color: "#1cb2e4"
         },
-        baselineColor: '#0b4e73'
+        baselineColor: '#1cb2e4'
       },
-      colors: ['#0b4e73','#2bb3e2'],
+      chartArea: {width: 400, height: 300},
+      colors: ['#1cb2e4','#ebebeb'],
       backgroundColor: '#ffffff',
       legend: 'none'
     }
