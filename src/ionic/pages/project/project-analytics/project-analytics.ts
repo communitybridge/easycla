@@ -39,7 +39,9 @@ export class ProjectAnalyticsPage {
   firstResponseTimeGoal: any;
   closeTimeCurrent: any;
   closeTimeGoal: any;
-  sumOpenPRs: any = 0;
+  sumOpenPRs: any;
+  newContributors: any;
+  totalContributors: any;
 
   constructor(
     public navCtrl: NavController,
@@ -76,12 +78,12 @@ export class ProjectAnalyticsPage {
     this.getcommitsDistribution('year');
     this.getIssuesStatus(this.span);
     this.getIssuesActivity(this.span);
-    this.getPrsPipeline(this.span);
+    this.getPrsPipeline('year');
     this.getPrsActivity(this.span);
     this.getPageViews(this.span);
-    this.getMaintainers(this.span);
+    this.getMaintainers('year');
     this.redrawCharts();
-
+    this.sumOpenPRs = 0;
     this.claContributors = [{
       name: "Nick Young",
       email: "swaggyp@dubs.com",
@@ -107,12 +109,12 @@ export class ProjectAnalyticsPage {
       email: "iggie@dubs.com",
       date: "11/27/17",
     }];
-    this.firstResponseTimeCurrent = "1.6";
+    this.firstResponseTimeCurrent = 1.6;
     this.firstResponseTimeGoal = 1.5;
     this.closeTimeCurrent = 9.2;
     this.closeTimeGoal = 10;
-
-
+    this.newContributors = 28;
+    this.totalContributors = 826;
 
   }
 
@@ -304,7 +306,6 @@ export class ProjectAnalyticsPage {
   }
 
   getPrsPipeline(span) {
-    span = 'year';
     let index = this.index;
     let metricType = 'prs.open';
     let groupBy = 'year';
