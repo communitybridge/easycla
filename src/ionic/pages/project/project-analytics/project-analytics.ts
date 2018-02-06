@@ -7,6 +7,7 @@ import { DomSanitizer} from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { HostListener } from '@angular/core'
+import { RoundProgressConfig } from 'angular-svg-round-progressbar';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
@@ -38,6 +39,7 @@ export class ProjectAnalyticsPage {
   firstResponseTimeGoal: any;
   closeTimeCurrent: any;
   closeTimeGoal: any;
+  sumOpenPRs: any = 0;
 
   constructor(
     public navCtrl: NavController,
@@ -48,8 +50,17 @@ export class ProjectAnalyticsPage {
     private domSanitizer : DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
+    private gaugeConfig: RoundProgressConfig
   ) {
     this.projectId = navParams.get('projectId');
+
+    this.gaugeConfig.setDefaults({
+      color: '#2bb3e2',
+      semicircle: true,
+      stroke: 30,
+      rounded: true,
+      responsive: true,
+    });
   }
 
   ngOnInit() {
@@ -100,6 +111,9 @@ export class ProjectAnalyticsPage {
     this.firstResponseTimeGoal = 1.5;
     this.closeTimeCurrent = 9.2;
     this.closeTimeGoal = 10;
+
+
+
   }
 
   setTimeNow() {
@@ -296,23 +310,15 @@ export class ProjectAnalyticsPage {
     let groupBy = 'year';
     let tsFrom = this.calculateTsFrom(span);
     let tsTo = this.timeNow;
-    let sumOpenPRs = 0;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      this.prsPipelineChart.dataTable = [
-        ['Label', 'Value'] // Clean Array
-      ];
+      this.sumOpenPRs = 0; // Clean Data
       if (Object.keys(metrics.value).length) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
-            sumOpenPRs = sumOpenPRs + value;
+            this.sumOpenPRs = this.sumOpenPRs + value;
           }
         );
-        this.prsPipelineChart.dataTable.push(['PRs', sumOpenPRs]);
       }
-      else {
-        this.prsPipelineChart.dataTable.push(['No PRs for a ' + span + ' now', 0]);
-      }
-      this.prsPipelineChart = Object.create(this.prsPipelineChart);
     });
   }
 
@@ -412,7 +418,6 @@ export class ProjectAnalyticsPage {
     this.commitsActivityChart = Object.create(this.commitsActivityChart);
     this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
     this.issuesStatusChart = Object.create(this.issuesStatusChart);
-    this.prsPipelineChart = Object.create(this.prsPipelineChart);
     this.issuesActivityChart = Object.create(this.issuesActivityChart);
     this.prsActivityChart = Object.create(this.prsActivityChart);
     this.pageViewsChart = Object.create(this.pageViewsChart);
@@ -504,21 +509,6 @@ export class ProjectAnalyticsPage {
     }
   };
 
-  public prsPipelineChart:any =  {
-    chartType: 'Gauge',
-    dataTable: [
-      ['Label', 'Value']
-    ],
-    options: {
-      animation: {easing: 'out'},
-      greenFrom: 0, greenTo: 32,
-      minorTicks: 1,
-      min: 0, max: 100,
-      majorTicks: ['0', '20', '40', '60', '80', '100'],
-      greenColor: '#ffffff'
-    }
-  };
-
   public prsActivityChart:any =  {
     chartType: 'AreaChart',
     dataTable: [
@@ -560,14 +550,14 @@ export class ProjectAnalyticsPage {
   };
 
   public cssClassNames:any = {
-    'headerRow': 'cssHeaderRow',
-    'tableRow': 'cssTableRow',
-    'oddTableRow': 'cssOddTableRow',
-    'selectedTableRow': 'cssSelectedTableRow',
-    'hoverTableRow': 'cssHoverTableRow',
-    'headerCell': 'cssHeaderCell',
-    'tableCell': 'cssTableCell',
-    'rowNumberCell': 'cssRowNumberCell'
+    'headerRow': 'header-row',
+    'tableRow': 'table-row',
+    'oddTableRow': 'odd-table-row',
+    'selectedTableRow': 'selected-table-row',
+    'hoverTableRow': 'hover-table-row',
+    'headerCell': 'header-cell',
+    'tableCell': 'table-cell',
+    'rowNumberCell': 'row-number-cell'
   };
 
   public maintainersTable:any =  {
