@@ -315,32 +315,40 @@
         </ion-card>
 
         <ion-card class="analytics-card same-height">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Distribution of Commits</span>
-            <br>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('day')">1 D</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('week')">1 W</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('month')">1 M</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+          <ion-card-header>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="commitsDistributionChart"></google-chart>
+            <ion-row text-center>
+              <ion-col col-12>
+                New Contributors
+              </ion-col>
+              <ion-col col-12>
+                <ion-icon class="contributor-icon" ios="ios-person" md="md-person"></ion-icon>
+                <span class="contributor-index">{{ newContributors }}</span>
+              </ion-col>
+            </ion-row>
+            <ion-col col-2>
+              <div class="contributors-tile-index-separator"></div>
+            </ion-col>
+            <ion-row text-center>
+              <ion-col col-12>
+                Total Contributors
+              </ion-col>
+              <ion-col col-12>
+                 <ion-icon class="contributor-icon" ios="ios-people" md="md-people"></ion-icon>
+                 <span class="contributor-index">{{ totalContributors }}</span>
+              </ion-col>
+            </ion-row>
           </ion-card-content>
         </ion-card>
+
       </ion-col>
+
       <ion-col col-9>
-        <ion-card class="analytics-card">
+        <ion-card class="analytics-card double-height">
           <ion-card-header class="analytics-card">
             <ion-item class="analytics-card">
-              <span class="analytics-card">Top Contributors</span>
-              <ion-buttons item-end>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('day')">1 D</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('week')">1 W</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('month')">1 M</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('quarter')">1 Q</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('year')">1 Y</button>
-              </ion-buttons>
+              <span class="analytics-card">Top Contributors (# of Commits)</span>
             </ion-item>
           </ion-card-header>
           <ion-card-content>
