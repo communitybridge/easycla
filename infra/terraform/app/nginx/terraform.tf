@@ -44,7 +44,7 @@ data "template_file" "nginx_ecs_task" {
     CONSUL_SERVICE            = "CLA_${var.build_hash}"
 
     # NGINX Domains
-    APP_DOMAINS               = "cla.linuxfoundation.org"
+    APP_DOMAINS               = "cla.api.linuxfoundation.org"
 
     # Build Information
     build_hash                = "${var.build_hash}"
@@ -101,6 +101,7 @@ resource "aws_alb_target_group" "nginx" {
     path = "/elb-status"
     protocol = "HTTP"
     interval = 15
+    matcher = "200,202"
   }
 }
 
@@ -140,7 +141,7 @@ resource "aws_alb_listener" "nginx_443" {
 resource "aws_route53_record" "public" {
   provider= "aws.local"
   zone_id = "${var.route53_zone_id}"
-  name    = "api"
+  name    = "cla"
   type    = "A"
 
   alias {

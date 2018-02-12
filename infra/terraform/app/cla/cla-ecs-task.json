@@ -6,7 +6,7 @@
     "name": "cla",
     "portMappings": [
       {
-        "containerPort": 8000
+        "containerPort": 5000
       }
     ],
     "dnsServers": [
@@ -16,11 +16,11 @@
     ],
     "environment": [
       {
-        "name": "SERVICE_8080_NAME",
+        "name": "SERVICE_5000_NAME",
         "value": "CLA_${build_hash}"
       },
       {
-        "name": "SERVICE_8080_TAGS",
+        "name": "SERVICE_5000_TAGS",
         "value": "${TAG_REGION},${TAG_VPC_ID}"
       }
     ],

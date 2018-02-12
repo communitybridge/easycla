@@ -4,6 +4,7 @@ DynamoDBLocal_lib/
 DynamoDBLocal.jar
 docker-compose.yml
 cla_config.py
+test-results.xml
 htmlcov/
 .coverage
 *.egg*
@@ -11,3 +12,7 @@ htmlcov/
 *.swp
 *.pyc
 *.db
+*.tfstate
+*.tfstate.backup
+.terraform/
+.idea/

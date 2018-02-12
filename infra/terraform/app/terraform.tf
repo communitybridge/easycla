@@ -73,7 +73,6 @@ module "registrator" {
   source           = "git::ssh://git@github.linuxfoundation.org/Engineering/terraform.git//modules/prod-registrator"
 
   # Application Information
-  build_hash       = "${var.build_hash}"
   project          = "cla"
 
   region           = "${data.terraform_remote_state.cla-env.region}"
@@ -91,7 +90,6 @@ module "consul" {
   endpoint         = "consul.service.consul"
 
   # Application Information
-  build_hash       = "${var.build_hash}"
   project          = "cla"
 
   region           = "${data.terraform_remote_state.cla-env.region}"
@@ -123,7 +121,7 @@ module "nginx" {
 
   # Application Information
   build_hash      = "${var.build_hash}"
-  route53_zone_id   = "${data.terraform_remote_state.cla-env.route53_zone_id}"
+  route53_zone_id   = "${data.terraform_remote_state.cla-env.api_route53}"
 
   # ECS Information
   external_elb_sg   = "${data.terraform_remote_state.cla-env.sg_external_elb}"
