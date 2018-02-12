@@ -21,7 +21,7 @@ class EmailTestCase(CLATestCase):
             email_service.initialize(cla.conf)
             email_service.emails_sent = []
             email_service.send('Test Subject1', 'Test body1', 'cla-test@mailinator.com')
-            document_path = 'resources/test.pdf'
+            document_path = cla.utils.get_cla_path() + '/tests/resources/test.pdf'
             attachment = {'type': 'file',
                           'file': document_path,
                           'filename': 'document.pdf'}

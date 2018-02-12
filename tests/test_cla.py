@@ -18,7 +18,7 @@ import cla
 
 # For now, force DynamoDB for testing (should probably be SQlite :memory: in the future).
 cla.conf['DATABASE'] = 'DynamoDB'
-cla.conf['DATABASE_HOST'] = 'http://localhost:8000'
+cla.conf['DATABASE_HOST'] = 'http://dynamodb:8000'
 # Use a mock signing service for testing.
 cla.conf['SIGNING_SERVICE'] = 'MockDocuSign'
 cla.conf['BASE_URL'] = 'http://cla-system.com'

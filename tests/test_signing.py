@@ -26,7 +26,7 @@ class SigningTestCase(CLATestCase):
                                           signature_signed=False)
         change_id = 1 # Repository provider specific ID.
         # First one has status 'Sent', second one has status 'Completed'.
-        fhandle = open('resources/docusign_callback_payload.xml')
+        fhandle = open(cla.utils.get_cla_path() + '/tests/resources/docusign_callback_payload.xml')
         docusign_payload = fhandle.read()
         fhandle.close()
         data = docusign_payload %signature['signature_id']

@@ -42,7 +42,7 @@ class GitHubTestCase(CLATestCase):
                                 repository['repository_id'], change_request_id, request)
         # Should have automatically created a new user.
         user = get_user_instance().all()[0]
-        uri = '/#/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
+        uri = '/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
               '?redirect=http://test-github.com/user/repo/' + repository['repository_external_id']
         self.assertTrue(uri in str(context.exception))
 
@@ -66,7 +66,7 @@ class GitHubTestCase(CLATestCase):
             github.oauth2_redirect(state, code, request)
         # Should have automatically created a new user.
         user = get_user_instance().all()[0]
-        uri = '/#/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
+        uri = '/cla/project/' + project['project_id'] + '/user/' + user.get_user_id() + \
               '?redirect=http://github/origin/url'
         self.assertTrue(uri in str(context.exception))
 

@@ -3,12 +3,20 @@ Utility functions for the CLA project.
 """
 
 import urllib.parse
+import inspect
 import json
+import os
 import re
 import falcon
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
 import cla
+
+def get_cla_path():
+    """Returns the CLA code root directory on the current system."""
+    cla_folder_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    cla_root_dir = os.path.dirname(cla_folder_dir)
+    return cla_root_dir
 
 def get_session_middleware():
     """Prepares the hug middleware to manage key-value session data."""

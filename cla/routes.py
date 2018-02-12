@@ -17,7 +17,7 @@ from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
-from falcon import HTTP_403
+from falcon import status, HTTP_403
 
 #
 # Middleware
@@ -32,6 +32,17 @@ def process_data(request, response, resource):
       response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
       response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
       response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+#
+# Custom 404.
+#
+@hug.not_found()
+def not_found():
+    """Custom 404 handler to hide the default hug behaviour of displaying all available routes."""
+    return {'error': {'status': status.HTTP_NOT_FOUND,
+                      'description': 'URL is invalid.'
+                     }
+           }
 
 #
 # Health check route.
@@ -66,7 +77,6 @@ def get_user(user_id: hug.types.uuid):
     Returns the requested user data based on ID.
     """
     return cla.controllers.user.get_user(user_id=user_id)
-
 
 @hug.get('/user/email/{user_email}', requires=token_authentication, versions=1)
 def get_user_email(user_email: cla.hug_types.email, user: cla_user):
@@ -158,7 +168,7 @@ def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', requires=token_authentication, versions=1)
 def request_company_whitelist(user: cla_user, user_id: hug.types.uuid, company_id: hug.types.uuid,
-                              user_email: cla.hug_types.email,message=None):
+                              user_email: cla.hug_types.email, message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
 
@@ -548,7 +558,7 @@ def delete_company(user: cla_user, company_id: hug.types.text):
     return cla.controllers.company.delete_company(company_id)
 
 @hug.put('/company/{company_id}/import/whitelist/csv', requires=token_authentication, versions=1)
-def put_company_whitelist_csv(body, company_id: hug.types.uuid):
+def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
     """
     PUT: /company/{company_id}/import/whitelist/csv
 
@@ -558,6 +568,15 @@ def put_company_whitelist_csv(body, company_id: hug.types.uuid):
     content = body.read().decode()
     return cla.controllers.company.update_company_whitelist_csv(content, company_id)
 
+
+@hug.get('/companies/{manager_id}', version=1)
+def get_manager_companies(manager_id: hug.types.uuid):
+    """
+    GET: /companies/{manager_id}
+
+    Returns a list of companies a manager is associated with
+    """
+    return cla.controllers.company.get_manager_companies(manager_id)
 #
 # Project Routes.
 #
