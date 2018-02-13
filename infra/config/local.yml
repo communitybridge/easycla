@@ -3,7 +3,7 @@
 # The Syntax for each container should mimic the docker-compose format.
 containers:
   dynamodb:
-    image: 'dwmkerr/dynamodb'
+    image: 'dwmkerr/dynamodb:38'
     expose: ['8000']
     command: '-dbPath /srv/data -sharedDb -optimizeDbBeforeStartup'
     volumes: ['.lf/data/dynamo:/srv/data']
