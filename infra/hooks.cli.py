@@ -31,7 +31,7 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
         notice('Example: EMAIL_SERVICE = SMTP')
         notice('Example: SMTP_HOST = localhost')
         notice('Example: SMTP_PORT = %s' %mailhog_port)
-        notice('Example: KEYCLOAK_ENDPOINT = http://localhost:<port>/auth/')
+        notice('Example: KEYCLOAK_ENDPOINT = http://localhost:<port>')
         notice('Example: KEYCLOAK_REALM = LinuxFoundation')
         notice('Example: KEYCLOAK_CLIENT_ID = cla')
         notice('Example: KEYCLOAK_CLIENT_SECRET = secret')
@@ -58,7 +58,7 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
             if keycloak is not None and keycloak.created:
                 kc_endpoint = keycloak.endpoints.containers.get('workspace', 8080).formatted
                 success('Keycloak: %s' %kc_endpoint)
-                containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint + '/auth/'
+                containers['workspace']['environment']['CLA_KEYCLOAK_ENDPOINT'] = kc_endpoint
 
         # Set the callback_url to the CLA instance.
         ip = lfcore.utils.public_ip()
