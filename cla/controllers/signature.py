@@ -295,3 +295,17 @@ def get_project_signatures(project_id):
     """
     signatures = get_signature_instance().get_signatures_by_project(str(project_id))
     return [signature.to_dict() for signature in signatures]
+
+
+def get_project_company_signatures(company_id, project_id):
+    """
+    Get all signatures for project specified and a company specified
+
+    :param company_id: The ID of the company in question
+    :param project_id: The ID of the project in question
+    :type company_id: string
+    :type project_id: string
+    """
+    signatures = get_signature_instance().get_signatures_by_company_project(str(company_id),
+                                                                            str(project_id))
+    return signatures
