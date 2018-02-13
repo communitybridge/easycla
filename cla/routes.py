@@ -380,6 +380,15 @@ def get_signatures_project(user: cla_user, project_id: hug.types.uuid):
     return cla.controllers.signature.get_project_signatures(project_id)
 
 
+@hug.get('/signatures/company/{company_id}/project/{project_id}', versions=1)
+def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+     GET: /signatures/company/{company_id}/project/{project_id}
+
+     Get all signatures for project specified and a company specified
+     """
+    return cla.controllers.signature.get_project_company_signatures(company_id, project_id)
+
 #
 # Repository Routes.
 #
