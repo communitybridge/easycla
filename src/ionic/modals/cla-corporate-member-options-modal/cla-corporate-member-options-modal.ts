@@ -8,7 +8,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'cla-corporate-member-options-modal',
   templateUrl: 'cla-corporate-member-options-modal.html',
-  providers: [CincoService]
 })
 export class ClaCorporateMemberOptionsModal {
   members: any;

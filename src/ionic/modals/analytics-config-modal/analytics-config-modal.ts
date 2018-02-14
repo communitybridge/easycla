@@ -10,7 +10,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'analytics-config-modal',
   templateUrl: 'analytics-config-modal.html',
-  providers: [CincoService]
 })
 export class AnalyticsConfigModal {
 
