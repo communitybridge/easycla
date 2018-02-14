@@ -8,7 +8,6 @@ import { CincoService } from '../../services/cinco.service';
 @Component({
   selector: 'member-modal',
   templateUrl: 'member-modal.html',
-  providers: [CincoService]
 })
 export class MemberModal {
 

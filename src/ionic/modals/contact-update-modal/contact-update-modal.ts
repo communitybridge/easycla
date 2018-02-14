@@ -13,7 +13,6 @@ import { MemberContactModel } from '../../models/member-contact-model';
 @Component({
   selector: 'contact-update-modal',
   templateUrl: 'contact-update-modal.html',
-  providers: [CincoService]
 })
 export class ContactUpdateModal {
   projectId: string; // Always Needed
