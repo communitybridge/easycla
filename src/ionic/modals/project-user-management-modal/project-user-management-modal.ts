@@ -8,7 +8,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'project-user-management-modal',
   templateUrl: 'project-user-management-modal.html',
-  providers: [CincoService]
 })
 export class ProjectUserManagementModal {
   projectId: string;
