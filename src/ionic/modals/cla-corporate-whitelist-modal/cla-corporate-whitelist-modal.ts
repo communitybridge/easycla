@@ -9,7 +9,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'cla-corporate-whitelist-modal',
   templateUrl: 'cla-corporate-whitelist-modal.html',
-  providers: [CincoService]
 })
 export class ClaCorporateWhitelistModal {
   domains: any;

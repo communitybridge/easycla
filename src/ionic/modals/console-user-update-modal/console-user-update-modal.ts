@@ -12,7 +12,6 @@ import { CincoService } from '../../services/cinco.service';
 @Component({
   selector: 'console-user-update-modal',
   templateUrl: 'console-user-update-modal.html',
-  providers: [CincoService]
 })
 export class ConsoleUserUpdateModal {
   user: any;
