@@ -12,7 +12,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
-from cla.auth import token_authentication
+from cla.auth import token_authentication, pm_verify
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
@@ -29,9 +29,9 @@ hug.API('cla/routes').http.add_middleware(get_session_middleware())
 # CORS Middleware
 @hug.response_middleware()
 def process_data(request, response, resource):
-      response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
-      response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-      response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
+    response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
 #
 # Custom 404.
@@ -66,6 +66,7 @@ def get_users(user: cla_user):
 
     Returns all CLA users.
     """
+    staff_verify(user)
     return cla.controllers.user.get_users()
 
 
@@ -84,6 +85,9 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     GET: /user/email/{user_email}
 
     Returns the requested user data based on user email.
+
+    TODO: Need to look into whether this has to be locked down more (by staff maybe?). Would that
+    break the user flow from GitHub?
     """
     return cla.controllers.user.get_user(user_email=user_email)
 
@@ -94,6 +98,8 @@ def get_user_github(user_github_id: hug.types.number, user: cla_user):
     GET: /user/github/{user_github_id}
 
     Returns the requested user data based on user GitHub ID.
+
+    TODO: Should this be locked down more? Staff only?
     """
     return cla.controllers.user.get_user(user_github_id=user_github_id)
 
@@ -111,6 +117,7 @@ def post_user(user: cla_user, user_email: cla.hug_types.email, user_name=None,
 
     Returns the data of the newly created user.
     """
+    staff_verify(user) # Only staff can create users.
     return cla.controllers.user.create_user(user_email=user_email,
                                             user_name=user_name,
                                             user_company_id=user_company_id,
@@ -129,6 +136,8 @@ def put_user(user: cla_user, user_id: hug.types.uuid, user_email=None, user_name
     Supports all the same fields as the POST equivalent.
 
     Returns the data of the updated user.
+
+    TODO: Should the user be able to update their own CLA data?
     """
     return cla.controllers.user.update_user(user_id,
                                             user_email=user_email,
@@ -144,6 +153,7 @@ def delete_user(user: cla_user, user_id: hug.types.uuid):
 
     Deletes the specified user.
     """
+    staff_verify(user)
     return cla.controllers.user.delete_user(user_id)
 
 
@@ -163,6 +173,8 @@ def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
     GET: /users/company/{user_company_id}
 
     Returns a list of users associated with an company.
+
+    TODO: Should probably not simply be auth only - need some role check?
     """
     return cla.controllers.user.get_users_company(user_company_id)
 
@@ -176,6 +188,8 @@ def request_company_whitelist(user: cla_user, user_id: hug.types.uuid, company_i
 
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
+
+    TODO: This may need to be completely opened as no login is required to go through the signing flow.
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
@@ -226,6 +240,7 @@ def get_signatures(user: cla_user):
 
     Returns all CLA signatures.
     """
+    staff_verify(user)
     return cla.controllers.signature.get_signatures()
 
 
@@ -327,6 +342,7 @@ def delete_signature(user: cla_user, signature_id: hug.types.uuid):
 
     Deletes the specified signature.
     """
+    staff_verify(user)
     return cla.controllers.signature.delete_signature(signature_id)
 
 
@@ -399,6 +415,7 @@ def get_repositories(user: cla_user):
 
     Returns all CLA repositories.
     """
+    staff_verify(user)
     return cla.controllers.repository.get_repositories()
 
 
@@ -479,6 +496,7 @@ def delete_repository(user: cla_user, repository_id: hug.types.text):
 
     Deletes the specified repository.
     """
+    staff_verify(user)
     return cla.controllers.repository.delete_repository(repository_id)
 
 
@@ -564,6 +582,7 @@ def delete_company(user: cla_user, company_id: hug.types.text):
 
     Deletes the specified company.
     """
+    staff_verify(user)
     return cla.controllers.company.delete_company(company_id)
 
 @hug.put('/company/{company_id}/import/whitelist/csv', requires=token_authentication, versions=1)
@@ -574,6 +593,7 @@ def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
     Imports a CSV file of whitelisted user emails.
     Expects the first column to have a header in the first row and contain email addresses.
     """
+    staff_verify(user) or company_manager_verify(user, company_id)
     content = body.read().decode()
     return cla.controllers.company.update_company_whitelist_csv(content, company_id)
 
@@ -596,6 +616,7 @@ def get_projects(user: cla_user):
 
     Returns all CLA projects.
     """
+    staff_verify(user)
     projects = cla.controllers.project.get_projects()
     # For public endpoint, don't show the project_external_id.
     for project in projects:
@@ -639,6 +660,7 @@ def post_project(user: cla_user, project_external_id: hug.types.text, project_na
 
     Returns the CLA project that was just created.
     """
+    staff_verify(user) or pm_verify_external_id(user, project_external_id)
     return cla.controllers.project.create_project(project_external_id, project_name,
                                                   project_icla_enabled, project_ccla_enabled,
                                                   project_ccla_requires_icla_signature)
@@ -658,6 +680,7 @@ def put_project(user: cla_user, project_id: hug.types.uuid, project_name=None,
 
     Returns the CLA project that was just updated.
     """
+    staff_verify(user) or pm_verify(user, project_id)
     return cla.controllers.project.update_project(project_id, project_name=project_name,
                                                   project_icla_enabled=project_icla_enabled,
                                                   project_ccla_enabled=project_ccla_enabled,
@@ -671,6 +694,7 @@ def delete_project(user: cla_user, project_id: hug.types.uuid):
 
     Deletes the specified project.
     """
+    staff_verify(user)
     return cla.controllers.project.delete_project(project_id)
 
 
@@ -702,8 +726,8 @@ def get_project_document(project_id: hug.types.uuid,
     """
     return cla.controllers.project.get_project_document(project_id, document_type)
 
-@hug.get('/project/{project_id}/document/{document_type}/pdf', requires=token_authentication, version=1)
-def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
+@hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
     GET: /project/{project_id}/document/{document_type}/pdf
@@ -713,8 +737,8 @@ def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
     response.set_header('Content-Type', 'application/pdf')
     return cla.controllers.project.get_project_document_raw(project_id, document_type)
 
-@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', requires=token_authentication, version=1)
-def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
+@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate']),
                          document_major_version: hug.types.number,
                          document_minor_version: hug.types.number):
@@ -769,6 +793,7 @@ def post_project_document(user: cla_user,
     If document_content_type starts with 'storage+', the document_content is assumed to be base64
     encoded binary data that will be saved in the CLA system's configured storage service.
     """
+    staff_verify(user) or pm_verify(user, project_id)
     return cla.controllers.project.post_project_document(
         project_id=project_id,
         document_type=document_type,
@@ -810,6 +835,7 @@ def post_project_document_template(user: cla_user,
     The document_content_type is assumed to be 'storage+pdf', which means the document content will
     be saved in the CLA system's configured storage service.
     """
+    staff_verify(user) or pm_verify(user, project_id)
     return cla.controllers.project.post_project_document_template(
         project_id=project_id,
         document_type=document_type,
@@ -819,8 +845,10 @@ def post_project_document_template(user: cla_user,
         template_name=template_name,
         new_major_version=new_major_version)
 
-@hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
-def delete_project_document(project_id: hug.types.uuid,
+@hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}',
+            requires=token_authentication, versions=1)
+def delete_project_document(user: cla_user,
+                            project_id: hug.types.uuid,
                             document_type: hug.types.one_of(['individual', 'corporate']),
                             major_version: hug.types.number,
                             minor_version: hug.types.number):
@@ -829,6 +857,7 @@ def delete_project_document(project_id: hug.types.uuid,
 
     Delete a project's signature document by revision.
     """
+    staff_verify(user)
     return cla.controllers.project.delete_project_document(project_id,
                                                            document_type,
                                                            major_version,
@@ -866,10 +895,11 @@ def request_individual_signature(project_id: hug.types.uuid,
     """
     return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
 
-@hug.post('/request-corporate-signature', versions=1,
+@hug.post('/request-corporate-signature', requires=token_authentication, versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'company_id': 'some-company-uuid'}")
-def request_corporate_signature(project_id: hug.types.uuid,
+def request_corporate_signature(user: cla_user,
+                                project_id: hug.types.uuid,
                                 company_id: hug.types.uuid,
                                 return_url=None):
     """
@@ -892,6 +922,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
     Manager should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
+    company_manager_verify(user, company_id)
     return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
 
 @hug.post('/request-employee-signature', versions=1)
@@ -922,7 +953,8 @@ def post_individual_signed(body,
     """
     POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
 
-    TODO: Need to protect this endpoint somehow.
+    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
+    DocuSign and the data hasn't been tampered with.
 
     Callback URL from signing service upon ICLA signature.
     """
@@ -936,7 +968,8 @@ def post_corporate_signed(body,
     """
     POST: /signed/corporate/{project_id}/{company_id}
 
-    TODO: Need to protect this endpoint somehow.
+    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
+    DocuSign and the data hasn't been tampered with.
 
     Callback URL from signing service upon CCLA signature.
     """
@@ -992,8 +1025,9 @@ def change_icon(provider: hug.types.one_of(get_supported_repository_providers().
     return cla.controllers.repository_service.change_icon(provider, signed)
 
 
-@hug.get('/repository-provider/{provider}/oauth2_redirect', versions=1)
-def oauth2_redirect(provider: hug.types.one_of(get_supported_repository_providers().keys()), # pylint: disable=too-many-arguments
+@hug.get('/repository-provider/{provider}/oauth2_redirect', requires=token_authentication, versions=1)
+def oauth2_redirect(user: cla_user, # pylint: disable=too-many-arguments
+                    provider: hug.types.one_of(get_supported_repository_providers().keys()),
                     state: hug.types.text,
                     code: hug.types.text,
                     repository_id: hug.types.text,
@@ -1006,6 +1040,7 @@ def oauth2_redirect(provider: hug.types.one_of(get_supported_repository_provider
 
     Handles the redirect from an OAuth2 provider when initiating a signature.
     """
+    staff_verify(user)
     return cla.controllers.repository_service.oauth2_redirect(provider,
                                                               state,
                                                               code,
@@ -1076,6 +1111,7 @@ def post_github_organization(user: cla_user,
 
     Returns the CLA GitHub Organization that was just created.
     """
+    pm_verify(user, organization_project_id)
     return cla.controllers.github.create_organization(organization_name,
                                                       organization_project_id,
                                                       organization_installation_id)
@@ -1088,6 +1124,7 @@ def delete_repository(user: cla_user, organization_name: hug.types.text):
 
     Deletes the specified Github Organization.
     """
+    staff_verify(user)
     return cla.controllers.github.delete_organization(organization_name)
 
 @hug.get('/github/installation', versions=1)

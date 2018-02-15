@@ -20,10 +20,12 @@ class CLAUser(object):
     """
     def __init__(self, data):
         self.data = data
-        self.name = data['name']
-        self.session_state = data['session_state']
-        self.resource_access = data['resource_access']
-        self.preferred_username = data['preferred_username']
-        self.given_name = data['given_name']
-        self.family_name = data['family_name']
-        self.email = data['email']
+        self.user_id = data.get('sub', None)
+        self.name = data.get('name', None)
+        self.session_state = data.get('session_state', None)
+        self.resource_access = data.get('resource_access', None)
+        self.preferred_username = data.get('preferred_username', None)
+        self.given_name = data.get('given_name', None)
+        self.family_name = data.get('family_name', None)
+        self.email = data.get('email', None)
+        self.roles = data.get('realm_access', {}).get('roles', [])

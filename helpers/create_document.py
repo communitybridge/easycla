@@ -1,4 +1,5 @@
-PROJECT_EXTERNAL_ID = 'salesforce-id-here'
+PROJECT_EXTERNAL_ID1 = 'a090t0000008DEiAAM'
+PROJECT_EXTERNAL_ID2 = 'a090t0000008E7iAAE'
 GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
@@ -24,8 +25,8 @@ pdf_content = pdf_generator.generate(content)
 # Organisation
 github_org = get_github_organization_instance().get_organization_by_installation_id(GITHUB_INSTALLATION_ID)
 # Project
-github_project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
-github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '2')[0]
+github_project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID1)[0]
+github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID2)[0]
 # Document
 # ICLA Project1
 individual_document = get_document_instance()
