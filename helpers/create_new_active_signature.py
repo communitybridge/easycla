@@ -8,7 +8,7 @@ import uuid
 import cla
 from cla.utils import get_user_instance, get_project_instance, set_active_signature_metadata
 
-PROJECT_EXTERNAL_ID = 'salesforce-id-here'
+PROJECT_EXTERNAL_ID1 = 'a090t0000008DEiAAM'
 
 # Create new user so as to not conflict with the create_user.py script.
 user = get_user_instance()
@@ -19,7 +19,7 @@ user.set_user_github_id(234)
 user.save()
 
 user_id = user.get_user_id()
-project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
+project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID1)[0]
 project_id = project.get_project_id()
 
 repository_id = '96820382'

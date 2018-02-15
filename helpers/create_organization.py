@@ -1,8 +1,8 @@
 # Project external ID.
-PROJECT_EXTERNAL_ID = 'salesforce-id-here'
+PROJECT_EXTERNAL_ID = 'a090t0000008DEiAAM'
 # The GitHub user/org used for testing purposes.
 GITHUB_ORGANIZATION_NAME = 'linuxfoundation'
-GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
+GITHUB_INSTALLATION_ID = 74230 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
 sys.path.append('../')
@@ -11,7 +11,7 @@ import cla
 from cla.utils import get_project_instance, get_github_organization_instance
 
 # Organisation
-project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
+project = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID)[0]
 cla.log.info('Creating GitHub Organization: %s' %GITHUB_ORGANIZATION_NAME)
 github_org = get_github_organization_instance()
 github_org.set_organization_name(GITHUB_ORGANIZATION_NAME)
