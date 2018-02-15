@@ -25,6 +25,7 @@ variable "security_group" {
 
 # Security Group for EFS
 resource "aws_security_group" "efs" {
+  provider           = "aws.local"
   name        = "${var.name}-efs"
   description = "Allows Internal EFS use from inside the VPC"
   vpc_id      = "${var.vpc_id}"
@@ -54,6 +55,7 @@ resource "aws_security_group" "efs" {
 
 # Creating EFS for Tools Storage
 resource "aws_efs_file_system" "efs" {
+  provider           = "aws.local"
   creation_token = "${var.name}-efs"
   tags {
     Name = "${var.display_name}"
@@ -61,18 +63,21 @@ resource "aws_efs_file_system" "efs" {
 }
 
 resource "aws_efs_mount_target" "efs_mount_1" {
+  provider           = "aws.local"
   file_system_id = "${aws_efs_file_system.efs.id}"
   subnet_id = "${var.subnet_ids[0]}"
   security_groups = ["${aws_security_group.efs.id}"]
 }
 
 resource "aws_efs_mount_target" "efs_mount_2" {
+  provider           = "aws.local"
   file_system_id = "${aws_efs_file_system.efs.id}"
   subnet_id = "${var.subnet_ids[1]}"
   security_groups = ["${aws_security_group.efs.id}"]
 }
 
 resource "aws_efs_mount_target" "efs_mount_3" {
+  provider           = "aws.local"
   file_system_id = "${aws_efs_file_system.efs.id}"
   subnet_id = "${var.subnet_ids[2]}"
   security_groups = ["${aws_security_group.efs.id}"]

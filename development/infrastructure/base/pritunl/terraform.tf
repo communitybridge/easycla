@@ -27,7 +27,7 @@ resource "aws_launch_configuration" "main" {
   name_prefix = "vpn-pritunl-nodes-config"
 
   image_id                    = "${data.aws_ami.pritunl.id}"
-  instance_type               = "t2.small"
+  instance_type               = "t2.medium"
   key_name                    = "production-shared-tools"
   security_groups             = ["${var.vpn_sg}"]
   associate_public_ip_address = true

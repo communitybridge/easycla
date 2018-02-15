@@ -89,12 +89,14 @@ module "engineering-sandboxes-ecs-cluster" {
   iam_instance_profile = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
   region               = "us-west-2"
   availability_zones   = "${module.vpc.availability_zones}"
-  instance_type        = "t2.medium"
+  instance_type        = "t2.xlarge"
   security_group       = "${module.security_groups.engineering_sandboxes}"
   instance_ebs_optimized = false
   desired_capacity     = "3"
   min_size             = "3"
   cloud_config_content = "${data.template_file.ecs_cloud_config.rendered}"
+  root_volume_size     = 100
+  docker_volume_size   = 100
 }
 
 module "rds-cluster" {
