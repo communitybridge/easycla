@@ -49,11 +49,11 @@ filebeat.prospectors:
 
 #================================ General =====================================
 
-name: production-tools
+name: production-cluster
 tags: ["system"]
 fields:
-  sys_name: engineering-sandboxes
-  sys_env: sandbox
+  sys_name: production-ecs-cluster
+  sys_env: production
   sys_region: ${aws_region}
 
 #================================ Outputs =====================================

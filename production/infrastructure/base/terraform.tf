@@ -253,6 +253,12 @@ module "logstash-cloudwatch" {
   region                 = "${var.region}"
 }
 
+module "informer" {
+  source = "./informer"
+
+  subnets = "${module.vpc.internal_subnets}"
+}
+
 
 /**
  * Outputs

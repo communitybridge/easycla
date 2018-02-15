@@ -49,11 +49,11 @@ filebeat.prospectors:
 
 #================================ General =====================================
 
-name: production-tools
+name: staging-cluster
 tags: ["system"]
 fields:
-  sys_name: engineering-sandboxes
-  sys_env: sandbox
+  sys_name: staging-ecs-cluster
+  sys_env: staging
   sys_region: ${aws_region}
 
 #================================ Outputs =====================================

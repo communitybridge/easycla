@@ -97,6 +97,23 @@ resource "aws_instance" "jenkins" {
   }
 }
 
+resource "aws_ebs_volume" "jenkins-master-storage" {
+  availability_zone = "us-west-2a"
+  size = 350
+  type = "io1"
+  iops = 2500
+  tags {
+    Name = "Jenkins Master"
+  }
+}
+
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdh"
+  volume_id   = "${aws_ebs_volume.jenkins-master-storage.id}"
+  instance_id = "${aws_instance.jenkins.id}"
+  force_detach = true
+}
+
 # Create a new load balancer
 resource "aws_elb" "jenkins" {
   provider = "aws.local"

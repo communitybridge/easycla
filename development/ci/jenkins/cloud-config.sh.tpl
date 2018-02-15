@@ -7,7 +7,7 @@ yum install -y gcc java-1.8.0-openjdk git yum-utils openssl-devel install jq nfs
 echo "nameserver 10.32.2.2" > /etc/resolv.conf
 
 echo "license_key: ${newrelic_license}" | tee -a /etc/newrelic-infra.yml
-printf "[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\nenable=1\ngpgcheck=0" | tee -a /etc/yum.repos.d/newrelic-infra.repo
+sudo curl -o /etc/yum.repos.d/newrelic-infra.repo https://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64/newrelic-infra.repo
 yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
 yum install newrelic-infra -y
 
@@ -15,25 +15,11 @@ wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/je
 rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key
 yum install jenkins -y
 
-# Get region of EC2 from instance metadata
-EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-EC2_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
-
-# Create mount point
-mkdir /var/lib/jenkins
-
-# Get EFS FileSystemID attribute
-#Instance needs to be added to a EC2 role that give the instance at least read access to EFS
-EFS_FILE_SYSTEM_ID=${efs_id}
-
-# Instance needs to be a member of security group that allows 2049 inbound/outbound
-#The security group that the instance belongs to has to be added to EFS file system configuration
-#Create variables for source and target
-DIR_SRC=$EC2_AVAIL_ZONE.$EFS_FILE_SYSTEM_ID.efs.$EC2_REGION.amazonaws.com:/
+DIR_SRC=/dev/xvdh
 DIR_TGT=/var/lib/jenkins
 
 # Mount EFS file system
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $DIR_SRC $DIR_TGT
+mount $DIR_SRC $DIR_TGT
 
 #Backup fstab
 cp -p /etc/fstab /etc/fstab.back-$(date +%F)
