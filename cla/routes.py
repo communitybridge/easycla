@@ -1111,7 +1111,7 @@ def post_github_organization(user: cla_user,
 
     Returns the CLA GitHub Organization that was just created.
     """
-    pm_verify(user, organization_project_id)
+    staff_verify(user) or pm_verify(user, organization_project_id)
     return cla.controllers.github.create_organization(organization_name,
                                                       organization_project_id,
                                                       organization_installation_id)
