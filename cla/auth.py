@@ -41,7 +41,7 @@ def pm_verify(user, project_id):
     Helper function to ensure the request is made by a user who is manager for the project in question.
     """
     project = cla.utils.get_project_instance()
-    project.load(project_id)
+    project.load(str(project_id))
     external_project_id = project.get_project_external_id()
     pm_verify_external_id(user, external_project_id)
 
