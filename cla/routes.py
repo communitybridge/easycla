@@ -12,7 +12,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
-from cla.auth import token_authentication, pm_verify
+from cla.auth import token_authentication, pm_verify, pm_verify_external_id, staff_verify
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
@@ -922,7 +922,7 @@ def request_corporate_signature(user: cla_user,
     Manager should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    company_manager_verify(user, company_id)
+    staff_verify(user) or company_manager_verify(user, company_id)
     return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
 
 @hug.post('/request-employee-signature', versions=1)
