@@ -89,5 +89,18 @@ export class CompanyPage {
       projectId: projectId,
     });
   }
+  
+  openCompanyModal() {
+    console.log('company page');
+    console.log(this.company);
+    let modal = this.modalCtrl.create('AddCompanyModal', {
+      company: this.company,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
 
 }

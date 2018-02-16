@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, IonicPage } from 'ionic-angular';
 import { ClaService } from 'cla-service';
-
+import { ClaCompanyModel } from '../../models/cla-company';
 
 @IonicPage({
   segment: 'companies'
@@ -35,7 +35,7 @@ export class CompaniesPage {
     this.getCompanies();
   }
 
-  openCompanyModel() {
+  openCompanyModal() {
     let modal = this.modalCtrl.create('AddCompanyModal', {});
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
