@@ -565,6 +565,7 @@ def put_company(user: cla_user, # pylint: disable=too-many-arguments
 
     Returns the CLA company that was just updated.
     """
+    staff_verify(user) or company_manager_verify(user, company_id)
     return cla.controllers.company.update_company(
         company_id,
         company_name=company_name,
