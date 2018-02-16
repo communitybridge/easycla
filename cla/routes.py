@@ -178,8 +178,8 @@ def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
     """
     return cla.controllers.user.get_users_company(user_company_id)
 
-@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', requires=token_authentication, versions=1)
-def request_company_whitelist(user: cla_user, user_id: hug.types.uuid, company_id: hug.types.uuid,
+@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
+def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
                               user_email: cla.hug_types.email, message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
@@ -188,8 +188,6 @@ def request_company_whitelist(user: cla_user, user_id: hug.types.uuid, company_i
 
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
-
-    TODO: This may need to be completely opened as no login is required to go through the signing flow.
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
