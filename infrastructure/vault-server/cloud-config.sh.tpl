@@ -75,23 +75,15 @@ initctl restart newrelic-infra
 
 # Create mount point
 mkdir /mnt/storage
-mkdir /mnt/storage/consul
-mkdir /mnt/storage/nexus
-mkdir /mnt/storage/mongodb
+mkdir /mnt/storage/vault
 
-CONSUL_DIR_SRC=$EC2_AVAIL_ZONE.${consul_efs}.efs.$EC2_REGION.amazonaws.com:/
-NEXUS_DIR_SRC=$EC2_AVAIL_ZONE.${nexus_efs}.efs.$EC2_REGION.amazonaws.com:/
-MONGODB_DIR_SRC=$EC2_AVAIL_ZONE.${mongodb_efs}.efs.$EC2_REGION.amazonaws.com:/
+VAULT_DIR_SRC=$EC2_AVAIL_ZONE.${vault_efs}.efs.$EC2_REGION.amazonaws.com:/
 
 # Mount EFS file system
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $CONSUL_DIR_SRC /mnt/storage/consul
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $NEXUS_DIR_SRC /mnt/storage/nexus
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $MONGODB_DIR_SRC /mnt/storage/mongodb
+mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $VAULT_DIR_SRC /mnt/storage/vault
 
 #Backup fstab
 cp -p /etc/fstab /etc/fstab.back-$(date +%F)
 
 #Append line to fstab
-echo -e "$CONSUL_DIR_SRC \t\t /mnt/storage/consul \t\t nfs \t\t defaults \t\t 0 \t\t 0" | tee -a /etc/fstab
-echo -e "$NEXUS_DIR_SRC \t\t /mnt/storage/nexus \t\t nfs \t\t defaults \t\t 0 \t\t 0" | tee -a /etc/fstab
-echo -e "$MONGODB_DIR_SRC \t\t /mnt/storage/mongodb \t\t nfs \t\t defaults \t\t 0 \t\t 0" | tee -a /etc/fstab
+echo -e "$VAULT_DIR_SRC \t\t /mnt/storage/vault \t\t nfs \t\t defaults \t\t 0 \t\t 0" | tee -a /etc/fstab

@@ -2,33 +2,18 @@
   {
     "essential": true,
     "memory": 256,
-    "image": "djenriquez/vault-ui:latest",
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/infra/goldfish:0.8.0",
     "name": "vault-ui",
     "privileged": true,
     "portMappings": [
       {
-        "containerPort": 8000
-      }
-    ],
-    "dnsServers": [
-      "${DNS_SERVER_1}",
-      "${DNS_SERVER_2}",
-      "${DNS_SERVER_3}"
-    ],
-    "environment": [
-      {
-        "name": "VAULT_URL_DEFAULT",
-        "value": "${VAULT_URL_DEFAULT}"
-      },
-      {
-        "name": "VAULT_AUTH_DEFAULT",
-        "value": "${VAULT_AUTH_DEFAULT}"
+        "containerPort": 8080
       }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "infrastructure",
+        "awslogs-group": "infra",
         "awslogs-region": "us-west-2",
         "awslogs-stream-prefix": "vault-ui"
       }

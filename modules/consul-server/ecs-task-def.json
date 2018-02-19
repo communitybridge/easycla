@@ -16,22 +16,8 @@
     ],
     "environment": [
       {
-        "name": "CONSUL_CLIENT_INTERFACE",
-        "value": "eth0"
-      },
-      {
-        "name": "CONSUL_BIND_INTERFACE",
-        "value": "eth0"
-      },
-      {
         "name": "CONSUL_ADVERTISE_INTERFACE",
         "value": "eth0"
-      }
-    ],
-    "mountPoints": [
-      {
-        "sourceVolume": "consul-storage",
-        "containerPath": "/consul/data"
       }
     ],
     "logConfiguration": {

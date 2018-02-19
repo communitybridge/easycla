@@ -15,7 +15,7 @@ wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/je
 rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key
 yum install jenkins -y
 
-DIR_SRC=/dev/xvdh
+DIR_SRC=/dev/nvme1n1
 DIR_TGT=/var/lib/jenkins
 
 # Mount EFS file system

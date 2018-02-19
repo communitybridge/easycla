@@ -1,0 +1,36 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/consul-agent:latest",
+    "name": "consul-agent",
+    "environment": [
+      {
+        "name": "CONSUL_ENCRYPT",
+        "value": "${ENCRYPTION}"
+      },
+      {
+        "name": "CONSUL_DATACENTER",
+        "value": "${DATACENTER}"
+      },
+      {
+        "name": "CONSUL_ENDPOINT",
+        "value": "${CONSUL_ENDPOINT}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "consul-agent"
+      }
+    },
+    "dockerLabels": {
+      "realm": "infra",
+      "application": "consul-agent",
+      "environment": "production",
+      "tags": "service, consul"
+    }
+  }
+]

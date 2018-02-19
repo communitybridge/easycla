@@ -17,7 +17,6 @@ data "template_file" "ecs_cloud_config" {
   template = "${file("${path.module}/cloud-config.sh.tpl")}"
 
   vars {
-    efs_id               = "${aws_efs_file_system.jenkins-home.id}"
     newrelic_license     = "951db34ebed364ea663002571b63db5d3f827758"
     aws_region           = "${var.region}"
   }
@@ -30,37 +29,6 @@ data "template_cloudinit_config" "userdata" {
   part {
     content      = "${data.template_file.ecs_cloud_config.rendered}"
   }
-}
-
-# Creating EFS for Tools Storage
-resource "aws_efs_file_system" "jenkins-home" {
-  provider = "aws.local"
-  creation_token = "enginnering-jenkins-home"
-
-  tags {
-    Name = "Enginnering - Jenkins Home"
-  }
-}
-
-resource "aws_efs_mount_target" "efs_mount_1" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.jenkins-home.id}"
-  subnet_id       = "${var.internal_subnets[0]}"
-  security_groups = ["${var.sg_jenkins_efs}"]
-}
-
-resource "aws_efs_mount_target" "efs_mount_2" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.jenkins-home.id}"
-  subnet_id       = "${var.internal_subnets[1]}"
-  security_groups = ["${var.sg_jenkins_efs}"]
-}
-
-resource "aws_efs_mount_target" "efs_mount_3" {
-  provider        = "aws.local"
-  file_system_id  = "${aws_efs_file_system.jenkins-home.id}"
-  subnet_id       = "${var.internal_subnets[2]}"
-  security_groups = ["${var.sg_jenkins_efs}"]
 }
 
 data "aws_ami" "amazon-linux-ami" {
@@ -80,9 +48,9 @@ data "aws_ami" "amazon-linux-ami" {
 
 resource "aws_instance" "jenkins" {
   provider               = "aws.local"
-  ami                    = "${data.aws_ami.amazon-linux-ami.id}"
+  ami                    = "ami-bf4193c7"
   source_dest_check      = false
-  instance_type          = "t2.large"
+  instance_type          = "c5.large"
   subnet_id              = "${element(var.internal_subnets, 0)}"
   key_name               = "production-shared-tools"
   vpc_security_group_ids = ["${var.sg_jenkins}"]

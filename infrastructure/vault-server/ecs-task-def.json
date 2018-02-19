@@ -35,10 +35,6 @@
     ],
     "mountPoints": [
       {
-        "sourceVolume": "vault-data-storage",
-        "containerPath": "/vault/file"
-      },
-      {
         "sourceVolume": "vault-logs-storage",
         "containerPath": "/vault/logs"
       }

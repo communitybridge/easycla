@@ -24,8 +24,10 @@ variable "cidr" {
 
 terraform {
   backend "consul" {
-    address = "consul.service.production.consul:8500"
+    address = "consul.eng.linuxfoundation.org:443"
+    scheme  = "https"
     path    = "terraform/infrastructure2.0"
+    access_token = "b3012a26-0753-cb99-93ce-73752278247d"
   }
 }
 
@@ -150,7 +152,7 @@ module "efs-vault" {
   vpc_id  = "${module.vpc.id}"
   vpc_cidr = "${var.cidr}"
   subnet_ids = "${module.vpc.internal_subnets}"
-  security_group = "${module.security_groups.infra-ecs-cluster}"
+  security_group = "${module.security_groups.vault-ecs-cluster}"
 }
 
 module "efs-nexus" {
@@ -183,7 +185,6 @@ data "template_file" "ecs_cloud_config" {
     consul_efs       = "${module.efs-consul.id}"
     nexus_efs        = "${module.efs-nexus.id}"
     mongodb_efs      = "${module.efs-mongodb.id}"
-    vault_efs      = "${module.efs-vault.id}"
   }
 }
 
@@ -201,8 +202,8 @@ module "infrastructure-cluster" {
   instance_type        = "m5.large"
   security_group       = "${module.security_groups.infra-ecs-cluster}"
   instance_ebs_optimized = false
-  desired_capacity     = "4"
-  min_size             = "4"
+  desired_capacity     = "3"
+  min_size             = "3"
   cloud_config_content = "${data.template_file.ecs_cloud_config.rendered}"
   root_volume_size     = 100
   docker_volume_size   = 100
@@ -232,22 +233,35 @@ module "consul-server" {
 }
 
 module "vault-server" {
-  source               = "../modules/vault-server"
-  ecs_cluster_name     = "infra"
-  ecs_asg_name         = "${module.infrastructure-cluster.asg_name}"
+  source               = "./vault-server"
   internal_subnets     = "${module.vpc.internal_subnets}"
   internal_elb_sg      = "${module.security_groups.vault-elb}"
   region               = "us-west-2"
   data_path            = "/mnt/storage/vault"
   route53_zone_id      = "Z1WGT54F777KX0"
+  efs_id               = "${module.efs-vault.id}"
+  ecs_sg               = "${module.security_groups.vault-ecs-cluster}"
+  iam_role             = "${module.ecs-iam-profile.ecsInstanceProfile}"
 }
+
+//module "vault-ui" {
+//  source               = "../modules/vault-ui"
+//  ecs_cluster_name     = "infra"
+//  ecs_asg_name         = "${module.infrastructure-cluster.asg_name}"
+//  internal_subnets     = "${module.vpc.internal_subnets}"
+//  internal_elb_sg      = "${module.security_groups.vault-elb}"
+//  region               = "us-west-2"
+//  route53_zone_id      = "Z1WGT54F777KX0"
+//  vpc_id               = "${module.vpc.id}"
+//  ecs_role             = "${module.ecs-iam-profile.service_role_arn}"
+//}
 
 module "nexus-server" {
   source               = "../modules/nexus"
   ecs_cluster_name     = "infra"
   ecs_asg_name         = "${module.infrastructure-cluster.asg_name}"
   internal_subnets     = "${module.vpc.internal_subnets}"
-  internal_elb_sg      = "${module.security_groups.vault-elb}"
+  internal_elb_sg      = "${module.security_groups.nexus-elb}"
   region               = "us-west-2"
   data_path            = "/mnt/storage/nexus"
   route53_zone_id      = "Z1WGT54F777KX0"
@@ -283,6 +297,74 @@ module "staging_peering" {
   project_cidr = "10.37.0.0/16"
   peering_id = "pcx-c882b1a1"
 }
+
+//# Setup Peering with Production
+//module "production_peering" {
+//  source = "../modules/peering_setup"
+//
+//  raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
+//  external_rtb_id = "${module.vpc.external_rtb_id}"
+//  project_cidr = "10.45.0.0/16"
+//  peering_id = "pcx-c882b1a1"
+//}
+
+# Setup Peering with CI
+module "ci_peering" {
+  source = "../modules/peering_setup"
+
+  raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc.external_rtb_id}"
+  project_cidr = "10.32.2.0/24"
+  peering_id = "pcx-1efecc77"
+}
+
+# Setup Peering with Sandboxes
+module "sandboxes_peering" {
+  source = "../modules/peering_setup"
+
+  raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc.external_rtb_id}"
+  project_cidr = "10.32.1.0/24"
+  peering_id = "pcx-44e2d02d"
+}
+
+# Setup Peering with Sandboxes
+module "it_ldap_peering" {
+  source = "../modules/peering_setup"
+
+  raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc.external_rtb_id}"
+  project_cidr = "10.30.112.0/21"
+  peering_id = "pcx-3be9db52"
+}
+
+# IAM Account for Vault AWS Integration
+resource "aws_iam_user" "vault-iam-user" {
+  provider = "aws.local"
+  name = "vault-iam-user"
+  path = "/system/"
+}
+
+resource "aws_iam_user_policy" "vault-iam-user" {
+  provider = "aws.local"
+  name = "iam-full-permissions"
+  user = "${aws_iam_user.vault-iam-user.name}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "iam:*",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
 
 output "account_number" {
   value = "643009352547"

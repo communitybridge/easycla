@@ -48,6 +48,26 @@ data "terraform_remote_state" "prod_infrastructure" {
   }
 }
 
+data "terraform_remote_state" "infrastructure2" {
+  backend = "consul"
+  config {
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure2.0"
+  }
+}
+
+module "peering_infra" {
+  source                    = "../../modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.infrastructure2.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.infrastructure2.cidr}"
+  tools_vpc_id              = "${data.terraform_remote_state.infrastructure2.vpc_id}"
+}
+
 module "vpc" {
   source             = "../../modules/vpc"
   name               = "CI"
