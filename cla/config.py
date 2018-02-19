@@ -50,6 +50,8 @@ GITHUB_OAUTH_CLIENT_ID = 'client_id' #: GitHub OAuth2 client ID.
 GITHUB_OAUTH_SECRET = 'secret' #: GitHub OAuth2 secret.
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
+#: GitHub OAuth2 Callback URL.
+GITHUB_OAUTH_CALLBACK_URL = BASE_URL + '/v1/github/installation'
 #: GitHub OAuth2 Token URL.
 GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 #: How users get notified of CLA status in GitHub ('status', 'comment', or 'status+comment').
@@ -61,7 +63,10 @@ GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
 GITHUB_APP_ID = '0000'
 
 # KeyCloak Authentication
-KEYCLOAK_ENDPOINT = 'url'
+KEYCLOAK_ENDPOINT = 'https://<keycloak-domain>'
+KEYCLOAK_CLIENT_ID = '<client-id>'
+KEYCLOAK_REALM = '<realm>'
+KEYCLOAK_CLIENT_SECRET = 'secret'
 
 # GitLab Repository Service.
 GITLAB_DOMAIN = 'https://<gitlab-domain>' #: URL to GitLab instance.

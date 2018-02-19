@@ -34,12 +34,16 @@ DOCUSIGN_INTEGRATOR_KEY = '' # Integrator Key UUID.
 # GitHub Application Service.
 GITHUB_OAUTH_CLIENT_ID = 'client_id'
 GITHUB_OAUTH_SECRET = 'secret'
+GITHUB_OAUTH_CALLBACK_URL = BASE_URL + '/v1/github/installation'
 GITHUB_APP_WEBHOOK_SECRET = 'secret'
 GITHUB_APP_PRIVATE_KEY_PATH = 'private-key-path'
 GITHUB_APP_ID = 'app_id'
 
 # KeyCloak Authentication
-KEYCLOAK_ENDPOINT = ''
+KEYCLOAK_ENDPOINT = 'https://id.linuxfoundation.org'
+KEYCLOAK_REALM = 'LinuxFoundation'
+KEYCLOAK_CLIENT_ID = 'cla'
+KEYCLOAK_CLIENT_SECRET = 'secret'
 
 # CINCO (SFDC) Authentication
 CINCO_ENDPOINT = ''

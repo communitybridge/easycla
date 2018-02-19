@@ -182,7 +182,7 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
         console_url = console_endpoint + \
-                      '/cla/project/' + project_id + \
+                      '/#/cla/project/' + project_id + \
                       '/user/' + user.get_user_id() + \
                       '?redirect=' + redirect
         raise falcon.HTTPFound(console_url)

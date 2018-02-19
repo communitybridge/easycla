@@ -9,13 +9,14 @@ import cla
 from cla.utils import get_signature_instance, get_user_instance, get_project_instance, \
                       get_company_instance
 
-PROJECT_EXTERNAL_ID = 'salesforce-id-here'
+PROJECT_EXTERNAL_ID1 = 'a090t0000008DEiAAM'
+PROJECT_EXTERNAL_ID2 = 'a090t0000008E7iAAE'
 COMPANY_EXTERNAL_ID = 'company-external-id'
 USER_GITHUB_ID = 123
 
 user = get_user_instance().get_user_by_github_id(USER_GITHUB_ID)
-project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
-project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '2')[0]
+project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID1)[0]
+project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID2)[0]
 company = get_company_instance().get_company_by_external_id(COMPANY_EXTERNAL_ID)
 
 # Test ICLA Agreement.

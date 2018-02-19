@@ -144,3 +144,8 @@ def delete_company(company_id):
         return {'errors': {'company_id': str(err)}}
     company.delete()
     return {'success': True}
+
+
+def get_manager_companies(manager_id):
+    companies = get_company_instance().get_companies_by_manager(manager_id)
+    return companies
