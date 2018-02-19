@@ -1122,7 +1122,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
-        signature_generator = self.model.signature_reference_index.query(reference_id)
+        signature_generator = self.model.signature_reference_index.query(str(reference_id))
         signatures = []
         for signature_model in signature_generator:
             if signature_model.signature_reference_type != reference_type:
