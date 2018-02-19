@@ -99,7 +99,7 @@ resource "aws_ecs_service" "logstash" {
   name                               = "logstash"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.logstash.arn}"
-  desired_count                      = "4"
+  desired_count                      = "3"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
 

@@ -33,6 +33,23 @@ data "terraform_remote_state" "infrastructure" {
   }
 }
 
+// This allows me to pull the state of another environment, in this case production-tools and grab data from it.
+data "terraform_remote_state" "infrastructure2" {
+  backend = "consul"
+  config {
+    address = "consul.service.production.consul:8500"
+    path    = "terraform/infrastructure2.0"
+  }
+}
+
+// IAM Profiles, Roles & Policies for ECS
+module "ecs-iam-profile" {
+  source = "./iam-role"
+
+  name = "sandboxes"
+  environment = "development"
+}
+
 module "peering" {
   source                    = "../../modules/peering"
 
@@ -43,6 +60,18 @@ module "peering" {
   tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
   tools_cidr                = "${data.terraform_remote_state.infrastructure.west_cidr}"
   tools_vpc_id              = "${data.terraform_remote_state.infrastructure.west_vpc_id}"
+}
+
+module "peering_infra" {
+  source                    = "../../modules/peering"
+
+  vpc_id                    = "${module.vpc.id}"
+  external_rtb_id           = "${module.vpc.external_rtb_id}"
+  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
+
+  tools_account_number      = "${data.terraform_remote_state.infrastructure2.account_number}"
+  tools_cidr                = "${data.terraform_remote_state.infrastructure2.cidr}"
+  tools_vpc_id              = "${data.terraform_remote_state.infrastructure2.vpc_id}"
 }
 
 data "template_file" "ecs_cloud_config" {
@@ -86,10 +115,10 @@ module "engineering-sandboxes-ecs-cluster" {
   vpc_id               = "${module.vpc.id}"
   subnet_ids           = "${module.vpc.internal_subnets}"
   key_name             = "engineering-sandboxes"
-  iam_instance_profile = "arn:aws:iam::433610389961:instance-profile/ecsInstanceRole"
+  iam_instance_profile = "${module.ecs-iam-profile.ecsInstanceProfile}"
   region               = "us-west-2"
   availability_zones   = "${module.vpc.availability_zones}"
-  instance_type        = "t2.xlarge"
+  instance_type        = "m5.xlarge"
   security_group       = "${module.security_groups.engineering_sandboxes}"
   instance_ebs_optimized = false
   desired_capacity     = "3"
@@ -98,35 +127,6 @@ module "engineering-sandboxes-ecs-cluster" {
   root_volume_size     = 100
   docker_volume_size   = 100
 }
-
-module "rds-cluster" {
-  source               = "../../modules/rds-cluster"
-  master_username      = "lfengineering"
-  name                 = "sandboxes"
-  master_password      = "buanCAWwwAGxUyoU2Fai"
-  availability_zones   = "${module.vpc.availability_zones}"
-  vpc_id               = "${module.vpc.id}"
-  subnet_ids           = "${module.vpc.internal_subnets}"
-  environment          = "Sandbox"
-  team                 = "Engineering"
-  security_groups      = ["${module.engineering-sandboxes-ecs-cluster.security_group_id}"]
-  engine               = "mariadb"
-  engine_version       = "10.1.19"
-  parameter_group_name = "engineering"
-  instance_type        = "db.t2.medium"
-}
-
-module "redis-cluster" {
-  source               = "../../modules/redis-cluster"
-  name                 = "sandboxes"
-  vpc_id               = "${module.vpc.id}"
-  subnet_ids           = "${module.vpc.internal_subnets}"
-  environment          = "Sandbox"
-  team                 = "Engineering"
-  security_groups      = ["${module.security_groups.engineering_sandboxes_redis}"]
-  instance_type        = "cache.t2.small"
-}
-
 
 output "internal_subnets" {
   value = "${module.vpc.internal_subnets}"
@@ -169,5 +169,5 @@ output "sandbox_cert_arn" {
 }
 
 output "ecs_role" {
-  value = "arn:aws:iam::433610389961:role/ecsServiceRole"
+  value = "${module.ecs-iam-profile.ecsInstanceProfile}"
 }

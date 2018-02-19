@@ -57,6 +57,14 @@ resource "aws_security_group" "pritunl-node" {
     self      = true
   }
 
+  # Engineering VPN Server (Split Tunnel)
+  ingress {
+    from_port = 17813
+    protocol = "udp"
+    to_port = 17813
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -215,11 +223,18 @@ resource "aws_security_group" "ghe_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "10.32.0.0/12",
+      "52.193.246.225/32",
+      "54.179.151.230/32",
+      "174.143.200.141/32",
+      "119.9.92.26/32",
+      "54.172.59.54/32",
+      "54.193.90.43/32",
+      "54.213.24.55/32",
       "198.145.29.72/32",
       "198.145.29.65/32",
       "140.211.169.2/32",
       "140.211.169.30/32",
-      "54.201.117.121/32" // for salt.e.tux.rocks
+      "54.201.117.121/32"
     ]
   }
 
@@ -229,11 +244,18 @@ resource "aws_security_group" "ghe_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "10.32.0.0/12",
+      "52.193.246.225/32",
+      "54.179.151.230/32",
+      "174.143.200.141/32",
+      "119.9.92.26/32",
+      "54.172.59.54/32",
+      "54.193.90.43/32",
+      "54.213.24.55/32",
       "198.145.29.72/32",
       "198.145.29.65/32",
       "140.211.169.2/32",
       "140.211.169.30/32",
-      "54.201.117.121/32" // for salt.e.tux.rocks
+      "54.201.117.121/32"
     ]
   }
 
@@ -243,40 +265,20 @@ resource "aws_security_group" "ghe_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "10.32.0.0/12",
+      "52.193.246.225/32",
+      "54.179.151.230/32",
+      "174.143.200.141/32",
+      "119.9.92.26/32",
+      "54.172.59.54/32",
+      "54.193.90.43/32",
+      "54.213.24.55/32",
       "198.145.29.72/32",
       "198.145.29.65/32",
       "140.211.169.2/32",
       "140.211.169.30/32",
-      "54.201.117.121/32" // for salt.e.tux.rocks
+      "54.201.117.121/32"
     ]
   }
-
-//  ingress {
-//    from_port = 80
-//    to_port = 80
-//    protocol = "tcp"
-//    security_groups = [
-//      "sg-e5b2d098"
-//    ]
-//  }
-//
-//  ingress {
-//    from_port = 22
-//    to_port = 22
-//    protocol = "tcp"
-//    security_groups = [
-//      "sg-e5b2d098"
-//    ]
-//  }
-//
-//  ingress {
-//    from_port = 443
-//    to_port = 443
-//    protocol = "tcp"
-//    security_groups = [
-//      "sg-e5b2d098"
-//    ]
-//  }
 
   egress {
     from_port   = 0
@@ -321,15 +323,6 @@ resource "aws_security_group" "infra-ecs-cluster" {
     to_port = 0
     protocol = "-1"
     security_groups = [
-      "${aws_security_group.vault-elb.id}"
-    ]
-  }
-
-  ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    security_groups = [
       "${aws_security_group.nexus-elb.id}"
     ]
   }
@@ -356,6 +349,15 @@ resource "aws_security_group" "infra-ecs-cluster" {
     from_port = 0
     to_port = 0
     protocol = "-1"
+    security_groups = [
+      "${aws_security_group.vault-ecs-cluster.id}"
+    ]
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
     cidr_blocks = ["10.45.114.105/32"]
   }
 
@@ -368,6 +370,50 @@ resource "aws_security_group" "infra-ecs-cluster" {
 
   tags {
     Name        = "Infra ECS Cluster"
+  }
+}
+
+resource "aws_security_group" "vault-ecs-cluster" {
+  provider    = "aws.local"
+  name        = "vault-ecs"
+  description = "Vault ECS Cluster"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    self            = true
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    security_groups = [
+      "${aws_security_group.vault-elb.id}"
+    ]
+  }
+
+  // Authorizing VPN Users to ping Vault nodes directly (required).
+  ingress {
+    from_port = 8200
+    to_port = 8200
+    protocol = "tcp"
+    security_groups = [
+      "${aws_security_group.pritunl-node.id}"
+    ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "Vault ECS Cluster"
   }
 }
 
@@ -518,6 +564,10 @@ output "nexus-elb" {
 
 output "infra-ecs-cluster" {
   value = "${aws_security_group.infra-ecs-cluster.id}"
+}
+
+output "vault-ecs-cluster" {
+  value = "${aws_security_group.vault-ecs-cluster.id}"
 }
 
 output "pritunl_elb" {

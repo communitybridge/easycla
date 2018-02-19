@@ -1,17 +1,24 @@
 [
   {
     "essential": true,
-    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/infra/nexus:2.14.7-01",
+    "image": "sonatype/nexus3:3.8.0",
     "memoryReservation": 1528,
     "name": "nexus",
     "portMappings": [{
       "containerPort": 8081,
       "hostPort": 8081
     }],
+    "ulimits": [
+      {
+        "name": "nofile",
+        "softLimit": 65536,
+        "hardLimit": 65536
+      }
+    ],
     "mountPoints": [
       {
         "sourceVolume": "nexus-storage",
-        "containerPath": "/sonatype-work"
+        "containerPath": "/nexus-data"
       }
     ],
     "logConfiguration": {

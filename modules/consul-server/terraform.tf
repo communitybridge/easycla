@@ -27,7 +27,7 @@ data "template_file" "consul" {
   vars {
     # Used for Docker Tags
     AWS_REGION      = "${var.region}"
-    DATA_PATH       = "${var.data_path}"
+//    DATA_PATH       = "${var.data_path}"
   }
 }
 
@@ -42,11 +42,6 @@ resource "aws_ecs_task_definition" "consul" {
   }
 
   container_definitions = "${data.template_file.consul.rendered}"
-
-  volume {
-    name      = "consul-storage"
-    host_path = "${var.data_path}"
-  }
 }
 
 resource "aws_ecs_service" "consul" {
@@ -72,17 +67,25 @@ resource "aws_elb" "consul" {
   internal           = true
 
   listener {
-    instance_port     = 8300
-    instance_protocol = "tcp"
-    lb_port           = 8300
-    lb_protocol       = "tcp"
+    instance_port      = 8500
+    instance_protocol  = "http"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "arn:aws:acm:us-west-2:643009352547:certificate/4938ed7c-e270-4597-84b2-6374db6149f4"
   }
 
   listener {
-    instance_port     = 8500
-    instance_protocol = "tcp"
-    lb_port           = 8500
-    lb_protocol       = "tcp"
+    instance_port      = 8500
+    instance_protocol  = "http"
+    lb_port            = 80
+    lb_protocol        = "http"
+  }
+
+  listener {
+    instance_port      = 8301
+    instance_protocol  = "tcp"
+    lb_port            = 8301
+    lb_protocol        = "tcp"
   }
 
   health_check {

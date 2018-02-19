@@ -38,7 +38,7 @@ resource "aws_instance" "pritunl-1" {
   ami                    = "${data.aws_ami.pritunl.id}"
   vpc_security_group_ids = ["${var.sg}"]
   subnet_id              = "${var.external_subnets[0]}"
-  instance_type          = "c4.large"
+  instance_type          = "c5.large"
   key_name               = "engineering-production"
 
   root_block_device {
@@ -56,7 +56,7 @@ resource "aws_instance" "pritunl-2" {
   ami                    = "${data.aws_ami.pritunl.id}"
   vpc_security_group_ids = ["${var.sg}"]
   subnet_id              = "${var.external_subnets[1]}"
-  instance_type          = "c4.large"
+  instance_type          = "c5.large"
   key_name               = "engineering-production"
 
   root_block_device {

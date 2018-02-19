@@ -8,7 +8,16 @@
       "mongod",
       "--storageEngine",
       "wiredTiger",
-      "--auth"
+      "--auth",
+      "--maxConns",
+      "1000"
+    ],
+    "ulimits": [
+      {
+        "name": "nofile",
+        "softLimit": 64000,
+        "hardLimit": 64000
+      }
     ],
     "portMappings": [
       {

@@ -15,14 +15,6 @@ variable "internal_elb_sg" {
   description = "Security Group for the internal ELB"
 }
 
-variable "consul_endpoint" {
-  description = "Endpoint to hit in order to connect to Consul"
-}
-
-variable "dns_servers" {
-  type = "list"
-}
-
 variable "vpc_id" {}
 
 variable "region" {}
@@ -32,17 +24,9 @@ variable "route53_zone_id" {}
 variable "ecs_role" {}
 
 data "template_file" "vault-ui_ecs_task" {
-  template = "${file("${path.module}/vault-ui-ecs-task.json")}"
+  template = "${file("${path.module}/ecs-task-def.json")}"
 
   vars {
-    VAULT_URL_DEFAULT = "http://vault.service.production.consul:8200"
-    VAULT_AUTH_DEFAULT= "TOKEN"
-
-    # DNS Servers for Container Resolution
-    DNS_SERVER_1     = "${var.dns_servers[0]}"
-    DNS_SERVER_2     = "${var.dns_servers[1]}"
-    DNS_SERVER_3     = "${var.dns_servers[2]}"
-
     # Used for Docker Tags
     AWS_REGION      = "${var.region}"
   }
@@ -59,7 +43,7 @@ resource "aws_ecs_service" "vault-ui" {
   name                               = "vault-ui"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.vault-ui.arn}"
-  desired_count                      = "3"
+  desired_count                      = "1"
   deployment_minimum_healthy_percent = "100"
   deployment_maximum_percent         = "200"
   iam_role                           = "${var.ecs_role}"
@@ -67,14 +51,14 @@ resource "aws_ecs_service" "vault-ui" {
   load_balancer {
     target_group_arn   = "${aws_alb_target_group.vault-ui.arn}"
     container_name     = "vault-ui"
-    container_port     = 8000
+    container_port     = 8080
   }
 }
 
 resource "aws_alb_target_group" "vault-ui" {
   provider             = "aws.local"
-  name                 = "vault-ui-8000"
-  port                 = 8000
+  name                 = "vault-ui-8080"
+  port                 = 8080
   protocol             = "HTTP"
   vpc_id               = "${var.vpc_id}"
   deregistration_delay = 30
@@ -115,7 +99,7 @@ resource "aws_alb_listener" "vault-ui_443" {
   load_balancer_arn  = "${aws_alb.vault-ui.id}"
   port               = "443"
   protocol           = "HTTPS"
-  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/bfd6e237-3606-454f-ac4d-e57bf636b2f2"
+  certificate_arn    = "arn:aws:acm:us-west-2:643009352547:certificate/4938ed7c-e270-4597-84b2-6374db6149f4"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.vault-ui.id}"
@@ -126,20 +110,7 @@ resource "aws_alb_listener" "vault-ui_443" {
 resource "aws_route53_record" "public" {
   provider= "aws.local"
   zone_id = "${var.route53_zone_id}"
-  name    = "vault"
-  type    = "A"
-
-  alias {
-    name                   = "${aws_alb.vault-ui.dns_name}"
-    zone_id                = "${aws_alb.vault-ui.zone_id}"
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_route53_record" "public_www" {
-  provider= "aws.local"
-  zone_id = "${var.route53_zone_id}"
-  name    = "www.vault"
+  name    = "vault-ui"
   type    = "A"
 
   alias {
