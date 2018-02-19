@@ -1122,7 +1122,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
-        signature_generator = self.model.signature_reference_index.query(reference_id)
+        signature_generator = self.model.signature_reference_index.query(str(reference_id))
         signatures = []
         for signature_model in signature_generator:
             if signature_model.signature_reference_type != reference_type:
@@ -1173,6 +1173,17 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
             signature.model = signature_model
             signatures.append(signature)
         return signatures
+
+    def get_signatures_by_company_project(self, company_id, project_id):
+        signature_generator = self.model.signature_reference_index.\
+            query(company_id, SignatureModel.signature_project_id == project_id)
+        signatures = []
+        for signature_model in signature_generator:
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+        signatures_dict = [signature_model.to_dict() for signature_model in signatures]
+        return signatures_dict
 
     def all(self, ids=None):
         if ids is None:
@@ -1327,6 +1338,16 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
             org.model = company
             ret.append(org)
         return ret
+
+    def get_companies_by_manager(self, manager_id):
+        company_generator = self.model.scan(company_manager_id__eq=str(manager_id))
+        companies = []
+        for company_model in company_generator:
+            company = Company()
+            company.model = company_model
+            companies.append(company)
+        companies_dict = [company_model.to_dict() for company_model in companies]
+        return companies_dict
 
 
 class StoreModel(Model):

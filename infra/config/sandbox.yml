@@ -12,7 +12,7 @@ containers:
     ports: [8025]
     memory: 256
   dynamodb:
-    image: 'dwmkerr/dynamodb'
+    image: 'dwmkerr/dynamodb:38'
     memory: 256
   workspace:
     memory: 512

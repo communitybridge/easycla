@@ -1,4 +1,5 @@
-PROJECT_EXTERNAL_ID = 'salesforce-id-here'
+PROJECT_EXTERNAL_ID1 = 'a090t0000008DEiAAM'
+PROJECT_EXTERNAL_ID2 = 'a090t0000008E7iAAE'
 GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.
 
 import sys
@@ -24,11 +25,9 @@ pdf_content = pdf_generator.generate(content)
 # Organisation
 github_org = get_github_organization_instance().get_organization_by_installation_id(GITHUB_INSTALLATION_ID)
 # Project
-github_project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '1')[0]
-github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID + '2')[0]
+github_project1 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID1)[0]
+github_project2 = get_project_instance().get_projects_by_external_id(PROJECT_EXTERNAL_ID2)[0]
 # Document
-# Slower as the document is fetched every time a document signature is initiated.
-#document = Document(str(uuid.uuid4()), 'Test Document', 'url+pdf', TEST_DOCUMENT_URL)
 # ICLA Project1
 individual_document = get_document_instance()
 individual_document.set_document_name('Test ICLA Document')
@@ -37,14 +36,11 @@ individual_document.set_document_content_type('storage+pdf')
 individual_document.set_document_content(pdf_content, b64_encoded=False)
 individual_document.set_document_major_version(1)
 individual_document.set_document_minor_version(0)
-document.set_raw_document_tabs(template.get_tabs())
+individual_document.set_raw_document_tabs(template.get_tabs())
 github_project1.add_project_individual_document(individual_document)
 github_project2.add_project_individual_document(individual_document)
-
-document.set_document_content_type('storage+pdf')
-document.set_document_content(pdf_content, b64_encoded=False)
-document.set_raw_document_tabs(template.get_tabs())
-project.save()
+github_project1.save()
+github_project2.save()
 
 # CCLA
 corporate_document = get_document_instance()
@@ -54,9 +50,8 @@ corporate_document.set_document_content_type('storage+pdf')
 corporate_document.set_document_content(pdf_content, b64_encoded=False)
 corporate_document.set_document_major_version(1)
 corporate_document.set_document_minor_version(0)
-document.set_raw_document_tabs(template.get_tabs())
+corporate_document.set_raw_document_tabs(template.get_tabs())
 github_project1.add_project_corporate_document(corporate_document)
-
 github_project2.add_project_corporate_document(corporate_document)
 github_project1.save()
 github_project2.save()
