@@ -7,7 +7,12 @@ import { ClaSignatureModel } from '../../models/cla-signature';
 // import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 // import { ProjectModel } from '../../models/project-model';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated'],
+})
 @IonicPage({
   segment: 'company/:companyId'
 })
@@ -28,9 +33,9 @@ export class CompanyPage {
     public navParams: NavParams,
     private claService: ClaService,
     public modalCtrl: ModalController,
+    private rolesService: RolesService, // for @Restricted
   ) {
     this.companyId = navParams.get('companyId');
-    console.log(this.companyId);
     this.getDefaults();
   }
 
@@ -49,7 +54,6 @@ export class CompanyPage {
 
   getCompany() {
     this.claService.getCompany(this.companyId).subscribe(response => {
-      console.log(response);
       this.company = response;
       this.getUser(this.company.company_manager_id);
     });
@@ -57,16 +61,12 @@ export class CompanyPage {
 
   getUser(userId) {
     this.claService.getUser(userId).subscribe(response => {
-      console.log('getUser: ' + userId);
-      console.log(response);
       this.manager = response;
     });
   }
 
   getCompanySignatures() {
     this.claService.getCompanySignatures(this.companyId).subscribe(response => {
-      console.log('company signatures');
-      console.log(response);
       this.companySignatures = response;
       for (let signature of this.companySignatures) {
         this.getProject(signature.signature_project_id);
@@ -76,10 +76,7 @@ export class CompanyPage {
 
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
-      console.log('project: ' + projectId);
-      console.log(response);
       this.projects[projectId] = response;
-      console.log(this.projects);
     });
   }
 
@@ -91,9 +88,31 @@ export class CompanyPage {
   }
   
   openCompanyModal() {
-    console.log('company page');
-    console.log(this.company);
     let modal = this.modalCtrl.create('AddCompanyModal', {
+      company: this.company,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
+  
+  openWhitelistEmailModal() {
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'email',
+      company: this.company,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
+  
+  openWhitelistDomainModal() {
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'domain',
       company: this.company,
     });
     modal.onDidDismiss(data => {
