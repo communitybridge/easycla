@@ -67,18 +67,11 @@ resource "aws_elb" "consul" {
   internal           = true
 
   listener {
-    instance_port      = 8500
-    instance_protocol  = "http"
+    instance_port      = 8501
+    instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
     ssl_certificate_id = "arn:aws:acm:us-west-2:643009352547:certificate/4938ed7c-e270-4597-84b2-6374db6149f4"
-  }
-
-  listener {
-    instance_port      = 8500
-    instance_protocol  = "http"
-    lb_port            = 80
-    lb_protocol        = "http"
   }
 
   listener {
