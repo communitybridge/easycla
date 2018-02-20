@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <span *ngIf="mode === 'add'">Add Company</span>
+      <span *ngIf="mode === 'edit'">Edit Company</span>
+    </ion-title>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form id="form" (submit)="submit()" [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+    <ion-grid formArrayName="whitelist">
+      <ion-row *ngIf="submitAttempt && !form.valid">
+        <ion-col col-12>
+          <p class="form-message">Please check the fields below for errors.</p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add Item</button  >
+        </ion-col>
+      </ion-row>
+      <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">
+        <ion-col col-9>
+          <ion-item>
+            <ion-input formControlName="whitelistItem"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col col-3>
+          <button type="button" ion-button class="clickable" (click)="removeWhitelistItem(i)">
+            X
+          </button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+<ion-toolbar>
+  <ion-buttons end>
+    <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
+      Cancel
+    </button>
+    <button form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+      Save
+    </button>
+  </ion-buttons>
+</ion-toolbar>
+</ion-footer>
