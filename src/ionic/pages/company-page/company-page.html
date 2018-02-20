@@ -9,7 +9,10 @@
 
 <ion-content padding headerspacing>
   <header>
-    <h1>{{ company.company_name }}</h1>
+    <h1>
+      {{ company.company_name }}
+      <ion-icon class="clickable" name="md-create" item-right (click)="openCompanyModal()"></ion-icon>
+    </h1>
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-4>
