@@ -38,7 +38,7 @@ export class CompanyPage {
     this.loading = {
       companySignatures: true,
     };
-    this.company = new ClaUserModel();
+    this.company = new ClaCompanyModel();
     this.projects = {};
   }
 
@@ -88,6 +88,19 @@ export class CompanyPage {
       companyId: this.companyId,
       projectId: projectId,
     });
+  }
+  
+  openCompanyModal() {
+    console.log('company page');
+    console.log(this.company);
+    let modal = this.modalCtrl.create('AddCompanyModal', {
+      company: this.company,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
   }
 
 }
