@@ -149,6 +149,15 @@ resource "aws_security_group" "ghe" {
     ]
   }
 
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+  }
+
 //  ingress {
 //    from_port = 122
 //    to_port = 122
@@ -211,6 +220,7 @@ resource "aws_security_group" "ghe" {
   }
 }
 
+
 resource "aws_security_group" "ghe_elb" {
   provider    = "aws.local"
   name        = "github-enterprise-elb"
@@ -221,20 +231,29 @@ resource "aws_security_group" "ghe_elb" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = [
-      "10.32.0.0/12",
-      "52.193.246.225/32",
-      "54.179.151.230/32",
-      "174.143.200.141/32",
-      "119.9.92.26/32",
-      "54.172.59.54/32",
-      "54.193.90.43/32",
-      "54.213.24.55/32",
-      "198.145.29.72/32",
-      "198.145.29.65/32",
-      "140.211.169.2/32",
-      "140.211.169.30/32",
-      "54.201.117.121/32"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = ["10.32.0.0/12"]
+  }
+
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    security_groups = [
+      "sg-e5b2d098"
     ]
   }
 
@@ -242,20 +261,8 @@ resource "aws_security_group" "ghe_elb" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = [
-      "10.32.0.0/12",
-      "52.193.246.225/32",
-      "54.179.151.230/32",
-      "174.143.200.141/32",
-      "119.9.92.26/32",
-      "54.172.59.54/32",
-      "54.193.90.43/32",
-      "54.213.24.55/32",
-      "198.145.29.72/32",
-      "198.145.29.65/32",
-      "140.211.169.2/32",
-      "140.211.169.30/32",
-      "54.201.117.121/32"
+    security_groups = [
+      "sg-e5b2d098"
     ]
   }
 
@@ -263,20 +270,8 @@ resource "aws_security_group" "ghe_elb" {
     from_port = 443
     to_port = 443
     protocol = "tcp"
-    cidr_blocks = [
-      "10.32.0.0/12",
-      "52.193.246.225/32",
-      "54.179.151.230/32",
-      "174.143.200.141/32",
-      "119.9.92.26/32",
-      "54.172.59.54/32",
-      "54.193.90.43/32",
-      "54.213.24.55/32",
-      "198.145.29.72/32",
-      "198.145.29.65/32",
-      "140.211.169.2/32",
-      "140.211.169.30/32",
-      "54.201.117.121/32"
+    security_groups = [
+      "sg-e5b2d098"
     ]
   }
 
@@ -293,6 +288,62 @@ resource "aws_security_group" "ghe_elb" {
 
   tags {
     Name        = "GitHub Enterprise Appliance"
+  }
+}
+
+resource "aws_security_group" "it-ghe-elb" {
+  provider    = "aws.local"
+  name        = "it-github-enterprise"
+  description = "IT GHE Bridge"
+  vpc_id      = "${var.vpc_id}"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32",
+      "140.211.169.30/32",
+      "54.201.117.121/32" // for salt.e.tux.rocks
+    ]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32",
+      "140.211.169.30/32"
+    ]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [
+      "198.145.29.72/32",
+      "198.145.29.65/32",
+      "140.211.169.2/32",
+      "140.211.169.30/32",
+      "54.201.117.121/32" // for salt.e.tux.rocks
+    ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name        = "IT GHE Bridge"
   }
 }
 
@@ -584,6 +635,10 @@ output "pritunl_mongodb" {
 
 output "ghe-elb" {
   value = "${aws_security_group.ghe_elb.id}"
+}
+
+output "it-ghe-elb" {
+  value = "${aws_security_group.it-ghe-elb.id}"
 }
 
 output "ghe" {

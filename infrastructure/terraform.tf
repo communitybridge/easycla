@@ -27,7 +27,7 @@ terraform {
     address = "consul.eng.linuxfoundation.org:443"
     scheme  = "https"
     path    = "terraform/infrastructure2.0"
-    access_token = "b3012a26-0753-cb99-93ce-73752278247d"
+    access_token = "99e1dd84-a0dc-2bca-5cab-89291a1db801"
   }
 }
 
@@ -122,6 +122,7 @@ module "ghe" {
   replica_count          = "1"
   ghe_sg                 = "${module.security_groups.ghe}"
   elb_sg                 = "${module.security_groups.ghe-elb}"
+  it_elb_sg              = "${module.security_groups.it-ghe-elb}"
   internal_subnets       = "${module.vpc.internal_subnets}"
   external_subnets       = "${module.vpc.external_subnets}"
 }
@@ -336,6 +337,16 @@ module "it_ldap_peering" {
   external_rtb_id = "${module.vpc.external_rtb_id}"
   project_cidr = "10.30.112.0/21"
   peering_id = "pcx-3be9db52"
+}
+
+# Setup Peering with Certification
+module "cert_peering" {
+  source = "../modules/peering_setup"
+
+  raw_route_tables_id = "${module.vpc.raw_route_tables_id}"
+  external_rtb_id = "${module.vpc.external_rtb_id}"
+  project_cidr = "10.150.0.0/26"
+  peering_id = "pcx-ab132fc2"
 }
 
 # IAM Account for Vault AWS Integration

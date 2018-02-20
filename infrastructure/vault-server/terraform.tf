@@ -158,14 +158,6 @@ resource "aws_elb" "vault" {
     ssl_certificate_id = "arn:aws:acm:us-west-2:643009352547:certificate/4938ed7c-e270-4597-84b2-6374db6149f4"
   }
 
-  listener {
-    instance_port      = 8201
-    instance_protocol  = "ssl"
-    lb_port            = 8201
-    lb_protocol        = "ssl"
-    ssl_certificate_id = "arn:aws:acm:us-west-2:643009352547:certificate/4938ed7c-e270-4597-84b2-6374db6149f4"
-  }
-
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 2

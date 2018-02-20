@@ -4,6 +4,8 @@ variable "ghe_sg" {}
 
 variable "elb_sg" {}
 
+variable "it_elb_sg" {}
+
 variable "replica_count" {}
 
 variable "internal_subnets" {
@@ -25,7 +27,7 @@ data "aws_ami" "github-enterprise-ami" {
 
   filter {
     name   = "name"
-    values = ["GitHub Enterprise 2.11.5"]
+    values = ["GitHub Enterprise 2.12.5"]
   }
 }
 
@@ -44,6 +46,10 @@ resource "aws_instance" "ghe-master" {
 
   tags {
     Name = "[M] GitHub Enterprise"
+  }
+
+  lifecycle {
+    ignore_changes = ["ami"]
   }
 }
 
@@ -66,12 +72,14 @@ resource "aws_instance" "ghe-replicas" {
   }
 }
 
+
 # Create a new load balancer
 resource "aws_elb" "ghe" {
-  provider           = "aws.local"
+  provider               = "aws.local"
   name               = "github-enterprise"
   security_groups    = ["${var.elb_sg}"]
   subnets            = ["${var.internal_subnets}"]
+  internal           = true
 
   listener {
     instance_port     = 22
@@ -109,6 +117,52 @@ resource "aws_elb" "ghe" {
 
   tags {
     Name = "github-enterprise"
+  }
+}
+
+# Create a new load balancer
+resource "aws_elb" "it-ghe-bridge" {
+  provider               = "aws.local"
+  name               = "it-github-enterprise"
+  security_groups    = ["${var.it_elb_sg}"]
+  subnets            = ["${var.external_subnets}"]
+
+  listener {
+    instance_port     = 22
+    instance_protocol = "tcp"
+    lb_port           = 22
+    lb_protocol       = "tcp"
+  }
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  listener {
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "arn:aws:acm:us-west-2:643009352547:certificate/6c05217b-d0ba-4065-b45b-46441f9207e3"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTPS:443/status"
+    interval            = 30
+  }
+
+  instances                   = ["${aws_instance.ghe-master.id}"]
+  cross_zone_load_balancing   = true
+  idle_timeout                = 400
+
+  tags {
+    Name = "it-github-enterprise"
   }
 }
 
