@@ -9,6 +9,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HttpClient } from '../services/http-client';
 import { CincoService } from '../services/cinco.service';
+import { AnalyticsService } from '../services/analytics.service';
 import { S3Service } from '../services/s3.service';
 import { RolesService } from '../services/roles.service';
 import { XHRBackend, RequestOptions } from '@angular/http';
@@ -40,6 +41,7 @@ import { MyApp } from './app.component';
     DatePipe,
     HttpClient,
     CincoService,
+    AnalyticsService,
     S3Service,
     RolesService,
     KeycloakService,
