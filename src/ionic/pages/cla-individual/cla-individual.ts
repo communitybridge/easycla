@@ -75,7 +75,7 @@ export class ClaIndividualPage {
     let signatureRequest = {
       'project_id': this.projectId,
       'user_id': this.userId,
-      // Switch this to intermediary loading screen as docusign postback has delay
+      // TODO: Switch this to intermediary loading screen as docusign postback has delay
       'return_url': this.signatureIntent.return_url,
     };
 

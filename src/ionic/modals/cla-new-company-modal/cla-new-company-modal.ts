@@ -8,9 +8,6 @@ import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angul
 @Component({
   selector: 'cla-new-company-modal',
   templateUrl: 'cla-new-company-modal.html',
-  providers: [
-
-  ]
 })
 export class ClaNewCompanyModal {
   projectId: string;
