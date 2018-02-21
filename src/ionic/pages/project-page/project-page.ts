@@ -19,6 +19,7 @@ export class ProjectPage {
 
   companyId: string;
   projectId: string;
+  users: any;
 
   constructor(
     public navCtrl: NavController,
@@ -53,8 +54,19 @@ export class ProjectPage {
     this.claService.getProjectSignatures(this.projectId).subscribe(response => {
       console.log('signatures:');
       console.log(response);
-      this.signatures = response;
+      this.signatures = response.filter(sig => sig.signature_type === 'cla');
+      for (let signature of this.signatures) {
+        this.getUser(signature.signature_reference_id);
+      }
     });
+  }
+
+  getUser(userId) {
+    if(!this.users[userId]) {
+      this.claService.getUser(userId).subscribe(response => {
+        this.users[userId] = response;
+      });
+    }
   }
 
 }
