@@ -22,31 +22,11 @@
     </ion-row>
   </ion-grid>
 
-  <!-- This will be ported and removed once CINCO API has the ability to return the full payload with all the information required -->
-  <!-- <ion-grid class="all-projects">
-    <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of projects">
-        <ion-card>
-          <img (click)="projectSelected($event, project)" src="{{project.icon}}" alt="{{project.title}} logo"/>
-          <ion-card-content>
-            <ion-card-title (click)="projectSelected($event, project)">
-              {{project.title}}
-            </ion-card-title>
-            <dl>
-              <ng-container *ngFor="let data of project.datas">
-                <dt>{{data.label}}</dt>
-                <dd>{{data.value}} <span *ngIf="data.status == 'alert'" class="circle-alert"></span></dd>
-              </ng-container>
-            </dl>
-            <ion-item *ngFor="let meeting of project.meetings">
-              <ion-icon name="calendar" item-left large></ion-icon>
-              <h2>{{meeting.label}}</h2>
-              <p>{{meeting.value}}</p>
-            </ion-item>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid> -->
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <ion-fab-list side="top">
+      <button title="Add Company" ion-fab (click)="openCompanyModal()"><ion-icon name="briefcase"></ion-icon></button>
+    </ion-fab-list>
+  </ion-fab>
 
 </ion-content>

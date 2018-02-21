@@ -2,6 +2,6 @@
   "realm": "LinuxFoundation",
   "auth-server-url": "https://id.linuxfoundation.org/auth",
   "ssl-required": "external",
-  "resource": "cla-management-console",
+  "resource": "pmc",
   "public-client": true
 }

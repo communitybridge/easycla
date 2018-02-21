@@ -8,7 +8,7 @@ def lf_instance_compose_generation(containers, config, dependencies, mode, path)
 
     cla = dependencies.get('cla')
 
-    if cla.created:
+    if cla is not None and cla.created:
         cla_endpoint = cla.endpoints.containers.get('workspace', 5000).formatted
         containers['workspace']['environment']['CLA_SERVER_URL'] = cla_endpoint
         lfcore.logger.info('Setting CLA_SERVER_URL to ' + containers['workspace']['environment']['CLA_SERVER_URL'])

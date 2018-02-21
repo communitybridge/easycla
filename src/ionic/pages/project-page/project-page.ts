@@ -19,6 +19,9 @@ export class ProjectPage {
   companyId: string;
   projectId: string;
 
+  companyId: string;
+  projectId: string;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
