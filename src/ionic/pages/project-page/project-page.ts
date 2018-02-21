@@ -16,6 +16,8 @@ import { SortService } from '../../services/sort.service';
 export class ProjectPage {
   signatures: ClaSignatureModel[];
   loading: any;
+  companyId: string;
+  projectId: string;
 
   constructor(
     public navCtrl: NavController,
