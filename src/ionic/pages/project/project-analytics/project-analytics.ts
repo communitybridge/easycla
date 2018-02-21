@@ -372,13 +372,27 @@ export class ProjectAnalyticsPage {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             key = this.formatDate(key);
-            if(value.value.open && !value.value.merged && !value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, 0, 0]);
-            if(value.value.merged  && !value.value.open && !value.value.closed) this.prsActivityChart.dataTable.push([key, 0, value.value.merged, 0]);
-            if(value.value.closed && !value.value.open && !value.value.merged) this.prsActivityChart.dataTable.push([key, 0, 0, value.value.closed]);
-            if(value.value.open && value.value.merged && !value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, 0]);
-            if(value.value.merged  && !value.value.open && value.value.closed) this.prsActivityChart.dataTable.push([key, 0, value.value.merged, value.value.closed]);
-            if(value.value.closed && value.value.open && !value.value.merged) this.prsActivityChart.dataTable.push([key, value.value.open, 0, value.value.closed]);
-            if(value.value.open && value.value.merged && value.value.closed) this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, value.value.closed]);
+            if(value.value.open && !value.value.merged && !value.value.closed) {
+              this.prsActivityChart.dataTable.push([key, value.value.open, 0, 0]);
+            }
+            if(value.value.open && value.value.merged && !value.value.closed) {
+              this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, 0]);
+            }
+            if(value.value.open && value.value.merged && value.value.closed) {
+              this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, value.value.closed]);
+            }
+            if(value.value.merged && !value.value.open && !value.value.closed) {
+              this.prsActivityChart.dataTable.push([key, 0, value.value.merged, 0]);
+            }
+            if(value.value.merged && !value.value.open && value.value.closed) {
+              this.prsActivityChart.dataTable.push([key, 0, value.value.merged, value.value.closed]);
+            }
+            if(value.value.closed && !value.value.open && !value.value.merged) {
+              this.prsActivityChart.dataTable.push([key, 0, 0, value.value.closed]);
+            }
+            if(value.value.closed && value.value.open && !value.value.merged) {
+              this.prsActivityChart.dataTable.push([key, value.value.open, 0, value.value.closed]);
+            }
           }
         );
       }
