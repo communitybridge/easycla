@@ -74,7 +74,7 @@ export class ProjectAnalyticsPage {
   getDefaults() {
     this.setTimeNow();
     this.span = 'month';
-    this.index = 'hyperledger';
+    this.index = 'hyperledger5';
     this.getCommitActivity(this.span);
     this.getcommitsDistribution('year');
     this.getIssuesStatus(this.span);
