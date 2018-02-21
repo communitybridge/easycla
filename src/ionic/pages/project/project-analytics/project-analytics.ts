@@ -17,8 +17,7 @@ import { RoundProgressConfig } from 'angular-svg-round-progressbar';
 })
 @Component({
   selector: 'project-analytics',
-  templateUrl: 'project-analytics.html',
-  providers: [AnalyticsService]
+  templateUrl: 'project-analytics.html'
 })
 
 export class ProjectAnalyticsPage {
