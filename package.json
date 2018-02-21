@@ -19,7 +19,7 @@
     "url": "git@github.linuxfoundation.org:engineering-npm-modules/cla-service.git"
   },
   "publishConfig": {
-    "registry": "https://nexus.engineering.tux.rocks/repository/npm-private/"
+    "registry": "https://nexus.eng.linuxfoundation.org/repository/npm-private/"
   },
   "author": {
     "name": "zaclittleberry",
