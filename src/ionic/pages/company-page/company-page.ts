@@ -38,7 +38,7 @@ export class CompanyPage {
     this.loading = {
       companySignatures: true,
     };
-    this.company = new ClaUserModel();
+    this.company = new ClaCompanyModel();
     this.projects = {};
   }
 
