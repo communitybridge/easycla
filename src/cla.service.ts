@@ -6,7 +6,7 @@ import 'rxjs/Rx';
 @Injectable()
 export class ClaService {
   http: any;
-  claApiUrl: String = '';
+  claApiUrl: string = '';
 
   constructor(http: Http) {
     this.http = http;
@@ -338,6 +338,11 @@ export class ClaService {
       .map((res) => res.json());
   }
 
+  getProjectsCcla() {
+    return this.http.get(this.claApiUrl + '/project/ccla')
+      .map((res) => res.json());
+  }
+
   postProject(project) {
     /*
       {
@@ -492,6 +497,22 @@ export class ClaService {
       }
      */
     return this.http.post(this.claApiUrl + '/request-employee-signature', signatureRequest)
+      .map((res) => res.json());
+  }
+
+  /**
+  * /request-corporate-signature
+  **/
+
+  postCorporateSignatureRequest(signatureRequest) {
+    /*
+      {
+        'project_id': <project-id>,
+        'company_id': <company-id>,
+        'return_url': <optional-return-url>,
+      }
+     */
+    return this.http.post(this.claApiUrl + '/request-corporate-signature', signatureRequest)
       .map((res) => res.json());
   }
 
