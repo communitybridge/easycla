@@ -1,7 +1,13 @@
 import { Component } from '@angular/core';
-import { NavController, IonicPage } from 'ionic-angular';
-import { ClaService } from 'cla-service'
+import { NavController, ModalController, IonicPage } from 'ionic-angular';
+import { ClaService } from 'cla-service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
+@Restricted({
+  roles: ['isAuthenticated', 'isPmcUser'],
+})
 @IonicPage({
   segment: 'companies'
 })
@@ -16,12 +22,13 @@ export class CompaniesPage {
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
+    public modalCtrl: ModalController,
+    private rolesService: RolesService, // for @Restricted
   ) {
     this.getDefaults();
   }
 
   getDefaults() {
-    console.log('companies page');
     this.loading = {
       companies: true,
     };
@@ -33,11 +40,18 @@ export class CompaniesPage {
     this.getCompanies();
   }
 
+  openCompanyModal() {
+    let modal = this.modalCtrl.create('AddCompanyModal', {});
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompanies();
+    });
+    modal.present();
+  }
+
   getCompanies() {
-    console.log('get companies called');
     this.claService.getCompanies().subscribe(response => {
         this.companies = response;
-        console.log(this.companies);
         this.loading.companies = false;
     });
   }
