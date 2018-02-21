@@ -121,5 +121,16 @@ export class CompanyPage {
     });
     modal.present();
   }
+  
+  openProjectsCclaSelectModal() {
+    let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
+      company: this.company,
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
 
 }
