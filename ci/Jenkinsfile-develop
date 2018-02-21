@@ -11,17 +11,9 @@ node {
 
   try {
 
-    stage ("Generating Docker Build Artifact") {
-      docker.withRegistry("https://433610389961.dkr.ecr.us-west-2.amazonaws.com", "ecr:us-west-2:jenkins-aws-user") {
-        sh "docker build -t cla-console/sandbox/${params.SHA} --build-arg build_number=${env.BUILD_NUMBER} --build-arg git_hash=${params.SHA} ."
-        sh "docker tag cla-console/sandbox/${params.SHA} 433610389961.dkr.ecr.us-west-2.amazonaws.com/cla-console/sandbox:${env.BUILD_NUMBER}"
-        sh "docker push 433610389961.dkr.ecr.us-west-2.amazonaws.com/cla-console/sandbox:${env.BUILD_NUMBER}"
-      }
-    }
-
     stage ("Updating Sandbox") {
       sshagent(['d78c94c4-9179-4765-9851-9907b5ef2cc4']) {
-        sh "/home/centos/.local/bin/lfs update --project=cla-console --name=sandbox --newrelic -d -y"
+        sh "lfs update --project=cla-console --name=sandbox --newrelic -d -y"
       }
     }
 
