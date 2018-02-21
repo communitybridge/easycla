@@ -73,7 +73,7 @@ export class ClaCorporatePage {
         this.error = response;
       }
       this.signature = response;
-    }
+    });
   }
 
   openClaAgreement() {
