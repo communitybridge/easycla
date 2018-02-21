@@ -23,18 +23,14 @@ import { RoundProgressConfig } from 'angular-svg-round-progressbar';
 export class ProjectAnalyticsPage {
 
   projectId: string;
-
   hasAnalyticsUrl: boolean;
   analyticsUrl: any;
   sanitizedAnalyticsUrl: any;
-
   index:any;
   timeNow:any;
   span:any;
-
   claContributors:any = [];
   organizationContributors:any = [];
-
   firstResponseTimeCurrent: any;
   firstResponseTimeGoal: any;
   closeTimeCurrent: any;
@@ -55,19 +51,11 @@ export class ProjectAnalyticsPage {
     private gaugeConfig: RoundProgressConfig
   ) {
     this.projectId = navParams.get('projectId');
-
-    this.gaugeConfig.setDefaults({
-      color: '#2bb3e2',
-      semicircle: true,
-      stroke: 30,
-      rounded: true,
-      responsive: true,
-    });
+    this.getDefaults();
   }
 
   ngOnInit() {
     this.getProjectConfig(this.projectId);
-    this.getDefaults();
   }
 
   getDefaults() {
@@ -115,7 +103,6 @@ export class ProjectAnalyticsPage {
     this.closeTimeGoal = 10;
     this.newContributors = 28;
     this.totalContributors = 826;
-
     this.organizationContributors= [{
       name: "Google",
       commits: "2,745,342",
@@ -157,7 +144,13 @@ export class ProjectAnalyticsPage {
       commits: "156,256",
       distribution: "1.36%",
     }];
-
+    this.gaugeConfig.setDefaults({
+      color: '#2bb3e2',
+      semicircle: true,
+      stroke: 30,
+      rounded: true,
+      responsive: true,
+    });
   }
 
   setTimeNow() {
