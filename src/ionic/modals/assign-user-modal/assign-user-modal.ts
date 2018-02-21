@@ -8,7 +8,6 @@ import { CincoService } from '../../services/cinco.service'
 @Component({
   selector: 'assign-user-modal',
   templateUrl: 'assign-user-modal.html',
-  providers: [CincoService]
 })
 export class AssignUserModal {
   projectId: string; // Always Needed
