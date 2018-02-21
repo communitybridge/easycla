@@ -13,7 +13,7 @@
 </ion-header>
 
 <ion-content>
-  <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
+  <form id="form" (submit)="submit()" [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
       <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
@@ -23,22 +23,31 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
+            <ion-label stacked>Template *</ion-label>
+            <ion-select formControlName="templateName">
+              <ion-option value="">- Select -</ion-option>
+              <ion-option *ngFor="let template of keysGetter(templateOptions)" value="{{ template }}">{{ templateOptions[template] }}</ion-option>
+              <!-- <ion-option value="custom">Custom</ion-option> -->
+            </ion-select>
+          </ion-item>
+        </ion-col>
+        <ion-col col-12 *ngIf="form.value.templateName=='custom'">
+          <ion-item>
             <ion-label stacked>Legal Entity Name:</ion-label>
             <ion-input formControlName="legalEntityName"></ion-input>
           </ion-item>
         </ion-col>
-        <ion-col col-12>
+        <ion-col col-12 *ngIf="form.value.templateName=='custom'">
           <ion-item>
             <ion-label stacked>Preamble:</ion-label>
             <ion-textarea formControlName="preamble"></ion-textarea>
           </ion-item>
         </ion-col>
-        <ion-col col-12>
+        <ion-col col-12 *ngIf="form.value.templateName=='custom'">
           <ion-item no-lines>
             <ion-label>Require new signature</ion-label>
             <ion-checkbox color="secondary" formControlName="newSignature"></ion-checkbox>
           </ion-item>
-
           <div class="checkbox-description">
             <p>
               Existing users will be required to sign this new version before access.
@@ -53,10 +62,10 @@
 <ion-footer class="footer-bordered">
   <ion-toolbar>
     <ion-buttons end>
-      <button ion-button icon-right color="light" (click)="dismiss()">
-        Cancel Upload
+      <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
+        Cancel
       </button>
-      <button ion-button icon-right color="primary" (click)="submit()">
+      <button form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
         Save
       </button>
     </ion-buttons>
