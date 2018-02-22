@@ -4,9 +4,7 @@ import { ClaService } from 'cla-service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
 import { ClaSignatureModel } from '../../models/cla-signature';
-// import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
-// import { ProjectModel } from '../../models/project-model';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
