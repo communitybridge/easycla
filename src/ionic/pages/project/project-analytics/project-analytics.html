@@ -22,10 +22,10 @@
     <ion-row>
 
       <ion-col col-6>
-        <ion-card class="analytics-card first-row">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Project - Checklist</span>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Project - Checklist</span>
             </ion-item>
           </ion-card-header>
           <ion-card-content>
@@ -83,10 +83,10 @@
       </ion-col>
 
       <ion-col col-6>
-        <ion-card class="analytics-card first-row">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">PR Submitted by Contributors with Outstanding CLA</span>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>PR Submitted by Contributors with Outstanding CLA</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small>SEE ALL</button>
               </ion-buttons>
@@ -125,10 +125,10 @@
 
     <ion-row>
       <ion-col col-8>
-        <ion-card class="analytics-card first-row">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card" item-start>Commit Activity</span>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span item-start>Commit Activity</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small (click)="getCommitActivity('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getCommitActivity('week')">1 W</button>
@@ -139,15 +139,15 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="commitsActivityChart"></google-chart>
+            <google-chart #commitsActivity [data]="commitsActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
       <ion-col col-4>
-        <ion-card class="analytics-card first-row">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Issues - Status</span>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Issues - Status</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('week')">1 W</button>
@@ -160,7 +160,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="issuesStatusChart"></google-chart>
+            <google-chart #issuesStatus [data]="issuesStatusChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -168,26 +168,55 @@
 
     <ion-row>
       <ion-col col-3>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Distribution of Commits</span>
-            <br>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('day')">1 D</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('week')">1 W</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('month')">1 M</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+        <ion-card>
+          <ion-card-header>
+            <span>Issues - Performance</span>
           </ion-card-header>
-          <ion-card-content>
-            <google-chart [data]="commitsDistributionChart"></google-chart>
+          <ion-card-content class="issues-tile" padding>
+            <ion-row >
+              <ion-col col-12>
+                Time to first Response
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col col-5>
+                Current
+                <div class="issues-tile-index">{{ firstResponseTimeCurrent }} days</div>
+              </ion-col>
+              <ion-col col-2>
+                <div class="issues-tile-index-separator"></div>
+              </ion-col>
+              <ion-col col-5>
+                Goal
+                <div class="issues-tile-index">{{ firstResponseTimeGoal }} days</div>
+              </ion-col>
+            </ion-row>
+            <ion-row padding-top>
+              <ion-col col-12>
+                Time to Close
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col col-5>
+                Current
+                <div class="issues-tile-index">{{ closeTimeCurrent }} days</div>
+              </ion-col>
+              <ion-col col-2>
+                <div class="issues-tile-index-separator"></div>
+              </ion-col>
+              <ion-col col-5>
+                Goal
+                <div class="issues-tile-index">{{ closeTimeGoal }} days</div>
+              </ion-col>
+            </ion-row>
           </ion-card-content>
         </ion-card>
       </ion-col>
       <ion-col col-5>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Issues Activity</span>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Issues Activity</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesActivity('week')">1 W</button>
@@ -198,52 +227,41 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="issuesActivityChart"></google-chart>
+            <google-chart #issuesActivity [data]="issuesActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
       <ion-col col-4>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Distribution of Commits</span>
-            <br>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('day')">1 D</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('week')">1 W</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('month')">1 M</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('quarter')">1 Q</button>
-            <button ion-button color="dark_blue" clear small (click)="getcommitsDistribution('year')">1 Y</button>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Pull Request - Pipeline</span>
+            </ion-item>
           </ion-card-header>
-          <ion-card-content>
-            <google-chart [data]="commitsDistributionChart"></google-chart>
+          <ion-card-content class="pipeline-content">
+            <div class="pipeline-gauge-title">
+              Pull Requests
+              <br>
+              Ready for Review
+            </div>
+            <div class="gauge-current-value">{{ sumOpenPRs }}</div>
+            <div class="pipeline-chart">
+              <round-progress
+                [current]="sumOpenPRs"
+                [max]="100">
+              </round-progress>
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
     </ion-row>
 
     <ion-row>
-      <ion-col col-3>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <span class="analytics-card">Pull Request - Pipeline</span>
-            <br>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('day')">1 D</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('week')">1 W</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('month')">1 M</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('quarter')">1 Q</button>
-            <button ion-button color="light" clear small (click)="getPrsPipeline('year')">1 Y</button>
-          </ion-card-header>
-          <ion-card-content class="pipeline-content">
-            <div class='pipeline-chart'>
-              <google-chart [data]="prsPipelineChart"></google-chart>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col col-9>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Pull Request Activity</span>
+      <ion-col col-6>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Pull Request Activity</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small (click)="getPrsActivity('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getPrsActivity('week')">1 W</button>
@@ -254,18 +272,15 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="prsActivityChart"></google-chart>
+            <google-chart #prsActivity [data]="prsActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
-    </ion-row>
-
-    <ion-row>
-      <ion-col col-12>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Project Page Views</span>
+      <ion-col col-6>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Project Page Views</span>
               <ion-buttons item-end>
                 <button ion-button color="dark_blue" clear small (click)="getPageViews('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getPageViews('week')">1 W</button>
@@ -276,29 +291,106 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="pageViewsChart"></google-chart>
+            <google-chart #pageViews [data]="pageViewsChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
     </ion-row>
 
     <ion-row>
-      <ion-col col-12>
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-card">
-            <ion-item class="analytics-card">
-              <span class="analytics-card">Top Contributors</span>
-              <ion-buttons item-end>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('day')">1 D</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('week')">1 W</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('month')">1 M</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('quarter')">1 Q</button>
-                <button ion-button color="dark_blue" clear small (click)="getMaintainers('year')">1 Y</button>
-              </ion-buttons>
+      <ion-col col-3>
+
+        <ion-card>
+          <ion-card-header>
+            <span>Distribution of Commits</span>
+          </ion-card-header>
+          <ion-card-content>
+            <div text-center>
+              <span>% of Commits Made by</span>
+              <br>
+              <span>Top 10 Contributors</span>
+            </div>
+            <google-chart #commitsDistribution [data]="commitsDistributionChart" padding></google-chart>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-row text-center>
+              <ion-col col-12>
+                New Contributors
+              </ion-col>
+              <ion-col col-12>
+                <ion-icon class="contributor-icon" ios="ios-person" md="md-person"></ion-icon>
+                <span class="contributor-index">{{ newContributors }}</span>
+              </ion-col>
+            </ion-row>
+            <ion-col col-2>
+              <div class="contributors-tile-index-separator"></div>
+            </ion-col>
+            <ion-row text-center>
+              <ion-col col-12>
+                Total Contributors
+              </ion-col>
+              <ion-col col-12>
+                 <ion-icon class="contributor-icon" ios="ios-people" md="md-people"></ion-icon>
+                 <span class="contributor-index">{{ totalContributors }}</span>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-col>
+
+      <ion-col col-9>
+        <ion-card class="double-height">
+          <ion-card-header>
+            <ion-item>
+              <span>Top Contributors (# of Commits)</span>
             </ion-item>
           </ion-card-header>
           <ion-card-content>
             <google-chart [data]="maintainersTable"></google-chart>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col col-6>
+        <ion-card>
+          <ion-card-header>
+            <ion-item>
+              <span>Activity by Organizations (# of Commits)</span>
+            </ion-item>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid padding>
+              <ion-row left>
+                <ion-col col-4>
+                  <strong>Organization</strong>
+                </ion-col>
+                <ion-col col-4 text-center>
+                  <strong># of Commits</strong>
+                </ion-col>
+                <ion-col col-4 text-center>
+                  <strong>Distribution</strong>
+                </ion-col>
+              </ion-row>
+              <ion-row *ngFor="let contributor of organizationContributors">
+                <ion-col col-4>
+                  {{ contributor.name }}
+                </ion-col>
+                <ion-col col-4 text-center class="contributor-data">
+                  {{ contributor.commits }}
+                </ion-col>
+                <ion-col col-4 text-center class="contributor-data">
+                  {{ contributor.distribution }}
+                </ion-col>
+              </ion-row>
+            </ion-grid>
           </ion-card-content>
         </ion-card>
       </ion-col>

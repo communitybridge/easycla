@@ -7,6 +7,7 @@ import { SortingDisplayComponentModule } from '../../../components/sorting-displ
 import { ProjectHeaderComponentModule } from '../../../components/project-header/project-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 import { Ng2GoogleChartsModule } from 'ng2-google-charts';
+import { RoundProgressModule } from 'angular-svg-round-progressbar';
 
 @NgModule({
   declarations: [
@@ -14,6 +15,7 @@ import { Ng2GoogleChartsModule } from 'ng2-google-charts';
   ],
   imports: [
     Ng2GoogleChartsModule,
+    RoundProgressModule,
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
