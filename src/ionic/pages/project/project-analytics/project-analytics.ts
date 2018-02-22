@@ -213,6 +213,13 @@ export class ProjectAnalyticsPage {
     else { return false; }
   }
 
+  pushDataToChart(object, chartName, isKeyDate) {
+    Object.entries(object).forEach(([key, value]) => {
+      if (isKeyDate) { key = this.formatDate(key); }
+      this[chartName].dataTable.push([key, value]);
+    });
+  }
+
   getCommitActivity(span) {
     let index = this.index;
     let metricType = 'code.commits';
@@ -221,14 +228,10 @@ export class ProjectAnalyticsPage {
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.commitsActivityChart.dataTable = [
-        ['Date', 'Commits'] // Clean Array
+        ['Date', 'Commits']
       ];
-      if(!this.isEmpty(metrics.value)) { // Check Object response is not empty
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            this.commitsActivityChart.dataTable.push([this.formatDate(key), value]);
-          }
-        );
+      if(!this.isEmpty(metrics.value)) {
+        this.pushDataToChart(metrics.value, 'commitsActivityChart', true);
       }
       else {
         this.commitsActivityChart.dataTable.push(['No commits for a ' + span + ' now', 0]);
@@ -250,28 +253,20 @@ export class ProjectAnalyticsPage {
     let restPercentage = 0;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.commitsDistributionChart.dataTable = [
-        ['Date', 'Commits'] // Clean Array
+        ['Date', 'Commits']
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              maintainers = value;
-            }
+        Object.entries(metrics.value).forEach( ([key, value]) => {
+          maintainers = value;
+        });
+        let topTenCounter = 0;
+        Object.entries(maintainers.value).forEach( ([maintainer, commits]) => {
+          if(topTenCounter < 10) {
+            maintainersCommitsTop10 = maintainersCommitsTop10 + commits;
           }
-        );
-        let i = 0;
-        Object.entries(maintainers.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              if(i < 10) {
-                maintainersCommitsTop10 = maintainersCommitsTop10 + value;
-              }
-              maintainersCommitsTotal = maintainersCommitsTotal + value;
-              i++
-            }
-          }
-        );
+          maintainersCommitsTotal = maintainersCommitsTotal + commits;
+          topTenCounter++;
+        });
         top10Percentage = Math.round( maintainersCommitsTop10 * 100 / maintainersCommitsTotal );
         restPercentage = 100 - top10Percentage;
         this.commitsDistributionChart.dataTable.push(['Top 10', top10Percentage])
@@ -293,19 +288,13 @@ export class ProjectAnalyticsPage {
     let issuesStatus;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.issuesStatusChart.dataTable = [
-        ['Status', 'Issues'] // Clean Array
+        ['Status', 'Issues']
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            issuesStatus = value;
-          }
-        );
-        Object.entries(issuesStatus.value).forEach(
-          ([key, value]) => {
-            this.issuesStatusChart.dataTable.push([key, value]);
-          }
-        );
+        Object.entries(metrics.value).forEach( ([key, value]) => {
+          issuesStatus = value;
+        });
+        this.pushDataToChart(issuesStatus.value, 'issuesStatusChart', false);
       }
       else {
         this.issuesStatusChart.dataTable.push(['No issues for a ' + span + ' now', 0]);
@@ -322,17 +311,15 @@ export class ProjectAnalyticsPage {
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.issuesActivityChart.dataTable = [
-        ['Date', 'Issues Open', 'Issues Closed'] // Clean Array
+        ['Date', 'Issues Open', 'Issues Closed']
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            key = this.formatDate(key);
-            if(value.value['open'] && !value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], 0]);
-            if(!value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, 0, value.value['closed']]);
-            if(value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([key, value.value['open'], value.value['closed']]);
-          }
-        );
+        Object.entries(metrics.value).forEach( ([date, value]) => {
+          date = this.formatDate(date);
+          if(value.value['open'] && !value.value['closed']) this.issuesActivityChart.dataTable.push([date, value.value['open'], 0]);
+          if(!value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([date, 0, value.value['closed']]);
+          if(value.value['open']  && value.value['closed']) this.issuesActivityChart.dataTable.push([date, value.value['open'], value.value['closed']]);
+        });
       }
       else {
         this.issuesActivityChart.dataTable.push(['No issues for a ' + span + ' now', 0, 0]);
@@ -348,13 +335,11 @@ export class ProjectAnalyticsPage {
     let tsFrom = this.calculateTsFrom(span);
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
-      this.sumOpenPRs = 0; // Clean Data
+      this.sumOpenPRs = 0;
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            this.sumOpenPRs = this.sumOpenPRs + value;
-          }
-        );
+        Object.entries(metrics.value).forEach( ([key, value]) => {
+          this.sumOpenPRs = this.sumOpenPRs + value;
+        });
       }
     });
   }
@@ -370,32 +355,30 @@ export class ProjectAnalyticsPage {
         ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed'] // Clean Array
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            key = this.formatDate(key);
-            if(value.value.open && !value.value.merged && !value.value.closed) {
-              this.prsActivityChart.dataTable.push([key, value.value.open, 0, 0]);
-            }
-            if(value.value.open && value.value.merged && !value.value.closed) {
-              this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, 0]);
-            }
-            if(value.value.open && value.value.merged && value.value.closed) {
-              this.prsActivityChart.dataTable.push([key, value.value.open, value.value.merged, value.value.closed]);
-            }
-            if(value.value.merged && !value.value.open && !value.value.closed) {
-              this.prsActivityChart.dataTable.push([key, 0, value.value.merged, 0]);
-            }
-            if(value.value.merged && !value.value.open && value.value.closed) {
-              this.prsActivityChart.dataTable.push([key, 0, value.value.merged, value.value.closed]);
-            }
-            if(value.value.closed && !value.value.open && !value.value.merged) {
-              this.prsActivityChart.dataTable.push([key, 0, 0, value.value.closed]);
-            }
-            if(value.value.closed && value.value.open && !value.value.merged) {
-              this.prsActivityChart.dataTable.push([key, value.value.open, 0, value.value.closed]);
-            }
+        Object.entries(metrics.value).forEach( ([date, value]) => {
+          date = this.formatDate(date);
+          if(value.value.open && !value.value.merged && !value.value.closed) {
+            this.prsActivityChart.dataTable.push([date, value.value.open, 0, 0]);
           }
-        );
+          if(value.value.open && value.value.merged && !value.value.closed) {
+            this.prsActivityChart.dataTable.push([date, value.value.open, value.value.merged, 0]);
+          }
+          if(value.value.open && value.value.merged && value.value.closed) {
+            this.prsActivityChart.dataTable.push([date, value.value.open, value.value.merged, value.value.closed]);
+          }
+          if(value.value.merged && !value.value.open && !value.value.closed) {
+            this.prsActivityChart.dataTable.push([date, 0, value.value.merged, 0]);
+          }
+          if(value.value.merged && !value.value.open && value.value.closed) {
+            this.prsActivityChart.dataTable.push([date, 0, value.value.merged, value.value.closed]);
+          }
+          if(value.value.closed && !value.value.open && !value.value.merged) {
+            this.prsActivityChart.dataTable.push([date, 0, 0, value.value.closed]);
+          }
+          if(value.value.closed && value.value.open && !value.value.merged) {
+            this.prsActivityChart.dataTable.push([date, value.value.open, 0, value.value.closed]);
+          }
+        });
       }
       else {
         this.prsActivityChart.dataTable.push(['No PRs for a ' + span + ' now', 0, 0, 0]);
@@ -413,22 +396,16 @@ export class ProjectAnalyticsPage {
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.pageViewsChart.dataTable = [
-        ['Date', 'Views'] // Clean Array
+        ['Date', 'Views']
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            key = this.formatDate(key);
-            this.pageViewsChart.dataTable.push([key, value]);
-          }
-        );
+        this.pushDataToChart(metrics.value, 'pageViewsChart', true);
       }
       else {
         this.pageViewsChart.dataTable.push(['No page views for a ' + span + ' now', 0]);
       }
       this.pageViewsChart = Object.create(this.pageViewsChart);
     });
-
   }
 
   getMaintainers(span) {
@@ -443,20 +420,10 @@ export class ProjectAnalyticsPage {
         ['Contributor', 'Commits'] // Clean Array
       ];
       if(!this.isEmpty(metrics.value)) {
-        Object.entries(metrics.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              maintainers = value;
-            }
-          }
-        );
-        Object.entries(maintainers.value).forEach(
-          ([key, value]) => {
-            if(value) {
-              this.maintainersTable.dataTable.push([key, value]);
-            }
-          }
-        );
+        Object.entries(metrics.value).forEach( ([key, value]) => {
+          maintainers = value;
+        });
+        this.pushDataToChart(maintainers.value, 'maintainersTable', false);
       }
       else {
         this.maintainersTable.dataTable.push(['No maintainers for a ' + span + ' now', 0]);
