@@ -212,6 +212,11 @@ export class ProjectAnalyticsPage {
     return [month, day].join('-');
   }
 
+  isEmpty(object) {
+    if(!Object.keys(object).length) { return true; }
+    else { return false; }
+  }
+
   getCommitActivity(span) {
     let index = this.index;
     let metricType = 'code.commits';
@@ -222,7 +227,7 @@ export class ProjectAnalyticsPage {
       this.commitsActivityChart.dataTable = [
         ['Date', 'Commits'] // Clean Array
       ];
-      if(Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) { // Check Object response is not empty
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             this.commitsActivityChart.dataTable.push([this.formatDate(key), value]);
@@ -251,7 +256,7 @@ export class ProjectAnalyticsPage {
       this.commitsDistributionChart.dataTable = [
         ['Date', 'Commits'] // Clean Array
       ];
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             if(value) {
@@ -294,7 +299,7 @@ export class ProjectAnalyticsPage {
       this.issuesStatusChart.dataTable = [
         ['Status', 'Issues'] // Clean Array
       ];
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             issuesStatus = value;
@@ -323,7 +328,7 @@ export class ProjectAnalyticsPage {
       this.issuesActivityChart.dataTable = [
         ['Date', 'Issues Open', 'Issues Closed'] // Clean Array
       ];
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             key = this.formatDate(key);
@@ -348,7 +353,7 @@ export class ProjectAnalyticsPage {
     let tsTo = this.timeNow;
     this.analyticsService.getMetrics(index, metricType, groupBy, tsFrom, tsTo).subscribe(metrics => {
       this.sumOpenPRs = 0; // Clean Data
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             this.sumOpenPRs = this.sumOpenPRs + value;
@@ -368,7 +373,7 @@ export class ProjectAnalyticsPage {
       this.prsActivityChart.dataTable = [
         ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed'] // Clean Array
       ];
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             key = this.formatDate(key);
@@ -414,7 +419,7 @@ export class ProjectAnalyticsPage {
       this.pageViewsChart.dataTable = [
         ['Date', 'Views'] // Clean Array
       ];
-      if(Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             key = this.formatDate(key);
@@ -441,7 +446,7 @@ export class ProjectAnalyticsPage {
       this.maintainersTable.dataTable = [
         ['Contributor', 'Commits'] // Clean Array
       ];
-      if (Object.keys(metrics.value).length) {
+      if(!this.isEmpty(metrics.value)) {
         Object.entries(metrics.value).forEach(
           ([key, value]) => {
             if(value) {
