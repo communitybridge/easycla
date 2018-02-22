@@ -139,7 +139,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="commitsActivityChart"></google-chart>
+            <google-chart #commitsActivity [data]="commitsActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -160,7 +160,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="issuesStatusChart"></google-chart>
+            <google-chart #issuesStatus [data]="issuesStatusChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -227,7 +227,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="issuesActivityChart"></google-chart>
+            <google-chart #issuesActivity [data]="issuesActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -272,7 +272,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="prsActivityChart"></google-chart>
+            <google-chart #prsActivity [data]="prsActivityChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -291,7 +291,7 @@
             </ion-item>
           </ion-card-header>
           <ion-card-content>
-            <google-chart [data]="pageViewsChart"></google-chart>
+            <google-chart #pageViews [data]="pageViewsChart"></google-chart>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -310,7 +310,7 @@
               <br>
               <span>Top 10 Contributors</span>
             </div>
-            <google-chart padding [data]="commitsDistributionChart"></google-chart>
+            <google-chart #commitsDistribution [data]="commitsDistributionChart" padding></google-chart>
           </ion-card-content>
         </ion-card>
 

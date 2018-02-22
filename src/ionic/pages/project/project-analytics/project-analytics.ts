@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../../services/cinco.service';
@@ -40,6 +40,23 @@ export class ProjectAnalyticsPage {
   newContributors: any;
   totalContributors: any;
 
+  commitsActivityChart: any;
+  commitsDistributionChart: any;
+  issuesStatusChart:any;
+  issuesActivityChart:any;
+  prsActivityChart:any;
+  pageViewsChart:any;
+
+  cssClassNames:any;
+  maintainersTable:any;
+
+  @ViewChild('commitsActivity') commitsActivity;
+  @ViewChild('commitsDistribution') commitsDistribution;
+  @ViewChild('issuesStatus') issuesStatus;
+  @ViewChild('issuesActivity') issuesActivity;
+  @ViewChild('prsActivity') prsActivity;
+  @ViewChild('pageViews') pageViews;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -61,6 +78,153 @@ export class ProjectAnalyticsPage {
   }
 
   getDefaults() {
+    this.commitsActivityChart =  {
+      chartType: 'ColumnChart',
+      dataTable: [
+        ['Date', 'Commits']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#0b4e73'},
+          gridlines: {
+            color: "#0b4e73"
+          },
+          baselineColor: '#0b4e73',
+          format: 'h:mm a',
+        },
+        vAxis: {title: '# of commits'},
+        colors: ['#2bb3e2'],
+        backgroundColor: '#ffffff',
+        legend: 'none',
+      }
+    };
+    this.commitsDistributionChart =  {
+      chartType: 'PieChart',
+      dataTable: [
+        ['Date', 'Commits']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#1cb2e4'},
+          gridlines: {
+            color: "#1cb2e4"
+          },
+          baselineColor: '#1cb2e4'
+        },
+        chartArea: {width: 400, height: 300},
+        colors: ['#1cb2e4','#ebebeb'],
+        backgroundColor: '#ffffff',
+        legend: 'none'
+      }
+    };
+    this.issuesStatusChart =  {
+      chartType: 'BarChart',
+      dataTable: [
+        ['Status', 'Issues']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#0b4e73'},
+          gridlines: {
+            color: "#0b4e73"
+          },
+          baselineColor: '#0b4e73'
+        },
+        vAxis: {},
+        colors: ['#2bb3e2'],
+        backgroundColor: '#ffffff',
+        legend: 'none',
+      }
+    };
+    this.issuesActivityChart =  {
+      chartType: 'AreaChart',
+      dataTable: [
+        ['Date', 'Issues Open', 'Issues Closed']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#0b4e73'},
+          gridlines: {
+            color: "#0b4e73"
+          },
+          baselineColor: '#FFFFFF'
+        },
+        vAxis: {title: '# of Issues'},
+        colors: ['#2bb3e2', '#0b4e73'],
+        backgroundColor: '#ffffff',
+        legend: 'none'
+      }
+    };
+    this.prsActivityChart =  {
+      chartType: 'AreaChart',
+      dataTable: [
+        ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#0b4e73'},
+          gridlines: {
+            color: "#0b4e73"
+          },
+          baselineColor: '#0b4e73'
+        },
+        vAxis: {title: '# of PRs'},
+        colors: ['#2bb3e2', '#0b4e73'],
+        backgroundColor: '#ffffff',
+        legend: 'none'
+      }
+    };
+    this.pageViewsChart =  {
+      chartType: 'AreaChart',
+      dataTable: [
+        ['Date', 'Page Views']
+      ],
+      options: {
+        hAxis: {
+          textStyle:{ color: '#0b4e73'},
+          gridlines: {
+            color: "#0b4e73"
+          },
+          baselineColor: '#0b4e73'
+        },
+        vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
+        colors: ['#2bb3e2'],
+        backgroundColor: '#ffffff',
+        legend: 'none'
+      }
+    };
+    this.cssClassNames = {
+      'headerRow': 'header-row',
+      'tableRow': 'table-row',
+      'oddTableRow': 'odd-table-row',
+      'selectedTableRow': 'selected-table-row',
+      'hoverTableRow': 'hover-table-row',
+      'headerCell': 'header-cell',
+      'tableCell': 'table-cell',
+      'rowNumberCell': 'row-number-cell'
+    };
+    this.maintainersTable =  {
+      chartType: 'Table',
+      dataTable: [
+        ['Contributor', 'Commits'],
+      ],
+      options: {
+        title: 'Maintainers',
+        allowHtml: true,
+        alternatingRowStyle: false,
+        width: '100%',
+        cssClassNames: this.cssClassNames,
+        sortColumn: 1,
+        sortAscending: false,
+      }
+    };
+    this.gaugeConfig.setDefaults({
+      color: '#2bb3e2',
+      semicircle: true,
+      stroke: 30,
+      rounded: true,
+      responsive: true,
+    });
     this.setTimeNow();
     this.span = 'month';
     this.index = 'hyperledger5';
@@ -72,7 +236,6 @@ export class ProjectAnalyticsPage {
     this.getPrsActivity(this.span);
     this.getPageViews(this.span);
     this.getMaintainers('year');
-    this.redrawCharts();
     this.sumOpenPRs = 0;
     this.claContributors = [{
       name: "Nick Young",
@@ -146,13 +309,6 @@ export class ProjectAnalyticsPage {
       commits: "156,256",
       distribution: "1.36%",
     }];
-    this.gaugeConfig.setDefaults({
-      color: '#2bb3e2',
-      semicircle: true,
-      stroke: 30,
-      rounded: true,
-      responsive: true,
-    });
   }
 
   setTimeNow() {
@@ -433,12 +589,12 @@ export class ProjectAnalyticsPage {
   }
 
   redrawCharts() {
-    this.commitsActivityChart = Object.create(this.commitsActivityChart);
-    this.commitsDistributionChart = Object.create(this.commitsDistributionChart);
-    this.issuesStatusChart = Object.create(this.issuesStatusChart);
-    this.issuesActivityChart = Object.create(this.issuesActivityChart);
-    this.prsActivityChart = Object.create(this.prsActivityChart);
-    this.pageViewsChart = Object.create(this.pageViewsChart);
+    this.commitsActivity.redraw();
+    this.commitsDistribution.redraw();
+    this.issuesStatus.redraw();
+    this.issuesActivity.redraw();
+    this.prsActivity.redraw();
+    this.pageViews.redraw();
   }
 
   @HostListener('window:resize', ['$event'])
@@ -446,153 +602,5 @@ export class ProjectAnalyticsPage {
     event.target.innerWidth;
     this.redrawCharts();
   }
-
-  public commitsActivityChart:any =  {
-    chartType: 'ColumnChart',
-    dataTable: [
-      ['Date', 'Commits']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#0b4e73'},
-        gridlines: {
-          color: "#0b4e73"
-        },
-        baselineColor: '#0b4e73',
-        format: 'h:mm a',
-      },
-      vAxis: {title: '# of commits'},
-      colors: ['#2bb3e2'],
-      backgroundColor: '#ffffff',
-      legend: 'none',
-    }
-  };
-
-  public commitsDistributionChart:any =  {
-    chartType: 'PieChart',
-    dataTable: [
-      ['Date', 'Commits']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#1cb2e4'},
-        gridlines: {
-          color: "#1cb2e4"
-        },
-        baselineColor: '#1cb2e4'
-      },
-      chartArea: {width: 400, height: 300},
-      colors: ['#1cb2e4','#ebebeb'],
-      backgroundColor: '#ffffff',
-      legend: 'none'
-    }
-  };
-
-  public issuesStatusChart:any =  {
-    chartType: 'BarChart',
-    dataTable: [
-      ['Status', 'Issues']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#0b4e73'},
-        gridlines: {
-          color: "#0b4e73"
-        },
-        baselineColor: '#0b4e73'
-      },
-      vAxis: {},
-      colors: ['#2bb3e2'],
-      backgroundColor: '#ffffff',
-      legend: 'none',
-    }
-  };
-
-  public issuesActivityChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'Issues Open', 'Issues Closed']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#0b4e73'},
-        gridlines: {
-          color: "#0b4e73"
-        },
-        baselineColor: '#FFFFFF'
-      },
-      vAxis: {title: '# of Issues'},
-      colors: ['#2bb3e2', '#0b4e73'],
-      backgroundColor: '#ffffff',
-      legend: 'none'
-    }
-  };
-
-  public prsActivityChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'PRs Open', 'PRs Merged', 'PRs Closed']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#0b4e73'},
-        gridlines: {
-          color: "#0b4e73"
-        },
-        baselineColor: '#0b4e73'
-      },
-      vAxis: {title: '# of PRs'},
-      colors: ['#2bb3e2', '#0b4e73'],
-      backgroundColor: '#ffffff',
-      legend: 'none'
-    }
-  };
-
-  public pageViewsChart:any =  {
-    chartType: 'AreaChart',
-    dataTable: [
-      ['Date', 'Page Views']
-    ],
-    options: {
-      hAxis: {
-        textStyle:{ color: '#0b4e73'},
-        gridlines: {
-          color: "#0b4e73"
-        },
-        baselineColor: '#0b4e73'
-      },
-      vAxis: {title: 'Page Views (in thousands)', minValue: 0, maxValue: 15},
-      colors: ['#2bb3e2'],
-      backgroundColor: '#ffffff',
-      legend: 'none'
-    }
-  };
-
-  public cssClassNames:any = {
-    'headerRow': 'header-row',
-    'tableRow': 'table-row',
-    'oddTableRow': 'odd-table-row',
-    'selectedTableRow': 'selected-table-row',
-    'hoverTableRow': 'hover-table-row',
-    'headerCell': 'header-cell',
-    'tableCell': 'table-cell',
-    'rowNumberCell': 'row-number-cell'
-  };
-
-  public maintainersTable:any =  {
-    chartType: 'Table',
-    dataTable: [
-      ['Contributor', 'Commits'],
-    ],
-    options: {
-      title: 'Maintainers',
-      allowHtml: true,
-      alternatingRowStyle: false,
-      width: '100%',
-      cssClassNames: this.cssClassNames,
-      sortColumn: 1,
-      sortAscending: false,
-    }
-  };
 
 }
