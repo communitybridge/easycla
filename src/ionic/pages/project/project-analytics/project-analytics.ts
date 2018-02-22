@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
@@ -48,7 +49,8 @@ export class ProjectAnalyticsPage {
     private domSanitizer : DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
-    private gaugeConfig: RoundProgressConfig
+    private gaugeConfig: RoundProgressConfig,
+    private datePipe: DatePipe,
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
@@ -203,13 +205,7 @@ export class ProjectAnalyticsPage {
   }
 
   formatDate(date) {
-    var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-    return [month, day].join('-');
+    return this.datePipe.transform(date, 'MM-dd');
   }
 
   isEmpty(object) {
