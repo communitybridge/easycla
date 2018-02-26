@@ -6,7 +6,7 @@ import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated'],
 })
 @IonicPage({
   segment: 'companies'
