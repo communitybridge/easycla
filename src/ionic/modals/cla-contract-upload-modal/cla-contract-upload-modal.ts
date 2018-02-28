@@ -16,7 +16,7 @@ export class ClaContractUploadModal {
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
-  keysGetter;
+  keysGetter: any;
 
   claProjectId: any;
   documentType: string; // individual | corporate
