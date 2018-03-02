@@ -17,6 +17,11 @@
         "name": "nofile",
         "softLimit": 64000,
         "hardLimit": 64000
+      },
+      {
+        "name": "nproc",
+        "softLimit": 32000,
+        "hardLimit": 32000
       }
     ],
     "portMappings": [

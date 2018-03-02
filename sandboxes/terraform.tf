@@ -18,18 +18,11 @@ provider "aws" {
 }
 
 terraform {
-    backend "consul" {
-      address = "consul.service.development.consul:8500"
-      path    = "terraform/sandboxes"
-    }
-}
-
-// This allows me to pull the state of another environment, in this case production-tools and grab data from it.
-data "terraform_remote_state" "infrastructure" {
-  backend = "consul"
-  config {
-    address = "consul.service.development.consul:8500"
-    path    = "terraform/infrastructure"
+  backend "consul" {
+    address = "consul.eng.linuxfoundation.org:443"
+    scheme  = "https"
+    path    = "terraform/development/sandboxes"
+    access_token = "99e1dd84-a0dc-2bca-5cab-89291a1db801"
   }
 }
 
@@ -37,8 +30,10 @@ data "terraform_remote_state" "infrastructure" {
 data "terraform_remote_state" "infrastructure2" {
   backend = "consul"
   config {
-    address = "consul.service.production.consul:8500"
+    address = "consul.eng.linuxfoundation.org:443"
+    scheme  = "https"
     path    = "terraform/infrastructure2.0"
+    access_token = "99e1dd84-a0dc-2bca-5cab-89291a1db801"
   }
 }
 
@@ -50,20 +45,8 @@ module "ecs-iam-profile" {
   environment = "development"
 }
 
-module "peering" {
-  source                    = "../../modules/peering"
-
-  vpc_id                    = "${module.vpc.id}"
-  external_rtb_id           = "${module.vpc.external_rtb_id}"
-  raw_route_tables_id       = "${module.vpc.raw_route_tables_id}"
-
-  tools_account_number      = "${data.terraform_remote_state.infrastructure.account_number}"
-  tools_cidr                = "${data.terraform_remote_state.infrastructure.west_cidr}"
-  tools_vpc_id              = "${data.terraform_remote_state.infrastructure.west_vpc_id}"
-}
-
 module "peering_infra" {
-  source                    = "../../modules/peering"
+  source                    = "../modules/peering"
 
   vpc_id                    = "${module.vpc.id}"
   external_rtb_id           = "${module.vpc.external_rtb_id}"
@@ -85,7 +68,7 @@ data "template_file" "ecs_cloud_config" {
 }
 
 module "vpc" {
-  source             = "../../modules/vpc"
+  source             = "../modules/vpc"
   name               = "Sandboxes"
   cidr               = "${var.cidr}"
   internal_subnets   = ["10.32.1.128/27", "10.32.1.160/27", "10.32.1.192/27"]
@@ -94,10 +77,10 @@ module "vpc" {
 }
 
 module "dhcp" {
-  source  = "../../modules/dhcp"
+  source  = "../modules/dhcp"
   name    = "ci.engineering.internal"
   vpc_id  = "${module.vpc.id}"
-  servers = "10.32.0.140, 10.32.0.180, 10.32.0.220"
+  servers = "${cidrhost("${var.cidr}", 2)}"
 }
 
 module "security_groups" {
@@ -108,7 +91,7 @@ module "security_groups" {
 }
 
 module "engineering-sandboxes-ecs-cluster" {
-  source               = "../../modules/ecs-cluster"
+  source               = "../modules/ecs-cluster"
   environment          = "Sandbox"
   team                 = "Engineering"
   name                 = "sandboxes"

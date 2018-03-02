@@ -253,7 +253,9 @@ resource "aws_security_group" "ghe_elb" {
     to_port = 80
     protocol = "tcp"
     security_groups = [
-      "sg-e5b2d098"
+      "sg-e5b2d098",
+      "sg-0d2f4376",
+      "sg-493b5732"
     ]
   }
 
@@ -262,7 +264,9 @@ resource "aws_security_group" "ghe_elb" {
     to_port = 22
     protocol = "tcp"
     security_groups = [
-      "sg-e5b2d098"
+      "sg-e5b2d098",
+      "sg-0d2f4376",
+      "sg-493b5732"
     ]
   }
 
@@ -271,7 +275,9 @@ resource "aws_security_group" "ghe_elb" {
     to_port = 443
     protocol = "tcp"
     security_groups = [
-      "sg-e5b2d098"
+      "sg-e5b2d098",
+      "sg-0d2f4376",
+      "sg-493b5732"
     ]
   }
 
@@ -402,6 +408,36 @@ resource "aws_security_group" "infra-ecs-cluster" {
     protocol = "-1"
     security_groups = [
       "${aws_security_group.vault-ecs-cluster.id}"
+    ]
+  }
+
+  // Giving Access to Consul from other ECS Cluster
+  ingress {
+    from_port = 8300
+    to_port = 8300
+    protocol = "tcp"
+    security_groups = [
+      "sg-de5b9fa1" // Staging ECS Cluster
+    ]
+  }
+
+  // Giving Access to Consul from other ECS Cluster
+  ingress {
+    from_port = 8301
+    to_port = 8301
+    protocol = "tcp"
+    security_groups = [
+      "sg-de5b9fa1" // Staging ECS Cluster
+    ]
+  }
+
+  // Giving Access to Logstash from other ECS Cluster
+  ingress {
+    from_port = 12201
+    to_port = 12201
+    protocol = "tcp"
+    security_groups = [
+      "sg-de5b9fa1" // Staging ECS Cluster
     ]
   }
 

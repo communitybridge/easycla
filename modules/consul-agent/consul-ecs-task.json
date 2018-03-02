@@ -21,7 +21,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "infra",
+        "awslogs-group": "${LOG_GROUP_NAME}",
         "awslogs-region": "us-west-2",
         "awslogs-stream-prefix": "consul-agent"
       }
