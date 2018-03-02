@@ -191,3 +191,16 @@ resource "aws_route53_record" "dot" {
     evaluate_target_health = true
   }
 }
+
+resource "aws_route53_record" "it-bridge" {
+  provider= "aws.local"
+  zone_id = "Z3BZCCH1SRA7EW"
+  name    = "it-bridge"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.it-ghe-bridge.dns_name}"
+    zone_id                = "${aws_elb.it-ghe-bridge.zone_id}"
+    evaluate_target_health = true
+  }
+}

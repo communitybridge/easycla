@@ -14,6 +14,10 @@ variable "endpoint" {
   description = "Consul Server Endpoint the Agent needs to connect to"
 }
 
+variable "log_group_name" {
+  description = "Consul Server Endpoint the Agent needs to connect to"
+}
+
 
 data "template_file" "consul_ecs_task" {
   template = "${file("${path.module}/consul-ecs-task.json")}"
@@ -23,6 +27,7 @@ data "template_file" "consul_ecs_task" {
     ENCRYPTION    = "${var.encryption_key}"
     DATACENTER    = "${var.datacenter}"
     CONSUL_ENDPOINT = "${var.endpoint}"
+    LOG_GROUP_NAME = "${var.log_group_name}"
   }
 }
 
@@ -38,7 +43,7 @@ resource "aws_ecs_service" "consul" {
   name                               = "consul-agent"
   cluster                            = "${var.ecs_cluster_name}"
   task_definition                    = "${aws_ecs_task_definition.consul.arn}"
-  desired_count                      = "2"
+  desired_count                      = "20"
   deployment_maximum_percent         = "200"
 
   placement_strategy {

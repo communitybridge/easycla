@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo vm.max_map_count=262144 >> /etc/sysctl.conf
+sysctl -w vm.max_map_count=262144
+
 # Join the default ECS cluster
 echo ECS_CLUSTER=${ecs_cluster_name} >> /etc/ecs/ecs.config
 
@@ -14,20 +17,15 @@ yum update -y
 # Install packages
 yum -y install jq nfs-utils python27 python27-pip
 
-# Get region of EC2 from instance metadata
-EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-EC2_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
 EC2_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-EC2_PRIVATE_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
-
-# Add the consul dns server
-sed -i "1s/^/nameserver $EC2_PRIVATE_IP\n/" /etc/resolv.conf
 
 # NewRelic Infrastructure Agent
 echo "license_key: ${newrelic_key}" | sudo tee -a /etc/newrelic-infra.yml
 printf "[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\nenable=1\ngpgcheck=0" | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo
 yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
 sudo yum install newrelic-infra -y
+
+service docker start
 
 # Restarting ECS
 start ecs
@@ -54,40 +52,18 @@ filebeat.prospectors:
 
 #================================ General =====================================
 
-name: production-tools
+name: staging-cluster
 tags: ["system"]
 fields:
-  sys_name: production-tools
-  sys_env: production
-  sys_region: ${region}
+  sys_name: staging-ecs-cluster
+  sys_env: staging
+  sys_region: ${aws_region}
 
 #================================ Outputs =====================================
 output.logstash:
-  hosts: ["${region}.logstash.service.consul:5044"]
+  hosts: ["${aws_region}.logstash.service.consul:5044"]
 EOF
 
 service filebeat start
 
 initctl restart newrelic-infra
-
-# Create mount point
-mkdir /mnt/storage
-
-# Get EFS FileSystemID attribute
-#Instance needs to be added to a EC2 role that give the instance at least read access to EFS
-EFS_FILE_SYSTEM_ID=${efs_id}
-
-# Instance needs to be a member of security group that allows 2049 inbound/outbound
-#The security group that the instance belongs to has to be added to EFS file system configuration
-#Create variables for source and target
-DIR_SRC=$EC2_AVAIL_ZONE.$EFS_FILE_SYSTEM_ID.efs.$EC2_REGION.amazonaws.com:/
-DIR_TGT=/mnt/storage
-
-# Mount EFS file system
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $DIR_SRC $DIR_TGT
-
-#Backup fstab
-cp -p /etc/fstab /etc/fstab.back-$(date +%F)
-
-#Append line to fstab
-echo -e "$DIR_SRC \t\t $DIR_TGT \t\t nfs \t\t defaults \t\t 0 \t\t 0" | tee -a /etc/fstab

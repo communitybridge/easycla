@@ -139,6 +139,7 @@ module "consul" {
   datacenter       = "us-west-2"
   endpoint         = "consul.eng.linuxfoundation.org"
   ecs_cluster_name = "vault"
+  log_group_name   = "infra"
 }
 
 
