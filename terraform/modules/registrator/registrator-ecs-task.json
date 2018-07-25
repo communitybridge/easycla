@@ -1,0 +1,29 @@
+[
+  {
+    "essential": true,
+    "memory": 256,
+    "image": "gliderlabs/registrator:latest",
+    "name": "registrator",
+    "command": ["-cleanup", "consul://127.0.0.1:8500"],
+    "mountPoints": [
+      {
+        "sourceVolume": "docker-sock",
+        "containerPath": "/tmp/docker.sock"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${LOG_GROUP_NAME}",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "registrator"
+      }
+    },
+    "dockerLabels": {
+      "realm": "${PROJECT}",
+      "application": "registrator",
+      "environment": "production",
+      "tags": "service, registrator"
+    }
+  }
+]
