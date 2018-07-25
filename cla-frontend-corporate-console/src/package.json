@@ -2,16 +2,14 @@
   "name": "cla-corporate-console",
   "author": "",
   "private": true,
-  "os": [
-    "linux",
-    "darwin"
-  ],
+  "os": ["linux", "darwin"],
   "scripts": {
     "clean": "./node_modules/.bin/ionic-app-scripts clean",
     "build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:serve": "./node_modules/.bin/ionic-app-scripts serve",
-    "ionic:watch": "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic"
+    "ionic:watch":
+      "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic"
   },
   "dependencies": {
     "@angular/common": "5.0.3",
@@ -34,9 +32,7 @@
     "rxjs": "5.5.2",
     "sw-toolbox": "3.6.0",
     "timsort": "^0.3.0",
-    "zone.js": "0.8.18",
-    "lf-theme": "^1.0.0",
-    "cla-service": "^1.0.0"
+    "zone.js": "0.8.18"
   },
   "devDependencies": {
     "@ionic/app-scripts": "3.1.4",

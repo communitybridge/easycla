@@ -1,13 +1,18 @@
-import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
-import { ClaService } from 'cla-service';
+import { Component } from "@angular/core";
+import {
+  NavController,
+  NavParams,
+  IonicPage,
+  ModalController
+} from "ionic-angular";
+import { ClaService } from "../../services/cla.service";
 
 @IonicPage({
-  segment: 'project/:projectId'
+  segment: "project/:projectId"
 })
 @Component({
-  selector: 'cla-corporate-page',
-  templateUrl: 'cla-corporate-page.html'
+  selector: "cla-corporate-page",
+  templateUrl: "cla-corporate-page.html"
 })
 export class ClaCorporatePage {
   projectId: string;
@@ -23,19 +28,19 @@ export class ClaCorporatePage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.getDefaults();
-    this.projectId = navParams.get('projectId');
-    this.company = this.navParams.get('company');
+    this.projectId = navParams.get("projectId");
+    this.company = this.navParams.get("company");
   }
 
   getDefaults() {
     this.project = {
-      project_name: "",
+      project_name: ""
     };
     this.signature = {
-      sign_url: "",
+      sign_url: ""
     };
   }
 
@@ -51,29 +56,37 @@ export class ClaCorporatePage {
   }
 
   getReturnUrl() {
-    return window.location.protocol + '//' + window.location.host + '/#/company/' + this.company.company_id;
+    return (
+      window.location.protocol +
+      "//" +
+      window.location.host +
+      "/#/company/" +
+      this.company.company_id
+    );
   }
 
   postSignatureRequest() {
     let signatureRequest = {
-      'project_id': this.projectId,
-      'company_id': this.company.company_id,
+      project_id: this.projectId,
+      company_id: this.company.company_id,
       // TODO: Switch this to intermediary loading screen as docusign postback has delay
-      'return_url': this.getReturnUrl(),
+      return_url: this.getReturnUrl()
     };
 
-    this.claService.postCorporateSignatureRequest(signatureRequest).subscribe((response) => {
-      // returns {
-      //   user_id:
-      //   signature_id:
-      //   project_id:
-      //   sign_url: docusign.com/some-docusign-url
-      // }
-      if(response.errors) {
-        this.error = response;
-      }
-      this.signature = response;
-    });
+    this.claService
+      .postCorporateSignatureRequest(signatureRequest)
+      .subscribe(response => {
+        // returns {
+        //   user_id:
+        //   signature_id:
+        //   project_id:
+        //   sign_url: docusign.com/some-docusign-url
+        // }
+        if (response.errors) {
+          this.error = response;
+        }
+        this.signature = response;
+      });
   }
 
   openClaAgreement() {
@@ -81,7 +94,6 @@ export class ClaCorporatePage {
       // Can't open agreement if we don't have a sign_url yet
       return;
     }
-    window.open(this.signature.sign_url, '_blank');
+    window.open(this.signature.sign_url, "_blank");
   }
-
 }
