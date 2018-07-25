@@ -1,6 +1,5 @@
 // http://ionicframework.com/docs/v2/theming/
 
-
 // App Global Sass
 // --------------------------------------------------
 // Put style rules here that you want to apply globally. These
@@ -15,7 +14,7 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
-@import '../../node_modules/lf-theme/scss/styles.scss';
+@import "../theme/styles.scss";
 
 .card-md .item-md.item-block .item-inner {
   border-bottom: 1px solid #dedede;
