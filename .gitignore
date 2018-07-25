@@ -35,8 +35,12 @@ src/build/Release
 
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
-src/node_modules/*
-src/!node_modules/passport-cas
+cla-frontend-console/src/node_modules/*
+cla-frontend-corporate-console/src/node_modules/*
+frontend-project-management-console/src/node_modules/*
+cla-frontend-console/src/!node_modules/passport-cas
+cla-frontend-corporate-console/src/!node_modules/passport-cas
+frontend-project-management-console/src/!node_modules/passport-cas
 
 # Optional npm cache directory
 .npm
