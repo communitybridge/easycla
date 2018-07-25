@@ -1,29 +1,29 @@
-import { Component, ViewChild } from '@angular/core';
-import { Nav, Platform, App } from 'ionic-angular';
-import { StatusBar } from '@ionic-native/status-bar';
-import { SplashScreen } from '@ionic-native/splash-screen';
+import { Component, ViewChild } from "@angular/core";
+import { Nav, Platform, App } from "ionic-angular";
+import { StatusBar } from "@ionic-native/status-bar";
+import { SplashScreen } from "@ionic-native/splash-screen";
 
-import { CincoService } from '../services/cinco.service';
-import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { RolesService } from '../services/roles.service';
-import { ClaService } from 'cla-service';
-import { CLA_API_URL } from '../services/constants';
-import { HttpClient } from '../services/http-client';
+import { CincoService } from "../services/cinco.service";
+import { KeycloakService } from "../services/keycloak/keycloak.service";
+import { RolesService } from "../services/roles.service";
+import { ClaService } from "../services/cla.service";
+import { CLA_API_URL } from "../services/constants";
+import { HttpClient } from "../services/http-client";
 
 @Component({
-  templateUrl: 'app.html',
+  templateUrl: "app.html"
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'CompaniesPage';
+  rootPage: any = "CompaniesPage";
 
   userRoles: any;
   pages: Array<{
-    icon?: string,
-    access: boolean,
-    title: string,
-    component: any
+    icon?: string;
+    access: boolean;
+    title: string;
+    component: any;
   }>;
 
   users: any[];
@@ -37,7 +37,7 @@ export class MyApp {
     private keycloak: KeycloakService,
     private rolesService: RolesService,
     public claService: ClaService,
-    public httpClient: HttpClient,
+    public httpClient: HttpClient
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -52,11 +52,10 @@ export class MyApp {
   }
 
   ngOnInit() {
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
+    this.rolesService.getUserRolesPromise().then(userRoles => {
       this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
-
   }
 
   initializeApp() {
@@ -80,9 +79,9 @@ export class MyApp {
   regeneratePagesMenu() {
     this.pages = [
       {
-        title: 'All Companies',
+        title: "All Companies",
         access: true,
-        component: 'CompaniesPage'
+        component: "CompaniesPage"
       }
     ];
   }
