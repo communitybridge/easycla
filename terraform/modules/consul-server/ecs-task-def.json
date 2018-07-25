@@ -1,0 +1,32 @@
+[
+  {
+    "essential": true,
+    "image": "643009352547.dkr.ecr.us-west-2.amazonaws.com/infra/consul:1.0.6",
+    "memoryReservation": 512,
+    "name": "consul",
+    "portMappings": [
+      {
+        "containerPort": 8500,
+        "hostPort": 8500
+      },
+      {
+        "containerPort": 8301,
+        "hostPort": 8301
+      }
+    ],
+    "environment": [
+      {
+        "name": "CONSUL_ADVERTISE_INTERFACE",
+        "value": "eth0"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "infra",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "consul"
+      }
+    }
+  }
+]
