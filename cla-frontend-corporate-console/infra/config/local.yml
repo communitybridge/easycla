@@ -1,0 +1,41 @@
+# List of all the containers that needs to be spun up.
+# The workspace container will be added and configured automatically.
+# The Syntax for each container should mimic the docker-compose format.
+containers:
+  nginx:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/nginx:latest'
+    volumes: ['.lf/logs/nginx/:/var/log/nginx']
+    ports: ['%:80']
+    internal_volumes: ['app']
+  workspace:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/cli/workspace/node:6'
+    internal_volumes: ['app']
+
+# Environment Variables to be injected in the container.
+environment:
+  nginx:
+    web_docroot: '/srv/app/src/www'
+    custom_config_file: '/srv/app/infra/nginx/local.conf'
+
+modes:
+  default:
+    description: "Only the workspace container will have have an external port mappings. App will autorun in workspace."
+    containers:
+      workspace:
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
+
+  dev:
+    description: "All containers will have external port mappings. No autorun."
+    containers:
+      workspace:
+        command: '/srv/app/scripts/watch.sh'
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
+
+  ci:
+    description: "All containers are launched, including the workspace but no port mappings are set and no autorun"
+    containers:
+      workspace:
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/generate-constants.sh"
