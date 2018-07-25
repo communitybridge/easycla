@@ -27,7 +27,6 @@
     "@types/node": "^8.0.17",
     "angular-svg-round-progressbar": "^1.2.1",
     "chart.js": "^2.5.0",
-    "ws": "^3.3.2",
     "google-libphonenumber": "^2.0.18",
     "ionic-angular": "3.9.2",
     "ionicons": "3.0.0",
