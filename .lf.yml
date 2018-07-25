@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 name: CLA Corporate Console
 machine_name: ccc
 =======
@@ -23,4 +24,11 @@ dependencies:
 =======
 >>>>>>> 6e949e3c936f47f3710f0e3fe3859fed5818fa3b
   - cla
+=======
+name: CLA System
+machine_name: cla
+stack: python
+dependencies:
+- cinco
+>>>>>>> ddcd55ee69621b91435657356d5de16da46cc364
 files:

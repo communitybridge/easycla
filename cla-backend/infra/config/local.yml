@@ -1,0 +1,78 @@
+# List of all the containers that needs to be spun up.
+# The workspace container will be added and configured automatically.
+# The Syntax for each container should mimic the docker-compose format.
+containers:
+  dynamodb:
+    image: 'dwmkerr/dynamodb:latest'
+    expose: ['8000']
+    command: '-dbPath /srv/data -sharedDb -optimizeDbBeforeStartup'
+    volumes: ['.lf/data/dynamo:/srv/data']
+  mailhog:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/mailhog:latest'
+    expose: ['1025']
+    ports: ['%:8025']
+  workspace:
+    image: '433610389961.dkr.ecr.us-west-2.amazonaws.com/cli/workspace/python:3'
+    ports: ['%:5000']
+    internal_volumes: ['app']
+
+# Environment Variables to be injected in the container.
+environment:
+  workspace:
+    cla_base_url: 'Should be populated by hooks'
+    cla_signed_callback_url: 'Should be populated by hooks'
+    cla_database: 'DynamoDB'
+    cla_database_host: 'http://dynamodb:8000'
+    cla_keyvalue: 'DynamoDB'
+    cla_keyvalue_host: 'http://dynamodb:8000'
+    cla_cla_console_endpoint: 'http://cla.linuxfoundation.org'
+    cla_dynamo_region: 'us-west-2'
+    cla_dynamo_write_units: 1
+    cla_dynamo_read_units: 1
+    cla_signing_service: 'DocuSign'
+    cla_docusign_root_url: 'https://demo.docusign.net/restapi/v2'
+    cla_docusign_username: 'fa239181-b14a-489d-85c1-3cac52d58884'
+    cla_docusign_password: 'k3Y7Q5zot%ZD@i3W'
+    cla_docusign_integrator_key: '828f4192-0f3f-4f9f-9cff-56f0b6d61615'
+    cla_github_oauth_callback_url: 'Should be populated by hooks'
+    cla_github_oauth_client_id: '527a71a1f12e710d93ec'
+    cla_github_oauth_secret: '9272a1a0c09e21bd89e30f88a2994c985aede26e'
+    cla_github_app_id: '4449'
+    cla_github_app_webhook_secret: '8f19e80bfe465c03ddf9dfa1b517304e00e51288'
+    cla_github_app_private_key_path: '/srv/app/cla/resources/contributor-license-agreement.2017-08-24.private-key.pem'
+    cla_keycloak_endpoint: 'Should be populated by hooks'
+    cla_keycloak_realm: 'LinuxFoundation'
+    cla_keycloak_client_id: 'cla'
+    cla_keycloak_client_secret: '66ba05c5-2326-47f5-91dd-559ec056b927'
+    cla_cinco_endpoint: 'Should be populated by hooks'
+    cla_email_service: 'SMTP'
+    cla_smtp_sender_email_address: 'donotreply@cla.system'
+    cla_smtp_host: 'mailhog'
+    cla_smtp_port: '1025'
+    cla_storage_service: 'LocalStorage'
+    cla_local_storage_folder: '/tmp/cla'
+    cla_pdf_service: 'DocRaptor'
+    cla_docraptor_api_key: 'QgWaRzRESop5buSbARt'
+    cla_docraptor_debug_mode: 0
+    cla_docraptor_test_mode: 1
+    cla_docraptor_javascript: 1
+
+modes:
+  default:
+    description: "Only the workspace container will have have an external port mappings. App will autorun in workspace."
+    containers:
+      workspace:
+        command: '/srv/app/scripts/run_dev.sh'
+        environment:
+          OPENING_SEQUENCE: "/srv/app/scripts/install.sh"
+
+  dev:
+    description: "All containers will have external port mappings. No autorun. No Workspace Container."
+    containers:
+      dynamodb:
+        ports: ['%:8000']
+      mailhog:
+          ports: ['%:1025', '%:8025']
+
+  ci:
+    description: "All containers are launched, including the workspace but no port mappings are set and no autorun"
