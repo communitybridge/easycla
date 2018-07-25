@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Activity Log</ion-title>
+    <div class="toolbar-select">
+      <ion-label>Projects:</ion-label>
+      <ion-select [(ngModel)]="selectedProject" (ionChange)="projectSelectChanged()">
+        <ion-option *ngFor="let project of allProjects" [value]="project">{{ project.name }}</ion-option>
+      </ion-select>
+    </div>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding overflow-scroll="true">
+  <ion-grid class="tabular-head">
+    <ion-row class="tabular-row">
+      <ion-col col-4>
+        User
+      </ion-col>
+      <ion-col col-4>
+        Operation
+      </ion-col>
+      <ion-col col-4>
+        Time
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <loading-spinner [loading]="loading.events"></loading-spinner>
+  <ion-grid class="tabular-body" [loading-display]="loading.events">
+    <ion-row *ngIf="!events.length && !loading.events">
+      <ion-col col-12 text-center padding>
+        It looks like there isn't any activity for this item.
+      </ion-col>
+    </ion-row>
+    <ion-row class="tabular-row" *ngFor="let event of events; let i = index" (click)="toggle(i)">
+      <ion-col col-4>
+        <span *ngIf="users[event.userId].lfId">
+          {{ users[event.userId].lfId }}
+        </span>
+      </ion-col>
+      <ion-col col-4>
+        {{ event.operation }}
+      </ion-col>
+      <ion-col col-4>
+        {{ event.timestamp | date:'medium' }}
+      </ion-col>
+      <ion-col col-12 *ngIf="expand[i]">
+        <pre>{{ event.data | json }}</pre>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+
+</ion-content>
