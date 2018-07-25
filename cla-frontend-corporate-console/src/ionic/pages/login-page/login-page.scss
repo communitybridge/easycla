@@ -1,0 +1,34 @@
+login-page {
+
+  .scroll-content {
+    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+  }
+
+  .login-container {
+    text-align: center;
+    margin-top: 60px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 50px 20px;
+    background-color: #ececec;
+    max-width: 400px;
+  }
+
+  .logo {
+    display: block;
+    width: 250px;
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .login-button {
+    margin-top: 50px;
+  }
+
+}
