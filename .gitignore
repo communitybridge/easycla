@@ -86,3 +86,4 @@ terraform.tfstate.backup
 terraform.tfstate
 /src/ionic/services/constants.ts
 /src/ionic/assets/keycloak.json
+.idea/
