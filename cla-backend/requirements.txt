@@ -7,7 +7,7 @@ hug==2.2.0
 
 # Not a public package yet.
 #lf-keycloak==2.0.4
-https://nexus.engineering.tux.rocks/repository/pypi-engineering/packages/lf-keycloak/2.0.4/lf-keycloak-2.0.4.tar.gz
+https://nexus.eng.linuxfoundation.org/repository/pypi-engineering/packages/lf-keycloak/2.0.4/lf-keycloak-2.0.4.tar.gz
 
 nose2==0.7.2
 
