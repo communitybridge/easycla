@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Cla Contributor Console</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding headerspacing overflow-scroll="true">
+  <header>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-2>
+          <img src="{{ project.logoRef }}" alt="{{ project.project_name }} Logo" />
+        </ion-col>
+        <ion-col col-12 col-md-10>
+          <h1>{{ project.project_name }}</h1>
+          <p>CLA</p>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header>
+  <loading-spinner [loading]="(loading.individualDoc || loading.corporateDoc)"></loading-spinner>
+  <ion-grid [loading-display]="(loading.individualDoc || loading.corporateDoc)">
+    <ion-row justify-content-center>
+      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
+        <ion-card class="clickable" (click)="openClaIndividualPage()">
+          <ion-card-content>
+            <ion-card-title>
+              <ion-icon name="person" item-left large ></ion-icon>
+              <span>Individual</span>
+            </ion-card-title>
+            <p>Select this if you are contributing code as an individual.</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <ion-row justify-content-center>
+      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
+        <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
+          <ion-card-content>
+            <ion-card-title >
+              <ion-icon name="briefcase" item-left large ></ion-icon>
+              <span>Employee</span>
+            </ion-card-title>
+            <p>Select this if you are contributing code as an employee.</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+</ion-content>

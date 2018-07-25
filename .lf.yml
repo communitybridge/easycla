@@ -1,18 +1,26 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 name: CLA Corporate Console
 machine_name: ccc
 =======
 name: Project Management Console
 machine_name: pmc
 >>>>>>> c5f1638d55afe98cb0fba6aae1d02963daea833e
+=======
+name: CLA Console
+machine_name: cla-console
+>>>>>>> 6e949e3c936f47f3710f0e3fe3859fed5818fa3b
 stack: nodejs
 modes:
   - default
   - dev
 dependencies:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   - cinco
 >>>>>>> c5f1638d55afe98cb0fba6aae1d02963daea833e
+=======
+>>>>>>> 6e949e3c936f47f3710f0e3fe3859fed5818fa3b
   - cla
 files:
