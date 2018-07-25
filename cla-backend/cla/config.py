@@ -20,8 +20,8 @@ SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed' #: Default callback once signature
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
-DATABASE = 'SQLite' #: Database type ('SQLite', 'DynamoDB', etc).
-DATABASE_HOST = ':memory:' #: Database Host (':memory:', 'localhost', etc).
+DATABASE = 'DynamoDB' #: Database type ('SQLite', 'DynamoDB', etc).
+DATABASE_HOST = 'http://localhost:8000' #: Database Host (':memory:', 'localhost', etc).
 
 # Define the key-value we are working with.
 KEYVALUE = 'Memory' #: Key-value store type ('Memory', 'DynamoDB', etc).
