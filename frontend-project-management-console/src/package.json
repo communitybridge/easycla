@@ -2,16 +2,14 @@
   "name": "project-management-console",
   "author": "",
   "private": true,
-  "os": [
-    "linux",
-    "darwin"
-  ],
+  "os": ["linux", "darwin"],
   "scripts": {
     "clean": "./node_modules/.bin/ionic-app-scripts clean",
     "build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:serve": "./node_modules/.bin/ionic-app-scripts serve",
-    "ionic:watch": "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic"
+    "ionic:watch":
+      "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic"
   },
   "dependencies": {
     "@angular/common": "5.0.3",
@@ -29,7 +27,7 @@
     "@types/node": "^8.0.17",
     "angular-svg-round-progressbar": "^1.2.1",
     "chart.js": "^2.5.0",
-    "cla-service": "^1.0.0",
+    "ws": "^3.3.2",
     "google-libphonenumber": "^2.0.18",
     "ionic-angular": "3.9.2",
     "ionicons": "3.0.0",
