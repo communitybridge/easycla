@@ -1,0 +1,60 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Company CLA
+    </ion-title>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="content-container">
+    <ion-grid>
+      <div class="clearfix">
+        <ion-icon icon-left icon-large name="briefcase"></ion-icon>
+        <h2>Company CLA</h2>
+        <p>
+          Directions on who signs this and what happens. Now with more text so
+          we can see that is is like when it wraps. Just for good measure I will
+          add a little more. Still need some more because it isn't quite long
+          enough but after this it should be.
+        </p>
+      </div>
+    </ion-grid>
+
+    <div class="simple-sharing-link-management">
+      <ion-grid class="link-management-container">
+        <ion-row class="link-management-text-container">
+          <ion-col class="link-management-text" col-9>
+            <span class="link-management-label">Link To Contract on Docusign</span>
+          </ion-col>
+          <ion-col class="link-management-copy-link-button" col-3>
+            <button ion-button color="light" (click)="copyText()">
+              Copy link
+            </button>
+          </ion-col>
+        </ion-row>
+        <div class="link-management-url-container">
+          <input #textArea class="link-management-url-input" type="text" [value]="cclaLink" readonly>
+        </div>
+      </ion-grid>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button (click)="dismiss()">
+        Cancel
+      </button>
+      <button ion-button color="primary" (click)="openCclaLink()">
+        View CCLA
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
