@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormControl } from '@angular/forms';
-import { ClaService } from 'cla-service';
+import { ClaService } from '../../services/cla.service';
 import { Http } from '@angular/http';
 
 @IonicPage({
