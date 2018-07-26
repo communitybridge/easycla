@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { ClaService } from 'cla-service';
+import { ClaService } from '../../services/cla.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 import { PopoverController } from 'ionic-angular';

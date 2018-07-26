@@ -3,7 +3,7 @@ import { NavController, NavParams, ModalController, ViewController, AlertControl
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { EmailValidator } from  '../../validators/email';
-import { ClaService } from 'cla-service';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
