@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-angular';
-import { ClaService } from 'cla-service';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla-loading'

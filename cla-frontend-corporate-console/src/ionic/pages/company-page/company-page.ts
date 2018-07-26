@@ -1,22 +1,27 @@
-import { Component } from '@angular/core';
-import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { ClaService } from 'cla-service';
-import { ClaCompanyModel } from '../../models/cla-company';
-import { ClaUserModel } from '../../models/cla-user';
-import { ClaSignatureModel } from '../../models/cla-signature';
-import { SortService } from '../../services/sort.service';
-import { RolesService } from '../../services/roles.service';
-import { Restricted } from '../../decorators/restricted';
+import { Component } from "@angular/core";
+import {
+  NavController,
+  ModalController,
+  NavParams,
+  IonicPage
+} from "ionic-angular";
+import { ClaService } from "../../services/cla.service";
+import { ClaCompanyModel } from "../../models/cla-company";
+import { ClaUserModel } from "../../models/cla-user";
+import { ClaSignatureModel } from "../../models/cla-signature";
+import { SortService } from "../../services/sort.service";
+import { RolesService } from "../../services/roles.service";
+import { Restricted } from "../../decorators/restricted";
 
 @Restricted({
-  roles: ['isAuthenticated'],
+  roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'company/:companyId'
+  segment: "company/:companyId"
 })
 @Component({
-  selector: 'company-page',
-  templateUrl: 'company-page.html',
+  selector: "company-page",
+  templateUrl: "company-page.html"
 })
 export class CompanyPage {
   companyId: string;
@@ -31,15 +36,15 @@ export class CompanyPage {
     public navParams: NavParams,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private rolesService: RolesService, // for @Restricted
+    private rolesService: RolesService // for @Restricted
   ) {
-    this.companyId = navParams.get('companyId');
+    this.companyId = navParams.get("companyId");
     this.getDefaults();
   }
 
   getDefaults() {
     this.loading = {
-      companySignatures: true,
+      companySignatures: true
     };
     this.company = new ClaCompanyModel();
     this.projects = {};
@@ -79,50 +84,15 @@ export class CompanyPage {
   }
 
   openProjectPage(projectId) {
-    this.navCtrl.push('ProjectPage', {
+    this.navCtrl.push("ProjectPage", {
       companyId: this.companyId,
-      projectId: projectId,
+      projectId: projectId
     });
   }
-  
+
   openCompanyModal() {
-    let modal = this.modalCtrl.create('AddCompanyModal', {
-      company: this.company,
-    });
-    modal.onDidDismiss(data => {
-      // A refresh of data anytime the modal is dismissed
-      this.getCompany();
-    });
-    modal.present();
-  }
-  
-  openWhitelistEmailModal() {
-    let modal = this.modalCtrl.create('WhitelistModal', {
-      type: 'email',
-      company: this.company,
-    });
-    modal.onDidDismiss(data => {
-      // A refresh of data anytime the modal is dismissed
-      this.getCompany();
-    });
-    modal.present();
-  }
-  
-  openWhitelistDomainModal() {
-    let modal = this.modalCtrl.create('WhitelistModal', {
-      type: 'domain',
-      company: this.company,
-    });
-    modal.onDidDismiss(data => {
-      // A refresh of data anytime the modal is dismissed
-      this.getCompany();
-    });
-    modal.present();
-  }
-  
-  openProjectsCclaSelectModal() {
-    let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
-      company: this.company,
+    let modal = this.modalCtrl.create("AddCompanyModal", {
+      company: this.company
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
@@ -131,4 +101,38 @@ export class CompanyPage {
     modal.present();
   }
 
+  openWhitelistEmailModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "email",
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
+
+  openWhitelistDomainModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "domain",
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
+
+  openProjectsCclaSelectModal() {
+    let modal = this.modalCtrl.create("ProjectsCclaSelectModal", {
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
 }

@@ -1,32 +1,32 @@
-import { Component, ViewChild } from '@angular/core';
-import { Nav, Platform, App } from 'ionic-angular';
-import { StatusBar } from '@ionic-native/status-bar';
-import { SplashScreen } from '@ionic-native/splash-screen';
+import { Component, ViewChild } from "@angular/core";
+import { Nav, Platform, App } from "ionic-angular";
+import { StatusBar } from "@ionic-native/status-bar";
+import { SplashScreen } from "@ionic-native/splash-screen";
 
-import { CincoService } from '../services/cinco.service';
-import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { KeycloakHttp } from '../services/keycloak/keycloak.http';
-import { RolesService } from '../services/roles.service';
-import { S3Service } from '../services/s3.service';
-import { ClaService } from 'cla-service';
-import { CLA_API_URL } from '../services/constants';
-import { CINCO_API_URL } from '../services/constants';
-import { HttpClient } from '../services/http-client';
+import { CincoService } from "../services/cinco.service";
+import { KeycloakService } from "../services/keycloak/keycloak.service";
+import { KeycloakHttp } from "../services/keycloak/keycloak.http";
+import { RolesService } from "../services/roles.service";
+import { S3Service } from "../services/s3.service";
+import { ClaService } from "../services/cla.service";
+import { CLA_API_URL } from "../services/constants";
+import { CINCO_API_URL } from "../services/constants";
+import { HttpClient } from "../services/http-client";
 
 @Component({
-  templateUrl: 'app.html',
+  templateUrl: "app.html"
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = 'AllProjectsPage';
+  rootPage: any = "AllProjectsPage";
 
   userRoles: any;
   pages: Array<{
-    icon?: string,
-    access: boolean,
-    title: string,
-    component: any
+    icon?: string;
+    access: boolean;
+    title: string;
+    component: any;
   }>;
 
   users: any[];
@@ -42,7 +42,7 @@ export class MyApp {
     private rolesService: RolesService,
     public claService: ClaService,
     public s3service: S3Service,
-    public httpClient: HttpClient,
+    public httpClient: HttpClient
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -59,7 +59,6 @@ export class MyApp {
 
     this.cincoService.setApiUrl(CINCO_API_URL);
     this.cincoService.setHttp(kcHttpClient);
-
   }
 
   getDefaults() {
@@ -69,11 +68,10 @@ export class MyApp {
   }
 
   ngOnInit() {
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
+    this.rolesService.getUserRolesPromise().then(userRoles => {
       this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
-
   }
 
   initializeApp() {
@@ -97,40 +95,40 @@ export class MyApp {
   regeneratePagesMenu() {
     this.pages = [
       {
-        title: 'All Projects',
+        title: "All Projects",
         access: this.userRoles.isPmcUser,
-        component: 'AllProjectsPage'
+        component: "AllProjectsPage"
       },
       {
-        title: 'Member Companies',
+        title: "Member Companies",
         access: this.userRoles.isPmcUser,
-        component: 'AllMembersPage'
+        component: "AllMembersPage"
       },
       {
-        title: 'All Invoices Status',
+        title: "All Invoices Status",
         access: this.userRoles.isPmcUser,
-        component: 'AllInvoicesPage'
+        component: "AllInvoicesPage"
       },
       {
-        title: 'All Projects Logos',
+        title: "All Projects Logos",
         access: this.userRoles.isPmcUser,
-        component: 'AllProjectsLogosPage'
+        component: "AllProjectsLogosPage"
       },
       {
-        title: 'Activity Log',
+        title: "Activity Log",
         access: this.userRoles.isAdmin,
-        component: 'ActivityLogPage'
+        component: "ActivityLogPage"
       },
       {
-        title: 'Sign Out',
+        title: "Sign Out",
         access: this.userRoles.isAuthenticated,
-        component: 'LoginPage'
+        component: "LoginPage"
       },
       {
-        title: 'Sign In',
+        title: "Sign In",
         access: !this.userRoles.isAuthenticated,
-        component: 'LoginPage'
-      },
+        component: "LoginPage"
+      }
     ];
   }
 }
