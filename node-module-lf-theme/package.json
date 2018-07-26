@@ -1,0 +1,18 @@
+{
+  "name": "lf-theme",
+  "version": "1.0.0",
+  "description": "A common set of styles for LF front-end applications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.linuxfoundation.org:engineering-npm-modules/lf-theme.git"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.engineering.tux.rocks/repository/npm-private/"
+  },
+  "author": "",
+  "license": "UNLICENSED"
+}
