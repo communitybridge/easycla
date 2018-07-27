@@ -48,6 +48,11 @@ cla-frontend-console/src/!node_modules/passport-cas
 cla-frontend-corporate-console/src/!node_modules/passport-cas
 frontend-project-management-console/src/!node_modules/passport-cas
 
+# backend and serverless
+cla-backend/cla/node_modules/*
+cla-backend/cla/.serverless/*
+cla-backend/cla/.requirements/*
+
 # Optional npm cache directory
 .npm
 
