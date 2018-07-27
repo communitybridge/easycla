@@ -3,8 +3,8 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
-# import cla.hug_types
-# import cla.controllers.user
+import cla.hug_types
+import cla.controllers.user
 # import cla.controllers.project
 # import cla.controllers.signing
 # import cla.controllers.signature
@@ -13,7 +13,7 @@ import hug
 # import cla.controllers.repository_service
 # import cla.controllers.github
 # # from cla.auth import token_authentication, pm_verify, pm_verify_external_id, staff_verify
-# from cla.user import cla_user
+from cla.user import cla_user
 # from cla.utils import get_supported_repository_providers, \
 #                       get_supported_document_content_types, \
 #                       get_session_middleware
@@ -56,177 +56,177 @@ def get_health():
     """
     return {'status': 'up'}
 
-# #
-# # User routes.
-# #
-# @hug.get('/user', versions=1)
-# def get_users(user: cla_user):
-#     """
-#     GET: /user
+#
+# User routes.
+#
+@hug.get('/user', versions=1)
+def get_users(user: cla_user):
+    """
+    GET: /user
 
-#     Returns all CLA users.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.user.get_users()
-
-
-# @hug.get('/user/{user_id}', versions=1)
-# def get_user(user_id: hug.types.uuid):
-#     """
-#     GET: /user/{user_id}
-
-#     Returns the requested user data based on ID.
-#     """
-#     return cla.controllers.user.get_user(user_id=user_id)
-
-# @hug.get('/user/email/{user_email}', versions=1)
-# def get_user_email(user_email: cla.hug_types.email, user: cla_user):
-#     """
-#     GET: /user/email/{user_email}
-
-#     Returns the requested user data based on user email.
-
-#     TODO: Need to look into whether this has to be locked down more (by staff maybe?). Would that
-#     break the user flow from GitHub?
-#     """
-#     return cla.controllers.user.get_user(user_email=user_email)
+    Returns all CLA users.
+    """
+    # staff_verify(user)
+    return cla.controllers.user.get_users()
 
 
-# @hug.get('/user/github/{user_github_id}', versions=1)
-# def get_user_github(user_github_id: hug.types.number, user: cla_user):
-#     """
-#     GET: /user/github/{user_github_id}
+@hug.get('/user/{user_id}', versions=1)
+def get_user(user_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}
 
-#     Returns the requested user data based on user GitHub ID.
+    Returns the requested user data based on ID.
+    """
+    return cla.controllers.user.get_user(user_id=user_id)
 
-#     TODO: Should this be locked down more? Staff only?
-#     """
-#     return cla.controllers.user.get_user(user_github_id=user_github_id)
+@hug.get('/user/email/{user_email}', versions=1)
+def get_user_email(user_email: cla.hug_types.email, user: cla_user):
+    """
+    GET: /user/email/{user_email}
 
+    Returns the requested user data based on user email.
 
-# @hug.post('/user', versions=1,
-#           examples=" - {'user_email': 'user@email.com', 'user_name': 'User Name', \
-#                    'user_company_id': '<org-id>', 'user_github_id': 12345)")
-# def post_user(user: cla_user, user_email: cla.hug_types.email, user_name=None,
-#               user_company_id=None, user_github_id=None):
-#     """
-#     POST: /user
-
-#     DATA: {'user_email': 'user@email.com', 'user_name': 'User Name',
-#            'user_company_id': '<org-id>', 'user_github_id': 12345}
-
-#     Returns the data of the newly created user.
-#     """
-#     # staff_verify(user) # Only staff can create users.
-#     return cla.controllers.user.create_user(user_email=user_email,
-#                                             user_name=user_name,
-#                                             user_company_id=user_company_id,
-#                                             user_github_id=user_github_id)
+    TODO: Need to look into whether this has to be locked down more (by staff maybe?). Would that
+    break the user flow from GitHub?
+    """
+    return cla.controllers.user.get_user(user_email=user_email)
 
 
-# @hug.put('/user', versions=1,
-#          examples=" - {'user_id': '<user-id>', 'user_github_id': 23456)")
-# def put_user(user: cla_user, user_id: hug.types.uuid, user_email=None, user_name=None,
-#              user_company_id=None, user_github_id=None):
-#     """
-#     PUT: /user
+@hug.get('/user/github/{user_github_id}', versions=1)
+def get_user_github(user_github_id: hug.types.number, user: cla_user):
+    """
+    GET: /user/github/{user_github_id}
 
-#     DATA: {'user_id': '<user-id>', 'user_github_id': 23456}
+    Returns the requested user data based on user GitHub ID.
 
-#     Supports all the same fields as the POST equivalent.
-
-#     Returns the data of the updated user.
-
-#     TODO: Should the user be able to update their own CLA data?
-#     """
-#     return cla.controllers.user.update_user(user_id,
-#                                             user_email=user_email,
-#                                             user_name=user_name,
-#                                             user_company_id=user_company_id,
-#                                             user_github_id=user_github_id)
+    TODO: Should this be locked down more? Staff only?
+    """
+    return cla.controllers.user.get_user(user_github_id=user_github_id)
 
 
-# @hug.delete('/user/{user_id}', versions=1)
-# def delete_user(user: cla_user, user_id: hug.types.uuid):
-#     """
-#     DELETE: /user/{user_id}
+@hug.post('/user', versions=1,
+          examples=" - {'user_email': 'user@email.com', 'user_name': 'User Name', \
+                   'user_company_id': '<org-id>', 'user_github_id': 12345)")
+def post_user(user: cla_user, user_email: cla.hug_types.email, user_name=None,
+              user_company_id=None, user_github_id=None):
+    """
+    POST: /user
 
-#     Deletes the specified user.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.user.delete_user(user_id)
+    DATA: {'user_email': 'user@email.com', 'user_name': 'User Name',
+           'user_company_id': '<org-id>', 'user_github_id': 12345}
+
+    Returns the data of the newly created user.
+    """
+    # staff_verify(user) # Only staff can create users.
+    return cla.controllers.user.create_user(user_email=user_email,
+                                            user_name=user_name,
+                                            user_company_id=user_company_id,
+                                            user_github_id=user_github_id)
 
 
-# @hug.get('/user/{user_id}/signatures', versions=1)
-# def get_user_signatures(user: cla_user, user_id: hug.types.uuid):
-#     """
-#     GET: /user/{user_id}/signatures
+@hug.put('/user', versions=1,
+         examples=" - {'user_id': '<user-id>', 'user_github_id': 23456)")
+def put_user(user: cla_user, user_id: hug.types.uuid, user_email=None, user_name=None,
+             user_company_id=None, user_github_id=None):
+    """
+    PUT: /user
 
-#     Returns a list of signatures associated with a user.
-#     """
-#     return cla.controllers.user.get_user_signatures(user_id)
+    DATA: {'user_id': '<user-id>', 'user_github_id': 23456}
+
+    Supports all the same fields as the POST equivalent.
+
+    Returns the data of the updated user.
+
+    TODO: Should the user be able to update their own CLA data?
+    """
+    return cla.controllers.user.update_user(user_id,
+                                            user_email=user_email,
+                                            user_name=user_name,
+                                            user_company_id=user_company_id,
+                                            user_github_id=user_github_id)
 
 
-# @hug.get('/users/company/{user_company_id}', versions=1)
-# def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
-#     """
-#     GET: /users/company/{user_company_id}
+@hug.delete('/user/{user_id}', versions=1)
+def delete_user(user: cla_user, user_id: hug.types.uuid):
+    """
+    DELETE: /user/{user_id}
 
-#     Returns a list of users associated with an company.
+    Deletes the specified user.
+    """
+    # staff_verify(user)
+    return cla.controllers.user.delete_user(user_id)
 
-#     TODO: Should probably not simply be auth only - need some role check?
-#     """
-#     return cla.controllers.user.get_users_company(user_company_id)
 
-# @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
-# def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
-#                               user_email: cla.hug_types.email, message=None):
-#     """
-#     POST: /user/{user_id}/request-company-whitelist/{company_id}
+@hug.get('/user/{user_id}/signatures', versions=1)
+def get_user_signatures(user: cla_user, user_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/signatures
 
-#     DATA: {'user_email': <email-selection>, 'message': 'custom message to manager'}
+    Returns a list of signatures associated with a user.
+    """
+    return cla.controllers.user.get_user_signatures(user_id)
 
-#     Performs the necessary actions (ie: send email to manager) when the specified user requests to
-#     be added the the specified company's whitelist.
-#     """
-#     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
-# @hug.get('/user/{user_id}/active-signature', versions=1)
-# def get_user_active_signature(user_id: hug.types.uuid):
-#     """
-#     GET: /user/{user_id}/active-signature
+@hug.get('/users/company/{user_company_id}', versions=1)
+def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
+    """
+    GET: /users/company/{user_company_id}
 
-#     Returns all metadata associated with a user's active signature.
+    Returns a list of users associated with an company.
 
-#     {'user_id': <user-id>,
-#      'project_id': <project-id>,
-#      'repository_id': <repository-id>,
-#      'pull_request_id': <PR>,
-#      'return_url': <url-where-user-initiated-signature-from>'}
+    TODO: Should probably not simply be auth only - need some role check?
+    """
+    return cla.controllers.user.get_users_company(user_company_id)
 
-#     Returns null if the user does not have an active signature.
-#     """
-#     return cla.controllers.user.get_active_signature(user_id)
+@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
+def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
+                              user_email: cla.hug_types.email, message=None):
+    """
+    POST: /user/{user_id}/request-company-whitelist/{company_id}
 
-# @hug.get('/user/{user_id}/project/{project_id}/last-signature', versions=1)
-# def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.types.uuid):
-#     """
-#     GET: /user/{user_id}/project/{project_id}/last-signature
+    DATA: {'user_email': <email-selection>, 'message': 'custom message to manager'}
 
-#     Returns the user's latest ICLA signature for the project specified.
-#     """
-#     return cla.controllers.user.get_user_project_last_signature(user_id, project_id)
+    Performs the necessary actions (ie: send email to manager) when the specified user requests to
+    be added the the specified company's whitelist.
+    """
+    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
-# @hug.get('/user/{user_id}/project/{project_id}/last-signature/{company_id}', versions=1)
-# def get_user_project_company_last_signature(user_id: hug.types.uuid,
-#                                             project_id: hug.types.uuid,
-#                                             company_id: hug.types.uuid):
-#     """
-#     GET: /user/{user_id}/project/{project_id}/last-signature/{company_id}
+@hug.get('/user/{user_id}/active-signature', versions=1)
+def get_user_active_signature(user_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/active-signature
 
-#     Returns the user's latest employee signature for the project and company specified.
-#     """
-#     return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
+    Returns all metadata associated with a user's active signature.
+
+    {'user_id': <user-id>,
+     'project_id': <project-id>,
+     'repository_id': <repository-id>,
+     'pull_request_id': <PR>,
+     'return_url': <url-where-user-initiated-signature-from>'}
+
+    Returns null if the user does not have an active signature.
+    """
+    return cla.controllers.user.get_active_signature(user_id)
+
+@hug.get('/user/{user_id}/project/{project_id}/last-signature', versions=1)
+def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/project/{project_id}/last-signature
+
+    Returns the user's latest ICLA signature for the project specified.
+    """
+    return cla.controllers.user.get_user_project_last_signature(user_id, project_id)
+
+@hug.get('/user/{user_id}/project/{project_id}/last-signature/{company_id}', versions=1)
+def get_user_project_company_last_signature(user_id: hug.types.uuid,
+                                            project_id: hug.types.uuid,
+                                            company_id: hug.types.uuid):
+    """
+    GET: /user/{user_id}/project/{project_id}/last-signature/{company_id}
+
+    Returns the user's latest employee signature for the project and company specified.
+    """
+    return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
 
 # #
 # # Signature Routes.
