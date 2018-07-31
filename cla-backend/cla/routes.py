@@ -11,7 +11,7 @@ import cla.controllers.user
 # import cla.controllers.repository
 # import cla.controllers.company
 # import cla.controllers.repository_service
-# import cla.controllers.github
+import cla.controllers.github
 # # from cla.auth import token_authentication, pm_verify, pm_verify_external_id, staff_verify
 from cla.user import cla_user
 # from cla.utils import get_supported_repository_providers, \
@@ -1061,135 +1061,135 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
 #                                                                 body)
 
 
-# #
-# # GitHub Routes.
-# #
-# @hug.get('/github/organizations', versions=1)
-# def get_github_organizations(user: cla_user):
-#     """
-#     GET: /github/organizations
+#
+# GitHub Routes.
+#
+@hug.get('/github/organizations', versions=1)
+def get_github_organizations(user: cla_user):
+    """
+    GET: /github/organizations
 
-#     Returns all CLA Github Organizations.
-#     """
-#     return cla.controllers.github.get_organizations()
-
-
-# @hug.get('/github/organizations/{organization_name}', versions=1)
-# def get_github_organization(user: cla_user, organization_name: hug.types.text):
-#     """
-#     GET: /github/organizations/{organization_name}
-
-#     Returns the CLA Github Organization requested by Name.
-#     """
-#     return cla.controllers.github.get_organization(organization_name)
+    Returns all CLA Github Organizations.
+    """
+    return cla.controllers.github.get_organizations()
 
 
-# @hug.get('/github/organizations/{organization_name}/repositories', versions=1)
-# def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
-#     """
-#     GET: /github/organizations/{organization_name}/repositories
+@hug.get('/github/organizations/{organization_name}', versions=1)
+def get_github_organization(user: cla_user, organization_name: hug.types.text):
+    """
+    GET: /github/organizations/{organization_name}
 
-#     Returns a list of Repositories selected under this organization.
-#     """
-#     return cla.controllers.github.get_organization_repositories(organization_name)
-
-
-# @hug.post('/github/organizations', versions=1,
-#           examples=" - {'organization_project_id': '<project-id>', \
-#                         'organization_name': 'org-name'}")
-# def post_github_organization(user: cla_user,
-#                              organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
-#                              organization_name: hug.types.text,
-#                              organization_installation_id=None):
-#     """
-#     POST: /github/organizations
-
-#     DATA: {'organization_project_id': '<project-id>',
-#            'organization_name': 'org-name'}
-
-#     Returns the CLA GitHub Organization that was just created.
-#     """
-#     # staff_verify(user) or pm_verify(user, organization_project_id)
-#     return cla.controllers.github.create_organization(organization_name,
-#                                                       organization_project_id,
-#                                                       organization_installation_id)
+    Returns the CLA Github Organization requested by Name.
+    """
+    return cla.controllers.github.get_organization(organization_name)
 
 
-# @hug.delete('/github/organizations/{organization_name}', versions=1)
-# def delete_repository(user: cla_user, organization_name: hug.types.text):
-#     """
-#     DELETE: /github/organizations/{organization_name}
+@hug.get('/github/organizations/{organization_name}/repositories', versions=1)
+def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
+    """
+    GET: /github/organizations/{organization_name}/repositories
 
-#     Deletes the specified Github Organization.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.github.delete_organization(organization_name)
-
-# @hug.get('/github/installation', versions=1)
-# def github_oauth2_callback(code, state, request):
-#     """
-#     GET: /github/installation
-
-#     TODO: Need to secure this endpoint - possibly with GitHub's Webhook secrets.
-
-#     GitHub will send the user to this endpoint when new OAuth2 handshake occurs.
-#     This needs to match the callback used when users install the app as well (below).
-#     """
-#     return cla.controllers.github.user_oauth2_callback(code, state, request)
-
-# @hug.post('/github/installation', versions=1)
-# def github_app_installation(body):
-#     """
-#     POST: /github/installation
-
-#     TODO: Need to secure this endpoint - possibly with GitHub's Webhook secret.
-
-#     GitHub will fire off this webhook when new installation of our CLA app occurs.
-#     """
-#     return cla.controllers.github.user_authorization_callback(body)
+    Returns a list of Repositories selected under this organization.
+    """
+    return cla.controllers.github.get_organization_repositories(organization_name)
 
 
-# @hug.post('/github/activity', versions=1)
-# def github_app_activity(body, request, response):
-#     """
-#     POST: /github/activity
+@hug.post('/github/organizations', versions=1,
+          examples=" - {'organization_project_id': '<project-id>', \
+                        'organization_name': 'org-name'}")
+def post_github_organization(user: cla_user,
+                             organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
+                             organization_name: hug.types.text,
+                             organization_installation_id=None):
+    """
+    POST: /github/organizations
 
-#     TODO: Need to secure this endpoint with GitHub's Webhook secret.
+    DATA: {'organization_project_id': '<project-id>',
+           'organization_name': 'org-name'}
 
-#     Acts upon any events triggered by our app installed in someone's organization.
-#     """
-#     # Verify that Webhook Signature is valid
-#     # if cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request._wrap_stream()):
-#     return cla.controllers.github.activity(body)
-#     # else:
-#     #     response.status = HTTP_403
-#     #     return {'status': 'Not Authorized'}
-
-
-# @hug.post('/github/validate', versions=1)
-# def github_organization_validation(body):
-#     """
-#     POST: /github/validate
-
-#     TODO: Need to secure this endpoint with GitHub's Webhook secret.
-#     """
-#     return cla.controllers.github.validate_organization(body)
+    Returns the CLA GitHub Organization that was just created.
+    """
+    # staff_verify(user) or pm_verify(user, organization_project_id)
+    return cla.controllers.github.create_organization(organization_name,
+                                                      organization_project_id,
+                                                      organization_installation_id)
 
 
-# @hug.get('/github/check/namespace/{namespace}', versions=1)
-# def github_check_namespace(namespace):
-#     """
-#     GET: /github/check/namespace/{namespace}
+@hug.delete('/github/organizations/{organization_name}', versions=1)
+def delete_repository(user: cla_user, organization_name: hug.types.text):
+    """
+    DELETE: /github/organizations/{organization_name}
 
-#     Returns True if the namespace provided is a valid GitHub account.
-#     """
-#     return cla.controllers.github.check_namespace(namespace)
+    Deletes the specified Github Organization.
+    """
+    # staff_verify(user)
+    return cla.controllers.github.delete_organization(organization_name)
 
-# @hug.get('/github/get/namespace/{namespace}', versions=1)
-# def github_get_namespace(namespace):
-#     """
-#     GET: /github/get/namespace/{namespace}
+@hug.get('/github/installation', versions=1)
+def github_oauth2_callback(code, state, request):
+    """
+    GET: /github/installation
 
-#     Returns info on the GitHub account provided.
-#     """
-#     return cla.controllers.github.get_namespace(namespace)
+    TODO: Need to secure this endpoint - possibly with GitHub's Webhook secrets.
+
+    GitHub will send the user to this endpoint when new OAuth2 handshake occurs.
+    This needs to match the callback used when users install the app as well (below).
+    """
+    return cla.controllers.github.user_oauth2_callback(code, state, request)
+
+@hug.post('/github/installation', versions=1)
+def github_app_installation(body):
+    """
+    POST: /github/installation
+
+    TODO: Need to secure this endpoint - possibly with GitHub's Webhook secret.
+
+    GitHub will fire off this webhook when new installation of our CLA app occurs.
+    """
+    return cla.controllers.github.user_authorization_callback(body)
+
+
+@hug.post('/github/activity', versions=1)
+def github_app_activity(body, request, response):
+    """
+    POST: /github/activity
+
+    TODO: Need to secure this endpoint with GitHub's Webhook secret.
+
+    Acts upon any events triggered by our app installed in someone's organization.
+    """
+    # Verify that Webhook Signature is valid
+    # if cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request._wrap_stream()):
+    return cla.controllers.github.activity(body)
+    # else:
+    #     response.status = HTTP_403
+    #     return {'status': 'Not Authorized'}
+
+
+@hug.post('/github/validate', versions=1)
+def github_organization_validation(body):
+    """
+    POST: /github/validate
+
+    TODO: Need to secure this endpoint with GitHub's Webhook secret.
+    """
+    return cla.controllers.github.validate_organization(body)
+
+
+@hug.get('/github/check/namespace/{namespace}', versions=1)
+def github_check_namespace(namespace):
+    """
+    GET: /github/check/namespace/{namespace}
+
+    Returns True if the namespace provided is a valid GitHub account.
+    """
+    return cla.controllers.github.check_namespace(namespace)
+
+@hug.get('/github/get/namespace/{namespace}', versions=1)
+def github_get_namespace(namespace):
+    """
+    GET: /github/get/namespace/{namespace}
+
+    Returns info on the GitHub account provided.
+    """
+    return cla.controllers.github.get_namespace(namespace)
