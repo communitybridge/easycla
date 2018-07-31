@@ -13,7 +13,7 @@ class GitHubInstallation(object):
 
     @property
     def private_key(self):
-        return open(cla.conf['GITHUB_APP_PRIVATE_KEY_PATH']).read()
+        return open("lf-cla-test.2018-07-30.private-key.pem").read()
 
     @property
     def repos(self):
