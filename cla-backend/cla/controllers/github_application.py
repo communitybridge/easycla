@@ -3,17 +3,18 @@ import cla
 from github import GithubIntegration, Github
 from github.GithubException import UnknownObjectException
 from jose import jwt
+import os
 
 
 class GitHubInstallation(object):
 
     @property
     def app_id(self):
-        return cla.conf['GITHUB_APP_ID']
+        return os.environ['GH_APP_ID']
 
     @property
     def private_key(self):
-        return open(cla.conf['GITHUB_APP_PRIVATE_KEY_PATH']).read()
+        return os.environ['GH_APP_PRIVATE_SECRET']
 
     @property
     def repos(self):

@@ -3,6 +3,7 @@ Easily access CLA models backed by DynamoDB using pynamodb.
 """
 
 import uuid
+import os
 import base64
 import datetime
 import dateutil.parser
@@ -18,6 +19,8 @@ from pynamodb.attributes import UTCDateTimeAttribute, \
                                 MapAttribute
 import cla
 from cla.models import model_interfaces, key_value_store_interface
+
+stage = os.environ.get('STAGE', '')
 
 
 def create_database():
@@ -686,9 +689,9 @@ class UserModel(BaseModel):
     """
     class Meta:
         """Meta class for User."""
-        table_name = 'cla_users'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
+        table_name = 'cla-{}-users'.format(stage)
+        # host = cla.conf['DATABASE_HOST']
+        # region = cla.conf['DYNAMO_REGION']
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
@@ -955,9 +958,9 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     """
     class Meta:
         """Meta class for Signature."""
-        table_name = 'cla_signatures'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
+        table_name = 'cla-{}-signatures'.format(stage)
+        # host = cla.conf['DATABASE_HOST']
+        # region = cla.conf['DYNAMO_REGION']
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     signature_id = UnicodeAttribute(hash_key=True)
