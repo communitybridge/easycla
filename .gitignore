@@ -152,6 +152,13 @@ cla-frontend-console/src/ionic/assets/keycloak.json
 cla-frontend-corporate-console/src/ionic/assets/keycloak.json
 frontend-project-management-console/src/ionic/assets/keycloak.json
 
+# Serverless
+cla-backend/.requirements/*
+cla-backend/.serverless/*
+cla-backend/node_modules/*
+cla-backend/package-lock.json
+cla-backend/package.json
+
 .idea/
 __pycache__
 build/
