@@ -5,18 +5,18 @@ The entry point for the CLA service. Lays out all routes and controller function
 import hug
 import cla.hug_types
 import cla.controllers.user
-# import cla.controllers.project
-# import cla.controllers.signing
-# import cla.controllers.signature
-# import cla.controllers.repository
-# import cla.controllers.company
-# import cla.controllers.repository_service
+import cla.controllers.project
+import cla.controllers.signing
+import cla.controllers.signature
+import cla.controllers.repository
+import cla.controllers.company
+import cla.controllers.repository_service
 import cla.controllers.github
 # # from cla.auth import token_authentication, pm_verify, pm_verify_external_id, staff_verify
 from cla.user import cla_user
-# from cla.utils import get_supported_repository_providers, \
-#                       get_supported_document_content_types, \
-#                       get_session_middleware
+from cla.utils import get_supported_repository_providers, \
+                      get_supported_document_content_types, \
+                      get_session_middleware
 # from falcon import status, HTTP_403
 
 #
@@ -608,217 +608,217 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
 # #
 # # Project Routes.
 # #
-# @hug.get('/project', versions=1)
-# def get_projects(user: cla_user):
-#     """
-#     GET: /project
+@hug.get('/project', versions=1)
+def get_projects(user: cla_user):
+    """
+    GET: /project
 
-#     Returns all CLA projects.
-#     """
-#     # staff_verify(user)
-#     projects = cla.controllers.project.get_projects()
-#     # For public endpoint, don't show the project_external_id.
-#     for project in projects:
-#         if 'project_external_id' in project:
-#             del project['project_external_id']
-#     return projects
+    Returns all CLA projects.
+    """
+    # staff_verify(user)
+    projects = cla.controllers.project.get_projects()
+    # For public endpoint, don't show the project_external_id.
+    for project in projects:
+        if 'project_external_id' in project:
+            del project['project_external_id']
+    return projects
 
-# @hug.get('/project/{project_id}', versions=1)
-# def get_project(project_id: hug.types.uuid):
-#     """
-#     GET: /project/{project_id}
+@hug.get('/project/{project_id}', versions=1)
+def get_project(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}
 
-#     Returns the CLA project requested by ID.
-#     """
-#     project = cla.controllers.project.get_project(project_id)
-#     # For public endpoint, don't show the project_external_id.
-#     if 'project_external_id' in project:
-#         del project['project_external_id']
-#     return project
+    Returns the CLA project requested by ID.
+    """
+    project = cla.controllers.project.get_project(project_id)
+    # For public endpoint, don't show the project_external_id.
+    if 'project_external_id' in project:
+        del project['project_external_id']
+    return project
 
-# @hug.get('/project/external/{project_external_id}', version=1)
-# def get_external_project(user: cla_user, project_external_id: hug.types.text):
-#     """
-#     GET: /project/external/{project_external_id}
+@hug.get('/project/external/{project_external_id}', version=1)
+def get_external_project(user: cla_user, project_external_id: hug.types.text):
+    """
+    GET: /project/external/{project_external_id}
 
-#     Returns the list of CLA projects marching the requested external ID.
-#     """
-#     return cla.controllers.project.get_projects_by_external_id(project_external_id)
+    Returns the list of CLA projects marching the requested external ID.
+    """
+    return cla.controllers.project.get_projects_by_external_id(project_external_id)
 
-# @hug.post('/project', versions=1,
-#           examples=" - {'project_name': 'Project Name'}")
-# def post_project(user: cla_user, project_external_id: hug.types.text, project_name: hug.types.text,
-#                  project_icla_enabled: hug.types.boolean, project_ccla_enabled: hug.types.boolean,
-#                  project_ccla_requires_icla_signature: hug.types.boolean):
-#     """
-#     POST: /project
+@hug.post('/project', versions=1,
+          examples=" - {'project_name': 'Project Name'}")
+def post_project(user: cla_user, project_external_id: hug.types.text, project_name: hug.types.text,
+                 project_icla_enabled: hug.types.boolean, project_ccla_enabled: hug.types.boolean,
+                 project_ccla_requires_icla_signature: hug.types.boolean):
+    """
+    POST: /project
 
-#     DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name',
-#            'project_icla_enabled': True, 'project_ccla_enabled': True,
-#            'project_ccla_requires_icla_signature': True}
+    DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name',
+           'project_icla_enabled': True, 'project_ccla_enabled': True,
+           'project_ccla_requires_icla_signature': True}
 
-#     Returns the CLA project that was just created.
-#     """
-#     # staff_verify(user) or pm_verify_external_id(user, project_external_id)
-#     return cla.controllers.project.create_project(project_external_id, project_name,
-#                                                   project_icla_enabled, project_ccla_enabled,
-#                                                   project_ccla_requires_icla_signature)
-
-
-# @hug.put('/project', versions=1,
-#          examples=" - {'project_id': '<proj-id>', \
-#                        'project_name': 'New Project Name'}")
-# def put_project(user: cla_user, project_id: hug.types.uuid, project_name=None,
-#                 project_icla_enabled=None, project_ccla_enabled=None,
-#                 project_ccla_requires_icla_signature=None):
-#     """
-#     PUT: /project
-
-#     DATA: {'project_id': '<project-id>',
-#            'project_name': 'New Project Name'}
-
-#     Returns the CLA project that was just updated.
-#     """
-#     # staff_verify(user) or pm_verify(user, project_id)
-#     return cla.controllers.project.update_project(project_id, project_name=project_name,
-#                                                   project_icla_enabled=project_icla_enabled,
-#                                                   project_ccla_enabled=project_ccla_enabled,
-#                                                   project_ccla_requires_icla_signature=project_ccla_requires_icla_signature)
+    Returns the CLA project that was just created.
+    """
+    # staff_verify(user) or pm_verify_external_id(user, project_external_id)
+    return cla.controllers.project.create_project(project_external_id, project_name,
+                                                  project_icla_enabled, project_ccla_enabled,
+                                                  project_ccla_requires_icla_signature)
 
 
-# @hug.delete('/project/{project_id}', versions=1)
-# def delete_project(user: cla_user, project_id: hug.types.uuid):
-#     """
-#     DELETE: /project/{project_id}
+@hug.put('/project', versions=1,
+         examples=" - {'project_id': '<proj-id>', \
+                       'project_name': 'New Project Name'}")
+def put_project(user: cla_user, project_id: hug.types.uuid, project_name=None,
+                project_icla_enabled=None, project_ccla_enabled=None,
+                project_ccla_requires_icla_signature=None):
+    """
+    PUT: /project
 
-#     Deletes the specified project.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.project.delete_project(project_id)
+    DATA: {'project_id': '<project-id>',
+           'project_name': 'New Project Name'}
+
+    Returns the CLA project that was just updated.
+    """
+    # staff_verify(user) or pm_verify(user, project_id)
+    return cla.controllers.project.update_project(project_id, project_name=project_name,
+                                                  project_icla_enabled=project_icla_enabled,
+                                                  project_ccla_enabled=project_ccla_enabled,
+                                                  project_ccla_requires_icla_signature=project_ccla_requires_icla_signature)
 
 
-# @hug.get('/project/{project_id}/repositories', versions=1)
-# def get_project_repositories(user: cla_user, project_id: hug.types.uuid):
-#     """
-#     GET: /project/{project_id}/repositories
+@hug.delete('/project/{project_id}', versions=1)
+def delete_project(user: cla_user, project_id: hug.types.uuid):
+    """
+    DELETE: /project/{project_id}
 
-#     Gets the specified project's repositories.
-#     """
-#     return cla.controllers.project.get_project_repositories(project_id)
+    Deletes the specified project.
+    """
+    # staff_verify(user)
+    return cla.controllers.project.delete_project(project_id)
 
-# @hug.get('/project/{project_id}/organizations', version=1)
-# def get_project_organizations(user: cla_user, project_id: hug.types.uuid):
-#     """
-#     GET: /project/{project_id}/organizations.
 
-#     Gets the specified project's tied GitHub organizations.
-#     """
-#     return cla.controllers.project.get_project_organizations(project_id)
+@hug.get('/project/{project_id}/repositories', versions=1)
+def get_project_repositories(user: cla_user, project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/repositories
 
-# @hug.get('/project/{project_id}/document/{document_type}', versions=1)
-# def get_project_document(project_id: hug.types.uuid,
-#                          document_type: hug.types.one_of(['individual', 'corporate'])):
-#     """
-#     GET: /project/{project_id}/document/{document_type}
+    Gets the specified project's repositories.
+    """
+    return cla.controllers.project.get_project_repositories(project_id)
 
-#     Fetch a project's signature document.
-#     """
-#     return cla.controllers.project.get_project_document(project_id, document_type)
+@hug.get('/project/{project_id}/organizations', version=1)
+def get_project_organizations(user: cla_user, project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/organizations.
 
-# @hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
-# def get_project_document(response, project_id: hug.types.uuid,
-#                          document_type: hug.types.one_of(['individual', 'corporate'])):
-#     """
-#     GET: /project/{project_id}/document/{document_type}/pdf
+    Gets the specified project's tied GitHub organizations.
+    """
+    return cla.controllers.project.get_project_organizations(project_id)
 
-#     Returns the PDF document matching the latest individual or corporate contract for that project.
-#     """
-#     response.set_header('Content-Type', 'application/pdf')
-#     return cla.controllers.project.get_project_document_raw(project_id, document_type)
+@hug.get('/project/{project_id}/document/{document_type}', versions=1)
+def get_project_document(project_id: hug.types.uuid,
+                         document_type: hug.types.one_of(['individual', 'corporate'])):
+    """
+    GET: /project/{project_id}/document/{document_type}
 
-# @hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
-# def get_project_document(response, project_id: hug.types.uuid,
-#                          document_type: hug.types.one_of(['individual', 'corporate']),
-#                          document_major_version: hug.types.number,
-#                          document_minor_version: hug.types.number):
-#     """
-#     GET: /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
+    Fetch a project's signature document.
+    """
+    return cla.controllers.project.get_project_document(project_id, document_type)
 
-#     Returns the PDF document version matching the individual or corporate contract for that project.
-#     """
-#     response.set_header('Content-Type', 'application/pdf')
-#     return cla.controllers.project.get_project_document_raw(project_id, document_type,
-#                                                             document_major_version=document_major_version,
-#                                                             document_minor_version=document_minor_version)
+@hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
+                         document_type: hug.types.one_of(['individual', 'corporate'])):
+    """
+    GET: /project/{project_id}/document/{document_type}/pdf
 
-# @hug.get('/project/{project_id}/companies', versions=1)
-# def get_project_companies(project_id: hug.types.uuid):
-#     """
-#     GET: /project/{project_id}/companies
+    Returns the PDF document matching the latest individual or corporate contract for that project.
+    """
+    response.set_header('Content-Type', 'application/pdf')
+    return cla.controllers.project.get_project_document_raw(project_id, document_type)
 
-#     Fetch all the companies that are associated with a project through a CCLA.
-#     """
-#     return cla.controllers.project.get_project_companies(project_id)
+@hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
+def get_project_document(response, project_id: hug.types.uuid,
+                         document_type: hug.types.one_of(['individual', 'corporate']),
+                         document_major_version: hug.types.number,
+                         document_minor_version: hug.types.number):
+    """
+    GET: /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
 
-# @hug.post('/project/{project_id}/document/{document_type}', versions=1,
-#           examples=" - {'document_name': 'doc_name.pdf', \
-#                         'document_content_type': 'url+pdf', \
-#                         'document_content': 'http://url.com/doc.pdf', \
-#                         'new_major_version': true}")
-# def post_project_document(user: cla_user,
-#                           project_id: hug.types.uuid,
-#                           document_type: hug.types.one_of(['individual', 'corporate']),
-#                           document_name: hug.types.text,
-#                           document_content_type: hug.types.one_of(get_supported_document_content_types()),
-#                           document_content: hug.types.text,
-#                           document_preamble=None,
-#                           document_legal_entity_name=None,
-#                           new_major_version=None):
-#     """
-#     POST: /project/{project_id}/document/{document_type}
+    Returns the PDF document version matching the individual or corporate contract for that project.
+    """
+    response.set_header('Content-Type', 'application/pdf')
+    return cla.controllers.project.get_project_document_raw(project_id, document_type,
+                                                            document_major_version=document_major_version,
+                                                            document_minor_version=document_minor_version)
 
-#     DATA: {'document_name': 'doc_name.pdf',
-#            'document_content_type': 'url+pdf',
-#            'document_content': 'http://url.com/doc.pdf',
-#            'document_preamble': 'Preamble here',
-#            'document_legal_entity_name': 'Legal entity name',
-#            'new_major_version': false}
+@hug.get('/project/{project_id}/companies', versions=1)
+def get_project_companies(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/companies
 
-#     Creates a new CLA document for a specified project.
+    Fetch all the companies that are associated with a project through a CCLA.
+    """
+    return cla.controllers.project.get_project_companies(project_id)
 
-#     Will create a new revision of the individual or corporate document. if new_major_version is set,
-#     the document will have a new major version and this will force users to re-sign.
+@hug.post('/project/{project_id}/document/{document_type}', versions=1,
+          examples=" - {'document_name': 'doc_name.pdf', \
+                        'document_content_type': 'url+pdf', \
+                        'document_content': 'http://url.com/doc.pdf', \
+                        'new_major_version': true}")
+def post_project_document(user: cla_user,
+                          project_id: hug.types.uuid,
+                          document_type: hug.types.one_of(['individual', 'corporate']),
+                          document_name: hug.types.text,
+                          document_content_type: hug.types.one_of(get_supported_document_content_types()),
+                          document_content: hug.types.text,
+                          document_preamble=None,
+                          document_legal_entity_name=None,
+                          new_major_version=None):
+    """
+    POST: /project/{project_id}/document/{document_type}
 
-#     If document_content_type starts with 'storage+', the document_content is assumed to be base64
-#     encoded binary data that will be saved in the CLA system's configured storage service.
-#     """
-#     # staff_verify(user) or pm_verify(user, project_id)
-#     return cla.controllers.project.post_project_document(
-#         project_id=project_id,
-#         document_type=document_type,
-#         document_name=document_name,
-#         document_content_type=document_content_type,
-#         document_content=document_content,
-#         document_preamble=document_preamble,
-#         document_legal_entity_name=document_legal_entity_name,
-#         new_major_version=new_major_version)
+    DATA: {'document_name': 'doc_name.pdf',
+           'document_content_type': 'url+pdf',
+           'document_content': 'http://url.com/doc.pdf',
+           'document_preamble': 'Preamble here',
+           'document_legal_entity_name': 'Legal entity name',
+           'new_major_version': false}
 
-# @hug.post('/project/{project_id}/document/template/{document_type}', versions=1,
-#           examples=" - {'document_name': 'doc_name.pdf', \
-#                         'document_preamble': 'Preamble here', \
-#                         'document_legal_entity_name': 'Legal entity name', \
-#                         'template_name': 'CNCFTemplate', \
-#                         'new_major_version': true}")
-# def post_project_document_template(user: cla_user,
-#                                    project_id: hug.types.uuid,
-#                                    document_type: hug.types.one_of(['individual', 'corporate']),
-#                                    document_name: hug.types.text,
-#                                    document_preamble: hug.types.text,
-#                                    document_legal_entity_name: hug.types.text,
-#                                    template_name: hug.types.one_of(['CNCFTemplate']),
-#                                    new_major_version=None):
-#     """
-#     POST: /project/{project_id}/document/template/{document_type}
+    Creates a new CLA document for a specified project.
+
+    Will create a new revision of the individual or corporate document. if new_major_version is set,
+    the document will have a new major version and this will force users to re-sign.
+
+    If document_content_type starts with 'storage+', the document_content is assumed to be base64
+    encoded binary data that will be saved in the CLA system's configured storage service.
+    """
+    # staff_verify(user) or pm_verify(user, project_id)
+    return cla.controllers.project.post_project_document(
+        project_id=project_id,
+        document_type=document_type,
+        document_name=document_name,
+        document_content_type=document_content_type,
+        document_content=document_content,
+        document_preamble=document_preamble,
+        document_legal_entity_name=document_legal_entity_name,
+        new_major_version=new_major_version)
+
+@hug.post('/project/{project_id}/document/template/{document_type}', versions=1,
+          examples=" - {'document_name': 'doc_name.pdf', \
+                        'document_preamble': 'Preamble here', \
+                        'document_legal_entity_name': 'Legal entity name', \
+                        'template_name': 'CNCFTemplate', \
+                        'new_major_version': true}")
+def post_project_document_template(user: cla_user,
+                                   project_id: hug.types.uuid,
+                                   document_type: hug.types.one_of(['individual', 'corporate']),
+                                   document_name: hug.types.text,
+                                   document_preamble: hug.types.text,
+                                   document_legal_entity_name: hug.types.text,
+                                   template_name: hug.types.one_of(['CNCFTemplate']),
+                                   new_major_version=None):
+    """
+    POST: /project/{project_id}/document/template/{document_type}
 
 #     DATA: {'document_name': 'doc_name.pdf',
 #            'document_preamble': 'Preamble here',
@@ -834,231 +834,231 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
 #     The document_content_type is assumed to be 'storage+pdf', which means the document content will
 #     be saved in the CLA system's configured storage service.
 #     """
-#     # staff_verify(user) or pm_verify(user, project_id)
-#     return cla.controllers.project.post_project_document_template(
-#         project_id=project_id,
-#         document_type=document_type,
-#         document_name=document_name,
-#         document_preamble=document_preamble,
-#         document_legal_entity_name=document_legal_entity_name,
-#         template_name=template_name,
-#         new_major_version=new_major_version)
+    # staff_verify(user) or pm_verify(user, project_id)
+    return cla.controllers.project.post_project_document_template(
+        project_id=project_id,
+        document_type=document_type,
+        document_name=document_name,
+        document_preamble=document_preamble,
+        document_legal_entity_name=document_legal_entity_name,
+        template_name=template_name,
+        new_major_version=new_major_version)
 
-# @hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
-# def delete_project_document(user: cla_user,
-#                             project_id: hug.types.uuid,
-#                             document_type: hug.types.one_of(['individual', 'corporate']),
-#                             major_version: hug.types.number,
-#                             minor_version: hug.types.number):
+@hug.delete('/project/{project_id}/document/{document_type}/{major_version}/{minor_version}', versions=1)
+def delete_project_document(user: cla_user,
+                            project_id: hug.types.uuid,
+                            document_type: hug.types.one_of(['individual', 'corporate']),
+                            major_version: hug.types.number,
+                            minor_version: hug.types.number):
 #     """
 #     DELETE: /project/{project_id}/document/{document_type}/{revision}
 
 #     Delete a project's signature document by revision.
 #     """
 #     # staff_verify(user)
-#     return cla.controllers.project.delete_project_document(project_id,
-#                                                            document_type,
-#                                                            major_version,
-#                                                            minor_version)
+    return cla.controllers.project.delete_project_document(project_id,
+                                                           document_type,
+                                                           major_version,
+                                                           minor_version)
 
 
 # #
 # # Document Signing Routes.
 # #
-# @hug.post('/request-individual-signature', versions=1,
-#           examples=" - {'project_id': 'some-proj-id', \
-#                         'user_id': 'some-user-uuid'}")
-# def request_individual_signature(project_id: hug.types.uuid,
-#                                  user_id: hug.types.uuid,
-#                                  return_url=None):
-#     """
-#     POST: /request-individual-signature
+@hug.post('/request-individual-signature', versions=1,
+          examples=" - {'project_id': 'some-proj-id', \
+                        'user_id': 'some-user-uuid'}")
+def request_individual_signature(project_id: hug.types.uuid,
+                                 user_id: hug.types.uuid,
+                                 return_url=None):
+    """
+    POST: /request-individual-signature
 
-#     DATA: {'project_id': 'some-project-id',
-#            'user_id': 'some-user-id',
-#            'return_url': <optional>}
+    DATA: {'project_id': 'some-project-id',
+           'user_id': 'some-user-id',
+           'return_url': <optional>}
 
-#     Creates a new signature given project and user IDs. The user will be redirected to the
-#     return_url once signature is complete.
+    Creates a new signature given project and user IDs. The user will be redirected to the
+    return_url once signature is complete.
 
-#     Returns a dict of the format:
+    Returns a dict of the format:
 
-#         {'user_id': <user_id>,
-#          'signature_id': <signature_id>,
-#          'project_id': <project_id>,
-#          'sign_url': <sign_url>}
+        {'user_id': <user_id>,
+         'signature_id': <signature_id>,
+         'project_id': <project_id>,
+         'sign_url': <sign_url>}
 
-#     User should hit the provided URL to initiate the signing process through the
-#     signing service provider.
-#     """
-#     return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
+    User should hit the provided URL to initiate the signing process through the
+    signing service provider.
+    """
+    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
 
-# @hug.post('/request-corporate-signature', versions=1,
-#           examples=" - {'project_id': 'some-proj-id', \
-#                         'company_id': 'some-company-uuid'}")
-# def request_corporate_signature(user: cla_user,
-#                                 project_id: hug.types.uuid,
-#                                 company_id: hug.types.uuid,
-#                                 return_url=None):
-#     """
-#     POST: /request-corporate-signature
+@hug.post('/request-corporate-signature', versions=1,
+          examples=" - {'project_id': 'some-proj-id', \
+                        'company_id': 'some-company-uuid'}")
+def request_corporate_signature(user: cla_user,
+                                project_id: hug.types.uuid,
+                                company_id: hug.types.uuid,
+                                return_url=None):
+    """
+    POST: /request-corporate-signature
 
-#     DATA: {'project_id': 'some-project-id',
-#            'company_id': 'some-company-id',
-#            'return_url': <optional>}
+    DATA: {'project_id': 'some-project-id',
+           'company_id': 'some-company-id',
+           'return_url': <optional>}
 
-#     Creates a new signature given project and company IDs. The manager will be redirected to the
-#     return_url once signature is complete.
+    Creates a new signature given project and company IDs. The manager will be redirected to the
+    return_url once signature is complete.
 
-#     Returns a dict of the format:
+    Returns a dict of the format:
 
-#         {'company_id': <user_id>,
-#          'signature_id': <signature_id>,
-#          'project_id': <project_id>,
-#          'sign_url': <sign_url>}
+        {'company_id': <user_id>,
+         'signature_id': <signature_id>,
+         'project_id': <project_id>,
+         'sign_url': <sign_url>}
 
-#     Manager should hit the provided URL to initiate the signing process through the
-#     signing service provider.
-#     """
-#     # staff_verify(user) or company_manager_verify(user, company_id)
-#     return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
+    Manager should hit the provided URL to initiate the signing process through the
+    signing service provider.
+    """
+    # staff_verify(user) or company_manager_verify(user, company_id)
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
 
-# @hug.post('/request-employee-signature', versions=1)
-# def request_employee_signature(project_id: hug.types.uuid,
-#                                company_id: hug.types.uuid,
-#                                user_id: hug.types.uuid,
-#                                return_url=None):
-#     """
-#     POST: /request-employee-signature
+@hug.post('/request-employee-signature', versions=1)
+def request_employee_signature(project_id: hug.types.uuid,
+                               company_id: hug.types.uuid,
+                               user_id: hug.types.uuid,
+                               return_url=None):
+    """
+    POST: /request-employee-signature
 
-#     DATA: {'project_id': <project-id>,
-#            'company_id': <company-id>,
-#            'user_id': <user-id>,
-#            'return_url': <optional>}
+    DATA: {'project_id': <project-id>,
+           'company_id': <company-id>,
+           'user_id': <user-id>,
+           'return_url': <optional>}
 
-#     Creates a placeholder signature object that represents an employee of a company having confirmed
-#     that they indeed work for company X which already has a CCLA with the project. This does not
-#     require a full DocuSign signature process, which means the sign/callback URLs and document
-#     versions may not be populated or reliable.
-#     """
-#     return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
+    Creates a placeholder signature object that represents an employee of a company having confirmed
+    that they indeed work for company X which already has a CCLA with the project. This does not
+    require a full DocuSign signature process, which means the sign/callback URLs and document
+    versions may not be populated or reliable.
+    """
+    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
 
-# @hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
-# def post_individual_signed(body,
-#                            installation_id: hug.types.number,
-#                            github_repository_id: hug.types.number,
-#                            change_request_id: hug.types.number):
-#     """
-#     POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
+@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+def post_individual_signed(body,
+                           installation_id: hug.types.number,
+                           github_repository_id: hug.types.number,
+                           change_request_id: hug.types.number):
+    """
+    POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
 
-#     TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
-#     DocuSign and the data hasn't been tampered with.
+    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
+    DocuSign and the data hasn't been tampered with.
 
-#     Callback URL from signing service upon ICLA signature.
-#     """
-#     content = body.read()
-#     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
+    Callback URL from signing service upon ICLA signature.
+    """
+    content = body.read()
+    return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
-# @hug.post('/signed/corporate/{project_id}/{company_id}', versions=1)
-# def post_corporate_signed(body,
-#                           project_id: hug.types.uuid,
-#                           company_id: hug.types.uuid):
-#     """
-#     POST: /signed/corporate/{project_id}/{company_id}
+@hug.post('/signed/corporate/{project_id}/{company_id}', versions=1)
+def post_corporate_signed(body,
+                          project_id: hug.types.uuid,
+                          company_id: hug.types.uuid):
+    """
+    POST: /signed/corporate/{project_id}/{company_id}
 
-#     TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
-#     DocuSign and the data hasn't been tampered with.
+    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
+    DocuSign and the data hasn't been tampered with.
 
-#     Callback URL from signing service upon CCLA signature.
-#     """
-#     content = body.read()
-#     return cla.controllers.signing.post_corporate_signed(content, project_id, company_id)
+    Callback URL from signing service upon CCLA signature.
+    """
+    content = body.read()
+    return cla.controllers.signing.post_corporate_signed(content, project_id, company_id)
 
-# @hug.get('/return-url/{signature_id}', versions=1)
-# def get_return_url(signature_id: hug.types.uuid, event=None):
-#     """
-#     GET: /return-url/{signature_id}
+@hug.get('/return-url/{signature_id}', versions=1)
+def get_return_url(signature_id: hug.types.uuid, event=None):
+    """
+    GET: /return-url/{signature_id}
 
-#     The endpoint the user will be redirected to upon completing signature. Will utilize the
-#     signature's "signature_return_url" field to redirect the user to the appropriate location.
+    The endpoint the user will be redirected to upon completing signature. Will utilize the
+    signature's "signature_return_url" field to redirect the user to the appropriate location.
 
-#     Will also capture the signing service provider's return GET parameters, such as DocuSign's
-#     'event' flag that describes the redirect reason.
-#     """
-#     return cla.controllers.signing.return_url(signature_id, event)
+    Will also capture the signing service provider's return GET parameters, such as DocuSign's
+    'event' flag that describes the redirect reason.
+    """
+    return cla.controllers.signing.return_url(signature_id, event)
 
 
 # #
 # # Repository Provider Routes.
 # #
-# @hug.get('/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
-# def sign_request(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-#                  installation_id: hug.types.text,
-#                  github_repository_id: hug.types.text,
-#                  change_request_id: hug.types.text,
-#                  request):
-#     """
-#     GET: /repository-provider/{provider}/sign/{installation_id}/{repository_id}/{change_request_id}
+@hug.get('/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+def sign_request(provider: hug.types.one_of(get_supported_repository_providers().keys()),
+                 installation_id: hug.types.text,
+                 github_repository_id: hug.types.text,
+                 change_request_id: hug.types.text,
+                 request):
+    """
+    GET: /repository-provider/{provider}/sign/{installation_id}/{repository_id}/{change_request_id}
 
-#     The endpoint that will initiate a CLA signature for the user.
-#     """
-#     return cla.controllers.repository_service.sign_request(provider,
-#                                                            installation_id,
-#                                                            github_repository_id,
-#                                                            change_request_id,
-#                                                            request)
-
-
-# @hug.get('/repository-provider/{provider}/icon.svg', versions=1,
-#          output=hug.output_format.svg_xml_image) # pylint: disable=no-member
-# def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-#                 signed: hug.types.smart_boolean):
-#     """
-#     GET: /repository-provider/{provider}/icon.svg
-
-#     TODO: This should probably be cached and web-accessible outside of the CLA.
-
-#     Returns the CLA status image for the provider requested.
-#     """
-#     return cla.controllers.repository_service.change_icon(provider, signed)
+    The endpoint that will initiate a CLA signature for the user.
+    """
+    return cla.controllers.repository_service.sign_request(provider,
+                                                           installation_id,
+                                                           github_repository_id,
+                                                           change_request_id,
+                                                           request)
 
 
-# @hug.get('/repository-provider/{provider}/oauth2_redirect', versions=1)
-# def oauth2_redirect(user: cla_user, # pylint: disable=too-many-arguments
-#                     provider: hug.types.one_of(get_supported_repository_providers().keys()),
-#                     state: hug.types.text,
-#                     code: hug.types.text,
-#                     repository_id: hug.types.text,
-#                     change_request_id: hug.types.text,
-#                     request=None):
-#     """
-#     GET: /repository-provider/{provider}/oauth2_redirect
+@hug.get('/repository-provider/{provider}/icon.svg', versions=1,
+         output=hug.output_format.svg_xml_image) # pylint: disable=no-member
+def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
+                signed: hug.types.smart_boolean):
+    """
+    GET: /repository-provider/{provider}/icon.svg
 
-#     TODO: This has been deprecated in favor of GET:/github/installation for GitHub Apps.
+    TODO: This should probably be cached and web-accessible outside of the CLA.
 
-#     Handles the redirect from an OAuth2 provider when initiating a signature.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.repository_service.oauth2_redirect(provider,
-#                                                               state,
-#                                                               code,
-#                                                               repository_id,
-#                                                               change_request_id,
-#                                                               request)
+    Returns the CLA status image for the provider requested.
+    """
+    return cla.controllers.repository_service.change_icon(provider, signed)
 
 
-# @hug.post('/repository-provider/{provider}/activity', versions=1)
-# def received_activity(body,
-#                       provider: hug.types.one_of(get_supported_repository_providers().keys())):
-#     """
-#     POST: /repository-provider/{provider}/activity
+@hug.get('/repository-provider/{provider}/oauth2_redirect', versions=1)
+def oauth2_redirect(user: cla_user, # pylint: disable=too-many-arguments
+                    provider: hug.types.one_of(get_supported_repository_providers().keys()),
+                    state: hug.types.text,
+                    code: hug.types.text,
+                    repository_id: hug.types.text,
+                    change_request_id: hug.types.text,
+                    request=None):
+    """
+    GET: /repository-provider/{provider}/oauth2_redirect
 
-#     TODO: Need to secure this endpoint somehow - maybe use GitHub's Webhook secret option.
+    TODO: This has been deprecated in favor of GET:/github/installation for GitHub Apps.
 
-#     Acts upon a code repository provider's activity.
-#     """
-#     return cla.controllers.repository_service.received_activity(provider,
-#                                                                 body)
+    Handles the redirect from an OAuth2 provider when initiating a signature.
+    """
+    # staff_verify(user)
+    return cla.controllers.repository_service.oauth2_redirect(provider,
+                                                              state,
+                                                              code,
+                                                              repository_id,
+                                                              change_request_id,
+                                                              request)
+
+
+@hug.post('/repository-provider/{provider}/activity', versions=1)
+def received_activity(body,
+                      provider: hug.types.one_of(get_supported_repository_providers().keys())):
+    """
+    POST: /repository-provider/{provider}/activity
+
+    TODO: Need to secure this endpoint somehow - maybe use GitHub's Webhook secret option.
+
+    Acts upon a code repository provider's activity.
+    """
+    return cla.controllers.repository_service.received_activity(provider,
+                                                                body)
 
 
 #
