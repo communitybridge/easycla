@@ -463,11 +463,7 @@ class ProjectModel(BaseModel):
     """
     class Meta:
         """Meta class for Project."""
-        table_name = 'cla_projects'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
-        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        table_name = 'cla-{}-projects'.format(stage)
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
@@ -845,11 +841,7 @@ class RepositoryModel(BaseModel):
     """
     class Meta:
         """Meta class for Repository."""
-        table_name = 'cla_repositories'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
-        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        table_name = 'cla-{}-repositories'.format(stage)
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
@@ -1207,11 +1199,7 @@ class CompanyModel(BaseModel):
     """
     class Meta:
         """Meta class for Company."""
-        table_name = 'cla_companies'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
-        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        table_name = 'cla-{}-companies'.format(stage)
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
@@ -1360,7 +1348,7 @@ class StoreModel(Model):
     class Meta:
         """Meta class for Store."""
         table_name = 'cla_store'
-        host = cla.conf['DATABASE_HOST']
+        # host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1408,11 +1396,7 @@ class GitHubOrgModel(BaseModel):
     """
     class Meta:
         """Meta class for User."""
-        table_name = 'cla_github_orgs'
-        host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
-        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
-        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        table_name = 'cla-{}-github-orgs'.format(stage)
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)

@@ -159,6 +159,9 @@ cla-backend/node_modules/*
 cla-backend/package-lock.json
 cla-backend/package.json
 
+# GH app secrets
+cla-backend/cla/resources/*.pem
+
 .idea/
 __pycache__
 build/
