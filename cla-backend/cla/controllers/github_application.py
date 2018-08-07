@@ -15,7 +15,8 @@ class GitHubInstallation(object):
     @property
     def private_key(self):
         # return os.environ['GH_APP_PRIVATE_SECRET']
-        return open('cla/resources/lf-cla-test.2018-07-30.private-key.pem').read()
+        key_path = 'cla/resources/cla-gh-app.%s.private-key.pem'%(os.environ['STAGE'])
+        return open(key_path).read()
 
     @property
     def repos(self):
