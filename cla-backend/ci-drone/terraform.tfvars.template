@@ -1,0 +1,17 @@
+access_key = 
+
+secret_key = 
+
+domain = 
+
+github_client_id = 
+
+github_client_secret = 
+
+key_file = 
+
+email = 
+
+safe_network_ip =
+
+terraform_state_key =
