@@ -3,7 +3,7 @@ docraptor==1.2.0
 boto3==1.4.7
 gossip==2.2.0
 gunicorn==19.7.1
-hug==2.2.0
+hug==2.3.0
 
 # Not a public package yet.
 #lf-keycloak==2.0.4
