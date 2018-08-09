@@ -12,7 +12,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
-# # from cla.auth import token_authentication, pm_verify, pm_verify_external_id, staff_verify
+from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
@@ -60,7 +60,8 @@ def get_health():
 # User routes.
 #
 @hug.get('/user', versions=1)
-def get_users(user: cla_user):
+@staff_required
+def get_users():
     """
     GET: /user
 
