@@ -231,380 +231,380 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
 # #
 # # Signature Routes.
 # #
-# @hug.get('/signature', versions=1)
-# def get_signatures(user: cla_user):
-#     """
-#     GET: /signature
+@hug.get('/signature', versions=1)
+def get_signatures(user: cla_user):
+    """
+    GET: /signature
 
-#     Returns all CLA signatures.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.signature.get_signatures()
-
-
-# @hug.get('/signature/{signature_id}', versions=1)
-# def get_signature(user: cla_user, signature_id: hug.types.uuid):
-#     """
-#     GET: /signature/{signature_id}
-
-#     Returns the CLA signature requested by UUID.
-#     """
-#     return cla.controllers.signature.get_signature(signature_id)
+    Returns all CLA signatures.
+    """
+    # staff_verify(user)
+    return cla.controllers.signature.get_signatures()
 
 
-# @hug.post('/signature', versions=1,
-#           examples=" - {'signature_type': 'cla', 'signature_signed': true, \
-#                         'signature_approved': true, 'signature_sign_url': 'http://sign.com/here', \
-#                         'signature_return_url': 'http://cla-system.com/signed', \
-#                         'signature_project_id': '<project-id>', \
-#                         'signature_reference_id': '<ref-id>', \
-#                         'signature_reference_type': 'individual'}")
-# def post_signature(user: cla_user, # pylint: disable=too-many-arguments
-#                    signature_project_id: hug.types.uuid,
-#                    signature_reference_id: hug.types.text,
-#                    signature_reference_type: hug.types.one_of(['company', 'user']),
-#                    signature_type: hug.types.one_of(['cla', 'dco']),
-#                    signature_signed: hug.types.smart_boolean,
-#                    signature_approved: hug.types.smart_boolean,
-#                    signature_return_url: cla.hug_types.url,
-#                    signature_sign_url: cla.hug_types.url,
-#                    signature_user_ccla_company_id=None):
-#     """
-#     POST: /signature
+@hug.get('/signature/{signature_id}', versions=1)
+def get_signature(user: cla_user, signature_id: hug.types.uuid):
+    """
+    GET: /signature/{signature_id}
 
-#     DATA: {'signature_type': 'cla',
-#            'signature_signed': true,
-#            'signature_approved': true,
-#            'signature_sign_url': 'http://sign.com/here',
-#            'signature_return_url': 'http://cla-system.com/signed',
-#            'signature_project_id': '<project-id>',
-#            'signature_user_ccla_company_id': '<company-id>',
-#            'signature_reference_id': '<ref-id>',
-#            'signature_reference_type': 'individual'}
-
-#     signature_reference_type is either 'individual' or 'corporate', depending on the CLA type.
-#     signature_reference_id needs to reflect the user or company tied to this signature.
-
-#     Returns a CLA signatures that was created.
-#     """
-#     return cla.controllers.signature.create_signature(signature_project_id,
-#                                                       signature_reference_id,
-#                                                       signature_reference_type,
-#                                                       signature_type=signature_type,
-#                                                       signature_user_ccla_company_id=signature_user_ccla_company_id,
-#                                                       signature_signed=signature_signed,
-#                                                       signature_approved=signature_approved,
-#                                                       signature_return_url=signature_return_url,
-#                                                       signature_sign_url=signature_sign_url)
+    Returns the CLA signature requested by UUID.
+    """
+    return cla.controllers.signature.get_signature(signature_id)
 
 
-# @hug.put('/signature', versions=1,
-#          examples=" - {'signature_id': '01620259-d202-4350-8264-ef42a861922d', \
-#                        'signature_type': 'cla', 'signature_signed': true}")
-# def put_signature(user: cla_user, # pylint: disable=too-many-arguments
-#                   signature_id: hug.types.uuid,
-#                   signature_project_id=None,
-#                   signature_reference_id=None,
-#                   signature_reference_type=None,
-#                   signature_type=None,
-#                   signature_signed=None,
-#                   signature_approved=None,
-#                   signature_return_url=None,
-#                   signature_sign_url=None):
-#     """
-#     PUT: /signature
+@hug.post('/signature', versions=1,
+          examples=" - {'signature_type': 'cla', 'signature_signed': true, \
+                        'signature_approved': true, 'signature_sign_url': 'http://sign.com/here', \
+                        'signature_return_url': 'http://cla-system.com/signed', \
+                        'signature_project_id': '<project-id>', \
+                        'signature_reference_id': '<ref-id>', \
+                        'signature_reference_type': 'individual'}")
+def post_signature(user: cla_user, # pylint: disable=too-many-arguments
+                   signature_project_id: hug.types.uuid,
+                   signature_reference_id: hug.types.text,
+                   signature_reference_type: hug.types.one_of(['company', 'user']),
+                   signature_type: hug.types.one_of(['cla', 'dco']),
+                   signature_signed: hug.types.smart_boolean,
+                   signature_approved: hug.types.smart_boolean,
+                   signature_return_url: cla.hug_types.url,
+                   signature_sign_url: cla.hug_types.url,
+                   signature_user_ccla_company_id=None):
+    """
+    POST: /signature
 
-#     DATA: {'signature_id': '<signature-id>',
-#            'signature_type': 'cla', 'signature_signed': true}
+    DATA: {'signature_type': 'cla',
+           'signature_signed': true,
+           'signature_approved': true,
+           'signature_sign_url': 'http://sign.com/here',
+           'signature_return_url': 'http://cla-system.com/signed',
+           'signature_project_id': '<project-id>',
+           'signature_user_ccla_company_id': '<company-id>',
+           'signature_reference_id': '<ref-id>',
+           'signature_reference_type': 'individual'}
 
-#     Supports all the fields as the POST equivalent.
+    signature_reference_type is either 'individual' or 'corporate', depending on the CLA type.
+    signature_reference_id needs to reflect the user or company tied to this signature.
 
-#     Returns the CLA signature that was just updated.
-#     """
-#     return cla.controllers.signature.update_signature(
-#         signature_id,
-#         signature_project_id=signature_project_id,
-#         signature_reference_id=signature_reference_id,
-#         signature_reference_type=signature_reference_type,
-#         signature_type=signature_type,
-#         signature_signed=signature_signed,
-#         signature_approved=signature_approved,
-#         signature_return_url=signature_return_url,
-#         signature_sign_url=signature_sign_url)
-
-
-# @hug.delete('/signature/{signature_id}', versions=1)
-# def delete_signature(user: cla_user, signature_id: hug.types.uuid):
-#     """
-#     DELETE: /signature/{signature_id}
-
-#     Deletes the specified signature.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.signature.delete_signature(signature_id)
-
-
-# @hug.get('/signatures/user/{user_id}', versions=1)
-# def get_signatures_user(user: cla_user, user_id: hug.types.uuid):
-#     """
-#     GET: /signatures/user/{user_id}
-
-#     Get all signatures for user specified.
-#     """
-#     return cla.controllers.signature.get_user_signatures(user_id)
-
-# @hug.get('/signatures/user/{user_id}/project/{project_id}', versions=1)
-# def get_signatures_user_project(user: cla_user, user_id: hug.types.uuid, project_id: hug.types.uuid):
-#     """
-#     GET: /signatures/user/{user_id}/project/{project_id}
-
-#     Get all signatures for user, filtered by project_id specified.
-#     """
-#     return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
-
-# @hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', versions=1)
-# def get_signatures_user_project(user: cla_user,
-#                                 user_id: hug.types.uuid,
-#                                 project_id: hug.types.uuid,
-#                                 signature_type: hug.types.one_of(['individual', 'employee'])):
-#     """
-#     GET: /signatures/user/{user_id}/project/{project_id}/type/[individual|corporate|employee]
-
-#     Get all signatures for user, filtered by project_id and signature type specified.
-#     """
-#     return cla.controllers.signature.get_user_project_signatures(user_id, project_id, signature_type)
-
-# @hug.get('/signatures/company/{company_id}', versions=1)
-# def get_signatures_company(user: cla_user, company_id: hug.types.uuid):
-#     """
-#     GET: /signatures/company/{company_id}
-
-#     Get all signatures for company specified.
-#     """
-#     return cla.controllers.signature.get_company_signatures(company_id)
+    Returns a CLA signatures that was created.
+    """
+    return cla.controllers.signature.create_signature(signature_project_id,
+                                                      signature_reference_id,
+                                                      signature_reference_type,
+                                                      signature_type=signature_type,
+                                                      signature_user_ccla_company_id=signature_user_ccla_company_id,
+                                                      signature_signed=signature_signed,
+                                                      signature_approved=signature_approved,
+                                                      signature_return_url=signature_return_url,
+                                                      signature_sign_url=signature_sign_url)
 
 
-# @hug.get('/signatures/project/{project_id}', versions=1)
-# def get_signatures_project(user: cla_user, project_id: hug.types.uuid):
-#     """
-#     GET: /signatures/project/{project_id}
+@hug.put('/signature', versions=1,
+         examples=" - {'signature_id': '01620259-d202-4350-8264-ef42a861922d', \
+                       'signature_type': 'cla', 'signature_signed': true}")
+def put_signature(user: cla_user, # pylint: disable=too-many-arguments
+                  signature_id: hug.types.uuid,
+                  signature_project_id=None,
+                  signature_reference_id=None,
+                  signature_reference_type=None,
+                  signature_type=None,
+                  signature_signed=None,
+                  signature_approved=None,
+                  signature_return_url=None,
+                  signature_sign_url=None):
+    """
+    PUT: /signature
 
-#     Get all signatures for project specified.
-#     """
-#     return cla.controllers.signature.get_project_signatures(project_id)
+    DATA: {'signature_id': '<signature-id>',
+           'signature_type': 'cla', 'signature_signed': true}
 
+    Supports all the fields as the POST equivalent.
 
-# @hug.get('/signatures/company/{company_id}/project/{project_id}', versions=1)
-# def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.types.uuid):
-#     """
-#      GET: /signatures/company/{company_id}/project/{project_id}
-
-#      Get all signatures for project specified and a company specified
-#      """
-#     return cla.controllers.signature.get_project_company_signatures(company_id, project_id)
-
-# #
-# # Repository Routes.
-# #
-# @hug.get('/repository', versions=1)
-# def get_repositories(user: cla_user):
-#     """
-#     GET: /repository
-
-#     Returns all CLA repositories.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.repository.get_repositories()
-
-
-# @hug.get('/repository/{repository_id}', versions=1)
-# def get_repository(user: cla_user, repository_id: hug.types.text):
-#     """
-#     GET: /repository/{repository_id}
-
-#     Returns the CLA repository requested by UUID.
-#     """
-#     return cla.controllers.repository.get_repository(repository_id)
+    Returns the CLA signature that was just updated.
+    """
+    return cla.controllers.signature.update_signature(
+        signature_id,
+        signature_project_id=signature_project_id,
+        signature_reference_id=signature_reference_id,
+        signature_reference_type=signature_reference_type,
+        signature_type=signature_type,
+        signature_signed=signature_signed,
+        signature_approved=signature_approved,
+        signature_return_url=signature_return_url,
+        signature_sign_url=signature_sign_url)
 
 
-# @hug.post('/repository', versions=1,
-#           examples=" - {'repository_project_id': '<project-id>', \
-#                         'repository_external_id': 'repo1', \
-#                         'repository_name': 'Repo Name', \
-#                         'repository_type': 'github', \
-#                         'repository_url': 'http://url-to-repo.com'}")
-# def post_repository(user: cla_user, # pylint: disable=too-many-arguments
-#                     repository_project_id: hug.types.uuid,
-#                     repository_name: hug.types.text,
-#                     repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
-#                     repository_url: cla.hug_types.url,
-#                     repository_external_id=None):
-#     """
-#     POST: /repository
+@hug.delete('/signature/{signature_id}', versions=1)
+def delete_signature(user: cla_user, signature_id: hug.types.uuid):
+    """
+    DELETE: /signature/{signature_id}
 
-#     DATA: {'repository_project_id': '<project-id>',
-#            'repository_external_id': 'repo1',
-#            'repository_name': 'Repo Name',
-#            'repository_type': 'github',
-#            'repository_url': 'http://url-to-repo.com'}
-
-#     repository_external_id is the ID of the repository given by the repository service provider.
-#     It is used to redirect the user back to the appropriate location once signing is complete.
-
-#     Returns the CLA repository that was just created.
-#     """
-#     return cla.controllers.repository.create_repository(repository_project_id,
-#                                                         repository_name,
-#                                                         repository_type,
-#                                                         repository_url,
-#                                                         repository_external_id)
+    Deletes the specified signature.
+    """
+    # staff_verify(user)
+    return cla.controllers.signature.delete_signature(signature_id)
 
 
-# @hug.put('/repository', versions=1,
-#          examples=" - {'repository_id': '<repo-id>', \
-#                        'repository_url': 'http://new-url-to-repository.com'}")
-# def put_repository(user: cla_user, # pylint: disable=too-many-arguments
-#                    repository_id: hug.types.text,
-#                    repository_project_id=None,
-#                    repository_name=None,
-#                    repository_type=None,
-#                    repository_url=None,
-#                    repository_external_id=None):
-#     """
-#     PUT: /repository
+@hug.get('/signatures/user/{user_id}', versions=1)
+def get_signatures_user(user: cla_user, user_id: hug.types.uuid):
+    """
+    GET: /signatures/user/{user_id}
 
-#     DATA: {'repository_id': '<repo-id>',
-#            'repository_url': 'http://new-url-to-repository.com'}
+    Get all signatures for user specified.
+    """
+    return cla.controllers.signature.get_user_signatures(user_id)
 
-#     Returns the CLA repository that was just updated.
-#     """
-#     return cla.controllers.repository.update_repository(
-#         repository_id,
-#         repository_project_id=repository_project_id,
-#         repository_name=repository_name,
-#         repository_type=repository_type,
-#         repository_url=repository_url,
-#         repository_external_id=repository_external_id)
+@hug.get('/signatures/user/{user_id}/project/{project_id}', versions=1)
+def get_signatures_user_project(user: cla_user, user_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+    GET: /signatures/user/{user_id}/project/{project_id}
+
+    Get all signatures for user, filtered by project_id specified.
+    """
+    return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
+
+@hug.get('/signatures/user/{user_id}/project/{project_id}/type/{signature_type}', versions=1)
+def get_signatures_user_project(user: cla_user,
+                                user_id: hug.types.uuid,
+                                project_id: hug.types.uuid,
+                                signature_type: hug.types.one_of(['individual', 'employee'])):
+    """
+    GET: /signatures/user/{user_id}/project/{project_id}/type/[individual|corporate|employee]
+
+    Get all signatures for user, filtered by project_id and signature type specified.
+    """
+    return cla.controllers.signature.get_user_project_signatures(user_id, project_id, signature_type)
+
+@hug.get('/signatures/company/{company_id}', versions=1)
+def get_signatures_company(user: cla_user, company_id: hug.types.uuid):
+    """
+    GET: /signatures/company/{company_id}
+
+    Get all signatures for company specified.
+    """
+    return cla.controllers.signature.get_company_signatures(company_id)
 
 
-# @hug.delete('/repository/{repository_id}', versions=1)
-# def delete_repository(user: cla_user, repository_id: hug.types.text):
-#     """
-#     DELETE: /repository/{repository_id}
+@hug.get('/signatures/project/{project_id}', versions=1)
+def get_signatures_project(user: cla_user, project_id: hug.types.uuid):
+    """
+    GET: /signatures/project/{project_id}
 
-#     Deletes the specified repository.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.repository.delete_repository(repository_id)
+    Get all signatures for project specified.
+    """
+    return cla.controllers.signature.get_project_signatures(project_id)
+
+
+@hug.get('/signatures/company/{company_id}/project/{project_id}', versions=1)
+def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+     GET: /signatures/company/{company_id}/project/{project_id}
+
+     Get all signatures for project specified and a company specified
+     """
+    return cla.controllers.signature.get_project_company_signatures(company_id, project_id)
+
+#
+# Repository Routes.
+#
+@hug.get('/repository', versions=1)
+def get_repositories(user: cla_user):
+    """
+    GET: /repository
+
+    Returns all CLA repositories.
+    """
+    # staff_verify(user)
+    return cla.controllers.repository.get_repositories()
+
+
+@hug.get('/repository/{repository_id}', versions=1)
+def get_repository(user: cla_user, repository_id: hug.types.text):
+    """
+    GET: /repository/{repository_id}
+
+    Returns the CLA repository requested by UUID.
+    """
+    return cla.controllers.repository.get_repository(repository_id)
+
+
+@hug.post('/repository', versions=1,
+          examples=" - {'repository_project_id': '<project-id>', \
+                        'repository_external_id': 'repo1', \
+                        'repository_name': 'Repo Name', \
+                        'repository_type': 'github', \
+                        'repository_url': 'http://url-to-repo.com'}")
+def post_repository(user: cla_user, # pylint: disable=too-many-arguments
+                    repository_project_id: hug.types.uuid,
+                    repository_name: hug.types.text,
+                    repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
+                    repository_url: cla.hug_types.url,
+                    repository_external_id=None):
+    """
+    POST: /repository
+
+    DATA: {'repository_project_id': '<project-id>',
+           'repository_external_id': 'repo1',
+           'repository_name': 'Repo Name',
+           'repository_type': 'github',
+           'repository_url': 'http://url-to-repo.com'}
+
+    repository_external_id is the ID of the repository given by the repository service provider.
+    It is used to redirect the user back to the appropriate location once signing is complete.
+
+    Returns the CLA repository that was just created.
+    """
+    return cla.controllers.repository.create_repository(repository_project_id,
+                                                        repository_name,
+                                                        repository_type,
+                                                        repository_url,
+                                                        repository_external_id)
+
+
+@hug.put('/repository', versions=1,
+         examples=" - {'repository_id': '<repo-id>', \
+                       'repository_id': 'http://new-url-to-repository.com'}")
+def put_repository(user: cla_user, # pylint: disable=too-many-arguments
+                   repository_id: hug.types.text,
+                   repository_project_id=None,
+                   repository_name=None,
+                   repository_type=None,
+                   repository_url=None,
+                   repository_external_id=None):
+    """
+    PUT: /repository
+
+    DATA: {'repository_id': '<repo-id>',
+           'repository_url': 'http://new-url-to-repository.com'}
+
+    Returns the CLA repository that was just updated.
+    """
+    return cla.controllers.repository.update_repository(
+        repository_id,
+        repository_project_id=repository_project_id,
+        repository_name=repository_name,
+        repository_type=repository_type,
+        repository_url=repository_url,
+        repository_external_id=repository_external_id)
+
+
+@hug.delete('/repository/{repository_id}', versions=1)
+def delete_repository(user: cla_user, repository_id: hug.types.text):
+    """
+    DELETE: /repository/{repository_id}
+
+    Deletes the specified repository.
+    """
+    # staff_verify(user)
+    return cla.controllers.repository.delete_repository(repository_id)
 
 
 # #
 # # Company Routes.
 # #
-# @hug.get('/company', versions=1)
-# def get_companies():
-#     """
-#     GET: /company
+@hug.get('/company', versions=1)
+def get_companies():
+    """
+    GET: /company
 
-#     Returns all CLA companies.
-#     """
-#     return cla.controllers.company.get_companies()
-
-
-# @hug.get('/company/{company_id}', versions=1)
-# def get_company(company_id: hug.types.text):
-#     """
-#     GET: /company/{company_id}
-
-#     Returns the CLA company requested by UUID.
-#     """
-#     return cla.controllers.company.get_company(company_id)
+    Returns all CLA companies.
+    """
+    return cla.controllers.company.get_companies()
 
 
-# @hug.post('/company', versions=1,
-#           examples=" - {'company_name': 'Company Name', \
-#                         'company_whitelist': ['user@safe.org'], \
-#                         'company_whitelist_patterns': ['*@safe.org'], \
-#                         'company_manager_id': 'user-id'}")
-# def post_company(user: cla_user,
-#                  company_name: hug.types.text,
-#                  company_whitelist: hug.types.multiple,
-#                  company_whitelist_patterns: hug.types.multiple,
-#                  company_manager_id=None):
-#     """
-#     POST: /company
+@hug.get('/company/{company_id}', versions=1)
+def get_company(company_id: hug.types.text):
+    """
+    GET: /company/{company_id}
 
-#     DATA: {'company_name': 'Org Name',
-#            'company_whitelist': ['safe@email.org'],
-#            'company_whitelist': ['*@email.org'],
-#            'company_manager_id': <user-id>}
-
-#     Returns the CLA company that was just created.
-#     """
-#     return cla.controllers.company.create_company(
-#         company_name=company_name,
-#         company_whitelist=company_whitelist,
-#         company_whitelist_patterns=company_whitelist_patterns,
-#         company_manager_id=company_manager_id)
+    Returns the CLA company requested by UUID.
+    """
+    return cla.controllers.company.get_company(company_id)
 
 
-# @hug.put('/company', versions=1,
-#          examples=" - {'company_id': '<company-id>', \
-#                        'company_name': 'New Company Name'}")
-# def put_company(user: cla_user, # pylint: disable=too-many-arguments
-#                 company_id: hug.types.uuid,
-#                 company_name=None,
-#                 company_whitelist=None,
-#                 company_whitelist_patterns=None,
-#                 company_manager_id=None):
-#     """
-#     PUT: /company
+@hug.post('/company', versions=1,
+          examples=" - {'company_name': 'Company Name', \
+                        'company_whitelist': ['user@safe.org'], \
+                        'company_whitelist_patterns': ['*@safe.org'], \
+                        'company_manager_id': 'user-id'}")
+def post_company(user: cla_user,
+                 company_name: hug.types.text,
+                 company_whitelist: hug.types.multiple,
+                 company_whitelist_patterns: hug.types.multiple,
+                 company_manager_id=None):
+    """
+    POST: /company
 
-#     DATA: {'company_id': '<company-id>',
-#            'company_name': 'New Company Name'}
+    DATA: {'company_name': 'Org Name',
+           'company_whitelist': ['safe@email.org'],
+           'company_whitelist': ['*@email.org'],
+           'company_manager_id': <user-id>}
 
-#     Returns the CLA company that was just updated.
-#     """
-#     # staff_verify(user) or company_manager_verify(user, company_id)
-#     return cla.controllers.company.update_company(
-#         company_id,
-#         company_name=company_name,
-#         company_whitelist=company_whitelist,
-#         company_whitelist_patterns=company_whitelist_patterns,
-#         company_manager_id=company_manager_id)
-
-
-# @hug.delete('/company/{company_id}', versions=1)
-# def delete_company(user: cla_user, company_id: hug.types.text):
-#     """
-#     DELETE: /company/{company_id}
-
-#     Deletes the specified company.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.company.delete_company(company_id)
-
-# @hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
-# def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
-#     """
-#     PUT: /company/{company_id}/import/whitelist/csv
-
-#     Imports a CSV file of whitelisted user emails.
-#     Expects the first column to have a header in the first row and contain email addresses.
-#     """
-#     # staff_verify(user) or company_manager_verify(user, company_id)
-#     content = body.read().decode()
-#     return cla.controllers.company.update_company_whitelist_csv(content, company_id)
+    Returns the CLA company that was just created.
+    """
+    return cla.controllers.company.create_company(
+        company_name=company_name,
+        company_whitelist=company_whitelist,
+        company_whitelist_patterns=company_whitelist_patterns,
+        company_manager_id=company_manager_id)
 
 
-# @hug.get('/companies/{manager_id}', version=1)
-# def get_manager_companies(manager_id: hug.types.uuid):
-#     """
-#     GET: /companies/{manager_id}
+@hug.put('/company', versions=1,
+         examples=" - {'company_id': '<company-id>', \
+                       'company_name': 'New Company Name'}")
+def put_company(user: cla_user, # pylint: disable=too-many-arguments
+                company_id: hug.types.uuid,
+                company_name=None,
+                company_whitelist=None,
+                company_whitelist_patterns=None,
+                company_manager_id=None):
+    """
+    PUT: /company
 
-#     Returns a list of companies a manager is associated with
-#     """
-#     return cla.controllers.company.get_manager_companies(manager_id)
+    DATA: {'company_id': '<company-id>',
+           'company_name': 'New Company Name'}
+
+    Returns the CLA company that was just updated.
+    """
+    # staff_verify(user) or company_manager_verify(user, company_id)
+    return cla.controllers.company.update_company(
+        company_id,
+        company_name=company_name,
+        company_whitelist=company_whitelist,
+        company_whitelist_patterns=company_whitelist_patterns,
+        company_manager_id=company_manager_id)
+
+
+@hug.delete('/company/{company_id}', versions=1)
+def delete_company(user: cla_user, company_id: hug.types.text):
+    """
+    DELETE: /company/{company_id}
+
+    Deletes the specified company.
+    """
+    # staff_verify(user)
+    return cla.controllers.company.delete_company(company_id)
+
+@hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
+def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
+    """
+    PUT: /company/{company_id}/import/whitelist/csv
+
+    Imports a CSV file of whitelisted user emails.
+    Expects the first column to have a header in the first row and contain email addresses.
+    """
+    # staff_verify(user) or company_manager_verify(user, company_id)
+    content = body.read().decode()
+    return cla.controllers.company.update_company_whitelist_csv(content, company_id)
+
+
+@hug.get('/companies/{manager_id}', version=1)
+def get_manager_companies(manager_id: hug.types.uuid):
+    """
+    GET: /companies/{manager_id}
+
+    Returns a list of companies a manager is associated with
+    """
+    return cla.controllers.company.get_manager_companies(manager_id)
 # #
 # # Project Routes.
 # #

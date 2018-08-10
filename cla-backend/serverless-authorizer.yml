@@ -1,0 +1,4 @@
+name: authorizer
+identitySource: method.request.header.Authorization
+identityValidationExpression: Bearer (.*)
+type: token
