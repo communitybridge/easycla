@@ -21,6 +21,7 @@ import {
 import { SortService } from "../services/sort.service";
 import { FilterService } from "../services/filter.service";
 import { ClaService } from "../services/cla.service";
+import { AuthService } from "../services/auth.service";
 
 import { MyApp } from "./app.component";
 
@@ -43,6 +44,7 @@ import { MyApp } from "./app.component";
     SortService,
     FilterService,
     ClaService,
+    AuthService,
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     {
       provide: KeycloakHttp,

@@ -13,6 +13,8 @@ import { CLA_API_URL } from "../services/constants";
 import { CINCO_API_URL } from "../services/constants";
 import { HttpClient } from "../services/http-client";
 
+import { AuthService } from "../services/auth.service";
+
 @Component({
   templateUrl: "app.html"
 })
@@ -42,7 +44,8 @@ export class MyApp {
     private rolesService: RolesService,
     public claService: ClaService,
     public s3service: S3Service,
-    public httpClient: HttpClient
+    public httpClient: HttpClient,
+    public authService: AuthService
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -59,6 +62,8 @@ export class MyApp {
 
     this.cincoService.setApiUrl(CINCO_API_URL);
     this.cincoService.setHttp(kcHttpClient);
+
+    this.authService.handleAuthentication();
   }
 
   getDefaults() {

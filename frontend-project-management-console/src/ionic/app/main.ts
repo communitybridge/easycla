@@ -5,7 +5,7 @@ import { enableProdMode } from "@angular/core";
 
 import { KeycloakService } from "../services/keycloak/keycloak.service";
 
-enableProdMode();
+// enableProdMode(); disable prod mode.
 platformBrowserDynamic().bootstrapModule(AppModule);
 
 // KeycloakService.init({ onLoad: 'check-sso', checkLoginIframeInterval: 1 })
