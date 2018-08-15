@@ -70,7 +70,7 @@ export class AuthService {
 
   public getIdToken(): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      if (isAuthenticated && localStorage.getItem("id_token")) {
+      if (this.isAuthenticated() && localStorage.getItem("id_token")) {
         resolve(localStorage.getItem("id_token"));
       } else {
         return reject("Id token not found. Please login.");

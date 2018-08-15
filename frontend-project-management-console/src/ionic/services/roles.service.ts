@@ -42,51 +42,51 @@ export class RolesService {
   getUserRolesPromise() {
     console.log("Get UserRole Promise.");
     if (this.authService.isAuthenticated()) {
-      return this.authService.getIdToken()
-      .then(token =>
-        return this.authService.parseIdToken(token);
-      )
-      .then(tokenParsed => {
-        if (
-          tokenParsed &&
-          tokenParsed.roles
-        ) {
-          this.userRoles = {
-            isAuthenticated: this.authService.isAuthenticated(),
-            isPmcUser: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "PMC_LOGIN"
-            ),
-            isStaffInc: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_STAFF_INC"
-            ),
-            isDirectorInc: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_DIRECTOR_INC"
-            ),
-            isStaffDirect: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_STAFF_DIRECT"
-            ),
-            isDirectorDirect: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_DIRECTOR_DIRECT"
-            ),
-            isExec: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_EXEC"
-            ),
-            isAdmin: this.isInArray(
-              tokenParsed.realm_access.roles,
-              "STAFF_SUPER_ADMIN"
-            )
-          };
-          return this.userRoles;
-        }
-        return this.userRoleDefaults;
-      });
-      return Promise.resolve(this.userRoleDefaults);
+      return this.authService
+        .getIdToken()
+        .then(token => {
+          return this.authService.parseIdToken(token);
+        })
+        .then(tokenParsed => {
+          if (tokenParsed && tokenParsed.roles) {
+            this.userRoles = {
+              isAuthenticated: this.authService.isAuthenticated(),
+              isPmcUser: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "PMC_LOGIN"
+              ),
+              isStaffInc: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_STAFF_INC"
+              ),
+              isDirectorInc: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_DIRECTOR_INC"
+              ),
+              isStaffDirect: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_STAFF_DIRECT"
+              ),
+              isDirectorDirect: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_DIRECTOR_DIRECT"
+              ),
+              isExec: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_EXEC"
+              ),
+              isAdmin: this.isInArray(
+                tokenParsed.realm_access.roles,
+                "STAFF_SUPER_ADMIN"
+              )
+            };
+            return this.userRoles;
+          }
+          return this.userRoleDefaults;
+        })
+        .catch(error => {
+          return Promise.resolve(this.userRoleDefaults);
+        });
     } else {
       // not authenticated. can't decode token. just return defaults
       return Promise.resolve(this.userRoleDefaults);
