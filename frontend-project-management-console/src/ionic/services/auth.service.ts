@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { AUTH_CONFIG } from "./auth0-variables";
 import * as auth0 from "auth0-js";
+import * as jwt_decode from "jwt-decode";
 
 (window as any).global = window;
 
@@ -32,7 +33,11 @@ export class AuthService {
         // this.router.navigate(["/home"]);
         // here we will redirect user to login page or error page??
         console.log(err);
-        alert(`Error: ${err.error}. Check the console for further details.`);
+        alert(
+          `Authentication Error: ${
+            err.error
+          }. Check the console for further details.`
+        );
       }
     });
   }
@@ -61,5 +66,25 @@ export class AuthService {
     // access token's expiry time
     const expiresAt = JSON.parse(localStorage.getItem("expires_at") || "{}");
     return new Date().getTime() < expiresAt;
+  }
+
+  public getIdToken(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      if (isAuthenticated && localStorage.getItem("id_token")) {
+        resolve(localStorage.getItem("id_token"));
+      } else {
+        return reject("Id token not found. Please login.");
+      }
+    });
+  }
+
+  public parseIdToken(token: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(jwt_decode(token));
+      } catch (error) {
+        return reject(error);
+      }
+    });
   }
 }

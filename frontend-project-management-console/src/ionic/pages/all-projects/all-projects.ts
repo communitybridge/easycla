@@ -1,23 +1,23 @@
 // import { Component, ViewChild } from '@angular/core';
-import { Component } from '@angular/core';
+import { Component } from "@angular/core";
 // import { DomSanitizer} from '@angular/platform-browser';
-import { NavController, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service'
+import { NavController, IonicPage } from "ionic-angular";
+import { CincoService } from "../../services/cinco.service";
 // import { Chart } from 'chart.js';
-import { FilterService } from '../../services/filter.service'
-import { RolesService } from '../../services/roles.service';
-import { Restricted } from '../../decorators/restricted';
+import { FilterService } from "../../services/filter.service";
+import { RolesService } from "../../services/roles.service";
+import { Restricted } from "../../decorators/restricted";
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ["isAuthenticated", "isPmcUser"]
 })
 @IonicPage({
-  name: 'AllProjectsPage',
-  segment: 'projects',
+  name: "AllProjectsPage",
+  segment: "projects"
 })
 @Component({
-  selector: 'all-projects',
-  templateUrl: 'all-projects.html'
+  selector: "all-projects",
+  templateUrl: "all-projects.html"
 })
 export class AllProjectsPage {
   loading: any;
@@ -39,22 +39,22 @@ export class AllProjectsPage {
   //   paidLast30Days: number,
   // }
   projects: Array<{
-    icon: string,
-    title: string,
+    icon: string;
+    title: string;
     datas: Array<{
-      label: string,
-      value: string,
-      status?: string
-    }>,
+      label: string;
+      value: string;
+      status?: string;
+    }>;
     meetings: Array<{
-      label: string,
-      value: string
-    }>
+      label: string;
+      value: string;
+    }>;
   }>;
 
   industryFilterValues: Array<{
-    key: string,
-    prettyValue: string
+    key: string;
+    prettyValue: string;
   }> = [];
 
   managersFilterValues: any = [];
@@ -72,7 +72,7 @@ export class AllProjectsPage {
     private cincoService: CincoService,
     // private sanitizer: DomSanitizer,
     private rolesService: RolesService,
-    private filterService: FilterService,
+    private filterService: FilterService
   ) {
     this.getDefaults();
   }
@@ -85,31 +85,39 @@ export class AllProjectsPage {
 
   getAllProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
-        this.allProjects = response;
-        for(let eachProject of this.allProjects) {
-          // After uploading a logo, Cinco will provide same name,
-          // so a refresh to the image needs to be forced.
-          // This is to refresh an image that have same URL
-          if(eachProject.config.logoRef) { eachProject.config.logoRef += "?" + new Date().getTime(); }
-          // Currently PMs are returned with their KC IDs
-          // This translates to LF IDs
-          if(eachProject.config.programManagers.length > 0) {
-            for(let eachManager of eachProject.config.programManagers) {
-              this.cincoService.getUser(eachManager).subscribe(response => {
-                if(response) {
-                  eachProject.managers.push(response.lfId);
-                  // Prevent dupes in PMs filter list
-                  if(!this.managersFilterValues.some(lfId => lfId == response.lfId)) {
-                      this.managersFilterValues.push(response.lfId);
-                  }
-                  this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
+      this.allProjects = response;
+      for (let eachProject of this.allProjects) {
+        // After uploading a logo, Cinco will provide same name,
+        // so a refresh to the image needs to be forced.
+        // This is to refresh an image that have same URL
+        if (eachProject.config.logoRef) {
+          eachProject.config.logoRef += "?" + new Date().getTime();
+        }
+        // Currently PMs are returned with their KC IDs
+        // This translates to LF IDs
+        if (eachProject.config.programManagers.length > 0) {
+          for (let eachManager of eachProject.config.programManagers) {
+            this.cincoService.getUser(eachManager).subscribe(response => {
+              if (response) {
+                eachProject.managers.push(response.lfId);
+                // Prevent dupes in PMs filter list
+                if (
+                  !this.managersFilterValues.some(lfId => lfId == response.lfId)
+                ) {
+                  this.managersFilterValues.push(response.lfId);
                 }
-              });
-            }
+                this.allFilteredProjects = this.filterService.resetFilter(
+                  this.allProjects
+                );
+              }
+            });
           }
         }
-        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
-        this.loading.projects = false;
+      }
+      this.allFilteredProjects = this.filterService.resetFilter(
+        this.allProjects
+      );
+      this.loading.projects = false;
     });
   }
 
@@ -124,7 +132,7 @@ export class AllProjectsPage {
   // }
 
   viewProject(projectId) {
-    this.navCtrl.setRoot('ProjectPage', {
+    this.navCtrl.setRoot("ProjectPage", {
       projectId: projectId
     });
   }
@@ -227,16 +235,15 @@ export class AllProjectsPage {
   //   }
   // }
 
-  getDefaults(){
-
+  getDefaults() {
     this.userRoles = this.rolesService.userRoleDefaults;
 
     // this.userHasCalendar = false;
 
     this.loading = {
       // charts: true,
-      projects: true,
-    }
+      projects: true
+    };
 
     this.expand = {};
 
@@ -259,7 +266,6 @@ export class AllProjectsPage {
     //   roles: [],
     //   calendar: null,
     // }
-
   }
 
   // openAccountSettings() {
@@ -282,16 +288,20 @@ export class AllProjectsPage {
   }
 
   filterAllProjects(projectProperty, keyword) {
-    if(keyword == "NO_FILTER") {
-      this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
-    }
-    else {
-      this.allFilteredProjects = this.filterService.filterAllProjects(this.allProjects, projectProperty, keyword);
+    if (keyword == "NO_FILTER") {
+      this.allFilteredProjects = this.filterService.resetFilter(
+        this.allProjects
+      );
+    } else {
+      this.allFilteredProjects = this.filterService.filterAllProjects(
+        this.allProjects,
+        projectProperty,
+        keyword
+      );
     }
   }
 
   toggleExpand(index) {
     this.expand[index] = !this.expand[index];
   }
-
 }
