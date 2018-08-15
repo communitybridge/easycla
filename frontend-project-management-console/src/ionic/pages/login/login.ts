@@ -28,6 +28,7 @@ export class LoginPage {
     let dataString = this.navParams.get("return");
     try {
       this.data = JSON.parse(dataString);
+      console.log(this.data);
       this.returnData = true;
     } catch (e) {
       this.returnData = false;
@@ -43,9 +44,13 @@ export class LoginPage {
     this.canAccess = this.hasAccess();
     if (this.canAccess && this.returnData) {
       if (this.data.page) {
+        console.log("can be accessed to page:");
         if (this.data.params) {
+          console.log("page: " + this.data.page);
+          console.log("page params: " + this.data.params);
           this.navCtrl.setRoot(this.data.page, this.data.params);
         } else {
+          console.log(this.data.page);
           this.navCtrl.setRoot(this.data.page);
         }
       }
@@ -53,6 +58,8 @@ export class LoginPage {
   }
 
   hasAccess() {
+    console.log("check if hasAccess");
+    console.log("data.roles: " + this.data.roles);
     if (this.data && this.data.roles) {
       for (let role of this.data.roles) {
         if (!this.userRoles[role]) {
