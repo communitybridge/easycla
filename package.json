@@ -1,0 +1,9 @@
+{
+  "name": "project",
+  "version": "0.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "install-backend": "./scripts/install-backend.sh",
+    "install-aws-profile": "./scripts/install-aws-profile.sh"
+  }
+}
