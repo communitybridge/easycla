@@ -28,9 +28,7 @@ export class AuthService {
       if (authResult && authResult.accessToken && authResult.idToken) {
         this.setSession(authResult);
         // Here we will redirect user to main page.
-        // this.router.navigate(["/home"]);
       } else if (err) {
-        // this.router.navigate(["/home"]);
         // here we will redirect user to login page or error page??
         console.log(err);
         alert(
@@ -57,8 +55,6 @@ export class AuthService {
     localStorage.removeItem("access_token");
     localStorage.removeItem("id_token");
     localStorage.removeItem("expires_at");
-    // Go back to the home route
-    // this.router.navigate(["/"]);
   }
 
   public isAuthenticated(): boolean {
