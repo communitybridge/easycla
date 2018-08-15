@@ -38,7 +38,8 @@
     "timsort": "^0.3.0",
     "ws": "^3.3.2",
     "zone.js": "0.8.18",
-    "auth0-js": "^9.4.1"
+    "auth0-js": "^9.4.1",
+    "jwt-decode": "2.2.0"
   },
   "devDependencies": {
     "@ionic/app-scripts": "3.1.4",
