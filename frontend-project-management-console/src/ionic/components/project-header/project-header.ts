@@ -1,24 +1,22 @@
-import { Input, Component } from '@angular/core';
-import { NavController, ModalController } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
+import { Input, Component } from "@angular/core";
+import { NavController, ModalController } from "ionic-angular";
+import { CincoService } from "../../services/cinco.service";
 
 @Component({
-  selector: 'project-header',
-  templateUrl: 'project-header.html',
+  selector: "project-header",
+  templateUrl: "project-header.html"
 })
 export class ProjectHeaderComponent {
-
-  @Input('projectId')
-  private projectId: string;
+  @Input("projectId") private projectId: string;
 
   project: any;
 
   projectSectors: any;
 
-  constructor (
+  constructor(
     private navCtrl: NavController,
     private cincoService: CincoService,
-    public modalCtrl: ModalController,
+    public modalCtrl: ModalController
   ) {
     this.getDefaults();
   }
@@ -61,19 +59,21 @@ export class ProjectHeaderComponent {
     };
   }
 
-  viewProjectDetails(projectId){
-    this.navCtrl.push('ProjectDetailsPage', {
+  viewProjectDetails(projectId) {
+    this.navCtrl.push("ProjectDetailsPage", {
       projectId: projectId
     });
   }
 
   getProject(projectId) {
     let getMembers = true;
-    this.cincoService.getProject(projectId, getMembers).subscribe(response => {
-      if(response) {
-        this.project = response;
-      }
-    });
+    this.cincoService
+      .getMockProject(projectId, getMembers)
+      .subscribe(response => {
+        if (response) {
+          this.project = response;
+        }
+      });
   }
 
   getProjectSectors() {
@@ -83,7 +83,7 @@ export class ProjectHeaderComponent {
   }
 
   openProjectUserManagementModal() {
-    let modal = this.modalCtrl.create('ProjectUserManagementModal', {
+    let modal = this.modalCtrl.create("ProjectUserManagementModal", {
       projectId: this.projectId,
       projectName: this.project.name
     });
@@ -91,7 +91,7 @@ export class ProjectHeaderComponent {
   }
 
   openAssetManagementModal() {
-    let modal = this.modalCtrl.create('AssetManagementModal', {
+    let modal = this.modalCtrl.create("AssetManagementModal", {
       projectId: this.projectId,
       projectName: this.project.name
     });
