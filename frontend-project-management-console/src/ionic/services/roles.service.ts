@@ -19,8 +19,8 @@ export class RolesService {
     this.rolesFetched = false;
     this.userRoleDefaults = {
       isAuthenticated: this.authService.isAuthenticated(),
-      isPmcUser: false,
-      isStaffInc: false,
+      isPmcUser: true,
+      isStaffInc: true,
       isDirectorInc: false,
       isStaffDirect: false,
       isDirectorDirect: false,
@@ -51,34 +51,22 @@ export class RolesService {
           if (tokenParsed && tokenParsed.roles) {
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
-              isPmcUser: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "PMC_LOGIN"
-              ),
-              isStaffInc: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_STAFF_INC"
-              ),
+              isPmcUser: this.isInArray(tokenParsed.roles, "PMC_LOGIN"),
+              isStaffInc: this.isInArray(tokenParsed.roles, "STAFF_STAFF_INC"),
               isDirectorInc: this.isInArray(
-                tokenParsed.realm_access.roles,
+                tokenParsed.roles,
                 "STAFF_DIRECTOR_INC"
               ),
               isStaffDirect: this.isInArray(
-                tokenParsed.realm_access.roles,
+                tokenParsed.roles,
                 "STAFF_STAFF_DIRECT"
               ),
               isDirectorDirect: this.isInArray(
-                tokenParsed.realm_access.roles,
+                tokenParsed.roles,
                 "STAFF_DIRECTOR_DIRECT"
               ),
-              isExec: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_EXEC"
-              ),
-              isAdmin: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_SUPER_ADMIN"
-              )
+              isExec: this.isInArray(tokenParsed.roles, "STAFF_EXEC"),
+              isAdmin: this.isInArray(tokenParsed.roles, "STAFF_SUPER_ADMIN")
             };
             return this.userRoles;
           }
