@@ -1,21 +1,26 @@
-import { Component } from '@angular/core';
-import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
-import { CincoService } from '../../../services/cinco.service';
-import { KeycloakService } from '../../../services/keycloak/keycloak.service';
-import { SortService } from '../../../services/sort.service';
-import { ProjectModel } from '../../../models/project-model';
-import { RolesService } from '../../../services/roles.service';
-import { Restricted } from '../../../decorators/restricted';
+import { Component } from "@angular/core";
+import {
+  NavController,
+  ModalController,
+  NavParams,
+  IonicPage
+} from "ionic-angular";
+import { CincoService } from "../../../services/cinco.service";
+import { KeycloakService } from "../../../services/keycloak/keycloak.service";
+import { SortService } from "../../../services/sort.service";
+import { ProjectModel } from "../../../models/project-model";
+import { RolesService } from "../../../services/roles.service";
+import { Restricted } from "../../../decorators/restricted";
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ["isAuthenticated", "isPmcUser"]
 })
 @IonicPage({
-  segment: 'project/:projectId',
+  segment: "project/:projectId"
 })
 @Component({
-  selector: 'project',
-  templateUrl: 'project.html',
+  selector: "project",
+  templateUrl: "project.html"
 })
 export class ProjectPage {
   selectedProject: any;
@@ -33,54 +38,60 @@ export class ProjectPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    private rolesService: RolesService,
+    private rolesService: RolesService
   ) {
-    this.projectId = navParams.get('projectId');
+    this.projectId = navParams.get("projectId");
     this.getDefaults();
   }
 
   ngOnInit() {
+    console.log("project id: " + this.projectId);
     this.getProject(this.projectId);
 
-      this.cincoService.getEventsForProject(this.projectId).subscribe(response => {
+    this.cincoService
+      .getEventsForProject(this.projectId)
+      .subscribe(response => {
         if (response) {
           console.log(response);
         }
       });
-
   }
 
   getProject(projectId) {
     let getMembers = true;
-    this.cincoService.getProject(projectId, getMembers).subscribe(response => {
-      if(response) {
-        this.project = response;
-        // This is to refresh an image that have same URL
-        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
-        this.loading.project = false;
-      }
-    });
+    this.cincoService
+      .getMockProject(projectId, getMembers)
+      .subscribe(response => {
+        if (response) {
+          this.project = response;
+          // This is to refresh an image that have same URL
+          if (this.project.config.logoRef) {
+            this.project.config.logoRef += "?" + new Date().getTime();
+          }
+          this.loading.project = false;
+        }
+      });
   }
 
   memberSelected(event, memberId) {
-    this.navCtrl.push('MemberPage', {
+    this.navCtrl.push("MemberPage", {
       projectId: this.projectId,
-      memberId: memberId,
+      memberId: memberId
     });
   }
 
   getDefaults() {
     this.loading = {
-      project: true,
+      project: true
     };
     this.project = {
-      id: "",
-      name: "Project",
-      description: "Description",
-      managers: "",
+      id: "mock_project_id",
+      name: "Mock Project AOSP",
+      description: "Mock Description. This is a mock AOSP.",
+      managers: "Mock Manager.",
       members: [],
-      status: "",
-      category: "",
+      status: "Mock Status Active",
+      category: "Mock Category Mobile",
       sector: "",
       url: "",
       logoRef: "",
@@ -104,44 +115,39 @@ export class ProjectPage {
     };
     this.sort = {
       alert: {
-        arrayProp: 'alert',
-        sortType: 'text',
-        sort: null,
+        arrayProp: "alert",
+        sortType: "text",
+        sort: null
       },
       company: {
-        arrayProp: 'org.name',
-        sortType: 'text',
-        sort: null,
+        arrayProp: "org.name",
+        sortType: "text",
+        sort: null
       },
       product: {
-        arrayProp: 'product',
-        sortType: 'text',
-        sort: null,
+        arrayProp: "product",
+        sortType: "text",
+        sort: null
       },
       status: {
-        arrayProp: 'invoices[0].status',
-        sortType: 'text',
-        sort: null,
+        arrayProp: "invoices[0].status",
+        sortType: "text",
+        sort: null
       },
       dues: {
-        arrayProp: 'annualDues',
-        sortType: 'number',
-        sort: null,
+        arrayProp: "annualDues",
+        sortType: "number",
+        sort: null
       },
       renewal: {
-        arrayProp: 'renewalDate',
-        sortType: 'date',
-        sort: null,
-      },
+        arrayProp: "renewalDate",
+        sortType: "date",
+        sort: null
+      }
     };
   }
 
   sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.project.members,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.project.members);
   }
-
 }
