@@ -1,18 +1,18 @@
-import { Component } from '@angular/core';
-import { NavController, IonicPage, NavParams } from 'ionic-angular';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
-import { RolesService } from '../../services/roles.service';
+import { Component } from "@angular/core";
+import { NavController, IonicPage, NavParams } from "ionic-angular";
+import { KeycloakService } from "../../services/keycloak/keycloak.service";
+import { RolesService } from "../../services/roles.service";
+import { AuthService } from "../../services/auth.service";
 
 @IonicPage({
-  name: 'LoginPage',
-  segment: 'login/:return'
+  name: "LoginPage",
+  segment: "login/:return"
 })
 @Component({
-  selector: 'login',
-  templateUrl: 'login.html'
+  selector: "login",
+  templateUrl: "login.html"
 })
 export class LoginPage {
-
   returnData: boolean;
   data: any;
   userRoles: any;
@@ -23,8 +23,9 @@ export class LoginPage {
     public navParams: NavParams,
     private keycloak: KeycloakService,
     public rolesService: RolesService,
+    public authService: AuthService
   ) {
-    let dataString = this.navParams.get('return');
+    let dataString = this.navParams.get("return");
     try {
       this.data = JSON.parse(dataString);
       this.returnData = true;
@@ -32,7 +33,7 @@ export class LoginPage {
       this.returnData = false;
     }
     this.userRoles = this.rolesService.userRoles;
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
+    this.rolesService.getUserRolesPromise().then(userRoles => {
       this.userRoles = userRoles;
       this.checkPageReturn();
     });
@@ -52,6 +53,7 @@ export class LoginPage {
   }
 
   hasAccess() {
+    console.log("check if hasAccess");
     if (this.data && this.data.roles) {
       for (let role of this.data.roles) {
         if (!this.userRoles[role]) {
@@ -63,11 +65,10 @@ export class LoginPage {
   }
 
   login() {
-    this.keycloak.login();
+    this.authService.login();
   }
 
   logout() {
-    this.keycloak.logout();
+    this.authService.logout();
   }
-
 }
