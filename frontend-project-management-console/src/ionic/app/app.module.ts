@@ -49,7 +49,7 @@ import { MyApp } from "./app.component";
     {
       provide: KeycloakHttp,
       useFactory: keycloakHttpFactory,
-      deps: [XHRBackend, RequestOptions, KeycloakService]
+      deps: [XHRBackend, RequestOptions, AuthService]
     }
   ]
 })
