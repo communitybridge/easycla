@@ -26,12 +26,14 @@ from cla.utils import get_supported_repository_providers, \
 # # Session Middleware
 # hug.API('cla/routes').http.add_middleware(get_session_middleware())
 
-# # CORS Middleware
-# @hug.response_middleware()
-# def process_data(request, response, resource):
-#     response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
-#     response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-#     response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+# CORS Middleware
+@hug.response_middleware()
+def process_data(request, response, resource):
+    # response.set_header('Access-Control-Allow-Origin', cla.conf['ALLOW_ORIGIN'])
+    response.set_header('Access-Control-Allow-Origin',  '*')
+    response.set_header('Access-Control-Allow-Credentials',  'true')
+    response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
 # Here we comment out the custom 404. Make it back to Hug default 404 behaviour
 # Custom 404.
