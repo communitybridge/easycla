@@ -62,7 +62,8 @@ export class ProjectClaPage {
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService
-      .getProjectsByExternalId(this.projectId)
+      // .getProjectsByExternalId(this.projectId)
+      .getProjects()
       .subscribe(projects => {
         console.log("claProjects");
         console.log(projects);
