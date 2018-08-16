@@ -25,7 +25,7 @@ export class RolesService {
       isStaffDirect: false,
       isDirectorDirect: false,
       isExec: false,
-      isAdmin: false
+      isAdmin: true
     };
     this.userRoles = this.userRoleDefaults;
   }
