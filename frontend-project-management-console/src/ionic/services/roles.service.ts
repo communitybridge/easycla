@@ -21,10 +21,10 @@ export class RolesService {
       isAuthenticated: this.authService.isAuthenticated(),
       isPmcUser: true,
       isStaffInc: true,
-      isDirectorInc: false,
-      isStaffDirect: false,
-      isDirectorDirect: false,
-      isExec: false,
+      isDirectorInc: true,
+      isStaffDirect: true,
+      isDirectorDirect: true,
+      isExec: true,
       isAdmin: true
     };
     this.userRoles = this.userRoleDefaults;
