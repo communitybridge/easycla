@@ -1,0 +1,2 @@
+-# Don't put secrets into this file	
+-profile: lf-cla # Used for setting the AWS Profile with serverless.
