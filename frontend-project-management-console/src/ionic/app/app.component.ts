@@ -104,26 +104,26 @@ export class MyApp {
         access: this.userRoles.isPmcUser,
         component: "AllProjectsPage"
       },
-      {
-        title: "Member Companies",
-        access: this.userRoles.isPmcUser,
-        component: "AllMembersPage"
-      },
-      {
-        title: "All Invoices Status",
-        access: this.userRoles.isPmcUser,
-        component: "AllInvoicesPage"
-      },
-      {
-        title: "All Projects Logos",
-        access: this.userRoles.isPmcUser,
-        component: "AllProjectsLogosPage"
-      },
-      {
-        title: "Activity Log",
-        access: this.userRoles.isAdmin,
-        component: "ActivityLogPage"
-      },
+      // {
+      //   title: "Member Companies",
+      //   access: this.userRoles.isPmcUser,
+      //   component: "AllMembersPage"
+      // },
+      // {
+      //   title: "All Invoices Status",
+      //   access: this.userRoles.isPmcUser,
+      //   component: "AllInvoicesPage"
+      // },
+      // {
+      //   title: "All Projects Logos",
+      //   access: this.userRoles.isPmcUser,
+      //   component: "AllProjectsLogosPage"
+      // },
+      // {
+      //   title: "Activity Log",
+      //   access: this.userRoles.isAdmin,
+      //   component: "ActivityLogPage"
+      // },
       {
         title: "Sign Out",
         access: this.userRoles.isAuthenticated,
