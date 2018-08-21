@@ -70,5 +70,6 @@ export class LoginPage {
 
   logout() {
     this.authService.logout();
+    this.userRoles.isAuthenticated = false;
   }
 }
