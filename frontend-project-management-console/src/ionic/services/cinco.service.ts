@@ -53,7 +53,7 @@ export class CincoService {
 
   hyperledger = {
     id: "2",
-    name: "Mock hyperledger project",
+    name: "Mock Hyperledger project",
     description: "This is a mock hyperledger project description.",
     managers: "Mock managers.",
     members: [],

@@ -78,7 +78,7 @@ export class AllProjectsPage {
   }
 
   async ngOnInit() {
-    this.getIndustries();
+    // this.getIndustries();
     // this.getCurrentUser();
     this.getAllProjects();
   }
@@ -133,6 +133,12 @@ export class AllProjectsPage {
 
   viewProject(projectId) {
     this.navCtrl.setRoot("ProjectPage", {
+      projectId: projectId
+    });
+  }
+
+  viewProjectCLA(projectId) {
+    this.navCtrl.setRoot("ProjectClaPage", {
       projectId: projectId
     });
   }
