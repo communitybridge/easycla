@@ -33,6 +33,10 @@ coverage
 # node-waf configuration
 .lock-wscript
 
+
+# Auth0 client id/domain
+frontend-project-management-console/src/ionic/services/auth0-variables.ts
+
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 cla-frontend-console/src/build/Release
 cla-frontend-corporate-console/src/build/Release
