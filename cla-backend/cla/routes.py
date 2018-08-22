@@ -1140,7 +1140,7 @@ def github_oauth2_callback(code, state, request):
     """
     return cla.controllers.github.user_oauth2_callback(code, state, request)
 
-@hug.post('/github/installation', versions=1)
+@hug.post('/github/installation', versions=2)
 def github_app_installation(body):
     """
     POST: /github/installation
@@ -1152,7 +1152,7 @@ def github_app_installation(body):
     return cla.controllers.github.user_authorization_callback(body)
 
 
-@hug.post('/github/activity', versions=1)
+@hug.post('/github/activity', versions=2)
 def github_app_activity(body, request, response):
     """
     POST: /github/activity
