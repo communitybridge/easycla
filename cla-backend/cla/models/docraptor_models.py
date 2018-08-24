@@ -3,6 +3,7 @@ DocRaptor PDF generator.
 """
 
 import docraptor
+import os
 from cla.models.pdf_service_interface import PDFService
 
 class DocRaptor(PDFService):
@@ -15,7 +16,7 @@ class DocRaptor(PDFService):
         self.javascript = False
 
     def initialize(self, config):
-        self.api_key = "zIHdSVf0zOh9bQPBGxo"
+        self.api_key = os.environ['DOCRAPTOR_API_KEY']
         docraptor.configuration.username = self.api_key
         self.debug_mode = True
         docraptor.configuration.debug = self.debug_mode
