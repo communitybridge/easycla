@@ -74,6 +74,10 @@ docker-compose.yml
 __pycache__
 
 # Ionic Build Files
+cla-frontend-console/src/ionic/services/constants.ts
+cla-frontend-corporate-console/src/ionic/services/constants.ts
+frontend-project-management-console/src/ionic/services/constants.ts
+
 cla-frontend-console/src/www
 cla-frontend-corporate-console/src/www
 frontend-project-management-console/src/www
