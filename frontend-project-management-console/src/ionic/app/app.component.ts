@@ -14,6 +14,7 @@ import { CINCO_API_URL } from "../services/constants";
 import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
+import { ConfigService } from "../services/config.service";
 
 @Component({
   templateUrl: "app.html"
@@ -45,7 +46,8 @@ export class MyApp {
     public claService: ClaService,
     public s3service: S3Service,
     public httpClient: HttpClient,
-    public authService: AuthService
+    public authService: AuthService,
+    public configService: ConfigService
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -57,7 +59,7 @@ export class MyApp {
     let kcHttpClient = new HttpClient(keycloakHttp);
 
     // set authd services to use kcHttpClient
-    this.claService.setApiUrl(CLA_API_URL);
+    this.claService.setApiUrl(configService.CLA_API_URL);
     this.claService.setHttp(kcHttpClient);
 
     this.cincoService.setApiUrl(CINCO_API_URL);
