@@ -78,13 +78,13 @@ export class AllProjectsPage {
   }
 
   async ngOnInit() {
-    this.getIndustries();
+    // this.getIndustries();
     // this.getCurrentUser();
     this.getAllProjects();
   }
 
   getAllProjects() {
-    this.cincoService.getAllProjects().subscribe(response => {
+    this.cincoService.getAllMockProjects().subscribe(response => {
       this.allProjects = response;
       for (let eachProject of this.allProjects) {
         // After uploading a logo, Cinco will provide same name,
@@ -133,6 +133,12 @@ export class AllProjectsPage {
 
   viewProject(projectId) {
     this.navCtrl.setRoot("ProjectPage", {
+      projectId: projectId
+    });
+  }
+
+  viewProjectCLA(projectId) {
+    this.navCtrl.setRoot("ProjectClaPage", {
       projectId: projectId
     });
   }
