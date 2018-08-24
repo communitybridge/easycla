@@ -12,6 +12,10 @@ export class RolesService {
   public getData: any;
   private rolesFetched: boolean;
 
+  private LF_CUSTOM_CLAIM = "https://sso.linuxfoundation.org/claims/roles";
+  private CLA_PROJECT_ADMIN = "cla-system-admin";
+  private projectSet = new Set(["cla-admin-project-mvp"]); // Here we may need to generate this array from Salesforce API ??
+
   constructor(
     private keycloak: KeycloakService,
     private authService: AuthService
@@ -48,38 +52,19 @@ export class RolesService {
           return this.authService.parseIdToken(token);
         })
         .then(tokenParsed => {
-          if (tokenParsed && tokenParsed.roles) {
+          if (tokenParsed && tokenParsed[this.LF_CUSTOM_CLAIM]) {
+            let customRules = tokenParsed[this.LF_CUSTOM_CLAIM];
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
-              isPmcUser: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "PMC_LOGIN"
-              ),
-              isStaffInc: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_STAFF_INC"
-              ),
-              isDirectorInc: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_DIRECTOR_INC"
-              ),
-              isStaffDirect: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_STAFF_DIRECT"
-              ),
-              isDirectorDirect: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_DIRECTOR_DIRECT"
-              ),
-              isExec: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_EXEC"
-              ),
-              isAdmin: this.isInArray(
-                tokenParsed.realm_access.roles,
-                "STAFF_SUPER_ADMIN"
-              )
+              isPmcUser: this.isInProjectSet(customRules, this.projectSet),
+              isStaffInc: false,
+              isDirectorInc: false,
+              isStaffDirect: false,
+              isDirectorDirect: false,
+              isExec: false,
+              isAdmin: this.isInArray(customRules, this.CLA_PROJECT_ADMIN)
             };
+            console.log(this.userRoles);
             return this.userRoles;
           }
           return this.userRoleDefaults;
@@ -96,6 +81,15 @@ export class RolesService {
   private isInArray(roles, role) {
     for (let i = 0; i < roles.length; i++) {
       if (roles[i].toLowerCase() === role.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private isInProjectSet(roles, projectSet) {
+    for (let i = 0; i < roles.length; i++) {
+      if (projectSet.has(roles[i])) {
         return true;
       }
     }
