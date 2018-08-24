@@ -135,10 +135,6 @@ cla-frontend-console/src/ionic/assets/keycloak.json
 cla-frontend-corporate-console/src/ionic/assets/keycloak.json
 frontend-project-management-console/src/ionic/assets/keycloak.json
 
-cla-frontend-console/src/ionic/services/constants.ts
-cla-frontend-corporate-console/src/ionic/services/constants.ts
-frontend-project-management-console/src/ionic/services/constants.ts
-
 # Terraform
 .lf/
 cla-backend/ci-drone/.terraform
@@ -146,11 +142,6 @@ cla-backend/ci-drone/terraform.tfvars
 cla-backend/ci-drone/terraform.tfstate
 cla-backend/ci-drone/terraform.tfstate.backup
 cla-backend/ci-drone/backend.auto.tfvars
-
-
-cla-frontend-console/src/ionic/services/constants.ts
-cla-frontend-corporate-console/src/ionic/services/constants.ts
-frontend-project-management-console/src/ionic/services/constants.ts
 
 cla-frontend-console/src/ionic/assets/keycloak.json
 cla-frontend-corporate-console/src/ionic/assets/keycloak.json
