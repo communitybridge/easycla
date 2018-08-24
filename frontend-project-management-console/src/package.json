@@ -60,7 +60,8 @@
   ],
   "config": {
     "ionic_purge_decorators": false,
-    "ionic_src_dir": "ionic"
+    "ionic_src_dir": "ionic",
+    "ionic_webpack": "./config/webpack.config.js"
   },
   "description": "project-management-console"
 }
