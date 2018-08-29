@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "license": "UNLICENSED",
   "scripts": {
-    "deploy": "./scripts/deploy.sh"
+    "deploy": "./scripts/deploy.sh",
+    "sls": "../node_modules/.bin/serverless"
   },
   "devDependencies": {
     "serverless-finch": "^2.3.2"
