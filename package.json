@@ -5,5 +5,8 @@
   "scripts": {
     "install-backend": "./scripts/install-backend.sh",
     "install-aws-profile": "./scripts/install-aws-profile.sh"
+  },
+  "dependencies": {
+    "serverless-finch": "^2.3.2"
   }
 }
