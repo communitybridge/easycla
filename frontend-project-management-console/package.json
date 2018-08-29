@@ -1,0 +1,14 @@
+{
+  "name": "frontend-project-management-console",
+  "version": "0.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "deploy": "./scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "serverless-finch": "^2.3.2"
+  },
+  "dependencies": {
+    "ionic": "^4.1.1"
+  }
+}
