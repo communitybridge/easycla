@@ -3,7 +3,7 @@ import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
 
-import { ANALYTICS_API_URL } from './constants'; // TODO: Make sure ANALYTICS_API_URL corresponds to ANALYTICS URL
+declare const webpackGlobalVars: any;
 
 @Injectable()
 export class AnalyticsService {
@@ -12,7 +12,7 @@ export class AnalyticsService {
   apiVersion: string;
 
   constructor(public http: Http) {
-    this.analyticsApiUrl = ANALYTICS_API_URL;
+    this.analyticsApiUrl = webpackGlobalVars.ANALYTICS_API_URL;
     this.apiVersion = '/v1';
   }
 

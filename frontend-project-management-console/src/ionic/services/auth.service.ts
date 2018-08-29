@@ -1,17 +1,17 @@
 import { Injectable } from "@angular/core";
-import { AUTH_CONFIG } from "./auth0-variables";
 import * as auth0 from "auth0-js";
 import * as jwt_decode from "jwt-decode";
 
 (window as any).global = window;
+declare const webpackGlobalVars: any;
 
 @Injectable()
 export class AuthService {
   auth0 = new auth0.WebAuth({
-    clientID: AUTH_CONFIG.clientID,
-    domain: AUTH_CONFIG.domain,
+    clientID: webpackGlobalVars.AUTH0_CLIENT_ID,
+    domain: webpackGlobalVars.AUTH0_DOMAIN,
     responseType: "token id_token",
-    redirectUri: AUTH_CONFIG.callbackURL
+    redirectUri: "http://localhost:8100/#/projects"
   });
 
   // constructor(public router: Router) {} Right now haven't figure out how ionic does routing
