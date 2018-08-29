@@ -40,14 +40,14 @@ yarn build
 cd ../
 
 echo 'Deploying Cloudfront and lambda@edge'
-sls deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
+yarn sls deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
 
 echo 'Deploying Frontend Bucket'
-sls client deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}" --no-confirm --no-policy-change --no-config-change
+yarn sls client deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}" --no-confirm --no-policy-change --no-config-change
 
 if [ ${CLOUDFRONT} = true ]; then
   echo 'Invalidating Cloudfront'
-  sls invalidate --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
+  yarn sls invalidate --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
 fi
 
 exit 0
