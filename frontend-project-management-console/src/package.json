@@ -2,14 +2,20 @@
   "name": "project-management-console",
   "author": "",
   "private": true,
-  "os": ["linux", "darwin"],
+  "os": [
+    "linux",
+    "darwin"
+  ],
   "scripts": {
     "clean": "./node_modules/.bin/ionic-app-scripts clean",
     "build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:build": "./node_modules/.bin/ionic-app-scripts build",
     "ionic:serve": "./node_modules/.bin/ionic-app-scripts serve",
-    "ionic:watch":
-      "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic"
+    "ionic:watch": "./node_modules/.bin/ionic-app-scripts watch /srv/app/src/ionic",
+    "build:staging": "STAGE_ENV=staging ./node_modules/.bin/ionic-app-scripts build",
+    "build:prod": "STAGE_ENV=prod ./node_modules/.bin/ionic-app-scripts build --prod",
+    "serve:staging": "STAGE_ENV=staging ./node_modules/.bin/ionic-app-scripts serve",
+    "serve:prod": "STAGE_ENV=prod ./node_modules/.bin/ionic-app-scripts serve --prod"
   },
   "dependencies": {
     "@angular/common": "5.0.3",
@@ -26,17 +32,18 @@
     "@ionic/storage": "2.1.3",
     "@types/node": "^8.0.17",
     "angular-svg-round-progressbar": "^1.2.1",
+    "auth0-js": "^9.4.1",
+    "aws-sdk": "^2.304.0",
     "chart.js": "^2.5.0",
     "google-libphonenumber": "^2.0.18",
     "ionic-angular": "3.9.2",
     "ionicons": "3.0.0",
+    "jwt-decode": "2.2.0",
     "ng2-google-charts": "^3.3.0",
     "rxjs": "5.5.2",
     "sw-toolbox": "3.6.0",
     "timsort": "^0.3.0",
-    "zone.js": "0.8.18",
-    "auth0-js": "^9.4.1",
-    "jwt-decode": "2.2.0"
+    "zone.js": "0.8.18"
   },
   "devDependencies": {
     "@ionic/app-scripts": "3.1.4",
