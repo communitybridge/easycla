@@ -9,8 +9,6 @@ import { KeycloakHttp } from "../services/keycloak/keycloak.http";
 import { RolesService } from "../services/roles.service";
 import { S3Service } from "../services/s3.service";
 import { ClaService } from "../services/cla.service";
-import { CLA_API_URL } from "../services/constants";
-import { CINCO_API_URL } from "../services/constants";
 import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
