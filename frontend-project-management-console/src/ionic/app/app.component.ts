@@ -9,11 +9,11 @@ import { KeycloakHttp } from "../services/keycloak/keycloak.http";
 import { RolesService } from "../services/roles.service";
 import { S3Service } from "../services/s3.service";
 import { ClaService } from "../services/cla.service";
-import { CLA_API_URL } from "../services/constants";
-import { CINCO_API_URL } from "../services/constants";
 import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
+
+declare const webpackGlobalVars: any;
 
 @Component({
   templateUrl: "app.html"
@@ -57,10 +57,10 @@ export class MyApp {
     let kcHttpClient = new HttpClient(keycloakHttp);
 
     // set authd services to use kcHttpClient
-    this.claService.setApiUrl(CLA_API_URL);
+    this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
     this.claService.setHttp(kcHttpClient);
 
-    this.cincoService.setApiUrl(CINCO_API_URL);
+    this.cincoService.setApiUrl(webpackGlobalVars.CINCO_API_URL);
     this.cincoService.setHttp(kcHttpClient);
 
     this.authService.handleAuthentication();
