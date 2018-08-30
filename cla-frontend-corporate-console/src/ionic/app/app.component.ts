@@ -7,8 +7,9 @@ import { CincoService } from "../services/cinco.service";
 import { KeycloakService } from "../services/keycloak/keycloak.service";
 import { RolesService } from "../services/roles.service";
 import { ClaService } from "../services/cla.service";
-import { CLA_API_URL } from "../services/constants";
 import { HttpClient } from "../services/http-client";
+
+declare const webpackGlobalVars: any;
 
 @Component({
   templateUrl: "app.html"
@@ -41,7 +42,7 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
-    this.claService.setApiUrl(CLA_API_URL);
+    this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
     this.claService.setHttp(httpClient);
   }
 
