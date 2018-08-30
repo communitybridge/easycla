@@ -1,6 +1,5 @@
 const { dev, prod} = require('@ionic/app-scripts/config/webpack.config');
 const webpack = require('webpack');
-const RetrieveSSMValues = require('./scripts/read-ssm');
 const RetrieveLocalConfigValues = require('./scripts/read-local');
 const configVarArray = ['auth0-clientId', 'auth0-domain', 'cinco-api-url', 'cla-api-url', 'analytics-api-url'];
 const stageEnv = process.env.STAGE_ENV;
@@ -10,14 +9,11 @@ module.exports = async env => {
   const shouldReadFromSSM = (stageEnv !== undefined && stageEnv === 'staging') || (stageEnv !== undefined && stageEnv === 'prod');
   let configMap = {};
 
-  console.log(shouldReadFromSSM);
-  
+  // Here in the future, we maybe want to use Enum class to replace hard-code file name as indicator.
   if (shouldReadFromSSM){
-    const profile = 'lf-cla';
-    const region = 'us-east-1';
-    configMap = await RetrieveSSMValues(configVarArray, stageEnv, region, profile);
+    configMap = await RetrieveLocalConfigValues(configVarArray, 'config-ssm.json');
   } else {
-    configMap = await RetrieveLocalConfigValues(configVarArray);
+    configMap = await RetrieveLocalConfigValues(configVarArray, 'config-local.json');
   }
 
   const claConfigPlugin = new webpack.DefinePlugin({
