@@ -1,10 +1,9 @@
-const localConfig = require('../config-local.json');
-
 /**
  * @param {string[]} variables
  * @returns {{ [key:string]: string }}
  */
-async function retrieveLocalConfigValues(variables) {
+async function retrieveLocalConfigValues(variables, fileName) {
+  const localConfig = require(`../${fileName}`);
   const parameterMap = {};
   variables.forEach( variable => {
     value = localConfig[variable];
