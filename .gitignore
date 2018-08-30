@@ -78,6 +78,11 @@ cla-frontend-console/src/ionic/services/constants.ts
 cla-frontend-corporate-console/src/ionic/services/constants.ts
 frontend-project-management-console/src/ionic/services/constants.ts
 
+cla-frontend-console/src/config/config-local.json
+cla-frontend-console/src/config/config-qa.json
+cla-frontend-console/src/config/config-staging.json
+cla-frontend-console/src/config/config-prod.json
+
 cla-frontend-console/src/www
 cla-frontend-corporate-console/src/www
 frontend-project-management-console/src/www
