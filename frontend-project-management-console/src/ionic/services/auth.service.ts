@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import * as auth0 from "auth0-js";
 import * as jwt_decode from "jwt-decode";
+import { getAuthURLFromWindow } from "./auth.utils";
 
 (window as any).global = window;
 declare const webpackGlobalVars: any;
@@ -11,7 +12,7 @@ export class AuthService {
     clientID: webpackGlobalVars.AUTH0_CLIENT_ID,
     domain: webpackGlobalVars.AUTH0_DOMAIN,
     responseType: "token id_token",
-    redirectUri: "http://localhost:8100/#/projects"
+    redirectUri: getAuthURLFromWindow()
   });
 
   // constructor(public router: Router) {} Right now haven't figure out how ionic does routing
