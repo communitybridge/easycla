@@ -6,7 +6,7 @@ const stageEnv = process.env.STAGE_ENV;
 
 module.exports = async env => {
   // Here we hard code stage name, it's not perfect since if a new stage created/modified, we also need to change it.
-  const shouldReadFromSSM = (stageEnv !== undefined && stageEnv === 'staging') || (stageEnv !== undefined && stageEnv === 'prod');
+  const shouldReadFromSSM = (stageEnv !== undefined && stageEnv === 'staging') || (stageEnv !== undefined && stageEnv === 'prod') || (stageEnv !== undefined && stageEnv === 'qa');
   let configMap = {};
 
   // Here in the future, we maybe want to use Enum class to replace hard-code file name as indicator.
