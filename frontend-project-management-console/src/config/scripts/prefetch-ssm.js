@@ -9,7 +9,7 @@ async function prefetchSSM () {
   let result = {};
   console.log('Start to fetch SSM values...');
   result = await RetrieveSSMValues(configVarArray, stageEnv, region, profile);
-  fs.writeFile ("./config/config-ssm.json", JSON.stringify(result), function(err) {
+  fs.writeFile (`./config/config-${stageEnv}.json`, JSON.stringify(result), function(err) {
     if (err) throw new Error(`Couldn't save SSM paramters to disk with error ${err}`);
     console.log('Fetching completed...');});
 }
