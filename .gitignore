@@ -75,7 +75,8 @@ __pycache__
 
 # Ionic Build Files
 frontend-project-management-console/src/config/config-local.json
-frontend-project-management-console/src/config/config-ssm.json
+frontend-project-management-console/src/config/config-staging.json
+frontend-project-management-console/src/config/config-prod.json
 
 cla-frontend-console/src/www
 cla-frontend-corporate-console/src/www
