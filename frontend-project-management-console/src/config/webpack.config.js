@@ -11,7 +11,7 @@ module.exports = async env => {
 
   // Here in the future, we maybe want to use Enum class to replace hard-code file name as indicator.
   if (shouldReadFromSSM){
-    configMap = await RetrieveLocalConfigValues(configVarArray, 'config-ssm.json');
+    configMap = await RetrieveLocalConfigValues(configVarArray, `config-${stageEnv}.json`);
   } else {
     configMap = await RetrieveLocalConfigValues(configVarArray, 'config-local.json');
   }
