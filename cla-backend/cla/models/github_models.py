@@ -2,6 +2,7 @@
 Holds the GitHub repository service.
 """
 
+import os
 import uuid
 import falcon
 import urllib
@@ -120,7 +121,7 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         #origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
-        return self._get_authorization_url_and_state(cla.conf['GITHUB_OAUTH_CLIENT_ID'],
+        return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
                                                      cla.conf['GITHUB_OAUTH_CALLBACK_URL'],
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
@@ -153,8 +154,8 @@ class GitHub(repository_service_interface.RepositoryService):
         origin_url = session.get('github_origin_url', None)
         state = session.get('github_oauth2_state')
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
-        client_id = cla.conf['GITHUB_OAUTH_CLIENT_ID']
-        client_secret = cla.conf['GITHUB_OAUTH_SECRET']
+        client_id = os.environ['GH_OAUTH_CLIENT_ID']
+        client_secret = os.environ['GH_OAUTH_SECRET']
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
         cla.log.info('OAuth2 token received for state %s: %s', state, token)
         session['github_oauth2_token'] = token
@@ -302,7 +303,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :type request: Request
         """
         session = self._get_request_session(request)
-        github_user = self.get_user_data(session, cla.conf['GITHUB_OAUTH_CLIENT_ID'])
+        github_user = self.get_user_data(session, os.environ['GH_OAUTH_CLIENT_ID'])
         if 'error' in github_user:
             # Could not get GitHub user data - maybe user revoked CLA app permissions?
             session = self._get_request_session(request)
@@ -311,7 +312,7 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.warning('Deleted OAuth2 session data - retrying token exchange next time')
             raise falcon.HTTPError('400 Bad Request', 'github_oauth2_token',
                                    'Token permissions have been rejected, please try again')
-        emails = self.get_user_emails(session, cla.conf['GITHUB_OAUTH_CLIENT_ID'])
+        emails = self.get_user_emails(session, os.environ['GH_OAUTH_CLIENT_ID'])
         if len(emails) < 1:
             cla.log.warning('GitHub user has no verified email address: %s (%s)',
                             github_user['name'], github_user['login'])
