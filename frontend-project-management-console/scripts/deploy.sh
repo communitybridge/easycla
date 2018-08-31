@@ -31,7 +31,7 @@ fi
 
 echo 'Building Distribution'
 cd src
-../node_modules/.bin/ionic build
+npm run build:${STAGE}
 cd ../
 
 echo 'Building Edge Function'
