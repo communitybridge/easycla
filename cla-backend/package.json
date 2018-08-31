@@ -3,10 +3,9 @@
   "version": "0.0.0",
   "license": "UNLICENSED",
   "devDependencies": {
-    "serverless": "1.30.0",
     "serverless-wsgi": "^1.5.0"
   },
   "scripts": {
-      "sls": "./node_modules/.bin/serverless"
+      "sls": "../node_modules/.bin/serverless"
   }
 }

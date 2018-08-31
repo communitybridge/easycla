@@ -1,0 +1,13 @@
+node_modules
+dist
+.webpack
+.serverless
+coverage
+
+.idea
+/.nyc_output
+node_modules
+dist
+.webpack
+coverage
+
