@@ -10,6 +10,6 @@
     "serverless-finch": "^2.3.2"
   },
   "dependencies": {
-    "ionic": "^4.1.1"
+    "ionic": "^3.20.0"
   }
 }
