@@ -3,7 +3,7 @@ import { HttpClient } from './http-client';
 
 import 'rxjs/Rx';
 
-import { CINCO_API_URL } from './constants'; // TODO: Make sure CINCO_API_URL maps to CINCO URL
+declare const webpackGlobalVars: any;
 
 @Injectable()
 export class CincoService {
@@ -11,7 +11,7 @@ export class CincoService {
   cincoApiUrl: String;
 
   constructor(public http: HttpClient) {
-    this.cincoApiUrl = CINCO_API_URL;
+    this.cincoApiUrl = webpackGlobalVars.CINCO_API_URL;
   }
 
   //////////////////////////////////////////////////////////////////////////////
