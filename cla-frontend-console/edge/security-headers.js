@@ -29,7 +29,10 @@ function generateCSP(env, isDevServer) {
   'https://***REMOVED***.auth0.com/',
   'https://linuxfoundation-dev.auth0.com/',
   'https://linuxfoundation-staging.auth0.com/',
-  'https://sso.linuxfoundation.org/'
+  'https://sso.linuxfoundation.org/',
+  'https://pd9alkfok2.execute-api.us-east-1.amazonaws.com/qa/',
+  'https://wbkv5r3eyf.execute-api.us-east-1.amazonaws.com/staging/',
+  'https://ckr858t6zb.execute-api.us-east-1.amazonaws.com/prod/'
 ];
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
   let styleSources = [SELF, UNSAFE_INLINE];
