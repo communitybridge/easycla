@@ -8,11 +8,6 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
  * Ionic pages and navigation.
  */
 
- @IonicPage({
-   name: "AuthPage",
-   segment: "auth"
- })
-
  @Component({
   selector: 'page-auth',
   templateUrl: 'auth.html',
