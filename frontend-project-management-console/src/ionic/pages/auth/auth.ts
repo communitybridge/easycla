@@ -19,16 +19,13 @@ export class AuthPage {
   userRoles: any;
 
   constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {
-    this.userRoles = this.rolesService.userRoles;
   }
 
   ionViewDidEnter() {
-    console.log('ionViewDidEnter ProjectsPage');
+    console.log('ionViewDidEnter AuthPage');
 
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
-        this.userRoles = userRoles; // It's painful to maintain a global userRoles, can't image it's not a pure function.
-
         if(this.hasAccess(userRoles)) {
           this.navCtrl.setRoot("AllProjectsPage");
         } else {
