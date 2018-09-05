@@ -33,7 +33,7 @@ export function Restricted(restrictions: any) {
             // }
             // let navString = JSON.stringify(navObject);
             // window.location.hash = '#/login/' + navString;
-            window.location.hash = '#/login/';
+            window.location.hash = '#/login';
             window.location.reload(true);
             return false;
           }
