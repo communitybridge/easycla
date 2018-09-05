@@ -28,9 +28,7 @@ export class AuthService {
     this.auth0.parseHash((err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
         this.setSession(authResult);
-        // Here we will redirect user to main page.
       } else if (err) {
-        // here we will redirect user to login page or error page??
         console.log(err);
         alert(
           `Authentication Error: ${

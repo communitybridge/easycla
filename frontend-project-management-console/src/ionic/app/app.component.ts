@@ -12,6 +12,7 @@ import { ClaService } from "../services/cla.service";
 import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
+import { AuthPage } from "../pages/auth/auth";
 
 declare const webpackGlobalVars: any;
 
@@ -21,7 +22,7 @@ declare const webpackGlobalVars: any;
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = "AllProjectsPage";
+  rootPage: any = AuthPage;
 
   userRoles: any;
   pages: Array<{

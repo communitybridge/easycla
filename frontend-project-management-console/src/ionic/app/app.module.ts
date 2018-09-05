@@ -22,13 +22,14 @@ import { SortService } from "../services/sort.service";
 import { FilterService } from "../services/filter.service";
 import { ClaService } from "../services/cla.service";
 import { AuthService } from "../services/auth.service";
+import { AuthPage } from "../pages/auth/auth";
 import { MyApp } from "./app.component";
 
 @NgModule({
-  declarations: [MyApp],
+  declarations: [MyApp, AuthPage],
   imports: [BrowserModule, HttpModule, IonicModule.forRoot(MyApp)],
   bootstrap: [IonicApp],
-  entryComponents: [MyApp],
+  entryComponents: [MyApp, AuthPage],
   providers: [
     StatusBar,
     SplashScreen,
