@@ -16,7 +16,10 @@ import { RolesService } from "../../services/roles.service";
 })
 export class AuthPage {
 
+  userRoles: any;
+
   constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {
+    this.userRoles = this.rolesService.userRoles;
   }
 
   ionViewDidEnter() {
@@ -24,13 +27,18 @@ export class AuthPage {
 
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
+        this.userRoles = userRoles; // It's painful to maintain a global userRoles, can't image it's not a pure function.
+
         if(this.hasAccess(userRoles)) {
           this.navCtrl.setRoot("AllProjectsPage");
         } else {
           this.navCtrl.setRoot("LoginPage");
         }
       });
-    }, 2000);
+    }, 2000); 
+    // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
+    // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack. 
+    // Refactoring to Ionic 4.0+ with default Ng Route Module may resolve this problem but it's over work balance.
   }
 
   private hasAccess(userRoles: any): boolean {
