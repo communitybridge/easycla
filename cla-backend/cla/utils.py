@@ -1002,4 +1002,4 @@ def user_whitelisted(user, company):
     return False
 
 def get_oauth_client():
-    return OAuth2Session(cla.conf['GITHUB_OAUTH_CLIENT_ID'])
+    return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])
