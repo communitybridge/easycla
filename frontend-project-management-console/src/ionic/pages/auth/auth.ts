@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { NavController } from 'ionic-angular';
+import { AuthService } from '../../services/auth.service';
+import { RolesService } from "../../services/roles.service";
 
 /**
  * Generated class for the AuthPage page.
@@ -14,11 +16,25 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
 })
 export class AuthPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {
   }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad AuthPage');
+  ionViewDidEnter() {
+    console.log('ionViewDidEnter ProjectsPage');
+
+    setTimeout(() => {
+      this.rolesService.getUserRolesPromise().then((userRoles) => {
+        if(this.hasAccess(userRoles)) {
+          this.navCtrl.setRoot("AllProjectsPage");
+        } else {
+          this.navCtrl.setRoot("LoginPage");
+        }
+      });
+    }, 2000);
+  }
+
+  private hasAccess(userRoles: any): boolean {
+    return userRoles.isAuthenticated && userRoles.isPmcUser;
   }
 
 }
