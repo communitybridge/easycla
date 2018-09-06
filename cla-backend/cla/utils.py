@@ -19,18 +19,18 @@ def get_cla_path():
     cla_root_dir = os.path.dirname(cla_folder_dir)
     return cla_root_dir
 
-# def get_session_middleware():
-#     """Prepares the hug middleware to manage key-value session data."""
-#     store = get_key_value_store_service()
-#     return SessionMiddleware(store, context_name='session', cookie_name='cla-sid',
-#                              cookie_max_age=300, cookie_domain=None, cookie_path='/',
-#                              cookie_secure=False)
-
 def get_session_middleware():
     """Prepares the hug middleware to manage key-value session data."""
-    return SessionMiddleware(Store(), context_name='session', cookie_name='cla-sid',
+    store = get_key_value_store_service()
+    return SessionMiddleware(store, context_name='session', cookie_name='cla-sid',
                              cookie_max_age=300, cookie_domain=None, cookie_path='/',
                              cookie_secure=False)
+
+# def get_session_middleware():
+#     """Prepares the hug middleware to manage key-value session data."""
+#     return SessionMiddleware(Store(), context_name='session', cookie_name='cla-sid',
+#                              cookie_max_age=300, cookie_domain=None, cookie_path='/',
+#                              cookie_secure=False)
 
 def create_database(conf=None):
     """
