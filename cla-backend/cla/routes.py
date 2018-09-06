@@ -23,8 +23,8 @@ from cla.utils import get_supported_repository_providers, \
 # Middleware
 #
 
-# # Session Middleware
-# hug.API('cla/routes').http.add_middleware(get_session_middleware())
+# Session Middleware
+hug.API('cla/routes').http.add_middleware(get_session_middleware())
 
 # CORS Middleware
 @hug.response_middleware()
@@ -1128,7 +1128,7 @@ def delete_repository(user: cla_user, organization_name: hug.types.text):
     # staff_verify(user)
     return cla.controllers.github.delete_organization(organization_name)
 
-@hug.get('/github/installation', versions=1)
+@hug.get('/github/installation', versions=2)
 def github_oauth2_callback(code, state, request):
     """
     GET: /github/installation
