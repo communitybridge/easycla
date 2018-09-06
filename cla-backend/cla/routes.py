@@ -12,6 +12,9 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
+from hug.middleware import SessionMiddleware
+from hug.store import InMemoryStore as Store
+
 from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
@@ -24,7 +27,12 @@ from cla.utils import get_supported_repository_providers, \
 #
 
 # Session Middleware
-hug.API('cla/routes').http.add_middleware(get_session_middleware())
+# hug.API('cla/routes').http.add_middleware(get_session_middleware())
+
+
+@hug.request_middleware()
+def session_middleware(request, response):
+    request.context['session'] = {}
 
 # CORS Middleware
 @hug.response_middleware()
@@ -1005,6 +1013,8 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
 
     The endpoint that will initiate a CLA signature for the user.
     """
+    print ('Sign Request Call ->')
+    print (request.context)
     return cla.controllers.repository_service.sign_request(provider,
                                                            installation_id,
                                                            github_repository_id,
