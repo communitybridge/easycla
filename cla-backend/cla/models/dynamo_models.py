@@ -1347,7 +1347,7 @@ class StoreModel(Model):
     """
     class Meta:
         """Meta class for Store."""
-        table_name = 'cla_store'
+        table_name = 'cla-{}-store'.format(stage)
         # host = cla.conf['DATABASE_HOST']
         region = cla.conf['DYNAMO_REGION']
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
