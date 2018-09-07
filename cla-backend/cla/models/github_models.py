@@ -77,8 +77,8 @@ class GitHub(repository_service_interface.RepositoryService):
         # Not sure if we need a different token for each installation ID...
         # Here we hard code a token
         session = self._get_request_session(request)
-        token = {'access_token': 'a551ac7469340f8ddad4b0c0266bb16cf611156f', 'token_type': 'bearer', 'scope': ['user:email']}
-        session['github_oauth2_token'] = token
+        # token = {'access_token': 'a551ac7469340f8ddad4b0c0266bb16cf611156f', 'token_type': 'bearer', 'scope': ['user:email']}
+        # session['github_oauth2_token'] = token
         session['github_installation_id'] = installation_id
         session['github_repository_id'] = github_repository_id
         session['github_change_request_id'] = change_request_id
@@ -151,9 +151,9 @@ class GitHub(repository_service_interface.RepositoryService):
         print('Oauth2 redirect')
         session = self._get_request_session(request)
         print(session)
-        # if state != session.get('github_oauth2_state', None):
-        #     cla.log.warning('Invalid GitHub OAuth2 state')
-        #     raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
+        if state != session.get('github_oauth2_state', None):
+            cla.log.warning('Invalid GitHub OAuth2 state')
+            raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
         # Get session information for this request.
         cla.log.info('Attempting to fetch OAuth2 token for state %s', state)
         installation_id = session.get('github_installation_id', None)
