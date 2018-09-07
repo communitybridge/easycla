@@ -29,11 +29,6 @@ from cla.utils import get_supported_repository_providers, \
 # Session Middleware
 # hug.API('cla/routes').http.add_middleware(get_session_middleware())
 
-
-@hug.request_middleware()
-def session_middleware(request, response):
-    request.context['session'] = {}
-
 # CORS Middleware
 @hug.response_middleware()
 def process_data(request, response, resource):
@@ -58,12 +53,13 @@ def process_data(request, response, resource):
 # Health check route.
 #
 @hug.get('/health', versions=1)
-def get_health():
+def get_health(request):
     """
     GET: /health
 
     Returns a basic health check on the CLA system.
     """
+    request.context['session']['health'] = 'up'
     return {'status': 'up'}
 
 #
@@ -1206,3 +1202,6 @@ def github_get_namespace(namespace):
     Returns info on the GitHub account provided.
     """
     return cla.controllers.github.get_namespace(namespace)
+
+# Session Middleware
+__hug__.http.add_middleware(get_session_middleware())
