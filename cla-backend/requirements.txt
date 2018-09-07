@@ -13,9 +13,9 @@ nose2==0.7.2
 
 # Use custom fork until PR #109 gets merged.
 # pydocusign==1.2.0
-git+https://github.com/edouardpoitras/pydocusign.git@dev/edouardpoitras
+# git+https://github.com/edouardpoitras/pydocusign.git@dev/edouardpoitras
 
-#pydocusign==2.2
+pydocusign==2.2
 #git+https://github.com/peopledoc/pydocusign.git@2.2
 
 pygithub==1.34.0
