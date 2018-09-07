@@ -24,7 +24,7 @@ DATABASE = 'DynamoDB' #: Database type ('SQLite', 'DynamoDB', etc).
 DATABASE_HOST = 'http://localhost:8000' #: Database Host (':memory:', 'localhost', etc).
 
 # Define the key-value we are working with.
-KEYVALUE = 'DynamoDB' #: Key-value store type ('Memory', 'DynamoDB', etc).
+KEYVALUE = 'Memory' #: Key-value store type ('Memory', 'DynamoDB', etc).
 KEYVALUE_HOST = '' #: Key-value store host - '' if type is 'Memory'.
 
 # DynamoDB-specific configurations - this is applied to each table.
