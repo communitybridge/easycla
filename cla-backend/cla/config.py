@@ -28,7 +28,7 @@ KEYVALUE = 'Memory' #: Key-value store type ('Memory', 'DynamoDB', etc).
 KEYVALUE_HOST = '' #: Key-value store host - '' if type is 'Memory'.
 
 # DynamoDB-specific configurations - this is applied to each table.
-DYNAMO_REGION = 'us-west-2' #: DynamoDB AWS region.
+DYNAMO_REGION = 'us-east-1' #: DynamoDB AWS region.
 DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
 DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
 
