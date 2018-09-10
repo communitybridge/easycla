@@ -10,6 +10,7 @@ import re
 import falcon
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
+from hug.store import InMemoryStore as Store
 import cla
 
 def get_cla_path():
