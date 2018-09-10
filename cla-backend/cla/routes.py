@@ -12,6 +12,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
+
 from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
@@ -23,7 +24,7 @@ from cla.utils import get_supported_repository_providers, \
 # Middleware
 #
 
-# # Session Middleware
+# Session Middleware
 # hug.API('cla/routes').http.add_middleware(get_session_middleware())
 
 # CORS Middleware
@@ -50,12 +51,13 @@ def process_data(request, response, resource):
 # Health check route.
 #
 @hug.get('/health', versions=1)
-def get_health():
+def get_health(request):
     """
     GET: /health
 
     Returns a basic health check on the CLA system.
     """
+    request.context['session']['health'] = 'up'
     return {'status': 'up'}
 
 #
@@ -1128,7 +1130,7 @@ def delete_repository(user: cla_user, organization_name: hug.types.text):
     # staff_verify(user)
     return cla.controllers.github.delete_organization(organization_name)
 
-@hug.get('/github/installation', versions=1)
+@hug.get('/github/installation', versions=2)
 def github_oauth2_callback(code, state, request):
     """
     GET: /github/installation
@@ -1196,3 +1198,6 @@ def github_get_namespace(namespace):
     Returns info on the GitHub account provided.
     """
     return cla.controllers.github.get_namespace(namespace)
+
+# Session Middleware
+__hug__.http.add_middleware(get_session_middleware())
