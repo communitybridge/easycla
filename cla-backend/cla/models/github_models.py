@@ -75,10 +75,7 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         cla.log.info('Initiating GitHub sign request for repository %s', github_repository_id)
         # Not sure if we need a different token for each installation ID...
-        # Here we hard code a token
         session = self._get_request_session(request)
-        # token = {'access_token': 'a551ac7469340f8ddad4b0c0266bb16cf611156f', 'token_type': 'bearer', 'scope': ['user:email']}
-        # session['github_oauth2_token'] = token
         session['github_installation_id'] = installation_id
         session['github_repository_id'] = github_repository_id
         session['github_change_request_id'] = change_request_id
@@ -86,8 +83,6 @@ class GitHub(repository_service_interface.RepositoryService):
                                                            change_request_id,
                                                            installation_id)
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
-        print('Build session')
-        print(session)
         if 'github_oauth2_token' in session:
             cla.log.info('Using existing session OAuth2 token')
             return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
@@ -106,7 +101,6 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         Mockable method used to get the current user session.
         """
-        # return {} # temperarily retur empty dict to avoid error thrown. but it won't work.
         return request.context['session']
 
     def get_authorization_url_and_state(self, installation_id, github_repository_id, pull_request_number, scope):
@@ -148,9 +142,7 @@ class GitHub(repository_service_interface.RepositoryService):
         further requests and initiate the signing workflow.
         """
         cla.log.info('Handling GitHub OAuth2 redirect')
-        print('Oauth2 redirect')
         session = self._get_request_session(request)
-        print(session)
         if state != session.get('github_oauth2_state', None):
             cla.log.warning('Invalid GitHub OAuth2 state')
             raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
@@ -380,8 +372,6 @@ class GitHub(repository_service_interface.RepositoryService):
         :type client_id: string
         """
         token = session['github_oauth2_token']
-        print('Get User Data')
-        print(token)
         oauth2 = OAuth2Session(client_id, token=token)
         request = oauth2.get('https://api.github.com/user')
         github_user = request.json()
