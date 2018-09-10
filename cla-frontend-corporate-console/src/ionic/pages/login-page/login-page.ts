@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
+import { AuthService } from "../../services/auth.service";
 
 @IonicPage({
   name: 'LoginPage',
@@ -12,28 +12,13 @@ import { KeycloakService } from '../../services/keycloak/keycloak.service';
 })
 export class LoginPage {
 
-  constructor(public navCtrl: NavController, private keycloak: KeycloakService) {
-  }
-
-  ionViewWillEnter() {
-    if(this.keycloak.authenticated())
-    {
-      this.navCtrl.setRoot('CompaniesPage');
-      this.navCtrl.popToRoot();
-    }
-  }
-
-  ionViewCanLeave() {
-    return (this.keycloak.authenticated());
+  constructor(
+    public navCtrl: NavController,
+    public authService: AuthService
+  ) {
   }
 
   login() {
-    if (this.keycloak.authenticated()) {
-      this.navCtrl.setRoot('CompaniesPage');
-    }
-    else{
-      this.keycloak.login();
-    }
+    this.authService.login();
   }
-
 }
