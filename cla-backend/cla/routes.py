@@ -1007,8 +1007,6 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
 
     The endpoint that will initiate a CLA signature for the user.
     """
-    print ('Sign Request Call ->')
-    print (request.context)
     return cla.controllers.repository_service.sign_request(provider,
                                                            installation_id,
                                                            github_repository_id,
