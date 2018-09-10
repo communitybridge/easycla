@@ -16,6 +16,7 @@ import {
 } from "../services/keycloak/keycloak.http";
 import { SortService } from "../services/sort.service";
 import { ClaService } from "../services/cla.service";
+import { AuthService } from "../services/auth.service";
 
 import { MyApp } from "./app.component";
 
