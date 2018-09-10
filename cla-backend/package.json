@@ -4,7 +4,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "serverless-python-requirements": "^4.1.1",
-    "serverless-wsgi": "^1.5.0"
+    "serverless-wsgi": "^1.5.1"
   },
   "scripts": {
     "sls": "../node_modules/.bin/serverless"
