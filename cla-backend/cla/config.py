@@ -38,9 +38,9 @@ CLA_CONSOLE_ENDPOINT = 'http://d37jq4fjnidrq1.cloudfront.net' # ICLA QA
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 DOCUSIGN_ROOT_URL = 'https://demo.docusign.net/restapi/v2' #: DocuSign API root URL.
-DOCUSIGN_USERNAME = 'username' #: DocuSign username or account UUID.
-DOCUSIGN_PASSWORD = 'password' #: DocuSign password.
-DOCUSIGN_INTEGRATOR_KEY = 'key' #: DocuSign integrator key.
+DOCUSIGN_USERNAME = 'c1b49625-7634-4f17-8886-cd5b78794350' #: DocuSign username or account UUID.
+DOCUSIGN_PASSWORD = '8HEt4?J92JsecYf*zbfC' #: DocuSign password.
+DOCUSIGN_INTEGRATOR_KEY = '9db886ef-221d-497e-b29c-7189b372f613' #: DocuSign integrator key.
 
 # Repository settings.
 AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on webhook.
