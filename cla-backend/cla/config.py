@@ -15,7 +15,7 @@ LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)
 
 DEBUG = False #: Debug off in production
 
-BASE_URL = 'http://change.me' #: Base URL used for callbacks and OAuth2 redirects.
+BASE_URL = 'https://k0dcklbzoh.execute-api.us-east-1.amazonaws.com/dev-runze' #: Base URL used for callbacks and OAuth2 redirects.
 SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed' #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
@@ -24,23 +24,23 @@ DATABASE = 'DynamoDB' #: Database type ('SQLite', 'DynamoDB', etc).
 DATABASE_HOST = 'http://localhost:8000' #: Database Host (':memory:', 'localhost', etc).
 
 # Define the key-value we are working with.
-KEYVALUE = 'Memory' #: Key-value store type ('Memory', 'DynamoDB', etc).
+KEYVALUE = 'DynamoDB' #: Key-value store type ('Memory', 'DynamoDB', etc).
 KEYVALUE_HOST = '' #: Key-value store host - '' if type is 'Memory'.
 
 # DynamoDB-specific configurations - this is applied to each table.
-DYNAMO_REGION = 'us-west-2' #: DynamoDB AWS region.
+DYNAMO_REGION = 'us-east-1' #: DynamoDB AWS region.
 DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
 DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
 
 # Endpoint where users end up to start the signing workflow.
-CLA_CONSOLE_ENDPOINT = 'http://change.me'
+CLA_CONSOLE_ENDPOINT = 'http://d37jq4fjnidrq1.cloudfront.net' # ICLA QA
 
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 DOCUSIGN_ROOT_URL = 'https://demo.docusign.net/restapi/v2' #: DocuSign API root URL.
-DOCUSIGN_USERNAME = 'username' #: DocuSign username or account UUID.
-DOCUSIGN_PASSWORD = 'password' #: DocuSign password.
-DOCUSIGN_INTEGRATOR_KEY = 'key' #: DocuSign integrator key.
+DOCUSIGN_USERNAME = 'c1b49625-7634-4f17-8886-cd5b78794350' #: DocuSign username or account UUID.
+DOCUSIGN_PASSWORD = '8HEt4?J92JsecYf*zbfC' #: DocuSign password.
+DOCUSIGN_INTEGRATOR_KEY = '9db886ef-221d-497e-b29c-7189b372f613' #: DocuSign integrator key.
 
 # Repository settings.
 AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on webhook.
@@ -51,7 +51,7 @@ GITHUB_OAUTH_SECRET = 'secret' #: GitHub OAuth2 secret.
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 #: GitHub OAuth2 Callback URL.
-GITHUB_OAUTH_CALLBACK_URL = BASE_URL + '/v1/github/installation'
+GITHUB_OAUTH_CALLBACK_URL = BASE_URL + '/v2/github/installation'
 #: GitHub OAuth2 Token URL.
 GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 #: How users get notified of CLA status in GitHub ('status', 'comment', or 'status+comment').
