@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { NavController } from 'ionic-angular';
+import { AuthService } from '../../services/auth.service';
+import { RolesService } from "../../services/roles.service";
 
 /**
  * Generated class for the AuthPage page.
@@ -7,19 +9,36 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
  * See https://ionicframework.com/docs/components/#navigation for more info on
  * Ionic pages and navigation.
  */
-
-@IonicPage()
-@Component({
+ @Component({
   selector: 'page-auth',
   templateUrl: 'auth.html',
 })
 export class AuthPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  userRoles: any;
+
+  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {
   }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad AuthPage');
+  ionViewDidEnter() {
+    console.log('ionViewDidEnter AuthPage');
+
+    setTimeout(() => {
+      this.rolesService.getUserRolesPromise().then((userRoles) => {
+        if(this.hasAccess(userRoles)) {
+          this.navCtrl.setRoot("CompaniesPage");
+        } else {
+          this.navCtrl.setRoot("LoginPage");
+        }
+      });
+    }, 2000);
+    // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
+    // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack.
+    // Refactoring to Ionic 4.0+ with default Ng Route Module may resolve this problem but it's over work balance.
+  }
+
+  private hasAccess(userRoles: any): boolean {
+    return userRoles.isAuthenticated
   }
 
 }
