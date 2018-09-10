@@ -12,8 +12,6 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
-from hug.middleware import SessionMiddleware
-from hug.store import InMemoryStore as Store
 
 from cla.auth import staff_required
 from cla.user import cla_user
