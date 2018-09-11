@@ -89,6 +89,9 @@ frontend-project-management-console/src/config/config-prod.json
 frontend-project-management-console/.serverless/
 frontend-project-management-console/edge/node_modules/
 frontend-project-management-console/node_modules/
+cla-frontend-console/.serverless/
+cla-frontend-console/edge/node_modules/
+cla-frontend-console/node_modules/
 
 cla-frontend-console/src/www
 cla-frontend-corporate-console/src/www
