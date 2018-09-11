@@ -9,6 +9,9 @@ import { RolesService } from "../services/roles.service";
 import { ClaService } from "../services/cla.service";
 import { HttpClient } from "../services/http-client";
 
+import { AuthService } from "../services/auth.service";
+import { AuthPage } from "../pages/auth/auth"
+
 declare const webpackGlobalVars: any;
 
 @Component({
@@ -17,7 +20,7 @@ declare const webpackGlobalVars: any;
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = "CompaniesPage";
+  rootPage: any = AuthPage;
 
   userRoles: any;
   pages: Array<{
@@ -38,12 +41,15 @@ export class MyApp {
     private keycloak: KeycloakService,
     private rolesService: RolesService,
     public claService: ClaService,
-    public httpClient: HttpClient
+    public httpClient: HttpClient,
+    public authService: AuthService
   ) {
     this.getDefaults();
     this.initializeApp();
     this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
     this.claService.setHttp(httpClient);
+    // here to check authentication state
+    this.authService.handleAuthentication()
   }
 
   getDefaults() {
