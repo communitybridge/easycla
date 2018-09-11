@@ -23,16 +23,17 @@ export function Restricted(restrictions: any) {
             return true;
           } else {
             console.log('no access');
-            let navObject = {
-              page: target.prototype.constructor.name,
-              params: {},
-              roles: restrictions.roles,
-            };
-            if (this.navParams) {
-              navObject.params = this.navParams.data;
-            }
-            let navString = JSON.stringify(navObject);
-            window.location.hash = '#/login/' + navString;
+            // let navObject = {
+            //   page: target.prototype.constructor.name,
+            //   params: {},
+            //   roles: restrictions.roles,
+            // };
+            // if (this.navParams) {
+            //   navObject.params = this.navParams.data;
+            // }
+            // let navString = JSON.stringify(navObject);
+            // window.location.hash = '#/login/';
+            window.location.hash = '#/login';
             window.location.reload(true);
             return false;
           }
