@@ -22,7 +22,7 @@ import { AuthPage } from "../pages/auth/auth";
 import { MyApp } from "./app.component";
 
 @NgModule({
-  declarations: [MyApp, AuthPage],
+  declarations: [MyApp],
   imports: [BrowserModule, HttpModule, IonicModule.forRoot(MyApp)],
   bootstrap: [IonicApp],
   entryComponents: [MyApp, AuthPage],
