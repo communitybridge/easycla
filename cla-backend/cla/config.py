@@ -97,15 +97,15 @@ SES_ACCESS_KEY = None #: AWS Access Key ID for the SES service.
 SES_SECRET_KEY = None #: AWS Secret Access Key for the SES service.
 
 # Storage Service.
-STORAGE_SERVICE = 'S3Storage' #: The storage service to use for storing CLAs. `S3Storage` or `LocalStorage` 
+STORAGE_SERVICE = 'S3Storage' #: The storage service to use for storing CLAs.
 
 # LocalStorage Configuration.
 LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage service.
 
 # S3Storage Configuration.
-S3_ACCESS_KEY = 'AKIAJOVJ6CIJ2UAXNTVA' #: AWS Access Key ID for the S3 service.
-S3_SECRET_KEY = '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' #: AWS Secret Access Key for the S3 service.
-S3_BUCKET = 'cla-files-bucket' #: AWS S3 bucket used to store CLA files - must be unique.
+S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
+S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
+S3_BUCKET = '' #: AWS S3 bucket used to store CLA files - must be unique.
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
