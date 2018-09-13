@@ -3,10 +3,15 @@ Storage service that stores files in AWS S3 buckets.
 """
 
 import io
+import os
 import boto3
 import botocore
 import cla
 from cla.models import storage_service_interface
+
+stage = os.environ.get('STAGE', '')
+aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID', config['S3_ACCESS_KEY'])
+aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY', config['S3_SECRET_KEY'])
 
 class S3Storage(storage_service_interface.StorageService):
     """
@@ -18,9 +23,9 @@ class S3Storage(storage_service_interface.StorageService):
         self.secret_key = None
 
     def initialize(self, config):
-        self.access_key = config['S3_ACCESS_KEY']
-        self.secret_key = config['S3_SECRET_KEY']
-        self.bucket = config['S3_BUCKET']
+        self.access_key = aws_access_key_id
+        self.secret_key = aws_secret_access_key
+        self.bucket = 'cla-{}-files'.format(stage)
         # Create bucket if doesn't exist.
         client = self._get_client()
         response = client.list_buckets()
