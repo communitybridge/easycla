@@ -13,10 +13,7 @@ import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
 import { AuthPage } from "../pages/auth/auth";
-
-import  * as env from '../../config/config-prod.json';
-
-const envAny = env as any;
+import { EnvConfig } from "../services/cla.env.utils";
 
 @Component({
   templateUrl: "app.html"
@@ -60,17 +57,10 @@ export class MyApp {
     let kcHttpClient = new HttpClient(keycloakHttp);
 
     // set authd services to use kcHttpClient
-<<<<<<< HEAD
-    this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
+    this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(kcHttpClient);
 
-    this.cincoService.setApiUrl(webpackGlobalVars.CINCO_API_URL);
-=======
-    this.claService.setApiUrl(envAny['cla-api-url']);
-    this.claService.setHttp(kcHttpClient);
-
-    this.cincoService.setApiUrl(envAny['cinco-api-url']);
->>>>>>> a8db3afc... Import local json file to refer envrionment variable
+    this.cincoService.setApiUrl(EnvConfig['cinco-api-url']);
     this.cincoService.setHttp(kcHttpClient);
 
     this.authService.handleAuthentication();

@@ -1,0 +1,7 @@
+{
+"auth0-clientId": "zSfzHdNliet3nt90BGUFBcKNikmeAV9Y",
+"auth0-domain": "***REMOVED***.auth0.com",
+"cinco-api-url": "https://cinco_api_endpoint",
+"cla-api-url": "https://k0dcklbzoh.execute-api.us-east-1.amazonaws.com/dev-runze",
+"analytics-api-url": "https://analytics_api_endpoint"
+}
