@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from './http-client';
-
+import { EnvConfig } from './cla.env.utils';
 import 'rxjs/Rx';
-
-declare const webpackGlobalVars: any;
 
 @Injectable()
 export class CincoService {
@@ -11,7 +9,7 @@ export class CincoService {
   cincoApiUrl: String;
 
   constructor(public http: HttpClient) {
-    this.cincoApiUrl = webpackGlobalVars.CINCO_API_URL;
+    this.cincoApiUrl = EnvConfig['cinco-api-url'];
   }
 
   //////////////////////////////////////////////////////////////////////////////
