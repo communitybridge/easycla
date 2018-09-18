@@ -3,8 +3,7 @@ import { Nav, Platform } from "ionic-angular";
 import { StatusBar } from "@ionic-native/status-bar";
 import { SplashScreen } from "@ionic-native/splash-screen";
 import { ClaService } from "../services/cla.service";
-
-declare const webpackGlobalVars: any;
+import { EnvConfig } from "../services/cla.env.utils";
 
 @Component({
   templateUrl: "app.html",
@@ -23,7 +22,7 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
-    this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
+    this.claService.setApiUrl(EnvConfig['cla-api-url']);
   }
 
   getDefaults() {}
