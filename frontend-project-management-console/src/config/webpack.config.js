@@ -3,7 +3,12 @@ const webpack = require('webpack');
 const RetrieveLocalConfigValues = require('./scripts/read-local');
 const configVarArray = ['auth0-clientId', 'auth0-domain', 'cinco-api-url', 'cla-api-url', 'analytics-api-url'];
 const stageEnv = process.env.STAGE_ENV;
-
+/**
+ * This custom webpack config is deprecated,
+ * since we don't inject environment variables through webpack plugin.
+ * If we're going to reactivate this someday, go to src/package.json,
+ * add `"ionic_webpack": "./config/webpack.config.js"` at config block.
+ */
 module.exports = async env => {
   // Here we hard code stage name, it's not perfect since if a new stage created/modified, we also need to change it.
   const shouldReadFromSSM = (stageEnv !== undefined && stageEnv === 'staging') || (stageEnv !== undefined && stageEnv === 'prod') || (stageEnv !== undefined && stageEnv === 'qa');
