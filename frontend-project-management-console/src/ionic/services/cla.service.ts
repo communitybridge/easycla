@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Http } from "@angular/http";
+import { Observable } from "rxjs/Observable";
 
 import "rxjs/Rx";
 
@@ -802,6 +803,49 @@ export class ClaService {
     return this.http
       .post(this.claApiUrl + "/github/validate")
       .map(res => res.json());
+  }
+
+  /**
+   * /salesforce/projects
+   **/
+  linux = {
+    id: "0",
+    name: "Mock Linux project",
+    logoRef: "https://logo.url.com"
+  };
+
+  hyperledger = {
+    id: "1",
+    name: "Mock Hyperledger project",
+    logoRef: "https://logo.url.com",
+  };
+
+  CNCF = {
+    id: "2",
+    name: "Mock CNCF project",
+    logoRef: "https://logo.url.com",
+  }
+
+  mockProjects = [this.linux, this.hyperledger, this.CNCF];
+  
+  getAllProjectsFromSFDC() {
+    return this.http
+      .get(this.claApiUrl + "/salesforce/proejcts")
+      .map(res => res.json());
+   }
+
+  getProjectFromSFDC(projectId) {
+    return this.http
+      .get(this.claApiUrl + "/salesforce/project/" + projectId)
+      .map(res => res.json());
+  }
+
+  getMcokAllProjectFromSFDC() {
+    return Observable.of(this.mockProjects);
+  }
+
+  getMockSFDCProject(projectId) {
+    return Observable.of(this.mockProjects[+projectId])
   }
 
   //////////////////////////////////////////////////////////////////////////////
