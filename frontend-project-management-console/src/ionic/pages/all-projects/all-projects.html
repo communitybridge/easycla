@@ -76,7 +76,7 @@
       <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allFilteredProjects">
         <ion-card>
           <div class="card-header clickable" (click)="viewProjectCLA(project.id)">
-            <img *ngIf="project.config.logoRef" src="{{project.config.logoRef}}" alt="{{project.name}} logo"/>
+            <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
             <ion-card-title>
               {{ project.name }}
             </ion-card-title>
