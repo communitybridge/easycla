@@ -10,8 +10,6 @@ import cla
 from cla.models import storage_service_interface
 
 stage = os.environ.get('STAGE', '')
-aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID', config['S3_ACCESS_KEY'])
-aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY', config['S3_SECRET_KEY'])
 
 class S3Storage(storage_service_interface.StorageService):
     """
@@ -23,15 +21,10 @@ class S3Storage(storage_service_interface.StorageService):
         self.secret_key = None
 
     def initialize(self, config):
-        self.access_key = aws_access_key_id
-        self.secret_key = aws_secret_access_key
+        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY']) 
+        self.secret_key = os.environ.get('AWS_SECRET', config['S3_SECRET_KEY'])
         self.bucket = 'cla-{}-files'.format(stage)
-        # Create bucket if doesn't exist.
-        client = self._get_client()
-        response = client.list_buckets()
-        buckets = [bucket['Name'] for bucket in response['Buckets']]
-        if self.bucket not in buckets:
-            self._create_bucket(client)
+
 
     def _get_client(self):
         """Mockable method to get the S3 client."""
@@ -39,12 +32,6 @@ class S3Storage(storage_service_interface.StorageService):
                             aws_access_key_id=self.access_key,
                             aws_secret_access_key=self.secret_key)
 
-    def _create_bucket(self, client=None):
-        """Mockable method to create an S3 bucket."""
-        cla.log.info('Creating S3 bucket: %s', self.bucket)
-        if client is None:
-            client = self._get_client()
-        client.create_bucket(Bucket=self.bucket)
 
     def store(self, filename, data):
         cla.log.info('Storing filename content in S3 bucket %s: %s', self.bucket, filename)
