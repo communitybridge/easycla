@@ -19,7 +19,7 @@ def get_ssm_client(aws_profile, aws_region):
 
 def main():
     print("This script will help you provision GH app private key file to AWS parameter store.")
-    print("First, enter the aws profile name it should use otherwises default will be used:")
+    print("First, enter the aws profile name it should use otherwise default will be used:")
     aws_profile = input(PROMPT_CHAR)
     print("Second, enter the aws region name it should look up:")
     aws_region = input(PROMPT_CHAR)
