@@ -7,6 +7,7 @@ import {
   IonicPage
 } from "ionic-angular";
 import { PopoverController } from "ionic-angular";
+import { EnvConfig } from "../../services/cla.env.utils";
 
 @IonicPage({
   segment: "cla-organization-app-modal"
@@ -33,8 +34,7 @@ export class ClaOrganizationAppModal {
   // TODO: Do we want a call to cla that polls for the installation status?
 
   openAppPage() {
-    // window.open('https://github.com/apps/contributor-license-agreement', '_blank');
-    window.open("https://github.com/apps/lf-cla-test", "_blank");
+    window.open(EnvConfig['gh-app-public-link'], '_blank');
   }
 
   dismiss() {
