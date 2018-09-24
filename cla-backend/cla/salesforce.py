@@ -1,10 +1,16 @@
-from http import HTTPStatus
+import cla
 import requests
 import os
 import json
+from http import HTTPStatus
+from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 
-sf_instance_url = os.environ.get('SF_INSTANCE_URL', '')
+sf_instance_url = os.environ.get('SF_INSTANCE_URL', 'cs93.salesforce.com')
+sf_client_id = os.environ.get('SF_CLIENT_ID', '')
+sf_client_secret = os.environ.get('SF_CLIENT_SECRET', '')
+sf_username = os.environ.get('SF_USERNAME', '')
+sf_password = os.environ.get('SF_PASSWORD', '')
 
 def format_response(status_code, headers, body):
     """
@@ -31,27 +37,27 @@ def format_json_cors_response(status_code, body):
     return response
 
 
-def get_projects():
-    query = {'q': 'SELECT+name+from+Project__c'}
+def get_projects(event, context):
+    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
+    oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
+    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret, 
+    client_id=sf_client_id, username=sf_username, password=sf_password)
+
+    query = {'q': 'SELECT name from Project__c'}
+    headers = {'Content-Type': 'application/json'}
     url = 'https://{}/services/data/v20.0/query/'.format(sf_instance_url)
-    ##Oauth stuff
-    token = '' #need to get using fetch token thing
-    oauth2 = OAuth2Session(client_id, token=token)
-    #client_id='3MVG9Xjf0O2Peyd6s.Y3iz9Ev_DVUX_IElCRz4Yhi1Itv5WPAdfCx_KTVcjYxBTEg_PRfdkoApZ4rvFqV8KbE',
-    oauth2.fetch_token(code=None, token_url='https://cs93.salesforce.com/services/oauth2/token',
-    client_secret='7907730997014943382', username='ernest@twobulls.com', 
-    password='GB{9TB9B}8CDPv2oz&naca[JmRTH04K6rxIrM9WfqrOs9mO0Z', grant_type='password')
-    request = oauth2.get(url)
-    
-    ##fix
-    response = requests.get(url, params=query)
-    status_code = response.status_code
+    cla.log.info('Calling salesforce api for project list...')
+    r = oauth2.request('GET', url, params=query, headers=headers)
+
+    response = r.json()
+    status_code = r.status_code
     if status_code != HTTPStatus.OK:
+        cla.log.error('Error retrieving projects: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving projects')
-    records = response.json()
+    records = response.get('records')
     projects = [
         {'name': project.get('Name'), 
-        'id': project.get('attributes').get('url').split('/')[-1]}
+        'id': project.get('attributes').get('url').split('/')[-1],
+        'logoRef': 'mock_project_logo.jpg'}
         for project in records]
     return format_json_cors_response(status_code, projects)
-
