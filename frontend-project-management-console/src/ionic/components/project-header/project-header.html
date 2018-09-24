@@ -1,34 +1,35 @@
-<ion-grid>
-  <ion-row>
+<!-- <ion-grid> -->
+  <!-- <ion-row> -->
     <ion-col class="project-info" col-12 col-md-8>
       <ion-row><!-- Logo and description -->
-        <ion-col col-12 col-md-4>
+        <ion-col col-12 col-md-2>
           <div class="project-logo-wrapper">
-            <div *ngIf="!project.config.logoRef" text-center>
+            <div *ngIf="!project.logoRef" text-center>
               <ion-icon class="no-logo-icon" name="image"></ion-icon>
               <ion-label>Change logo in <a class="project-details-link clickable" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label>
             </div>
-            <div class="project-logo" *ngIf="project.config.logoRef">
-              <img src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
+            <div class="project-logo" *ngIf="project.logoRef">
+              <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
             </div>
           </div>
         </ion-col>
         <ion-col col-12 col-md-8>
           <h1>
             {{ project.name }}
-            <ion-icon class="clickable" name="md-create" item-right (click)="viewProjectDetails(projectId)"></ion-icon>
+            <!-- <ion-icon class="clickable" name="md-create" item-right (click)="viewProjectDetails(projectId)"></ion-icon> -->
           </h1>
-          <p>{{ project.description }}</p>
+          <p>This should be a project short description.</p>
         </ion-col>
       </ion-row>
-      <ion-row><!-- Tags/Data Points -->
+    </ion-col>
+      <!-- <ion-row> -->
 
-        <ion-col col-12 col-md-4>
+        <!-- <ion-col col-12 col-md-4>
           <ion-label>
             Industry: {{ projectSectors[project.sector] }} <span *ngIf="!project.sector">N/A</span>
           </ion-label>
-        </ion-col>
-        <ion-col col-12 col-md-4>
+        </ion-col> -->
+        <!-- <ion-col col-12 col-md-4>
           <ion-label>
             <ion-row>
               <span>Launched:&nbsp;</span>
@@ -42,8 +43,8 @@
         <ion-col col-12 col-md-4>
           <ion-label>
             Members: {{ project.members.length }}
-          </ion-label>
-        </ion-col>
+          </ion-label> -->
+        <!-- </ion-col>
       </ion-row>
     </ion-col>
     <ion-col col-12 col-md-4>
@@ -56,7 +57,6 @@
       <ion-item (click)="openAssetManagementModal()">
         <ion-icon class="add-pointer" name="folder" item-left large></ion-icon>
         <p class="clickable">Project Files</p>
-      </ion-item>
-    </ion-col>
-  </ion-row>
-</ion-grid>
+      </ion-item> -->
+  <!-- </ion-row> -->
+<!-- </ion-grid> -->
