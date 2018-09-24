@@ -7,9 +7,9 @@ const stageEnv = process.env.STAGE_ENV;
 
 async function prefetchSSM () {
   let result = {};
-  console.log('Start to fetch SSM values...');
+  console.log(`Start to fetch SSM values at ${stageEnv}...`);
   result = await RetrieveSSMValues(configVarArray, stageEnv, region, profile);
-  fs.writeFile (`./config/config-${stageEnv}.json`, JSON.stringify(result), function(err) {
+  fs.writeFile (`./config/cla-env-config.json`, JSON.stringify(result), function(err) {
     if (err) throw new Error(`Couldn't save SSM paramters to disk with error ${err}`);
     console.log('Fetching completed...');});
 }

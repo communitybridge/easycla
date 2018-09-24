@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
-
-declare const webpackGlobalVars: any;
+import { EnvConfig} from './cla.env.utils';
 
 @Injectable()
 export class AnalyticsService {
@@ -12,7 +11,7 @@ export class AnalyticsService {
   apiVersion: string;
 
   constructor(public http: Http) {
-    this.analyticsApiUrl = webpackGlobalVars.ANALYTICS_API_URL;
+    this.analyticsApiUrl = EnvConfig['analytics-api-url'];
     this.apiVersion = '/v1';
   }
 
