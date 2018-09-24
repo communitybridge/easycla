@@ -2,15 +2,14 @@ import { Injectable } from "@angular/core";
 import * as auth0 from "auth0-js";
 import * as jwt_decode from "jwt-decode";
 import { getAuthURLFromWindow } from "./auth.utils";
-
+import { EnvConfig } from "./cla.env.utils";
 (window as any).global = window;
-declare const webpackGlobalVars: any;
 
 @Injectable()
 export class AuthService {
   auth0 = new auth0.WebAuth({
-    clientID: webpackGlobalVars.AUTH0_CLIENT_ID,
-    domain: webpackGlobalVars.AUTH0_DOMAIN,
+    clientID: EnvConfig['auth0-clientId'],
+    domain: EnvConfig['auth0-domain'],
     responseType: "token id_token",
     redirectUri: getAuthURLFromWindow()
   });

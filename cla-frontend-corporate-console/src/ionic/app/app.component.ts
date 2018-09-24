@@ -10,9 +10,8 @@ import { ClaService } from "../services/cla.service";
 import { HttpClient } from "../services/http-client";
 
 import { AuthService } from "../services/auth.service";
-import { AuthPage } from "../pages/auth/auth"
-
-declare const webpackGlobalVars: any;
+import { AuthPage } from "../pages/auth/auth";
+import { EnvConfig } from "../services/cla.env.utils";
 
 @Component({
   templateUrl: "app.html"
@@ -46,7 +45,7 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
-    this.claService.setApiUrl(webpackGlobalVars.CLA_API_URL);
+    this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
     // here to check authentication state
     this.authService.handleAuthentication()

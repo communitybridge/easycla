@@ -70,8 +70,7 @@
   ],
   "config": {
     "ionic_purge_decorators": false,
-    "ionic_src_dir": "ionic",
-    "ionic_webpack": "./config/webpack.config.js"
+    "ionic_src_dir": "ionic"
   },
   "description": "cla-corporate-console"
 }
