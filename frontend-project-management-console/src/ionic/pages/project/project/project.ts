@@ -5,10 +5,11 @@ import {
   NavParams,
   IonicPage
 } from "ionic-angular";
+import { ClaService } from "../../../services/cla.service";
 import { CincoService } from "../../../services/cinco.service";
 import { KeycloakService } from "../../../services/keycloak/keycloak.service";
 import { SortService } from "../../../services/sort.service";
-import { ProjectModel } from "../../../models/project-model";
+import { SFProjectModel } from "../../../models/sfdc-project-model";
 import { RolesService } from "../../../services/roles.service";
 import { Restricted } from "../../../decorators/restricted";
 
@@ -26,7 +27,7 @@ export class ProjectPage {
   selectedProject: any;
   projectId: string;
 
-  project = new ProjectModel();
+  project = new SFProjectModel();
 
   loading: any;
   sort: any;
@@ -38,7 +39,8 @@ export class ProjectPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    private claService: ClaService
   ) {
     this.projectId = navParams.get("projectId");
     this.getDefaults();
@@ -46,39 +48,50 @@ export class ProjectPage {
 
   ngOnInit() {
     console.log("project id: " + this.projectId);
-    this.getProject(this.projectId);
+    // this.getSFDCProject(this.projectId);
 
-    this.cincoService
-      .getEventsForProject(this.projectId)
-      .subscribe(response => {
-        if (response) {
-          console.log(response);
-        }
-      });
+    // this.cincoService
+    //   .getEventsForProject(this.projectId)
+    //   .subscribe(response => {
+    //     if (response) {
+    //       console.log(response);
+    //     }
+    //   });
   }
 
-  getProject(projectId) {
-    let getMembers = true;
-    this.cincoService
-      .getMockProject(projectId, getMembers)
+  getSFDCProject(projectId) {
+    this.claService
+      .getProjectFromSFDC(projectId)
       .subscribe(response => {
         if (response) {
           this.project = response;
-          // This is to refresh an image that have same URL
-          if (this.project.config.logoRef) {
-            this.project.config.logoRef += "?" + new Date().getTime();
-          }
           this.loading.project = false;
         }
       });
   }
 
-  memberSelected(event, memberId) {
-    this.navCtrl.push("MemberPage", {
-      projectId: this.projectId,
-      memberId: memberId
-    });
-  }
+  // getProject(projectId) {
+  //   let getMembers = true;
+  //   this.cincoService
+  //     .getMockProject(projectId, getMembers)
+  //     .subscribe(response => {
+  //       if (response) {
+  //         this.project = response;
+  //         // // This is to refresh an image that have same URL
+  //         // if (this.project.config.logoRef) {
+  //         //   this.project.config.logoRef += "?" + new Date().getTime();
+  //         // }
+  //         this.loading.project = false;
+  //       }
+  //     });
+  // }
+
+  // memberSelected(event, memberId) {
+  //   this.navCtrl.push("MemberPage", {
+  //     projectId: this.projectId,
+  //     memberId: memberId
+  //   });
+  // }
 
   getDefaults() {
     this.loading = {
@@ -87,31 +100,7 @@ export class ProjectPage {
     this.project = {
       id: "mock_project_id",
       name: "Mock Project AOSP",
-      description: "Mock Description. This is a mock AOSP.",
-      managers: "Mock Manager.",
-      members: [],
-      status: "Mock Status Active",
-      category: "Mock Category Mobile",
-      sector: "",
-      url: "",
-      logoRef: "",
-      startDate: "",
-      agreementRef: "",
-      mailingListType: "",
-      emailAliasType: "",
-      address: {
-        address: {
-          administrativeArea: "",
-          country: "",
-          localityName: "",
-          postalCode: "",
-          thoroughfare: ""
-        },
-        type: ""
-      },
-      config: {
-        logoRef: ""
-      }
+      logoRef: "mocklogo.com"
     };
     this.sort = {
       alert: {
@@ -147,7 +136,7 @@ export class ProjectPage {
     };
   }
 
-  sortMembers(prop) {
-    this.sortService.toggleSort(this.sort, prop, this.project.members);
-  }
+  // sortMembers(prop) {
+  //   this.sortService.toggleSort(this.sort, prop, this.project.members);
+  // }
 }

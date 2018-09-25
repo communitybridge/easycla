@@ -2,8 +2,9 @@
 import { Component } from "@angular/core";
 // import { DomSanitizer} from '@angular/platform-browser';
 import { NavController, IonicPage } from "ionic-angular";
-import { CincoService } from "../../services/cinco.service";
+// import { CincoService } from "../../services/cinco.service";
 // import { Chart } from 'chart.js';
+import { ClaService } from "../../services/cla.service";
 import { FilterService } from "../../services/filter.service";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
@@ -38,24 +39,24 @@ export class AllProjectsPage {
   //   late: number,
   //   paidLast30Days: number,
   // }
-  projects: Array<{
-    icon: string;
-    title: string;
-    datas: Array<{
-      label: string;
-      value: string;
-      status?: string;
-    }>;
-    meetings: Array<{
-      label: string;
-      value: string;
-    }>;
-  }>;
+  // projects: Array<{
+  //   icon: string;
+  //   title: string;
+  //   datas: Array<{
+  //     label: string;
+  //     value: string;
+  //     status?: string;
+  //   }>;
+  //   meetings: Array<{
+  //     label: string;
+  //     value: string;
+  //   }>;
+  // }>;
 
-  industryFilterValues: Array<{
-    key: string;
-    prettyValue: string;
-  }> = [];
+  // industryFilterValues: Array<{
+  //   key: string;
+  //   prettyValue: string;
+  // }> = [];
 
   managersFilterValues: any = [];
 
@@ -69,8 +70,9 @@ export class AllProjectsPage {
 
   constructor(
     public navCtrl: NavController,
-    private cincoService: CincoService,
+    // private cincoService: CincoService,
     // private sanitizer: DomSanitizer,
+    private claService: ClaService,
     private rolesService: RolesService,
     private filterService: FilterService
   ) {
@@ -80,46 +82,57 @@ export class AllProjectsPage {
   async ngOnInit() {
     // this.getIndustries();
     // this.getCurrentUser();
-    this.getAllProjects();
+    this.getAllProjectFromSFDC();
   }
 
-  getAllProjects() {
-    this.cincoService.getAllMockProjects().subscribe(response => {
+  getAllProjectFromSFDC() {
+    this.claService.getAllProjectsFromSFDC().subscribe(response => {
       this.allProjects = response;
-      for (let eachProject of this.allProjects) {
-        // After uploading a logo, Cinco will provide same name,
-        // so a refresh to the image needs to be forced.
-        // This is to refresh an image that have same URL
-        if (eachProject.config.logoRef) {
-          eachProject.config.logoRef += "?" + new Date().getTime();
-        }
-        // Currently PMs are returned with their KC IDs
-        // This translates to LF IDs
-        if (eachProject.config.programManagers.length > 0) {
-          for (let eachManager of eachProject.config.programManagers) {
-            this.cincoService.getUser(eachManager).subscribe(response => {
-              if (response) {
-                eachProject.managers.push(response.lfId);
-                // Prevent dupes in PMs filter list
-                if (
-                  !this.managersFilterValues.some(lfId => lfId == response.lfId)
-                ) {
-                  this.managersFilterValues.push(response.lfId);
-                }
-                this.allFilteredProjects = this.filterService.resetFilter(
-                  this.allProjects
-                );
-              }
-            });
-          }
-        }
-      }
       this.allFilteredProjects = this.filterService.resetFilter(
         this.allProjects
       );
       this.loading.projects = false;
     });
+    // we may need to do some filter later instead of showing all projects
   }
+
+  // getAllProjects() {
+  //   this.cincoService.getAllMockProjects().subscribe(response => {
+  //     this.allProjects = response;
+  //     for (let eachProject of this.allProjects) {
+  //       // After uploading a logo, Cinco will provide same name,
+  //       // so a refresh to the image needs to be forced.
+  //       // This is to refresh an image that have same URL
+  //       if (eachProject.config.logoRef) {
+  //         eachProject.config.logoRef += "?" + new Date().getTime();
+  //       }
+  //       // Currently PMs are returned with their KC IDs
+  //       // This translates to LF IDs
+  //       if (eachProject.config.programManagers.length > 0) {
+  //         for (let eachManager of eachProject.config.programManagers) {
+  //           this.cincoService.getUser(eachManager).subscribe(response => {
+  //             if (response) {
+  //               eachProject.managers.push(response.lfId);
+  //               // Prevent dupes in PMs filter list
+  //               if (
+  //                 !this.managersFilterValues.some(lfId => lfId == response.lfId)
+  //               ) {
+  //                 this.managersFilterValues.push(response.lfId);
+  //               }
+  //               this.allFilteredProjects = this.filterService.resetFilter(
+  //                 this.allProjects
+  //               );
+  //             }
+  //           });
+  //         }
+  //       }
+  //     }
+  //     this.allFilteredProjects = this.filterService.resetFilter(
+  //       this.allProjects
+  //     );
+  //     this.loading.projects = false;
+  //   });
+  // }
 
   // getCurrentUser() {
   //   this.cincoService.getCurrentUser().subscribe(response => {
@@ -278,20 +291,20 @@ export class AllProjectsPage {
   //   this.navCtrl.setRoot('AccountSettingsPage');
   // }
 
-  getIndustries() {
-    this.cincoService.getProjectSectors().subscribe(response => {
-      this.projectSectors = response;
-      for (let key in this.projectSectors) {
-        if (this.projectSectors.hasOwnProperty(key)) {
-          let industry = {
-            key: key,
-            prettyValue: this.projectSectors[key]
-          };
-          this.industryFilterValues.push(industry);
-        }
-      }
-    });
-  }
+  // getIndustries() {
+  //   this.cincoService.getProjectSectors().subscribe(response => {
+  //     this.projectSectors = response;
+  //     for (let key in this.projectSectors) {
+  //       if (this.projectSectors.hasOwnProperty(key)) {
+  //         let industry = {
+  //           key: key,
+  //           prettyValue: this.projectSectors[key]
+  //         };
+  //         this.industryFilterValues.push(industry);
+  //       }
+  //     }
+  //   });
+  // }
 
   filterAllProjects(projectProperty, keyword) {
     if (keyword == "NO_FILTER") {
