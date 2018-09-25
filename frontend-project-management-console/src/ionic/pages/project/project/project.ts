@@ -61,7 +61,7 @@ export class ProjectPage {
 
   getSFDCProject(projectId) {
     this.claService
-      .getMockSFDCProject(projectId)
+      .getProjectFromSFDC(projectId)
       .subscribe(response => {
         if (response) {
           this.project = response;

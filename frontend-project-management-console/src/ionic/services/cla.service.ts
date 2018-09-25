@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
+import { Http, RequestOptions, URLSearchParams } from '@angular/http';
 import { Observable } from "rxjs/Observable";
 
 import "rxjs/Rx";
@@ -808,44 +808,20 @@ export class ClaService {
   /**
    * /salesforce/projects
    **/
-  linux = {
-    id: "0",
-    name: "Mock Linux project",
-    logoRef: "https://logo.url.com"
-  };
-
-  hyperledger = {
-    id: "1",
-    name: "Mock Hyperledger project",
-    logoRef: "https://logo.url.com",
-  };
-
-  CNCF = {
-    id: "2",
-    name: "Mock CNCF project",
-    logoRef: "https://logo.url.com",
-  }
-
-  mockProjects = [this.linux, this.hyperledger, this.CNCF];
   
   getAllProjectsFromSFDC() {
     return this.http
-      .get(this.claApiUrl + "/salesforce/proejcts")
+      .get(this.claApiUrl + "/salesforce/projects")
       .map(res => res.json());
    }
 
   getProjectFromSFDC(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/salesforce/project/" + projectId)
+    let params: URLSearchParams = new URLSearchParams();
+    params.set('id', projectId);
+    let requestOptions = new RequestOptions();
+    requestOptions.search = params;    
+    return this.http.get(this.claApiUrl + "/salesforce/project/", requestOptions)
       .map(res => res.json());
-  }
-
-  getMcokAllProjectFromSFDC() {
-    return Observable.of(this.mockProjects);
-  }
-
-  getMockSFDCProject(projectId) {
-    return Observable.of(this.mockProjects[+projectId])
   }
 
   //////////////////////////////////////////////////////////////////////////////
