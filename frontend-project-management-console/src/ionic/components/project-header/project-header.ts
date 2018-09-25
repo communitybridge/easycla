@@ -46,7 +46,7 @@ export class ProjectHeaderComponent {
   getProject(projectId) {
     // let getMembers = true;
     this.claService
-      .getMockSFDCProject(projectId)
+      .getProjectFromSFDC(projectId)
       .subscribe(response => {
         if (response) {
           this.project = response;

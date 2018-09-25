@@ -86,7 +86,7 @@ export class AllProjectsPage {
   }
 
   getAllProjectFromSFDC() {
-    this.claService.getMcokAllProjectFromSFDC().subscribe(response => {
+    this.claService.getAllProjectsFromSFDC().subscribe(response => {
       this.allProjects = response;
       this.allFilteredProjects = this.filterService.resetFilter(
         this.allProjects
