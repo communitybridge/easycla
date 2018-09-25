@@ -61,3 +61,28 @@ def get_projects(event, context):
         'logoRef': 'mock_project_logo.jpg'}
         for project in records]
     return format_json_cors_response(status_code, projects)
+
+
+def get_project(event, context):
+    project_id = event.get('queryStringParameters').get('id')
+
+    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
+    oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
+    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret, 
+    client_id=sf_client_id, username=sf_username, password=sf_password)
+
+    url = 'https://{}/services/data/v20.0/sobjects/Project__c/{}'.format(sf_instance_url, project_id)
+    cla.log.info('Calling salesforce api for project info..')
+    r = oauth2.request('GET', url)
+
+    response = r.json()
+    status_code = r.status_code
+    if status_code != HTTPStatus.OK:
+        cla.log.error('Error retrieving project: %s', response[0].get('message'))
+        return format_json_cors_response(status_code, 'Error retrieving project')
+    project = {
+        'name': response.get('Name'), 
+        'id': response.get('Id'),
+        'logoRef': 'mock_project_logo.jpg'
+    }
+    return format_json_cors_response(status_code, project)
