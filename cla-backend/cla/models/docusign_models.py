@@ -3,6 +3,7 @@ Easily perform signing workflows using DocuSign signing service with pydocusign.
 """
 
 import io
+import os
 import uuid
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -36,10 +37,10 @@ class DocuSign(signing_service_interface.SigningService):
         self.client = None
 
     def initialize(self, config):
-        root_url = config['DOCUSIGN_ROOT_URL']
-        username = config['DOCUSIGN_USERNAME']
-        password = config['DOCUSIGN_PASSWORD']
-        integrator_key = config['DOCUSIGN_INTEGRATOR_KEY']
+        root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
+        username = os.environ.get('DOCUSIGN_USERNAME', '')
+        password = os.environ.get('DOCUSIGN_PASSWORD', '')
+        integrator_key = os.environ.get('DOCUSIGN_INTEGRATOR_KEY', '')
         self.client = pydocusign.DocuSignClient(root_url=root_url,
                                                 username=username,
                                                 password=password,
