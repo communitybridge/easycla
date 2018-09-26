@@ -11,9 +11,9 @@ import { AlertController } from 'ionic-angular';
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
-@IonicPage({
-  segment: 'project/:projectId/groups'
-})
+// @IonicPage({
+//   segment: 'project/:projectId/groups'
+// })
 @Component({
   selector: 'project-groups',
   templateUrl: 'project-groups.html'
