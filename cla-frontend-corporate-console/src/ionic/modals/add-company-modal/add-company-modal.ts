@@ -10,6 +10,7 @@ import {
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
+import { AuthService } from "../../services/auth.service";
 
 @IonicPage({
   segment: "add-company-modal"
@@ -25,12 +26,16 @@ export class AddCompanyModal {
 
   mode: string;
   company: ClaCompanyModel;
+  companyName: string;
+  userEmail: string;
+  userName: string;
 
   constructor(
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
-    private claService: ClaService
+    private claService: ClaService,
+    private authService: AuthService
   ) {
     this.getDefaults();
   }
@@ -38,22 +43,24 @@ export class AddCompanyModal {
   getDefaults() {
     this.company = this.navParams.get("company");
     this.mode = this.company ? "edit" : "add";
-    let companyName = this.company ? this.company.company_name : "";
+
     this.form = this.formBuilder.group({
-      name: [companyName, Validators.compose([Validators.required])]
+      companyName: [this.companyName, Validators.compose([Validators.required])],
+      userEmail: [this.userEmail, Validators.compose([Validators.required])],
+      userName: [this.userName, Validators.compose([Validators.required])]
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+  }
+
+  ionViewDidEnter() {
+    this.updateUserInfoBasedLFID();
+  }
 
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this.form.valid) {
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
     if (this.mode === "add") {
       this.addCompany();
     } else {
@@ -63,7 +70,7 @@ export class AddCompanyModal {
 
   addCompany() {
     let company = {
-      company_name: this.form.value.name,
+      company_name: this.form.value.companyName,
       company_whitelist: [],
       company_whitelist_patterns: []
     };
@@ -81,7 +88,7 @@ export class AddCompanyModal {
   updateCompany() {
     let company = {
       company_id: this.company.company_id,
-      company_name: this.form.value.name,
+      company_name: this.companyName,
       company_whitelist: this.company.company_whitelist,
       company_whitelist_patterns: this.company.company_whitelist_patterns
     };
@@ -98,5 +105,27 @@ export class AddCompanyModal {
 
   dismiss() {
     this.viewCtrl.dismiss();
+  }
+
+  private updateUserInfoBasedLFID() {
+    if (this.authService.isAuthenticated()) {
+      this.authService.getIdToken()
+        .then(token => {
+          return this.authService.parseIdToken(token);
+        })
+        .then(tokenParsed => {
+          if (tokenParsed && tokenParsed["email"]) {
+            this.userEmail = tokenParsed["email"];
+          }
+          if (tokenParsed && tokenParsed["name"]) {
+            this.userName = tokenParsed["name"];
+          }
+        })
+        .catch(error => {
+          console.log(JSON.stringify(error));
+          return;
+        });
+    }
+    return;
   }
 }

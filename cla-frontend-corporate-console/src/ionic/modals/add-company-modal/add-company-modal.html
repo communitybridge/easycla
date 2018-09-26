@@ -24,10 +24,28 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Company Name:</ion-label>
-            <ion-input formControlName="name"></ion-input>
+            <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName"></ion-input>
           </ion-item>
-          <ion-item *ngIf="!form.controls.name.valid && (form.controls.name.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!form.controls.companyName.valid && (form.controls.companyName.touched || submitAttempt)" no-lines>
             <p>* A company name is required.</p>
+          </ion-item>
+        </ion-col>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Manager email:</ion-label>
+            <ion-input name="userEmail" formControlName="userEmail" [(ngModel)]="userEmail"></ion-input>
+          </ion-item>
+          <ion-item *ngIf="!form.controls.userEmail.valid && (form.controls.userEmail.touched || submitAttempt)" no-lines>
+            <p>* A manager email is required.</p>
+          </ion-item>
+        </ion-col>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Manager name:</ion-label>
+            <ion-input name="userName" formControlName="userName" [(ngModel)]="userName"></ion-input>
+          </ion-item>
+          <ion-item *ngIf="!form.controls.userName.valid && (form.controls.userName.touched || submitAttempt)" no-lines>
+            <p>* A manager name is required.</p>
           </ion-item>
         </ion-col>
       </ion-row>
