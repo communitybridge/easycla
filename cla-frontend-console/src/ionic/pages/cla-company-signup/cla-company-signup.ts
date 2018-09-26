@@ -3,9 +3,9 @@ import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-ang
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from  '../../validators/email';
 
-@IonicPage({
-  segment: 'cla/project/:projectId/company-signup'
-})
+// @IonicPage({
+//   segment: 'cla/project/:projectId/company-signup'
+// })
 @Component({
   selector: 'cla-company-signup',
   templateUrl: 'cla-company-signup.html'
