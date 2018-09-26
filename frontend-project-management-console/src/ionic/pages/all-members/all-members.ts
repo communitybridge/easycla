@@ -10,9 +10,9 @@ import { Restricted } from '../../decorators/restricted';
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
-@IonicPage({
-  segment: 'all-members'
-})
+// @IonicPage({
+//   segment: 'all-members'
+// })
 @Component({
   selector: 'all-members',
   templateUrl: 'all-members.html'

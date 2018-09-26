@@ -13,9 +13,9 @@ import { RoundProgressConfig } from 'angular-svg-round-progressbar';
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
-@IonicPage({
-  segment: 'project/:projectId/analytics'
-})
+// @IonicPage({
+//   segment: 'project/:projectId/analytics'
+// })
 @Component({
   selector: 'project-analytics',
   templateUrl: 'project-analytics.html'

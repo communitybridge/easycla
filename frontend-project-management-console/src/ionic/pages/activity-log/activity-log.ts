@@ -7,9 +7,9 @@ import { Restricted } from '../../decorators/restricted';
 @Restricted({
   roles: ['isAdmin'],
 })
-@IonicPage({
-  segment: 'activity-log'
-})
+// @IonicPage({
+//   segment: 'activity-log'
+// })
 @Component({
   selector: 'activity-log',
   templateUrl: 'activity-log.html'
