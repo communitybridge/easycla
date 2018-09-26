@@ -11,9 +11,9 @@ import { Restricted } from '../../../decorators/restricted';
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
-@IonicPage({
-  segment: 'project/:projectId/member/:memberId/details'
-})
+// @IonicPage({
+//   segment: 'project/:projectId/member/:memberId/details'
+// })
 @Component({
   selector: 'member-details',
   templateUrl: 'member-details.html',
