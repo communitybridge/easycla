@@ -1,6 +1,6 @@
 const fs = require('fs');
 const RetrieveSSMValues = require('./read-ssm');
-const configVarArray = ['auth0-clientId', 'auth0-domain', 'cla-api-url'];
+const configVarArray = ['auth0-clientId', 'auth0-domain', 'cla-api-url', 'corp-console-link'];
 const region = 'us-east-1';
 const profile = 'lf-cla';
 const stageEnv = process.env.STAGE_ENV;
