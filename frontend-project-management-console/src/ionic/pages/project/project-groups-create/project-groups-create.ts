@@ -10,9 +10,9 @@ import { Restricted } from '../../../decorators/restricted';
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser'],
 })
-@IonicPage({
-  segment: 'project/:projectId/groups/create'
-})
+// @IonicPage({
+//   segment: 'project/:projectId/groups/create'
+// })
 @Component({
   selector: 'project-groups-create',
   templateUrl: 'project-groups-create.html'
