@@ -1,7 +1,0 @@
-{
-  "generator-angular2-library": {
-    "promptValues": {
-      "gitRepositoryUrl": "https://github.linuxfoundation.org/engineering-npm-modules/cla-service.git"
-    }
-  }
-}
