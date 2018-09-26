@@ -5,6 +5,7 @@ Controller related to company operations.
 import uuid
 import hug.types
 from cla.utils import get_company_instance
+from cla.utils import get_user_instance
 from cla.models import DoesNotExist
 
 
@@ -149,3 +150,27 @@ def delete_company(company_id):
 def get_manager_companies(manager_id):
     companies = get_company_instance().get_companies_by_manager(manager_id)
     return companies
+
+def get_or_create_user_as_manager(email, user_name):
+    """
+    Helper method to either get or create a user as company manager based on the email address.
+
+    :param email: The email address of a user who is creating a company.
+    :type email: string
+    :param user_name: The user name of a user who is creating a company.
+    :type user_name: string
+    :return: user object
+    """
+    user = get_user_instance()
+    found = user.get_user_by_email(email)
+    if found is not None:
+        # Found user by email, set the GitHub ID
+        cla.log.info('Loaded user by email: %s - (%s)', found.get_user_name(), found.get_user_emails())
+        return found
+    # User not found, create.
+    cla.log.debug('Could not find user by email: %s', email)
+    user.set_user_id(str(uuid.uuid4()))
+    user.set_user_emails(emails)
+    user.set_user_name(userName)
+    user.save()
+    return user
