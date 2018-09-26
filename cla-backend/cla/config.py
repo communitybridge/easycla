@@ -8,6 +8,9 @@ configuration, etc) in cla_config.py somewhere in your Python path.
 """
 
 import logging
+import os
+
+stage = os.environ.get('STAGE', '')
 
 LOG_LEVEL = logging.INFO #: Logging level.
 #: Logging format.
@@ -15,39 +18,41 @@ LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)
 
 DEBUG = False #: Debug off in production
 
-BASE_URL = 'https://k0dcklbzoh.execute-api.us-east-1.amazonaws.com/dev-runze' #: Base URL used for callbacks and OAuth2 redirects.
+# Base URL used for callbacks and OAuth2 redirects.
+if stage == 'prod':
+    BASE_URL = 'https://ckr858t6zb.execute-api.us-east-1.amazonaws.com/prod'
+elif stage == 'staging':
+    BASE_URL = 'https://wbkv5r3eyf.execute-api.us-east-1.amazonaws.com/staging'
+elif stage == 'qa':
+    BASE_URL = 'https://pd9alkfok2.execute-api.us-east-1.amazonaws.com/qa'
+else:
+    BASE_URL = '' #ADD YOUR DEV STAGE STAGE HERE
 SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed' #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
 DATABASE = 'DynamoDB' #: Database type ('SQLite', 'DynamoDB', etc).
-DATABASE_HOST = 'http://localhost:8000' #: Database Host (':memory:', 'localhost', etc).
 
 # Define the key-value we are working with.
 KEYVALUE = 'DynamoDB' #: Key-value store type ('Memory', 'DynamoDB', etc).
-KEYVALUE_HOST = '' #: Key-value store host - '' if type is 'Memory'.
-
-# DynamoDB-specific configurations - this is applied to each table.
-DYNAMO_REGION = 'us-east-1' #: DynamoDB AWS region.
-DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
-DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
 
 # Endpoint where users end up to start the signing workflow.
-CLA_CONSOLE_ENDPOINT = 'http://d37jq4fjnidrq1.cloudfront.net' # ICLA QA
+if stage == 'prod':
+    CLA_CONSOLE_ENDPOINT = 'https://d1fivluqxpmxmf.cloudfront.net'
+elif stage == 'staging':
+    CLA_CONSOLE_ENDPOINT = 'https://d7pvqqazh4kg5.cloudfront.net'
+elif stage == 'qa':
+    CLA_CONSOLE_ENDPOINT = 'https://d37jq4fjnidrq1.cloudfront.net'
+else:
+    CLA_CONSOLE_ENDPOINT = 'http://localhost:8100' #MODIFY HERE IF DEPLOYING TO DEV STAGE
 
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
-DOCUSIGN_ROOT_URL = 'https://demo.docusign.net/restapi/v2' #: DocuSign API root URL.
-DOCUSIGN_USERNAME = 'c1b49625-7634-4f17-8886-cd5b78794350' #: DocuSign username or account UUID.
-DOCUSIGN_PASSWORD = '8HEt4?J92JsecYf*zbfC' #: DocuSign password.
-DOCUSIGN_INTEGRATOR_KEY = '9db886ef-221d-497e-b29c-7189b372f613' #: DocuSign integrator key.
 
 # Repository settings.
 AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on webhook.
 
 # GitHub Repository Service.
-GITHUB_OAUTH_CLIENT_ID = 'client_id' #: GitHub OAuth2 client ID.
-GITHUB_OAUTH_SECRET = 'secret' #: GitHub OAuth2 secret.
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 #: GitHub OAuth2 Callback URL.
@@ -59,14 +64,6 @@ GITHUB_PR_NOTIFICATION = 'status+comment'
 
 # GitHub Application Service.
 GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
-GITHUB_APP_PRIVATE_KEY_PATH = 'path-to-file'
-GITHUB_APP_ID = '0000'
-
-# KeyCloak Authentication
-KEYCLOAK_ENDPOINT = 'https://<keycloak-domain>'
-KEYCLOAK_CLIENT_ID = '<client-id>'
-KEYCLOAK_REALM = '<realm>'
-KEYCLOAK_CLIENT_SECRET = 'secret'
 
 # GitLab Repository Service.
 GITLAB_DOMAIN = 'https://<gitlab-domain>' #: URL to GitLab instance.
@@ -103,15 +100,9 @@ STORAGE_SERVICE = 'S3Storage' #: The storage service to use for storing CLAs.
 LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage service.
 
 # S3Storage Configuration.
+# ADD KEYS IF DEPLOYING TO DEV STAGE
 S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
 S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
-S3_BUCKET = '' #: AWS S3 bucket used to store CLA files - must be unique.
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
-
-# DocRaptor Configuration.
-DOCRAPTOR_API_KEY = '' #: DocRaptopr API Key.
-DOCRAPTOR_DEBUG_MODE = False #: Whether or not to print debug information when generating PDF docs.
-DOCRAPTOR_TEST_MODE = False #: Test mode creates documents with watermarks at no charge.
-DOCRAPTOR_JAVASCRIPT = True #: Whether javascript processing is enabled for PDF generation.
