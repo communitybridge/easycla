@@ -36,6 +36,11 @@ DATABASE = 'DynamoDB' #: Database type ('SQLite', 'DynamoDB', etc).
 # Define the key-value we are working with.
 KEYVALUE = 'DynamoDB' #: Key-value store type ('Memory', 'DynamoDB', etc).
 
+# DynamoDB-specific configurations - this is applied to each table.
+DYNAMO_REGION = 'us-east-1' #: DynamoDB AWS region.
+DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
+DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
+
 # Endpoint where users end up to start the signing workflow.
 if stage == 'prod':
     CLA_CONSOLE_ENDPOINT = 'https://d1fivluqxpmxmf.cloudfront.net'
