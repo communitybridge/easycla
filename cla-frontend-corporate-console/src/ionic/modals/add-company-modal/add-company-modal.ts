@@ -71,6 +71,8 @@ export class AddCompanyModal {
   addCompany() {
     let company = {
       company_name: this.companyName,
+      company_manager_user_email: this.userEmail,
+      company_manager_user_name: this.userName,
       company_whitelist: [],
       company_whitelist_patterns: []
     };
