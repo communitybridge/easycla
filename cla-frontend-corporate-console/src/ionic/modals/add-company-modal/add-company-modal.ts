@@ -70,7 +70,7 @@ export class AddCompanyModal {
 
   addCompany() {
     let company = {
-      company_name: this.form.value.companyName,
+      company_name: this.companyName,
       company_whitelist: [],
       company_whitelist_patterns: []
     };
