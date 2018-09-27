@@ -535,7 +535,9 @@ def post_company(user: cla_user,
                  company_name: hug.types.text,
                  company_whitelist: hug.types.multiple,
                  company_whitelist_patterns: hug.types.multiple,
-                 company_manager_id=None):
+                 company_manager_id=None,
+                 company_manager_user_name=None,
+                 company_manager_user_email=None):
     """
     POST: /company
 
@@ -550,7 +552,9 @@ def post_company(user: cla_user,
         company_name=company_name,
         company_whitelist=company_whitelist,
         company_whitelist_patterns=company_whitelist_patterns,
-        company_manager_id=company_manager_id)
+        company_manager_id=company_manager_id,
+        company_manager_user_name=company_manager_user_name,
+        company_manager_user_email=company_manager_user_email)
 
 
 @hug.put('/company', versions=1,
