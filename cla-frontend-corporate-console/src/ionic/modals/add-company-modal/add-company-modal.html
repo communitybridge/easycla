@@ -33,7 +33,7 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Manager email:</ion-label>
-            <ion-input name="userEmail" formControlName="userEmail" [(ngModel)]="userEmail" [readonly]="true"></ion-input>
+            <ion-input name="userEmail" formControlName="userEmail" [(ngModel)]="userEmail" [readonly]="true" [disabled]="isDisbled"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.userEmail.valid && (form.controls.userEmail.touched || submitAttempt)" no-lines>
             <p>* A manager email is required.</p>
@@ -42,7 +42,7 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Manager name:</ion-label>
-            <ion-input name="userName" formControlName="userName" [(ngModel)]="userName" [readonly]="true"></ion-input>
+            <ion-input name="userName" formControlName="userName" [(ngModel)]="userName" [readonly]="true" [disabled]="isDisbled"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.userName.valid && (form.controls.userName.touched || submitAttempt)" no-lines>
             <p>* A manager name is required.</p>
