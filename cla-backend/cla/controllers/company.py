@@ -39,7 +39,9 @@ def get_company(company_id):
 def create_company(company_name=None,
                    company_whitelist=None,
                    company_whitelist_patterns=None,
-                   company_manager_id=None):
+                   company_manager_id=None,
+                   company_manager_user_name=None,
+                   company_manager_user_email=None):
     """
     Creates an company and returns the newly created company in dict format.
 
@@ -51,9 +53,15 @@ def create_company(company_name=None,
     :type company_whitelist_patterns: [string]
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
+    :param company_manager_user_name: The user name of the company manager user.
+    :type company_manager_user_name: string
+    :param company_manager_user_email: The user email of the company manager user.
+    :type company_manager_user_email: string
     :return: dict representation of the company object.
     :rtype: dict
     """
+    if company_manager_user_email not None:
+        company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
     company = get_company_instance()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
@@ -63,7 +71,6 @@ def create_company(company_name=None,
     company.set_company_manager_id(str(company_manager_id))
     company.save()
     return company.to_dict()
-
 
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
@@ -154,23 +161,26 @@ def get_manager_companies(manager_id):
 def get_or_create_user_as_manager(email, user_name):
     """
     Helper method to either get or create a user as company manager based on the email address.
+    And return user id as manager id for a company.
 
     :param email: The email address of a user who is creating a company.
     :type email: string
     :param user_name: The user name of a user who is creating a company.
     :type user_name: string
-    :return: user object
+    :return: user_id
+    :type: string
     """
     user = get_user_instance()
     found = user.get_user_by_email(email)
     if found is not None:
         # Found user by email, set the GitHub ID
         cla.log.info('Loaded user by email: %s - (%s)', found.get_user_name(), found.get_user_emails())
-        return found
+        return str(found.get_user_id())
     # User not found, create.
     cla.log.debug('Could not find user by email: %s', email)
-    user.set_user_id(str(uuid.uuid4()))
+    user_uuid = str(uuid.uuid4())
+    user.set_user_id(user_uuid)
     user.set_user_emails(emails)
     user.set_user_name(userName)
     user.save()
-    return user
+    return user_uuid
