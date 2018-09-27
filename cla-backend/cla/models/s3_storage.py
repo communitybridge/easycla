@@ -21,7 +21,7 @@ class S3Storage(storage_service_interface.StorageService):
         self.secret_key = None
 
     def initialize(self, config):
-        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY']) 
+        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY'])
         self.secret_key = os.environ.get('AWS_SECRET', config['S3_SECRET_KEY'])
         self.bucket = 'cla-{}-files'.format(stage)
 
@@ -41,6 +41,7 @@ class S3Storage(storage_service_interface.StorageService):
             client.upload_fileobj(obj, self.bucket, filename)
         except Exception as err:
             cla.log.error('Could not save filename %s in S3: %s', filename, str(err))
+            raise Exception('*** Upload file failed. See details from stack traceback ^^^ ***')
 
     def retrieve(self, filename):
         cla.log.info('Retrieving filename content from S3: %s', filename)
