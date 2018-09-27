@@ -7,7 +7,7 @@ import hug.types
 from cla.utils import get_company_instance
 from cla.utils import get_user_instance
 from cla.models import DoesNotExist
-
+import cla
 
 def get_companies():
     """
@@ -60,7 +60,7 @@ def create_company(company_name=None,
     :return: dict representation of the company object.
     :rtype: dict
     """
-    if company_manager_user_email not None:
+    if company_manager_user_email is not None:
         company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
     company = get_company_instance()
     company.set_company_id(str(uuid.uuid4()))
@@ -158,7 +158,7 @@ def get_manager_companies(manager_id):
     companies = get_company_instance().get_companies_by_manager(manager_id)
     return companies
 
-def get_or_create_user_as_manager(email, user_name):
+def get_or_create_user_as_manager(user_email, user_name):
     """
     Helper method to either get or create a user as company manager based on the email address.
     And return user id as manager id for a company.
@@ -171,16 +171,16 @@ def get_or_create_user_as_manager(email, user_name):
     :type: string
     """
     user = get_user_instance()
-    found = user.get_user_by_email(email)
+    found = user.get_user_by_email(user_email)
     if found is not None:
         # Found user by email, set the GitHub ID
         cla.log.info('Loaded user by email: %s - (%s)', found.get_user_name(), found.get_user_emails())
         return str(found.get_user_id())
     # User not found, create.
-    cla.log.debug('Could not find user by email: %s', email)
+    cla.log.debug('Could not find user by email: %s', user_email)
     user_uuid = str(uuid.uuid4())
     user.set_user_id(user_uuid)
-    user.set_user_emails(emails)
-    user.set_user_name(userName)
+    user.set_user_email(str(user_email).lower())
+    user.set_user_name(user_name)
     user.save()
     return user_uuid
