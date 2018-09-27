@@ -3,6 +3,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
+import cla
 import cla.hug_types
 import cla.controllers.user
 import cla.controllers.project
@@ -1147,7 +1148,7 @@ def github_oauth2_callback(code, state, request):
     return cla.controllers.github.user_oauth2_callback(code, state, request)
 
 @hug.post('/github/installation', versions=2)
-def github_app_installation(body):
+def github_app_installation(body, request, response):
     """
     POST: /github/installation
 
@@ -1168,7 +1169,9 @@ def github_app_activity(body, request, response):
     Acts upon any events triggered by our app installed in someone's organization.
     """
     # Verify that Webhook Signature is valid
-    # if cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request._wrap_stream()):
+    # valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request.stream.read())
+    # cla.log.info(valid_request)
+    # if valid_request:
     return cla.controllers.github.activity(body)
     # else:
     #     response.status = HTTP_403
