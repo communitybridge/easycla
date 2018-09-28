@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
-
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla/project/:projectId/new-company'
@@ -14,7 +14,7 @@ export class ClaNewCompanyModal {
   repositoryId: string;
   userId: string;
 
-  cclaLink: string;
+  consoleLink: string;
 
   @ViewChild('textArea') textArea: ElementRef;
 
@@ -30,7 +30,7 @@ export class ClaNewCompanyModal {
   }
 
   getDefaults() {
-    this.cclaLink = window.location.protocol + '//' + window.location.host + '/#/cla/project/' + this.projectId + '/company-signup';
+    this.consoleLink = EnvConfig['corp-console-link'];
   }
 
   ngOnInit() {
@@ -41,8 +41,8 @@ export class ClaNewCompanyModal {
     this.viewCtrl.dismiss();
   }
 
-  openCclaLink() {
-    window.open(this.cclaLink, '_blank');
+  openConsoleLink() {
+    window.open(this.consoleLink, '_blank');
   }
 
   copyText() {
