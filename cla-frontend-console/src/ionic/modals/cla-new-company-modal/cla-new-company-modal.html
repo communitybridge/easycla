@@ -18,10 +18,8 @@
         <ion-icon icon-left icon-large name="briefcase"></ion-icon>
         <h2>Company CLA</h2>
         <p>
-          Directions on who signs this and what happens. Now with more text so
-          we can see that is is like when it wraps. Just for good measure I will
-          add a little more. Still need some more because it isn't quite long
-          enough but after this it should be.
+          Directions on who signs this and what happens.
+          The link will direct user to CLA corporate console.
         </p>
       </div>
     </ion-grid>
@@ -30,7 +28,7 @@
       <ion-grid class="link-management-container">
         <ion-row class="link-management-text-container">
           <ion-col class="link-management-text" col-9>
-            <span class="link-management-label">Link To Contract on Docusign</span>
+            <span class="link-management-label">Link To CLA Corporate Console</span>
           </ion-col>
           <ion-col class="link-management-copy-link-button" col-3>
             <button ion-button color="light" (click)="copyText()">
@@ -39,7 +37,7 @@
           </ion-col>
         </ion-row>
         <div class="link-management-url-container">
-          <input #textArea class="link-management-url-input" type="text" [value]="cclaLink" readonly>
+          <input #textArea class="link-management-url-input" type="text" [value]="consoleLink" readonly>
         </div>
       </ion-grid>
     </div>
@@ -52,8 +50,8 @@
       <button ion-button (click)="dismiss()">
         Cancel
       </button>
-      <button ion-button color="primary" (click)="openCclaLink()">
-        View CCLA
+      <button ion-button color="primary" (click)="openConsoleLink()">
+        Go To Console
       </button>
     </ion-buttons>
   </ion-toolbar>
