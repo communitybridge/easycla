@@ -6,7 +6,7 @@ from http import HTTPStatus
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 
-sf_instance_url = os.environ.get('SF_INSTANCE_URL', 'cs93.salesforce.com')
+sf_instance_url = os.environ.get('SF_INSTANCE_URL', '')
 sf_client_id = os.environ.get('SF_CLIENT_ID', '')
 sf_client_secret = os.environ.get('SF_CLIENT_SECRET', '')
 sf_username = os.environ.get('SF_USERNAME', '')
@@ -38,6 +38,9 @@ def format_json_cors_response(status_code, body):
 
 
 def get_projects(event, context):
+    """
+    Gets list of all projects from Salesforce
+    """
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
     token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret, 
@@ -56,14 +59,17 @@ def get_projects(event, context):
         return format_json_cors_response(status_code, 'Error retrieving projects')
     records = response.get('records')
     projects = [
-        {'name': project.get('Name'), 
+        {'name': project.get('Name'),
         'id': project.get('attributes').get('url').split('/')[-1],
-        'logoRef': 'mock_project_logo.jpg'}
+        'logoRef': project.get('Image_File_for_PDF__c')}
         for project in records]
     return format_json_cors_response(status_code, projects)
 
 
 def get_project(event, context):
+    """
+    Given project id, gets project details from Salesforce
+    """
     project_id = event.get('queryStringParameters').get('id')
 
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
@@ -83,6 +89,7 @@ def get_project(event, context):
     project = {
         'name': response.get('Name'), 
         'id': response.get('Id'),
-        'logoRef': 'mock_project_logo.jpg'
+        'logoRef': response.get('Image_File_for_PDF__c'),
+        'description': response.get('Description__c')
     }
     return format_json_cors_response(status_code, project)
