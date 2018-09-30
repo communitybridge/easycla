@@ -1354,7 +1354,7 @@ class StoreModel(Model):
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     key = UnicodeAttribute(hash_key=True)
     value = JSONAttribute()
-
+    expire = NumberAttribute()
 
 class Store(key_value_store_interface.KeyValueStore):
     """
@@ -1367,6 +1367,7 @@ class Store(key_value_store_interface.KeyValueStore):
         model = StoreModel()
         model.key = key
         model.value = value
+        model.expire = self.get_expire_timestamp()
         model.save()
 
     def get(self, key):
@@ -1389,6 +1390,10 @@ class Store(key_value_store_interface.KeyValueStore):
         except cla.models.DoesNotExist:
             return False
 
+    def get_expire_timestamp(self):
+        # helper function to set store item ttl: 1 day
+        exp_datetime = datetime.datetime.now() + datetime.timedelta(days=1)
+        return exp_datetime.timestamp()
 
 class GitHubOrgModel(BaseModel):
     """
