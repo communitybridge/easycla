@@ -8,5 +8,8 @@
   },
   "scripts": {
     "sls": "../node_modules/.bin/serverless"
+  },
+  "dependencies": {
+    "serverless": "^1.32.0"
   }
 }
