@@ -181,8 +181,9 @@ class DocuSign(signing_service_interface.SigningService):
         else:
             cla.log.info('Project does not requires ICLA signature from employee - updating PR')
             organization = cla.utils.get_github_organization_instance()
-            organization = organization.get_organization_by_project_id(str(project_id))
-            installation_id = organization.get_organization_installation_id()
+            orgs = organization.get_organization_by_project_id(str(project_id))
+            target_org = get_org_from_return_url('github', return_url, orgs)
+            installation_id = target_org.get_organization_installation_id()
             github_repository_id = signature_metadata['repository_id']
             change_request_id = signature_metadata['pull_request_id']
             update_repository_provider(installation_id, github_repository_id, change_request_id)
@@ -516,6 +517,30 @@ def update_repository_provider(installation_id, github_repository_id, change_req
     """Helper method to notify the repository provider of successful signature."""
     repo_service = cla.utils.get_repository_service('github')
     repo_service.update_change_request(installation_id, github_repository_id, change_request_id)
+
+def get_org_from_return_url(repo_provider_type, return_url, orgs):
+    """
+    Helper method to find specific org from list of orgs under same contract group
+    This is a hack solution since it totally depends on return_url and repo service provider
+    However, based on the current implementation, it's a simple way to invovled minimal refactor
+    BTW, I don't believe the last team can do a successful demo without doing any tweaks like this
+
+    :param repo_provider_type: The repo service provider.
+    :type repo_provider_type: string
+    :param return_url: The URL will be redirected after signature done.
+    :type return_url: string
+    :return: List of Organizations of any repo service provider.
+    :rtype: [any_repo_service_provider.Organization]
+    """
+    if repo_provider_type is 'github':
+        split_url = return_url.split('/') #parse repo name from URL
+        target_org_name = split_url[3]
+        for org in orgs:
+            if org.get_organization_name() == target_org_name:
+                return org
+        raise Exception('Not found org: {} under current CLA project'.format(target_org_name))
+    else:
+        raise Exception('Repo service: {} not supported'.format(repo_provider_type))
 
 def get_docusign_tabs_from_document(document, document_id):
     """
