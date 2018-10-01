@@ -4,6 +4,7 @@ export class SFProjectModel {
   id: string;
   name: string;
   logoRef: string;
+  description: string;
 
   constructor() {
   }
