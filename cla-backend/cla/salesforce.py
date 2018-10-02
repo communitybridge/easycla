@@ -31,7 +31,8 @@ def format_json_cors_response(status_code, body):
     body = json.dumps(body)
     cors_headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': True
+        'Access-Control-Allow-Credentials': True,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
     response = format_response(status_code, cors_headers, body)
     return response
@@ -43,7 +44,7 @@ def get_projects(event, context):
     """
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
-    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret, 
+    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
     client_id=sf_client_id, username=sf_username, password=sf_password)
 
     query = {'q': 'SELECT name from Project__c'}
@@ -74,7 +75,7 @@ def get_project(event, context):
 
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
-    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret, 
+    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
     client_id=sf_client_id, username=sf_username, password=sf_password)
 
     url = 'https://{}/services/data/v20.0/sobjects/Project__c/{}'.format(sf_instance_url, project_id)
@@ -87,7 +88,7 @@ def get_project(event, context):
         cla.log.error('Error retrieving project: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving project')
     project = {
-        'name': response.get('Name'), 
+        'name': response.get('Name'),
         'id': response.get('Id'),
         'logoRef': response.get('Image_File_for_PDF__c'),
         'description': response.get('Description__c')
