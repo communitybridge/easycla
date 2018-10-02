@@ -100,7 +100,8 @@ export class ProjectPage {
     this.project = {
       id: "mock_project_id",
       name: "Mock Project AOSP",
-      logoRef: "mocklogo.com"
+      logoRef: "mocklogo.com",
+      description: "description"
     };
     this.sort = {
       alert: {

@@ -33,7 +33,8 @@ export class ProjectHeaderComponent {
     this.project = {
       id: "",
       name: "Project",
-      logoRef: ""
+      logoRef: "",
+      description: ""
     };
   }
 
