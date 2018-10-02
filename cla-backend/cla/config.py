@@ -106,8 +106,8 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage se
 
 # S3Storage Configuration.
 # ADD KEYS IF DEPLOYING TO DEV STAGE
-S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
-S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
+S3_ACCESS_KEY = 'AKIAJOVJ6CIJ2UAXNTVA' #: AWS Access Key ID for the S3 service.
+S3_SECRET_KEY = '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' #: AWS Secret Access Key for the S3 service.
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
