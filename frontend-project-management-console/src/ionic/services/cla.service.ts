@@ -816,11 +816,7 @@ export class ClaService {
     }
 
     getProjectFromSFDC(projectId) {
-      let params: URLSearchParams = new URLSearchParams();
-      params.set('id', projectId);
-      let requestOptions = new RequestOptions();
-      requestOptions.search = params;
-      return this.http.get(this.claApiUrl + "/v1/salesforce/project/", requestOptions)
+      return this.http.get(this.claApiUrl + `/v1/salesforce/project?id=${projectId}`)
         .map(res => res.json());
     }
 
