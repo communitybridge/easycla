@@ -27,7 +27,7 @@ elif stage == 'qa':
     BASE_URL = 'https://pd9alkfok2.execute-api.us-east-1.amazonaws.com/qa'
 else:
     BASE_URL = '' #ADD YOUR DEV STAGE STAGE HERE
-SIGNED_CALLBACK_URL = BASE_URL + '/v1/signed' #: Default callback once signature is completed.
+SIGNED_CALLBACK_URL = BASE_URL + '/v2/signed' #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
