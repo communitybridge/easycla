@@ -14,7 +14,7 @@ export class ClaService {
   }
 
   public setApiUrl(claApiUrl: string) {
-    this.claApiUrl = claApiUrl + "/v1";
+    this.claApiUrl = claApiUrl;
   }
 
   public setHttp(http: any) {
@@ -34,7 +34,7 @@ export class ClaService {
    **/
 
   getUsers() {
-    return this.http.get(this.claApiUrl + "/user").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v1/user").map(res => res.json());
   }
 
   postUser(user) {
@@ -47,7 +47,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/user", user)
+      .post(this.claApiUrl + "/v1/user", user)
       .map(res => res.json());
   }
 
@@ -61,7 +61,7 @@ export class ClaService {
         'user_github_id': 12345
       }
      */
-    return this.http.put(this.claApiUrl + "/user", user).map(res => res.json());
+    return this.http.put(this.claApiUrl + "/v1/user", user).map(res => res.json());
   }
 
   /**
@@ -70,13 +70,13 @@ export class ClaService {
 
   getUser(userId) {
     return this.http
-      .get(this.claApiUrl + "/user/" + userId)
+      .get(this.claApiUrl + "/v2/user/" + userId)
       .map(res => res.json());
   }
 
   deleteUser(userId) {
     return this.http
-      .delete(this.claApiUrl + "/user/" + userId)
+      .delete(this.claApiUrl + "/v1/user/" + userId)
       .map(res => res.json());
   }
 
@@ -86,7 +86,7 @@ export class ClaService {
 
   getUserByEmail(userEmail) {
     return this.http
-      .get(this.claApiUrl + "/user/email/" + userEmail)
+      .get(this.claApiUrl + "/v1/user/email/" + userEmail)
       .map(res => res.json());
   }
 
@@ -96,7 +96,7 @@ export class ClaService {
 
   getUserByGithubId(userGithubId) {
     return this.http
-      .get(this.claApiUrl + "/user/github/" + userGithubId)
+      .get(this.claApiUrl + "/v1/user/github/" + userGithubId)
       .map(res => res.json());
   }
 
@@ -106,7 +106,7 @@ export class ClaService {
 
   getUserSignatures(userId) {
     return this.http
-      .get(this.claApiUrl + "/user/" + userId + "/signatures")
+      .get(this.claApiUrl + "/v1/user/" + userId + "/signatures")
       .map(res => res.json());
   }
 
@@ -116,7 +116,7 @@ export class ClaService {
 
   getUsersByCompanyId(userCompanyId) {
     return this.http
-      .get(this.claApiUrl + "/users/company/" + userCompanyId)
+      .get(this.claApiUrl + "/v1/users/company/" + userCompanyId)
       .map(res => res.json());
   }
 
@@ -133,7 +133,7 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/user/" +
+          "/v2/user/" +
           userId +
           "/request-company-whitelist/" +
           companyId,
@@ -148,7 +148,7 @@ export class ClaService {
 
   getUserSignatureIntent(userId) {
     return this.http
-      .get(this.claApiUrl + "/user/" + userId + "/active-signature")
+      .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
       .map(res => res.json());
   }
 
@@ -160,7 +160,7 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/user/" +
+          "/v2/user/" +
           userId +
           "/project/" +
           projectId +
@@ -174,7 +174,7 @@ export class ClaService {
    **/
 
   getSignatures() {
-    return this.http.get(this.claApiUrl + "/signature").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v1/signature").map(res => res.json());
   }
 
   postSignature(signature) {
@@ -191,7 +191,7 @@ export class ClaService {
       }
       */
     return this.http
-      .post(this.claApiUrl + "/signature", signature)
+      .post(this.claApiUrl + "/v1/signature", signature)
       .map(res => res.json());
   }
 
@@ -210,7 +210,7 @@ export class ClaService {
       }
       */
     return this.http
-      .put(this.claApiUrl + "/signature", signature)
+      .put(this.claApiUrl + "/v1/signature", signature)
       .map(res => res.json());
   }
 
@@ -220,13 +220,13 @@ export class ClaService {
 
   getSignature(signatureId) {
     return this.http
-      .get(this.claApiUrl + "/signature/" + signatureId)
+      .get(this.claApiUrl + "/v1/signature/" + signatureId)
       .map(res => res.json());
   }
 
   deleteSignature(signatureId) {
     return this.http
-      .delete(this.claApiUrl + "/signature/" + signatureId)
+      .delete(this.claApiUrl + "/v1/signature/" + signatureId)
       .map(res => res.json());
   }
 
@@ -236,7 +236,7 @@ export class ClaService {
 
   getSignaturesUser(userId) {
     return this.http
-      .get(this.claApiUrl + "/signatures/user/" + userId)
+      .get(this.claApiUrl + "/v1/signatures/user/" + userId)
       .map(res => res.json());
   }
 
@@ -246,7 +246,7 @@ export class ClaService {
 
   getCompanySignatures(companyId) {
     return this.http
-      .get(this.claApiUrl + "/signatures/company/" + companyId)
+      .get(this.claApiUrl + "/v1/signatures/company/" + companyId)
       .map(res => res.json());
   }
 
@@ -258,7 +258,7 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/signatures/company/" +
+          "/v1/signatures/company/" +
           companyId +
           "/project/" +
           projectId
@@ -272,7 +272,7 @@ export class ClaService {
 
   getProjectSignatures(projectId) {
     return this.http
-      .get(this.claApiUrl + "/signatures/project/" + projectId)
+      .get(this.claApiUrl + "/v1/signatures/project/" + projectId)
       .map(res => res.json());
   }
 
@@ -281,7 +281,7 @@ export class ClaService {
    **/
 
   getRepositories() {
-    return this.http.get(this.claApiUrl + "/repository").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v1/repository").map(res => res.json());
   }
 
   postRepository(repository) {
@@ -295,7 +295,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/repository", repository)
+      .post(this.claApiUrl + "/v1/repository", repository)
       .map(res => res.json());
   }
 
@@ -311,7 +311,7 @@ export class ClaService {
       }
      */
     return this.http
-      .put(this.claApiUrl + "/repository", repository)
+      .put(this.claApiUrl + "/v1/repository", repository)
       .map(res => res.json());
   }
 
@@ -321,13 +321,13 @@ export class ClaService {
 
   getRepository(repositoryId) {
     return this.http
-      .get(this.claApiUrl + "/repository/" + repositoryId)
+      .get(this.claApiUrl + "/v1/repository/" + repositoryId)
       .map(res => res.json());
   }
 
   deleteRepository(repositoryId) {
     return this.http
-      .delete(this.claApiUrl + "/repository/" + repositoryId)
+      .delete(this.claApiUrl + "/v1/repository/" + repositoryId)
       .map(res => res.json());
   }
 
@@ -336,7 +336,7 @@ export class ClaService {
    **/
 
   getCompanies() {
-    return this.http.get(this.claApiUrl + "/company").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v1/company").map(res => res.json());
   }
 
   postCompany(company) {
@@ -348,7 +348,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/company", company)
+      .post(this.claApiUrl + "/v1/company", company)
       .map(res => res.json());
   }
 
@@ -360,7 +360,7 @@ export class ClaService {
       }
      */
     return this.http
-      .put(this.claApiUrl + "/company", company)
+      .put(this.claApiUrl + "/v1/company", company)
       .map(res => res.json());
   }
 
@@ -370,13 +370,13 @@ export class ClaService {
 
   getCompany(companyId) {
     return this.http
-      .get(this.claApiUrl + "/company/" + companyId)
+      .get(this.claApiUrl + "/v2/company/" + companyId)
       .map(res => res.json());
   }
 
   deleteCompany(companyId) {
     return this.http
-      .delete(this.claApiUrl + "/company/" + companyId)
+      .delete(this.claApiUrl + "/v1/company/" + companyId)
       .map(res => res.json());
   }
 
@@ -385,12 +385,12 @@ export class ClaService {
    **/
 
   getProjects() {
-    return this.http.get(this.claApiUrl + "/project").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v1/project").map(res => res.json());
   }
 
   getProjectsCcla() {
     return this.http
-      .get(this.claApiUrl + "/project/ccla")
+      .get(this.claApiUrl + "/v1/project/ccla")
       .map(res => res.json());
   }
 
@@ -405,7 +405,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/project", project)
+      .post(this.claApiUrl + "/v1/project", project)
       .map(res => res.json());
   }
 
@@ -417,7 +417,7 @@ export class ClaService {
       }
      */
     return this.http
-      .put(this.claApiUrl + "/project", project)
+      .put(this.claApiUrl + "/v1/project", project)
       .map(res => res.json());
   }
 
@@ -427,19 +427,19 @@ export class ClaService {
 
   getProject(projectId) {
     return this.http
-      .get(this.claApiUrl + "/project/" + projectId)
+      .get(this.claApiUrl + "/v2/project/" + projectId)
       .map(res => res.json());
   }
 
   getProjectsByExternalId(externalId) {
     return this.http
-      .get(this.claApiUrl + "/project/external/" + externalId)
+      .get(this.claApiUrl + "/v1/project/external/" + externalId)
       .map(res => res.json());
   }
 
   deleteProject(projectId) {
     return this.http
-      .delete(this.claApiUrl + "/project/" + projectId)
+      .delete(this.claApiUrl + "/v1/project/" + projectId)
       .map(res => res.json());
   }
 
@@ -449,7 +449,7 @@ export class ClaService {
 
   getProjectRepositories(projectId) {
     return this.http
-      .get(this.claApiUrl + "/project/" + projectId + "/repositories")
+      .get(this.claApiUrl + "/v1/project/" + projectId + "/repositories")
       .map(res => res.json());
   }
 
@@ -459,7 +459,7 @@ export class ClaService {
 
   getProjectOrganizations(projectId) {
     return this.http
-      .get(this.claApiUrl + "/project/" + projectId + "/organizations")
+      .get(this.claApiUrl + "/v1/project/" + projectId + "/organizations")
       .map(res => res.json());
   }
 
@@ -469,7 +469,7 @@ export class ClaService {
 
   getProjectCompanies(projectId) {
     return this.http
-      .get(this.claApiUrl + "/project/" + projectId + "/companies")
+      .get(this.claApiUrl + "/v2/project/" + projectId + "/companies")
       .map(res => res.json());
   }
 
@@ -480,7 +480,7 @@ export class ClaService {
   getProjectDocument(projectId, documentType) {
     return this.http
       .get(
-        this.claApiUrl + "/project/" + projectId + "/document/" + documentType
+        this.claApiUrl + "/v2/project/" + projectId + "/document/" + documentType
       )
       .map(res => res.json());
   }
@@ -495,7 +495,7 @@ export class ClaService {
      */
     return this.http
       .post(
-        this.claApiUrl + "/project/" + projectId + "/document/" + documentType,
+        this.claApiUrl + "/v1/project/" + projectId + "/document/" + documentType,
         document
       )
       .map(res => res.json());
@@ -513,7 +513,7 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/project/" +
+          "/v1/project/" +
           projectId +
           "/document/template/" +
           documentType,
@@ -535,7 +535,7 @@ export class ClaService {
     return this.http
       .delete(
         this.claApiUrl +
-          "/project/" +
+          "/v1/project/" +
           projectId +
           "/document/" +
           documentType +
@@ -559,7 +559,7 @@ export class ClaService {
   ) {
     return (
       this.claApiUrl +
-      "/project/" +
+      "/v1/project/" +
       projectId +
       "/document/" +
       documentType +
@@ -584,7 +584,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/request-individual-signature", signatureRequest)
+      .post(this.claApiUrl + "/v2/request-individual-signature", signatureRequest)
       .map(res => res.json());
   }
 
@@ -601,7 +601,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/request-employee-signature", signatureRequest)
+      .post(this.claApiUrl + "/v2/request-employee-signature", signatureRequest)
       .map(res => res.json());
   }
 
@@ -618,7 +618,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/request-corporate-signature", signatureRequest)
+      .post(this.claApiUrl + "/v1/request-corporate-signature", signatureRequest)
       .map(res => res.json());
   }
 
@@ -630,7 +630,7 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/signed/" +
+          "/v1/signed/" +
           installationId +
           "/" +
           githubRepositoryId +
@@ -646,7 +646,7 @@ export class ClaService {
 
   getReturnUrl(signatureId) {
     return this.http
-      .get(this.claApiUrl + "/return-url/" + signatureId)
+      .get(this.claApiUrl + "/v2/return-url/" + signatureId)
       .map(res => res.json());
   }
 
@@ -663,7 +663,7 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/repository-provider/" +
+          "/v2/repository-provider/" +
           provider +
           "/sign/" +
           installationId +
@@ -682,7 +682,7 @@ export class ClaService {
   getChangeIcon(provider) {
     // This probably won't map to json, but instead to svg/xml
     return this.http
-      .get(this.claApiUrl + "/repository-provider/" + provider + "/icon.svg")
+      .get(this.claApiUrl + "/v2/repository-provider/" + provider + "/icon.svg")
       .map(res => res.json());
   }
 
@@ -692,7 +692,7 @@ export class ClaService {
 
   postReceivedActivity(provider) {
     return this.http
-      .post(this.claApiUrl + "/repository-provider/" + provider + "/activity")
+      .post(this.claApiUrl + "/v2/repository-provider/" + provider + "/activity")
       .map(res => res.json());
   }
 
@@ -702,7 +702,7 @@ export class ClaService {
 
   getGithubOrganizations() {
     return this.http
-      .get(this.claApiUrl + "/github/organizations")
+      .get(this.claApiUrl + "/v1/github/organizations")
       .map(res => res.json());
   }
 
@@ -714,7 +714,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/github/organizations", organization)
+      .post(this.claApiUrl + "/v1/github/organizations", organization)
       .map(res => res.json());
   }
 
@@ -724,7 +724,7 @@ export class ClaService {
 
   getGithubGetNamespace(namespace) {
     return this.http
-      .get(this.claApiUrl + "/github/get/namespace/" + namespace)
+      .get(this.claApiUrl + "/v1/github/get/namespace/" + namespace)
       .map(res => res.json());
   }
 
@@ -734,7 +734,7 @@ export class ClaService {
 
   getGithubCheckNamespace(namespace) {
     return this.http
-      .get(this.claApiUrl + "/github/check/namespace/" + namespace)
+      .get(this.claApiUrl + "/v1/github/check/namespace/" + namespace)
       .map(res => res.json());
   }
 
@@ -744,13 +744,13 @@ export class ClaService {
 
   getGithubOrganization(organizationName) {
     return this.http
-      .get(this.claApiUrl + "/github/organizations/" + organizationName)
+      .get(this.claApiUrl + "/v1/github/organizations/" + organizationName)
       .map(res => res.json());
   }
 
   deleteGithubOrganization(organizationName) {
     return this.http
-      .delete(this.claApiUrl + "/github/organizations/" + organizationName)
+      .delete(this.claApiUrl + "/v1/github/organizations/" + organizationName)
       .map(res => res.json());
   }
 
@@ -762,7 +762,7 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/github/organizations/" +
+          "/v1/github/organizations/" +
           organizationName +
           "/repositories"
       )
@@ -775,13 +775,13 @@ export class ClaService {
 
   getGithubInstallation() {
     return this.http
-      .get(this.claApiUrl + "/github/installation")
+      .get(this.claApiUrl + "/v2/github/installation")
       .map(res => res.json());
   }
 
   postGithubInstallation() {
     return this.http
-      .post(this.claApiUrl + "/github/installation")
+      .post(this.claApiUrl + "/v2/github/installation")
       .map(res => res.json());
   }
 
@@ -791,7 +791,7 @@ export class ClaService {
 
   postGithubActivity() {
     return this.http
-      .post(this.claApiUrl + "/github/activity")
+      .post(this.claApiUrl + "/v2/github/activity")
       .map(res => res.json());
   }
 
@@ -801,28 +801,28 @@ export class ClaService {
 
   postGithubValidate() {
     return this.http
-      .post(this.claApiUrl + "/github/validate")
+      .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
   }
 
   /**
    * /salesforce/projects
    **/
-  
-  getAllProjectsFromSFDC() {
-    return this.http
-      .get(this.claApiUrl + "/salesforce/projects")
-      .map(res => res.json());
-   }
 
-  getProjectFromSFDC(projectId) {
-    let params: URLSearchParams = new URLSearchParams();
-    params.set('id', projectId);
-    let requestOptions = new RequestOptions();
-    requestOptions.search = params;    
-    return this.http.get(this.claApiUrl + "/salesforce/project/", requestOptions)
-      .map(res => res.json());
-  }
+   getAllProjectsFromSFDC() {
+     return this.http
+       .get(this.claApiUrl + "/v1/salesforce/projects")
+       .map(res => res.json());
+    }
+
+    getProjectFromSFDC(projectId) {
+      let params: URLSearchParams = new URLSearchParams();
+      params.set('id', projectId);
+      let requestOptions = new RequestOptions();
+      requestOptions.search = params;
+      return this.http.get(this.claApiUrl + "/v1/salesforce/project/", requestOptions)
+        .map(res => res.json());
+    }
 
   //////////////////////////////////////////////////////////////////////////////
 }
