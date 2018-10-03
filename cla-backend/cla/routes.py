@@ -50,7 +50,7 @@ def process_data(request, response, resource):
 #
 # Health check route.
 #
-@hug.get('/health', versions=1)
+@hug.get('/health', versions=2)
 def get_health(request):
     """
     GET: /health
@@ -75,7 +75,7 @@ def get_users():
     return cla.controllers.user.get_users()
 
 
-@hug.get('/user/{user_id}', versions=1)
+@hug.get('/user/{user_id}', versions=2)
 def get_user(user_id: hug.types.uuid):
     """
     GET: /user/{user_id}
@@ -183,7 +183,7 @@ def get_users_company(user: cla_user, user_company_id: hug.types.uuid):
     """
     return cla.controllers.user.get_users_company(user_company_id)
 
-@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=1)
+@hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=2)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
                               user_email: cla.hug_types.email, message=None):
     """
@@ -196,7 +196,7 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
-@hug.get('/user/{user_id}/active-signature', versions=1)
+@hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
     """
     GET: /user/{user_id}/active-signature
@@ -213,7 +213,7 @@ def get_user_active_signature(user_id: hug.types.uuid):
     """
     return cla.controllers.user.get_active_signature(user_id)
 
-@hug.get('/user/{user_id}/project/{project_id}/last-signature', versions=1)
+@hug.get('/user/{user_id}/project/{project_id}/last-signature', versions=2)
 def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.types.uuid):
     """
     GET: /user/{user_id}/project/{project_id}/last-signature
@@ -516,7 +516,7 @@ def get_companies():
     return cla.controllers.company.get_companies()
 
 
-@hug.get('/company/{company_id}', versions=1)
+@hug.get('/company/{company_id}', versions=2)
 def get_company(company_id: hug.types.text):
     """
     GET: /company/{company_id}
@@ -632,7 +632,7 @@ def get_projects(user: cla_user):
             del project['project_external_id']
     return projects
 
-@hug.get('/project/{project_id}', versions=1)
+@hug.get('/project/{project_id}', versions=2)
 def get_project(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}
@@ -724,7 +724,7 @@ def get_project_organizations(user: cla_user, project_id: hug.types.uuid):
     """
     return cla.controllers.project.get_project_organizations(project_id)
 
-@hug.get('/project/{project_id}/document/{document_type}', versions=1)
+@hug.get('/project/{project_id}/document/{document_type}', versions=2)
 def get_project_document(project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
@@ -734,7 +734,7 @@ def get_project_document(project_id: hug.types.uuid,
     """
     return cla.controllers.project.get_project_document(project_id, document_type)
 
-@hug.get('/project/{project_id}/document/{document_type}/pdf', version=1)
+@hug.get('/project/{project_id}/document/{document_type}/pdf', version=2)
 def get_project_document(response, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
@@ -760,7 +760,7 @@ def get_project_document(response, project_id: hug.types.uuid,
                                                             document_major_version=document_major_version,
                                                             document_minor_version=document_minor_version)
 
-@hug.get('/project/{project_id}/companies', versions=1)
+@hug.get('/project/{project_id}/companies', versions=2)
 def get_project_companies(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/companies
@@ -874,7 +874,7 @@ def delete_project_document(user: cla_user,
 # #
 # # Document Signing Routes.
 # #
-@hug.post('/request-individual-signature', versions=1,
+@hug.post('/request-individual-signature', versions=2,
           examples=" - {'project_id': 'some-proj-id', \
                         'user_id': 'some-user-uuid'}")
 def request_individual_signature(project_id: hug.types.uuid,
@@ -932,7 +932,7 @@ def request_corporate_signature(user: cla_user,
     # staff_verify(user) or company_manager_verify(user, company_id)
     return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
 
-@hug.post('/request-employee-signature', versions=1)
+@hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
                                company_id: hug.types.uuid,
                                user_id: hug.types.uuid,
@@ -952,7 +952,7 @@ def request_employee_signature(project_id: hug.types.uuid,
     """
     return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
 
-@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def post_individual_signed(body,
                            installation_id: hug.types.number,
                            github_repository_id: hug.types.number,
@@ -968,7 +968,7 @@ def post_individual_signed(body,
     content = body.read()
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
-@hug.post('/signed/corporate/{project_id}/{company_id}', versions=1)
+@hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
                           project_id: hug.types.uuid,
                           company_id: hug.types.uuid):
@@ -983,7 +983,7 @@ def post_corporate_signed(body,
     content = body.read()
     return cla.controllers.signing.post_corporate_signed(content, project_id, company_id)
 
-@hug.get('/return-url/{signature_id}', versions=1)
+@hug.get('/return-url/{signature_id}', versions=2)
 def get_return_url(signature_id: hug.types.uuid, event=None):
     """
     GET: /return-url/{signature_id}
@@ -1000,7 +1000,7 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
 # #
 # # Repository Provider Routes.
 # #
-@hug.get('/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+@hug.get('/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def sign_request(provider: hug.types.one_of(get_supported_repository_providers().keys()),
                  installation_id: hug.types.text,
                  github_repository_id: hug.types.text,
@@ -1018,7 +1018,7 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
                                                            request)
 
 
-@hug.get('/repository-provider/{provider}/icon.svg', versions=1,
+@hug.get('/repository-provider/{provider}/icon.svg', versions=2,
          output=hug.output_format.svg_xml_image) # pylint: disable=no-member
 def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
                 signed: hug.types.smart_boolean):
@@ -1032,7 +1032,7 @@ def change_icon(provider: hug.types.one_of(get_supported_repository_providers().
     return cla.controllers.repository_service.change_icon(provider, signed)
 
 
-@hug.get('/repository-provider/{provider}/oauth2_redirect', versions=1)
+@hug.get('/repository-provider/{provider}/oauth2_redirect', versions=2)
 def oauth2_redirect(user: cla_user, # pylint: disable=too-many-arguments
                     provider: hug.types.one_of(get_supported_repository_providers().keys()),
                     state: hug.types.text,
@@ -1056,7 +1056,7 @@ def oauth2_redirect(user: cla_user, # pylint: disable=too-many-arguments
                                                               request)
 
 
-@hug.post('/repository-provider/{provider}/activity', versions=1)
+@hug.post('/repository-provider/{provider}/activity', versions=2)
 def received_activity(body,
                       provider: hug.types.one_of(get_supported_repository_providers().keys())):
     """
