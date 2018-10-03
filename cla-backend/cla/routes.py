@@ -952,7 +952,7 @@ def request_employee_signature(project_id: hug.types.uuid,
     """
     return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
 
-@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=1)
+@hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def post_individual_signed(body,
                            installation_id: hug.types.number,
                            github_repository_id: hug.types.number,
@@ -968,7 +968,7 @@ def post_individual_signed(body,
     content = body.read()
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
-@hug.post('/signed/corporate/{project_id}/{company_id}', versions=1)
+@hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
                           project_id: hug.types.uuid,
                           company_id: hug.types.uuid):
