@@ -4,6 +4,7 @@ Controller related to the github application (CLA GitHub App).
 import requests
 import hmac
 import cla
+import os
 from pprint import pprint
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
 from cla.models import DoesNotExist
@@ -210,7 +211,6 @@ def validate_organization(body):
 
 
 def webhook_secret_validation(webhook_signature, data):
-
     if not webhook_signature:
         return False
 
@@ -219,13 +219,12 @@ def webhook_secret_validation(webhook_signature, data):
     if not sha_name == 'sha1':
         return False
 
-    mac = hmac.new(cla.conf['GITHUB_APP_WEBHOOK_SECRET'].encode('utf-8'), msg=data, digestmod='sha1')
-
+    mac = hmac.new(os.environ.get('GH_APP_WEBHOOK_SECRET', '').encode('utf-8'), msg=data, digestmod='sha1')
     pprint(str(mac.hexdigest()))
     pprint(str(signature))
     pprint(data)
-
-    return True if str(mac.hexdigest()) == str(signature) else False
+    
+    return True if hmac.compare_digest(mac.hexdigest(), signature) else False
 
 def check_namespace(namespace):
     """
