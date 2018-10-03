@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
+import { Http, RequestOptions, URLSearchParams } from '@angular/http';
+import { Observable } from "rxjs/Observable";
 
 import "rxjs/Rx";
 
@@ -803,6 +804,25 @@ export class ClaService {
       .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
   }
+
+  /**
+   * /salesforce/projects
+   **/
+
+   getAllProjectsFromSFDC() {
+     return this.http
+       .get(this.claApiUrl + "/v1/salesforce/projects")
+       .map(res => res.json());
+    }
+
+   getProjectFromSFDC(projectId) {
+      let params: URLSearchParams = new URLSearchParams();
+      params.set('id', projectId);
+      let requestOptions = new RequestOptions();
+      requestOptions.search = params;
+      return this.http.get(this.claApiUrl + "/v1/salesforce/project/", requestOptions)
+        .map(res => res.json());
+    }
 
   //////////////////////////////////////////////////////////////////////////////
 }
