@@ -815,7 +815,7 @@ export class ClaService {
        .map(res => res.json());
     }
 
-   getProjectFromSFDC(projectId) {
+    getProjectFromSFDC(projectId) {
       let params: URLSearchParams = new URLSearchParams();
       params.set('id', projectId);
       let requestOptions = new RequestOptions();
