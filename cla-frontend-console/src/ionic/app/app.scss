@@ -16,6 +16,15 @@
 
 @import "../theme/styles.scss";
 
+.item-md{
+  padding-left: 0;
+}
+
+.item-md.item-block .item-inner{
+  padding-right: 0;
+}
+
 .card-md .item-md.item-block .item-inner {
   border-bottom: 1px solid #dedede;
+  padding-right: 0 !important;
 }

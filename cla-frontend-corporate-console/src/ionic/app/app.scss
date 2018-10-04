@@ -15,3 +15,11 @@
 // automatically applied to the <body> element in the app.
 
 @import "../theme/styles.scss";
+
+.item-md{
+  padding-left: 0;
+}
+
+.item-md.item-block .item-inner{
+  padding-right: 0;
+}
