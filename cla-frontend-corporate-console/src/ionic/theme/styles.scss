@@ -75,8 +75,11 @@ ion-menu {
       }
     }
   }
-  .item-md.item-block .item-inner {
-    border-bottom: 0;
+
+  .item-md {
+    &.item-block .item-inner {
+      border-bottom: 0;
+    }
   }
 
   .scroll-content {
