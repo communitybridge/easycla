@@ -23,6 +23,14 @@ ion-icon[name=menu] {
   color: color($colors, white);
 }
 
+.item-md.item-block .item-inner{
+  padding-right: 0;
+}
+
+.item-md{
+  padding-left: 0;
+}
+
 .toolbar {
   background-color: color($colors, primary);
   color: color($colors, light);
