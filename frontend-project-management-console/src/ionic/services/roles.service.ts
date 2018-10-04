@@ -44,7 +44,7 @@ export class RolesService {
   //////////////////////////////////////////////////////////////////////////////
 
   getUserRolesPromise() {
-    console.log("Get UserRole Promise. - Updated @jamesheller");
+    console.log("Get UserRole Promise.");
     if (this.authService.isAuthenticated()) {
       return this.authService
         .getIdToken()
