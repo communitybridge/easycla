@@ -23,6 +23,22 @@ ion-icon[name=menu] {
   color: color($colors, white);
 }
 
+.contract-group .card {
+  margin-left: 0;
+  margin-right: 0;
+  width: auto;
+  .card-content {
+    .grid {
+      padding-left: 0;
+      padding-right: 0;
+      .col {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  }
+}
+
 .item-md.item-block .item-inner{
   padding-right: 0;
 }
@@ -102,6 +118,10 @@ ion-content .scroll-content > header {
 .table > tbody > tr > td.actions-cell {
   text-align: right;
   padding-top: .6rem;
+}
+
+.toolbar-title-md {
+  padding: 0;
 }
 
 @import './styles/menu';
