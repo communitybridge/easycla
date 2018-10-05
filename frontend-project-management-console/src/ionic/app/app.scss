@@ -15,6 +15,11 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
+.grid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 ion-icon{
   color: color($colors, gray);
 }
@@ -43,8 +48,11 @@ ion-icon[name=menu] {
   padding-right: 0;
 }
 
-.item-md{
+.item.item-md{
   padding-left: 0;
+  .checkbox-md {
+    margin: 6px 15px 9px 0px;
+  }
 }
 
 .toolbar {
@@ -122,6 +130,21 @@ ion-content .scroll-content > header {
 
 .toolbar-title-md {
   padding: 0;
+}
+
+.md ion-footer .toolbar:last-child{
+  padding-bottom: 1rem;
+}
+
+.bar-buttons-md[end] {
+  margin-right: 0;
+  .button:last-child {
+    margin-right: 0;
+  }
+}
+
+.row .col .card {
+  min-height: calc( 100% - 20px )
 }
 
 @import './styles/menu';
