@@ -1,0 +1,3 @@
+wsgi.py
+serverless_wsgi.py
+.wsgi_app
