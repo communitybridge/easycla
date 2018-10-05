@@ -16,8 +16,16 @@
 
 @import "../theme/styles.scss";
 
-.item-md{
+.grid {
   padding-left: 0;
+  padding-right: 0;
+}
+
+.item.item-md {
+  padding-left: 0;
+  .checkbox-md {
+    margin: 6px 15px 9px 0px;
+  }
 }
 
 .item-md.item-block .item-inner{
@@ -31,4 +39,19 @@
 
 .toolbar-title-md {
   padding: 0;
+}
+
+.md ion-footer .toolbar:last-child{
+  padding-bottom: 1rem;
+}
+
+.bar-buttons-md[end] {
+  margin-right: 0;
+  .button:last-child {
+    margin-right: 0;
+  }
+}
+
+.row .col .card {
+  min-height: calc( 100% - 20px )
 }
