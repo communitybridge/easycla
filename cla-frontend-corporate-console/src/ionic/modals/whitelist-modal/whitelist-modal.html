@@ -1,8 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span *ngIf="mode === 'add'">Add Company</span>
-      <span *ngIf="mode === 'edit'">Edit Company</span>
+      <span>Edit {{type}} Whitelist</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
