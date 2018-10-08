@@ -43,13 +43,14 @@ def get_projects(event, context):
     Gets list of all projects from Salesforce
     """
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
+
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
     token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
     client_id=sf_client_id, username=sf_username, password=sf_password)
 
     query = {'q': 'SELECT name from Project__c'}
     headers = {'Content-Type': 'application/json'}
-    url = 'https://{}/services/data/v20.0/query/'.format(sf_instance_url)
+    url = '{}/services/data/v20.0/query/'.format(token['instance_url'])
     cla.log.info('Calling salesforce api for project list...')
     r = oauth2.request('GET', url, params=query, headers=headers)
 
@@ -78,7 +79,7 @@ def get_project(event, context):
     token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
     client_id=sf_client_id, username=sf_username, password=sf_password)
 
-    url = 'https://{}/services/data/v20.0/sobjects/Project__c/{}'.format(sf_instance_url, project_id)
+    url = '{}/services/data/v20.0/sobjects/Project__c/{}'.format(token['instance_url'], project_id)
     cla.log.info('Calling salesforce api for project info..')
     r = oauth2.request('GET', url)
 

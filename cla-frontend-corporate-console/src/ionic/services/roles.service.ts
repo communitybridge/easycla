@@ -88,12 +88,14 @@ export class RolesService {
   }
 
   private isInProjectSet(roles, projectSet) {
-    for (let i = 0; i < roles.length; i++) {
-      if (projectSet.has(roles[i])) {
-        return true;
-      }
-    }
-    return false;
+    return true;
+
+    // for (let i = 0; i < roles.length; i++) {
+    //   if (projectSet.has(roles[i])) {
+    //     return true;
+    //   }
+    // }
+    // return false;
   }
 
   //////////////////////////////////////////////////////////////////////////////
