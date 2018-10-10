@@ -3,8 +3,14 @@ import requests
 import os
 import json
 from http import HTTPStatus
+
+import cla.utils
+
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
+from jose import jwt
+
+stage = os.environ.get('STAGE', '')
 
 sf_instance_url = os.environ.get('SF_INSTANCE_URL', '')
 sf_client_id = os.environ.get('SF_CLIENT_ID', '')
@@ -42,13 +48,53 @@ def get_projects(event, context):
     """
     Gets list of all projects from Salesforce
     """
+
+    # Get userID from token
+    headers = event.get('headers')
+    if headers is None:
+        cla.log.error('Error reading headers')
+        return format_json_cors_response(400, 'Error reading headers')
+
+    bearer_token = headers.get('Authorization')
+    if bearer_token is None:
+        cla.log.error('Error reading authorization header')
+        return format_json_cors_response(400, 'Error reading authorization header')
+
+    bearer_token = bearer_token.replace('Bearer ', '')
+    try:
+        token_params = jwt.get_unverified_claims(bearer_token)
+    except:
+        cla.log.error('Error parsing Bearer token')
+        return format_json_cors_response(400, 'Error parsing Bearer token')
+
+    user_id = token_params.get('sub')
+    if user_id is None:
+        cla.log.error('Error parsing user ID')
+        return format_json_cors_response(400, 'Error parsing user ID')
+
+    # Get project access list for user
+    user_permissions = cla.utils.get_user_permissions_instance()
+    try:
+        user_permissions.load(user_id)
+    except:
+        cla.log.error('Error invalid user ID')
+        return format_json_cors_response(400, 'Error invalid user ID')
+
+    user_permissions = user_permissions.to_dict()
+
+    authorized_projects = user_permissions.get('projects')
+    if authorized_projects is None:
+        cla.log.error('Error user not authorized to access projects')
+        return format_json_cors_response(403, 'Error user not authorized to access projects')
+
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
 
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
     token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
     client_id=sf_client_id, username=sf_username, password=sf_password)
 
-    query = {'q': 'SELECT name from Project__c'}
+    project_list = ', '.join('\'' + project_id + '\'' for project_id in authorized_projects)
+    query = {'q': 'SELECT id, Name, Description__c from Project__c WHERE id IN ({})'.format(project_list)}
     headers = {'Content-Type': 'application/json'}
     url = '{}/services/data/v20.0/query/'.format(token['instance_url'])
     cla.log.info('Calling salesforce api for project list...')
@@ -60,19 +106,70 @@ def get_projects(event, context):
         cla.log.error('Error retrieving projects: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving projects')
     records = response.get('records')
-    projects = [
-        {'name': project.get('Name'),
-        'id': project.get('attributes').get('url').split('/')[-1],
-        'logoRef': project.get('Image_File_for_PDF__c')}
-        for project in records]
-    return format_json_cors_response(status_code, projects)
 
+    projects = []
+    for project in records:
+        logo_url = None
+        project_id = project.get('Id')
+        if project_id:
+            logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, project_id)
+
+        projects.append({
+            'name': project.get('Name'),
+            'id': project_id,
+            'description': project.get('Description'),
+            'logoUrl': logo_url
+        })
+
+    return format_json_cors_response(status_code, projects)
 
 def get_project(event, context):
     """
     Given project id, gets project details from Salesforce
     """
+
+    # Get userID from token
+    headers = event.get('headers')
+    if headers is None:
+        cla.log.error('Error reading headers')
+        return format_json_cors_response(400, 'Error reading headers')
+
+    bearer_token = headers.get('Authorization')
+    if bearer_token is None:
+        cla.log.error('Error reading authorization header')
+        return format_json_cors_response(400, 'Error reading authorization header')
+
+    bearer_token = bearer_token.replace('Bearer ', '')
+    try:
+        token_params = jwt.get_unverified_claims(bearer_token)
+    except:
+        cla.log.error('Error parsing Bearer token')
+        return format_json_cors_response(400, 'Error parsing Bearer token')
+
+    user_id = token_params.get('sub')
+    if user_id is None:
+        cla.log.error('Error parsing user ID')
+        return format_json_cors_response(400, 'Error parsing user ID')
+
+    # Get project access list for user
+    user_permissions = cla.utils.get_user_permissions_instance()
+    try:
+        user_permissions.load(user_id)
+    except:
+        cla.log.error('Error invalid user ID')
+        return format_json_cors_response(400, 'Error invalid user ID')
+
+    user_permissions = user_permissions.to_dict()
+
+    authorized_projects = user_permissions.get('projects')
+    if authorized_projects is None:
+        cla.log.error('Error user not authorized to access projects')
+        return format_json_cors_response(403, 'Error user not authorized to access projects')
+
     project_id = event.get('queryStringParameters').get('id')
+    if project_id not in authorized_projects:
+        cla.log.error('Error user not authorized')
+        return format_json_cors_response(403, 'Error user not authorized')
 
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
     oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
@@ -88,10 +185,15 @@ def get_project(event, context):
     if status_code != HTTPStatus.OK:
         cla.log.error('Error retrieving project: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving project')
+
+    logo_url = None
+    if response.get('id'):
+        logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, response.get('id'))
+
     project = {
         'name': response.get('Name'),
         'id': response.get('Id'),
-        'logoRef': response.get('Image_File_for_PDF__c'),
-        'description': response.get('Description__c')
+        'description': response.get('Description__c'),
+        'logoUrl': logo_url
     }
     return format_json_cors_response(status_code, project)
