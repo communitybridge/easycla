@@ -64,20 +64,30 @@ export class WhitelistModal {
   }
 
   addWhitelistItem(item) {
+    let regexForItem = this.type === "domain" ? /[a-z0-9]{1,}\.[a-z]{2,}$/i : /^.+@.+\..+$/i;
+
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
       this.formBuilder.group({
-        whitelistItem: [item, Validators.required]
+        whitelistItem: [item, Validators.compose([
+          Validators.required,
+          Validators.pattern(regexForItem)
+        ])]
       })
     );
   }
 
   addNewWhitelistItem() {
+    let regexForItem = this.type === "domain" ? /[a-z0-9]{1,}\.[a-z]{2,}$/i : /^.+@.+\..+$/i;
+
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.insert(
       0,
       this.formBuilder.group({
-        whitelistItem: ["", Validators.required]
+        whitelistItem: ["", Validators.compose([
+          Validators.required,
+          Validators.pattern(regexForItem)
+        ])]
       })
     );
   }
