@@ -25,15 +25,17 @@
         </ion-col>
       </ion-row>
       <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">
-        <ion-col col-9>
-          <ion-item>
-            <ion-input formControlName="whitelistItem"></ion-input>
-          </ion-item>
-        </ion-col>
-        <ion-col col-3>
-          <button type="button" ion-button class="clickable" (click)="removeWhitelistItem(i)">
-            X
-          </button>
+        <ion-col>
+          <div style="float:right">
+            <button type="button" ion-button class="clickable" (click)="removeWhitelistItem(i)">
+              X
+            </button>
+          </div>
+          <div style="margin-right:3.5em;">
+            <ion-item>
+              <ion-input formControlName="whitelistItem"></ion-input>
+            </ion-item>
+          </div>
         </ion-col>
       </ion-row>
     </ion-grid>
