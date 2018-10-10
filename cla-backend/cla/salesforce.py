@@ -52,24 +52,24 @@ def get_projects(event, context):
     # Get userID from token
     headers = event.get('headers')
     if headers is None:
-        cla.log.error('Error reading headers')
+        cla.log.error('Error reading headers. event: {}'.format(event))
         return format_json_cors_response(400, 'Error reading headers')
 
     bearer_token = headers.get('Authorization')
     if bearer_token is None:
-        cla.log.error('Error reading authorization header')
+        cla.log.error('Error reading authorization header. event: {}'.format(event))
         return format_json_cors_response(400, 'Error reading authorization header')
 
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
     except:
-        cla.log.error('Error parsing Bearer token')
+        cla.log.error('Error parsing Bearer token. event: {}'.format(event))
         return format_json_cors_response(400, 'Error parsing Bearer token')
 
     user_id = token_params.get('sub')
     if user_id is None:
-        cla.log.error('Error parsing user ID')
+        cla.log.error('Error parsing user ID. event: {}'.format(event))
         return format_json_cors_response(400, 'Error parsing user ID')
 
     # Get project access list for user
@@ -84,7 +84,7 @@ def get_projects(event, context):
 
     authorized_projects = user_permissions.get('projects')
     if authorized_projects is None:
-        cla.log.error('Error user not authorized to access projects')
+        cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
 
     token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
@@ -131,24 +131,24 @@ def get_project(event, context):
     # Get userID from token
     headers = event.get('headers')
     if headers is None:
-        cla.log.error('Error reading headers')
+        cla.log.error('Error reading headers. event: {}'.format(event))
         return format_json_cors_response(400, 'Error reading headers')
 
     bearer_token = headers.get('Authorization')
     if bearer_token is None:
-        cla.log.error('Error reading authorization header')
+        cla.log.error('Error reading authorization header. event: {}'.format(event))
         return format_json_cors_response(400, 'Error reading authorization header')
 
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
     except:
-        cla.log.error('Error parsing Bearer token')
+        cla.log.error('Error parsing Bearer token. event: {}'.format(event))
         return format_json_cors_response(400, 'Error parsing Bearer token')
 
     user_id = token_params.get('sub')
     if user_id is None:
-        cla.log.error('Error parsing user ID')
+        cla.log.error('Error parsing user ID. event: {}'.format(event))
         return format_json_cors_response(400, 'Error parsing user ID')
 
     # Get project access list for user
@@ -156,14 +156,14 @@ def get_project(event, context):
     try:
         user_permissions.load(user_id)
     except:
-        cla.log.error('Error invalid user ID')
+        cla.log.error('Error invalid user ID. event: {}'.format(event))
         return format_json_cors_response(400, 'Error invalid user ID')
 
     user_permissions = user_permissions.to_dict()
 
     authorized_projects = user_permissions.get('projects')
     if authorized_projects is None:
-        cla.log.error('Error user not authorized to access projects')
+        cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
 
     project_id = event.get('queryStringParameters').get('id')
