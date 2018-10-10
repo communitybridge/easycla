@@ -24,6 +24,7 @@ module.exports = async env => {
   const claConfigPlugin = new webpack.DefinePlugin({
     webpackGlobalVars: {
       CLA_API_URL: JSON.stringify(configMap['cla-api-url']),
+      CLA_LOGO_S3_URL: JSON.stringify(configMap['cla-logo-s3-url']),
       CINCO_API_URL: JSON.stringify(configMap['cinco-api-url']),
       ANALYTICS_API_URL: JSON.stringify(configMap['analytics-api-url']),
       AUTH0_DOMAIN: JSON.stringify(configMap['auth0-domain']),
