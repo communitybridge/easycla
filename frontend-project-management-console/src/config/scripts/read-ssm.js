@@ -59,7 +59,10 @@ function createParameterMap(parameters, stage) {
     .reduce((prev, current) => {
       return { ...prev, ...current };
     }, {});
-  return params;
+  const logoUrl = {
+    "cla-logo-s3-url": `https://s3.amazonaws.com/cla-logo-${stage}`
+  }
+  return { ...params, ...logoUrl };
 }
 
 /**
