@@ -1413,7 +1413,7 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
     def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None, organization_project_id=None):
-        super(User).__init__()
+        super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
         self.model.organization_company_id = organization_company_id
@@ -1490,6 +1490,54 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             org.model = org_model
             return org
         return None
+
+    def all(self):
+        orgs = self.model.scan()
+        ret = []
+        for organization in orgs:
+            org = GitHubOrg()
+            org.model = organization
+            ret.append(org)
+        return ret
+
+class UserPermissionsModel(BaseModel):
+    """
+    Represents user permissions in the database.
+    """
+    class Meta:
+        """Meta class for User Permissions."""
+        table_name = 'cla-{}-user-permissions'.format(stage)
+    user_id = UnicodeAttribute(hash_key=True)
+    projects = UnicodeSetAttribute(default=set())
+    companies = UnicodeSetAttribute(default=set())
+
+class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB UserPermissions model.
+    """
+    def __init__(self, user_id=None, projects=None, companies=None):
+        super(UserPermissions).__init__()
+        self.model = UserPermissionsModel()
+        self.model.user_id = user_id
+        self.model.projects = projects
+        self.model.companies = companies
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def save(self):
+        self.model.save()
+
+    def load(self, user_id):
+        try:
+            user_permissions = self.model.get(str(user_id))
+        except UserPermissionsModel.DoesNotExist:
+            raise cla.models.DoesNotExist('User Permissions not found')
+        self.model = user_permissions
+
+    def delete(self):
+        self.model.delete()
 
     def all(self):
         orgs = self.model.scan()
