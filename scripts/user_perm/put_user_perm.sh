@@ -3,27 +3,53 @@
 # This script uploads a user and accompanying permissions to
 # the DynamoDB cla-{env}-user-permissions table
 
-# This script assumes
+set -e
 
-USER='{
-    "user_id": { "S": "" },
-    "projects": { "SS": ["PROJECT_ID"] },
-    "companies": { "SS": ["COMPANY_ID"]}
-}'
+help () {
+  echo "Usage : $0 -s <stage> -r <region> -u <auth0-user-id> -p <\"project1\",\"project2\"> -c <\"company1\",\"company2\">"
+}
 
-ENV='';
+# Get stage, user, projects and companies
+while [ "$#" -gt 0 ]; do
+    case $1 in
+        -h|--help) help; exit 1 ;;
+        -s|--stage) STAGE=$2 ; shift; shift;;
+        -r|--region) REGION=$2 ; shift; shift ;;
+        -u|--user) USERNAME=$2 ; shift; shift ;;
+        -p|--projects) PROJECTS=$2 ; shift; shift ;;
+        -c|--companies) COMPANIES=$2 ; shift; shift ;;
+        *) printf "invalid parameter: $1\n" >&2 ; exit 1 ;;
+    esac
+done
 
-if [ -z "$ENV" ]; then
-    echo "ERROR: missing environment"
+if [ -x "$STAGE" ]; then
+    echo "ERROR: missing stage"
+fi
+
+if [ -x "$USERNAME" ]; then
+    echo "ERROR: missing username"
+fi
+
+if [ -z "$REGION" ]; then
+    echo "ERROR: missing region"
     exit 1
 fi
 
-if [ "$ENV" == "prod" ]; then
-    echo "Are you sure you want to update a production user?"
+if [ -z "$PROJECTS" ] && [ -z "$COMPANIES" ]; then
+    echo "ERROR: projects and companies cannot both be empty"
     exit 1
 fi
+
+USER="{ \"user_id\": { \"S\": \"$USERNAME\" } ";
+if [ -n "$PROJECTS" ]; then
+    USER="$USER, \"projects\": { \"SS\": [$PROJECTS] } "
+fi
+if [ -n "$COMPANIES" ]; then
+    USER="$USER ,\"companies\": { \"SS\": [$COMPANIES]} "
+fi
+USER="$USER }"
 
 aws dynamodb put-item \
-    --table-name "cla-$ENV-user-permissions" \
+    --table-name "cla-$STAGE-user-permissions" \
     --item "$USER" \
-    --profile lf-cla --region us-east-1
+    --profile lf-cla --region "$REGION"
