@@ -49,27 +49,29 @@ def get_projects(event, context):
     Gets list of all projects from Salesforce
     """
 
+    cla.log.info('event: {}'.format(event))
+
     # Get userID from token
     headers = event.get('headers')
     if headers is None:
-        cla.log.error('Error reading headers. event: {}'.format(event))
+        cla.log.error('Error reading headers')
         return format_json_cors_response(400, 'Error reading headers')
 
     bearer_token = headers.get('Authorization')
     if bearer_token is None:
-        cla.log.error('Error reading authorization header. event: {}'.format(event))
+        cla.log.error('Error reading authorization header')
         return format_json_cors_response(400, 'Error reading authorization header')
 
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
     except:
-        cla.log.error('Error parsing Bearer token. event: {}'.format(event))
+        cla.log.error('Error parsing Bearer token. event')
         return format_json_cors_response(400, 'Error parsing Bearer token')
 
     user_id = token_params.get('sub')
     if user_id is None:
-        cla.log.error('Error parsing user ID. event: {}'.format(event))
+        cla.log.error('Error parsing user ID. event')
         return format_json_cors_response(400, 'Error parsing user ID')
 
     # Get project access list for user
@@ -77,7 +79,7 @@ def get_projects(event, context):
     try:
         user_permissions.load(user_id)
     except:
-        cla.log.error('Error invalid user ID')
+        cla.log.error('Error invalid user ID: {}'.format(user_id))
         return format_json_cors_response(400, 'Error invalid user ID')
 
     user_permissions = user_permissions.to_dict()
@@ -128,27 +130,29 @@ def get_project(event, context):
     Given project id, gets project details from Salesforce
     """
 
+    cla.log.info('event: {}'.format(event))
+
     # Get userID from token
     headers = event.get('headers')
     if headers is None:
-        cla.log.error('Error reading headers. event: {}'.format(event))
+        cla.log.error('Error reading headers. event')
         return format_json_cors_response(400, 'Error reading headers')
 
     bearer_token = headers.get('Authorization')
     if bearer_token is None:
-        cla.log.error('Error reading authorization header. event: {}'.format(event))
+        cla.log.error('Error reading authorization header')
         return format_json_cors_response(400, 'Error reading authorization header')
 
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
     except:
-        cla.log.error('Error parsing Bearer token. event: {}'.format(event))
+        cla.log.error('Error parsing Bearer token')
         return format_json_cors_response(400, 'Error parsing Bearer token')
 
     user_id = token_params.get('sub')
     if user_id is None:
-        cla.log.error('Error parsing user ID. event: {}'.format(event))
+        cla.log.error('Error parsing user ID')
         return format_json_cors_response(400, 'Error parsing user ID')
 
     # Get project access list for user
@@ -156,7 +160,7 @@ def get_project(event, context):
     try:
         user_permissions.load(user_id)
     except:
-        cla.log.error('Error invalid user ID. event: {}'.format(event))
+        cla.log.error('Error invalid user ID: {}'.format(user_id))
         return format_json_cors_response(400, 'Error invalid user ID')
 
     user_permissions = user_permissions.to_dict()
