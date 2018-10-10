@@ -58,6 +58,7 @@ export class MyApp {
 
     // set authd services to use kcHttpClient
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
+    this.claService.setS3LogoUrl(EnvConfig['cla-logo-s3-url']);
     this.claService.setHttp(kcHttpClient);
 
     this.cincoService.setApiUrl(EnvConfig['cinco-api-url']);
