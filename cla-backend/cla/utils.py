@@ -80,10 +80,11 @@ def get_database_models(conf=None):
         conf = cla.conf
     if conf['DATABASE'] == 'DynamoDB':
         from cla.models.dynamo_models import User, Signature, Repository, \
-                                             Company, Project, Document, GitHubOrg
+                                             Company, Project, Document, \
+                                             GitHubOrg, UserPermissions
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
-                'GitHubOrg': GitHubOrg}
+                'GitHubOrg': GitHubOrg, 'UserPermissions': UserPermissions}
     else:
         raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
 
@@ -163,6 +164,17 @@ def get_document_instance(conf=None):
     :rtype: cla.models.model_interfaces.Document
     """
     return get_database_models(conf)['Document']()
+
+def get_user_permissions_instance(conf=None):
+    """
+    Helper function to get a database UserPermissions model instance based on CLA configuration.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A UserPermissions model instance based on configuration specified.
+    :rtype: cla.models.model_interfaces.UserPermissions
+    """
+    return get_database_models(conf)['UserPermissions']()
 
 def get_email_service(conf=None, initialize=True):
     """
