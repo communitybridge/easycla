@@ -64,7 +64,7 @@ ion-menu {
   }
 
   .menu-list {
-    padding-left: 1rem;
+    padding-left: 2rem;
     .item {
       font-weight: bold;
     }
@@ -75,8 +75,11 @@ ion-menu {
       }
     }
   }
-  .item-md.item-block .item-inner {
-    border-bottom: 0;
+
+  .item-md {
+    &.item-block .item-inner {
+      border-bottom: 0;
+    }
   }
 
   .scroll-content {
