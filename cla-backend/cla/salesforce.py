@@ -65,8 +65,8 @@ def get_projects(event, context):
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
-    except:
-        cla.log.error('Error parsing Bearer token. event')
+    except Exception as e:
+        cla.log.error('Error parsing Bearer token: {}'.format(e))
         return format_json_cors_response(400, 'Error parsing Bearer token')
 
     user_id = token_params.get('sub')
@@ -78,8 +78,8 @@ def get_projects(event, context):
     user_permissions = cla.utils.get_user_permissions_instance()
     try:
         user_permissions.load(user_id)
-    except:
-        cla.log.error('Error invalid user ID: {}'.format(user_id))
+    except Exception as e:
+        cla.log.error('Error invalid user ID: {}. error: {}'.format(user_id, e))
         return format_json_cors_response(400, 'Error invalid user ID')
 
     user_permissions = user_permissions.to_dict()
