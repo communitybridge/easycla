@@ -18,8 +18,8 @@ export class ClaService {
     this.claApiUrl = claApiUrl;
   }
 
-  public setS3LogoUrl(s4LogoUrl: string) {
-    this.s3LogoUrl = s4LogoUrl;
+  public setS3LogoUrl(s3LogoUrl: string) {
+    this.s3LogoUrl = s3LogoUrl;
   }
 
   public setHttp(http: any) {
