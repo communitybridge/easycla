@@ -1840,3 +1840,48 @@ class GitHubOrg(object):
         :rtype: [cla.models.model_interfaces.GitHubOrg]
         """
         raise NotImplementedError()
+
+class UserPermissions(object):
+    """
+    Interface to the UserPermissions model.
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model.
+        """
+        raise NotImplementedError()
+
+    def load(self, user_id):
+        """
+        Simple abstraction around the supported ORMs to load a model.
+        Should populate the current object.
+
+        :param user_id: The user's ID.
+        :type user_id: string
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model.
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all github organizations in the CLA system.
+
+        :return: A list of GitHubOrg objects.
+        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        """
+        raise NotImplementedError()
