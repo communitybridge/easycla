@@ -8,6 +8,7 @@ import "rxjs/Rx";
 export class ClaService {
   http: any;
   claApiUrl: string = "";
+  s3LogoUrl: string = "";
 
   constructor(http: Http) {
     this.http = http;
@@ -15,6 +16,10 @@ export class ClaService {
 
   public setApiUrl(claApiUrl: string) {
     this.claApiUrl = claApiUrl;
+  }
+
+  public setS3LogoUrl(s4LogoUrl: string) {
+    this.s3LogoUrl = s4LogoUrl;
   }
 
   public setHttp(http: any) {
@@ -133,10 +138,10 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/request-company-whitelist/" +
-          companyId,
+        "/v2/user/" +
+        userId +
+        "/request-company-whitelist/" +
+        companyId,
         message
       )
       .map(res => res.json());
@@ -160,11 +165,11 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/project/" +
-          projectId +
-          "/last-signature"
+        "/v2/user/" +
+        userId +
+        "/project/" +
+        projectId +
+        "/last-signature"
       )
       .map(res => res.json());
   }
@@ -258,10 +263,10 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v1/signatures/company/" +
-          companyId +
-          "/project/" +
-          projectId
+        "/v1/signatures/company/" +
+        companyId +
+        "/project/" +
+        projectId
       )
       .map(res => res.json());
   }
@@ -513,10 +518,10 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/v1/project/" +
-          projectId +
-          "/document/template/" +
-          documentType,
+        "/v1/project/" +
+        projectId +
+        "/document/template/" +
+        documentType,
         document
       )
       .map(res => res.json());
@@ -535,14 +540,14 @@ export class ClaService {
     return this.http
       .delete(
         this.claApiUrl +
-          "/v1/project/" +
-          projectId +
-          "/document/" +
-          documentType +
-          "/" +
-          majorVersion +
-          "/" +
-          minorVersion
+        "/v1/project/" +
+        projectId +
+        "/document/" +
+        documentType +
+        "/" +
+        majorVersion +
+        "/" +
+        minorVersion
       )
       .map(res => res.json());
   }
@@ -630,12 +635,12 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/v1/signed/" +
-          installationId +
-          "/" +
-          githubRepositoryId +
-          "/" +
-          changeRequestId
+        "/v1/signed/" +
+        installationId +
+        "/" +
+        githubRepositoryId +
+        "/" +
+        changeRequestId
       )
       .map(res => res.json());
   }
@@ -663,14 +668,14 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v2/repository-provider/" +
-          provider +
-          "/sign/" +
-          installationId +
-          "/" +
-          githubRepositoryId +
-          "/" +
-          changeRequestId
+        "/v2/repository-provider/" +
+        provider +
+        "/sign/" +
+        installationId +
+        "/" +
+        githubRepositoryId +
+        "/" +
+        changeRequestId
       )
       .map(res => res.json());
   }
@@ -762,9 +767,9 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v1/github/organizations/" +
-          organizationName +
-          "/repositories"
+        "/v1/github/organizations/" +
+        organizationName +
+        "/repositories"
       )
       .map(res => res.json());
   }
@@ -809,16 +814,26 @@ export class ClaService {
    * /salesforce/projects
    **/
 
-   getAllProjectsFromSFDC() {
-     return this.http
-       .get(this.claApiUrl + "/v1/salesforce/projects")
-       .map(res => res.json());
-    }
+  getAllProjectsFromSFDC() {
+    return this.http
+      .get(this.claApiUrl + "/v1/salesforce/projects")
+      .map(res => res.json()
+        .map(p => this.addProjectLogoFromS3(p))
+      );
+  }
 
-    getProjectFromSFDC(projectId) {
-      return this.http.get(this.claApiUrl + `/v1/salesforce/project?id=${projectId}`)
-        .map(res => res.json());
-    }
+  getProjectFromSFDC(projectId) {
+    return this.http
+      .get(this.claApiUrl + `/v1/salesforce/project?id=${projectId}`)
+      .map(res => res.json())
+      .map(p => this.addProjectLogoFromS3(p));
+  }
 
+  addProjectLogoFromS3(project) {
+    let objLogoUrl = {
+      "logoRef": `${this.s3LogoUrl}/${project.id}.png`
+    }
+    return { ...project, ...objLogoUrl }
+  }
   //////////////////////////////////////////////////////////////////////////////
 }
