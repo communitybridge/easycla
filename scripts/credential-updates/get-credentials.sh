@@ -14,5 +14,5 @@ while read param1; do
     read param9
     read param10
 
-    aws ssm get-parameters --profile lf-cla --region us-east-1 --name $param1 $param2 $param3 $param4 $param5 $param6 $param7 $param8 $param9 $param10 | jq '."Parameters" [] | "\(.Name),\(.Value)"' | tr -d '"'
+    aws ssm get-parameters --profile lf-cla --region us-east-1 --name $param1 $param2 $param3 $param4 $param5 $param6 $param7 $param8 $param9 $param10 | jq '."Parameters" [] | "\(.Name),\(.Value),\(.Type)"' | tr -d '"'
 done
