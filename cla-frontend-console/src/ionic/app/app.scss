@@ -14,7 +14,23 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
+@import url('https://fonts.googleapis.com/css?family=Lato');
 @import "../theme/styles.scss";
+
+body ion-app.ios {
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  // font-family: -apple-system, "Helvetica Neue", "Roboto", sans-serif;
+}
+
+body ion-app.md {
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  // font-family: "Roboto", "Helvetica Neue", sans-serif;
+}
+
+body ion-app.wp {
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  // font-family: "Segoe UI", "Noto Sans", sans-serif;
+}
 
 .grid {
   padding-left: 0;
