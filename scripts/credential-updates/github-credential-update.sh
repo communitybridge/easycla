@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# This script updates the SalesForce parameters for a given environment. Only
+# This script updates the Github parameters for a given environment. Only
 # parameters provided in the list below are updated.
 
 GH_APP_ID=''
