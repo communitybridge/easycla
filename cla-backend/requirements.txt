@@ -6,7 +6,7 @@ gunicorn==19.7.1
 hug==2.3.0
 nose2==0.7.2
 pydocusign==2.2
-pygithub==1.34.0
+pygithub==1.43.2
 pylint==1.5.2
 pynamodb==3.2.1
 python-jose==3.0.0
