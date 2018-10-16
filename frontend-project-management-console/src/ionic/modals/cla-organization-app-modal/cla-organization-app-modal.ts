@@ -32,8 +32,10 @@ export class ClaOrganizationAppModal {
   getDefaults() {}
 
   // TODO: Do we want a call to cla that polls for the installation status?
+  // UH YEA?
 
   openAppPage() {
+    this.viewCtrl.dismiss();
     window.open(EnvConfig['gh-app-public-link'], '_blank');
   }
 
