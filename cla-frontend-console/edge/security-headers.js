@@ -49,7 +49,7 @@ function generateCSP(env, isDevServer) {
   const environmentSources = JSON.parse(CSP_SOURCES || '{}');
 
   const sources = {
-    'default-src': [NONE],
+    'default-src': [SELF],
     'img-src': [SELF, 'data:', 'https://logo.url.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
