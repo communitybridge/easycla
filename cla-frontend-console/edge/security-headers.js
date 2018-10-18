@@ -49,7 +49,7 @@ function generateCSP(env, isDevServer) {
   const environmentSources = JSON.parse(CSP_SOURCES || '{}');
 
   const sources = {
-    'default-src': [SELF],
+    'default-src': [NONE],
     'img-src': [SELF, 'data:', 'https://logo.url.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
@@ -62,7 +62,8 @@ function generateCSP(env, isDevServer) {
     'frame-src': [],
     'child-src': [],
     'media-src': [],
-    'manifest-src': [SELF]
+    'manifest-src': [SELF],
+    'object-src': ['data:', '*']
   };
 
   return Object.entries(sources)
