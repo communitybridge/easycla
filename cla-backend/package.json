@@ -3,13 +3,20 @@
   "version": "0.0.0",
   "license": "UNLICENSED",
   "devDependencies": {
+    "request": "^2.88.0",
+    "serverless-plugin-simulate": "0.0.17",
     "serverless-python-requirements": "^4.1.1",
     "serverless-wsgi": "^1.5.1"
   },
   "scripts": {
-    "sls": "../node_modules/.bin/serverless"
+    "sls": "../node_modules/.bin/serverless",
+    "start:dev": "sls wsgi serve -s dev",
+    "test": "sh dev.sh",
+    "start:lambda": "sls simulate lambda -p 4000 -s dev",
+    "start:apigateway": "sls simulate apigateway -p 5000 --lambda-port 4000 -s dev"
   },
   "dependencies": {
-    "serverless": "^1.32.0"
+    "serverless": "^1.32.0",
+    "serverless-dynamodb-local": "^0.2.35"
   }
 }
