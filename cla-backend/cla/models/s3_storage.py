@@ -28,9 +28,15 @@ class S3Storage(storage_service_interface.StorageService):
 
     def _get_client(self):
         """Mockable method to get the S3 client."""
+        if stage == 'dev':
+            return boto3.client('s3',
+                                endpoint_url='http://localhost',
+                                aws_access_key_id=self.access_key,
+                                aws_secret_access_key=self.secret_key)
         return boto3.client('s3',
                             aws_access_key_id=self.access_key,
                             aws_secret_access_key=self.secret_key)
+
 
 
     def store(self, filename, data):
