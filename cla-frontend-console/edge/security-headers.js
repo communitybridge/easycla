@@ -62,7 +62,7 @@ function generateCSP(env, isDevServer) {
     'frame-src': [],
     'child-src': [],
     'media-src': [],
-    'manifest-src': [SELF]
+    'manifest-src': [SELF],
   };
 
   return Object.entries(sources)
