@@ -6,7 +6,8 @@
     "request": "^2.88.0",
     "serverless-python-requirements": "^4.1.1",
     "serverless-s3-local": "^0.3.17",
-    "serverless-wsgi": "^1.5.1"
+    "serverless-wsgi": "^1.5.1",
+    "serverless-dynamodb-local": "^0.2.35"
   },
   "scripts": {
     "sls": "../node_modules/.bin/serverless",
@@ -16,7 +17,6 @@
     "start:s3": "sh dev.sh start:s3"
   },
   "dependencies": {
-    "serverless": "^1.32.0",
-    "serverless-dynamodb-local": "^0.2.35"
+    "serverless": "^1.32.0"    
   }
 }
