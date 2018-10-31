@@ -52,7 +52,7 @@ def get_projects(event, context):
     cla.log.info('event: {}'.format(event))
 
     # Get userID from token
-    headers = event.get('headers')
+    headers = event.headers
     if headers is None:
         cla.log.error('Error reading headers')
         return format_json_cors_response(400, 'Error reading headers')
