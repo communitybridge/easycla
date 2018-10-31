@@ -13,26 +13,27 @@ if [ $1 = 'install' ]; then
   echo '======> installing python dependencies..'
     pip install -r requirements.txt &&\
     cat cla/config.py > cla_config.py &&\
-  echo '======> installing dynamodb local..'
-    sls dynamodb install -s dev &&\
   echo '======> setting up aws profile..'
     cd .. &&\
-    serverless config credentials --provider aws --profile lf-cla --key ' ' --secret ' ' -s devS
-  echo '======> installation has done, now run `npm run start:dev` to run local dev enviroment'
+    serverless config credentials --provider aws --profile lf-cla --key ' ' --secret ' ' -s devS &&\
+    cd cla-backend
+  echo '======> installing dynamodb local..'
+    sls dynamodb install -s dev &&\
+  echo '======> installation has done.'
 
 elif [ $1 = 'start:lambda' ]; then
   echo '======> activating virtual enviroment'
     . ~/.env/lf-cla/bin/activate &&\
   echo '======> running local lambda server'
-    sls wsgi serve -s dev
+    AWS_PROFILE=lf-cla sls wsgi serve -s dev
 
 elif [ $1 = 'start:dynamodb' ]; then
   echo '======> running local dynamodb server'
-    sls dynamodb start -s dev
+    AWS_PROFILE=lf-cla sls dynamodb start -s dev
 
 elif [ $1 = 'start:s3' ]; then
   echo '======> running local s3 server'
-    sls s3 start -s dev
+    AWS_PROFILE=lf-cla sls s3 start -s dev
   
 else
   echo "option not valid"
