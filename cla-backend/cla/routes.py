@@ -14,6 +14,8 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 
+import cla.salesforce
+
 from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
@@ -58,8 +60,9 @@ def get_health(request):
 
     Returns a basic health check on the CLA system.
     """
+    cla.salesforce.get_projects(request, '')
     request.context['session']['health'] = 'up'
-    return {'status': 'up'}
+    return request.headers
 
 #
 # User routes.
@@ -1208,3 +1211,15 @@ def github_get_namespace(namespace):
 
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
+
+#
+# Salesforce projects route.
+#
+@hug.get('/salesforce/project', versions=2)
+def get_health(request):
+    """
+    GET: /salesforce/project
+
+    Returns a list of all projects from Salesforce.
+    """
+    return cla.salesforce.get_projects(request, '')
