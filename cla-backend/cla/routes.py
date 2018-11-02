@@ -1215,11 +1215,20 @@ __hug__.http.add_middleware(get_session_middleware())
 #
 # Salesforce projects route.
 #
+@hug.get('/salesforce/projects', versions=2)
+def get_health(request):
+    """
+    GET: /salesforce/projects
+
+    Returns a list of all projects from Salesforce.
+    """
+    return cla.salesforce.get_projects(request, '')
+
 @hug.get('/salesforce/project', versions=2)
 def get_health(request):
     """
     GET: /salesforce/project
 
-    Returns a list of all projects from Salesforce.
+    Given project id, gets project details from Salesforce.
     """
-    return cla.salesforce.get_projects(request, '')
+    return cla.salesforce.get_project(request, '')
