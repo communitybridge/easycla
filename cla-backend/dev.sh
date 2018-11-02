@@ -19,7 +19,20 @@ if [ $1 = 'install' ]; then
     cd cla-backend
   echo '======> installing dynamodb local..'
     sls dynamodb install -s dev &&\
-  echo '======> installation has done.'
+  echo '======> installation has done. please run npm run add:user github|#######'
+
+elif [ $1 = 'add:user' ]; then
+  if [ "x" != "x$2" ]; then
+  echo '======> creating permission in local db'
+   aws dynamodb put-item \
+    --table-name "cla-dev-user-permissions" \
+    --item '{ "user_id": { "S": "$2" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
+    --profile lf-cla --region "us-east-1" \
+    --endpoint-url http://localhost:8000
+  echo '======> done!'
+  else
+    echo '======> user id is required!'
+  fi
 
 elif [ $1 = 'start:lambda' ]; then
   echo '======> activating virtual enviroment'
