@@ -29,7 +29,6 @@ def format_response(status_code, headers, body):
     }
     return response
 
-
 def format_json_cors_response(status_code, body):
     """
     Helper function: Formats json responses with cors headers
@@ -43,7 +42,6 @@ def format_json_cors_response(status_code, body):
     response = format_response(status_code, cors_headers, body)
     return response
 
-
 def get_projects(event, context):
     """
     Gets list of all projects from Salesforce
@@ -52,16 +50,21 @@ def get_projects(event, context):
     cla.log.info('event: {}'.format(event))
 
     # Get userID from token
-    headers = event.headers
+    if stage == 'dev':
+        headers = event.headers
+        bearer_token = headers.get('AUTHORIZATION')
+    else:
+        headers = event.get('headers')
+        bearer_token = headers.get('Authorization')
+
     if headers is None:
         cla.log.error('Error reading headers')
         return format_json_cors_response(400, 'Error reading headers')
 
-    bearer_token = headers.get('Authorization')
     if bearer_token is None:
         cla.log.error('Error reading authorization header')
         return format_json_cors_response(400, 'Error reading authorization header')
-
+    
     bearer_token = bearer_token.replace('Bearer ', '')
     try:
         token_params = jwt.get_unverified_claims(bearer_token)
@@ -133,12 +136,20 @@ def get_project(event, context):
     cla.log.info('event: {}'.format(event))
 
     # Get userID from token
-    headers = event.get('headers')
+    if stage == 'dev':
+        headers = event.headers
+        bearer_token = headers.get('AUTHORIZATION')
+        project_id = event.params
+        cla.log.info(project_id)
+    else:
+        headers = event.get('headers')
+        bearer_token = headers.get('Authorization')
+        project_id = event.get('queryStringParameters').get('id')
+
     if headers is None:
         cla.log.error('Error reading headers. event')
         return format_json_cors_response(400, 'Error reading headers')
 
-    bearer_token = headers.get('Authorization')
     if bearer_token is None:
         cla.log.error('Error reading authorization header')
         return format_json_cors_response(400, 'Error reading authorization header')
@@ -170,7 +181,7 @@ def get_project(event, context):
         cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
 
-    project_id = event.get('queryStringParameters').get('id')
+    
     if project_id not in authorized_projects:
         cla.log.error('Error user not authorized')
         return format_json_cors_response(403, 'Error user not authorized')
