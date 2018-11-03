@@ -70,5 +70,11 @@ export class ClaSelectCompanyModal {
     });
     modal.present();
   }
-
+  
+  openClaCompanyAdminYesnoModal() {
+    let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
+      projectId: this.projectId,
+    });
+    modal.present();
+  }
 }
