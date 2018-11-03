@@ -83,7 +83,7 @@ GITLAB_OAUTH_TOKEN_URL = 'https://<gitlab-domain>/oauth/token'
 GITLAB_MR_NOTIFICATION = 'status+comment'
 
 # Email Service.
-EMAIL_SERVICE = 'SMTP' #: Email service to use for notification emails.
+EMAIL_SERVICE = 'SES' #: Email service to use for notification emails.
 EMAIL_ON_SIGNATURE_APPROVED = True #: Whether to email the user when signature has been approved.
 
 # SMTP Configuration.

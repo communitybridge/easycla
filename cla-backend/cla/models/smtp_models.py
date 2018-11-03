@@ -31,7 +31,8 @@ class SMTP(email_service_interface.EmailService):
         """
         Mockable send method.
         """
-        smtp_client = smtplib.SMTP(self.host, self.port)
+        smtp_client = smtplib.SMTP()
+        smtp_client.connect(self.host, self.port)
         smtp_client.send_message(msg)
         smtp_client.quit()
 
