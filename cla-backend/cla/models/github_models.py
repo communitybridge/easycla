@@ -538,7 +538,11 @@ def get_pull_request_commit_authors(pull_request):
     """
     commit_authors = []
     for commit in pull_request.get_commits():
-        if commit.author is not None:
+        if commit.login is not None:
+            cla.log.debug('GitHub author found for commit SHA %s: %s <%s>',
+                          commit.sha, commit.author.id, commit.author.email)
+            commit_authors.append((commit, commit.login))
+        elif commit.author is not None:
             cla.log.debug('GitHub author found for commit SHA %s: %s <%s>',
                           commit.sha, commit.author.id, commit.author.email)
             commit_authors.append((commit, commit.author))
