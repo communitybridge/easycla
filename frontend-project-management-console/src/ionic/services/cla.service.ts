@@ -562,8 +562,8 @@ export class ClaService {
     majorVersion,
     minorVersion
   ) {
-    return (
-      this.claApiUrl +
+    return this.http
+    .get(this.claApiUrl +
       "/v1/project/" +
       projectId +
       "/document/" +
@@ -572,7 +572,8 @@ export class ClaService {
       majorVersion +
       "/" +
       minorVersion
-    );
+    )
+    .map(res => res.text());
   }
 
   /**
