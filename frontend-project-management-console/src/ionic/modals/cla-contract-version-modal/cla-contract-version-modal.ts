@@ -91,18 +91,26 @@ export class ClaContractVersionModal {
   }
 
   contractView(data) {
-    console.log("contract view");
-    console.log(data);
     let majorVersion = data.document.document_major_version;
     let minorVersion = data.document.document_minor_version;
-    let url = this.claService.getProjectDocumentRevisionPdf(
+    this.claService.getProjectDocumentRevisionPdf(
       this.claProjectId,
       this.documentType,
       majorVersion,
       minorVersion
-    );
-    console.log(url);
-    window.open(url, "_blank");
+    ).subscribe(base64PDF => {
+      let objbuilder = '';
+        objbuilder += ('<object width="100%" height="100%" data="data:application/pdf;base64,');
+        objbuilder += (base64PDF);
+        objbuilder += ('" type="application/pdf" class="internal">');
+        objbuilder += ('</object>');
+
+      let win = window.open("","_blank","titlebar=yes");
+      win.document.title = data.document_name;
+      win.document.write('<html><body>');
+      win.document.write(objbuilder);
+      win.document.write('</body></html>');
+    });
   }
 
   openClaContractUploadModal() {
