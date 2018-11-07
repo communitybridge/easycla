@@ -200,6 +200,22 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
+@hug.post('/user/{user_id}/invite-company-admin', versions=2)
+def invite_company_admin(user_id: hug.types.uuid, user_email: cla.hug_types.email, 
+                        admin_name: hug.types.text, admin_email: cla.hug_types.email):
+    """
+    POST: /user/{user_id}/invite-company-admin
+
+    DATA: {
+            'admin_name': John Doe,
+            'admin_email': admin@example.com,
+            'user_email': user@example.com, 
+        }
+
+    Sends an Email to the user's admin to sign up through the ccla console. 
+    """
+    return cla.controllers.user.invite_company_admin(user_id, user_email, admin_name, admin_email)
+
 @hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
     """
@@ -236,6 +252,8 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
     Returns the user's latest employee signature for the project and company specified.
     """
     return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
+
+
 
 # #
 # # Signature Routes.
@@ -1215,20 +1233,11 @@ __hug__.http.add_middleware(get_session_middleware())
 #
 # Salesforce projects route.
 #
-@hug.get('/salesforce/projects', versions=2)
-def get_health(request):
-    """
-    GET: /salesforce/projects
-
-    Returns a list of all projects from Salesforce.
-    """
-    return cla.salesforce.get_projects(request, '')
-
 @hug.get('/salesforce/project', versions=2)
 def get_health(request):
     """
     GET: /salesforce/project
 
-    Given project id, gets project details from Salesforce.
+    Returns a list of all projects from Salesforce.
     """
-    return cla.salesforce.get_project(request, '')
+    return cla.salesforce.get_projects(request, '')

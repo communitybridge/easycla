@@ -3,7 +3,7 @@ import { NavController, NavParams, ViewController, ModalController, IonicPage } 
 import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/admin-yesno'
+  segment: 'cla/project/:projectId/user/:userId/admin-yesno'
 
 })
 @Component({
@@ -45,6 +45,15 @@ export class ClaCompanyAdminYesnoModal {
 
   openCompanyAdminConsoleLink() {
     window.open(this.consoleLink, '_blank');
+  }
+
+  openCompanyAdminSendEmail() {
+    let modal = this.modalCtrl.create('ClaCompanyAdminSendEmailModal', {
+      projectId: this.projectId,
+      userId: this.userId,
+    });
+    modal.present();
+    this.dismiss();
   }
 
 }
