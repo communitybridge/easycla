@@ -214,6 +214,41 @@ Please follow up with the user as necessary.
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
 
+
+def invite_company_admin(user_id, user_email, admin_name, admin_email):
+    """
+    Sends email to the specified company administrator to sign up through the CCLA console and add the requested user to the whitelist. 
+
+    :param user_id: The ID of the user requesting to be added to the company's whitelist.
+    :type user_id: string
+    :param user_email: The email address that this user wants to be whitelisted. Must exist in the
+        user's list of emails.
+    :type user_email: string
+    :param messsage: A message to be sent out to the administrator. 
+    """
+    user = get_user_instance()
+    try:
+        user.load(user_id)
+    except DoesNotExist as err:
+        return {'errors': {'user_id': str(err)}}
+
+    subject = 'CLA: Invitation to Sign Up for Corporate CLA'
+    body = '''Hello %s, 
+    
+    The following user is requesting to be whitelisted as a contributor for your organization:
+
+    %s <%s>
+
+Please click the following link to sign up for Corporate CLA and add this user to your organization. 
+
+%s
+
+- Linux Foundation CLA System
+''' %(admin_name, user.get_user_name(), user.get_user_email(), cla.conf['CORPORATE_CONSOLE_ENDPOINT'])
+    recipient = admin_email
+    email_service = get_email_service()
+    email_service.send(subject, body, recipient)
+
 def get_active_signature(user_id):
     """
     Returns information on the user's active signature - if there is one.

@@ -142,9 +142,24 @@ export class ClaService {
   }
 
   /**
+   * /user/{user_id}/invite-company-admin
+   **/
+  postEmailToCompanyAdmin(userId, data) {
+    return this.http
+      .post(
+        this.claApiUrl +
+          "/v2/user/" +
+          userId +
+          "/invite-company-admin/"
+          ,
+          data
+      )
+      .map(res => res.json());
+  }
+
+  /**
    * /user/{user_id}/active-signature
    **/
-
   getUserSignatureIntent(userId) {
     return this.http
       .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")

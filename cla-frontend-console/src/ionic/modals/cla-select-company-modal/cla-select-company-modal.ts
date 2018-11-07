@@ -74,7 +74,9 @@ export class ClaSelectCompanyModal {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
+      userId: this.userId
     });
     modal.present();
+    this.dismiss();
   }
 }
