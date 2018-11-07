@@ -51,6 +51,16 @@ elif stage == 'qa':
 else:
     CLA_CONSOLE_ENDPOINT = 'http://localhost:8100' #MODIFY HERE IF DEPLOYING TO DEV STAGE
 
+# Endpoint for corporate console.
+if stage == 'prod':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+elif stage == 'staging':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+elif stage == 'qa':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+else:
+    CORPORATE_CONSOLE_ENDPOINT = 'http://localhost:8100'
+
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 
