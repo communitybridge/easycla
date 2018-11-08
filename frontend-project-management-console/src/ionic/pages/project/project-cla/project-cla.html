@@ -17,9 +17,9 @@
     <ion-row *ngIf="claProjects.length == 0">
       <ion-col col-12 class="no-claProjects">
         <ion-icon name="folder-open"></ion-icon>
-        <p>It seems you don't have any contract groups yet.</p>
+        <p>It seems you don't have any CLA Categories yet.</p>
         <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
-          Add Contract Group
+          Add CLA Category
         </button>
       </ion-col>
     </ion-row>
@@ -191,7 +191,7 @@
   <ion-fab right bottom>
     <button ion-fab mini><ion-icon name="add"></ion-icon></button>
     <ion-fab-list side="top">
-      <button ion-fab (click)="openClaContractConfigModal()" title="Add Contract Group">
+      <button ion-fab (click)="openClaContractConfigModal()" title="Add CLA Category">
         <ion-icon name="folder-open"></ion-icon>
       </button>
     </ion-fab-list>
