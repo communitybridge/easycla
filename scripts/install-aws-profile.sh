@@ -10,5 +10,5 @@ if [ -z "${CI}" ]; then
 fi
 
 echo "Installing Profile ${PROFILE}"
-mkdir ~/.aws
+mkdir -p ~/.aws
 printf "[${PROFILE}]\naws_access_key_id=${AWS_ACCESS_KEY_ID}\naws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" > ~/.aws/credentials
