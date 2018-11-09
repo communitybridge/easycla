@@ -1018,6 +1018,22 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
     """
     return cla.controllers.signing.return_url(signature_id, event)
 
+@hug.post('/send-authority-email', versions=2)
+def send_authority_email(company_name: hug.types.text, project_name: hug.types.text, 
+                        authority_name: hug.types.text, authority_email: cla.hug_types.email, 
+                        ):
+    """
+    POST: /send-authority-email 
+
+    DATA: {
+            'authority_name': John Doe,
+            'authority_email': authority@example.com,
+            'company_id': <company_id>
+            'project_id': <project_id>
+        }
+    """
+    return cla.controllers.signing.send_authority_email(company_name, project_name, authority_name, authority_email)
+
 
 # #
 # # Repository Provider Routes.

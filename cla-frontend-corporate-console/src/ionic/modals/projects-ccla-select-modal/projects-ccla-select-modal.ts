@@ -51,7 +51,7 @@ export class ProjectsCclaSelectModal {
   }
 
   selectProject(project) {
-    this.navCtrl.push("ClaCorporatePage", {
+    this.navCtrl.push("AuthorityYesnoPage", {
       projectId: project.project_id,
       company: this.company
     });
