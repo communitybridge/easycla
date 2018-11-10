@@ -927,9 +927,11 @@ def request_individual_signature(project_id: hug.types.uuid,
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'company_id': 'some-company-uuid'}")
-def request_corporate_signature(user: cla_user,
-                                project_id: hug.types.uuid,
+def request_corporate_signature(project_id: hug.types.uuid,
                                 company_id: hug.types.uuid,
+                                send_as_email=False,
+                                authority_name=None, 
+                                authority_email=None,
                                 return_url=None):
     """
     POST: /request-corporate-signature
@@ -952,7 +954,7 @@ def request_corporate_signature(user: cla_user,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
