@@ -8,6 +8,7 @@ import uuid
 import urllib.request
 import xml.etree.ElementTree as ET
 import pydocusign
+import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
@@ -190,7 +191,8 @@ class DocuSign(signing_service_interface.SigningService):
             cla.utils.delete_active_signature_metadata(user.get_user_id())
         return new_signature.to_dict()
 
-    def request_corporate_signature(self, project_id, company_id, return_url=None):
+    def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
+    authority_name=None, authority_email=None, return_url=None,):
         cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
         project = cla.utils.get_project_instance()
         try:
@@ -205,18 +207,18 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure the company doesn't already have a CCLA with this project.
         latest_signature = cla.utils.get_company_latest_signature(company, str(project_id))
         last_document = cla.utils.get_project_latest_corporate_document(str(project_id))
-        if latest_signature is not None and \
-           last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
-            cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
-            if latest_signature.get_signature_signed():
-                cla.log.info('CCLA signature object already signed')
-                return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
-            else:
-                cla.log.info('CCLA signature object still missing signature')
-                return {'company_id': str(company_id),
-                        'project_id': str(project_id),
-                        'signature_id': latest_signature.get_signature_id(),
-                        'sign_url': latest_signature.get_signature_sign_url()}
+        # if latest_signature is not None and \
+        #    last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
+        #     cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
+        #     if latest_signature.get_signature_signed():
+        #         cla.log.info('CCLA signature object already signed')
+        #         return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
+        #     else:
+        #         cla.log.info('CCLA signature object still missing signature')
+        #         return {'company_id': str(company_id),
+        #                 'project_id': str(project_id),
+        #                 'signature_id': latest_signature.get_signature_id(),
+        #                 'sign_url': latest_signature.get_signature_sign_url()}
         # Create the new Signature.
         signature = cla.utils.get_signature_instance()
         signature.set_signature_id(str(uuid.uuid4()))
@@ -233,18 +235,21 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_callback_url(callback_url)
         cla.log.info('Setting signature return_url to %s', return_url)
         signature.set_signature_return_url(return_url)
-        self.populate_sign_url(signature, callback_url)
+        self.populate_sign_url(signature, send_as_email, authority_name, authority_email, callback_url)
         signature.save()
         return {'company_id': str(company_id),
                 'project_id': str(project_id),
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, signature, callback_url=None): # pylint: disable=too-many-locals
+    def populate_sign_url(self, signature, send_as_email=False,
+    authority_name=None, authority_email=None, callback_url=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
         user = cla.utils.get_user_instance()
-        if sig_type == 'company': # Assume the company manager is signing the CCLA.
+        
+        # Assume the company manager is signing the CCLA
+        if sig_type == 'company' and send_as_email == False: 
             company = cla.utils.get_company_instance()
             company.load(signature.get_signature_reference_id())
             try:
@@ -253,10 +258,12 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.error('No CLA manager associated with this company - can not sign CCLA')
                 return
         else: # sig_type == 'user'
-            user.load(signature.get_signature_reference_id())
-        name = user.get_user_name()
-        if name is None:
-            name = 'Unknown'
+            #user.load(signature.get_signature_reference_id())
+            pass
+        #name = user.get_user_name()
+        name = "placeholder"
+        #if name is None:
+        #    name = 'Unknown'
         # Fetch the document to sign.
         project = cla.utils.get_project_instance()
         project.load(signature.get_signature_project_id())
@@ -275,11 +282,20 @@ class DocuSign(signing_service_interface.SigningService):
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
         tabs = get_docusign_tabs_from_document(document, document_id)
-        signer = pydocusign.Signer(email=user.get_user_email(),
+
+        if(send_as_email):
+            email = authority_email
+            name = authority_name
+        else:
+            email = user.get_user_email()
+
+        client_id = None
+        # if not sending sending
+            # = uuid()
+        signer = pydocusign.Signer(email=email,
                                    name=name,
                                    recipientId=1,
-                                   clientUserId=signature.get_signature_id(),
-                                   tabs=tabs,
+                                   tabs=tabs, 
                                    emailSubject='CLA Sign Request',
                                    emailBody='CLA Sign Request for %s'
                                    %user.get_user_email(),
@@ -310,14 +326,22 @@ class DocuSign(signing_service_interface.SigningService):
                                            status=pydocusign.Envelope.STATUS_SENT, # Send now.
                                            recipients=[signer])
         envelope = self.prepare_sign_request(envelope)
-        cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
+
+        print(envelope.sender)
+
+        #cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
         recipient = envelope.recipients[0]
-        # The URL the user will be redirected to after signing.
-        # This route will be in charge of extracting the signature's return_url and redirecting.
-        return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
-        sign_url = self.get_sign_url(envelope, recipient, return_url)
-        cla.log.info('Setting signature sign_url to %s', sign_url)
-        signature.set_signature_sign_url(sign_url)
+
+        if(send_as_email):
+            # sending as email, no redirection necessary.
+            self.send_authority_document(envelope)
+        else:
+            # The URL the user will be redirected to after signing.
+            # This route will be in charge of extracting the signature's return_url and redirecting.
+            return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
+            sign_url = self.get_sign_url(envelope, recipient, return_url)
+            cla.log.info('Setting signature sign_url to %s', sign_url)
+            signature.set_signature_sign_url(sign_url)
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
