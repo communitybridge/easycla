@@ -14,6 +14,9 @@ import { EnvConfig } from '../../services/cla.env.utils';
   templateUrl: 'collect-authority-email-modal.html',
 })
 export class CollectAuthorityEmailModal {
+  projectId: string;
+  companyId: string;
+
   projectName: string;
   companyName: string; 
 
@@ -34,6 +37,8 @@ export class CollectAuthorityEmailModal {
     this.getDefaults();
     this.projectName = navParams.get('projectName');
     this.companyName = navParams.get('companyName');
+    this.projectId = navParams.get('projectId');
+    this.companyId = navParams.get('companyId');
     this.form = formBuilder.group({
       authorityemail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       authorityname:[''],
@@ -67,16 +72,24 @@ export class CollectAuthorityEmailModal {
       return;
     }
     console.log(this.projectName);
-    let data = {
-      project_name: this.projectName,
-      company_name: this.companyName,
+    let emailRequest = {
+      project_id: this.projectId,
+      company_id: this.companyId,
+      send_as_email: true, 
       authority_name: this.form.value.authorityname, 
       authority_email: this.form.value.authorityemail, 
     };
-    this.claService.postEmailToCompanyAuthority(data).subscribe(response => {
-      this.emailSent();
-      this.dismiss();
-    });
+    
+    this.claService
+      .postCorporateSignatureRequest(emailRequest)
+      .subscribe(response => {
+        if (response.errors) {
+          //TODO: CREATE error message
+          console.log(response.errors); 
+        }
+        this.emailSent();
+        this.dismiss();
+      });
   }
 
 }

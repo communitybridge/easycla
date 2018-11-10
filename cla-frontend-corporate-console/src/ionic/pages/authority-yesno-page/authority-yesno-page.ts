@@ -57,6 +57,8 @@ export class AuthorityYesnoPage {
 
   openCollectAuthorityEmailModal(project) {
     let modal = this.modalCtrl.create('CollectAuthorityEmailModal', {
+      projectId: this.projectId,
+      companyId: this.company.company_id,
       projectName: this.project.project_name,
       companyName: this.company.company_name,
     });

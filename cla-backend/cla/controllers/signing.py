@@ -23,7 +23,8 @@ def request_individual_signature(project_id, user_id, return_url=None):
     """
     return get_signing_service().request_individual_signature(str(project_id), str(user_id), return_url)
 
-def request_corporate_signature(project_id, company_id, return_url=None):
+def request_corporate_signature(project_id, company_id, send_as_email=False, 
+                                authority_name=None, authority_email=None, return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
 
@@ -34,7 +35,7 @@ def request_corporate_signature(project_id, company_id, return_url=None):
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), return_url)
+    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url)
 
 def request_employee_signature(project_id, company_id, user_id, return_url=None):
     """
