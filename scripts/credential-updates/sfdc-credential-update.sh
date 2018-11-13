@@ -19,26 +19,26 @@ fi
 
 if [ -n "$INSTANCE_URL" ]; then
     echo "updating instance url: $INSTANCE_URL"
-    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-instance-url-$ENV" --description "SalesForce instance URL" --value "$INSTANCE_URL" --type "String"
+    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-instance-url-$ENV" --description "SalesForce instance URL" --value "$INSTANCE_URL" --type "String" --overwrite
 fi
 
 if [ -n "$USERNAME" ]; then
     echo "updating username: $USERNAME"
-    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-username-$ENV" --description "SalesForce user name" --value "$USERNAME" --type "String"
+    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-username-$ENV" --description "SalesForce user name" --value "$USERNAME" --type "String" --overwrite
 fi
 
 # The SalesForce API password is the user password concatenated with a security token.
 if [ -n "$PASSWORD$SECURITY_TOKEN" ]; then
     echo "updating password: $PASSWORD$SECURITY_TOKEN"
-    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-password-$ENV" --description "SalesForce password. Combined user password and secret token" --value "$PASSWORD$SECURITY_TOKEN" --type "String"
+    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-password-$ENV" --description "SalesForce password. Combined user password and secret token" --value "$PASSWORD$SECURITY_TOKEN" --type "String" --overwrite
 fi
 
 if [ -n "$CONSUMER_KEY" ]; then
     echo "updating consumer key: $CONSUMER_KEY"
-    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-consumer-key-$ENV" --description "SalesForce Connected App Consumer Key" --value "$CONSUMER_KEY" --type "String"
+    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-consumer-key-$ENV" --description "SalesForce Connected App Consumer Key" --value "$CONSUMER_KEY" --type "String" --overwrite
 fi
 
 if [ -n "$CONSUMER_SECRET" ]; then
     echo "updating consumer secret: $CONSUMER_SECRET"
-    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-consumer-secret-$ENV" --description "SalesForce Connected App Consumer Secret" --value "$CONSUMER_SECRET" --type "String"
+    aws ssm put-parameter --profile lf-cla --region us-east-1 --name "sf-consumer-secret-$ENV" --description "SalesForce Connected App Consumer Secret" --value "$CONSUMER_SECRET" --type "String" --overwrite
 fi
