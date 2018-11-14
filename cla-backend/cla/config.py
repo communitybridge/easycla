@@ -103,7 +103,9 @@ SMTP_HOST = '' #: Host of the SMTP service.
 SMTP_PORT = '0' #: Port of the SMTP service.
 
 # AWS SES Configuration.
-SES_SENDER_EMAIL_ADDRESS = 'test@cla.system' #: SES sender email address - must be verified in SES.
+# SES sender email address - must be verified in SES.
+# Temporary email that has been verified through the SES Console. 
+SES_SENDER_EMAIL_ADDRESS = 'charlie@cofebe.com' 
 SES_REGION = 'us-east-1' #: The AWS region out of which the emails will be sent.
 SES_ACCESS_KEY = None #: AWS Access Key ID for the SES service.
 SES_SECRET_KEY = None #: AWS Secret Access Key for the SES service.
