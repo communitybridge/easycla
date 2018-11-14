@@ -2,6 +2,6 @@ wsgi.py
 serverless_wsgi.py
 .wsgi_app
 cla_config.py
-env.json
 .dynamodb
 .serverless
+env.json
