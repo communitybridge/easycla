@@ -10,6 +10,7 @@ import cla
 from cla.models import storage_service_interface
 
 stage = os.environ.get('STAGE', '')
+region = os.environ.get('REGION', '')
 
 class S3Storage(storage_service_interface.StorageService):
     """
@@ -34,6 +35,7 @@ class S3Storage(storage_service_interface.StorageService):
                                 aws_access_key_id=self.access_key,
                                 aws_secret_access_key=self.secret_key)
         return boto3.client('s3',
+                            region,
                             aws_access_key_id=self.access_key,
                             aws_secret_access_key=self.secret_key)
 
