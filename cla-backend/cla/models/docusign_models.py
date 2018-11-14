@@ -237,15 +237,15 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting signature return_url to %s', return_url)
         if(not send_as_email): #get return url only for manual signing through console 
             signature.set_signature_return_url(return_url)
-        self.populate_sign_url(signature, send_as_email, authority_name, authority_email, callback_url)
+        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email)
         signature.save()
         return {'company_id': str(company_id),
                 'project_id': str(project_id),
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, signature, send_as_email=False,
-    authority_name=None, authority_email=None, callback_url=None): # pylint: disable=too-many-locals
+    def populate_sign_url(self, signature, callback_url=None, send_as_email=False,
+    authority_name=None, authority_email=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
         user = cla.utils.get_user_instance()
@@ -300,6 +300,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         if send_as_email: 
             # Not assigning a clientUserId sends an email. 
+            "CREATING SIGNER SEND-AS-EMAIL"
             signer = pydocusign.Signer(email=email,
                                     name=name,
                                     recipientId=1,
@@ -324,7 +325,7 @@ class DocuSign(signing_service_interface.SigningService):
                                     %user.get_user_email(),
                                     supportedLanguage='en',
                                     )
-
+        
         content_type = document.get_document_content_type()
         if content_type.startswith('url+'):
             pdf_url = document.get_document_content()
