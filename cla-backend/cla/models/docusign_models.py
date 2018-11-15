@@ -193,7 +193,7 @@ class DocuSign(signing_service_interface.SigningService):
 
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
     authority_name=None, authority_email=None, return_url=None,):
-        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
+        cla.log.info('Validating company %s on project %s', company_id, project_id)
         project = cla.utils.get_project_instance()
         try:
             project.load(str(project_id))
@@ -207,6 +207,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Ensure the company doesn't already have a CCLA with this project. 
         # and the user is about to sign the ccla manually 
+        cla.log.info('Checking if a signature exists')
         latest_signature = cla.utils.get_company_latest_signature(company, str(project_id))
         last_document = cla.utils.get_project_latest_corporate_document(str(project_id))
         if latest_signature is not None and \
@@ -229,6 +230,7 @@ class DocuSign(signing_service_interface.SigningService):
                         'sign_url': latest_signature.get_signature_sign_url()}  
                                    
         # No signature exists, create the new Signature.
+        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
         signature = cla.utils.get_signature_instance()
         signature.set_signature_id(str(uuid.uuid4()))
         signature.set_signature_project_id(str(project_id))
@@ -349,6 +351,7 @@ class DocuSign(signing_service_interface.SigningService):
             #webhook properties for callbacks after the user signs the document.
             recipient_events = [{"recipientEventStatusCode": "Completed"}]
             event_notification= pydocusign.EventNotification(url=callback_url,
+                                                            loggingEnabled=True,
                                                             recipientEvents=recipient_events)
             #event_notification = pydocusign.EventNotification(url=callback_url)
             envelope = pydocusign.Envelope(documents=[document],
@@ -424,15 +427,31 @@ class DocuSign(signing_service_interface.SigningService):
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
+        
         # Assume only one signature per signature.
-        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
-        signature = cla.utils.get_signature_instance()
-        try:
-            signature.load(signature_id)
-        except DoesNotExist:
-            cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
-                          content)
-            return
+        # If client_user_id is None, means the callback came from the email.
+        # Load the latest signature with the projectID & CompanyID
+        client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
+        if client_user_id is not None: 
+            signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+            signature = cla.utils.get_signature_instance()
+            try:
+                signature.load(signature_id)
+            except DoesNotExist:
+                cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
+                            content)
+                return
+        else:
+            # Callback came from an email signing the document.
+            # Retrieve the latest signature with projectId and CompanyId.
+            company = cla.utils.get_company_instance()
+            try:
+                company.load(str(company_id))
+            except DoesNotExist as err:
+                return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
+            signature = cla.utils.get_company_latest_signature(company, str(project_id))
+            signature_id = signature.get_signature_id()
+
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
