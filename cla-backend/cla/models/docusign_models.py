@@ -271,11 +271,7 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.error('No CLA manager associated with this company - can not sign CCLA')
                 return
         else:
-            if send_as_email:
-                # the document will be signed by the authority thru the email. 
-                # need to set name as authority name
-                name = authority_name
-            else: 
+            if not send_as_email: 
                 # sig_type == 'user'
                 user.load(signature.get_signature_reference_id())            
                 name = user.get_user_name()
@@ -303,9 +299,11 @@ class DocuSign(signing_service_interface.SigningService):
         tabs = get_docusign_tabs_from_document(document, document_id)
 
         if send_as_email:
+            # Sending email to authority
             email = authority_email
             name = authority_name
         else:
+            # User email
             email = user.get_user_email()
 
         if send_as_email: 
@@ -348,7 +346,9 @@ class DocuSign(signing_service_interface.SigningService):
                                        data=pdf)
 
         if callback_url is not None:
-            #webhook properties for callbacks after the user signs the document.
+            # Webhook properties for callbacks after the user signs the document.
+            # Ensure that a webhook is returned on the status "Completed" where 
+            # all signers on a document finish signing the document. 
             recipient_events = [{"recipientEventStatusCode": "Completed"}]
             event_notification= pydocusign.EventNotification(url=callback_url,
                                                             loggingEnabled=True,
