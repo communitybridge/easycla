@@ -150,10 +150,10 @@ def activity(body):
     # Pull Requests
     if 'pull_request' in body:
         # Makes sure that the repo is known to us
-        org_login = body['pull_request']['head']['repo']['owner']['login']
-        if org_is_covered_by_cla(org_login):
-            cla.log.error('App posted GitHub activity from repository that we do not have in the system: %s', org_login)
-            cla.log.error('Ensure the GitHub organization has a project_id and installation_id')
+        # org_login = body['pull_request']['head']['repo']['owner']['login']
+        # if not org_is_covered_by_cla(org_login):
+        #     cla.log.error('App posted GitHub activity from repository that we do not have in the system: %s', org_login)
+        #     cla.log.error('Ensure the GitHub organization has a project_id and installation_id')
 
         # New PR opened
         if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
