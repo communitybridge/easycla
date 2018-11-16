@@ -353,7 +353,6 @@ class DocuSign(signing_service_interface.SigningService):
             event_notification= pydocusign.EventNotification(url=callback_url,
                                                             loggingEnabled=True,
                                                             recipientEvents=recipient_events)
-            #event_notification = pydocusign.EventNotification(url=callback_url)
             envelope = pydocusign.Envelope(documents=[document],
                                            emailSubject='CLA Sign Request',
                                            emailBlurb='CLA Sign Request',
@@ -429,11 +428,9 @@ class DocuSign(signing_service_interface.SigningService):
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
         
         # Assume only one signature per signature.
-        # If client_user_id is None, means the callback came from the email.
-        # Load the latest signature with the projectID & CompanyID
         client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
         if client_user_id is not None: 
-            signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+            signature_id = client_user_id.text
             signature = cla.utils.get_signature_instance()
             try:
                 signature.load(signature_id)
@@ -442,7 +439,7 @@ class DocuSign(signing_service_interface.SigningService):
                             content)
                 return
         else:
-            # Callback came from an email signing the document.
+            # If client_user_id is None, the callback came from the email that finished signing. 
             # Retrieve the latest signature with projectId and CompanyId.
             company = cla.utils.get_company_instance()
             try:
