@@ -73,33 +73,38 @@
     </ion-row>
 
     <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allFilteredProjects">
-        <ion-card>
-          <div class="card-header clickable" (click)="viewProjectCLA(project.id)">
-            <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
-            <ion-card-title>
-              {{ project.name }}
-            </ion-card-title>
+      <ion-col col-12 col-md-6 col-lg-6 col-xl-6 *ngFor="let project of allFilteredProjects">
+        <ion-card class="cla-project-card">
+          <div class="card-header clickable">
+            <div class="border-wrapper">
+              <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
+              <ion-card-title>
+                {{ project.organization }}
+                Test Company
+              </ion-card-title>
+            </div>
           </div>
-          <ion-card-content *ngIf="expand && expand[project.id]">
-            <dl>
-              <dt>Industry:</dt>
-              <dd>{{ projectSectors[project.sector] }}</dd>
-            </dl>
-            <dl *ngIf="!userRoles.isStaffInc">
-              <dt>PM:</dt>
-              <dd>
-                <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
-                <span *ngIf="!project.managers.length">none</span>
-              </dd>
-            </dl>
+          <ion-card-content>
+            <div class="expand" *ngIf="expand && expand[project.id]">
+              <dl>
+                <dt>Industry:</dt>
+                <dd>{{ projectSectors[project.sector] }}</dd>
+              </dl>
+              <dl *ngIf="!userRoles.isStaffInc">
+                <dt>PM:</dt>
+                <dd>
+                  <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
+                  <span *ngIf="!project.managers.length">none</span>
+                </dd>
+              </dl>
+            </div>
+            <h2 (click)="viewProjectCLA(project.id)">{{ project.name }}</h2>
+            <p>
+              {{ project.description }}
+              Example content text for a project. Example content text for a project. Example content text for a project. Example content text for a project.
+              Example content text for a project. Example content text for a project. Example content text for a project. Example content text for a project.
+            </p>
           </ion-card-content>
-          <div class="explore-collapse">
-            <button ion-button clear (click)="viewProjectCLA(project.id)">MANAGE CLA</button>
-            <!-- <button ion-button color="light" float-right round icon-only (click)="toggleExpand(project.id)">
-              <ion-icon [name]="expand[project.id] ? 'arrow-dropup' : 'arrow-dropdown'"></ion-icon>
-            </button> -->
-          </div>
         </ion-card>
       </ion-col>
     </ion-row>

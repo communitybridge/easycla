@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
-import { ProjectHeaderComponent } from './project-header';
+import { SectionHeaderComponent } from './section-header';
 
 @NgModule({
   declarations: [
-    ProjectHeaderComponent,
+    SectionHeaderComponent,
   ],
   imports: [
     IonicModule,
   ],
   exports: [
-    ProjectHeaderComponent,
+    SectionHeaderComponent,
   ]
 })
 export class ProjectHeaderComponentModule {}
