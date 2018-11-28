@@ -6,6 +6,9 @@ all-projects {
   user-select: text;
 
   ion-card {
+    padding: 10px 15px;
+    height: 270px;
+
     &.card{
       margin-left: 0;
       margin-right: 0;
@@ -32,32 +35,47 @@ all-projects {
     }
   }
 
+  .cla-project-card {
+    ion-card-content {
+      padding: 30px 30px 33px 56px;
+
+      h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 7px;
+        cursor: pointer;
+      }
+
+      p {
+        color: #989898; // Todo: move this color to a variable
+      }
+    }
+  }
+
   .card-header {
-    height: 140px;
-    padding: 13px 16px;
+    padding: 0 15px;
     position: relative;
-    &::after {
-      content: "";
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, .5);
+    border-bottom: 1px solid lightgray;
+    height: 48px;
+
+    .border-wrapper {
+      display: flex;
+      align-items: center;
+      max-width: 250px;
+      border-bottom: 3px solid #003764;
     }
+
     img {
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 100%;
-      margin: auto;
+      max-width: 30px;
+      max-height: 30px;
+      display: block;
     }
+
     ion-card-title {
-      color: white;
-      z-index: 2;
-      position: absolute;
-      bottom: 0;
+      color: black;
+      font-size: 20px;
+      font-weight: 600;
+      margin-left: 10px;
     }
   }
 

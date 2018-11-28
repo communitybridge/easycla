@@ -1,5 +1,17 @@
 project-cla {
 
+  .content {
+    background-color: #F1F3F3;
+  }
+
+  ion-grid.grid {
+    padding: 0 50px !important;
+  }
+
+  ion-card {
+    box-shadow: none !important;
+  }
+
   .no-claProjects {
     text-align: center;
     ion-icon {
