@@ -7,12 +7,12 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing>
-  <header>
-    <project-header [projectId]="projectId"></project-header>
-    <project-navigation [context]="__proto__.constructor.name" [projectId]="projectId"></project-navigation>
-  </header>
+<ion-content headerspacing>
+
+  <section-header [projectId]="projectId"></section-header>
+
   <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+
   <ion-grid [loading-display]="loading.claProjects">
     <ion-row *ngIf="claProjects.length == 0">
       <ion-col col-12 class="no-claProjects">
