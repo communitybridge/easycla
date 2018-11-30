@@ -1,10 +1,77 @@
+// Move this to a shared css
+.button-md-secondary {
+  box-shadow: none;
+}
+
+.button-md-light {
+  box-shadow: none;
+  background-color: transparent;
+  color: #00a0fc;
+}
+
+ion-icon.icon-md {
+  font-size: 25px !important;
+}
+
+ion-icon.icon-sm {
+  font-size: 20px !important;
+}
+
+
 project-cla {
+
+  .project-detail-card {
+    background-color: white;
+    margin-top: 30px;
+  }
+
+  .project-detail-card-header {
+    padding: 15px 40px;
+    border-bottom: 1px solid lightgray;
+
+    .project-title {
+      display: flex;
+      align-items: center;
+
+      h2 {
+        margin: 0;
+        color: #989898;
+      }
+
+      ion-icon {
+        font-size: 20px;
+        color: #989898;
+      }
+    }
+  }
+
+  .contract-card, .organization-card {
+    h1 {
+      color: #989898;
+    }
+
+    ion-card-title {
+      color: #989898;
+      margin-bottom: 0;
+    }
+
+    ion-card-content {
+      padding-left: 70px;
+      padding-right: 30px;
+    }
+
+    .contract-details {
+      color: #989898;
+      padding-left: 23px;
+      padding-top: 0;
+    }
+  }
 
   .content {
     background-color: #F1F3F3;
   }
 
-  ion-grid.grid {
+  ion-grid.project-grid {
     padding: 0 50px !important;
   }
 
@@ -58,7 +125,7 @@ project-cla {
   .organization-actions {
     position: absolute;
     top: 0;
-    right: 0;
+    right: 25px;
   }
 
 }

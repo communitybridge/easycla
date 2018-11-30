@@ -4,10 +4,10 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "request": "^2.88.0",
-    "serverless-python-requirements": "^4.1.1",
+    "serverless-dynamodb-local": "^0.2.35",
+    "serverless-python-requirements": "^4.2.5",
     "serverless-s3-local": "^0.3.17",
-    "serverless-wsgi": "^1.5.1",
-    "serverless-dynamodb-local": "^0.2.35"
+    "serverless-wsgi": "^1.5.2"
   },
   "scripts": {
     "sls": "../node_modules/.bin/serverless",
