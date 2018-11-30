@@ -5,8 +5,8 @@
     </ion-title>
 
     <ion-buttons start>
-      <button ion-button (click)="dismiss()">
-        <ion-icon name="close"></ion-icon>
+      <button ion-button (click)="dismiss()" color="light">
+        Close
       </button>
     </ion-buttons>
   </ion-toolbar>
@@ -14,12 +14,6 @@
 
 <ion-content>
   <ion-grid>
-    <div>
-      <button ion-button icon-left color="light" (click)="openClaContractUploadModal()">
-        <ion-icon name="cloud-upload"></ion-icon> Upload New Version
-      </button>
-    </div>
-    <hr>
     <table class="table">
       <thead>
 
@@ -64,35 +58,13 @@
             </td>
           </tr>
         </ng-container>
-
-        <!-- <tr>
-          <th colspan="6">Previous</th>
-        </tr>
-        <tr *ngFor="let item of [1,2,3,4,5]">
-          <td>
-            <ion-icon name="document"></ion-icon>
-          </td>
-          <td data-title="Name">my_icla_pdf_vXX.pdf</td>
-          <td>v2.1</td>
-          <td>May 31, 2017 7:42, PST</td>
-          <td>Sarah Programmanager</td>
-          <td class="actions-cell">
-            <button ion-button icon-only clear round (click)="contractPopover($event, item)">
-              <ion-icon name="more"></ion-icon>
-            </button>
-          </td>
-        </tr> -->
       </tbody>
     </table>
+
+    <div class="btn-wrapper">
+      <button ion-button icon-left color="secondary" (click)="openClaContractUploadModal()">
+        <ion-icon class="inverted-icon" name="cloud-upload"></ion-icon> Upload New Version
+      </button>
+    </div>
   </ion-grid>
 </ion-content>
-
-<ion-footer class="footer-bordered">
-  <ion-toolbar>
-    <ion-buttons end>
-      <button ion-button icon-right color="secondary" (click)="dismiss()">
-        Close
-      </button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-footer>
