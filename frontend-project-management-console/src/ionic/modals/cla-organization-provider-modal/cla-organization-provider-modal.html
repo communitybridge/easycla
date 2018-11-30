@@ -5,8 +5,8 @@
     </ion-title>
 
     <ion-buttons start>
-      <button ion-button (click)="dismiss()">
-        <ion-icon name="close"></ion-icon>
+      <button ion-button (click)="dismiss()" color="light">
+        Close
       </button>
     </ion-buttons>
   </ion-toolbar>
@@ -36,24 +36,16 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Organization Name</ion-label>
-            <ion-label>https://github.com/</ion-label>
+            <ion-label class="github-label">https://github.com/</ion-label>
             <ion-input formControlName="orgName"></ion-input>
           </ion-item>
         </ion-col>
       </ion-row>
     </ion-grid>
   </form>
+  <div class="btn-wrapper">
+    <button ion-button color="secondary" (click)="submit()">
+      Add
+    </button>
+  </div>
 </ion-content>
-
-<ion-footer class="footer-bordered">
-  <ion-toolbar>
-    <ion-buttons end>
-      <button ion-button color="light" (click)="dismiss()">
-        Cancel
-      </button>
-      <button ion-button color="secondary" (click)="submit()">
-        Add
-      </button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-footer>

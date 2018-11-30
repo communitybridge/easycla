@@ -8,6 +8,7 @@ all-projects {
   ion-card {
     padding: 10px 15px;
     height: 270px;
+    box-shadow: none !important; // Todo: Move this to a global scss file
 
     &.card{
       margin-left: 0;
