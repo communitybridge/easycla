@@ -1,9 +1,21 @@
 all-projects {
-
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+
+  ion-header {
+    border-bottom: 40px solid #0C6DD4;
+  }
+
+  .scroll-content {
+    margin-top: 96px !important;
+    padding: 16px 50px !important;
+  }
+
+  .content {
+    background-color: #F1F3F3;
+  }
 
   ion-card {
     padding: 10px 15px;
