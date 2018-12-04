@@ -57,7 +57,7 @@ def get_projects_by_external_id(project_external_id):
 
 
 def create_project(project_external_id, project_name, project_icla_enabled, project_ccla_enabled,
-                   project_ccla_requires_icla_signature):
+                   project_ccla_requires_icla_signature, project_acl_user_id):
     """
     Creates a project and returns the newly created project in dict format.
 
@@ -81,6 +81,7 @@ def create_project(project_external_id, project_name, project_icla_enabled, proj
     project.set_project_icla_enabled(project_icla_enabled)
     project.set_project_ccla_enabled(project_ccla_enabled)
     project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
+    project.set_project_acl(project_acl_user_id)
     project.save()
     return project.to_dict()
 
