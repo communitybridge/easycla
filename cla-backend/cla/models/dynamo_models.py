@@ -473,6 +473,7 @@ class ProjectModel(BaseModel):
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
+    project_acl = UnicodeSetAttribute(default=set())
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
@@ -480,7 +481,8 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     """
     def __init__(self, project_id=None, project_external_id=None, project_name=None,
                  project_icla_enabled=True, project_ccla_enabled=True,
-                 project_ccla_requires_icla_signature=False):
+                 project_ccla_requires_icla_signature=False,
+                 project_acl=None):
         super(Project).__init__()
         self.model = ProjectModel()
         self.model.project_id = project_id
@@ -489,6 +491,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         self.model.project_icla_enabled = project_icla_enabled
         self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
+        self.model.project_acl = project_acl
 
     def to_dict(self):
         individual_documents = []
@@ -626,6 +629,10 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
 
     def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
         self.model.project_ccla_requires_icla_signature = ccla_requires_icla_signature
+
+    def set_project_acl(self, project_acl_user_id):
+        self.model.project_acl = set(self.model.project_acl + [project_acl_user_id])
+
 
     def get_project_repositories(self):
         repository_generator = RepositoryModel.repository_project_index.query(self.get_project_id())

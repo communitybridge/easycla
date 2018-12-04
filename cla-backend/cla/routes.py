@@ -670,9 +670,18 @@ def post_project(user: cla_user, project_external_id: hug.types.text, project_na
     Returns the CLA project that was just created.
     """
     # staff_verify(user) or pm_verify_external_id(user, project_external_id)
-    return cla.controllers.project.create_project(project_external_id, project_name,
-                                                  project_icla_enabled, project_ccla_enabled,
-                                                  project_ccla_requires_icla_signature)
+    try:
+        cla.log.info(user)
+        cla.log.info(dir(user))
+
+        created = cla.controllers.project.create_project(project_external_id, project_name,
+                                                    project_icla_enabled, project_ccla_enabled,
+                                                    project_ccla_requires_icla_signature,
+                                                    user.user_id)
+        return created
+    except Exception as e:
+      cla.log.error(e)
+  
 
 
 @hug.put('/project', versions=1,
