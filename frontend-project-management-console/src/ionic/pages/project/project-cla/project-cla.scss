@@ -23,10 +23,27 @@ ion-icon.icon-sm {
 
   ion-icon {
     color: #7b7b7b;
+    line-height: 6px;
+
+    &:before {
+      font-size: 19px;
+    }
   }
 }
 
 project-cla {
+  ion-header {
+    border-bottom: 40px solid #0C6DD4;
+  }
+
+  .scroll-content {
+    margin-top: 96px !important;
+  }
+
+  .toolbar .toolbar-title {
+    font-size: 15px;
+    cursor: pointer;
+  }
 
   .project-detail-card {
     background-color: white;
