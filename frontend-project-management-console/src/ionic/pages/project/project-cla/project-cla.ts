@@ -1,9 +1,9 @@
-import { Component } from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
 import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage
+  IonicPage, Nav, Events
 } from "ionic-angular";
 import { CincoService } from "../../../services/cinco.service";
 import { KeycloakService } from "../../../services/keycloak/keycloak.service";
@@ -32,6 +32,7 @@ export class ProjectClaPage {
 
   iclaUploadInfo: any;
   cclaUploadInfo: any;
+  @ViewChild(Nav) nav: Nav;
 
   constructor(
     public navCtrl: NavController,
@@ -42,7 +43,8 @@ export class ProjectClaPage {
     private keycloak: KeycloakService,
     private popoverCtrl: PopoverController,
     public claService: ClaService,
-    public rolesService: RolesService
+    public rolesService: RolesService,
+    public events: Events
   ) {
     this.projectId = navParams.get("projectId");
     this.getDefaults();
@@ -98,6 +100,10 @@ export class ProjectClaPage {
             });
         }
       });
+  }
+
+  backToProjects () {
+    this.events.publish('nav:allProjects');
   }
 
   openClaContractConfigModal(claProject) {
