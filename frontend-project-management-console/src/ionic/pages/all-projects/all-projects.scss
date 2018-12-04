@@ -4,6 +4,13 @@ all-projects {
   -ms-user-select: text;
   user-select: text;
 
+  .navbar-logo {
+    width: 40px;
+    position: absolute;
+    left: calc(50% - 20px);
+    top: 7px;
+  }
+
   ion-header {
     border-bottom: 40px solid #0C6DD4;
   }
