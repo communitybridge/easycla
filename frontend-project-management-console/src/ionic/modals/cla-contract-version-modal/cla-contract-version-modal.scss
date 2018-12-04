@@ -1,12 +1,8 @@
-.ion-md-cloud-upload:before {
-  color: white;
-}
-
 cla-contract-version-modal {
-  ion-icon {
-    color: white !important;
+  .ion-md-cloud-upload:before {
+    color: white;
+    font-size: 21px;
   }
-
 
   table {
     margin-top: 35px;
