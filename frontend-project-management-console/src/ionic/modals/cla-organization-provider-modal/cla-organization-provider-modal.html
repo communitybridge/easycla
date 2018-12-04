@@ -1,15 +1,7 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>
-      Add to Organization
-    </ion-title>
-
-    <ion-buttons start>
-      <button ion-button (click)="dismiss()" color="light">
-        Close
-      </button>
-    </ion-buttons>
-  </ion-toolbar>
+  <modal-header>
+    Add to Organization
+  </modal-header>
 </ion-header>
 
 <ion-content>
@@ -20,18 +12,6 @@
           <p class="form-message">Please check the fields below for errors.</p>
         </ion-col>
       </ion-row>
-      <!-- <ion-row>
-        <ion-col col-12>
-          <ion-item>
-            <ion-label stacked>Type *</ion-label>
-            <ion-select formControlName="provider">
-              <ion-option value="github">GitHub</ion-option>
-              <ion-option value="gitlab" disabled>GitLab</ion-option>
-              <ion-option value="gerrit" disabled>Gerrit</ion-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row> -->
       <ion-row>
         <ion-col col-12>
           <ion-item>

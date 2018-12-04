@@ -1,15 +1,7 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>
-      Corporate CLA
-    </ion-title>
-
-    <ion-buttons start>
-      <button ion-button (click)="dismiss()" color="light">
-        Close
-      </button>
-    </ion-buttons>
-  </ion-toolbar>
+  <modal-header>
+    Corporate CLA
+  </modal-header>
 </ion-header>
 
 <ion-content>
@@ -39,14 +31,14 @@
           </ion-item>
 
           <ion-item class="indented" no-lines>
-            <ion-label><ion-icon name="person"></ion-icon> Individual CLAs for users associated with a Corporate CLA</ion-label>
+            <ion-label>Individual CLAs for users associated with a Corporate CLA</ion-label>
             <ion-checkbox color="secondary" formControlName="cclaAndIcla"></ion-checkbox>
           </ion-item>
 
           <hr>
 
           <ion-item no-lines>
-            <ion-label><ion-icon name="person"></ion-icon> Individual CLAs for all users (not covered by Corporate CLAs.)</ion-label>
+            <ion-label>Individual CLAs for all users (not covered by Corporate CLAs.)</ion-label>
             <ion-checkbox color="secondary" formControlName="icla"></ion-checkbox>
           </ion-item>
         </ion-col>

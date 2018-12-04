@@ -1,22 +1,6 @@
 cla-contract-config-modal {
-  ion-header {
-    border-bottom: 1px solid lightgray;
-
-    &:after {
-      background: none !important;
-    }
-
-    ion-toolbar {
-      background-color: white !important;
-
-      ion-title {
-        color: #989898;
-      }
-
-      button {
-        color: #989898 !important;
-      }
-    }
+  p, ion-label, input {
+    color: #7b7b7b;
   }
 
   ion-grid {
@@ -31,4 +15,10 @@ cla-contract-config-modal {
     margin-top: 50px;
     border-top: 1px solid lightgray;
   }
+
+  ion-icon.icon-md {
+    font-size: 18px !important;
+  }
 }
+
+

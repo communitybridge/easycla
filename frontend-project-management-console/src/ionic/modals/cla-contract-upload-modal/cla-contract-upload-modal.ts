@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
+import { Events } from 'ionic-angular';
 
 @IonicPage({
   segment: 'cla-contract-upload-modal'
@@ -29,6 +30,7 @@ export class ClaContractUploadModal {
     private formBuilder: FormBuilder,
     public claService: ClaService,
     private datePipe: DatePipe,
+    public events: Events
   ) {
     this.documentType = this.navParams.get('documentType');
     this.claProjectId = this.navParams.get('claProjectId');
@@ -40,6 +42,10 @@ export class ClaContractUploadModal {
     });
     this.getDefaults();
     this.keysGetter = Object.keys;
+
+    events.subscribe('modal:close', () => {
+      this.dismiss();
+    });
   }
 
   getDefaults() {

@@ -1,27 +1,7 @@
 cla-contract-companies-modal {
-  ion-header {
-    border-bottom: 1px solid lightgray;
-
-    &:after {
-      background: none !important;
-    }
-
-    ion-toolbar {
-      background-color: white !important;
-
-      ion-title {
-        color: #989898;
-      }
-
-      button {
-        color: #989898 !important;
-      }
-    }
-  }
-
   ion-item {
     padding: 0 30px !important;
-    color: #989898 !important;
+    color: #7b7b7b !important;
 
     ion-label {
       padding-left: 20px;
