@@ -1,5 +1,5 @@
-/deep/ .ion-icon.icon-md {
-  color: white !important;
+.ion-md-cloud-upload:before {
+  color: white;
 }
 
 cla-contract-version-modal {
@@ -8,24 +8,10 @@ cla-contract-version-modal {
   }
 
 
-  ion-header {
-    border-bottom: 1px solid lightgray;
-
-    &:after {
-      background: none !important;
-    }
-
-    ion-toolbar {
-      background-color: white !important;
-
-      ion-title {
-        color: #989898;
-      }
-
-      button {
-        color: #989898 !important;
-      }
-    }
+  table {
+    margin-top: 35px;
+    margin-left: 20px;
+    color: #7b7b7b;
   }
 
   .btn-wrapper {

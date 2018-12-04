@@ -17,6 +17,14 @@ ion-icon.icon-sm {
   font-size: 20px !important;
 }
 
+.toolbar {
+  color: #7b7b7b;
+  background-color: white;
+
+  ion-icon {
+    color: #7b7b7b;
+  }
+}
 
 project-cla {
 
@@ -35,23 +43,23 @@ project-cla {
 
       h2 {
         margin: 0;
-        color: #989898;
+        color: #7b7b7b;
       }
 
       ion-icon {
         font-size: 20px;
-        color: #989898;
+        color: #7b7b7b;
       }
     }
   }
 
   .contract-card, .organization-card {
     h1 {
-      color: #989898;
+      color: #7b7b7b;
     }
 
     ion-card-title {
-      color: #989898;
+      color: #7b7b7b;
       margin-bottom: 0;
     }
 
@@ -61,7 +69,7 @@ project-cla {
     }
 
     .contract-details {
-      color: #989898;
+      color: #7b7b7b;
       padding-left: 23px;
       padding-top: 0;
     }

@@ -1,24 +1,4 @@
 cla-contract-upload-modal {
-  ion-header {
-    border-bottom: 1px solid lightgray;
-
-    &:after {
-      background: none !important;
-    }
-
-    ion-toolbar {
-      background-color: white !important;
-
-      ion-title {
-        color: #989898;
-      }
-
-      button {
-        color: #989898 !important;
-      }
-    }
-  }
-
   .btn-wrapper {
     display: flex;
     width: 100%;
