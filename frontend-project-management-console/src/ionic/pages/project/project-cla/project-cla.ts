@@ -109,11 +109,11 @@ export class ProjectClaPage {
   openClaContractConfigModal(claProject) {
     let modal;
     if (claProject) {
-      modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
+      modal = this.modalCtrl.create("ClaContractConfigModal", {
         claProject: claProject
       });
     } else {
-      modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
+      modal = this.modalCtrl.create("ClaContractConfigModal", {
         projectId: this.projectId
       });
     }
@@ -214,9 +214,9 @@ export class ProjectClaPage {
     });
   }
 
-  deleteClaGithubOrganization(data) {
+  deleteClaGithubOrganization(organization) {
     this.claService
-      .deleteGithubOrganization(data.organization.organization_name)
+      .deleteGithubOrganization(organization.organization_name)
       .subscribe(response => {
         this.getClaProjects();
       });
