@@ -109,11 +109,11 @@ export class ProjectClaPage {
   openClaContractConfigModal(claProject) {
     let modal;
     if (claProject) {
-      modal = this.modalCtrl.create("ClaContractConfigModal", {
+      modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
         claProject: claProject
       });
     } else {
-      modal = this.modalCtrl.create("ClaContractConfigModal", {
+      modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
         projectId: this.projectId
       });
     }
@@ -127,6 +127,18 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create("ClaContractUploadModal", {
       claProjectId: claProjectId,
       documentType: documentType
+    });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
+    });
+    modal.present();
+  }
+
+  openClaViewSignaturesModal(project_id) {
+    let modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
+
+    }, {
+      cssClass: 'medium'
     });
     modal.onDidDismiss(data => {
       this.getClaProjects();
