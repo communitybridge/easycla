@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
-import { SectionHeaderComponent } from './section-header';
+import { ModalHeaderComponent } from './modal-header';
 
 @NgModule({
   declarations: [
-    SectionHeaderComponent,
+    ModalHeaderComponent,
   ],
   imports: [
     IonicModule,
   ],
   exports: [
-    SectionHeaderComponent,
+    ModalHeaderComponent,
   ]
 })
-export class SectionHeaderComponentModule {}
+export class ModalHeaderComponentModule {}

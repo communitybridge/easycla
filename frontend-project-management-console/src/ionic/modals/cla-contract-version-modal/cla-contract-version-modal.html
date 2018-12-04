@@ -1,15 +1,7 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>
-      CLA PDF
-    </ion-title>
-
-    <ion-buttons start>
-      <button ion-button (click)="dismiss()" color="light">
-        Close
-      </button>
-    </ion-buttons>
-  </ion-toolbar>
+  <modal-header>
+    CLA PDF
+  </modal-header>
 </ion-header>
 
 <ion-content>
@@ -20,17 +12,12 @@
       </thead>
       <tbody>
         <ng-container *ngIf="currentDocument">
-          <tr>
-            <th><ion-icon name="checkmark"></ion-icon></th>
-            <th colspan="5">Current Version</th>
-          </tr>
           <tr *ngFor="let document of currentDocument">
-            <td>
-              <ion-icon name="document"></ion-icon>
+            <td data-title="Name">
+              {{ document.document_name }} <br>
+              {{ document.document_creation_date | date:'medium' }} <br>
+              Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
-            <td data-title="Name">{{ document.document_name }}</td>
-            <td>v{{ document.document_major_version }}.{{ document.document_minor_version }}</td>
-            <td>{{ document.document_creation_date | date:'medium' }}</td>
             <td class="actions-cell">
               <button ion-button icon-only clear round (click)="contractPopover($event, document)">
                 <ion-icon name="more"></ion-icon>
@@ -45,12 +32,11 @@
             <th colspan="5">Previous Versions</th>
           </tr>
           <tr *ngFor="let document of previousDocuments">
-            <td>
-              <ion-icon name="document"></ion-icon>
+            <td data-title="Name">
+              {{ document.document_name }} <br>
+              {{ document.document_creation_date | date:'medium' }} <br>
+              Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
-            <td data-title="Name">{{ document.document_name }}</td>
-            <td>v{{ document.document_major_version }}.{{ document.document_minor_version }}</td>
-            <td>{{ document.document_creation_date | date:'medium' }}</td>
             <td class="actions-cell">
               <button ion-button icon-only clear round (click)="contractPopover($event, document)">
                 <ion-icon name="more"></ion-icon>

@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import {
+  Events,
   IonicPage,
   ModalController,
   NavController,
@@ -29,7 +30,8 @@ export class ClaContractVersionModal {
     public viewCtrl: ViewController,
     private popoverCtrl: PopoverController,
     public modalCtrl: ModalController,
-    private claService: ClaService
+    private claService: ClaService,
+    public events: Events
   ) {
     this.claProjectId = this.navParams.get("claProjectId");
     this.documentType = this.navParams.get("documentType");
@@ -43,7 +45,10 @@ export class ClaContractVersionModal {
       }
     }
 
-    console.log(this.documents);
+    events.subscribe('modal:close', () => {
+      this.dismiss();
+    });
+
     this.getDefaults();
   }
 
