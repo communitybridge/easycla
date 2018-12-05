@@ -19,7 +19,7 @@ from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
-# from falcon import status, HTTP_403
+from falcon import status, HTTP_403
 
 #
 # Middleware
@@ -508,23 +508,25 @@ def delete_repository(user: cla_user, repository_id: hug.types.text):
 # # Company Routes.
 # #
 @hug.get('/company', versions=1)
-def get_companies():
+def get_companies(user: cla_user,):
     """
     GET: /company
 
     Returns all CLA companies.
     """
-    return cla.controllers.company.get_companies()
+
+    return cla.controllers.company.get_companies_by_user(user_id=user.user_id)
 
 
 @hug.get('/company/{company_id}', versions=2)
-def get_company(company_id: hug.types.text):
+def get_company(user: cla_user,
+                company_id: hug.types.text):
     """
     GET: /company/{company_id}
 
     Returns the CLA company requested by UUID.
     """
-    return cla.controllers.company.get_company(company_id)
+    return cla.controllers.company.get_company(company_id, user_id=user.user_id)
 
 
 @hug.post('/company', versions=1,
@@ -532,7 +534,8 @@ def get_company(company_id: hug.types.text):
                         'company_whitelist': ['user@safe.org'], \
                         'company_whitelist_patterns': ['*@safe.org'], \
                         'company_manager_id': 'user-id'}")
-def post_company(user: cla_user,
+def post_company(response,
+                 user: cla_user,
                  company_name: hug.types.text,
                  company_whitelist: hug.types.multiple,
                  company_whitelist_patterns: hug.types.multiple,
@@ -549,13 +552,21 @@ def post_company(user: cla_user,
 
     Returns the CLA company that was just created.
     """
-    return cla.controllers.company.create_company(
+
+    create_resp  = cla.controllers.company.create_company(
         company_name=company_name,
         company_whitelist=company_whitelist,
         company_whitelist_patterns=company_whitelist_patterns,
         company_manager_id=company_manager_id,
         company_manager_user_name=company_manager_user_name,
-        company_manager_user_email=company_manager_user_email)
+        company_manager_user_email=company_manager_user_email,
+        user_id=user.user_id)
+
+    response.status = create_resp.get("status_code")
+
+    return create_resp.get("data")
+
+
 
 
 @hug.put('/company', versions=1,
@@ -581,7 +592,8 @@ def put_company(user: cla_user, # pylint: disable=too-many-arguments
         company_name=company_name,
         company_whitelist=company_whitelist,
         company_whitelist_patterns=company_whitelist_patterns,
-        company_manager_id=company_manager_id)
+        company_manager_id=company_manager_id,
+        user_id=user.user_id)
 
 
 @hug.delete('/company/{company_id}', versions=1)
@@ -653,7 +665,7 @@ def get_external_project(user: cla_user, project_external_id: hug.types.text):
 
     Returns the list of CLA projects marching the requested external ID.
     """
-    return cla.controllers.project.get_projects_by_external_id(project_external_id)
+    return cla.controllers.project.get_projects_by_external_id(project_external_id, user.user_id)
 
 @hug.post('/project', versions=1,
           examples=" - {'project_name': 'Project Name'}")
@@ -671,13 +683,12 @@ def post_project(user: cla_user, project_external_id: hug.types.text, project_na
     """
     # staff_verify(user) or pm_verify_external_id(user, project_external_id)
     try:
-        cla.log.info(user)
-        cla.log.info(dir(user))
 
         created = cla.controllers.project.create_project(project_external_id, project_name,
                                                     project_icla_enabled, project_ccla_enabled,
                                                     project_ccla_requires_icla_signature,
                                                     user.user_id)
+
         return created
     except Exception as e:
       cla.log.error(e)

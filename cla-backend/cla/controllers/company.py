@@ -8,6 +8,7 @@ from cla.utils import get_company_instance
 from cla.utils import get_user_instance
 from cla.models import DoesNotExist
 import cla
+from falcon import status, HTTP_403, HTTP_409, HTTP_200
 
 def get_companies():
     """
@@ -18,8 +19,22 @@ def get_companies():
     """
     return [company.to_dict() for company in get_company_instance().all()]
 
+def get_companies_by_user(user_id):
+    """
+    Returns a list of companies for a user in the CLA system.
 
-def get_company(company_id):
+    :return: List of companies in dict format.
+    :rtype: [dict]
+    """
+    all_companies = [company.to_dict() for company in get_company_instance().all() if user_id in company.model.company_acl]
+
+
+    return all_companies
+
+
+
+
+def get_company(company_id, user_id):
     """
     Returns the CLA company requested by ID.
 
@@ -41,7 +56,8 @@ def create_company(company_name=None,
                    company_whitelist_patterns=None,
                    company_manager_id=None,
                    company_manager_user_name=None,
-                   company_manager_user_email=None):
+                   company_manager_user_email=None,
+                   user_id=None):
     """
     Creates an company and returns the newly created company in dict format.
 
@@ -62,6 +78,21 @@ def create_company(company_name=None,
     """
     if company_manager_user_email is not None:
         company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
+
+    cla.log.info(get_companies())
+
+    for company in get_companies():
+        cla.log.info("{}      {}    {}    {} ".format(
+            company.get("company_name"),
+            company_name,
+            type(company.get("company_name")),
+            type(company_name)))
+        if company.get("company_name") == company_name:
+            cla.log.error({"error": "Company already exists"})
+            return {"status_code": HTTP_409,
+                    "data": {"error":"Company already exists."}
+                    }
+
     company = get_company_instance()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
@@ -69,14 +100,19 @@ def create_company(company_name=None,
     company.set_company_whitelist(company_whitelist)
     company.set_company_whitelist_patterns(company_whitelist_patterns)
     company.set_company_manager_id(str(company_manager_id))
+    company.set_company_acl(user_id)
     company.save()
-    return company.to_dict()
+
+    return {"status_code": HTTP_200,
+            "data": company.to_dict()
+            }
 
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
                    company_whitelist=None,
                    company_whitelist_patterns=None,
-                   company_manager_id=None):
+                   company_manager_id=None,
+                   user_id=None):
     """
     Updates an company and returns the newly updated company in dict format.
     A value of None means the field should not be updated.

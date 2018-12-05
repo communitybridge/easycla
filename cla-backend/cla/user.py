@@ -10,7 +10,7 @@ from jose import jwt
 def cla_user(default=None, request=None, **kwargs):
     """Returns the current logged in CLA user"""
 
-    headers = request.headers # request.context.get('user', None)
+    headers = request.headers
     if headers is None:
         cla.log.error('Error reading headers')
         return default
@@ -30,17 +30,8 @@ def cla_user(default=None, request=None, **kwargs):
 
     if token_params is not None:
         return CLAUser(token_params)
-    
     cla.log.error('Failed to get user information from request')
     return default
-
-
-
-
-
-
-
-
 
 
 class CLAUser(object):
