@@ -79,14 +79,7 @@ def create_company(company_name=None,
     if company_manager_user_email is not None:
         company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
 
-    cla.log.info(get_companies())
-
     for company in get_companies():
-        cla.log.info("{}      {}    {}    {} ".format(
-            company.get("company_name"),
-            company_name,
-            type(company.get("company_name")),
-            type(company_name)))
         if company.get("company_name") == company_name:
             cla.log.error({"error": "Company already exists"})
             return {"status_code": HTTP_409,
