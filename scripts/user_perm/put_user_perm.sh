@@ -6,7 +6,7 @@
 set -e
 
 help () {
-  echo "Usage : $0 -s <stage> -r <region> -u <auth0-user-id> -p <\"project1\",\"project2\"> -c <\"company1\",\"company2\">"
+  echo "Usage : $0 -s <stage> -r <region> -u '<auth0-user-id>' -p '<\"project1\",\"project2\">' -c <\"company1\",\"company2\">"
 }
 
 # Get stage, user, projects and companies
@@ -52,4 +52,5 @@ USER="$USER }"
 aws dynamodb put-item \
     --table-name "cla-$STAGE-user-permissions" \
     --item "$USER" \
-    --profile lf-cla --region "$REGION"
+    --profile lf-cla --region "$REGION" 
+    #--endpoint-url http://localhost:8000 #local dev env

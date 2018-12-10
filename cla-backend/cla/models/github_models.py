@@ -246,15 +246,18 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
+            cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
-                # Deal with GitHub user.
+                # Handle GitHub user.
+                cla.log.info("Handle GitHub user")
                 handle_commit_from_github_user(project_id,
                                                commit,
                                                commit_author,
                                                signed,
                                                missing)
             elif isinstance(commit_author, github.GitAuthor.GitAuthor):
-                # Deal with non-github user (just email and name in commit).
+                # Handle non-github user (just email and name in commit).
+                cla.log.info("Handle non-github user (just email and name in commit)")
                 handle_commit_from_git_author(project_id,
                                               commit,
                                               commit_author,
@@ -262,7 +265,12 @@ class GitHub(repository_service_interface.RepositoryService):
                                               missing)
             else:
                 # Couldn't find any author information.
-                missing.append((commit.sha, None))
+                cla.log.info("Couldn't find any author information.")
+                if commit_author is not None:
+                    missing.append((commit.sha, commit_author))
+                else:
+                    missing.append((commit.sha, None))
+
         update_pull_request(installation_id,
                             github_repository_id,
                             pull_request,
@@ -539,13 +547,13 @@ def get_pull_request_commit_authors(pull_request):
     commit_authors = []
     for commit in pull_request.get_commits():
         if commit.author is not None:
-            cla.log.debug('GitHub author found for commit SHA %s: %s <%s>',
+            cla.log.info('GitHub author found for commit SHA %s: %s <%s>',
                           commit.sha, commit.author.id, commit.author.email)
-            commit_authors.append((commit, commit.author))
+            commit_authors.append((commit, commit.author.login))
         elif commit.commit.author is not None:
             # For now, trust that git commit author information is enough for verification.
             # TODO: This probably isn't enough - need to verify user somehow.
-            cla.log.debug('No GitHub author found for commit SHA %s, using git author info: ' + \
+            cla.log.info('No GitHub author found for commit SHA %s, using git author info: ' + \
                           '%s <%s>', commit.sha, commit.commit.author.name,
                           commit.commit.author.email)
             commit_authors.append((commit, commit.commit.author))
