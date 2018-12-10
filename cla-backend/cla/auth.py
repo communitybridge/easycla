@@ -91,7 +91,6 @@ def staff_required(func):
     @functools.wraps(func)
     def inner(request, *args, **kwargs):
         #so here we can check user role from API-GW-Auth.
-        print(request.env["API_GATEWAY_AUTHORIZER"])
         return func(*args, **kwargs)
     return inner
 #
