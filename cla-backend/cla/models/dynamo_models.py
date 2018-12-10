@@ -464,6 +464,8 @@ class ProjectModel(BaseModel):
     class Meta:
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'      
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
@@ -686,8 +688,8 @@ class UserModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-users'.format(stage)
-        # host = cla.conf['DATABASE_HOST']
-        # region = cla.conf['DYNAMO_REGION']
+        if stage == 'dev':
+            host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
@@ -842,6 +844,7 @@ class RepositoryModel(BaseModel):
     class Meta:
         """Meta class for Repository."""
         table_name = 'cla-{}-repositories'.format(stage)
+        host = 'http://localhost:8000'
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
@@ -951,8 +954,8 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     class Meta:
         """Meta class for Signature."""
         table_name = 'cla-{}-signatures'.format(stage)
-        # host = cla.conf['DATABASE_HOST']
-        # region = cla.conf['DYNAMO_REGION']
+        if stage == 'dev':
+            host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     signature_id = UnicodeAttribute(hash_key=True)
@@ -1200,6 +1203,8 @@ class CompanyModel(BaseModel):
     class Meta:
         """Meta class for Company."""
         table_name = 'cla-{}-companies'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
@@ -1348,8 +1353,8 @@ class StoreModel(Model):
     class Meta:
         """Meta class for Store."""
         table_name = 'cla-{}-store'.format(stage)
-        # host = cla.conf['DATABASE_HOST']
-        region = cla.conf['DYNAMO_REGION']
+        if stage == 'dev':
+            host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     key = UnicodeAttribute(hash_key=True)
@@ -1402,6 +1407,8 @@ class GitHubOrgModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-github-orgs'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
@@ -1507,6 +1514,8 @@ class UserPermissionsModel(BaseModel):
     class Meta:
         """Meta class for User Permissions."""
         table_name = 'cla-{}-user-permissions'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'
     user_id = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
     companies = UnicodeSetAttribute(default=set())
