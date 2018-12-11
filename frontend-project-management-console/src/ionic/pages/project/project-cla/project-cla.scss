@@ -104,7 +104,7 @@ project-cla {
   }
 
   ion-grid.project-grid {
-    padding: 0 50px !important;
+    padding: 0 50px 50px !important;
   }
 
   ion-card {
@@ -160,4 +160,12 @@ project-cla {
     right: 25px;
   }
 
+  .organizations-card {
+    margin-top: 0px;
+  }
+
+  .project-row {
+    border-bottom: 1px solid lightgray;
+    padding-bottom: 30px;
+  }
 }
