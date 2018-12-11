@@ -105,3 +105,29 @@ def require_company_manager():
 #
 def require_project_manager():
     pass
+
+
+##
+
+# Following code is not used
+# This implemation is started to use `requires` in `@hug.get(requires=func)`.
+# But stopped due to lack of access to `{company_id}` from path
+# Decorator chaining also not giving access to varaibles in path
+
+# from falcon import HTTPUnauthorized
+# @hug.authentication.token
+# def company_owner(request, response, *args, **kwargs):
+
+#     user_id = cla_user(request=request)
+#     if user_id in "company_acl":
+#         return True
+#     else:
+#         return False
+#         raise HTTPUnauthorized('Invalid Authentication',
+#                             'Provided Token credentials were invalid')
+
+# Example usage
+
+# @hug.put('/endpoing/{test_value}', versions=1, requires=company_owner)
+# def endpoint_with_requires(user: cla_user, test_value):
+#     return {'ok': 'fine'}

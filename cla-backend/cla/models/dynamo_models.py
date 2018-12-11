@@ -1276,6 +1276,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_company_whitelist_patterns(self):
         return self.model.company_whitelist_patterns
 
+    def get_company_acl(self):
+        return  self.model.company_acl
+
     def set_company_id(self, company_id):
         self.model.company_id = company_id
 
