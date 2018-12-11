@@ -14,7 +14,7 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 
-from cla.auth import staff_required, company_acl_verify
+from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
