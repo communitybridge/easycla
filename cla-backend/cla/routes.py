@@ -14,12 +14,12 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 
-from cla.auth import staff_required
+from cla.auth import staff_required, company_acl_verify
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
-from falcon import status, HTTP_403
+from falcon import status, HTTP_403, HTTPUnauthorized
 
 #
 # Middleware
@@ -512,7 +512,7 @@ def get_companies(user: cla_user,):
     """
     GET: /company
 
-    Returns all CLA companies.
+    Returns all CLA companies associated with user.
     """
 
     return cla.controllers.company.get_companies_by_user(user_id=user.user_id)
@@ -568,7 +568,6 @@ def post_company(response,
 
 
 
-
 @hug.put('/company', versions=1,
          examples=" - {'company_id': '<company-id>', \
                        'company_name': 'New Company Name'}")
@@ -586,7 +585,7 @@ def put_company(user: cla_user, # pylint: disable=too-many-arguments
 
     Returns the CLA company that was just updated.
     """
-    # staff_verify(user) or company_manager_verify(user, company_id)
+
     return cla.controllers.company.update_company(
         company_id,
         company_name=company_name,
@@ -604,7 +603,7 @@ def delete_company(user: cla_user, company_id: hug.types.text):
     Deletes the specified company.
     """
     # staff_verify(user)
-    return cla.controllers.company.delete_company(company_id)
+    return cla.controllers.company.delete_company(company_id, user_id=user.user_id)
 
 @hug.put('/company/{company_id}/import/whitelist/csv', versions=1)
 def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
@@ -616,7 +615,7 @@ def put_company_whitelist_csv(body, user: cla_user, company_id: hug.types.uuid):
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
     content = body.read().decode()
-    return cla.controllers.company.update_company_whitelist_csv(content, company_id)
+    return cla.controllers.company.update_company_whitelist_csv(content, company_id, user_id=user.user_id)
 
 
 @hug.get('/companies/{manager_id}', version=1)
@@ -682,17 +681,12 @@ def post_project(user: cla_user, project_external_id: hug.types.text, project_na
     Returns the CLA project that was just created.
     """
     # staff_verify(user) or pm_verify_external_id(user, project_external_id)
-    try:
 
-        created = cla.controllers.project.create_project(project_external_id, project_name,
-                                                    project_icla_enabled, project_ccla_enabled,
-                                                    project_ccla_requires_icla_signature,
-                                                    user.user_id)
+    return cla.controllers.project.create_project(project_external_id, project_name,
+                                                  project_icla_enabled, project_ccla_enabled,
+                                                  project_ccla_requires_icla_signature,
+                                                  user.user_id)
 
-        return created
-    except Exception as e:
-      cla.log.error(e)
-  
 
 
 @hug.put('/project', versions=1,
