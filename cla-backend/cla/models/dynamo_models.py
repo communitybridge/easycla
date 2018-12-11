@@ -588,6 +588,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         pass
         # @todo: Loop through documents for this project, return the highest version of them all.
 
+    def get_project_acl(self):
+        return  self.model.project_acl
+
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
 
@@ -655,8 +658,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            cla.log.info(project_model.project_acl)
-            if user_id in project_model.project_acl:
+            if user_id in project.get_project_acl():
                 projects.append(project)
         return projects
 
