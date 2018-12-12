@@ -149,22 +149,13 @@ def activity(body):
             pass
     # Pull Requests
     if 'pull_request' in body:
-        # Makes sure that the repo is known to us
-        org_login = body['pull_request']['head']['repo']['owner']['login']
-        if org_is_covered_by_cla(org_login):
-            # New PR opened
-            if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
-                # Copied from repository_service.py
-                provider = 'github'
-                service = cla.utils.get_repository_service(provider)
-                result = service.received_activity(body)
-                return result
-        # If the repo is not covered, post an annoying message on the Pull Request
-        else:
-            cla.log.error('App posted GitHub activity from repository that we do not have in the system: %s', org_login)
-            cla.log.error('Ensure the GitHub organization has a project_id and installation_id')
-            return {'status': 'Repo not covered under CLA System.'}
-
+        # New PR opened
+        if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
+            # Copied from repository_service.py
+            provider = 'github'
+            service = cla.utils.get_repository_service(provider)
+            result = service.received_activity(body)
+            return result
 
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
