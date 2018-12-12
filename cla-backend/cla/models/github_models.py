@@ -246,7 +246,7 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
-            cla.log.info("Author: " + commit_author)
+            # cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
                 # Handle GitHub user.
                 cla.log.info("Handle GitHub user")
@@ -549,14 +549,16 @@ def get_pull_request_commit_authors(pull_request):
         if commit.author is not None:
             cla.log.info('GitHub author found for commit SHA %s: %s <%s>',
                           commit.sha, commit.author.id, commit.author.email)
-            commit_authors.append((commit, commit.author.login))
+            # commit_authors.append((commit, commit.author.login))
+            commit_authors.append((commit, commit.author))
         elif commit.commit.author is not None:
             # For now, trust that git commit author information is enough for verification.
             # TODO: This probably isn't enough - need to verify user somehow.
             cla.log.info('No GitHub author found for commit SHA %s, using git author info: ' + \
                           '%s <%s>', commit.sha, commit.commit.author.name,
                           commit.commit.author.email)
-            commit_authors.append((commit, commit.commit.author))
+            # commit_authors.append((commit, commit.commit.author))
+            commit_authors.append((commit, commit.commit))
         else:
             cla.log.warning('Could not find commit author for SHA %s in PR %s',
                             commit.sha, pull_request.number)
