@@ -1,6 +1,6 @@
 <ion-header>
   <modal-header>
-    Corporate CLA
+    CLA Contract Group
   </modal-header>
 </ion-header>
 
@@ -21,12 +21,12 @@
 
           <!-- <ion-item no-lines> -->
           <p>
-            Select the CLAs required for Pull Requests in a repository.
+            Select the CLA types applicable to contributions to the project
           </p>
           <!-- </ion-item> -->
 
           <ion-item no-lines>
-            <ion-label><ion-icon name="briefcase"></ion-icon> Corporate CLAs</ion-label>
+            <ion-label><ion-icon name="briefcase"></ion-icon> Corporate CLA: required to be signed by a company</ion-label>
             <ion-checkbox color="secondary" formControlName="ccla"></ion-checkbox>
           </ion-item>
 
@@ -38,7 +38,7 @@
           <hr>
 
           <ion-item no-lines>
-            <ion-label>Individual CLAs for all users (not covered by Corporate CLAs.)</ion-label>
+            <ion-label>Individual CLA: required to be signed by an individual contributing</ion-label>
             <ion-checkbox color="secondary" formControlName="icla"></ion-checkbox>
           </ion-item>
         </ion-col>
