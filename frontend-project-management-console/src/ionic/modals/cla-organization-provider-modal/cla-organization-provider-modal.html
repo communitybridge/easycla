@@ -1,6 +1,6 @@
 <ion-header>
   <modal-header>
-    Add to Organization
+    Add GitHub Organization
   </modal-header>
 </ion-header>
 
@@ -15,8 +15,8 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Organization Name</ion-label>
-            <ion-label class="github-label">https://github.com/</ion-label>
+            <ion-label stacked>GitHub Organization URL</ion-label>
+            <ion-label class="github-label">https://github.com/<b>{{ form.controls.orgName.value }}</b></ion-label>
             <ion-input formControlName="orgName"></ion-input>
           </ion-item>
         </ion-col>
