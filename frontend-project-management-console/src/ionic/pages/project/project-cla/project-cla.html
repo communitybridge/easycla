@@ -20,7 +20,7 @@
         <ion-icon name="folder-open"></ion-icon>
         <p>A contract group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a project. Currently this project does not have a contract group defined. Please click below to add a contract group.</p>
         <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
-          Add CLA Category
+          Add CLA Contract Group
         </button>
       </ion-col>
     </ion-row>
@@ -45,7 +45,7 @@
                   View Signatures
                 </button>
                 <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-                  Add Category
+                  Add Contract Group
                 </button>
               </ion-buttons>
             </ion-col>
@@ -74,11 +74,11 @@
                     <ng-container
                       *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Upload the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
+                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
                         signature.
                       </p>
                       <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
-                              color="secondary">Upload Contract
+                              color="secondary">Select a template
                       </button>
                     </ng-container>
                     <ion-grid class="contract-details"
@@ -136,11 +136,11 @@
                     <ng-container
                       *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Upload the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
+                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
                         signature.
                       </p>
                       <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
-                              color="secondary">Upload Contract
+                              color="secondary">Select a template
                       </button>
                     </ng-container>
                     <ion-grid class="contract-details"
@@ -173,13 +173,13 @@
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
-                Organizations
+                GitHub Organizations
               </h2>
             </ion-col>
             <ion-col col-6>
               <ion-buttons end>
                 <button ion-button (click)="openClaOrganizationProviderModal(project.project_id)" color="secondary">
-                  Add Organization
+                  Add GitHub Organization
                 </button>
               </ion-buttons>
             </ion-col>
@@ -234,3 +234,28 @@
     </ion-row>
   </ion-grid>
 </ion-content>
+
+<ion-footer>
+  <footer class="text-white footer-section">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <picture class="d-inline-block">
+            <img src="./assets/logo/logo_white.svg" alt="" title="">
+          </picture>
+        </ion-col>
+      </ion-row>
+      <hr />
+      <ion-row>
+        <ion-col>
+          <small>&copy;2018 The Linux Foundation</small>
+        </ion-col>
+        <ion-col text-sm-right>
+          <small>
+            <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+          </small>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </footer>
+</ion-footer>

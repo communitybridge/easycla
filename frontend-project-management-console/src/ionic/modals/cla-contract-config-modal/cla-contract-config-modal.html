@@ -15,7 +15,7 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Cla Category Name</ion-label>
+            <ion-label stacked>CLA Contract Group Name</ion-label>
             <ion-input type="text" formControlName="name"></ion-input>
           </ion-item>
 
@@ -26,19 +26,19 @@
           <!-- </ion-item> -->
 
           <ion-item no-lines>
-            <ion-label><ion-icon name="briefcase"></ion-icon> Corporate CLA: required to be signed by a company</ion-label>
+            <ion-label><ion-icon name="briefcase"></ion-icon> Corporate CLA: to be signed by a company</ion-label>
             <ion-checkbox color="secondary" formControlName="ccla"></ion-checkbox>
           </ion-item>
 
           <ion-item class="indented" no-lines>
-            <ion-label>Individual CLAs for users associated with a Corporate CLA</ion-label>
+            <ion-label>Individual CLA: to be signed as an individual contributing</ion-label>
             <ion-checkbox color="secondary" formControlName="cclaAndIcla"></ion-checkbox>
           </ion-item>
 
           <hr>
 
           <ion-item no-lines>
-            <ion-label>Individual CLA: required to be signed by an individual contributing</ion-label>
+            <ion-label>Also required for corporate CLA contributors</ion-label>
             <ion-checkbox color="secondary" formControlName="icla"></ion-checkbox>
           </ion-item>
         </ion-col>
