@@ -2,11 +2,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from "../../services/roles.service";
-import { Restricted } from '../../decorators/restricted';
-
-@Restricted({
-  roles: ["isAuthenticated"]
-})
+import { AuthService } from "../../services/auth.service";
 @IonicPage({
   segment: 'cla/gerrit/project/:projectId/individual'
 })
@@ -31,6 +27,7 @@ export class ClaGerritIndividualPage {
     private modalCtrl: ModalController,
     private claService: ClaService,
     private rolesService: RolesService,
+    private authService: AuthService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -51,6 +48,18 @@ export class ClaGerritIndividualPage {
     this.getProject(this.projectId);
   }
 
+  ionViewCanEnter(){
+    if(!this.authService.isAuthenticated){
+      setTimeout(()=>this.navCtrl.setRoot('LoginPage'))
+    }
+    return this.authService.isAuthenticated
+  }
+
+
+  ngAfterViewInit() {
+    console.log('ngAfterViewInit');
+    this.navCtrl.setRoot("LoginPage"); // Works!
+  }
 
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
