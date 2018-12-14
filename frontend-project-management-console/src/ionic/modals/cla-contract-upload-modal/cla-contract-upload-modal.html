@@ -14,14 +14,13 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
-            <ion-label stacked>Template *</ion-label>
-            <ion-select formControlName="templateName">
-              <ion-option value="">- Select -</ion-option>
-              <ion-option *ngFor="let template of keysGetter(templateOptions)" value="{{ template }}">{{ templateOptions[template] }}</ion-option>
-              <!-- <ion-option value="custom">Custom</ion-option> -->
-            </ion-select>
-          </ion-item>
+          <ion-label stacked>Template *</ion-label>
+          <select formControlName="templateName" class="template-dropdown">
+            <option value="">- Select -</option>
+            <option *ngFor="let template of keysGetter(templateOptions)" value="{{ template }}">{{
+              templateOptions[template] }}
+            </option>
+          </select>
         </ion-col>
         <ion-col col-12 *ngIf="form.value.templateName=='custom'">
           <ion-item>
