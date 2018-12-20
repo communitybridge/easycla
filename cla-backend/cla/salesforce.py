@@ -122,7 +122,7 @@ def get_projects(event, context):
         projects.append({
             'name': project.get('Name'),
             'id': project_id,
-            'description': project.get('Description'),
+            'description': project.get('Description__c'),
             'logoUrl': logo_url
         })
 
