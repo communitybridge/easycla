@@ -29,7 +29,7 @@ def create_database():
     is expected to exist in all database storage wrappers.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Create all required tables.
     for table in tables:
         # Wait blocks until table is created.
@@ -44,7 +44,7 @@ def delete_database():
     WARNING: This will delete all existing table data.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Delete all existing tables.
     for table in tables:
         if table.exists():
@@ -1497,6 +1497,92 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             org.model = org_model
             return org
         return None
+
+    def all(self):
+        orgs = self.model.scan()
+        ret = []
+        for organization in orgs:
+            org = GitHubOrg()
+            org.model = organization
+            ret.append(org)
+        return ret
+
+class GerritModel(BaseModel):
+    """
+    Represents a Gerrit Instance in the database.
+    """
+    class Meta:
+        """Meta class for User."""
+        table_name = 'cla-{}-gerrit-instances'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'
+    gerrit_id  = UnicodeAttribute(hash_key=True)
+    project_id = UnicodeAttribute()
+    gerrit_name = UnicodeAttribute()
+    gerrit_url = UnicodeAttribute()
+    gerrit_group_id_icla = NumberAttribute()
+    gerrit_group_id_ccla = NumberAttribute()
+
+class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB Gerrit model.
+    """
+    def __init__(self, gerrit_id=None, gerrit_name=None, 
+    project_id=None, gerrit_url=None, gerrit_group_id_icla=None, gerrit_group_id_ccla=None):
+        super(Gerrit).__init__()
+        self.model = GerritModel()
+        self.model.gerrit_id = gerrit_id
+        self.model.gerrit_name = gerrit_name
+        self.model.project_id = project_id
+        self.model.gerrit_url = gerrit_url
+        self.model.gerrit_group_id_icla = gerrit_group_id_icla
+        self.model.gerrit_group_id_ccla = gerrit_group_id_ccla
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def get_gerrit_id(self):
+        return self.model.gerrit_id
+
+    def get_gerrit_name(self):
+        return self.model.gerrit_name
+
+    def get_project_id(self):
+        return self.model.project_id
+
+    def get_gerrit_url(self):
+        return self.model.gerrit_url
+
+    def get_gerrit_group_id_icla(self):
+        return self.model.gerrit_group_id_icla
+
+    def get_gerrit_group_id_ccla(self):
+        return self.model.gerrit_group_id_ccla
+
+    def set_gerrit_id(self, gerrit_id):
+        self.model.gerrit_id = gerrit_id
+
+    def set_gerrit_name(self, gerrit_name):
+        self.model.gerrit_name = gerrit_name
+
+    def set_project_id(self, project_id):
+        self.model.project_id = project_id
+
+    def set_gerrit_url(self, gerrit_url):
+        self.model.gerrit_url = gerrit_url
+
+    def set_group_id_icla(self, group_id_icla):
+        self.model.group_id_icla = group_id_icla
+
+    def set_group_id_ccla(self, group_id_ccla) :
+        self.model.group_id_ccla = group_id_ccla
+
+    def save(self):
+        self.model.save()
+
+    def delete(self):
+        self.model.delete()
 
     def all(self):
         orgs = self.model.scan()

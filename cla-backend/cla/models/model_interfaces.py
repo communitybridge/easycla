@@ -1841,6 +1841,51 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
+class Gerrit(object):
+    """
+    Interface to the Gerrit model.
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model.
+        """
+        raise NotImplementedError()
+
+    def load(self, gerrit_id):
+        """
+        Simple abstraction around the supported ORMs to load a model.
+        Should populate the current object.
+
+        :param gerrit_id: The Gerrit instance's ID.
+        :type organization_id: string
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model.
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all gerrit instances in the CLA system.
+
+        :return: A list ofG Gerrit Instance objects.
+        :rtype: [cla.models.model_interfaces.Gerrit]
+        """
+        raise NotImplementedError()
+
 class UserPermissions(object):
     """
     Interface to the UserPermissions model.
@@ -1881,7 +1926,7 @@ class UserPermissions(object):
         """
         Fetches all github organizations in the CLA system.
 
-        :return: A list of GitHubOrg objects.
-        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        :return: A list of UserPermission objects.
+        :rtype: [cla.models.model_interfaces.UserPermission]
         """
         raise NotImplementedError()
