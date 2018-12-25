@@ -4,8 +4,10 @@ Controller related to repository operations.
 
 import uuid
 import cla.hug_types
+import os
 from cla.utils import get_gerrit_instance
 from cla.models import DoesNotExist
+from cla.controllers.lf_group import LFGroup
 
 def get_gerrits():
     """
@@ -58,6 +60,24 @@ def create_gerrit(project_id,
     gerrit.set_project_id(str(project_id))
     gerrit.set_gerrit_url(gerrit_url)
     gerrit.set_gerrit_name(gerrit_name)
+    
+    
+    #check if LDAP group exists
+    lf_group_client_url = os.environ.get['lf-group-client-url']
+    lf_group_client_id = os.environ.get['lf-group-client-id']
+    lf_group_client_secret = os.environ.get['lf-group-client-secret']
+    lf_group_refresh_token = os.environ.get['lf-group-refresh-token']
+    lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
+     
+    # returns 'error' if the LDAP group does not exist
+    ldap_group = lf_group.get_group(group_id_icla)
+    if ldap_group.get('error') is not None:
+        return {'error': 'The specified LDAP group for ICLA does not exist. '}
+    ldap_group = lf_group.get_group(group_id_ccla)
+    if ldap_group.get('error') is not None:
+        return {'error': 'The specified LDAP group for CCLA does not exist. '}
+
+
     gerrit.set_group_id_icla(str(group_id_icla))
     gerrit.set_group_id_ccla(str(group_id_ccla))
     gerrit.save()
@@ -71,7 +91,7 @@ def update_gerrit(gerrit_id, # pylint: disable=too-many-arguments
                     group_id_icla=None,
                     group_id_ccla=None):
     """
-    Updates a repository and returns the newly updated repository in dict format.
+    Updates a repository and returns the newly updated gerrt instance in dict format.
     Values of None means the field will not be updated.
 
     :param gerrit_project_id: The project ID of the gerrit instance

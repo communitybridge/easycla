@@ -13,6 +13,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
+import cla.controllers.gerrit
 
 import cla.salesforce
 
@@ -1259,3 +1260,49 @@ def get_health(request):
     Returns a list of all projects from Salesforce.
     """
     return cla.salesforce.get_projects(request, '')
+
+#
+# Gerrit instance routes
+# 
+@hug.get('/gerrit/{gerrit_id}', versions=2)
+def get_gerrit_instance(gerrit_id: hug.types.uuid):
+    """
+    GET: /gerrit/{gerrit_id}
+
+    Returns all CLA Gerrit instances.
+    """
+    return cla.controllers.gerrit.get_gerrit_instance(gerrit_id)
+
+@hug.get('/gerrit/{gerrit_id}', versions=2)
+def get_gerrit_instances(project_id: hug.types.uuid):
+    """
+    GET: /project/gerrits
+
+    Returns all CLA Gerrit instances.
+    """
+    return cla.controllers.gerrit.get_gerrit_instance(project_id)
+
+
+@hug.post('/gerrit', versions=2)
+def create_gerrit_instance(project_id: hug.types.uuid,
+                             gerrit_name: hug.types.uuid, # pylint: disable=too-many-arguments
+                             gerrit_url: cla.hug_types.url,
+                             group_id_icla: hug.types.text, 
+                             group_id_ccla: hug.types.text):
+    """
+    POST: /gerrit
+
+    Creates a gerrit instance
+    """
+    return cla.controllers.gerrit.create_gerrit(project_id, gerrit_name, gerrit_url, group_id_icla, group_id_ccla)
+
+
+@hug.delete('/gerrit/{gerrit_id}', versions=1)
+def delete_gerrit_instance(gerrit_id: hug.types.uuid):
+    """
+    DELETE: /gerrit/{gerrit_id}
+
+    Deletes the specified gerrit instance.
+    """
+    # staff_verify(user)
+    return cla.controllers.gerrit.delete_gerrit(gerrit_id)
