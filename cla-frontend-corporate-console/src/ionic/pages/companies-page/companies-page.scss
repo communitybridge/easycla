@@ -1,85 +1,31 @@
-all-projects {
-
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-
-  .main-headers {
-    color: rgba(0, 0, 0, 0.54);
-    font-size: 24px;
-    font-family: "Roboto" !important;
-    src: url("../assets/fonts/roboto-light.ttf");
+companies-page {
+  .scroll-content {
+    padding: 60px 45px !important;
   }
+}
 
-  .project-name {
-    cursor:pointer;
-  }
+.cla-header {
+  border-bottom: 40px solid #4C79B6;
 
-  ion-card {
-    dl {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    dt, dd {
-      flex: 0 0 50%;
-      margin: 0;
-    }
-    .circle-alert {
-      display: inline-block;
-      width: 1.25rem;
-      height: 1.25rem;
-      border-radius: 100%;
-      background-color: color($colors, danger);
-      position: relative;
-      top: .2rem;
-    }
-    img{
-      padding-top: 10px;
-      height: 90px;
-      width: auto;
-      margin: auto;
-      display: block;
-    }
-  }
+  .toolbar {
+    color: #7b7b7b;
+    background-color: white;
+    padding: 4px 25px;
 
-  .chart-container {
-    position: relative;
-  }
-
-  .calendar-column {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .calendar-container {
-    position: relative;
-    background-color: #fafafa;
-    flex-grow: 1;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    iframe {
-      display: block;
-      overflow: hidden;
-      border: 0px;
-      margin: 0px;
-      top: 0px;
-      left: 0px;
-      bottom: 0px;
-      right: 0px;
-      height: 100%;
-      width: 100%;
-      position: absolute;
-    }
-  }
-
-  .calendar-container .no-calendar {
-    text-align: center;
-    width: 100%;
     ion-icon {
-      font-size: 9rem;
+      color: #7b7b7b;
+      line-height: 6px;
+
+      &:before {
+        font-size: 19px;
+      }
     }
   }
 
+  .navbar-logo {
+    width: 40px;
+    position: absolute;
+    left: calc(50% - 20px);
+    top: 7px;
+  }
 }
