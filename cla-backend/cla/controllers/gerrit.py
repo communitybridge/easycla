@@ -36,6 +36,15 @@ def get_gerrit(gerrit_id):
     return gerrit.to_dict()
 
 
+def get_gerrits_by_project_id(project_id):
+    gerrit = get_gerrit_instance()
+    try:
+        gerrits = gerrit.get_gerrits_by_project_id(project_id)
+    except DoesNotExist as err:
+        return {'errors': {'gerrit_id': str(err)}}
+    return [gerrit.to_dict() for gerrit in gerrits]
+
+
 def create_gerrit(project_id, 
                     gerrit_name, 
                     gerrit_url, 
@@ -55,18 +64,18 @@ def create_gerrit(project_id,
     :param group_id_ccla: The id of the LDAP group for CCLA. 
     :type group_id_ccla: string
     """
+    
     gerrit = get_gerrit_instance()
     gerrit.set_gerrit_id(str(uuid.uuid4()))
     gerrit.set_project_id(str(project_id))
     gerrit.set_gerrit_url(gerrit_url)
     gerrit.set_gerrit_name(gerrit_name)
     
-    
     #check if LDAP group exists
-    lf_group_client_url = os.environ.get['lf-group-client-url']
-    lf_group_client_id = os.environ.get['lf-group-client-id']
-    lf_group_client_secret = os.environ.get['lf-group-client-secret']
-    lf_group_refresh_token = os.environ.get['lf-group-refresh-token']
+    lf_group_client_url = os.environ.get('LF_GROUP_CLIENT_URL', '')
+    lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
+    lf_group_client_secret = os.environ.get('LF_GROUP_CLIENT_SECRET', '')
+    lf_group_refresh_token = os.environ.get('LF_GROUP_REFRESH_TOKEN', '')
     lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
      
     # returns 'error' if the LDAP group does not exist

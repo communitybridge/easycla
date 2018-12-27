@@ -1922,6 +1922,12 @@ class UserPermissions(object):
         """
         raise NotImplementedError()
 
+    def get_gerrits_by_project_id(self):
+        """
+        Gets all gerrit instances by a project ID.
+        """
+        raise NotImplementedError()
+    
     def all(self):
         """
         Fetches all github organizations in the CLA system.
@@ -1930,3 +1936,5 @@ class UserPermissions(object):
         :rtype: [cla.models.model_interfaces.UserPermission]
         """
         raise NotImplementedError()
+
+    
