@@ -4,10 +4,10 @@ import { CincoService } from "../../services/cinco.service";
 import { ClaService } from "../../services/cla.service";
 
 @Component({
-  selector: "project-header",
-  templateUrl: "project-header.html"
+  selector: "section-header",
+  templateUrl: "section-header.html"
 })
-export class ProjectHeaderComponent {
+export class SectionHeaderComponent {
   @Input("projectId") private projectId: string;
 
   project: any;

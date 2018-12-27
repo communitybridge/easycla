@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
+import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FormControl } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { Http } from '@angular/http';
 
@@ -26,38 +25,19 @@ export class ClaOrganizationProviderModal {
     private formBuilder: FormBuilder,
     public http: Http,
     public claService: ClaService,
+    public events: Events
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.form = formBuilder.group({
       // provider: ['', Validators.required],
       orgName: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
     });
-    // this.getDefaults();
+
+    events.subscribe('modal:close', () => {
+      this.dismiss();
+    });
   }
 
-  // urlCheck(control: FormControl) {
-  //   let url = 'https://api.github.com/users/' + control.value;
-  //   return this.http.get(url).map(res => {
-  //     let json = res.json();
-  //     return json;
-  //   });
-  //
-  //   CLA Service
-  //   GET /github/check/namespace/<namespace>
-  //    Will return true if namespace exists in GitHub, false otherwise
-  //    Example: true
-  //    Example: false
-  //
-  // GET /github/get/namespace/<namespace>
-  //    Will return an object of data on the account requested
-  //    Example: {"bio": "The Linux Foundation is a non-profit consortium dedicated to fostering the growth of Linux.", "company": null, "email": null, "created_at": <datetime object>, "location": null, "login": "linuxfoundation", "type": "Organization"}
-  //    Example: {"errors": {"namespace": "Invalid GitHub account namespace"}}
-  //
-  //  getGithubOrganizations()
-  //    will return if there is already a github org in the cla with this name
-  //
-  // }
-  //
   getDefaults() {
 
   }
