@@ -11,7 +11,7 @@ if [ $1 = 'install' ]; then
   echo '======> activating virtual enviroment'
     . ~/.env/lf-cla/bin/activate &&\
   echo '======> installing python dependencies..'
-    pip install -r requirements.txt &&\
+    pip3 install -r requirements.txt &&\
     cat cla/config.py > cla_config.py &&\
   echo '======> setting up aws profile..'
     cd .. &&\

@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
-import { ProjectHeaderComponent } from './project-header';
+import { ModalHeaderComponent } from './modal-header';
 
 @NgModule({
   declarations: [
-    ProjectHeaderComponent,
+    ModalHeaderComponent,
   ],
   imports: [
     IonicModule,
   ],
   exports: [
-    ProjectHeaderComponent,
+    ModalHeaderComponent,
   ]
 })
-export class ProjectHeaderComponentModule {}
+export class ModalHeaderComponentModule {}

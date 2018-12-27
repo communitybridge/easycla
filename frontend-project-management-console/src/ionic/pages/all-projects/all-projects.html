@@ -3,8 +3,8 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <!-- <ion-title>Linux Foundation Console</ion-title> -->
     <ion-title>CLA Management Console</ion-title>
+    <img class="navbar-logo" src="/assets/img/cla-icon-logo.png" alt="">
   </ion-navbar>
 </ion-header>
 
@@ -73,36 +73,66 @@
     </ion-row>
 
     <ion-row>
-      <ion-col col-12 col-md-6 col-lg-4 col-xl-3 *ngFor="let project of allFilteredProjects">
-        <ion-card>
-          <div class="card-header clickable" (click)="viewProjectCLA(project.id)">
-            <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
-            <ion-card-title>
-              {{ project.name }}
-            </ion-card-title>
+      <ion-col col-12 col-md-6 col-lg-6 col-xl-6 *ngFor="let project of allFilteredProjects">
+        <ion-card class="cla-project-card">
+          <div class="card-header clickable">
+            <div class="border-wrapper">
+              <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
+              <ion-card-title>
+                {{ project.organization }}
+                Test Company
+              </ion-card-title>
+            </div>
           </div>
-          <ion-card-content *ngIf="expand && expand[project.id]">
-            <dl>
-              <dt>Industry:</dt>
-              <dd>{{ projectSectors[project.sector] }}</dd>
-            </dl>
-            <dl *ngIf="!userRoles.isStaffInc">
-              <dt>PM:</dt>
-              <dd>
-                <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
-                <span *ngIf="!project.managers.length">none</span>
-              </dd>
-            </dl>
+          <ion-card-content>
+            <div class="expand" *ngIf="expand && expand[project.id]">
+              <dl>
+                <dt>Industry:</dt>
+                <dd>{{ projectSectors[project.sector] }}</dd>
+              </dl>
+              <dl *ngIf="!userRoles.isStaffInc">
+                <dt>PM:</dt>
+                <dd>
+                  <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
+                  <span *ngIf="!project.managers.length">none</span>
+                </dd>
+              </dl>
+            </div>
+            <h2 (click)="viewProjectCLA(project.id)">{{ project.name }}</h2>
+            <p>
+              {{ project.description }}
+              Example content text for a project. Example content text for a project. Example content text for a project. Example content text for a project.
+              Example content text for a project. Example content text for a project. Example content text for a project. Example content text for a project.
+            </p>
           </ion-card-content>
-          <div class="explore-collapse">
-            <button ion-button clear (click)="viewProjectCLA(project.id)">MANAGE CLA</button>
-            <!-- <button ion-button color="light" float-right round icon-only (click)="toggleExpand(project.id)">
-              <ion-icon [name]="expand[project.id] ? 'arrow-dropup' : 'arrow-dropdown'"></ion-icon>
-            </button> -->
-          </div>
         </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
 
 </ion-content>
+
+<ion-footer>
+    <footer class="text-white footer-section">
+        <ion-grid>
+            <ion-row>
+              <ion-col>
+                  <picture class="d-inline-block">
+                      <img src="./assets/logo/logo_white.svg" alt="" title="">
+                  </picture>
+              </ion-col>
+            </ion-row>
+            <hr />
+            <ion-row>
+                <ion-col>
+                    <small>&copy;2018 The Linux Foundation</small>
+                </ion-col>
+                <ion-col text-sm-right>
+                    <small>
+                        <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+                    </small>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
+    </footer>
+</ion-footer>
