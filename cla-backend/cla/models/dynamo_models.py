@@ -1520,27 +1520,34 @@ class GerritModel(BaseModel):
     project_id = UnicodeAttribute()
     gerrit_name = UnicodeAttribute()
     gerrit_url = UnicodeAttribute()
-    gerrit_group_id_icla = NumberAttribute()
-    gerrit_group_id_ccla = NumberAttribute()
+    group_id_icla = UnicodeAttribute()
+    group_id_ccla = UnicodeAttribute()
 
 class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Gerrit model.
     """
     def __init__(self, gerrit_id=None, gerrit_name=None, 
-    project_id=None, gerrit_url=None, gerrit_group_id_icla=None, gerrit_group_id_ccla=None):
+    project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
         super(Gerrit).__init__()
         self.model = GerritModel()
         self.model.gerrit_id = gerrit_id
         self.model.gerrit_name = gerrit_name
         self.model.project_id = project_id
         self.model.gerrit_url = gerrit_url
-        self.model.gerrit_group_id_icla = gerrit_group_id_icla
-        self.model.gerrit_group_id_ccla = gerrit_group_id_ccla
+        self.model.group_id_icla = group_id_icla
+        self.model.group_id_ccla = group_id_ccla
 
     def to_dict(self):
         ret = dict(self.model)
         return ret
+
+    def load(self, gerrit_id):
+        try:
+            gerrit = self.model.get(str(gerrit_id))
+        except GerritModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Gerrit Instance not found')
+        self.model = gerrit
 
     def get_gerrit_id(self):
         return self.model.gerrit_id
@@ -1583,14 +1590,23 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
 
     def delete(self):
         self.model.delete()
+        
+    def get_gerrits_by_project_id(self, project_id):
+        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
+        gerrits = []
+        for gerrit_model in gerrit_generator:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            gerrits.append(gerrit)
+        return gerrits
 
     def all(self):
-        orgs = self.model.scan()
+        gerrits = self.model.scan()
         ret = []
-        for organization in orgs:
-            org = GitHubOrg()
-            org.model = organization
-            ret.append(org)
+        for gerrit_model in gerrits:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            ret.append(gerrit)
         return ret
 
 class UserPermissionsModel(BaseModel):
