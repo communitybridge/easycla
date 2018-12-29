@@ -1,0 +1,60 @@
+<ion-header>
+  <modal-header>
+    Add Gerrit Instance
+  </modal-header>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
+    <ion-grid>
+      <ion-row *ngIf="submitAttempt && !form.valid">
+        <ion-col col-12>
+          <p class="form-message">Please check the fields below for errors.</p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Gerrit Instance Name</ion-label>
+            <ion-input formControlName="gerritName"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>Gerrit Instance URL</ion-label>
+            <ion-input formControlName="URL"></ion-input>
+          </ion-item>
+          <p *ngIf="form.controls['URL'].errors != null" class="form-message"> 
+          {{ form.controls['URL'].errors.invalidURL }} </p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>ICLA Group ID</ion-label>
+            <ion-input formControlName="groupIdIcla"></ion-input>
+          </ion-item>
+          <p *ngIf="form.controls['groupIdIcla'].errors != null" class="form-message"> 
+          {{ form.controls['groupIdIcla'].errors.groupNotExistentError }} </p>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label stacked>CCLA Group ID</ion-label>
+            <ion-input formControlName="groupIdCcla"></ion-input>
+          </ion-item>
+          <p *ngIf="form.controls['groupIdCcla'].errors != null" class="form-message"> 
+          {{ form.controls['groupIdCcla'].errors.groupNotExistentError }} </p>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+  <div class="btn-wrapper">
+    <button ion-button color="secondary" (click)="submit()">
+      Submit
+    </button>
+  </div>
+</ion-content>
