@@ -1522,6 +1522,8 @@ class GerritModel(BaseModel):
     gerrit_url = UnicodeAttribute()
     group_id_icla = UnicodeAttribute()
     group_id_ccla = UnicodeAttribute()
+    group_name_icla = UnicodeAttribute(null=True)
+    group_name_ccla = UnicodeAttribute(null=True)
 
 class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     """
@@ -1561,11 +1563,11 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     def get_gerrit_url(self):
         return self.model.gerrit_url
 
-    def get_gerrit_group_id_icla(self):
-        return self.model.gerrit_group_id_icla
+    def get_group_id_icla(self):
+        return self.model.group_id_icla
 
-    def get_gerrit_group_id_ccla(self):
-        return self.model.gerrit_group_id_ccla
+    def get_group_id_ccla(self):
+        return self.model.group_id_ccla
 
     def set_gerrit_id(self, gerrit_id):
         self.model.gerrit_id = gerrit_id
@@ -1584,6 +1586,12 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
 
     def set_group_id_ccla(self, group_id_ccla) :
         self.model.group_id_ccla = group_id_ccla
+
+    def set_group_name_icla(self, group_name_icla):
+        self.model.group_name_icla = group_name_icla
+
+    def set_group_name_ccla(self, group_name_ccla) :
+        self.model.group_name_ccla = group_name_ccla
 
     def save(self):
         self.model.save()

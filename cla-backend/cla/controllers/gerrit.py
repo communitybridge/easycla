@@ -79,16 +79,18 @@ def create_gerrit(project_id,
     lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
      
     # returns 'error' if the LDAP group does not exist
-    ldap_group = lf_group.get_group(group_id_icla)
-    if ldap_group.get('error') is not None:
-        return {'error': 'The specified LDAP group for ICLA does not exist. '}
-    ldap_group = lf_group.get_group(group_id_ccla)
-    if ldap_group.get('error') is not None:
-        return {'error': 'The specified LDAP group for CCLA does not exist. '}
-
-
+    ldap_group_icla = lf_group.get_group(group_id_icla)
+    if ldap_group_icla.get('error') is not None:
+        return {'error_icla': 'The specified LDAP group for ICLA does not exist. '}
+    gerrit.set_group_name_icla(ldap_group_icla.get('title'))
     gerrit.set_group_id_icla(str(group_id_icla))
+
+    ldap_group_ccla = lf_group.get_group(group_id_ccla)
+    if ldap_group_ccla.get('error') is not None:
+        return {'error_ccla': 'The specified LDAP group for CCLA does not exist. '}
+    gerrit.set_group_name_ccla(ldap_group_ccla.get('title'))
     gerrit.set_group_id_ccla(str(group_id_ccla))
+
     gerrit.save()
     return gerrit.to_dict()
 

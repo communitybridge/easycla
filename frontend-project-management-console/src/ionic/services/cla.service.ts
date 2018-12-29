@@ -836,5 +836,25 @@ export class ClaService {
     }
     return { ...project, ...objLogoUrl }
   }
+
+
+  getGerritInstances(projectId) {
+    return this.http
+      .get(this.claApiUrl + `/v2/project/${projectId}/gerrits`)
+      .map(res => res.json())
+  }
+
+  deleteGerritInstance(gerritId) {
+    return this.http
+      .delete(this.claApiUrl + `/v2/gerrit/${gerritId}`)
+      .map(res => res.json())
+  }
+
+  postGerritInstance(gerrit) {
+    return this.http
+      .post(this.claApiUrl + "/v2/gerrit", gerrit)
+      .map(res => res.json());
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 }

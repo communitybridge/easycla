@@ -62,6 +62,7 @@ export class ProjectClaPage {
   }
 
   getClaProjects() {
+    console.log(this.projectId);
     this.loading.claProjects = true;
     this.claService
       .getProjectsByExternalId(this.projectId)
@@ -71,21 +72,16 @@ export class ProjectClaPage {
         this.claProjects = projects;
         this.loading.claProjects = false;
         for (let project of projects) {
+          //Get Github Orgs. 
           this.claService
             .getProjectOrganizations(project.project_id)
             .subscribe(organizations => {
-              console.log("organizations:");
-              console.log(organizations);
               project.organizations = organizations;
               for (let organization of organizations) {
                 this.claService
                   .getGithubGetNamespace(organization.organization_name)
                   .subscribe(providerInfo => {
-                    console.log("info from github");
-                    console.log(providerInfo);
                     organization.providerInfo = providerInfo;
-                    console.log("claProjects:");
-                    console.log(this.claProjects);
                   });
                 if (organization.organization_installation_id) {
                   this.claService
@@ -97,6 +93,12 @@ export class ProjectClaPage {
                     });
                 }
               }
+            });
+            //Get Gerrit Instances
+            this.claService
+              .getGerritInstances(project.project_id)
+              .subscribe(gerrits => {
+                project.gerrits = gerrits;
             });
         }
       });
@@ -165,6 +167,17 @@ export class ProjectClaPage {
     modal.present();
   }
 
+  openClaGerritModal(projectId) {
+    console.log("before opening gerrit modal project id is " + projectId);
+    let modal = this.modalCtrl.create("ClaGerritModal", {
+      projectId: projectId
+    });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
+    });
+    modal.present();
+  }
+
   openClaOrganizationAppModal(orgName) {
     let modal = this.modalCtrl.create("ClaOrganizationAppModal", {
       orgName: orgName
@@ -217,6 +230,15 @@ export class ProjectClaPage {
   deleteClaGithubOrganization(organization) {
     this.claService
       .deleteGithubOrganization(organization.organization_name)
+      .subscribe(response => {
+        this.getClaProjects();
+      });
+  }
+
+
+  deleteGerritInstance(gerrit) {
+    this.claService
+      .deleteGerritInstance(gerrit.gerrit_id)
       .subscribe(response => {
         this.getClaProjects();
       });
