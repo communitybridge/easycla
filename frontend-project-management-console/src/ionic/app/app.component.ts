@@ -1,5 +1,5 @@
 import { Component, ViewChild } from "@angular/core";
-import { Nav, Platform, App } from "ionic-angular";
+import { Nav, Platform, App, Events } from "ionic-angular";
 import { StatusBar } from "@ionic-native/status-bar";
 import { SplashScreen } from "@ionic-native/splash-screen";
 
@@ -45,7 +45,8 @@ export class MyApp {
     public claService: ClaService,
     public s3service: S3Service,
     public httpClient: HttpClient,
-    public authService: AuthService
+    public authService: AuthService,
+    public events: Events
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -65,6 +66,11 @@ export class MyApp {
     this.cincoService.setHttp(kcHttpClient);
 
     this.authService.handleAuthentication();
+
+    events.subscribe('nav:allProjects', () => {
+      this.nav.setRoot('AllProjectsPage');
+    });
+
   }
 
   getDefaults() {

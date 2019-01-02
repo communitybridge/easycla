@@ -8,6 +8,7 @@ import uuid
 import urllib.request
 import xml.etree.ElementTree as ET
 import pydocusign
+import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
@@ -190,8 +191,9 @@ class DocuSign(signing_service_interface.SigningService):
             cla.utils.delete_active_signature_metadata(user.get_user_id())
         return new_signature.to_dict()
 
-    def request_corporate_signature(self, project_id, company_id, return_url=None):
-        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
+    def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
+    authority_name=None, authority_email=None, return_url=None,):
+        cla.log.info('Validating company %s on project %s', company_id, project_id)
         project = cla.utils.get_project_instance()
         try:
             project.load(str(project_id))
@@ -202,22 +204,33 @@ class DocuSign(signing_service_interface.SigningService):
             company.load(str(company_id))
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
-        # Ensure the company doesn't already have a CCLA with this project.
+
+        # Ensure the company doesn't already have a CCLA with this project. 
+        # and the user is about to sign the ccla manually 
+        cla.log.info('Checking if a signature exists')
         latest_signature = cla.utils.get_company_latest_signature(company, str(project_id))
         last_document = cla.utils.get_project_latest_corporate_document(str(project_id))
         if latest_signature is not None and \
-           last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
+        last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
             if latest_signature.get_signature_signed():
                 cla.log.info('CCLA signature object already signed')
                 return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
             else:
-                cla.log.info('CCLA signature object still missing signature')
+                if not send_as_email:
+                    #signature object exists but still has not been manually signed.
+                    cla.log.info('CCLA signature object still missing signature')
+                else:
+                    #signature object exists and the user wants to send it to a corp authority.
+                    callback_url = cla.utils.get_corporate_signature_callback_url(str(project_id), str(company_id))
+                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
                         'signature_id': latest_signature.get_signature_id(),
-                        'sign_url': latest_signature.get_signature_sign_url()}
-        # Create the new Signature.
+                        'sign_url': latest_signature.get_signature_sign_url()}  
+                                   
+        # No signature exists, create the new Signature.
+        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
         signature = cla.utils.get_signature_instance()
         signature.set_signature_id(str(uuid.uuid4()))
         signature.set_signature_project_id(str(project_id))
@@ -232,31 +245,40 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
         cla.log.info('Setting signature return_url to %s', return_url)
-        signature.set_signature_return_url(return_url)
-        self.populate_sign_url(signature, callback_url)
+        if(not send_as_email): #get return url only for manual signing through console
+            signature.set_signature_return_url(return_url)
+        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email)
         signature.save()
         return {'company_id': str(company_id),
                 'project_id': str(project_id),
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, signature, callback_url=None): # pylint: disable=too-many-locals
+    def populate_sign_url(self, signature, callback_url=None, send_as_email=False,
+    authority_name=None, authority_email=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
         user = cla.utils.get_user_instance()
-        if sig_type == 'company': # Assume the company manager is signing the CCLA.
+        
+        # Assume the company manager is signing the CCLA
+        if sig_type == 'company': 
             company = cla.utils.get_company_instance()
             company.load(signature.get_signature_reference_id())
             try:
                 user.load(company.get_company_manager_id())
+                name = user.get_user_name()
             except DoesNotExist:
                 cla.log.error('No CLA manager associated with this company - can not sign CCLA')
                 return
-        else: # sig_type == 'user'
-            user.load(signature.get_signature_reference_id())
-        name = user.get_user_name()
-        if name is None:
-            name = 'Unknown'
+        else:
+            if not send_as_email: 
+                # sig_type == 'user'
+                user.load(signature.get_signature_reference_id())            
+                name = user.get_user_name()
+                if name is None:
+                    name = 'Unknown'
+        
+        
         # Fetch the document to sign.
         project = cla.utils.get_project_instance()
         project.load(signature.get_signature_project_id())
@@ -275,15 +297,42 @@ class DocuSign(signing_service_interface.SigningService):
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
         tabs = get_docusign_tabs_from_document(document, document_id)
-        signer = pydocusign.Signer(email=user.get_user_email(),
-                                   name=name,
-                                   recipientId=1,
-                                   clientUserId=signature.get_signature_id(),
-                                   tabs=tabs,
-                                   emailSubject='CLA Sign Request',
-                                   emailBody='CLA Sign Request for %s'
-                                   %user.get_user_email(),
-                                   supportedLanguage='en')
+
+        if send_as_email:
+            # Sending email to authority
+            email = authority_email
+            name = authority_name
+        else:
+            # User email
+            email = user.get_user_email()
+
+        if send_as_email: 
+            # Not assigning a clientUserId sends an email. 
+            signer = pydocusign.Signer(email=email,
+                                    name=name,
+                                    recipientId=1,
+                                    tabs=tabs, 
+                                    emailSubject='CLA Sign Request',
+                                    emailBody='CLA Sign Request for %s'
+                                    %authority_email,
+                                    supportedLanguage='en',
+                                    )
+        else:
+            # Assigning a clientUserId does not send an email.
+            # It assumes that the user handles the communication with the client. 
+            # In this case, the user opened the docusign document to manually sign it. 
+            # Thus the email does not need to be sent. 
+            signer = pydocusign.Signer(email=email,
+                                    name=name,
+                                    recipientId=1,
+                                    clientUserId=signature.get_signature_id(),
+                                    tabs=tabs, 
+                                    emailSubject='CLA Sign Request',
+                                    emailBody='CLA Sign Request for %s'
+                                    %user.get_user_email(),
+                                    supportedLanguage='en',
+                                    )
+        
         content_type = document.get_document_content_type()
         if content_type.startswith('url+'):
             pdf_url = document.get_document_content()
@@ -295,29 +344,41 @@ class DocuSign(signing_service_interface.SigningService):
         document = pydocusign.Document(name=doc_name,
                                        documentId=document_id,
                                        data=pdf)
+
         if callback_url is not None:
-            event_notification = pydocusign.EventNotification(url=callback_url)
+            # Webhook properties for callbacks after the user signs the document.
+            # Ensure that a webhook is returned on the status "Completed" where 
+            # all signers on a document finish signing the document. 
+            recipient_events = [{"recipientEventStatusCode": "Completed"}]
+            event_notification= pydocusign.EventNotification(url=callback_url,
+                                                            loggingEnabled=True,
+                                                            recipientEvents=recipient_events)
             envelope = pydocusign.Envelope(documents=[document],
                                            emailSubject='CLA Sign Request',
                                            emailBlurb='CLA Sign Request',
                                            eventNotification=event_notification,
-                                           status=pydocusign.Envelope.STATUS_SENT, # Send now.
+                                           status=pydocusign.Envelope.STATUS_SENT,
                                            recipients=[signer])
         else:
             envelope = pydocusign.Envelope(documents=[document],
                                            emailSubject='CLA Sign Request',
                                            emailBlurb='CLA Sign Request',
-                                           status=pydocusign.Envelope.STATUS_SENT, # Send now.
+                                           status=pydocusign.Envelope.STATUS_SENT,
                                            recipients=[signer])
         envelope = self.prepare_sign_request(envelope)
-        cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
+
+        print("Envelope: {}".format(envelope))
+
+        #cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
         recipient = envelope.recipients[0]
-        # The URL the user will be redirected to after signing.
-        # This route will be in charge of extracting the signature's return_url and redirecting.
-        return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
-        sign_url = self.get_sign_url(envelope, recipient, return_url)
-        cla.log.info('Setting signature sign_url to %s', sign_url)
-        signature.set_signature_sign_url(sign_url)
+
+        if(not send_as_email):
+            # The URL the user will be redirected to after signing.
+            # This route will be in charge of extracting the signature's return_url and redirecting.
+            return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
+            sign_url = self.get_sign_url(envelope, recipient, return_url)
+            cla.log.info('Setting signature sign_url to %s', sign_url)
+            signature.set_signature_sign_url(sign_url)
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
@@ -365,15 +426,29 @@ class DocuSign(signing_service_interface.SigningService):
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
+        
         # Assume only one signature per signature.
-        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
-        signature = cla.utils.get_signature_instance()
-        try:
-            signature.load(signature_id)
-        except DoesNotExist:
-            cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
-                          content)
-            return
+        client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
+        if client_user_id is not None: 
+            signature_id = client_user_id.text
+            signature = cla.utils.get_signature_instance()
+            try:
+                signature.load(signature_id)
+            except DoesNotExist:
+                cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
+                            content)
+                return
+        else:
+            # If client_user_id is None, the callback came from the email that finished signing. 
+            # Retrieve the latest signature with projectId and CompanyId.
+            company = cla.utils.get_company_instance()
+            try:
+                company.load(str(company_id))
+            except DoesNotExist as err:
+                return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
+            signature = cla.utils.get_company_latest_signature(company, str(project_id))
+            signature_id = signature.get_signature_id()
+
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])

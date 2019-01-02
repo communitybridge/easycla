@@ -17,7 +17,10 @@ export class ClaSelectCompanyModal {
   repositoryId: string;
   userId: string;
 
+  signature: string;
+  
   companies: any;
+  
 
   constructor(
     public navCtrl: NavController,
@@ -56,13 +59,39 @@ export class ClaSelectCompanyModal {
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
-    this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
-      projectId: this.projectId,
-      repositoryId: this.repositoryId,
-      userId: this.userId,
-      companyId: company.company_id,
+    let signatureRequest = {
+      project_id: this.projectId,
+      company_id: company.company_id,
+      user_id: this.userId,
+    };
+
+    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
+      let errors = response.hasOwnProperty('errors');
+      if (errors) {
+        if (response.errors.hasOwnProperty('company_whitelist')) {
+          // When the user is not whitelisted with the company: return {'errors': {'company_whitelist': 'User email (<email>) is not whitelisted for this company'}}
+          this.openClaEmployeeCompanyTroubleshootPage(company);
+          return;
+        }
+        if (response.errors.hasOwnProperty('missing_ccla')) {
+          // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+          // The user shouldn't get here if they are using the console properly
+          return;
+        }
+      } else {
+        // No Errors, expect normal signature response
+        this.signature = response;
+
+      this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
+        projectId: this.projectId,
+        repositoryId: this.repositoryId,
+        userId: this.userId,
+        companyId: company.company_id,
+      });
+      }
     });
-  }
+  } 
+
 
   openClaNewCompanyModal() {
     let modal = this.modalCtrl.create('ClaNewCompanyModal', {
@@ -70,5 +99,24 @@ export class ClaSelectCompanyModal {
     });
     modal.present();
   }
+  
+  openClaCompanyAdminYesnoModal() {
+    let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
+      projectId: this.projectId,
+      userId: this.userId
+    });
+    modal.present();
+    this.dismiss();
+  }
 
+
+  openClaEmployeeCompanyTroubleshootPage(company) {
+    this.navCtrl.push('ClaEmployeeCompanyTroubleshootPage', {
+      projectId: this.projectId,
+      repositoryId: this.repositoryId,
+      userId: this.userId,
+      companyId: company.company_id,
+    });
+  }
+  
 }

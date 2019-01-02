@@ -1,9 +1,9 @@
-import { Component } from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
 import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage
+  IonicPage, Nav, Events
 } from "ionic-angular";
 import { CincoService } from "../../../services/cinco.service";
 import { KeycloakService } from "../../../services/keycloak/keycloak.service";
@@ -32,6 +32,7 @@ export class ProjectClaPage {
 
   iclaUploadInfo: any;
   cclaUploadInfo: any;
+  @ViewChild(Nav) nav: Nav;
 
   constructor(
     public navCtrl: NavController,
@@ -42,7 +43,8 @@ export class ProjectClaPage {
     private keycloak: KeycloakService,
     private popoverCtrl: PopoverController,
     public claService: ClaService,
-    public rolesService: RolesService
+    public rolesService: RolesService,
+    public events: Events
   ) {
     this.projectId = navParams.get("projectId");
     this.getDefaults();
@@ -100,6 +102,10 @@ export class ProjectClaPage {
       });
   }
 
+  backToProjects () {
+    this.events.publish('nav:allProjects');
+  }
+
   openClaContractConfigModal(claProject) {
     let modal;
     if (claProject) {
@@ -121,6 +127,18 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create("ClaContractUploadModal", {
       claProjectId: claProjectId,
       documentType: documentType
+    });
+    modal.onDidDismiss(data => {
+      this.getClaProjects();
+    });
+    modal.present();
+  }
+
+  openClaViewSignaturesModal(project_id) {
+    let modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
+
+    }, {
+      cssClass: 'medium'
     });
     modal.onDidDismiss(data => {
       this.getClaProjects();
@@ -196,9 +214,9 @@ export class ProjectClaPage {
     });
   }
 
-  deleteClaGithubOrganization(data) {
+  deleteClaGithubOrganization(organization) {
     this.claService
-      .deleteGithubOrganization(data.organization.organization_name)
+      .deleteGithubOrganization(organization.organization_name)
       .subscribe(response => {
         this.getClaProjects();
       });

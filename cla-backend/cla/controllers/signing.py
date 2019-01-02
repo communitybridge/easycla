@@ -3,10 +3,11 @@ Controller related to the signed callback.
 """
 
 import uuid
+import hug
 import falcon
 import cla
 from cla.utils import get_signing_service, get_signature_instance, get_project_instance, \
-                      get_company_instance, get_user_instance
+                      get_company_instance, get_user_instance, get_email_service
 from cla.models import DoesNotExist
 
 def request_individual_signature(project_id, user_id, return_url=None):
@@ -22,7 +23,8 @@ def request_individual_signature(project_id, user_id, return_url=None):
     """
     return get_signing_service().request_individual_signature(str(project_id), str(user_id), return_url)
 
-def request_corporate_signature(project_id, company_id, return_url=None):
+def request_corporate_signature(project_id, company_id, send_as_email=False, 
+                                authority_name=None, authority_email=None, return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
 
@@ -33,7 +35,7 @@ def request_corporate_signature(project_id, company_id, return_url=None):
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), return_url)
+    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url)
 
 def request_employee_signature(project_id, company_id, user_id, return_url=None):
     """
@@ -48,6 +50,30 @@ def request_employee_signature(project_id, company_id, user_id, return_url=None)
     :param return_url: The URL to return the user to after signing is complete.
     """
     return get_signing_service().request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
+
+
+def send_authority_email(company_name, project_name, authority_name, authority_email):
+    """
+    Sends email to the specified corporate authority to sign the CCLA Docusign file. 
+    """
+
+    subject = 'CLA: Invitation to Sign a Corporate Contributor License Agreement'
+    body = '''Hello %s, 
+    
+Your organization: %s, 
+    
+has requested a Corporate Contributor License Agreement Form to be signed for the following project:
+
+%s
+
+Please read the agreement carefully and sign the attached file. 
+    
+
+- Linux Foundation CLA System
+''' %(authority_name, company_name, project_name)
+    recipient = authority_email
+    email_service = get_email_service()
+    email_service.send(subject, body, recipient)
 
 def post_individual_signed(content, installation_id, github_repository_id, change_request_id):
     """

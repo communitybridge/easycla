@@ -246,15 +246,18 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
+            # cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
-                # Deal with GitHub user.
+                # Handle GitHub user.
+                cla.log.info("Handle GitHub user")
                 handle_commit_from_github_user(project_id,
                                                commit,
                                                commit_author,
                                                signed,
                                                missing)
             elif isinstance(commit_author, github.GitAuthor.GitAuthor):
-                # Deal with non-github user (just email and name in commit).
+                # Handle non-github user (just email and name in commit).
+                cla.log.info("Handle non-github user (just email and name in commit)")
                 handle_commit_from_git_author(project_id,
                                               commit,
                                               commit_author,
@@ -262,7 +265,12 @@ class GitHub(repository_service_interface.RepositoryService):
                                               missing)
             else:
                 # Couldn't find any author information.
-                missing.append((commit.sha, None))
+                cla.log.info("Couldn't find any author information.")
+                if commit_author is not None:
+                    missing.append((commit.sha, commit_author))
+                else:
+                    missing.append((commit.sha, None))
+
         update_pull_request(installation_id,
                             github_repository_id,
                             pull_request,
@@ -539,16 +547,18 @@ def get_pull_request_commit_authors(pull_request):
     commit_authors = []
     for commit in pull_request.get_commits():
         if commit.author is not None:
-            cla.log.debug('GitHub author found for commit SHA %s: %s <%s>',
+            cla.log.info('GitHub author found for commit SHA %s: %s <%s>',
                           commit.sha, commit.author.id, commit.author.email)
+            # commit_authors.append((commit, commit.author.login))
             commit_authors.append((commit, commit.author))
         elif commit.commit.author is not None:
             # For now, trust that git commit author information is enough for verification.
             # TODO: This probably isn't enough - need to verify user somehow.
-            cla.log.debug('No GitHub author found for commit SHA %s, using git author info: ' + \
+            cla.log.info('No GitHub author found for commit SHA %s, using git author info: ' + \
                           '%s <%s>', commit.sha, commit.commit.author.name,
                           commit.commit.author.email)
-            commit_authors.append((commit, commit.commit.author))
+            # commit_authors.append((commit, commit.commit.author))
+            commit_authors.append((commit, commit.commit))
         else:
             cla.log.warning('Could not find commit author for SHA %s in PR %s',
                             commit.sha, pull_request.number)
@@ -575,6 +585,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     """
     notification = cla.conf['GITHUB_PR_NOTIFICATION']
     both = notification == 'status+comment' or notification == 'comment+status'
+    last_commit = pull_request.get_commits().reversed[0]
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
@@ -582,29 +593,19 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     if both or notification == 'status':
         state = 'failure'
         for commit, author_name in missing:
-            body = cla.utils.assemble_cla_status(author_name, signed=False)
+            context, body = cla.utils.assemble_cla_status(author_name, signed=False)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
-            create_commit_status(pull_request, commit, state, sign_url, body)
+            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
         state = 'success'
         for commit, author_name in signed:
-            body = cla.utils.assemble_cla_status(author_name, signed=True)
+            context, body = cla.utils.assemble_cla_status(author_name, signed=True)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
-            create_commit_status(pull_request, commit, state, sign_url, body)
-        num_missing = len(missing)
-        if num_missing > 0:
-            # Need to update the last status message to prevent merging the PR.
-            last_commit = pull_request.get_commits().reversed[0]
-            signed_commits = [item[0] for item in signed]
-            if last_commit.sha in signed_commits:
-                num_signed = len(signed)
-                total = num_signed + len(missing)
-                last_commit.create_status('failure', sign_url,
-                                          'Missing CLA signatures (%s/%s)' %(num_signed, total))
+            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 
-def create_commit_status(pull_request, commit_hash, state, sign_url, body):
+def create_commit_status(pull_request, commit_hash, state, sign_url, body, context):
     """
     Helper function to create a pull request commit status message given the PR and commit hash.
 
@@ -628,7 +629,9 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body):
         cla.log.error('Could not post status on PR %s: Commit %s not found',
                       pull_request.number, commit_hash)
         return
-    commit_obj.create_status(state, sign_url, body)
+    # context is a string label to differentiate one signer status from another signer status.
+    # committer name is used as context label
+    commit_obj.create_status(state, sign_url, body, context)
 
 
 def update_cla_comment(pull_request, body):

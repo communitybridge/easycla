@@ -1,3 +1,31 @@
 cla-landing {
+  .scroll-content {
+    padding-top: 40px !important;
+  }
+}
 
+.cla-header {
+  border-bottom: 40px solid #4C79B6;
+
+  .toolbar {
+    color: #7b7b7b;
+    background-color: white;
+    padding: 4px 25px;
+
+    ion-icon {
+      color: #7b7b7b;
+      line-height: 6px;
+
+      &:before {
+        font-size: 19px;
+      }
+    }
+  }
+
+  .navbar-logo {
+    width: 40px;
+    position: absolute;
+    left: calc(50% - 20px);
+    top: 7px;
+  }
 }
