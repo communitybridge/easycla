@@ -8,6 +8,7 @@ from cla.utils import get_company_instance
 from cla.utils import get_user_instance
 from cla.models import DoesNotExist
 import cla
+from falcon import HTTP_409, HTTP_200, HTTPForbidden
 
 def get_companies():
     """
@@ -17,6 +18,26 @@ def get_companies():
     :rtype: [dict]
     """
     return [company.to_dict() for company in get_company_instance().all()]
+
+def get_companies_by_user(user_id):
+    """
+    Returns a list of companies for a user in the CLA system.
+
+    :return: List of companies in dict format.
+    :rtype: [dict]
+    """
+    all_companies = [company.to_dict() for company in get_company_instance().all() if user_id in company.get_company_acl()]
+
+
+    return all_companies
+
+
+def company_acl_verify(user_id, company_obj):
+    if user_id in company_obj.get_company_acl():
+        return True
+
+    raise HTTPForbidden('Unauthorized',
+        'Provided Token credentials does not have sufficient permissions to access resource')
 
 
 def get_company(company_id):
@@ -33,6 +54,7 @@ def get_company(company_id):
         company.load(company_id=str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+
     return company.to_dict()
 
 
@@ -41,7 +63,8 @@ def create_company(company_name=None,
                    company_whitelist_patterns=None,
                    company_manager_id=None,
                    company_manager_user_name=None,
-                   company_manager_user_email=None):
+                   company_manager_user_email=None,
+                   user_id=None):
     """
     Creates an company and returns the newly created company in dict format.
 
@@ -62,6 +85,14 @@ def create_company(company_name=None,
     """
     if company_manager_user_email is not None:
         company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
+
+    for company in get_companies():
+        if company.get("company_name") == company_name:
+            cla.log.error({"error": "Company already exists"})
+            return {"status_code": HTTP_409,
+                    "data": {"error":"Company already exists."}
+                    }
+
     company = get_company_instance()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
@@ -69,14 +100,19 @@ def create_company(company_name=None,
     company.set_company_whitelist(company_whitelist)
     company.set_company_whitelist_patterns(company_whitelist_patterns)
     company.set_company_manager_id(str(company_manager_id))
+    company.set_company_acl(user_id)
     company.save()
-    return company.to_dict()
+
+    return {"status_code": HTTP_200,
+            "data": company.to_dict()
+            }
 
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
                    company_whitelist=None,
                    company_whitelist_patterns=None,
-                   company_manager_id=None):
+                   company_manager_id=None,
+                   user_id=None):
     """
     Updates an company and returns the newly updated company in dict format.
     A value of None means the field should not be updated.
@@ -99,6 +135,9 @@ def update_company(company_id, # pylint: disable=too-many-arguments
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+
+    company_acl_verify(user_id, company)
+
     if company_name is not None:
         company.set_company_name(company_name)
     # TODO: Need to validate these values.
@@ -115,7 +154,7 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     company.save()
     return company.to_dict()
 
-def update_company_whitelist_csv(content, company_id):
+def update_company_whitelist_csv(content, company_id, user_id=None):
     """
     Adds the CSV of email addresse to this company's whitelist.
 
@@ -129,6 +168,9 @@ def update_company_whitelist_csv(content, company_id):
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+
+    company_acl_verify(user_id, company)
+
     # Ready email addresses.
     emails = content.split('\n')
     emails = [email for email in emails if '@' in email]
@@ -138,7 +180,7 @@ def update_company_whitelist_csv(content, company_id):
     company.save()
     return company.to_dict()
 
-def delete_company(company_id):
+def delete_company(company_id, user_id=None):
     """
     Deletes an company based on ID.
 
@@ -150,6 +192,9 @@ def delete_company(company_id):
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+
+    company_acl_verify(user_id, company)
+
     company.delete()
     return {'success': True}
 
