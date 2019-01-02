@@ -585,6 +585,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     """
     notification = cla.conf['GITHUB_PR_NOTIFICATION']
     both = notification == 'status+comment' or notification == 'comment+status'
+    last_commit = pull_request.get_commits().reversed[0]
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
@@ -592,29 +593,19 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     if both or notification == 'status':
         state = 'failure'
         for commit, author_name in missing:
-            body = cla.utils.assemble_cla_status(author_name, signed=False)
+            context, body = cla.utils.assemble_cla_status(author_name, signed=False)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
-            create_commit_status(pull_request, commit, state, sign_url, body)
+            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
         state = 'success'
         for commit, author_name in signed:
-            body = cla.utils.assemble_cla_status(author_name, signed=True)
+            context, body = cla.utils.assemble_cla_status(author_name, signed=True)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
-            create_commit_status(pull_request, commit, state, sign_url, body)
-        num_missing = len(missing)
-        if num_missing > 0:
-            # Need to update the last status message to prevent merging the PR.
-            last_commit = pull_request.get_commits().reversed[0]
-            signed_commits = [item[0] for item in signed]
-            if last_commit.sha in signed_commits:
-                num_signed = len(signed)
-                total = num_signed + len(missing)
-                last_commit.create_status('failure', sign_url,
-                                          'Missing CLA signatures (%s/%s)' %(num_signed, total))
+            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 
-def create_commit_status(pull_request, commit_hash, state, sign_url, body):
+def create_commit_status(pull_request, commit_hash, state, sign_url, body, context):
     """
     Helper function to create a pull request commit status message given the PR and commit hash.
 
@@ -638,7 +629,9 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body):
         cla.log.error('Could not post status on PR %s: Commit %s not found',
                       pull_request.number, commit_hash)
         return
-    commit_obj.create_status(state, sign_url, body)
+    # context is a string label to differentiate one signer status from another signer status.
+    # committer name is used as context label
+    commit_obj.create_status(state, sign_url, body, context)
 
 
 def update_cla_comment(pull_request, body):
