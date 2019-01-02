@@ -62,7 +62,6 @@ export class ProjectClaPage {
   }
 
   getClaProjects() {
-    console.log(this.projectId);
     this.loading.claProjects = true;
     this.claService
       .getProjectsByExternalId(this.projectId)
