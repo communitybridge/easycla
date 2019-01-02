@@ -10,6 +10,7 @@ import cla.resources.contract_templates
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
+from falcon import HTTPForbidden
 
 
 def get_projects():
@@ -42,7 +43,6 @@ def get_project(project_id, user_id=None):
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    project_acl_verify(user_id, project)
     return project.to_dict()
 
 
@@ -150,7 +150,7 @@ def delete_project(project_id, user_id=None):
     return {'success': True}
 
 
-def get_project_repositories(project_id, user_id=None):
+def get_project_repositories(project_id):
     """
     Get a project's repositories.
 
@@ -162,12 +162,11 @@ def get_project_repositories(project_id, user_id=None):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    project_acl_verify(user_id, project)
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
 
 
-def get_project_organizations(project_id, user_id=None):
+def get_project_organizations(project_id):
     """
     Get a project's tied organizations.
 
@@ -179,12 +178,11 @@ def get_project_organizations(project_id, user_id=None):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    project_acl_verify(user_id, project)
     organizations = get_github_organization_instance().get_organization_by_project_id(str(project_id))
     return [organization.to_dict() for organization in organizations]
 
 
-def get_project_companies(project_id, user_id=None):
+def get_project_companies(project_id):
     """
     Get a project's associated companies (via CCLA link).
 
@@ -196,7 +194,6 @@ def get_project_companies(project_id, user_id=None):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    project_acl_verify(user_id, project)
     # Get all reference_ids of signatures that match project_id AND are of reference type 'company'.
     # Return all the companies matching those reference_ids.
     signature = get_signature_instance()
@@ -208,7 +205,7 @@ def get_project_companies(project_id, user_id=None):
     company = get_company_instance()
     return [comp.to_dict() for comp in company.all(company_ids)]
 
-def _get_project_document(project_id, document_type, major_version=None, minor_version=None, user_id=None):
+def _get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
     See documentation for get_project_document().
     """
@@ -217,7 +214,6 @@ def _get_project_document(project_id, document_type, major_version=None, minor_v
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    project_acl_verify(user_id, project)
     if document_type == 'individual':
         try:
             document = project.get_project_individual_document(major_version, minor_version)
@@ -230,7 +226,7 @@ def _get_project_document(project_id, document_type, major_version=None, minor_v
             return {'errors': {'document': str(err)}}
     return document
 
-def get_project_document(project_id, document_type, major_version=None, minor_version=None, user_id=None):
+def get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
     Returns the specified project's document based on type (ICLA or CCLA) and version.
 
@@ -243,16 +239,16 @@ def get_project_document(project_id, document_type, major_version=None, minor_ve
     :param minor_version: The minor version number.
     :type minor_version: integer
     """
-    document = _get_project_document(project_id, document_type, major_version, minor_versionuser_id=None, user_id=None)
+    document = _get_project_document(project_id, document_type, major_version, minor_version=None)
     if isinstance(document, dict):
         return document
     return document.to_dict()
 
-def get_project_document_raw(project_id, document_type, document_major_version=None, document_minor_version=None, user_id=None):
+def get_project_document_raw(project_id, document_type, document_major_version=None, document_minor_version=None):
     """
     Same as get_project_document() except that it returns the raw PDF document instead.
     """
-    document = _get_project_document(project_id, document_type, document_major_version, document_minor_version, user_id=None)
+    document = _get_project_document(project_id, document_type, document_major_version, document_minor_version)
     if isinstance(document, dict):
         return document
     content_type = document.get_document_content_type()
