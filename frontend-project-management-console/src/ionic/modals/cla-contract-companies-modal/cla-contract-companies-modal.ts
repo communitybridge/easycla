@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, ModalController, NavController, NavParams, ViewController, } from 'ionic-angular';
+import {Events, IonicPage, ModalController, NavController, NavParams, ViewController,} from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -20,8 +20,12 @@ export class ClaContractCompaniesModal {
     public viewCtrl: ViewController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-  ) {
+    public events: Events) {
     this.getDefaults();
+
+    events.subscribe('modal:close', () => {
+      this.dismiss();
+    });
   }
 
   ngOnInit() {
