@@ -21,7 +21,7 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add Item</button  >
+          <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add {{type}}</button  >
         </ion-col>
       </ion-row>
       <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">
