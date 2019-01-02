@@ -1,0 +1,26 @@
+ion-footer {
+    background-image: none;
+    background-color: #4C79B6;
+    color:#ffffff;
+    .grid{
+        padding:0;
+        .col{
+            padding:15px 15px;
+        }
+    }
+    a{
+        color:#ffffff;
+        text-decoration: none;
+    }
+
+    hr{
+        border:0 none;
+        border-bottom:1px solid #FFFFFF;
+        margin:0;
+    }
+    picture, img{
+        margin:-10px 0 -10px -13px;
+        width: 175px;
+    }
+  
+}
