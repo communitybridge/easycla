@@ -11,7 +11,7 @@ if [ $1 = 'install' ]; then
   echo '======> activating virtual enviroment'
     . ~/.env/lf-cla/bin/activate &&\
   echo '======> installing python dependencies..'
-    pip install -r requirements.txt &&\
+    pip3 install -r requirements.txt &&\
     cat cla/config.py > cla_config.py &&\
   echo '======> setting up aws profile..'
     cd .. &&\
@@ -26,7 +26,7 @@ elif [ $1 = 'add:user' ]; then
   echo '======> creating permission in local db'
    aws dynamodb put-item \
     --table-name "cla-dev-user-permissions" \
-    --item '{ "user_id": { "S": "$2" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
+    --item '{ "user_id": { "S": "'$2'" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
     --profile lf-cla --region "us-east-1" \
     --endpoint-url http://localhost:8000
   echo '======> done!'

@@ -3,7 +3,7 @@ import { IonicPageModule } from 'ionic-angular';
 import { ProjectGroupsCreatePage } from './project-groups-create';
 import { LoadingSpinnerComponentModule } from '../../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../../directives/loading-display/loading-display.module';
-import { ProjectHeaderComponentModule } from '../../../components/project-header/project-header.module';
+import { SectionHeaderComponentModule } from '../../../components/section-header/section-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 
 @NgModule({
@@ -13,7 +13,7 @@ import { ProjectNavigationComponentModule } from '../../../components/project-na
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    ProjectHeaderComponentModule,
+    SectionHeaderComponentModule,
     ProjectNavigationComponentModule,
     IonicPageModule.forChild(ProjectGroupsCreatePage)
   ],

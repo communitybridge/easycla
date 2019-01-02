@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
+import {NavController, NavParams, ViewController, IonicPage, Events,} from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service'
 
@@ -25,6 +25,7 @@ export class ClaContractConfigModal {
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
     private claService: ClaService,
+    public events: Events
   ) {
     this.projectId = this.navParams.get('projectId');
     console.log("projectId" + this.projectId);
@@ -35,6 +36,10 @@ export class ClaContractConfigModal {
       ccla:[this.claProject.project_ccla_enabled],
       cclaAndIcla:[this.claProject.project_ccla_requires_icla_signature],
       icla:[this.claProject.project_icla_enabled],
+    });
+
+    events.subscribe('modal:close', () => {
+      this.dismiss();
     });
   }
 
