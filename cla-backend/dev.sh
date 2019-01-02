@@ -26,7 +26,7 @@ elif [ $1 = 'add:user' ]; then
   echo '======> creating permission in local db'
    aws dynamodb put-item \
     --table-name "cla-dev-user-permissions" \
-    --item '{ "user_id": { "S": "$2" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
+    --item '{ "user_id": { "S": "'$2'" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
     --profile lf-cla --region "us-east-1" \
     --endpoint-url http://localhost:8000
   echo '======> done!'
