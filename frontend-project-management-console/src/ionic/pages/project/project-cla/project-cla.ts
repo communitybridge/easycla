@@ -67,8 +67,6 @@ export class ProjectClaPage {
     this.claService
       .getProjectsByExternalId(this.projectId)
       .subscribe(projects => {
-        console.log("claProjects");
-        console.log(projects);
         this.claProjects = projects;
         this.loading.claProjects = false;
         for (let project of projects) {
@@ -168,7 +166,6 @@ export class ProjectClaPage {
   }
 
   openClaGerritModal(projectId) {
-    console.log("before opening gerrit modal project id is " + projectId);
     let modal = this.modalCtrl.create("ClaGerritModal", {
       projectId: projectId
     });
@@ -196,7 +193,6 @@ export class ProjectClaPage {
   }
 
   openClaContractsContributorsPage(claProjectId) {
-    console.log(claProjectId);
     this.navCtrl.push("ClaContractsContributorsPage", {
       claProjectId: claProjectId
     });
