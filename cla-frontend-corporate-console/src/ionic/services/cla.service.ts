@@ -675,6 +675,24 @@ export class ClaService {
   }
 
   /**
+   * /send-authority-email
+   **/
+
+  postEmailToCompanyAuthority(data) {
+    /*
+      {
+        'project_name': 'Project Name',
+        'company_name': 'Company Name',
+        'authority_name': 'John Doe'
+        'authority_email': 'johndoe@example.com'
+      }
+     */
+    return this.http
+      .post(this.claApiUrl + "/v2/send-authority-email", data)
+      .map(res => res.json());
+  }
+
+  /**
    * /repository-provider/{provider}/icon.svg
    **/
 

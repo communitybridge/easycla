@@ -1,3 +1,20 @@
 cla-contract-version-modal {
+  .ion-md-cloud-upload:before {
+    color: white;
+    font-size: 21px;
+  }
 
+  table {
+    margin-top: 35px;
+    margin-left: 20px;
+    color: #7b7b7b;
+  }
+
+  .btn-wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding-top: 30px;
+    border-top: 1px solid lightgray;
+  }
 }

@@ -14,6 +14,8 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 
+import cla.salesforce
+
 from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
@@ -58,8 +60,9 @@ def get_health(request):
 
     Returns a basic health check on the CLA system.
     """
+    cla.salesforce.get_projects(request, '')
     request.context['session']['health'] = 'up'
-    return {'status': 'up'}
+    return request.headers
 
 #
 # User routes.
@@ -197,6 +200,22 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     """
     return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
 
+@hug.post('/user/{user_id}/invite-company-admin', versions=2)
+def invite_company_admin(user_id: hug.types.uuid, user_email: cla.hug_types.email, 
+                        admin_name: hug.types.text, admin_email: cla.hug_types.email):
+    """
+    POST: /user/{user_id}/invite-company-admin
+
+    DATA: {
+            'admin_name': John Doe,
+            'admin_email': admin@example.com,
+            'user_email': user@example.com, 
+        }
+
+    Sends an Email to the user's admin to sign up through the ccla console. 
+    """
+    return cla.controllers.user.invite_company_admin(user_id, user_email, admin_name, admin_email)
+
 @hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
     """
@@ -233,6 +252,8 @@ def get_user_project_company_last_signature(user_id: hug.types.uuid,
     Returns the user's latest employee signature for the project and company specified.
     """
     return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
+
+
 
 # #
 # # Signature Routes.
@@ -923,9 +944,11 @@ def request_individual_signature(project_id: hug.types.uuid,
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'company_id': 'some-company-uuid'}")
-def request_corporate_signature(user: cla_user,
-                                project_id: hug.types.uuid,
+def request_corporate_signature(project_id: hug.types.uuid,
                                 company_id: hug.types.uuid,
+                                send_as_email=False,
+                                authority_name=None, 
+                                authority_email=None,
                                 return_url=None):
     """
     POST: /request-corporate-signature
@@ -948,7 +971,7 @@ def request_corporate_signature(user: cla_user,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, return_url)
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
@@ -1013,6 +1036,22 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
     'event' flag that describes the redirect reason.
     """
     return cla.controllers.signing.return_url(signature_id, event)
+
+@hug.post('/send-authority-email', versions=2)
+def send_authority_email(company_name: hug.types.text, project_name: hug.types.text, 
+                        authority_name: hug.types.text, authority_email: cla.hug_types.email, 
+                        ):
+    """
+    POST: /send-authority-email 
+
+    DATA: {
+            'authority_name': John Doe,
+            'authority_email': authority@example.com,
+            'company_id': <company_id>
+            'project_id': <project_id>
+        }
+    """
+    return cla.controllers.signing.send_authority_email(company_name, project_name, authority_name, authority_email)
 
 
 # #
@@ -1225,3 +1264,15 @@ def github_get_namespace(namespace):
 
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
+
+#
+# Salesforce projects route.
+#
+@hug.get('/salesforce/project', versions=2)
+def get_health(request):
+    """
+    GET: /salesforce/project
+
+    Returns a list of all projects from Salesforce.
+    """
+    return cla.salesforce.get_projects(request, '')

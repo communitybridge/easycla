@@ -4,10 +4,11 @@ import {
   ModalController,
   NavParams,
   ViewController,
-  IonicPage
+  IonicPage, Events
 } from "ionic-angular";
 import { PopoverController } from "ionic-angular";
 import { EnvConfig } from "../../services/cla.env.utils";
+import {ClaService} from "../../services/cla.service";
 
 @IonicPage({
   segment: "cla-organization-app-modal"
@@ -22,9 +23,14 @@ export class ClaOrganizationAppModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private popoverCtrl: PopoverController,
-    public modalCtrl: ModalController
+    public modalCtrl: ModalController,
+    public events: Events
   ) {
     this.getDefaults();
+
+    events.subscribe('modal:close', () => {
+      this.dismiss();
+    });
   }
 
   ngOnInit() {}

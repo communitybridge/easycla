@@ -51,6 +51,16 @@ elif stage == 'qa':
 else:
     CLA_CONSOLE_ENDPOINT = 'http://localhost:8100' #MODIFY HERE IF DEPLOYING TO DEV STAGE
 
+# Endpoint for corporate console.
+if stage == 'prod':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+elif stage == 'staging':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+elif stage == 'qa':
+    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
+else:
+    CORPORATE_CONSOLE_ENDPOINT = 'http://localhost:8100'
+
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 
@@ -83,7 +93,7 @@ GITLAB_OAUTH_TOKEN_URL = 'https://<gitlab-domain>/oauth/token'
 GITLAB_MR_NOTIFICATION = 'status+comment'
 
 # Email Service.
-EMAIL_SERVICE = 'SMTP' #: Email service to use for notification emails.
+EMAIL_SERVICE = 'SES' #: Email service to use for notification emails.
 EMAIL_ON_SIGNATURE_APPROVED = True #: Whether to email the user when signature has been approved.
 
 # SMTP Configuration.
@@ -93,7 +103,9 @@ SMTP_HOST = '' #: Host of the SMTP service.
 SMTP_PORT = '0' #: Port of the SMTP service.
 
 # AWS SES Configuration.
-SES_SENDER_EMAIL_ADDRESS = 'test@cla.system' #: SES sender email address - must be verified in SES.
+# SES sender email address - must be verified in SES.
+# Temporary email that has been verified through the SES Console. 
+SES_SENDER_EMAIL_ADDRESS = 'charlie@cofebe.com' 
 SES_REGION = 'us-east-1' #: The AWS region out of which the emails will be sent.
 SES_ACCESS_KEY = None #: AWS Access Key ID for the SES service.
 SES_SECRET_KEY = None #: AWS Secret Access Key for the SES service.
