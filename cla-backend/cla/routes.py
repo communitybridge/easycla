@@ -21,7 +21,6 @@ from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
                       get_session_middleware
-from falcon import status, HTTP_403, HTTPUnauthorized
 
 #
 # Middleware
@@ -540,14 +539,13 @@ def get_companies(user: cla_user,):
 
 
 @hug.get('/company/{company_id}', versions=2)
-def get_company(user: cla_user,
-                company_id: hug.types.text):
+def get_company(company_id: hug.types.text):
     """
     GET: /company/{company_id}
 
     Returns the CLA company requested by UUID.
     """
-    return cla.controllers.company.get_company(company_id, user_id=user.user_id)
+    return cla.controllers.company.get_company(company_id)
 
 
 @hug.post('/company', versions=1,
@@ -672,7 +670,7 @@ def get_project(user: cla_user, project_id: hug.types.uuid):
 
     Returns the CLA project requested by ID.
     """
-    project = cla.controllers.project.get_project(project_id, user_id=user.user_id)
+    project = cla.controllers.project.get_project(project_id)
     # For public endpoint, don't show the project_external_id.
     if 'project_external_id' in project:
         del project['project_external_id']
@@ -744,33 +742,32 @@ def delete_project(user: cla_user, project_id: hug.types.uuid):
 
 
 @hug.get('/project/{project_id}/repositories', versions=1)
-def get_project_repositories(user: cla_user, project_id: hug.types.uuid):
+def get_project_repositories(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/repositories
 
     Gets the specified project's repositories.
     """
-    return cla.controllers.project.get_project_repositories(project_id, user_id=user.user_id)
+    return cla.controllers.project.get_project_repositories(project_id)
 
 @hug.get('/project/{project_id}/organizations', version=1)
-def get_project_organizations(user: cla_user, project_id: hug.types.uuid):
+def get_project_organizations(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/organizations.
 
     Gets the specified project's tied GitHub organizations.
     """
-    return cla.controllers.project.get_project_organizations(project_id, user_id=user.user_id)
+    return cla.controllers.project.get_project_organizations(project_id)
 
 @hug.get('/project/{project_id}/document/{document_type}', versions=2)
-def get_project_document(user: cla_user,
-                         project_id: hug.types.uuid,
+def get_project_document(project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
     GET: /project/{project_id}/document/{document_type}
 
     Fetch a project's signature document.
     """
-    return cla.controllers.project.get_project_document(project_id, document_type, user_id=user.user_id)
+    return cla.controllers.project.get_project_document(project_id, document_type)
 
 @hug.get('/project/{project_id}/document/{document_type}/pdf', version=2)
 def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
@@ -781,7 +778,7 @@ def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
     Returns the PDF document matching the latest individual or corporate contract for that project.
     """
     response.set_header('Content-Type', 'application/pdf')
-    return cla.controllers.project.get_project_document_raw(project_id, document_type, user_id=user.user_id)
+    return cla.controllers.project.get_project_document_raw(project_id, document_type)
 
 @hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
 def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
@@ -799,13 +796,13 @@ def get_project_document(response, user: cla_user, project_id: hug.types.uuid,
                                                             document_minor_version=document_minor_version, user_id=user.user_id)
 
 @hug.get('/project/{project_id}/companies', versions=2)
-def get_project_companies(user: cla_user, project_id: hug.types.uuid):
+def get_project_companies(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/companies
 
     Fetch all the companies that are associated with a project through a CCLA.
     """
-    return cla.controllers.project.get_project_companies(project_id, user_id=user.user_id)
+    return cla.controllers.project.get_project_companies(project_id)
 
 @hug.post('/project/{project_id}/document/{document_type}', versions=1,
           examples=" - {'document_name': 'doc_name.pdf', \

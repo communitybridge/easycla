@@ -8,7 +8,7 @@ from cla.utils import get_company_instance
 from cla.utils import get_user_instance
 from cla.models import DoesNotExist
 import cla
-from falcon import status, HTTP_403, HTTP_409, HTTP_200, HTTPUnauthorized, HTTPForbidden
+from falcon import HTTP_409, HTTP_200, HTTPForbidden
 
 def get_companies():
     """
@@ -40,7 +40,7 @@ def company_acl_verify(user_id, company_obj):
         'Provided Token credentials does not have sufficient permissions to access resource')
 
 
-def get_company(company_id, user_id):
+def get_company(company_id):
     """
     Returns the CLA company requested by ID.
 
@@ -54,8 +54,6 @@ def get_company(company_id, user_id):
         company.load(company_id=str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
-
-    company_acl_verify(user_id, company)
 
     return company.to_dict()
 

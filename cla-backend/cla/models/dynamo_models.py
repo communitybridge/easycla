@@ -656,7 +656,6 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def get_projects_by_external_id(self, project_external_id, user_id):
         project_generator = self.model.project_external_id_index.query(project_external_id)
         projects = []
-        cla.log.info("user_id{}".format(user_id))
         for project_model in project_generator:
             project = Project()
             project.model = project_model
