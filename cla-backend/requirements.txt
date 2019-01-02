@@ -12,4 +12,5 @@ pynamodb==3.2.1
 python-jose==3.0.0
 python-dateutil==2.6.1
 requests_oauthlib==0.8.0
+Werkzeug==0.13
 newrelic

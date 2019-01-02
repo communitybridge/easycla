@@ -54,8 +54,8 @@
     <ion-buttons end>
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
-      </button>
-      <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+      </button> 
+      <button type="submit" form="form" ion-button icon-right color="primary" (click)="submit()">
         Send
       </button>
     </ion-buttons>

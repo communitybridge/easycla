@@ -3,6 +3,7 @@ Holds the AWS SES email service that can be used to send emails.
 """
 
 import boto3
+import os
 import cla
 from cla.models import email_service_interface
 
@@ -18,9 +19,11 @@ class SES(email_service_interface.EmailService):
 
     def initialize(self, config):
         self.region = config['SES_REGION']
-        self.access_key = config['SES_ACCESS_KEY']
-        self.secret_key = config['SES_SECRET_KEY']
+        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY'])
+        self.secret_key = os.environ.get('AWS_SECRET', config['S3_SECRET_KEY'])
         self.sender_email = config['SES_SENDER_EMAIL_ADDRESS']
+
+        
 
     def send(self, subject, body, recipient, attachment=None):
         msg = self.get_email_message(subject, body, self.sender_email, recipient, attachment)
@@ -38,15 +41,17 @@ class SES(email_service_interface.EmailService):
         """
         return boto3.client('ses',
                             aws_access_key_id=self.access_key,
-                            aws_secret_access_key=self.secret_key)
+                            aws_secret_access_key=self.secret_key,
+                            region_name=self.region,
+                            )
 
     def _send(self, connection, msg): # pylint: disable=no-self-use
         """
         Mockable send method.
         """
-        connection.send_raw_email(msg.as_string(),
-                                  source=msg['From'],
-                                  destinations=[msg['To']])
+        connection.send_raw_email(RawMessage={'Data': msg.as_string()},
+                                  Source=msg['From'],
+                                  Destinations=[msg['To']])
 
 class MockSES(SES):
     """
