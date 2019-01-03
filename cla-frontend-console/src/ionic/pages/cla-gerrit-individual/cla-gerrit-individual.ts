@@ -57,8 +57,6 @@ export class ClaGerritIndividualPage {
 
 
   ngAfterViewInit() {
-    console.log('ngAfterViewInit');
-    this.navCtrl.setRoot("LoginPage"); // Works!
   }
 
   getProject(projectId) {
