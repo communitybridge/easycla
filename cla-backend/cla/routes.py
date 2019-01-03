@@ -1260,20 +1260,6 @@ def github_get_namespace(namespace):
     """
     return cla.controllers.github.get_namespace(namespace)
 
-# Session Middleware
-__hug__.http.add_middleware(get_session_middleware())
-
-#
-# Salesforce projects route.
-#
-@hug.get('/salesforce/project', versions=2)
-def get_health(request):
-    """
-    GET: /salesforce/project
-
-    Returns a list of all projects from Salesforce.
-    """
-    return cla.salesforce.get_projects(request, '')
 
 #
 # Gerrit instance routes
@@ -1286,9 +1272,7 @@ def get_gerrit_instance(gerrit_id: hug.types.uuid):
     Returns all CLA Gerrit instances.
     """
     return cla.controllers.gerrit.get_gerrit(gerrit_id)
-#
-# Gerrit instance routes
-# 
+    
 @hug.get('/gerrits', versions=2)
 def get_gerrit_instances():
     """
@@ -1330,3 +1314,20 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     Deletes the specified gerrit instance.
     """
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
+
+
+# Session Middleware
+__hug__.http.add_middleware(get_session_middleware())
+
+#
+# Salesforce projects route.
+#
+@hug.get('/salesforce/project', versions=2)
+def get_health(request):
+    """
+    GET: /salesforce/project
+
+    Returns a list of all projects from Salesforce.
+    """
+    return cla.salesforce.get_projects(request, '')
+
