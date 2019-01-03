@@ -19,7 +19,6 @@ export class AuthPage {
 
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
-          this.navCtrl.setRoot("LoginPage");
       });
     }, 2000); 
   }
