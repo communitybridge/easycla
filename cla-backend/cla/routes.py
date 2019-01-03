@@ -1128,7 +1128,7 @@ def received_activity(body,
 #
 # GitHub Routes.
 #
-@hug.get('/github/organizations', versions=1)
+@hug.get('/github/organizations', versions=2)
 def get_github_organizations(user: cla_user):
     """
     GET: /github/organizations
@@ -1138,7 +1138,7 @@ def get_github_organizations(user: cla_user):
     return cla.controllers.github.get_organizations()
 
 
-@hug.get('/github/organizations/{organization_name}', versions=1)
+@hug.get('/github/organizations/{organization_name}', versions=2)
 def get_github_organization(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}
@@ -1148,7 +1148,7 @@ def get_github_organization(user: cla_user, organization_name: hug.types.text):
     return cla.controllers.github.get_organization(organization_name)
 
 
-@hug.get('/github/organizations/{organization_name}/repositories', versions=1)
+@hug.get('/github/organizations/{organization_name}/repositories', versions=2)
 def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}/repositories
@@ -1158,7 +1158,7 @@ def get_github_organization_repos(user: cla_user, organization_name: hug.types.t
     return cla.controllers.github.get_organization_repositories(organization_name)
 
 
-@hug.post('/github/organizations', versions=1,
+@hug.post('/github/organizations', versions=2,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
 def post_github_organization(user: cla_user,
@@ -1179,7 +1179,7 @@ def post_github_organization(user: cla_user,
                                                       organization_installation_id)
 
 
-@hug.delete('/github/organizations/{organization_name}', versions=1)
+@hug.delete('/github/organizations/{organization_name}', versions=2)
 def delete_repository(user: cla_user, organization_name: hug.types.text):
     """
     DELETE: /github/organizations/{organization_name}
@@ -1232,7 +1232,7 @@ def github_app_activity(body, request, response):
     #     return {'status': 'Not Authorized'}
 
 
-@hug.post('/github/validate', versions=1)
+@hug.post('/github/validate', versions=2)
 def github_organization_validation(body):
     """
     POST: /github/validate
@@ -1242,7 +1242,7 @@ def github_organization_validation(body):
     return cla.controllers.github.validate_organization(body)
 
 
-@hug.get('/github/check/namespace/{namespace}', versions=1)
+@hug.get('/github/check/namespace/{namespace}', versions=2)
 def github_check_namespace(namespace):
     """
     GET: /github/check/namespace/{namespace}
@@ -1251,7 +1251,7 @@ def github_check_namespace(namespace):
     """
     return cla.controllers.github.check_namespace(namespace)
 
-@hug.get('/github/get/namespace/{namespace}', versions=1)
+@hug.get('/github/get/namespace/{namespace}', versions=2)
 def github_get_namespace(namespace):
     """
     GET: /github/get/namespace/{namespace}
