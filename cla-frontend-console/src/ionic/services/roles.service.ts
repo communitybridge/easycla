@@ -54,13 +54,13 @@ export class RolesService {
             let customRules = tokenParsed[this.LF_CUSTOM_CLAIM];
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
-              isPmcUser: this.isInProjectSet(customRules, this.projectSet),
+              isPmcUser: false,
               isStaffInc: false,
               isDirectorInc: false,
               isStaffDirect: false,
               isDirectorDirect: false,
               isExec: false,
-              isAdmin: this.isInArray(customRules, this.CLA_PROJECT_ADMIN)
+              isAdmin: false,
             };
             console.log(this.userRoles);
             return this.userRoles;
