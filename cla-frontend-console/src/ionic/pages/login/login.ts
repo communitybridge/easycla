@@ -29,7 +29,7 @@ export class LoginPage {
   }
 
   hasAccess() {
-    return this.userRoles.isAuthenticated && this.userRoles.isPmcUser;
+    return this.userRoles.isAuthenticated;
   }
 
   login() {

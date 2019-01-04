@@ -6,15 +6,19 @@ import { EnvConfig } from "./cla.env.utils";
 (window as any).global = window;
 
 @Injectable()
+
 export class AuthService {
+  userProfile: any;
+
+
   auth0 = new auth0.WebAuth({
     clientID: EnvConfig['auth0-clientId'],
     domain: EnvConfig['auth0-domain'],
     responseType: "token id_token",
-    redirectUri: getAuthURLFromWindow()
+    redirectUri: getAuthURLFromWindow(),
+    scope: 'openid profile',
   });
 
-  // constructor(public router: Router) {} Right now haven't figure out how ionic does routing
 
   public login(): void {
     this.auth0.authorize();
@@ -81,4 +85,20 @@ export class AuthService {
       }
     });
   }
+
+  public getUserName(): any {
+
+      var accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        console.log('Access Token must exist to fetch profile');
+      }
+      this.auth0.client.userInfo(accessToken, function(err, profile) {
+        if (profile) {
+          console.log(profile.nickname);
+          return profile.nickname;
+        }
+      });
+      return null; 
+  };
+
 }

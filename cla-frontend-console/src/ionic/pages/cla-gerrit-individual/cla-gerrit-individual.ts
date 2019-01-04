@@ -3,6 +3,11 @@ import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-ang
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from "../../services/roles.service";
 import { AuthService } from "../../services/auth.service";
+import { Restricted } from "../../decorators/restricted";
+
+@Restricted({
+  roles: ["isAuthenticated"]
+})
 @IonicPage({
   segment: 'cla/gerrit/project/:projectId/individual'
 })
@@ -13,7 +18,7 @@ import { AuthService } from "../../services/auth.service";
 export class ClaGerritIndividualPage {
   projectId: string;
 
-  user: any;
+  username: string;
   project: any;
   signatureIntent: any;
   activeSignatures: boolean = true; // we assume true until otherwise
@@ -31,6 +36,8 @@ export class ClaGerritIndividualPage {
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
+    localStorage.setItem("gerritProjectId", this.projectId);
+    localStorage.setItem("gerritClaType", "ICLA");
   }
 
   getDefaults() {
@@ -59,6 +66,9 @@ export class ClaGerritIndividualPage {
   ngAfterViewInit() {
   }
 
+  getUserName() {
+    this.username = this.authService.getUserName(); 
+  }
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
