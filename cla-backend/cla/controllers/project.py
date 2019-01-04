@@ -10,6 +10,7 @@ import cla.resources.contract_templates
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
+from falcon import HTTPForbidden
 
 
 def get_projects():
@@ -21,8 +22,14 @@ def get_projects():
     """
     return [project.to_dict() for project in get_project_instance().all()]
 
+def project_acl_verify(user_id, project_obj):
+    if user_id in project_obj.get_project_acl():
+        return True
 
-def get_project(project_id):
+    raise HTTPForbidden('Unauthorized',
+        'Provided Token credentials does not have sufficient permissions to access resource')
+
+def get_project(project_id, user_id=None):
     """
     Returns the CLA project requested by ID.
 
@@ -39,7 +46,7 @@ def get_project(project_id):
     return project.to_dict()
 
 
-def get_projects_by_external_id(project_external_id):
+def get_projects_by_external_id(project_external_id, user_id):
     """
     Returns the CLA projects requested by External ID.
 
@@ -50,14 +57,14 @@ def get_projects_by_external_id(project_external_id):
     """
     try:
         p_instance = get_project_instance()
-        projects = p_instance.get_projects_by_external_id(str(project_external_id))
+        projects = p_instance.get_projects_by_external_id(str(project_external_id), user_id)
     except DoesNotExist as err:
         return {'errors': {'project_external_id': str(err)}}
     return [project.to_dict() for project in projects]
 
 
 def create_project(project_external_id, project_name, project_icla_enabled, project_ccla_enabled,
-                   project_ccla_requires_icla_signature):
+                   project_ccla_requires_icla_signature, project_acl_user_id):
     """
     Creates a project and returns the newly created project in dict format.
 
@@ -81,12 +88,14 @@ def create_project(project_external_id, project_name, project_icla_enabled, proj
     project.set_project_icla_enabled(project_icla_enabled)
     project.set_project_ccla_enabled(project_ccla_enabled)
     project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
+    project.set_project_acl(project_acl_user_id)
     project.save()
+
     return project.to_dict()
 
 
 def update_project(project_id, project_name=None, project_icla_enabled=None,
-                   project_ccla_enabled=None, project_ccla_requires_icla_signature=None):
+                   project_ccla_enabled=None, project_ccla_requires_icla_signature=None, user_id=None):
     """
     Updates a project and returns the newly updated project in dict format.
     A value of None means the field should not be updated.
@@ -109,6 +118,7 @@ def update_project(project_id, project_name=None, project_icla_enabled=None,
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+    project_acl_verify(user_id, project)
     if project_name is not None:
         project.set_project_name(project_name)
     if project_icla_enabled is not None:
@@ -121,7 +131,7 @@ def update_project(project_id, project_name=None, project_icla_enabled=None,
     return project.to_dict()
 
 
-def delete_project(project_id):
+def delete_project(project_id, user_id=None):
     """
     Deletes an project based on ID.
 
@@ -135,6 +145,7 @@ def delete_project(project_id):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+    project_acl_verify(user_id, project)
     project.delete()
     return {'success': True}
 
@@ -228,7 +239,7 @@ def get_project_document(project_id, document_type, major_version=None, minor_ve
     :param minor_version: The minor version number.
     :type minor_version: integer
     """
-    document = _get_project_document(project_id, document_type, major_version, minor_version)
+    document = _get_project_document(project_id, document_type, major_version, minor_version=None)
     if isinstance(document, dict):
         return document
     return document.to_dict()
@@ -256,7 +267,8 @@ def post_project_document(project_id,
                           document_content,
                           document_preamble,
                           document_legal_entity_name,
-                          new_major_version=None):
+                          new_major_version=None,
+                          user_id=None):
     """
     Will create a new document for the project specified.
 
@@ -284,6 +296,7 @@ def post_project_document(project_id,
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+    project_acl_verify(user_id, project)
     document = get_document_instance()
     document.set_document_name(document_name)
     document.set_document_content_type(document_content_type)
@@ -321,7 +334,8 @@ def post_project_document_template(project_id,
                                    document_preamble,
                                    document_legal_entity_name,
                                    template_name,
-                                   new_major_version=None):
+                                   new_major_version=None,
+                                   user_id=None):
     """
     Will create a new document for the project specified, using the existing template.
 
@@ -345,6 +359,7 @@ def post_project_document_template(project_id,
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+    project_acl_verify(user_id, project)
     document = get_document_instance()
     document.set_document_name(document_name)
     document.set_document_preamble(document_preamble)
@@ -379,7 +394,7 @@ def post_project_document_template(project_id,
     project.save()
     return project.to_dict()
 
-def delete_project_document(project_id, document_type, major_version, minor_version):
+def delete_project_document(project_id, document_type, major_version, minor_version, user_id=None):
     """
     Deletes the document from the specified project.
 
@@ -397,6 +412,7 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+    project_acl_verify(user_id, project)
     document = cla.utils.get_project_document(project, document_type, major_version, minor_version)
     if document is None:
         return {'errors': {'document': 'Document version not found'}}

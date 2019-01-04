@@ -475,6 +475,7 @@ class ProjectModel(BaseModel):
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
+    project_acl = UnicodeSetAttribute(default=set())
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
@@ -482,7 +483,8 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     """
     def __init__(self, project_id=None, project_external_id=None, project_name=None,
                  project_icla_enabled=True, project_ccla_enabled=True,
-                 project_ccla_requires_icla_signature=False):
+                 project_ccla_requires_icla_signature=False,
+                 project_acl=None):
         super(Project).__init__()
         self.model = ProjectModel()
         self.model.project_id = project_id
@@ -491,6 +493,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         self.model.project_icla_enabled = project_icla_enabled
         self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
+        self.model.project_acl = project_acl
 
     def to_dict(self):
         individual_documents = []
@@ -587,6 +590,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         pass
         # @todo: Loop through documents for this project, return the highest version of them all.
 
+    def get_project_acl(self):
+        return  self.model.project_acl
+
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
 
@@ -629,6 +635,10 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
         self.model.project_ccla_requires_icla_signature = ccla_requires_icla_signature
 
+    def set_project_acl(self, project_acl_user_id):
+        self.model.project_acl = set([project_acl_user_id])
+
+
     def get_project_repositories(self):
         repository_generator = RepositoryModel.repository_project_index.query(self.get_project_id())
         repositories = []
@@ -643,13 +653,14 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_approved=signature_approved,
                                                      signature_signed=signature_signed)
 
-    def get_projects_by_external_id(self, project_external_id):
+    def get_projects_by_external_id(self, project_external_id, user_id):
         project_generator = self.model.project_external_id_index.query(project_external_id)
         projects = []
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            projects.append(project)
+            if user_id in project.get_project_acl():
+                projects.append(project)
         return projects
 
     def all(self, project_ids=None):
@@ -1212,6 +1223,7 @@ class CompanyModel(BaseModel):
     company_whitelist = ListAttribute()
     company_whitelist_patterns = ListAttribute()
     company_external_id_index = ExternalCompanyIndex()
+    company_acl = UnicodeSetAttribute(default=set())
 
 
 class Company(model_interfaces.Company): # pylint: disable=too-many-public-methods
@@ -1224,7 +1236,8 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                  company_manager_id=None,
                  company_name=None,
                  company_whitelist_patterns=None,
-                 company_whitelist=None):
+                 company_whitelist=None,
+                 company_acl=None,):
         super(Company).__init__()
         self.model = CompanyModel()
         self.model.company_id = company_id
@@ -1233,6 +1246,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         self.model.company_name = company_name
         self.model.company_whitelist = company_whitelist
         self.model.company_whitelist_patterns = company_whitelist_patterns
+        self.model.company_acl = company_acl
 
     def to_dict(self):
         return dict(self.model)
@@ -1268,6 +1282,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_company_whitelist_patterns(self):
         return self.model.company_whitelist_patterns
 
+    def get_company_acl(self):
+        return  self.model.company_acl
+
     def set_company_id(self, company_id):
         self.model.company_id = company_id
 
@@ -1282,6 +1299,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
 
     def set_company_whitelist(self, whitelist):
         self.model.company_whitelist = [str(wl) for wl in whitelist]
+
+    def set_company_acl(self, company_acl_user_id):
+        self.model.company_acl = set([company_acl_user_id])
 
     def add_company_whitelist(self, whitelist_item):
         if self.model.company_whitelist is None:
