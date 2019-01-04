@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { NavController, NavParams } from 'ionic-angular';
 import { AuthService } from "../../services/auth.service";
 import { RolesService } from "../../services/roles.service";
 
@@ -10,21 +10,38 @@ import { RolesService } from "../../services/roles.service";
 export class AuthPage {
 
   userRoles: any;
+  projectId: string;
+  claType: string;
 
-  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {
+  constructor(public navCtrl: NavController, 
+    public navParams: NavParams,
+    public authService: AuthService, 
+    public rolesService: RolesService) {
+    this.projectId = localStorage.getItem("gerritProjectId");
+    this.claType = localStorage.getItem("gerritClaType");
   }
 
   ionViewDidEnter() {
-    console.log('ionViewDidEnter AuthPage');
-
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
+        if (userRoles.isAuthenticated) { 
+            if(this.claType == "ICLA") {
+              this.navCtrl.setRoot('ClaGerritIndividualPage', {projectId: this.projectId});
+            }
+            else if(this.claType == "CCLA") { 
+              this.navCtrl.setRoot('ClaGerritCorporatePage', {projectId: this.projectId});
+            }
+            localStorage.removeItem("gerritProjectId");
+            localStorage.removeItem("gerritClaType");
+
+        }
+        else { 
+          this.navCtrl.setRoot('loginPage');
+        }
       });
     }, 2000); 
   }
 
-  private hasAccess(userRoles: any): boolean {
-    return userRoles.isAuthenticated && userRoles.isPmcUser;
-  }
+  
 
 }
