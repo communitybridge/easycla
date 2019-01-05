@@ -47,7 +47,7 @@ yarn sls client deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}" --no-conf
 
 if [ ${CLOUDFRONT} = true ]; then
   echo 'Invalidating Cloudfront'
-  yarn sls invalidate --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
+  yarn sls cloudfrontInvalidate --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
 fi
 
 exit 0
