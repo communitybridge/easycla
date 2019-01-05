@@ -17,9 +17,8 @@ import { Restricted } from "../../decorators/restricted";
 })
 export class ClaGerritIndividualPage {
   projectId: string;
-
-  username: string;
   project: any;
+  user: any;
   signatureIntent: any;
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
@@ -53,6 +52,7 @@ export class ClaGerritIndividualPage {
 
   ngOnInit() {
     this.getProject(this.projectId);
+    this.getUserInfo();
   }
 
   ionViewCanEnter(){
@@ -66,9 +66,26 @@ export class ClaGerritIndividualPage {
   ngAfterViewInit() {
   }
 
-  getUserName() {
-    this.username = this.authService.getUserName(); 
+  getUserInfo() {
+    this.authService.getUserInfo().then(res => {
+      this.user = res;
+      console.log(this.user.email);
+      console.log(this.user);
+    })
   }
+  
+  getOrCreateUser() {
+    this.claService.getUserByEmail(this.userEmail).subscribe(user => {
+      if(user.errors != null) {
+        //create user since user doesnt exist in the db. 
+        this.claService.postUser( 
+          { user_email: this.user.email, 
+            user_name: this.user.name } );
+
+      }
+    })
+  }
+
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
@@ -78,4 +95,10 @@ export class ClaGerritIndividualPage {
     });
   }
   
+  openClaAgreement() {
+    if (!this.signature.sign_url) {
+      return;
+    }
+    window.open(this.signature.sign_url, '_blank');
+  }
 }
