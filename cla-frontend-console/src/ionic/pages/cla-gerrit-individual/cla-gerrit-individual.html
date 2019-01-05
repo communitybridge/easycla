@@ -11,12 +11,8 @@
   <header>
     <ion-grid>
       <ion-row>
-        <ion-col col-12 col-md-2>
-          <img [src]="project.logoRef" alt="{{ project.name }} Logo" />
-        </ion-col>
         <ion-col col-12 col-md-10>
           <h1>{{ project.project_name }}</h1>
-          <p>CLA</p>
         </ion-col>
       </ion-row>
     </ion-grid>
@@ -40,14 +36,9 @@
                 If a new tab with the document to sign did not open, you may use
                 the button below:
               </p>
-              <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
+              <button ion-button (click)="openClaAgreement()">
                 Open ICLA Agreement
               </button>
-            </div>
-            <div *ngIf="!activeSignatures">
-              <p class="error">
-                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and restarting the signing process from your pull request if necessary.
-              </p>
             </div>
           </ion-card-content>
         </ion-card>
