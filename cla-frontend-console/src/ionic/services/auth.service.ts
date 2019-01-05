@@ -8,15 +8,13 @@ import { EnvConfig } from "./cla.env.utils";
 @Injectable()
 
 export class AuthService {
-  userProfile: any;
-
 
   auth0 = new auth0.WebAuth({
     clientID: EnvConfig['auth0-clientId'],
     domain: EnvConfig['auth0-domain'],
     responseType: "token id_token",
     redirectUri: getAuthURLFromWindow(),
-    scope: 'openid profile',
+    scope: 'openid email profile',
   });
 
 
@@ -86,19 +84,20 @@ export class AuthService {
     });
   }
 
-  public getUserName(): any {
-
+  public getUserInfo(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
       var accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        console.log('Access Token must exist to fetch profile');
+        reject('Access Token must exist to fetch profile');
       }
       this.auth0.client.userInfo(accessToken, function(err, profile) {
-        if (profile) {
-          console.log(profile.nickname);
-          return profile.nickname;
+        if(profile) {
+          return resolve(profile);
         }
-      });
-      return null; 
-  };
+      })
+    });
+  } 
 
+
+  
 }
