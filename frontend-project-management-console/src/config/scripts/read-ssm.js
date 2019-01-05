@@ -9,17 +9,26 @@ const AWS = require('aws-sdk');
  * @returns {Promise<{ [key:string]: string}>}
  */
 async function retrieveSSMValues(variables, stage, region, profile) {
-  const result = await requestSSMParameters(variables, stage, region, profile);
+  const scopedVariables = variables.map(param => { return `cla-${param}-${stage}` });
+
+  const result = await requestSSMParameters(scopedVariables, stage, region, profile);
   const parameters = result.Parameters;
   const error = result.$response.error;
   if (error !== null) {
     throw new Error(`Couldn't retrieve SSM paramters from AWS with error ${error}`);
   }
-  const params = createParameterMap(parameters, stage);
+  const scopedParams = createParameterMap(parameters, stage);
+  var params = {};
+  Object.keys(scopedParams).forEach(key => {
+    var param = scopedParams[key];
+    key = key.replace('cla-', '');
+    key = key.replace(`-${stage}`, '');
+    params[key] = param;
+  });
 
   variables.forEach(variable => {
     if (params[variable] === undefined) {
-      throw new Error(`Missing SSM parameter with name ${variable}-${stage}`);
+      throw new Error(`Missing SSM parameter with name ${variable}`);
     }
   });
   return params;
@@ -36,7 +45,7 @@ function requestSSMParameters(variables, stage, region, profile) {
   const ssm = new AWS.SSM({ region: region });
 
   const ps = {
-    Names: variables.map(variable => `${variable}-${stage}`),
+    Names: variables,
     WithDecryption: true
   };
 
@@ -51,26 +60,14 @@ function createParameterMap(parameters, stage) {
   const params = parameters
     .filter(param => param.Name.endsWith(`-${stage}`))
     .map(param => {
-      const name = nameWithoutStage(param.Name, stage);
       const output = {};
-      output[name] = param.Value;
+      output[param.Name] = param.Value;
       return output;
     })
     .reduce((prev, current) => {
       return { ...prev, ...current };
     }, {});
-  const logoUrl = {
-    "cla-logo-s3-url": `https://s3.amazonaws.com/cla-logo-${stage}`
-  }
-  return { ...params, ...logoUrl };
-}
-
-/**
- * @param {string} name
- * @param {string} stage
- */
-function nameWithoutStage(name, stage) {
-  return name.slice(0, name.length - (stage.length + 1));
+  return params;
 }
 
 module.exports = retrieveSSMValues;
