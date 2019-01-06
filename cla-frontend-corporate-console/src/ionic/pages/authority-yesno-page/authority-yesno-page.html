@@ -4,6 +4,7 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>CLA - Corporate</ion-title>
+    <img class="navbar-logo" src="/assets/logo/cla-icon-logo.png" alt="">
   </ion-navbar>
 </ion-header>
 
@@ -24,11 +25,11 @@
         <ion-card>
           <ion-card-content>
             <ion-card-title>
-              <span>Verify Permission of Access</span>
+              <span>Are you a CLA Signatory?</span>
             </ion-card-title>
               <div>
                 <p>
-                  Are you a corporate authority? (explain context of corporate authority)
+                  A CLA signatory has the executive privilege to sign a Corporate CLA (CCLA) on behalf of this company. If you are a CLA manager but not a CLA signatory, you can request that the CLA signatory sign the CCLA.
                 </p>
                 <button ion-button color="secondary" (click)='openClaCorporatePage()'> YES </button>
                 <button ion-button color="secondary" (click)='openCollectAuthorityEmailModal()'> NO </button>
@@ -40,3 +41,28 @@
   </ion-grid>
 
 </ion-content>
+
+<ion-footer>
+  <footer class="text-white footer-section">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <picture class="d-inline-block">
+            <img src="./assets/logo/logo_white.svg" alt="" title="">
+          </picture>
+        </ion-col>
+      </ion-row>
+      <hr />
+      <ion-row>
+        <ion-col>
+          <small>&copy;2018 The Linux Foundation</small>
+        </ion-col>
+        <ion-col text-sm-right>
+          <small>
+            <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+          </small>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </footer>
+</ion-footer>
