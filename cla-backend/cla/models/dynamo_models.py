@@ -464,7 +464,7 @@ class ProjectModel(BaseModel):
     class Meta:
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'      
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
@@ -699,7 +699,7 @@ class UserModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-users'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -965,7 +965,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     class Meta:
         """Meta class for Signature."""
         table_name = 'cla-{}-signatures'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1214,7 +1214,7 @@ class CompanyModel(BaseModel):
     class Meta:
         """Meta class for Company."""
         table_name = 'cla-{}-companies'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
@@ -1373,7 +1373,7 @@ class StoreModel(Model):
     class Meta:
         """Meta class for Store."""
         table_name = 'cla-{}-store'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1427,7 +1427,7 @@ class GitHubOrgModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-github-orgs'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
@@ -1534,7 +1534,7 @@ class UserPermissionsModel(BaseModel):
     class Meta:
         """Meta class for User Permissions."""
         table_name = 'cla-{}-user-permissions'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     user_id = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
