@@ -9,36 +9,7 @@
 </ion-header>
 
 <ion-content padding headerspacing overflow-scroll="true">
-  <!-- <header>
-    <ion-grid>
-      <ion-row>
-        <ion-col col-12 col-md-3>
-          <span class="main-headers">CONTRACTS</span>
-          <div class="chart-container">
-            <canvas height="250" #contractsCanvas></canvas>
-          </div>
-        </ion-col>
-        <ion-col col-12 col-md-5>
-          <span class="main-headers">INVOICES</span>
-          <div class="chart-container">
-            <canvas #invoicesCanvas></canvas>
-          </div>
-        </ion-col>
-        <ion-col col-12 col-md-4 class="calendar-column">
-          <span class="main-headers">CALENDAR</span>
-          <div class="calendar-container">
-            <iframe *ngIf="userHasCalendar; else noCalendar" [src]="user.calendar"></iframe>
-            <ng-template #noCalendar>
-              <div class="no-calendar clickable" (click)="openAccountSettings()">
-                <ion-icon name="calendar"></ion-icon>
-                <ion-label>Add your calendar on the Account Settings page.</ion-label>
-              </div>
-            </ng-template>
-          </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </header> -->
+
   <loading-spinner [loading]="loading.projects"></loading-spinner>
   <ion-grid class="all-projects" [loading-display]="loading.projects">
     <ion-row>
@@ -47,34 +18,11 @@
           <h2>All Projects</h2>
         </ion-item>
       </ion-col>
-      <!-- <ion-col col-auto>
-        <ion-item no-lines class="transparent">
-          <p>Project Filters</p>
-        </ion-item>
-      </ion-col>
-      <ion-col col-auto>
-        <ion-item no-lines class="transparent">
-          <ion-label>Industry</ion-label>
-          <ion-select [(ngModel)]="industry" interface="popover" (ionChange)="filterAllProjects('sector', industry)">
-            <ion-option value="NO_FILTER">Show All</ion-option>
-            <ion-option *ngFor="let industry of industryFilterValues" [value]="industry.key">{{ industry.prettyValue }}</ion-option>
-          </ion-select>
-        </ion-item>
-      </ion-col> -->
-      <!-- <ion-col col-auto *ngIf="!userRoles.isStaffInc">
-        <ion-item no-lines class="transparent">
-          <ion-label>Program Manager</ion-label>
-          <ion-select interface="popover" [(ngModel)]="managers" interface="popover" (ionChange)="filterAllProjects('managers', managers)">
-            <ion-option value="NO_FILTER">Show All</ion-option>
-            <ion-option *ngFor="let manager of managersFilterValues" [value]="manager">{{ manager }}</ion-option>
-          </ion-select>
-        </ion-item>
-      </ion-col> -->
     </ion-row>
 
     <ion-row>
       <ion-col col-12 col-md-6 col-lg-6 col-xl-6 *ngFor="let project of allFilteredProjects">
-        <ion-card class="cla-project-card">
+        <ion-card class="cla-project-card" (click)="viewProjectCLA(project.id)">
           <div class="card-header clickable">
             <div class="border-wrapper">
               <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
@@ -98,7 +46,7 @@
                 </dd>
               </dl>
             </div>
-            <h2 (click)="viewProjectCLA(project.id)">{{ project.name }}</h2>
+            <h2>{{ project.name }}</h2>
             <p>
               {{ project.description }}
             </p>
