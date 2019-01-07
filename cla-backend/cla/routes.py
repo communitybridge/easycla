@@ -859,7 +859,7 @@ def post_project_document_template(user: cla_user,
                                    document_name: hug.types.text,
                                    document_preamble: hug.types.text,
                                    document_legal_entity_name: hug.types.text,
-                                   template_name: hug.types.one_of(['CNCFTemplate']),
+                                   template_name: hug.types.one_of(['CNCFTemplate', 'OpenBMCTemplate']),
                                    new_major_version=None):
     """
     POST: /project/{project_id}/document/template/{document_type}

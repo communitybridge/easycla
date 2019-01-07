@@ -54,6 +54,7 @@ export class ClaContractUploadModal {
     };
     this.templateOptions = {
       CNCFTemplate: 'CNCF Template',
+      OpenBMCTemplate: 'OpenBMC Template',
     };
   }
 

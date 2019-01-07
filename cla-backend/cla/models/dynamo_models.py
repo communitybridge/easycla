@@ -194,6 +194,7 @@ class DocumentTabModel(MapAttribute):
     document_tab_position_y = NumberAttribute()
     document_tab_width = NumberAttribute(default=200)
     document_tab_height = NumberAttribute(default=20)
+    document_tab_is_locked = BooleanAttribute(default=False)
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -207,7 +208,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_position_x=None,
                  document_tab_position_y=None,
                  document_tab_width=None,
-                 document_tab_height=None):
+                 document_tab_height=None,
+                 document_tab_is_locked=False):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
@@ -223,6 +225,7 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_width = document_tab_width
         if document_tab_height is not None:
             self.model.document_tab_height = document_tab_height
+        self.model.document_tab_is_locked = document_tab_is_locked
 
     def to_dict(self):
         return {'document_tab_type': self.model.document_tab_type,
@@ -232,7 +235,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_position_x': self.model.document_tab_position_x,
                 'document_tab_position_y': self.model.document_tab_position_y,
                 'document_tab_width': self.model.document_tab_width,
-                'document_tab_height': self.model.document_tab_height}
+                'document_tab_height': self.model.document_tab_height,
+                'document_tab_is_locked': self.model.document_tab_is_locked}
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -258,6 +262,9 @@ class DocumentTab(model_interfaces.DocumentTab):
     def get_document_tab_height(self):
         return self.model.document_tab_height
 
+    def get_document_tab_is_locked(self):
+        return self.model.document_tab_is_locked
+
     def set_document_tab_type(self, tab_type):
         self.model.document_tab_type = tab_type
 
@@ -281,6 +288,9 @@ class DocumentTab(model_interfaces.DocumentTab):
 
     def set_document_tab_height(self, tab_height):
         self.model.document_tab_height = tab_height
+
+    def set_document_tab_is_locked(self, is_locked):
+        self.model.document_tab_is_locked = is_locked
 
 class DocumentModel(MapAttribute):
     """
