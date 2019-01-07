@@ -36,9 +36,14 @@
                 If a new tab with the document to sign did not open, you may use
                 the button below:
               </p>
-              <button ion-button (click)="openClaAgreement()">
+              <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open ICLA Agreement
               </button>
+            </div>
+            <div *ngIf="!activeSignatures">
+              <p class="error">
+                Whoops, It looks like you don't have any signatures in progress. Try logging in with your Linux Foundation ID again. 
+              </p>
             </div>
           </ion-card-content>
         </ion-card>
