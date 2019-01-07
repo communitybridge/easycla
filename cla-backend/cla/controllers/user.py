@@ -316,3 +316,10 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
         last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
         last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
     return last_signature
+
+def get_or_create_user(user_email, user_name):
+    # Helper for gerrit users to retrieve or create user id as necessary. 
+    user = get_user_instance().get_user_by_email(str(user_email).lower())
+    if user is None:
+        return create_user(user_email, user_name)
+    return user.to_dict() 

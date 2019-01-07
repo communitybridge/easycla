@@ -115,6 +115,40 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
+
+    def request_individual_signature_gerrit(self, project_id, user_id, return_url=None):
+        # User is creating a signature request from Gerrit 
+        cla.log.info('Creating new Gerrit signature for user %s on project %s', user_id, project_id)
+        signature = cla.utils.get_signature_instance()
+        signature.set_signature_id(str(uuid.uuid4()))
+        try:
+            project = cla.utils.get_project_instance()
+            project.load(project_id)
+        except DoesNotExist as err:
+            cla.log.error('Project ID not found when trying to request a signature: %s',
+                        project_id)
+            return {'errors': {'project_id': str(err)}}
+        signature.set_signature_project_id(project_id)
+        callback_url = cla.utils.get_individual_signature_callback_url_gerrit(user_id)
+
+        try:
+            document = project.get_project_individual_document()
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+        signature.set_signature_document_major_version(document.get_document_major_version())
+        signature.set_signature_document_minor_version(document.get_document_minor_version())
+        signature.set_signature_signed(False)
+        signature.set_signature_approved(True)
+        signature.set_signature_type('cla')
+        signature.set_signature_reference_id(user_id)
+        signature.set_signature_reference_type('user')
+        self.populate_sign_url(signature, callback_url)
+        signature.save()
+        return {'user_id': str(user_id),
+                'project_id': project_id,
+                'signature_id': signature.get_signature_id(),
+                'sign_url': signature.get_signature_sign_url()}
+
     def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
         project = cla.utils.get_project_instance()
         try:

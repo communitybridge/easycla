@@ -18,6 +18,7 @@ import { Restricted } from "../../decorators/restricted";
 export class ClaGerritIndividualPage {
   projectId: string;
   project: any;
+  userId: string;
   user: any;
   signatureIntent: any;
   activeSignatures: boolean = true; // we assume true until otherwise
@@ -67,23 +68,38 @@ export class ClaGerritIndividualPage {
   }
 
   getUserInfo() {
+    // retrieve userInfo from auth0 service
     this.authService.getUserInfo().then(res => {
       this.user = res;
-      console.log(this.user.email);
-      console.log(this.user);
+      // retrieve existing userId by email, or create one for Gerrit 
+      // For users who has an LFID but has never used the CLA app before.
+      let data = {
+        user_email: this.user.email,
+        user_name: this.user.nickname
+      }
+      this.claService.postOrGetUserForGerrit(data).subscribe(user => {
+          this.userId = user.user_id;
+          // get signatureIntent object, similar to the Github flow. 
+          this.postSignatureRequest();
+      })
     })
   }
   
-  getOrCreateUser() {
-    this.claService.getUserByEmail(this.userEmail).subscribe(user => {
-      if(user.errors != null) {
-        //create user since user doesnt exist in the db. 
-        this.claService.postUser( 
-          { user_email: this.user.email, 
-            user_name: this.user.name } );
-
-      }
-    })
+  postSignatureRequest() {
+    let signatureRequest = {
+      'project_id': this.projectId,
+      'user_id': this.userId,
+      'return_url_type': "Gerrit",
+    };
+    this.claService.postIndividualSignatureRequest(signatureRequest).subscribe(response => {
+      // returns {
+      //   user_id:
+      //   signature_id:
+      //   project_id:
+      //   sign_url: docusign.com/some-docusign-url
+      // }
+      this.signature = response;
+    });
   }
 
   getProject(projectId) {
