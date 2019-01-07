@@ -932,6 +932,13 @@ def get_individual_signature_callback_url(user_id, metadata=None):
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])
 
+def get_individual_signature_callback_url_gerrit(user_id):
+    """
+    Helper function to get a user's active signature callback URL for Gerrit
+
+    """
+    return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
+
 def get_corporate_signature_callback_url(project_id, company_id):
     """
     Helper function to get the callback_url of a CCLA signature.
@@ -969,8 +976,10 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
         callback_url = cla.conf['SIGNED_CALLBACK_URL'] + \
                        '/' + str(installation_id) + '/' + str(change_request_id)
     signing_service = get_signing_service()
+    return_url_type = 'Github'
     signature_data = signing_service.request_individual_signature(project_id,
                                                                   user.get_user_id(),
+                                                                  return_url_type,
                                                                   return_url,
                                                                   callback_url)
     if 'sign_url' in signature_data:

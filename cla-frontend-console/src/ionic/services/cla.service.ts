@@ -89,6 +89,13 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  // creates a new account for Gerrit users, with email. 
+ postOrGetUserForGerrit(data) {
+    return this.http
+      .post(this.claApiUrl + "/v2/user/gerrit" ,data)
+      .map(res => res.json());
+  }
+
   /**
    * /user/github/{user_github_id}
    **/
@@ -163,6 +170,15 @@ export class ClaService {
   getUserSignatureIntent(userId) {
     return this.http
       .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
+      .map(res => res.json());
+  }
+
+  /**
+   * /user/{user_id}/active-signature
+   **/
+  getUserSignatureIntentGerrit(userId) {
+    return this.http
+      .get(this.claApiUrl + "/v2/user/gerrit/" + userId + "/active-signature")
       .map(res => res.json());
   }
 

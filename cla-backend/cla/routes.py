@@ -100,6 +100,16 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     """
     return cla.controllers.user.get_user(user_email=user_email)
 
+@hug.post('/user/gerrit', versions=2)
+def post_or_get_user_gerrit(user_email: cla.hug_types.email, user_name: hug.types.text):
+    """
+    GET: /user/gerrit
+
+    For a Gerrit user, there is a case where a user with an lfid may be a user in the db. 
+    An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent. 
+    """
+    return cla.controllers.user.get_or_create_user(user_email, user_name)
+
 
 @hug.get('/user/github/{user_github_id}', versions=1)
 def get_user_github(user_github_id: hug.types.number, user: cla_user):
@@ -916,12 +926,14 @@ def delete_project_document(user: cla_user,
                         'user_id': 'some-user-uuid'}")
 def request_individual_signature(project_id: hug.types.uuid,
                                  user_id: hug.types.uuid,
+                                 return_url_type=None,
                                  return_url=None):
     """
     POST: /request-individual-signature
 
     DATA: {'project_id': 'some-project-id',
            'user_id': 'some-user-id',
+           'return_url_type': Gerrit/Github. Optional depending on presence of return_url
            'return_url': <optional>}
 
     Creates a new signature given project and user IDs. The user will be redirected to the
@@ -937,7 +949,7 @@ def request_individual_signature(project_id: hug.types.uuid,
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
+    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url)
 
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
@@ -1315,7 +1327,7 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     """
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
 
-
+    
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
 
