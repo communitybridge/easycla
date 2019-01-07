@@ -199,11 +199,24 @@ class DocuSign(signing_service_interface.SigningService):
             project.load(str(project_id))
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
+        
         company = cla.utils.get_company_instance()
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
+
+        manager = cla.utils.get_user_instance()
+        try:
+            manager.load(str(company.get_company_manager_id()))
+        except DoesNotExist as err:
+            return {'errors': {'company_manager_id': str(err)}}
+
+        # Get CLA Manager. In the future, we will support multiple managers
+        # and contributors
+        scheduleA = generate_manager_and_contributor_list([
+            (manager.get_user_name(), manager.get_user_email())
+        ])
 
         # Ensure the company doesn't already have a CCLA with this project. 
         # and the user is about to sign the ccla manually 
@@ -223,7 +236,7 @@ class DocuSign(signing_service_interface.SigningService):
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
                     callback_url = cla.utils.get_corporate_signature_callback_url(str(project_id), str(company_id))
-                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email)
+                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
                         'signature_id': latest_signature.get_signature_id(),
@@ -247,7 +260,8 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting signature return_url to %s', return_url)
         if(not send_as_email): #get return url only for manual signing through console
             signature.set_signature_return_url(return_url)
-        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email)
+
+        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
         signature.save()
         return {'company_id': str(company_id),
                 'project_id': str(project_id),
@@ -255,7 +269,7 @@ class DocuSign(signing_service_interface.SigningService):
                 'sign_url': signature.get_signature_sign_url()}
 
     def populate_sign_url(self, signature, callback_url=None, send_as_email=False,
-    authority_name=None, authority_email=None): # pylint: disable=too-many-locals
+    authority_name=None, authority_email=None, scheduleA=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
         user = cla.utils.get_user_instance()
@@ -296,7 +310,7 @@ class DocuSign(signing_service_interface.SigningService):
                 return
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
-        tabs = get_docusign_tabs_from_document(document, document_id)
+        tabs = get_docusign_tabs_from_document(document, document_id, scheduleA)
 
         if send_as_email:
             # Sending email to authority
@@ -617,7 +631,7 @@ def get_org_from_return_url(repo_provider_type, return_url, orgs):
     else:
         raise Exception('Repo service: {} not supported'.format(repo_provider_type))
 
-def get_docusign_tabs_from_document(document, document_id):
+def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
     """
     Helper function to extract the DocuSign tabs out of a document object.
 
@@ -643,14 +657,39 @@ def get_docusign_tabs_from_document(document, document_id):
             cla.log.warning('Invalid tab type specified (%s) in document file ID %s',
                             tab_type, document.get_document_file_id())
             continue
-        tab_obj = tab_class(documentId=document_id,
-                            pageNumber=tab.get_document_tab_page(),
-                            xPosition=tab.get_document_tab_position_x(),
-                            yPosition=tab.get_document_tab_position_y(),
-                            width=tab.get_document_tab_width(),
-                            height=tab.get_document_tab_height(),
-                            customTabId=tab.get_document_tab_id(),
-                            tabLabel=tab.get_document_tab_id(),
-                            name=tab.get_document_tab_name())
+
+        args = {
+            'documentId': document_id,
+            'pageNumber': tab.get_document_tab_page(),
+            'xPosition': tab.get_document_tab_position_x(),
+            'yPosition': tab.get_document_tab_position_y(),
+            'width': tab.get_document_tab_width(),
+            'height': tab.get_document_tab_height(),
+            'customTabId': tab.get_document_tab_id(),
+            'tabLabel': tab.get_document_tab_id(),
+            'name': tab.get_document_tab_name(),
+            'locked': tab.get_document_tab_is_locked()
+        }
+
+        if scheduleA is not None and tab.get_document_tab_id() == 'scheduleA':
+            args['value'] = scheduleA
+
+        tab_obj = tab_class(**args)
         tabs.append(tab_obj)
+
     return tabs
+
+# managers and contributors are tuples of (name, email)
+def generate_manager_and_contributor_list( managers, contributors=None):
+    lines = []
+
+    for manager in managers:
+        lines.append('CLA Manager: {}, {}'.format(manager[0], manager[1]))
+
+    if contributors is not None:
+        for contributor in contributors:
+            lines.append('{}, {}'.format(contributor[0], contributor[1]))
+
+    lines = '\n'.join([str(line) for line in lines])
+
+    return lines
