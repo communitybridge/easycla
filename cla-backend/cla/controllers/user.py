@@ -281,7 +281,7 @@ def get_user_project_last_signature(user_id, project_id):
         user.load(str(user_id))
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
-    last_signature = cla.utils.get_user_latest_signature(user, str(project_id))
+    last_signature = user.get_latest_signature(str(project_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
         latest_doc = cla.utils.get_project_latest_individual_document(str(project_id))
@@ -308,7 +308,7 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
         user.load(str(user_id))
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
-    last_signature = cla.utils.get_user_latest_signature(user, str(project_id), company_id=str(company_id))
+    last_signature = user.get_latest_signature(str(project_id), company_id=str(company_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
         latest_doc = cla.utils.get_project_latest_corporate_document(str(project_id))

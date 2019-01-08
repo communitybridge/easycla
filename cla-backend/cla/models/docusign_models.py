@@ -12,6 +12,12 @@ import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
+from cla.models.dynamo_models import Signature
+
+root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
+username = os.environ.get('DOCUSIGN_USERNAME', '')
+password = os.environ.get('DOCUSIGN_PASSWORD', '')
+integrator_key = os.environ.get('DOCUSIGN_INTEGRATOR_KEY', '')
 
 class DocuSign(signing_service_interface.SigningService):
     """
@@ -38,10 +44,6 @@ class DocuSign(signing_service_interface.SigningService):
         self.client = None
 
     def initialize(self, config):
-        root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
-        username = os.environ.get('DOCUSIGN_USERNAME', '')
-        password = os.environ.get('DOCUSIGN_PASSWORD', '')
-        integrator_key = os.environ.get('DOCUSIGN_INTEGRATOR_KEY', '')
         self.client = pydocusign.DocuSignClient(root_url=root_url,
                                                 username=username,
                                                 password=password,
@@ -49,7 +51,8 @@ class DocuSign(signing_service_interface.SigningService):
 
     def request_individual_signature(self, project_id, user_id, return_url=None):
         cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
-        # Ensure this is a valid user.
+
+        # Ensure this is a valid user
         user_id = str(user_id)
         try:
             user = cla.utils.get_user_instance()
@@ -58,9 +61,20 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.warning('User ID not found when trying to request a signature: %s',
                             user_id)
             return {'errors': {'user_id': str(err)}}
-        # Check for active signature object with this project.
-        latest_signature = cla.utils.get_user_latest_signature(user, str(project_id))
-        last_document = cla.utils.get_project_latest_individual_document(str(project_id))
+
+        # Ensure the project exists
+        try:
+            project = cla.utils.get_project_instance()
+            project.load(project_id)
+        except DoesNotExist as err:
+            cla.log.error('Project ID not found when trying to request a signature: %s',
+                        project_id)
+            return {'errors': {'project_id': str(err)}}
+
+        # Check for active signature object with this project. If the user has
+        # signed the most recent major version, they do not need to sign again.
+        latest_signature = user.get_latest_signature(user, str(project_id))
+        last_document = project.get_latest_individual_document()
         if latest_signature is not None and \
            last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('User already has a signatures with this project: %s', \
@@ -69,47 +83,50 @@ class DocuSign(signing_service_interface.SigningService):
                     'project_id': project_id,
                     'signature_id': latest_signature.get_signature_id(),
                     'sign_url': latest_signature.get_signature_sign_url()}
-        # Create new signature.
-        signature = cla.utils.get_signature_instance()
-        signature.set_signature_id(str(uuid.uuid4()))
-        try:
-            project = cla.utils.get_project_instance()
-            project.load(project_id)
-        except DoesNotExist as err:
-            cla.log.error('Project ID not found when trying to request a signature: %s',
-                        project_id)
-            return {'errors': {'project_id': str(err)}}
-        signature.set_signature_project_id(project_id)
+
+        # Generate signature callback url
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
         callback_url = cla.utils.get_individual_signature_callback_url(user_id, signature_metadata)
         cla.log.info('Setting callback_url: %s', callback_url)
-        signature.set_signature_callback_url(callback_url)
-        # Requires us to know where the user came from.
+
+        # Get signature return URL
         if return_url is None:
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
+            cla.log.info('Setting signature return_url to %s', return_url)
         if return_url is None:
             return {'user_id': str(user_id),
                     'project_id': str(project_id),
                     'signature_id': None,
                     'sign_url': None,
-                    'error': 'No active signature found for user - cannot generate return_url \
-                              without knowing where the user came from'}
+                    'error': 'No active signature found for user - cannot generate return_url without knowing where the user came from'}
 
+        # Get latest document
         try:
-            document = project.get_project_individual_document()
+            document = project.get_latest_individual_document()
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
-        signature.set_signature_document_major_version(document.get_document_major_version())
-        signature.set_signature_document_minor_version(document.get_document_minor_version())
-        signature.set_signature_signed(False)
-        signature.set_signature_approved(True)
-        signature.set_signature_type('cla')
-        signature.set_signature_reference_id(user_id)
-        signature.set_signature_reference_type('user')
-        cla.log.info('Setting signature return_url to %s', return_url)
-        signature.set_signature_return_url(return_url)
+
+        # Create new Signature object
+        signature = Signature(signature_id=str(uuid.uuid4()),
+                                signature_project_id=project_id,
+                                signature_document_minor_version=document.get_document_minor_version(),
+                                signature_document_major_version=document.get_document_major_version(),
+                                signature_reference_id=user_id,
+                                signature_reference_type='user',
+                                signature_type='cla',
+                                signature_signed=False,
+                                signature_approved=True,
+                                signature_sign_url=None,
+                                signature_return_url=return_url,
+                                signature_callback_url=callback_url,
+                                signature_user_ccla_company_id=None)
+
+        # Populate sign url
         self.populate_sign_url(signature, callback_url)
+
+        # Save signature
         signature.save()
+
         return {'user_id': str(user_id),
                 'project_id': project_id,
                 'signature_id': signature.get_signature_id(),
@@ -308,6 +325,7 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.error('Could not get sign url for project %s: Project has no individual \
                                CLA document set', project.get_project_id())
                 return
+
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
         tabs = get_docusign_tabs_from_document(document, document_id, scheduleA)
