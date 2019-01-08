@@ -3,6 +3,7 @@ import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-ang
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from "../../services/roles.service";
 import { AuthService } from "../../services/auth.service";
+import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { Restricted } from "../../decorators/restricted";
 
 @Restricted({
@@ -33,6 +34,7 @@ export class ClaGerritIndividualPage {
     private claService: ClaService,
     private rolesService: RolesService,
     private authService: AuthService,
+    private keycloak: KeycloakService,
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -70,14 +72,7 @@ export class ClaGerritIndividualPage {
   getUserInfo() {
     // retrieve userInfo from auth0 service
     this.authService.getUserInfo().then(res => {
-      this.user = res;
-      // retrieve existing userId by email, or create one for Gerrit 
-      // For users who has an LFID but has never used the CLA app before.
-      let data = {
-        user_email: this.user.email,
-        user_name: this.user.nickname
-      }
-      this.claService.postOrGetUserForGerrit(data).subscribe(user => {
+      this.claService.postOrGetUserForGerrit().subscribe(user => {
           this.userId = user.user_id;
           // get signatureIntent object, similar to the Github flow. 
           this.postSignatureRequest();

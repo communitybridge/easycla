@@ -9,6 +9,11 @@ import { ClaService } from "../services/cla.service";
 import { AuthService } from "../services/auth.service";
 import { RolesService } from "../services/roles.service";
 import { HttpClient } from "../services/http-client";
+import { KeycloakService } from "../services/keycloak/keycloak.service";
+import {
+  KeycloakHttp,
+  KEYCLOAK_HTTP_PROVIDER
+} from "../services/keycloak/keycloak.http";
 import { AuthPage } from "../pages/auth/auth";
 import { MyApp } from "./app.component";
 
@@ -24,6 +29,8 @@ import { MyApp } from "./app.component";
     HttpClient,
     ClaService,
     AuthService,
+    KeycloakService,
+    KEYCLOAK_HTTP_PROVIDER,
     RolesService,
     { provide: ErrorHandler, useClass: IonicErrorHandler },
   ]
