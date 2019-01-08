@@ -405,6 +405,7 @@ def get_project_latest_individual_document(project_id):
     major, minor = get_last_version(document_models)
     return project.get_project_individual_document(major, minor)
 
+# TODO Heller remove
 def get_project_latest_corporate_document(project_id):
     """
     Helper function to return the latest corporate document belonging to a project.
@@ -518,6 +519,7 @@ def get_user_signature_by_github_repository(installation_id, user, company_id=No
     signature = get_user_latest_signature(user, project_id, company_id=company_id)
     return signature
 
+# TODO Heller remove
 def get_company_latest_signature(company, project_id):
     """
     Helper function to get a company's latest signature for a project.
@@ -892,19 +894,6 @@ def get_individual_signature_callback_url(user_id, metadata=None):
     return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])
-
-def get_corporate_signature_callback_url(project_id, company_id):
-    """
-    Helper function to get the callback_url of a CCLA signature.
-
-    :param project_id: The ID of the project this CCLA is for.
-    :type project_id: string
-    :param company_id: The ID of the company signing the CCLA.
-    :type company_id: string
-    :return: The callback URL hit by the signing provider once the signature is complete.
-    :rtype: string
-    """
-    return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
 
 def request_individual_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
