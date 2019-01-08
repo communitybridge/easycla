@@ -960,31 +960,5 @@ def change_icon(provider, signed=False): # pylint: disable=unused-argument
         return 'cla/resources/cla-signed.svg'
     return 'cla/resources/cla-unsigned.svg'
 
-def user_whitelisted(user, company):
-    """
-    Helper function to determine whether at least one of the user's email
-    addresses are whitelisted for a particular company.
-
-    :param user: The user to check.
-    :type user: cla.models.model_interfaces.User
-    :param company: The company to check against.
-    :type company: cla.models.model_interfaces.Company
-    :return: True if at least one email is whitelisted, False otherwise.
-    :rtype: bool
-    """
-    emails = user.get_user_emails()
-    whitelist = company.get_company_whitelist()
-    patterns = company.get_company_whitelist_patterns()
-    for email in emails:
-        if email in whitelist:
-            return True
-    for pattern in patterns:
-        preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
-        pat = re.compile(preprocessed_pattern)
-        for email in emails:
-            if pat.match(email) != None:
-                return True
-    return False
-
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])

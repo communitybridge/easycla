@@ -4,6 +4,7 @@ Easily access CLA models backed by DynamoDB using pynamodb.
 
 import uuid
 import os
+import re
 import base64
 import datetime
 import dateutil.parser
@@ -897,6 +898,30 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                 latest = signature
 
         return latest
+
+    def is_whitelisted(self, company):
+        """
+        Helper function to determine whether at least one of the user's email
+        addresses are whitelisted for a particular company.
+
+        :param company: The company to check against.
+        :type company: cla.models.model_interfaces.Company
+        :return: True if at least one email is whitelisted, False otherwise.
+        :rtype: bool
+        """
+        emails = self.get_user_emails()
+        whitelist = company.get_company_whitelist()
+        patterns = company.get_company_whitelist_patterns()
+        for email in emails:
+            if email in whitelist:
+                return True
+        for pattern in patterns:
+            preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
+            pat = re.compile(preprocessed_pattern)
+            for email in emails:
+                if pat.match(email) != None:
+                    return True
+        return False
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
