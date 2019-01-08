@@ -101,14 +101,14 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     return cla.controllers.user.get_user(user_email=user_email)
 
 @hug.post('/user/gerrit', versions=2)
-def post_or_get_user_gerrit(user_email: cla.hug_types.email, user_name: hug.types.text):
+def post_or_get_user_gerrit(user: cla_user):
     """
     GET: /user/gerrit
 
     For a Gerrit user, there is a case where a user with an lfid may be a user in the db. 
     An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent. 
     """
-    return cla.controllers.user.get_or_create_user(user_email, user_name)
+    return cla.controllers.user.get_or_create_user(user)
 
 
 @hug.get('/user/github/{user_github_id}', versions=1)
@@ -1019,6 +1019,23 @@ def post_individual_signed(body,
     content = body.read()
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
+
+@hug.post('/signed/gerrit/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
+def post_individual_signed(body,
+                           installation_id: hug.types.number,
+                           github_repository_id: hug.types.number,
+                           change_request_id: hug.types.number):
+    """
+    POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
+
+    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
+    DocuSign and the data hasn't been tampered with.
+
+    Callback URL from signing service upon ICLA signature.
+    """
+    content = body.read()
+    return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)    
+
 @hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
                           project_id: hug.types.uuid,
@@ -1326,6 +1343,7 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     Deletes the specified gerrit instance.
     """
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
+
 
     
 # Session Middleware
