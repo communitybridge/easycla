@@ -88,7 +88,12 @@ export class MyApp {
         title: "All Companies",
         access: true,
         component: "CompaniesPage"
-      }
+      },
+      {
+        title: "Sign Out",
+        access: this.userRoles.isAuthenticated,
+        component: "LoginPage"
+      },
     ];
   }
 }
