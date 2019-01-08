@@ -568,15 +568,21 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def get_project_individual_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_individual_documents()
         num_documents = len(document_models)
+
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
+
         if major_version is None:
-            major_version, minor_version = cla.utils.get_last_version(document_models)
+            version = self._get_lastest_version(document_models)
+            document = version[2]
+            return document
+
         # TODO Need to optimize this on the DB side.
         for document in document_models:
             if document.get_document_major_version() == major_version and \
                document.get_document_minor_version() == minor_version:
                 return document
+
         raise cla.models.DoesNotExist('Document revision not found')
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
@@ -592,6 +598,38 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                document.get_document_minor_version() == minor_version:
                 return document
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_individual_document(self):
+        document_models = self.get_project_individual_documents()
+        version = self._get_lastest_version(document_models)
+        document = version[2]
+
+        return document
+
+    def _get_lastest_version(self, documents):
+        """
+        Helper function to get the last version of the list of documents provided.
+
+        :param documents: List of documents to check.
+        :type documents: [cla.models.model_interfaces.Document]
+        :return: 2-item tuple containing (major, minor) version number.
+        :rtype: tuple
+        """
+        last_major = 0 # 0 will be returned if no document was found.
+        last_minor = -1 # -1 will be returned if no document was found.
+        current_document = None
+        for document in documents:
+            current_major = document.get_document_major_version()
+            current_minor = document.get_document_minor_version()
+            if current_major > last_major:
+                last_major = current_major
+                last_minor = current_minor
+                current_document = document
+                continue
+            if current_major == last_major and current_minor > last_minor:
+                last_minor = current_minor
+                current_document = document
+        return (last_major, last_minor, current_document)
 
     def get_project_ccla_requires_icla_signature(self):
         return self.model.project_ccla_requires_icla_signature
@@ -835,6 +873,30 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                                                        user_ccla_company_id=company_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_latest_signature(self, project_id, company_id=None):
+        """
+        Helper function to get a user's latest signature for a project.
+
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :param company_id: The company ID if looking for an employee signature.
+        :type company_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+                signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
