@@ -12,7 +12,7 @@ import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
-from cla.models.dynamo_models import Signature, GitHubOrg
+from cla.models.dynamo_models import Signature, GitHubOrg, User, Project, Company
 
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
 username = os.environ.get('DOCUSIGN_USERNAME', '')
@@ -55,7 +55,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure this is a valid user
         user_id = str(user_id)
         try:
-            user = cla.utils.get_user_instance()
+            user = User()
             user.load(user_id)
         except DoesNotExist as err:
             cla.log.warning('User ID not found when trying to request a signature: %s',
@@ -64,7 +64,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Ensure the project exists
         try:
-            project = cla.utils.get_project_instance()
+            project = Project()
             project.load(project_id)
         except DoesNotExist as err:
             cla.log.error('Project ID not found when trying to request a signature: %s',
@@ -133,21 +133,21 @@ class DocuSign(signing_service_interface.SigningService):
     def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
 
         # Ensure the project exists
-        project = cla.utils.get_project_instance()
+        project = Project()
         try:
             project.load(str(project_id))
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
 
         # Ensure the company exists
-        company = cla.utils.get_company_instance()
+        company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
 
         # Ensure the user exists
-        user = cla.utils.get_user_instance()
+        user = User()
         try:
             user.load(str(user_id))
         except DoesNotExist as err:
@@ -221,22 +221,39 @@ class DocuSign(signing_service_interface.SigningService):
 
         return new_signature.to_dict()
 
+    def _get_corporate_signature_callback_url(self, project_id, company_id):
+        """
+        Helper function to get the callback_url of a CCLA signature.
+
+        :param project_id: The ID of the project this CCLA is for.
+        :type project_id: string
+        :param company_id: The ID of the company signing the CCLA.
+        :type company_id: string
+        :return: The callback URL hit by the signing provider once the signature is complete.
+        :rtype: string
+        """
+        return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
+
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
     authority_name=None, authority_email=None, return_url=None,):
         cla.log.info('Validating company %s on project %s', company_id, project_id)
-        project = cla.utils.get_project_instance()
+
+        # Ensure the project exists
+        project = Project()
         try:
             project.load(str(project_id))
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
         
-        company = cla.utils.get_company_instance()
+        # Ensure the company exists
+        company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
 
-        manager = cla.utils.get_user_instance()
+        # Ensure the manager exists
+        manager = User()
         try:
             manager.load(str(company.get_company_manager_id()))
         except DoesNotExist as err:
@@ -251,8 +268,8 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure the company doesn't already have a CCLA with this project. 
         # and the user is about to sign the ccla manually 
         cla.log.info('Checking if a signature exists')
-        latest_signature = cla.utils.get_company_latest_signature(company, str(project_id))
-        last_document = cla.utils.get_project_latest_corporate_document(str(project_id))
+        latest_signature = company.get_latest_signature(str(project_id))
+        last_document = project.get_latest_corporate_document()
         if latest_signature is not None and \
         last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
@@ -265,7 +282,7 @@ class DocuSign(signing_service_interface.SigningService):
                     cla.log.info('CCLA signature object still missing signature')
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
-                    callback_url = cla.utils.get_corporate_signature_callback_url(str(project_id), str(company_id))
+                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
                     self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -274,25 +291,27 @@ class DocuSign(signing_service_interface.SigningService):
                                    
         # No signature exists, create the new Signature.
         cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
-        signature = cla.utils.get_signature_instance()
-        signature.set_signature_id(str(uuid.uuid4()))
-        signature.set_signature_project_id(str(project_id))
-        signature.set_signature_document_major_version(last_document.get_document_major_version())
-        signature.set_signature_document_minor_version(last_document.get_document_minor_version())
-        signature.set_signature_signed(False)
-        signature.set_signature_approved(True)
-        signature.set_signature_type('ccla')
-        signature.set_signature_reference_type('company')
-        signature.set_signature_reference_id(company_id)
-        callback_url = cla.utils.get_corporate_signature_callback_url(str(project_id), str(company_id))
+        signature = Signature(signature_id=str(uuid.uuid4()),
+                                signature_project_id=project_id,
+                                signature_document_minor_version=last_document.get_document_minor_version(),
+                                signature_document_major_version=last_document.get_document_major_version(),
+                                signature_reference_id=company_id,
+                                signature_reference_type='company',
+                                signature_type='ccla',
+                                signature_signed=False,
+                                signature_approved=True)
+
+        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
-        cla.log.info('Setting signature return_url to %s', return_url)
+
         if(not send_as_email): #get return url only for manual signing through console
+            cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
 
         self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
         signature.save()
+
         return {'company_id': str(company_id),
                 'project_id': str(project_id),
                 'signature_id': signature.get_signature_id(),
@@ -302,11 +321,11 @@ class DocuSign(signing_service_interface.SigningService):
     authority_name=None, authority_email=None, scheduleA=None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
-        user = cla.utils.get_user_instance()
+        user = User()
         
         # Assume the company manager is signing the CCLA
         if sig_type == 'company': 
-            company = cla.utils.get_company_instance()
+            company = Company()
             company.load(signature.get_signature_reference_id())
             try:
                 user.load(company.get_company_manager_id())
@@ -324,7 +343,7 @@ class DocuSign(signing_service_interface.SigningService):
         
         
         # Fetch the document to sign.
-        project = cla.utils.get_project_instance()
+        project = Project()
         project.load(signature.get_signature_project_id())
         if sig_type == 'company':
             document = project.get_project_corporate_document()
@@ -453,7 +472,7 @@ class DocuSign(signing_service_interface.SigningService):
             signature.set_signature_signed(True)
             signature.save()
             # Send user their signed document.
-            user = cla.utils.get_user_instance()
+            user = User()
             user.load(signature.get_signature_reference_id())
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
@@ -486,19 +505,20 @@ class DocuSign(signing_service_interface.SigningService):
         else:
             # If client_user_id is None, the callback came from the email that finished signing. 
             # Retrieve the latest signature with projectId and CompanyId.
-            company = cla.utils.get_company_instance()
+            company = Company()
             try:
                 company.load(str(company_id))
             except DoesNotExist as err:
                 return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
-            signature = cla.utils.get_company_latest_signature(company, str(project_id))
+
+            signature = company.get_latest_signature(str(project_id))
             signature_id = signature.get_signature_id()
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
-        company = cla.utils.get_company_instance()
+        company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist:
@@ -509,7 +529,7 @@ class DocuSign(signing_service_interface.SigningService):
             signature.set_signature_signed(True)
             signature.save()
             # Send manager their signed document.
-            manager = cla.utils.get_user_instance()
+            manager = User()
             manager.load(company.get_company_manager_id())
             # Send email with signed document.
             self.send_signed_document(envelope_id, manager, icla=False)

@@ -574,7 +574,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             raise cla.models.DoesNotExist('No individual document exists for this project')
 
         if major_version is None:
-            version = self._get_lastest_version(document_models)
+            version = self._get_latest_version(document_models)
             document = version[2]
             return document
 
@@ -585,6 +585,13 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                 return document
 
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_individual_document(self):
+        document_models = self.get_project_individual_documents()
+        version = self._get_latest_version(document_models)
+        document = version[2]
+
+        return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_corporate_documents()
@@ -600,14 +607,20 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                 return document
         raise cla.models.DoesNotExist('Document revision not found')
 
-    def get_latest_individual_document(self):
-        document_models = self.get_project_individual_documents()
-        version = self._get_lastest_version(document_models)
+    def get_latest_corporate_document(self):
+        """
+        Helper function to return the latest corporate document belonging to a project.
+
+        :return: Latest CCLA document object for this project.
+        :rtype: cla.models.model_instances.Document
+        """
+        document_models = self.get_project_corporate_documents()
+        version = self._get_latest_version(document_models)
         document = version[2]
 
         return document
 
-    def _get_lastest_version(self, documents):
+    def _get_latest_version(self, documents):
         """
         Helper function to get the last version of the list of documents provided.
 
@@ -1431,6 +1444,30 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                                                        project_id=project_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_latest_signature(self, project_id):
+        """
+        Helper function to get a company's latest signature for a project.
+
+        :param company: The company object to check for.
+        :type company: cla.models.model_interfaces.Company
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_company_signatures(project_id=project_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+            signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
 
     def get_company_by_external_id(self, company_external_id):
         company_generator = self.model.company_external_id_index.query(company_external_id)
