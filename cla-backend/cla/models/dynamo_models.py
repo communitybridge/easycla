@@ -1696,7 +1696,7 @@ class GerritModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-gerrit-instances'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     gerrit_id  = UnicodeAttribute(hash_key=True)
     project_id = UnicodeAttribute()

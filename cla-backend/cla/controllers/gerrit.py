@@ -21,7 +21,11 @@ def get_gerrit_by_project_id(project_id):
         gerrit = gerrit.get_gerrit_by_project_id(project_id)
     except DoesNotExist as err:
         return {'errors': {'a gerrit instance does not exist with the given project ID. ': str(err)}}
-    return gerrit.to_dict() 
+
+    if gerrit is None:
+        return []
+
+    return [gerrit.to_dict()]
 
 
 def create_gerrit(project_id, 
@@ -65,7 +69,7 @@ def create_gerrit(project_id,
     gerrit.set_group_id_ccla(str(group_id_ccla))
 
     gerrit.save()
-    return gerrit.to_dict()
+    return [gerrit.to_dict()]
 
 def delete_gerrit(gerrit_id):
     """

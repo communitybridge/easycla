@@ -93,7 +93,7 @@ export class ProjectClaPage {
             });
             //Get Gerrit Instances
             this.claService
-              .getGerritInstances(project.project_id)
+              .getGerritInstance(project.project_id)
               .subscribe(gerrits => {
                 project.gerrits = gerrits;
             });

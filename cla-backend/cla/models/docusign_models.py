@@ -13,7 +13,7 @@ import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
-from cla.models.dynamo_models import Signature, GitHubOrg, User,
+from cla.models.dynamo_models import Signature, GitHubOrg, User, \
                                         Project, Company, Gerrit
 
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
