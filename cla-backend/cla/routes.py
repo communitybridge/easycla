@@ -13,6 +13,7 @@ import cla.controllers.repository
 import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
+import cla.controllers.gerrit
 
 import cla.salesforce
 
@@ -98,6 +99,16 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     break the user flow from GitHub?
     """
     return cla.controllers.user.get_user(user_email=user_email)
+
+@hug.post('/user/gerrit', versions=1)
+def post_or_get_user_gerrit(user: cla_user):
+    """
+    GET: /user/gerrit
+
+    For a Gerrit user, there is a case where a user with an lfid may be a user in the db. 
+    An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent. 
+    """
+    return cla.controllers.user.get_or_create_user(user)
 
 
 @hug.get('/user/github/{user_github_id}', versions=1)
@@ -919,12 +930,14 @@ def delete_project_document(user: cla_user,
                         'user_id': 'some-user-uuid'}")
 def request_individual_signature(project_id: hug.types.uuid,
                                  user_id: hug.types.uuid,
+                                 return_url_type=None,
                                  return_url=None):
     """
     POST: /request-individual-signature
 
     DATA: {'project_id': 'some-project-id',
            'user_id': 'some-user-id',
+           'return_url_type': Gerrit/Github. Optional depending on presence of return_url
            'return_url': <optional>}
 
     Creates a new signature given project and user IDs. The user will be redirected to the
@@ -940,7 +953,7 @@ def request_individual_signature(project_id: hug.types.uuid,
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url)
+    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url)
 
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
@@ -1009,6 +1022,18 @@ def post_individual_signed(body,
     """
     content = body.read()
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
+
+
+@hug.post('/signed/gerrit/individual/{user_id}', versions=2)
+def post_individual_signed_gerrit(body,
+                           user_id: hug.types.uuid):
+    """
+    POST: /signed/gerritindividual/{user_id}
+
+    Callback URL from signing service upon ICLA signature for a Gerrit user.
+    """
+    content = body.read()
+    return cla.controllers.signing.post_individual_signed_gerrit(content, user_id)    
 
 @hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
@@ -1263,6 +1288,45 @@ def github_get_namespace(namespace):
     """
     return cla.controllers.github.get_namespace(namespace)
 
+
+#
+# Gerrit instance routes
+#
+@hug.get('/project/{project_id}/gerrits', versions=1)
+def get_project_gerrit_instance(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/gerrits
+
+    Returns all CLA Gerrit instances. 
+    """
+    return cla.controllers.gerrit.get_gerrit_by_project_id(project_id)
+
+
+@hug.post('/gerrit', versions=1)
+def create_gerrit_instance(project_id: hug.types.uuid,
+                             gerrit_name: hug.types.text, 
+                             gerrit_url: cla.hug_types.url,
+                             group_id_icla: hug.types.text, 
+                             group_id_ccla: hug.types.text):
+    """
+    POST: /gerrit
+
+    Creates a gerrit instance
+    """
+    return cla.controllers.gerrit.create_gerrit(project_id, gerrit_name, gerrit_url, group_id_icla, group_id_ccla)
+
+
+@hug.delete('/gerrit/{gerrit_id}', versions=1)
+def delete_gerrit_instance(gerrit_id: hug.types.uuid):
+    """
+    DELETE: /gerrit/{gerrit_id}
+
+    Deletes the specified gerrit instance.
+    """
+    return cla.controllers.gerrit.delete_gerrit(gerrit_id)
+
+
+    
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
 
@@ -1277,3 +1341,4 @@ def get_health(request):
     Returns a list of all projects from Salesforce.
     """
     return cla.salesforce.get_projects(request, '')
+

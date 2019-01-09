@@ -18,7 +18,7 @@ class SigningService(object):
         """
         raise NotImplementedError()
 
-    def request_individual_signature(self, project_id, user_id, return_url, callback_url=None):
+    def request_individual_signature(self, project_id, user_id, return_url_type, return_url, callback_url=None):
         """
         Method that will request a new signature from the user.
 

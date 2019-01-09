@@ -76,6 +76,7 @@ export class ClaIndividualPage {
       'project_id': this.projectId,
       'user_id': this.userId,
       // TODO: Switch this to intermediary loading screen as docusign postback has delay
+      'return_url_type': "Github",
       'return_url': this.signatureIntent.return_url,
     };
 
