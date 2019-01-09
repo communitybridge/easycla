@@ -8,6 +8,7 @@ import uuid
 import urllib.request
 import xml.etree.ElementTree as ET
 import pydocusign
+from cla.controllers.lf_group import LFGroup
 import json
 from pydocusign.exceptions import DocuSignException
 import cla
@@ -108,6 +109,7 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_reference_type('user')
         cla.log.info('Setting signature return_url to %s', return_url)
         signature.set_signature_return_url(return_url)
+        signature.set_signature_return_url_type("Github")
         self.populate_sign_url(signature, callback_url)
         signature.save()
         return {'user_id': str(user_id),
@@ -130,6 +132,11 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'project_id': str(err)}}
         signature.set_signature_project_id(project_id)
         callback_url = cla.utils.get_individual_signature_callback_url_gerrit(user_id)
+        gerrit = cla.utils.get_gerrit_instance() 
+        try:
+            gerrit = gerrit.get_gerrit_by_project_id(project_id)
+        except DoesNotExist as err:
+            return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
 
         try:
             document = project.get_project_individual_document()
@@ -142,6 +149,8 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_type('cla')
         signature.set_signature_reference_id(user_id)
         signature.set_signature_reference_type('user')
+        signature.set_signature_return_url_type("Gerrit")
+        signature.set_signature_gerrit_reference_id(gerrit.get_gerrit_id())
         self.populate_sign_url(signature, callback_url)
         signature.save()
         return {'user_id': str(user_id),
@@ -450,6 +459,64 @@ class DocuSign(signing_service_interface.SigningService):
             self.send_signed_document(envelope_id, user)
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
+
+    def signed_individual_callback_gerrit(self, content):
+        cla.log.debug('Docusign Gerrit ICLA signed callback POST data: %s', content)
+        tree = ET.fromstring(content)
+        # Get envelope ID.
+        envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
+        # Assume only one signature per signature.
+        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+        signature = cla.utils.get_signature_instance()
+        try:
+            signature.load(signature_id)
+        except DoesNotExist:
+            cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
+                          content)
+            return
+        # Iterate through recipients and update the signature signature status if changed.
+        elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
+                         '/' + self.TAGS['recipient_status'])
+        status = elem.find(self.TAGS['status']).text
+        if status == 'Completed' and not signature.get_signature_signed():
+            cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
+                         signature_id)
+            # Get User
+            user = cla.utils.get_user_instance()
+            user.load(signature.get_signature_reference_id())
+
+            # Get Gerrit id of signature
+            gerrit = cla.utils.get_gerrit_instance()
+            try:
+                gerrit.load(signature.get_signature_gerrit_reference_id())
+            except DoesNotExist:
+                cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
+                            content)
+                return
+            
+            # Get Gerrit Group ID
+            group_id = gerrit.get_group_id_icla()
+            lf_username = user.get_lf_username()
+
+            # Add the user to the LDAP Group
+            lf_group_client_url = os.environ.get('LF_GROUP_CLIENT_URL', '')
+            lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
+            lf_group_client_secret = os.environ.get('LF_GROUP_CLIENT_SECRET', '')
+            lf_group_refresh_token = os.environ.get('LF_GROUP_REFRESH_TOKEN', '')
+            lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
+            try:
+                lf_group.add_user_to_group(group_id, lf_username)
+            except DoesNotExist:
+                cla.log.error('Failed in adding user to the LDAP group.', content)
+                return
+
+            # Save signature in DB
+            signature.set_signature_signed(True)
+            signature.save()
+
+            # Send user their signed document.
+            self.send_signed_document(envelope_id, user)
+
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """

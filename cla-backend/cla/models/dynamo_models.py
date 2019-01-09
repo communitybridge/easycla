@@ -711,13 +711,14 @@ class UserModel(BaseModel):
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
+    user_lf_username = UnicodeAttribute(null=True)
 
 
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, user_lf_username=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -725,6 +726,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
+        self.model.user_lf_username = user_lf_username
 
     def to_dict(self):
         ret = dict(self.model)
@@ -774,8 +776,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_ldap_id(self):
         return self.model.user_ldap_id
 
+    def get_user_lf_username(self):
+        return self.model.user_lf_username
+
     def set_user_id(self, user_id):
         self.model.user_id = user_id
+
+    def set_user_lf_username(self, user_lf_username):
+        self.model.user_lf_username = user_lf_username
 
     def set_user_external_id(self, user_external_id):
         self.model.user_external_id = user_external_id
@@ -987,6 +995,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_reference_index = ReferenceSignatureIndex()
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
+    signature_gerrit_reference_id = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1008,7 +1017,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
-                 signature_return_url_type=None):
+                 signature_return_url_type=None,
+                 signature_gerrit_reference_id=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1026,6 +1036,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_return_url_type = signature_return_url_type
+        self.model.signature_gerrit_reference_id = signature_gerrit_reference_id
 
     def to_dict(self):
         return dict(self.model)
@@ -1089,6 +1100,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
+    def get_signature_gerrit_reference_id(self):
+        return self.model.signature_gerrit_reference_id
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1133,6 +1147,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
+
+    def set_signature_gerrit_reference_id(self, gerrit_id):
+        self.model.signature_gerrit_reference_id = gerrit_id
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
@@ -1630,14 +1647,18 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     def delete(self):
         self.model.delete()
         
-    def get_gerrits_by_project_id(self, project_id):
+    def get_gerrit_by_project_id(self, project_id):
+        # Projects can each have at most 1 Gerrit Instance.
         gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
         for gerrit_model in gerrit_generator:
             gerrit = Gerrit()
             gerrit.model = gerrit_model
             gerrits.append(gerrit)
-        return gerrits
+        if len(gerrits) >= 1: 
+            return gerrits[0]
+        else :
+            return None
 
     def all(self):
         gerrits = self.model.scan()
