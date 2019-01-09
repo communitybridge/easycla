@@ -332,4 +332,5 @@ def get_or_create_user(user):
         return user.to_dict()    
     if existingUser.get_user_lf_username() is None:
         existingUser.set_user_lf_username(lf_username)
-    return existingUser.to_dict() 
+        existingUser.save()
+    return existingUser.to_dict()

@@ -1,5 +1,6 @@
-import requests 
-import json 
+import requests
+import json
+import os
 
 class LFGroup():
     def __init__(self, lf_base_url, client_id, client_secret, refresh_token):
@@ -14,7 +15,7 @@ class LFGroup():
             'refresh_token': self.refresh_token,
             'scope': 'manage_groups'
         }
-        oauth_url = self.lf_base_url + "oauth2/token"
+        oauth_url = os.path.join(self.lf_base_url, 'oauth2/token')
         response = requests.post(oauth_url, data=data, auth=(self.client_id, self.client_secret)).json()
 
         return response['access_token']
@@ -22,8 +23,10 @@ class LFGroup():
     # get LDAP group 
     def get_group(self, group_id):
         access_token = self._get_access_token()
-        headers = { 'Authorization': 'bearer ' + access_token } 
-        response = requests.get(self.lf_base_url + 'rest/auth0/og/' + str(group_id), headers=headers)
+        headers = { 'Authorization': 'bearer ' + access_token }
+        get_group_url = os.path.join(self.lf_base_url, 'rest/auth0/og/', str(group_id))
+        response = requests.get(get_group_url, headers=headers)
+
         if response.status_code == 200:
             return response.json()
         else:
@@ -38,5 +41,7 @@ class LFGroup():
             'cache-control': 'no-cache',
         }
         data = { "username": username }
-        response = requests.put(self.lf_base_url + 'rest/auth0/og/' + str(group_id), headers=headers, data=json.dumps(data)).json()
+        add_user_url = os.path.join(self.lf_base_url, 'rest/auth0/og/', str(group_id))
+        response = requests.put(add_user_url, headers=headers, data=json.dumps(data)).json()
+
         return response
