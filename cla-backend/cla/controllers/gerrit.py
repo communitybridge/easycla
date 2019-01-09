@@ -36,13 +36,13 @@ def get_gerrit(gerrit_id):
     return gerrit.to_dict()
 
 
-def get_gerrits_by_project_id(project_id):
+def get_gerrit_by_project_id(project_id):
     gerrit = get_gerrit_instance()
     try:
-        gerrits = gerrit.get_gerrits_by_project_id(project_id)
+        gerrit = gerrit.get_gerrit_by_project_id(project_id)
     except DoesNotExist as err:
-        return {'errors': {'gerrit_id': str(err)}}
-    return [gerrit.to_dict() for gerrit in gerrits]
+        return {'errors': {'a gerrit instance does not exist with the given project ID. ': str(err)}}
+    return gerrit.to_dict() 
 
 
 def create_gerrit(project_id, 

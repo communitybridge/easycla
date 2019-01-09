@@ -115,7 +115,7 @@ def post_or_get_user_gerrit(user: cla_user):
 def get_user_github(user_github_id: hug.types.number, user: cla_user):
     """
     GET: /user/github/{user_github_id}
-
+ç
     Returns the requested user data based on user GitHub ID.
 
     TODO: Should this be locked down more? Staff only?
@@ -1020,21 +1020,16 @@ def post_individual_signed(body,
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
 
-@hug.post('/signed/gerrit/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
-def post_individual_signed(body,
-                           installation_id: hug.types.number,
-                           github_repository_id: hug.types.number,
-                           change_request_id: hug.types.number):
+@hug.post('/signed/gerrit/individual/{user_id}', versions=2)
+def post_individual_signed_gerrit(body,
+                           user_id: hug.types.uuid):
     """
-    POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
+    POST: /signed/gerritindividual/{user_id}
 
-    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
-    DocuSign and the data hasn't been tampered with.
-
-    Callback URL from signing service upon ICLA signature.
+    Callback URL from signing service upon ICLA signature for a Gerrit user.
     """
     content = body.read()
-    return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)    
+    return cla.controllers.signing.post_individual_signed_gerrit(content, user_id)    
 
 @hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
@@ -1311,14 +1306,14 @@ def get_gerrit_instances():
     """
     return cla.controllers.gerrit.get_gerrits()
 
-@hug.get('/project/{project_id}/gerrits', versions=2)
-def get_project_gerrit_instances(project_id: hug.types.uuid):
+@hug.get('/project/{project_id}/gerrit', versions=2)
+def get_project_gerrit_instance(project_id: hug.types.uuid):
     """
     GET: /project/gerrits
 
     Returns all CLA Gerrit instances. 
     """
-    return cla.controllers.gerrit.get_gerrits_by_project_id(project_id)
+    return cla.controllers.gerrit.get_gerrit_by_project_id(project_id)
 
 
 @hug.post('/gerrit', versions=2)
