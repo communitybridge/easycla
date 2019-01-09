@@ -740,7 +740,7 @@ export class ClaService {
 
   getGithubCheckNamespace(namespace) {
     return this.http
-      .get(this.claApiUrl + "/v1/github/check/namespace/" + namespace)
+      .get(this.claApiUrl + "/v2/github/check/namespace/" + namespace)
       .map(res => res.json());
   }
 
@@ -768,7 +768,7 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-        "/v1/github/organizations/" +
+        "/v2/github/organizations/" +
         organizationName +
         "/repositories"
       )
@@ -838,7 +838,7 @@ export class ClaService {
   }
 
 
-  getGerritInstances(projectId) {
+  getGerritInstance(projectId) {
     return this.http
       .get(this.claApiUrl + `/v2/project/${projectId}/gerrits`)
       .map(res => res.json())
