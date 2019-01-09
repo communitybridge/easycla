@@ -18,6 +18,8 @@ sf_client_secret = os.environ.get('SF_CLIENT_SECRET', '')
 sf_username = os.environ.get('SF_USERNAME', '')
 sf_password = os.environ.get('SF_PASSWORD', '')
 
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
+
 def format_response(status_code, headers, body):
     """
     Helper function: Generic response formatter
@@ -50,7 +52,7 @@ def get_projects(event, context):
     cla.log.info('event: {}'.format(event))
 
     # Get userID from token
-    if stage == 'dev':
+    if stage == 'local':
         headers = event.headers
         bearer_token = headers.get('AUTHORIZATION')
     else:
@@ -117,7 +119,7 @@ def get_projects(event, context):
         logo_url = None
         project_id = project.get('Id')
         if project_id:
-            logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, project_id)
+            logo_url = '{}/{}.png'.format(cla_logo_url, project_id)
 
         projects.append({
             'name': project.get('Name'),
@@ -136,7 +138,7 @@ def get_project(event, context):
     cla.log.info('event: {}'.format(event))
 
     # Get userID from token
-    if stage == 'dev':
+    if stage == 'local':
         headers = event.headers
         bearer_token = headers.get('AUTHORIZATION')
         project_id = event.params
@@ -203,7 +205,7 @@ def get_project(event, context):
 
     logo_url = None
     if response.get('id'):
-        logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, response.get('id'))
+        logo_url = '{}/{}.png'.format(cla_logo_url, response.get('id'))
 
     project = {
         'name': response.get('Name'),

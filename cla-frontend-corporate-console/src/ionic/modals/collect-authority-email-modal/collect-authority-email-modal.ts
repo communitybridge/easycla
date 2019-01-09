@@ -58,7 +58,7 @@ export class CollectAuthorityEmailModal {
   emailSent() {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'An E-Mail has been successfully sent. Please wait for your corporate authority to review and sign the CCLA Agreement. ',
+      subTitle: 'An E-Mail has been successfully sent. Please wait for your CLA Signatory to review and sign the CCLA Agreement. ',
       buttons: ['Dismiss']
     });
     alert.present();
