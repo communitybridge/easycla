@@ -81,10 +81,10 @@ def get_database_models(conf=None):
     if conf['DATABASE'] == 'DynamoDB':
         from cla.models.dynamo_models import User, Signature, Repository, \
                                              Company, Project, Document, \
-                                             GitHubOrg, UserPermissions
+                                             GitHubOrg, Gerrit, UserPermissions
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
-                'GitHubOrg': GitHubOrg, 'UserPermissions': UserPermissions}
+                'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions}
     else:
         raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
 
@@ -131,6 +131,17 @@ def get_github_organization_instance(conf=None):
     :rtype: cla.models.model_interfaces.GitHubOrg
     """
     return get_database_models(conf)['GitHubOrg']()
+
+def get_gerrit_instance(conf=None):
+    """
+    Helper function to get a database Gerrit model based on CLA configuration.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A Gerrit model instance based on configuration specified.
+    :rtype: cla.models.model_interfaces.Gerrit
+    """
+    return get_database_models(conf)['Gerrit']()
 
 def get_company_instance(conf=None):
     """
@@ -919,8 +930,10 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
         callback_url = cla.conf['SIGNED_CALLBACK_URL'] + \
                        '/' + str(installation_id) + '/' + str(change_request_id)
     signing_service = get_signing_service()
+    return_url_type = 'Github'
     signature_data = signing_service.request_individual_signature(project_id,
                                                                   user.get_user_id(),
+                                                                  return_url_type,
                                                                   return_url,
                                                                   callback_url)
     if 'sign_url' in signature_data:

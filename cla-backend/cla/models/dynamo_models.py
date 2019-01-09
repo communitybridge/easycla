@@ -30,7 +30,7 @@ def create_database():
     is expected to exist in all database storage wrappers.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Create all required tables.
     for table in tables:
         # Wait blocks until table is created.
@@ -45,7 +45,7 @@ def delete_database():
     WARNING: This will delete all existing table data.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Delete all existing tables.
     for table in tables:
         if table.exists():
@@ -773,13 +773,14 @@ class UserModel(BaseModel):
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
+    user_lf_username = UnicodeAttribute(null=True)
 
 
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, user_lf_username=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -787,6 +788,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
+        self.model.user_lf_username = user_lf_username
 
     def to_dict(self):
         ret = dict(self.model)
@@ -836,8 +838,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_ldap_id(self):
         return self.model.user_ldap_id
 
+    def get_user_lf_username(self):
+        return self.model.user_lf_username
+
     def set_user_id(self, user_id):
         self.model.user_id = user_id
+
+    def set_user_lf_username(self, user_lf_username):
+        self.model.user_lf_username = user_lf_username
 
     def set_user_external_id(self, user_external_id):
         self.model.user_external_id = user_external_id
@@ -1095,6 +1103,9 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_user_ccla_company_id = UnicodeAttribute(null=True)
     signature_project_index = ProjectSignatureIndex()
     signature_reference_index = ReferenceSignatureIndex()
+    # Callback type refers to either Gerrit or GitHub
+    signature_return_url_type = UnicodeAttribute(null=True)
+    signature_gerrit_reference_id = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1115,7 +1126,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_sign_url=None,
                  signature_return_url=None,
                  signature_callback_url=None,
-                 signature_user_ccla_company_id=None):
+                 signature_user_ccla_company_id=None,
+                 signature_return_url_type=None,
+                 signature_gerrit_reference_id=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1132,6 +1145,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_return_url = signature_return_url
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
+        self.model.signature_return_url_type = signature_return_url_type
+        self.model.signature_gerrit_reference_id = signature_gerrit_reference_id
 
     def to_dict(self):
         return dict(self.model)
@@ -1191,6 +1206,13 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_signature_user_ccla_company_id(self):
         return self.model.signature_user_ccla_company_id
 
+    def get_signature_return_url_type(self):
+        # Refers to either Gerrit or GitHub
+        return self.model.signature_return_url_type
+
+    def get_signature_gerrit_reference_id(self):
+        return self.model.signature_gerrit_reference_id
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1232,6 +1254,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_user_ccla_company_id(self, company_id):
         self.model.signature_user_ccla_company_id = company_id
+
+    def set_signature_return_url_type(self, signature_return_url_type):
+        self.model.signature_return_url_type = signature_return_url_type
+
+    def set_signature_gerrit_reference_id(self, gerrit_id):
+        self.model.signature_gerrit_reference_id = gerrit_id
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
@@ -1659,6 +1687,120 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             org = GitHubOrg()
             org.model = organization
             ret.append(org)
+        return ret
+
+class GerritModel(BaseModel):
+    """
+    Represents a Gerrit Instance in the database.
+    """
+    class Meta:
+        """Meta class for User."""
+        table_name = 'cla-{}-gerrit-instances'.format(stage)
+        if stage == 'dev':
+            host = 'http://localhost:8000'
+    gerrit_id  = UnicodeAttribute(hash_key=True)
+    project_id = UnicodeAttribute()
+    gerrit_name = UnicodeAttribute()
+    gerrit_url = UnicodeAttribute()
+    group_id_icla = UnicodeAttribute()
+    group_id_ccla = UnicodeAttribute()
+    group_name_icla = UnicodeAttribute(null=True)
+    group_name_ccla = UnicodeAttribute(null=True)
+
+class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB Gerrit model.
+    """
+    def __init__(self, gerrit_id=None, gerrit_name=None, 
+    project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
+        super(Gerrit).__init__()
+        self.model = GerritModel()
+        self.model.gerrit_id = gerrit_id
+        self.model.gerrit_name = gerrit_name
+        self.model.project_id = project_id
+        self.model.gerrit_url = gerrit_url
+        self.model.group_id_icla = group_id_icla
+        self.model.group_id_ccla = group_id_ccla
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def load(self, gerrit_id):
+        try:
+            gerrit = self.model.get(str(gerrit_id))
+        except GerritModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Gerrit Instance not found')
+        self.model = gerrit
+
+    def get_gerrit_id(self):
+        return self.model.gerrit_id
+
+    def get_gerrit_name(self):
+        return self.model.gerrit_name
+
+    def get_project_id(self):
+        return self.model.project_id
+
+    def get_gerrit_url(self):
+        return self.model.gerrit_url
+
+    def get_group_id_icla(self):
+        return self.model.group_id_icla
+
+    def get_group_id_ccla(self):
+        return self.model.group_id_ccla
+
+    def set_gerrit_id(self, gerrit_id):
+        self.model.gerrit_id = gerrit_id
+
+    def set_gerrit_name(self, gerrit_name):
+        self.model.gerrit_name = gerrit_name
+
+    def set_project_id(self, project_id):
+        self.model.project_id = project_id
+
+    def set_gerrit_url(self, gerrit_url):
+        self.model.gerrit_url = gerrit_url
+
+    def set_group_id_icla(self, group_id_icla):
+        self.model.group_id_icla = group_id_icla
+
+    def set_group_id_ccla(self, group_id_ccla) :
+        self.model.group_id_ccla = group_id_ccla
+
+    def set_group_name_icla(self, group_name_icla):
+        self.model.group_name_icla = group_name_icla
+
+    def set_group_name_ccla(self, group_name_ccla) :
+        self.model.group_name_ccla = group_name_ccla
+
+    def save(self):
+        self.model.save()
+
+    def delete(self):
+        self.model.delete()
+        
+    def get_gerrit_by_project_id(self, project_id):
+        # Projects can each have at most 1 Gerrit Instance.
+        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
+        gerrits = []
+        for gerrit_model in gerrit_generator:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            gerrits.append(gerrit)
+        if len(gerrits) >= 1: 
+            return gerrits[0]
+        else :
+            return None
+
+    def all(self):
+        gerrits = self.model.scan()
+        ret = []
+        for gerrit_model in gerrits:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            ret.append(gerrit)
         return ret
 
 class UserPermissionsModel(BaseModel):
