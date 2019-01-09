@@ -95,6 +95,17 @@ def post_individual_signed(content, installation_id, github_repository_id, chang
     """
     get_signing_service().signed_individual_callback(content, installation_id, github_repository_id, change_request_id)
 
+def post_individual_signed_gerrit(content, user_id):
+    """
+    Handle the posted callback from the signing service after ICLA signature for Gerrit.
+
+    :param content: The POST body from the signing service callback.
+    :type content: string
+    :param user_id: The ID of the user that signed. 
+    :type user_id: string
+    """
+    get_signing_service().signed_individual_callback_gerrit(content, user_id)
+
 def post_corporate_signed(content, project_id, company_id):
     """
     Handle the posted callback from the signing service after CCLA signature.

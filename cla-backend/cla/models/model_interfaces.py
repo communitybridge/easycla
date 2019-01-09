@@ -399,6 +399,13 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_user_lf_username(self):
+        """
+        Getter for the user's Linux Foundation Username.
+        """
+        
+        raise NotImplementedError() 
+
     def set_user_id(self, user_id):
         """
         Setter for the user's ID.
@@ -470,6 +477,15 @@ class User(object):
         :type user_ldap_id: integer
         """
         raise NotImplementedError()
+
+    def set_user_lf_username(self, user_lf_username):
+        """
+        Setter for the user's Linux Foundation Username.
+        :param user_lf_username: The user's LF Username. 
+        :type user_lf_username: string
+        """
+        
+        raise NotImplementedError() 
 
     def get_user_by_email(self, user_email):
         """
@@ -1922,7 +1938,7 @@ class UserPermissions(object):
         """
         raise NotImplementedError()
 
-    def get_gerrits_by_project_id(self):
+    def get_gerrit_by_project_id(self):
         """
         Gets all gerrit instances by a project ID.
         """
