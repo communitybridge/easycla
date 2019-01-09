@@ -9,6 +9,12 @@ CLA_BUCKET_LOGO_URL='';
 CLA_SIGNATURE_FILES_BUCKET='';
 SES_SENDER_EMAIL_ADDRESS='';
 
+# LFID LDAP OAuth2 Credentials
+LF_GROUP_CLIENT_ID='';
+LF_GROUP_CLIENT_SECRET='';
+LF_GROUP_REFRESH_TOKEN='';
+LF_GROUP_CLIENT_URL='';
+
 ENV='';
 PROFILE='';
 
@@ -45,4 +51,24 @@ fi
 if [ -n "$SES_SENDER_EMAIL_ADDRESS" ]; then
     echo "updating ses sender email address: $SES_SENDER_EMAIL_ADDRESS"
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-ses-sender-email-address-$ENV" --description "SES Sender Email Address" --value "$SES_SENDER_EMAIL_ADDRESS" --type "String" --overwrite
+fi
+
+if [ -n "$LF_GROUP_CLIENT_ID" ]; then
+    echo "updating lf group client id: $LF_GROUP_CLIENT_ID"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-lf-group-client-id-$ENV" --description "LFID Group Client ID" --value "$LF_GROUP_CLIENT_ID" --type "String" --overwrite
+fi
+
+if [ -n "$LF_GROUP_CLIENT_SECRET" ]; then
+    echo "updating lf group client secret: $LF_GROUP_CLIENT_SECRET"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-lf-group-client-secret-$ENV" --description "LFID Group Client Secret" --value "$LF_GROUP_CLIENT_SECRET" --type "String" --overwrite
+fi
+
+if [ -n "$LF_GROUP_REFRESH_TOKEN" ]; then
+    echo "updating lf group refresh token: $LF_GROUP_REFRESH_TOKEN"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-lf-group-refresh-token-$ENV" --description "LFID Group Refresh Token" --value "$LF_GROUP_REFRESH_TOKEN" --type "String" --overwrite
+fi
+
+if [ -n "$LF_GROUP_CLIENT_URL" ]; then
+    echo "updating lf group client url: $LF_GROUP_CLIENT_URL"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-lf-group-client-url-$ENV" --description "LFID Group Client URL" --value "$LF_GROUP_CLIENT_URL" --type "String" --overwrite
 fi
