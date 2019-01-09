@@ -32,7 +32,7 @@ def main():
     private_key_value = get_private_key_str(key_file_path)
 
     response = ssm_client.put_parameter(
-        Name='gh-app-private-key-{}'.format(stage_name),
+        Name='cla-gh-app-private-key-{}'.format(stage_name),
         Description='A gh app private key used to sign jwt',
         Value=private_key_value,
         Overwrite=True,

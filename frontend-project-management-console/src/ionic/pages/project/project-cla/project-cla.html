@@ -1,6 +1,6 @@
 <ion-header>
   <ion-navbar>
-    <button ion-button menuToggle>
+    <button ion-button [clear]="true" (click)="backToProjects()">
       <ion-icon name="arrow-back"></ion-icon>
     </button>
     <ion-title (click)="backToProjects()">Back to all Projects</ion-title>

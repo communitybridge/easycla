@@ -92,7 +92,7 @@ export class ClaService {
   // creates a new account for Gerrit users, with email. 
  postOrGetUserForGerrit() {
     return this.http
-      .securedPost(this.claApiUrl + "/v2/user/gerrit")
+      .securedPost(this.claApiUrl + "/v1/user/gerrit")
       .map(res => res.json());
   }
 

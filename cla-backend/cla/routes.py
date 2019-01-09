@@ -100,7 +100,7 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     """
     return cla.controllers.user.get_user(user_email=user_email)
 
-@hug.post('/user/gerrit', versions=2)
+@hug.post('/user/gerrit', versions=1)
 def post_or_get_user_gerrit(user: cla_user):
     """
     GET: /user/gerrit
@@ -115,7 +115,7 @@ def post_or_get_user_gerrit(user: cla_user):
 def get_user_github(user_github_id: hug.types.number, user: cla_user):
     """
     GET: /user/github/{user_github_id}
-ç
+
     Returns the requested user data based on user GitHub ID.
 
     TODO: Should this be locked down more? Staff only?
@@ -870,7 +870,11 @@ def post_project_document_template(user: cla_user,
                                    document_name: hug.types.text,
                                    document_preamble: hug.types.text,
                                    document_legal_entity_name: hug.types.text,
-                                   template_name: hug.types.one_of(['CNCFTemplate']),
+                                   template_name: hug.types.one_of([
+                                       'CNCFTemplate',
+                                       'OpenBMCTemplate',
+                                       'TungstenFabricTemplate'
+                                    ]),
                                    new_major_version=None):
     """
     POST: /project/{project_id}/document/template/{document_type}
@@ -1152,7 +1156,7 @@ def received_activity(body,
 #
 # GitHub Routes.
 #
-@hug.get('/github/organizations', versions=2)
+@hug.get('/github/organizations', versions=1)
 def get_github_organizations(user: cla_user):
     """
     GET: /github/organizations
@@ -1162,7 +1166,7 @@ def get_github_organizations(user: cla_user):
     return cla.controllers.github.get_organizations()
 
 
-@hug.get('/github/organizations/{organization_name}', versions=2)
+@hug.get('/github/organizations/{organization_name}', versions=1)
 def get_github_organization(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}
@@ -1172,7 +1176,7 @@ def get_github_organization(user: cla_user, organization_name: hug.types.text):
     return cla.controllers.github.get_organization(organization_name)
 
 
-@hug.get('/github/organizations/{organization_name}/repositories', versions=2)
+@hug.get('/github/organizations/{organization_name}/repositories', versions=1)
 def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}/repositories
@@ -1182,7 +1186,7 @@ def get_github_organization_repos(user: cla_user, organization_name: hug.types.t
     return cla.controllers.github.get_organization_repositories(organization_name)
 
 
-@hug.post('/github/organizations', versions=2,
+@hug.post('/github/organizations', versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
 def post_github_organization(user: cla_user,
@@ -1203,7 +1207,7 @@ def post_github_organization(user: cla_user,
                                                       organization_installation_id)
 
 
-@hug.delete('/github/organizations/{organization_name}', versions=2)
+@hug.delete('/github/organizations/{organization_name}', versions=1)
 def delete_repository(user: cla_user, organization_name: hug.types.text):
     """
     DELETE: /github/organizations/{organization_name}
@@ -1256,7 +1260,7 @@ def github_app_activity(body, request, response):
     #     return {'status': 'Not Authorized'}
 
 
-@hug.post('/github/validate', versions=2)
+@hug.post('/github/validate', versions=1)
 def github_organization_validation(body):
     """
     POST: /github/validate
@@ -1266,7 +1270,7 @@ def github_organization_validation(body):
     return cla.controllers.github.validate_organization(body)
 
 
-@hug.get('/github/check/namespace/{namespace}', versions=2)
+@hug.get('/github/check/namespace/{namespace}', versions=1)
 def github_check_namespace(namespace):
     """
     GET: /github/check/namespace/{namespace}
@@ -1275,7 +1279,7 @@ def github_check_namespace(namespace):
     """
     return cla.controllers.github.check_namespace(namespace)
 
-@hug.get('/github/get/namespace/{namespace}', versions=2)
+@hug.get('/github/get/namespace/{namespace}', versions=1)
 def github_get_namespace(namespace):
     """
     GET: /github/get/namespace/{namespace}
@@ -1287,36 +1291,18 @@ def github_get_namespace(namespace):
 
 #
 # Gerrit instance routes
-# 
-@hug.get('/gerrit/{gerrit_id}', versions=2)
-def get_gerrit_instance(gerrit_id: hug.types.uuid):
-    """
-    GET: /gerrit/{gerrit_id}
-
-    Returns all CLA Gerrit instances.
-    """
-    return cla.controllers.gerrit.get_gerrit(gerrit_id)
-    
-@hug.get('/gerrits', versions=2)
-def get_gerrit_instances():
-    """
-    GET: /gerrit/{gerrit_id}
-
-    Returns all CLA Gerrit instances.
-    """
-    return cla.controllers.gerrit.get_gerrits()
-
-@hug.get('/project/{project_id}/gerrit', versions=2)
+#
+@hug.get('/project/{project_id}/gerrits', versions=1)
 def get_project_gerrit_instance(project_id: hug.types.uuid):
     """
-    GET: /project/gerrits
+    GET: /project/{project_id}/gerrits
 
     Returns all CLA Gerrit instances. 
     """
     return cla.controllers.gerrit.get_gerrit_by_project_id(project_id)
 
 
-@hug.post('/gerrit', versions=2)
+@hug.post('/gerrit', versions=1)
 def create_gerrit_instance(project_id: hug.types.uuid,
                              gerrit_name: hug.types.text, 
                              gerrit_url: cla.hug_types.url,
@@ -1330,7 +1316,7 @@ def create_gerrit_instance(project_id: hug.types.uuid,
     return cla.controllers.gerrit.create_gerrit(project_id, gerrit_name, gerrit_url, group_id_icla, group_id_ccla)
 
 
-@hug.delete('/gerrit/{gerrit_id}', versions=2)
+@hug.delete('/gerrit/{gerrit_id}', versions=1)
 def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     """
     DELETE: /gerrit/{gerrit_id}
