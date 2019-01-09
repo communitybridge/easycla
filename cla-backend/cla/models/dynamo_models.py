@@ -4,6 +4,7 @@ Easily access CLA models backed by DynamoDB using pynamodb.
 
 import uuid
 import os
+import re
 import base64
 import datetime
 import dateutil.parser
@@ -194,6 +195,7 @@ class DocumentTabModel(MapAttribute):
     document_tab_position_y = NumberAttribute()
     document_tab_width = NumberAttribute(default=200)
     document_tab_height = NumberAttribute(default=20)
+    document_tab_is_locked = BooleanAttribute(default=False)
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -207,7 +209,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_position_x=None,
                  document_tab_position_y=None,
                  document_tab_width=None,
-                 document_tab_height=None):
+                 document_tab_height=None,
+                 document_tab_is_locked=False):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
@@ -223,6 +226,7 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_width = document_tab_width
         if document_tab_height is not None:
             self.model.document_tab_height = document_tab_height
+        self.model.document_tab_is_locked = document_tab_is_locked
 
     def to_dict(self):
         return {'document_tab_type': self.model.document_tab_type,
@@ -232,7 +236,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_position_x': self.model.document_tab_position_x,
                 'document_tab_position_y': self.model.document_tab_position_y,
                 'document_tab_width': self.model.document_tab_width,
-                'document_tab_height': self.model.document_tab_height}
+                'document_tab_height': self.model.document_tab_height,
+                'document_tab_is_locked': self.model.document_tab_is_locked}
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -258,6 +263,9 @@ class DocumentTab(model_interfaces.DocumentTab):
     def get_document_tab_height(self):
         return self.model.document_tab_height
 
+    def get_document_tab_is_locked(self):
+        return self.model.document_tab_is_locked
+
     def set_document_tab_type(self, tab_type):
         self.model.document_tab_type = tab_type
 
@@ -281,6 +289,9 @@ class DocumentTab(model_interfaces.DocumentTab):
 
     def set_document_tab_height(self, tab_height):
         self.model.document_tab_height = tab_height
+
+    def set_document_tab_is_locked(self, is_locked):
+        self.model.document_tab_is_locked = is_locked
 
 class DocumentModel(MapAttribute):
     """
@@ -464,7 +475,7 @@ class ProjectModel(BaseModel):
     class Meta:
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'      
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
@@ -558,16 +569,29 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def get_project_individual_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_individual_documents()
         num_documents = len(document_models)
+
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
+
         if major_version is None:
-            major_version, minor_version = cla.utils.get_last_version(document_models)
+            version = self._get_latest_version(document_models)
+            document = version[2]
+            return document
+
         # TODO Need to optimize this on the DB side.
         for document in document_models:
             if document.get_document_major_version() == major_version and \
                document.get_document_minor_version() == minor_version:
                 return document
+
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_individual_document(self):
+        document_models = self.get_project_individual_documents()
+        version = self._get_latest_version(document_models)
+        document = version[2]
+
+        return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_corporate_documents()
@@ -582,6 +606,44 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                document.get_document_minor_version() == minor_version:
                 return document
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_corporate_document(self):
+        """
+        Helper function to return the latest corporate document belonging to a project.
+
+        :return: Latest CCLA document object for this project.
+        :rtype: cla.models.model_instances.Document
+        """
+        document_models = self.get_project_corporate_documents()
+        version = self._get_latest_version(document_models)
+        document = version[2]
+
+        return document
+
+    def _get_latest_version(self, documents):
+        """
+        Helper function to get the last version of the list of documents provided.
+
+        :param documents: List of documents to check.
+        :type documents: [cla.models.model_interfaces.Document]
+        :return: 2-item tuple containing (major, minor) version number.
+        :rtype: tuple
+        """
+        last_major = 0 # 0 will be returned if no document was found.
+        last_minor = -1 # -1 will be returned if no document was found.
+        current_document = None
+        for document in documents:
+            current_major = document.get_document_major_version()
+            current_minor = document.get_document_minor_version()
+            if current_major > last_major:
+                last_major = current_major
+                last_minor = current_minor
+                current_document = document
+                continue
+            if current_major == last_major and current_minor > last_minor:
+                last_minor = current_minor
+                current_document = document
+        return (last_major, last_minor, current_document)
 
     def get_project_ccla_requires_icla_signature(self):
         return self.model.project_ccla_requires_icla_signature
@@ -699,7 +761,7 @@ class UserModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-users'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -833,6 +895,54 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                                                        user_ccla_company_id=company_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_latest_signature(self, project_id, company_id=None):
+        """
+        Helper function to get a user's latest signature for a project.
+
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :param company_id: The company ID if looking for an employee signature.
+        :type company_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+                signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
+
+    def is_whitelisted(self, company):
+        """
+        Helper function to determine whether at least one of the user's email
+        addresses are whitelisted for a particular company.
+
+        :param company: The company to check against.
+        :type company: cla.models.model_interfaces.Company
+        :return: True if at least one email is whitelisted, False otherwise.
+        :rtype: bool
+        """
+        emails = self.get_user_emails()
+        whitelist = company.get_company_whitelist()
+        patterns = company.get_company_whitelist_patterns()
+        for email in emails:
+            if email in whitelist:
+                return True
+        for pattern in patterns:
+            preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
+            pat = re.compile(preprocessed_pattern)
+            for email in emails:
+                if pat.match(email) != None:
+                    return True
+        return False
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
@@ -973,7 +1083,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     class Meta:
         """Meta class for Signature."""
         table_name = 'cla-{}-signatures'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1242,7 +1352,7 @@ class CompanyModel(BaseModel):
     class Meta:
         """Meta class for Company."""
         table_name = 'cla-{}-companies'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
@@ -1363,6 +1473,30 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
 
+    def get_latest_signature(self, project_id):
+        """
+        Helper function to get a company's latest signature for a project.
+
+        :param company: The company object to check for.
+        :type company: cla.models.model_interfaces.Company
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_company_signatures(project_id=project_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+            signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
+
     def get_company_by_external_id(self, company_external_id):
         company_generator = self.model.company_external_id_index.query(company_external_id)
         for company_model in company_generator:
@@ -1401,7 +1535,7 @@ class StoreModel(Model):
     class Meta:
         """Meta class for Store."""
         table_name = 'cla-{}-store'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1455,7 +1589,7 @@ class GitHubOrgModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-github-orgs'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
@@ -1562,7 +1696,7 @@ class GerritModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-gerrit-instances'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     gerrit_id  = UnicodeAttribute(hash_key=True)
     project_id = UnicodeAttribute()
@@ -1676,7 +1810,7 @@ class UserPermissionsModel(BaseModel):
     class Meta:
         """Meta class for User Permissions."""
         table_name = 'cla-{}-user-permissions'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     user_id = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
