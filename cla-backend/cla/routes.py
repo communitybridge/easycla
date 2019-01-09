@@ -1340,6 +1340,15 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
 
 
+@hug.get('/gerrit/{gerrit_id}/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
+def get_agreement_html(gerrit_id: hug.types.uuid, contract_type):
+    """
+    GET: /gerrit/{project_id}/{contract_type}/agreementUrl.html
+
+    Generates an appropriate HTML file for display in the Gerrit console.
+    """
+    return cla.controllers.gerrit.get_agreement_html(gerrit_id, contract_type)
+
     
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
