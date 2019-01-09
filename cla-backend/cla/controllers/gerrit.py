@@ -80,3 +80,10 @@ def delete_gerrit(gerrit_id):
         return {'errors': {'gerrit_id': str(err)}}
     gerrit.delete()
     return {'success': True}
+
+
+def get_agreement_html(gerrit_id, contract_type):
+    return """
+        <html>
+            <a href="https://contributor.dev.lfcla.com/gerrit/{gerrit_id}/{contract_type}">Click on the link to Sign the CLA Agreement. </a>
+        <html>""".format(gerrit_id=gerrit_id, contract_type=contract_type)
