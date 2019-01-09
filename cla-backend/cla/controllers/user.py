@@ -70,6 +70,7 @@ def create_user(user_email, user_name=None, user_company_id=None, user_github_id
     user.save()
     return user.to_dict()
 
+
 def update_user(user_id, user_email=None, user_name=None,
                 user_company_id=None, user_github_id=None):
     """
@@ -316,3 +317,19 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
         last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
         last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
     return last_signature
+
+def get_or_create_user(user):
+    # Helper for gerrit users to retrieve or create user id as necessary. 
+    lf_username = user.data['https://sso.linuxfoundation.org/claims/username']
+    existingUser = get_user_instance().get_user_by_email(str(user.email).lower())
+    if existingUser is None:
+        new_user = get_user_instance()
+        new_user.set_user_id(str(uuid.uuid4()))
+        new_user.set_user_email(str(user.email).lower())
+        # Nickname refers to LF account name 
+        new_user.set_user_lf_username(str(lf_username).lower())
+        new_user.save()
+        return user.to_dict()    
+    if existingUser.get_user_lf_username() is None:
+        existingUser.set_user_lf_username(lf_username)
+    return existingUser.to_dict() 

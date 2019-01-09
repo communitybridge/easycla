@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs/Observable";
-import { KeycloakService } from "./keycloak/keycloak.service";
 import { AuthService } from "./auth.service";
 
 @Injectable()
@@ -17,7 +16,6 @@ export class RolesService {
   private projectSet = new Set(["cla-admin-project-mvp"]); // Here we may need to generate this array from Salesforce API ??
 
   constructor(
-    private keycloak: KeycloakService,
     private authService: AuthService
   ) {
     this.rolesFetched = false;
@@ -44,6 +42,7 @@ export class RolesService {
   //////////////////////////////////////////////////////////////////////////////
 
   getUserRolesPromise() {
+    console.log("Get UserRole Promise.");
     if (this.authService.isAuthenticated()) {
       return this.authService
         .getIdToken()
@@ -55,13 +54,13 @@ export class RolesService {
             let customRules = tokenParsed[this.LF_CUSTOM_CLAIM];
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
-              isPmcUser: this.isInProjectSet(customRules, this.projectSet),
+              isPmcUser: false,
               isStaffInc: false,
               isDirectorInc: false,
               isStaffDirect: false,
               isDirectorDirect: false,
               isExec: false,
-              isAdmin: this.isInArray(customRules, this.CLA_PROJECT_ADMIN)
+              isAdmin: false,
             };
             console.log(this.userRoles);
             return this.userRoles;

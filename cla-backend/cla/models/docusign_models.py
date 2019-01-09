@@ -8,16 +8,24 @@ import uuid
 import urllib.request
 import xml.etree.ElementTree as ET
 import pydocusign
+from cla.controllers.lf_group import LFGroup
 import json
 from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
-from cla.models.dynamo_models import Signature, GitHubOrg, User, Project, Company
+from cla.models.dynamo_models import Signature, GitHubOrg, User,
+                                        Project, Company, Gerrit
 
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
 username = os.environ.get('DOCUSIGN_USERNAME', '')
 password = os.environ.get('DOCUSIGN_PASSWORD', '')
 integrator_key = os.environ.get('DOCUSIGN_INTEGRATOR_KEY', '')
+
+lf_group_client_url = os.environ.get('LF_GROUP_CLIENT_URL', '')
+lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
+lf_group_client_secret = os.environ.get('LF_GROUP_CLIENT_SECRET', '')
+lf_group_refresh_token = os.environ.get('LF_GROUP_REFRESH_TOKEN', '')
+lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
 
 class DocuSign(signing_service_interface.SigningService):
     """
@@ -109,17 +117,77 @@ class DocuSign(signing_service_interface.SigningService):
         # Create new Signature object
         signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
-                                signature_document_minor_version=document.get_document_minor_version(),
                                 signature_document_major_version=document.get_document_major_version(),
+                                signature_document_minor_version=document.get_document_minor_version(),
                                 signature_reference_id=user_id,
                                 signature_reference_type='user',
                                 signature_type='cla',
+                                signature_return_url_type = 'Github',
                                 signature_signed=False,
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_callback_url=callback_url)
 
         # Populate sign url
+        self.populate_sign_url(signature, callback_url)
+
+        # Save signature
+        signature.save()
+
+        return {'user_id': str(user_id),
+                'project_id': project_id,
+                'signature_id': signature.get_signature_id(),
+                'sign_url': signature.get_signature_sign_url()}
+
+    def request_individual_signature_gerrit(self, project_id, user_id, return_url=None):
+        cla.log.info('Creating new Gerrit signature for user %s on project %s', user_id, project_id)
+
+        # Ensure this is a valid user
+        user_id = str(user_id)
+        try:
+            user = User()
+            user.load(user_id)
+        except DoesNotExist as err:
+            cla.log.warning('User ID not found when trying to request a signature: %s',
+                            user_id)
+            return {'errors': {'user_id': str(err)}}
+
+        # Ensure the project exists
+        try:
+            project = Project()
+            project.load(project_id)
+        except DoesNotExist as err:
+            cla.log.error('Project ID not found when trying to request a signature: %s',
+                        project_id)
+            return {'errors': {'project_id': str(err)}}
+
+        try:
+            gerrit = Gerrit().get_gerrit_by_project_id(project_id)
+        except DoesNotExist as err:
+            return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
+
+        try:
+            document = project.get_project_individual_document()
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+
+        callback_url = self._generate_individual_signature_callback_url_gerrit(user_id)
+
+        # Create new Signature object
+        signature = Signature(signature_id=str(uuid.uuid4()),
+                                signature_project_id=project_id,
+                                signature_document_major_version=document.get_document_major_version(),
+                                signature_document_minor_version=document.get_document_minor_version(),
+                                signature_reference_id=user_id,
+                                signature_reference_type='user',
+                                signature_type='cla',
+                                signature_return_url_type = 'Gerrit',
+                                signature_gerrit_reference_id = gerrit.get_gerrit_id(),
+                                signature_signed=False,
+                                signature_approved=True,
+                                signature_return_url=return_url,
+                                signature_callback_url=callback_url)
+
         self.populate_sign_url(signature, callback_url)
 
         # Save signature
@@ -220,6 +288,13 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('Project requires ICLA signature from employee - PR has been left unchanged')
 
         return new_signature.to_dict()
+
+    def _generate_individual_signature_callback_url_gerrit(self, user_id):
+        """
+        Helper function to get a user's active signature callback URL for Gerrit
+
+        """
+        return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
 
     def _get_corporate_signature_callback_url(self, project_id, company_id):
         """
@@ -480,6 +555,59 @@ class DocuSign(signing_service_interface.SigningService):
             self.send_signed_document(envelope_id, user)
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
+
+    def signed_individual_callback_gerrit(self, content):
+        cla.log.debug('Docusign Gerrit ICLA signed callback POST data: %s', content)
+        tree = ET.fromstring(content)
+        # Get envelope ID.
+        envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
+        # Assume only one signature per signature.
+        signature_id = tree.find('.//' + self.TAGS['client_user_id']).text
+        signature = cla.utils.get_signature_instance()
+        try:
+            signature.load(signature_id)
+        except DoesNotExist:
+            cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
+                          content)
+            return
+        # Iterate through recipients and update the signature signature status if changed.
+        elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
+                         '/' + self.TAGS['recipient_status'])
+        status = elem.find(self.TAGS['status']).text
+        if status == 'Completed' and not signature.get_signature_signed():
+            cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
+                         signature_id)
+            # Get User
+            user = cla.utils.get_user_instance()
+            user.load(signature.get_signature_reference_id())
+
+            # Get Gerrit id of signature
+            gerrit = cla.utils.get_gerrit_instance()
+            try:
+                gerrit.load(signature.get_signature_gerrit_reference_id())
+            except DoesNotExist:
+                cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
+                            content)
+                return
+            
+            # Get Gerrit Group ID
+            group_id = gerrit.get_group_id_icla()
+            lf_username = user.get_lf_username()
+
+            # Add the user to the LDAP Group
+            try:
+                lf_group.add_user_to_group(group_id, lf_username)
+            except Exception as e:
+                cla.log.error('Failed in adding user to the LDAP group.', content, e)
+                return
+
+            # Save signature in DB
+            signature.set_signature_signed(True)
+            signature.save()
+
+            # Send user their signed document.
+            self.send_signed_document(envelope_id, user)
+
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """
