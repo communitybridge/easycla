@@ -19,7 +19,7 @@ def request_individual_signature(project_id, user_id, return_url_type, return_ur
     :param user_id: The ID of the user that will sign.
     :type user_id: string
     :param return_url_type: Refers to the return url provider type: Gerrit or Github
-    :type user_id: string
+    :type return_url_type: string
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
@@ -43,7 +43,7 @@ def request_corporate_signature(project_id, company_id, send_as_email=False,
     """
     return get_signing_service().request_corporate_signature(str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url)
 
-def request_employee_signature(project_id, company_id, user_id, return_url=None):
+def request_employee_signature(project_id, company_id, user_id, return_url_type, return_url=None):
     """
     Creates placeholder signature object that represents a user signing a CCLA as an employee.
 
@@ -53,9 +53,16 @@ def request_employee_signature(project_id, company_id, user_id, return_url=None)
     :type company_id: string
     :param user_id: The ID of the user.
     :type user_id: string
+    :param return_url_type: Refers to the return url provider type: Gerrit or Github
+    :type return_url_type: string
     :param return_url: The URL to return the user to after signing is complete.
     """
-    return get_signing_service().request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
+
+    signing_service = get_signing_service()
+    if return_url_type == "Gerrit":
+        return signing_service.request_employee_signature_gerrit(str(project_id), str(company_id), str(user_id), return_url)
+    elif return_url_type == "Github":
+        return signing_service.request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
 
 
 def send_authority_email(company_name, project_name, authority_name, authority_email):
