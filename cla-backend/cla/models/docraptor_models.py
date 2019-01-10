@@ -7,7 +7,7 @@ import os
 from cla.models.pdf_service_interface import PDFService
 
 docraptor_key = os.environ['DOCRAPTOR_API_KEY']
-docraptor_test_mode = os.environ.get('DOCRAPTOR_TEST_MODE') is not None
+docraptor_test_mode = os.environ.get('DOCRAPTOR_TEST_MODE', '').lower() == 'true'
 
 class DocRaptor(PDFService):
     """
