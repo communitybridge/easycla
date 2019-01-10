@@ -255,8 +255,7 @@ class DocuSign(signing_service_interface.SigningService):
         if return_url is None:
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
 
-        # return_url may still be empty at this point - the console will deal with it.
-
+        # return_url may still be empty at this point - the console will deal with it
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
                                 signature_document_minor_version=0,
@@ -268,7 +267,6 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id)
-
         new_signature.save()
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
@@ -289,6 +287,90 @@ class DocuSign(signing_service_interface.SigningService):
 
         return new_signature.to_dict()
 
+    def request_employee_signature_gerrit(self, project_id, company_id, user_id, return_url=None):
+        # Ensure the project exists
+        project = Project()
+        try:
+            project.load(str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+        # Ensure the company exists
+        company = Company()
+        try:
+            company.load(str(company_id))
+        except DoesNotExist as err:
+            return {'errors': {'company_id': str(err)}}
+        # Ensure the user exists
+        user = User()
+        try:
+            user.load(str(user_id))
+        except DoesNotExist as err:
+            return {'errors': {'user_id': str(err)}}
+        # Ensure the company actually has a CCLA with this project.
+        existing_signatures = Signature().get_signatures_by_project(
+            project_id,
+            signature_reference_type='company',
+            signature_reference_id=company.get_company_id()
+        )
+        if len(existing_signatures) < 1:
+            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+        # Ensure user hasn't already signed this signature.
+        existing_signatures = Signature().get_signatures_by_project(
+            project_id,
+            signature_reference_type='user',
+            signature_reference_id=user_id,
+            signature_user_ccla_company_id=company_id
+        )
+        if len(existing_signatures) > 0:
+            cla.log.info('Employee signature already exists for this project')
+            return existing_signatures[0].to_dict()
+
+        # Ensure user is whitelisted for this company.
+        if not user.is_whitelisted(company):
+            return {'errors': {'company_whitelist':
+                            'No user email whitelisted for this company'}}
+
+        # Assume this company is the user's employer.
+        user.set_user_company_id(str(company_id))
+        user.save()
+
+        # Add this user to the approperiate LDAP Group 
+        # Get Gerrit id of signature
+        gerrit = cla.utils.get_gerrit_instance()
+        try:
+            gerrit.get_gerrit_by_project_id(project_id)
+        except DoesNotExist:
+            cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
+            return
+
+        gerrit_id = gerrit.get_gerrit_id()
+        # Get Gerrit Group ID
+        group_id = gerrit.get_group_id_ccla()
+        lf_username = user.get_user_lf_username()
+
+        # Add the user to the LDAP Group
+        try:
+            lf_group.add_user_to_group(group_id, lf_username)
+        except Exception as e:
+            cla.log.error('Failed in adding user to the LDAP group.%s', e)
+            return
+
+        new_signature = Signature(signature_id=str(uuid.uuid4()),
+                                signature_project_id=project_id,
+                                signature_document_minor_version=0,
+                                signature_document_major_version=0,
+                                signature_reference_id=user_id,
+                                signature_reference_type='user',
+                                signature_type='cla',
+                                signature_signed=True,
+                                signature_approved=True,
+                                signature_return_url=return_url,
+                                signature_user_ccla_company_id=company_id,
+                                signature_gerrit_reference_id=gerrit_id)
+        new_signature.save()
+
+        return new_signature.to_dict() 
+
     def _generate_individual_signature_callback_url_gerrit(self, user_id):
         """
         Helper function to get a user's active signature callback URL for Gerrit
@@ -296,7 +378,7 @@ class DocuSign(signing_service_interface.SigningService):
         """
         return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
 
-    def _get_corporate_signature_callback_url(self, project_id, company_id):
+    def _get_corporate_signature_callback_url(self, project_id, company_id, return_url_type):
         """
         Helper function to get the callback_url of a CCLA signature.
 
@@ -307,10 +389,13 @@ class DocuSign(signing_service_interface.SigningService):
         :return: The callback URL hit by the signing provider once the signature is complete.
         :rtype: string
         """
-        return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
+        if return_url_type == "Github":
+            return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
+        elif return_url_type == "Gerrit":
+            return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/corporate/' + str(project_id) + '/' + str(company_id)
 
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
-    authority_name=None, authority_email=None, return_url=None,):
+    authority_name=None, authority_email=None, return_url_type=None, return_url=None):
         cla.log.info('Validating company %s on project %s', company_id, project_id)
 
         # Ensure the project exists
@@ -357,7 +442,7 @@ class DocuSign(signing_service_interface.SigningService):
                     cla.log.info('CCLA signature object still missing signature')
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
-                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
+                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id), return_url_type)
                     self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -376,7 +461,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_signed=False,
                                 signature_approved=True)
 
-        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
+        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id), return_url_type)
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
 
@@ -592,13 +677,13 @@ class DocuSign(signing_service_interface.SigningService):
             
             # Get Gerrit Group ID
             group_id = gerrit.get_group_id_icla()
-            lf_username = user.get_lf_username()
+            lf_username = user.get_user_lf_username()
 
             # Add the user to the LDAP Group
             try:
                 lf_group.add_user_to_group(group_id, lf_username)
             except Exception as e:
-                cla.log.error('Failed in adding user to the LDAP group.', content, e)
+                cla.log.error('Failed in adding user to the LDAP group: %s', e)
                 return
 
             # Save signature in DB

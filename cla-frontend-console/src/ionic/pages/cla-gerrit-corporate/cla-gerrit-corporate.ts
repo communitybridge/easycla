@@ -79,6 +79,7 @@ export class ClaGerritCorporatePage {
     this.authService.getUserInfo().then(res => {
       this.claService.postOrGetUserForGerrit().subscribe(user => {
           this.userId = user.user_id;
+          console.log(this.userId);
           // get signatureIntent object, similar to the Github flow. 
           //this.postSignatureRequest();
       })
@@ -139,9 +140,9 @@ export class ClaGerritCorporatePage {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
+      userId: this.userId
     });
     modal.present();
-    this.dismiss();
   }
 
 
