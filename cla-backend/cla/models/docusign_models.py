@@ -465,6 +465,10 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
 
+        # Get Gerrit reference ID for signing a Gerrit Project.
+        if return_url_type == "Gerrit": 
+            signature.set_signature_gerrit_reference_id(return_url_type)
+
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
@@ -726,6 +730,33 @@ class DocuSign(signing_service_interface.SigningService):
 
             signature = company.get_latest_signature(str(project_id))
             signature_id = signature.get_signature_id()
+
+        # Check if the callback is for a Gerrit Instance
+        gerrit_id = signature.get_signature_gerrit_reference_id()    
+        if gerrit_id is not None: 
+            # Get User
+            user = cla.utils.get_user_instance()
+            user.load(signature.get_signature_reference_id())
+
+            # Get Gerrit id of signature
+            gerrit = cla.utils.get_gerrit_instance()
+            try:
+                gerrit.load(gerrit_id)
+            except DoesNotExist:
+                cla.log.error('DocuSign Gerrit CCLA callback returned signed info on invalid signature: %s',
+                            content)
+                return
+            
+            # Get Gerrit Group ID
+            group_id = gerrit.get_group_id_ccla()
+            lf_username = user.get_user_lf_username()
+
+            # Add the user to the LDAP Group (corporate authority)
+            try:
+                lf_group.add_user_to_group(group_id, lf_username)
+            except Exception as e:
+                cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                return
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
