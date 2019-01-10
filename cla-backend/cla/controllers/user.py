@@ -326,7 +326,6 @@ def get_or_create_user(user):
         new_user = get_user_instance()
         new_user.set_user_id(str(uuid.uuid4()))
         new_user.set_user_email(str(user.email).lower())
-        # Nickname refers to LF account name 
         new_user.set_user_lf_username(str(lf_username).lower())
         new_user.save()
         return user.to_dict()    

@@ -618,7 +618,8 @@ export class ClaService {
       {
         'project_id': <project-id>,
         'company_id': <company-id>,
-        'user_id': <user-id>
+        'user_id': <user-id>,
+        'return_url_type' "Github" / "Gerrit"
       }
      */
     return this.http
