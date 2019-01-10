@@ -1326,8 +1326,8 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
 
 
-@hug.get('/project/{project_id}/gerrit/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
-def get_agreement_html(project_id: hug.types.uuid, contract_type):
+@hug.get('/gerrit/{project_id}/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
+def get_agreement_html(project_id: hug.types.uuid, contract_type: hug.types.text):
     """
     GET: /gerrit/{project_id}/{contract_type}/agreementUrl.html
 
