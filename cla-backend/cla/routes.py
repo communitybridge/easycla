@@ -963,16 +963,22 @@ def request_corporate_signature(project_id: hug.types.uuid,
                                 send_as_email=False,
                                 authority_name=None, 
                                 authority_email=None,
+                                return_url_type=None, 
                                 return_url=None):
     """
     POST: /request-corporate-signature
 
     DATA: {'project_id': 'some-project-id',
            'company_id': 'some-company-id',
+           'send_as_email': 'boolean', 
+           'authority_name': 'string',
+           'authority_email': 'string',
            'return_url': <optional>}
 
     Creates a new signature given project and company IDs. The manager will be redirected to the
     return_url once signature is complete.
+    TThe send_as_email flag determines whether to send the signing document because the signer
+    may not necessarily be a corporate authority with signing privileges. 
 
     Returns a dict of the format:
 
@@ -985,7 +991,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url)
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
@@ -1326,14 +1332,14 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     return cla.controllers.gerrit.delete_gerrit(gerrit_id)
 
 
-@hug.get('/gerrit/{project_id}/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
-def get_agreement_html(project_id: hug.types.uuid, contract_type: hug.types.text):
+@hug.get('/gerrit/{gerrit_id}/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
+def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text):
     """
-    GET: /gerrit/{project_id}/{contract_type}/agreementUrl.html
+    GET: /gerrit/{gerrit_id}/{contract_type}/agreementUrl.html
 
     Generates an appropriate HTML file for display in the Gerrit console.
     """
-    return cla.controllers.gerrit.get_agreement_html(project_id, contract_type)
+    return cla.controllers.gerrit.get_agreement_html(gerrit_id, contract_type)
 
     
 # Session Middleware
