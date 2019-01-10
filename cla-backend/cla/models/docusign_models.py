@@ -162,7 +162,9 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'project_id': str(err)}}
 
         try:
-            gerrit = Gerrit().get_gerrit_by_project_id(project_id)
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+            if gerrits.length > 0:
+                gerrit = gerrits[0]
         except DoesNotExist as err:
             return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
 
@@ -336,9 +338,10 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Add this user to the approperiate LDAP Group 
         # Get Gerrit id of signature
-        gerrit = cla.utils.get_gerrit_instance()
         try:
-            gerrit.get_gerrit_by_project_id(project_id)
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+            if gerrits.length > 0:
+                gerrit = gerrits[0]
         except DoesNotExist:
             cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
             return
@@ -467,7 +470,14 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Get Gerrit reference ID for signing a Gerrit Project.
         if return_url_type == "Gerrit": 
-            signature.set_signature_gerrit_reference_id(return_url_type)
+            gerrits = Gerrit()
+            try:
+                gerrits = gerrits.get_gerrit_by_project_id(project_id)
+                if gerrits.length > 0:
+                    gerrit = gerrits[0]
+            except DoesNotExist as err:
+                return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
+            signature.set_signature_gerrit_reference_id(gerrit.get_gerrit_id())
 
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
