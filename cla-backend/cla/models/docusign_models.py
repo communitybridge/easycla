@@ -294,18 +294,21 @@ class DocuSign(signing_service_interface.SigningService):
             project.load(str(project_id))
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
+
         # Ensure the company exists
         company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
+
         # Ensure the user exists
         user = User()
         try:
             user.load(str(user_id))
         except DoesNotExist as err:
             return {'errors': {'user_id': str(err)}}
+
         # Ensure the company actually has a CCLA with this project.
         existing_signatures = Signature().get_signatures_by_project(
             project_id,
@@ -314,6 +317,7 @@ class DocuSign(signing_service_interface.SigningService):
         )
         if len(existing_signatures) < 1:
             return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+
         # Ensure user hasn't already signed this signature.
         existing_signatures = Signature().get_signatures_by_project(
             project_id,
