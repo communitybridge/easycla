@@ -8,6 +8,7 @@ CORP_CONSOLE_LINK='';
 CLA_BUCKET_LOGO_URL='';
 CLA_SIGNATURE_FILES_BUCKET='';
 SES_SENDER_EMAIL_ADDRESS='';
+DOCRAPTOR_TEST_MODE='';
 
 # LFID LDAP OAuth2 Credentials
 LF_GROUP_CLIENT_ID='';
@@ -51,6 +52,11 @@ fi
 if [ -n "$SES_SENDER_EMAIL_ADDRESS" ]; then
     echo "updating ses sender email address: $SES_SENDER_EMAIL_ADDRESS"
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-ses-sender-email-address-$ENV" --description "SES Sender Email Address" --value "$SES_SENDER_EMAIL_ADDRESS" --type "String" --overwrite
+fi
+
+if [ -n "$DOCRAPTOR_TEST_MODE" ]; then
+    echo "updating docraptor test mode: $DOCRAPTOR_TEST_MODE"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-docraptor-test-mode-$ENV" --description "Docraptor test mode" --value "$DOCRAPTOR_TEST_MODE" --type "String" --overwrite
 fi
 
 if [ -n "$LF_GROUP_CLIENT_ID" ]; then
