@@ -10,15 +10,17 @@ import { Restricted } from "../../decorators/restricted";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'cla/gerrit/project/:projectId/individual'
+  segment: 'cla/gerrit/:gerritId/individual'
 })
 @Component({
   selector: 'cla-gerrit-individual',
   templateUrl: 'cla-gerrit-individual.html'
 })
 export class ClaGerritIndividualPage {
+  gerritId: string;
   projectId: string;
   project: any;
+  gerrit: any; 
   userId: string;
   user: any;
   signatureIntent: any;
@@ -37,8 +39,8 @@ export class ClaGerritIndividualPage {
     private keycloak: KeycloakService,
   ) {
     this.getDefaults();
-    this.projectId = navParams.get('projectId');
-    localStorage.setItem("gerritProjectId", this.projectId);
+    this.gerritId = navParams.get('gerritId');
+    localStorage.setItem("gerritId", this.gerritId);
     localStorage.setItem("gerritClaType", "ICLA");
   }
 
@@ -54,8 +56,7 @@ export class ClaGerritIndividualPage {
   }
 
   ngOnInit() {
-    this.getProject(this.projectId);
-    this.getUserInfo();
+    this.getProject(this.gerritId);
   }
 
   ionViewCanEnter(){
@@ -69,17 +70,33 @@ export class ClaGerritIndividualPage {
   ngAfterViewInit() {
   }
 
-  getUserInfo() {
-    // retrieve userInfo from auth0 service
-    this.authService.getUserInfo().then(res => {
-      this.claService.postOrGetUserForGerrit().subscribe(user => {
-          this.userId = user.user_id;
-          // get signatureIntent object, similar to the Github flow. 
-          this.postSignatureRequest();
-      })
+
+
+  getProject(gerritId) {
+    //retrieve projectId from this Gerrit
+    this.claService.getGerrit(gerritId).subscribe(gerrit => {
+      this.gerrit = gerrit;
+      this.projectId = gerrit.project_id;
+      
+      //retrieve project info with project Id
+      this.claService.getProject(gerrit.project_id).subscribe(project => {
+        this.project = project;
+
+          // retrieve userInfo from auth0 service
+            this.claService.postOrGetUserForGerrit().subscribe(user => {
+                this.userId = user.user_id;
+
+                // get signatureIntent object, similar to the Github flow. 
+                this.postSignatureRequest();
+            }); 
+        if (!this.project.logoRef) {
+          this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
+        }
+      });
     })
   }
-  
+
+    
   postSignatureRequest() {
     let signatureRequest = {
       'project_id': this.projectId,
@@ -94,15 +111,6 @@ export class ClaGerritIndividualPage {
       //   sign_url: docusign.com/some-docusign-url
       // }
       this.signature = response;
-    });
-  }
-
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe(response => {
-      this.project = response;
-      if (!this.project.logoRef) {
-        this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
-      }
     });
   }
   

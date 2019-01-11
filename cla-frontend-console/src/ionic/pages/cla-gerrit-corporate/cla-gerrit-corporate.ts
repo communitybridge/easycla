@@ -10,7 +10,7 @@ import { Restricted } from "../../decorators/restricted";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'cla/gerrit/project/:projectId/corporate'
+  segment: 'cla/gerrit/:gerritId/corporate'
 })
 @Component({
   selector: 'cla-gerrit-corporate',
@@ -21,6 +21,7 @@ import { Restricted } from "../../decorators/restricted";
 export class ClaGerritCorporatePage {
   loading: any;
   projectId: string;
+  gerritId: string;
   userId: string;
 
   signature: string;
@@ -38,8 +39,10 @@ export class ClaGerritCorporatePage {
     private authService: AuthService,
     private keycloak: KeycloakService,
   ) {
-    this.projectId = navParams.get('projectId');
+    this.gerritId = navParams.get('gerritId');
     this.getDefaults();
+    localStorage.setItem("gerritId", this.gerritId);
+    localStorage.setItem("gerritClaType", "CCLA");
   }
 
   getDefaults() {
@@ -66,11 +69,14 @@ export class ClaGerritCorporatePage {
   }
 
   getCompanies() {
-    this.claService.getProjectCompanies(this.projectId).subscribe(response => {
-      if (response) {
-        this.companies = response;
-      }
-      this.loading.companies = false;
+    this.claService.getGerrit(this.gerritId).subscribe(gerrit => {
+      this.projectId = gerrit.project_id;
+      this.claService.getProjectCompanies(gerrit.project_id).subscribe(response => {
+        if (response) {
+          this.companies = response;
+        }
+        this.loading.companies = false;
+      });
     });
   }
 
@@ -86,48 +92,35 @@ export class ClaGerritCorporatePage {
     })
   }
 
-
-  
-  postSignatureRequest() {
-    let signatureRequest = {
-      'project_id': this.projectId,
-      'user_id': this.userId,
-      'return_url_type': "Gerrit",
-    };
-    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
-      this.signature = response;
-    });
-  }
-
   openClaEmployeeCompanyConfirmPage(company) {
     let signatureRequest = {
       project_id: this.projectId,
-      company_id: company.company_id
+      company_id: company.company_id,
+      return_url_type: "Gerrit",
     };
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
         if (response.errors.hasOwnProperty('company_whitelist')) {
-          // When the user is not whitelisted with the company: return {'errors': {'company_whitelist': 'User email (<email>) is not whitelisted for this company'}}
-          this.openClaEmployeeCompanyTroubleshootPage(company);
           return;
         }
         if (response.errors.hasOwnProperty('missing_ccla')) {
-          // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-          // The user shouldn't get here if they are using the console properly
           return;
         }
       } else {
-        // No Errors, expect normal signature response
         this.signature = response;
 
       this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
-        projectId: this.projectId
+        projectId: this.projectId,
+        signingType: "Gerrit",
+        userId: this.userId,
+        companyId: company.company_id,
       });
       }
     });
   } 
+
 
 
   openClaNewCompanyModal() {
@@ -143,14 +136,6 @@ export class ClaGerritCorporatePage {
       userId: this.userId
     });
     modal.present();
-  }
-
-
-  openClaEmployeeCompanyTroubleshootPage(company) {
-    this.navCtrl.push('ClaEmployeeCompanyTroubleshootPage', {
-      projectId: this.projectId,
-      companyId: company.company_id,
-    });
   }
   
 }

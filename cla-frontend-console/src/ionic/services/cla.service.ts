@@ -637,6 +637,7 @@ export class ClaService {
         'project_id': <project-id>,
         'company_id': <company-id>,
         'return_url': <optional-return-url>,
+        'return_url_type': "Github" / "Gerrit"
       }
      */
     return this.http
@@ -825,6 +826,13 @@ export class ClaService {
     return this.http
       .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
+  }
+
+  getGerrit(gerritId) {
+    return this.http
+    .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
+    .map(res => res.json());
+
   }
 
   //////////////////////////////////////////////////////////////////////////////
