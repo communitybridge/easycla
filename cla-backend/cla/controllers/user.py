@@ -245,7 +245,7 @@ Please click the following link to sign up for Corporate CLA and add this user t
 %s
 
 - Linux Foundation CLA System
-''' %(admin_name, user.get_user_name(), user.get_user_email(), cla.conf['CORPORATE_CONSOLE_ENDPOINT'])
+''' %(admin_name, user.get_user_name(), user.get_user_email(), 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
     recipient = admin_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
