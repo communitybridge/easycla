@@ -1105,7 +1105,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_reference_index = ReferenceSignatureIndex()
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
-    signature_gerrit_reference_id = UnicodeAttribute(null=True)
+    signature_gerrit_reference_id = UnicodeSetAttribute(default=set())
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1790,7 +1790,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             gerrit.model = gerrit_model
             gerrits.append(gerrit)
         if len(gerrits) >= 1: 
-            return gerrits[0]
+            return gerrits
         else :
             return None
 

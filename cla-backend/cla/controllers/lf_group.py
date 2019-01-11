@@ -42,6 +42,9 @@ class LFGroup():
         }
         data = { "username": username }
         add_user_url = os.path.join(self.lf_base_url, 'rest/auth0/og/', str(group_id))
-        response = requests.put(add_user_url, headers=headers, data=json.dumps(data)).json()
+        response = requests.put(add_user_url, headers=headers, data=json.dumps(data))
 
-        return response
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {'error' : 'failed to add a user to the ldap group.'}
