@@ -162,7 +162,7 @@ class GitHub(repository_service_interface.RepositoryService):
         return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
-        console_endpoint = cla.conf['CLA_CONSOLE_ENDPOINT']
+        console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
@@ -182,7 +182,7 @@ class GitHub(repository_service_interface.RepositoryService):
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
         # Generate console URL
-        console_url = console_endpoint + \
+        console_url = 'https://' + console_endpoint + \
                       '/#/cla/project/' + project_id + \
                       '/user/' + user.get_user_id() + \
                       '?redirect=' + redirect
