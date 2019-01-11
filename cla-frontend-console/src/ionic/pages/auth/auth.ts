@@ -10,14 +10,14 @@ import { RolesService } from "../../services/roles.service";
 export class AuthPage {
 
   userRoles: any;
-  projectId: string;
+  gerritId: string;
   claType: string;
 
   constructor(public navCtrl: NavController, 
     public navParams: NavParams,
     public authService: AuthService, 
     public rolesService: RolesService) {
-    this.projectId = localStorage.getItem("gerritProjectId");
+    this.gerritId = localStorage.getItem("gerritId");
     this.claType = localStorage.getItem("gerritClaType");
   }
 
@@ -26,12 +26,12 @@ export class AuthPage {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
         if (userRoles.isAuthenticated) { 
             if(this.claType == "ICLA") {
-              this.navCtrl.setRoot('ClaGerritIndividualPage', {projectId: this.projectId});
+              this.navCtrl.setRoot('ClaGerritIndividualPage', {gerritId: this.gerritId});
             }
             else if(this.claType == "CCLA") { 
-              this.navCtrl.setRoot('ClaGerritCorporatePage', {projectId: this.projectId});
+              this.navCtrl.setRoot('ClaGerritCorporatePage', {gerritId: this.gerritId});
             }
-            localStorage.removeItem("gerritProjectId");
+            localStorage.removeItem("gerritId");
             localStorage.removeItem("gerritClaType");
 
         }

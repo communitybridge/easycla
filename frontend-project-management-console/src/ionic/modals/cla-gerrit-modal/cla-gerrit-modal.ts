@@ -53,7 +53,6 @@ export class ClaGerritModal {
 
 
   submit() {
-    console.log("dummy check for charlies build");
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     if (!this.form.valid) {
