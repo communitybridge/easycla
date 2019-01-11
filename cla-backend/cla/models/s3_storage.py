@@ -10,7 +10,6 @@ import cla
 from cla.models import storage_service_interface
 
 stage = os.environ.get('STAGE', '')
-region = os.environ.get('REGION', '')
 signature_files_bucket = os.environ.get('CLA_SIGNATURE_FILES_BUCKET', '')
 
 class S3Storage(storage_service_interface.StorageService):
@@ -28,7 +27,7 @@ class S3Storage(storage_service_interface.StorageService):
         if stage == 'local':
             return boto3.client('s3', endpoint_url='http://localhost:8001')
 
-        return boto3.client('s3', region)
+        return boto3.client('s3')
 
     def store(self, filename, data):
         cla.log.info('Storing filename content in S3 bucket %s: %s', self.bucket, filename)
