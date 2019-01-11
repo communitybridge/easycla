@@ -90,9 +90,9 @@ export class ClaService {
   }
 
   // creates a new account for Gerrit users, with email. 
- postOrGetUserForGerrit(data) {
+ postOrGetUserForGerrit() {
     return this.http
-      .post(this.claApiUrl + "/v2/user/gerrit" ,data)
+      .securedPost(this.claApiUrl + "/v1/user/gerrit")
       .map(res => res.json());
   }
 
@@ -170,15 +170,6 @@ export class ClaService {
   getUserSignatureIntent(userId) {
     return this.http
       .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
-      .map(res => res.json());
-  }
-
-  /**
-   * /user/{user_id}/active-signature
-   **/
-  getUserSignatureIntentGerrit(userId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/user/gerrit/" + userId + "/active-signature")
       .map(res => res.json());
   }
 
@@ -627,7 +618,8 @@ export class ClaService {
       {
         'project_id': <project-id>,
         'company_id': <company-id>,
-        'user_id': <user-id>
+        'user_id': <user-id>,
+        'return_url_type' "Github" / "Gerrit"
       }
      */
     return this.http
@@ -645,6 +637,7 @@ export class ClaService {
         'project_id': <project-id>,
         'company_id': <company-id>,
         'return_url': <optional-return-url>,
+        'return_url_type': "Github" / "Gerrit"
       }
      */
     return this.http
@@ -833,6 +826,13 @@ export class ClaService {
     return this.http
       .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
+  }
+
+  getGerrit(gerritId) {
+    return this.http
+    .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
+    .map(res => res.json());
+
   }
 
   //////////////////////////////////////////////////////////////////////////////
