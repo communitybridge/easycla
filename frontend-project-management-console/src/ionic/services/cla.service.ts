@@ -708,7 +708,7 @@ export class ClaService {
 
   getGithubOrganizations() {
     return this.http
-      .get(this.claApiUrl + "/v2/github/organizations")
+      .get(this.claApiUrl + "/v1/github/organizations")
       .map(res => res.json());
   }
 
@@ -720,7 +720,7 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/v2/github/organizations", organization)
+      .post(this.claApiUrl + "/v1/github/organizations", organization)
       .map(res => res.json());
   }
 
@@ -730,7 +730,7 @@ export class ClaService {
 
   getGithubGetNamespace(namespace) {
     return this.http
-      .get(this.claApiUrl + "/v2/github/get/namespace/" + namespace)
+      .get(this.claApiUrl + "/v1/github/get/namespace/" + namespace)
       .map(res => res.json());
   }
 
@@ -750,13 +750,13 @@ export class ClaService {
 
   getGithubOrganization(organizationName) {
     return this.http
-      .get(this.claApiUrl + "/v2/github/organizations/" + organizationName)
+      .get(this.claApiUrl + "/v1/github/organizations/" + organizationName)
       .map(res => res.json());
   }
 
   deleteGithubOrganization(organizationName) {
     return this.http
-      .delete(this.claApiUrl + "/v2/github/organizations/" + organizationName)
+      .delete(this.claApiUrl + "/v1/github/organizations/" + organizationName)
       .map(res => res.json());
   }
 
@@ -807,7 +807,7 @@ export class ClaService {
 
   postGithubValidate() {
     return this.http
-      .post(this.claApiUrl + "/v2/github/validate")
+      .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
   }
 
@@ -838,21 +838,21 @@ export class ClaService {
   }
 
 
-  getGerritInstances(projectId) {
+  getGerritInstance(projectId) {
     return this.http
-      .get(this.claApiUrl + `/v2/project/${projectId}/gerrits`)
+      .get(this.claApiUrl + `/v1/project/${projectId}/gerrits`)
       .map(res => res.json())
   }
 
   deleteGerritInstance(gerritId) {
     return this.http
-      .delete(this.claApiUrl + `/v2/gerrit/${gerritId}`)
+      .delete(this.claApiUrl + `/v1/gerrit/${gerritId}`)
       .map(res => res.json())
   }
 
   postGerritInstance(gerrit) {
     return this.http
-      .post(this.claApiUrl + "/v2/gerrit", gerrit)
+      .post(this.claApiUrl + "/v1/gerrit", gerrit)
       .map(res => res.json());
   }
 

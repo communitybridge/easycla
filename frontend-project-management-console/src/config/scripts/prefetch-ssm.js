@@ -1,8 +1,8 @@
 const fs = require('fs');
 const RetrieveSSMValues = require('./read-ssm');
-const configVarArray = ['auth0-clientId', 'auth0-domain', 'cinco-api-url', 'cla-api-url', 'analytics-api-url', 'gh-app-public-link'];
+const configVarArray = ['auth0-clientId', 'auth0-domain', /*'cinco-api-url',*/ 'cla-api-url', /*'analytics-api-url',*/ 'gh-app-public-link', 'cla-logo-s3-url'];
 const region = 'us-east-1';
-const profile = 'lf-cla';
+const profile = process.env.AWS_PROFILE;
 const stageEnv = process.env.STAGE_ENV;
 
 async function prefetchSSM () {

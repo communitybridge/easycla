@@ -100,7 +100,7 @@ def get_user_email(user_email: cla.hug_types.email, user: cla_user):
     """
     return cla.controllers.user.get_user(user_email=user_email)
 
-@hug.post('/user/gerrit', versions=2)
+@hug.post('/user/gerrit', versions=1)
 def post_or_get_user_gerrit(user: cla_user):
     """
     GET: /user/gerrit
@@ -870,7 +870,11 @@ def post_project_document_template(user: cla_user,
                                    document_name: hug.types.text,
                                    document_preamble: hug.types.text,
                                    document_legal_entity_name: hug.types.text,
-                                   template_name: hug.types.one_of(['CNCFTemplate']),
+                                   template_name: hug.types.one_of([
+                                       'CNCFTemplate',
+                                       'OpenBMCTemplate',
+                                       'TungstenFabricTemplate'
+                                    ]),
                                    new_major_version=None):
     """
     POST: /project/{project_id}/document/template/{document_type}
@@ -959,16 +963,22 @@ def request_corporate_signature(project_id: hug.types.uuid,
                                 send_as_email=False,
                                 authority_name=None, 
                                 authority_email=None,
+                                return_url_type=None, 
                                 return_url=None):
     """
     POST: /request-corporate-signature
 
     DATA: {'project_id': 'some-project-id',
            'company_id': 'some-company-id',
+           'send_as_email': 'boolean', 
+           'authority_name': 'string',
+           'authority_email': 'string',
            'return_url': <optional>}
 
     Creates a new signature given project and company IDs. The manager will be redirected to the
     return_url once signature is complete.
+    TThe send_as_email flag determines whether to send the signing document because the signer
+    may not necessarily be a corporate authority with signing privileges. 
 
     Returns a dict of the format:
 
@@ -981,7 +991,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url)
+    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
@@ -1020,21 +1030,16 @@ def post_individual_signed(body,
     return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)
 
 
-@hug.post('/signed/gerrit/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
-def post_individual_signed(body,
-                           installation_id: hug.types.number,
-                           github_repository_id: hug.types.number,
-                           change_request_id: hug.types.number):
+@hug.post('/signed/gerrit/individual/{user_id}', versions=2)
+def post_individual_signed_gerrit(body,
+                           user_id: hug.types.uuid):
     """
-    POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
+    POST: /signed/gerritindividual/{user_id}
 
-    TODO: Need to protect this endpoint somehow - at the very least ensure it's coming from
-    DocuSign and the data hasn't been tampered with.
-
-    Callback URL from signing service upon ICLA signature.
+    Callback URL from signing service upon ICLA signature for a Gerrit user.
     """
     content = body.read()
-    return cla.controllers.signing.post_individual_signed(content, installation_id, github_repository_id, change_request_id)    
+    return cla.controllers.signing.post_individual_signed_gerrit(content, user_id)    
 
 @hug.post('/signed/corporate/{project_id}/{company_id}', versions=2)
 def post_corporate_signed(body,
@@ -1157,7 +1162,7 @@ def received_activity(body,
 #
 # GitHub Routes.
 #
-@hug.get('/github/organizations', versions=2)
+@hug.get('/github/organizations', versions=1)
 def get_github_organizations(user: cla_user):
     """
     GET: /github/organizations
@@ -1167,7 +1172,7 @@ def get_github_organizations(user: cla_user):
     return cla.controllers.github.get_organizations()
 
 
-@hug.get('/github/organizations/{organization_name}', versions=2)
+@hug.get('/github/organizations/{organization_name}', versions=1)
 def get_github_organization(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}
@@ -1177,7 +1182,7 @@ def get_github_organization(user: cla_user, organization_name: hug.types.text):
     return cla.controllers.github.get_organization(organization_name)
 
 
-@hug.get('/github/organizations/{organization_name}/repositories', versions=2)
+@hug.get('/github/organizations/{organization_name}/repositories', versions=1)
 def get_github_organization_repos(user: cla_user, organization_name: hug.types.text):
     """
     GET: /github/organizations/{organization_name}/repositories
@@ -1187,7 +1192,7 @@ def get_github_organization_repos(user: cla_user, organization_name: hug.types.t
     return cla.controllers.github.get_organization_repositories(organization_name)
 
 
-@hug.post('/github/organizations', versions=2,
+@hug.post('/github/organizations', versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
 def post_github_organization(user: cla_user,
@@ -1208,7 +1213,7 @@ def post_github_organization(user: cla_user,
                                                       organization_installation_id)
 
 
-@hug.delete('/github/organizations/{organization_name}', versions=2)
+@hug.delete('/github/organizations/{organization_name}', versions=1)
 def delete_repository(user: cla_user, organization_name: hug.types.text):
     """
     DELETE: /github/organizations/{organization_name}
@@ -1261,7 +1266,7 @@ def github_app_activity(body, request, response):
     #     return {'status': 'Not Authorized'}
 
 
-@hug.post('/github/validate', versions=2)
+@hug.post('/github/validate', versions=1)
 def github_organization_validation(body):
     """
     POST: /github/validate
@@ -1271,7 +1276,7 @@ def github_organization_validation(body):
     return cla.controllers.github.validate_organization(body)
 
 
-@hug.get('/github/check/namespace/{namespace}', versions=2)
+@hug.get('/github/check/namespace/{namespace}', versions=1)
 def github_check_namespace(namespace):
     """
     GET: /github/check/namespace/{namespace}
@@ -1280,7 +1285,7 @@ def github_check_namespace(namespace):
     """
     return cla.controllers.github.check_namespace(namespace)
 
-@hug.get('/github/get/namespace/{namespace}', versions=2)
+@hug.get('/github/get/namespace/{namespace}', versions=1)
 def github_get_namespace(namespace):
     """
     GET: /github/get/namespace/{namespace}
@@ -1292,36 +1297,27 @@ def github_get_namespace(namespace):
 
 #
 # Gerrit instance routes
-# 
+#
+@hug.get('/project/{project_id}/gerrits', versions=1)
+def get_project_gerrit_instance(project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/gerrits
+
+    Returns all CLA Gerrit instances for this project.  
+    """
+    return cla.controllers.gerrit.get_gerrit_by_project_id(project_id)
+
 @hug.get('/gerrit/{gerrit_id}', versions=2)
 def get_gerrit_instance(gerrit_id: hug.types.uuid):
     """
-    GET: /gerrit/{gerrit_id}
+    GET: /gerrit/gerrit_id
 
-    Returns all CLA Gerrit instances.
+    Returns Gerrit instance with the given gerrit id.
     """
     return cla.controllers.gerrit.get_gerrit(gerrit_id)
-    
-@hug.get('/gerrits', versions=2)
-def get_gerrit_instances():
-    """
-    GET: /gerrit/{gerrit_id}
-
-    Returns all CLA Gerrit instances.
-    """
-    return cla.controllers.gerrit.get_gerrits()
-
-@hug.get('/project/{project_id}/gerrits', versions=2)
-def get_project_gerrit_instances(project_id: hug.types.uuid):
-    """
-    GET: /project/gerrits
-
-    Returns all CLA Gerrit instances. 
-    """
-    return cla.controllers.gerrit.get_gerrits_by_project_id(project_id)
 
 
-@hug.post('/gerrit', versions=2)
+@hug.post('/gerrit', versions=1)
 def create_gerrit_instance(project_id: hug.types.uuid,
                              gerrit_name: hug.types.text, 
                              gerrit_url: cla.hug_types.url,
@@ -1335,7 +1331,7 @@ def create_gerrit_instance(project_id: hug.types.uuid,
     return cla.controllers.gerrit.create_gerrit(project_id, gerrit_name, gerrit_url, group_id_icla, group_id_ccla)
 
 
-@hug.delete('/gerrit/{gerrit_id}', versions=2)
+@hug.delete('/gerrit/{gerrit_id}', versions=1)
 def delete_gerrit_instance(gerrit_id: hug.types.uuid):
     """
     DELETE: /gerrit/{gerrit_id}
@@ -1346,9 +1342,9 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
 
 
 @hug.get('/gerrit/{gerrit_id}/{contract_type}/agreementUrl.html', versions=2, output=hug.output_format.html)
-def get_agreement_html(gerrit_id: hug.types.uuid, contract_type):
+def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text):
     """
-    GET: /gerrit/{project_id}/{contract_type}/agreementUrl.html
+    GET: /gerrit/{gerrit_id}/{contract_type}/agreementUrl.html
 
     Generates an appropriate HTML file for display in the Gerrit console.
     """

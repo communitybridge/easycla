@@ -5,3 +5,4 @@ cla_config.py
 .dynamodb
 .serverless
 env.json
+_env.json

@@ -416,6 +416,7 @@ def get_project_latest_individual_document(project_id):
     major, minor = get_last_version(document_models)
     return project.get_project_individual_document(major, minor)
 
+# TODO Heller remove
 def get_project_latest_corporate_document(project_id):
     """
     Helper function to return the latest corporate document belonging to a project.
@@ -452,34 +453,6 @@ def get_last_version(documents):
         if current_major == last_major and current_minor > last_minor:
             last_minor = current_minor
     return (last_major, last_minor)
-
-def get_user_latest_signature(user, project_id, company_id=None):
-    """
-    Helper function to get a user's latest signature for a project.
-
-    :param user: The user object to check for.
-    :type user: cla.models.model_interfaces.User
-    :param project_id: The ID of the project to check for.
-    :type project_id: string
-    :param company_id: The company ID if looking for an employee signature.
-    :type company_id: string
-    :return: The latest versioned signature object if it exists.
-    :rtype: cla.models.model_interfaces.Signature or None
-    """
-    signatures = user.get_user_signatures(project_id=project_id, company_id=company_id)
-    latest = None
-    for signature in signatures:
-        if latest is None:
-            latest = signature
-            continue
-        if signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
-            latest = signature
-            continue
-        if signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
-           signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
-            latest = signature
-            continue
-    return latest
 
 def user_signed_project_signature(user, project_id, latest_major_version=True):
     """
@@ -557,6 +530,7 @@ def get_user_signature_by_github_repository(installation_id, user, company_id=No
     signature = get_user_latest_signature(user, project_id, company_id=company_id)
     return signature
 
+# TODO Heller remove
 def get_company_latest_signature(company, project_id):
     """
     Helper function to get a company's latest signature for a project.
@@ -932,26 +906,6 @@ def get_individual_signature_callback_url(user_id, metadata=None):
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])
 
-def get_individual_signature_callback_url_gerrit(user_id):
-    """
-    Helper function to get a user's active signature callback URL for Gerrit
-
-    """
-    return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
-
-def get_corporate_signature_callback_url(project_id, company_id):
-    """
-    Helper function to get the callback_url of a CCLA signature.
-
-    :param project_id: The ID of the project this CCLA is for.
-    :type project_id: string
-    :param company_id: The ID of the company signing the CCLA.
-    :type company_id: string
-    :return: The callback URL hit by the signing provider once the signature is complete.
-    :rtype: string
-    """
-    return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
-
 def request_individual_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
     Helper function send the user off to sign an signature based on the repository.
@@ -1007,32 +961,6 @@ def change_icon(provider, signed=False): # pylint: disable=unused-argument
     if signed:
         return 'cla/resources/cla-signed.svg'
     return 'cla/resources/cla-unsigned.svg'
-
-def user_whitelisted(user, company):
-    """
-    Helper function to determine whether at least one of the user's email
-    addresses are whitelisted for a particular company.
-
-    :param user: The user to check.
-    :type user: cla.models.model_interfaces.User
-    :param company: The company to check against.
-    :type company: cla.models.model_interfaces.Company
-    :return: True if at least one email is whitelisted, False otherwise.
-    :rtype: bool
-    """
-    emails = user.get_user_emails()
-    whitelist = company.get_company_whitelist()
-    patterns = company.get_company_whitelist_patterns()
-    for email in emails:
-        if email in whitelist:
-            return True
-    for pattern in patterns:
-        preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
-        pat = re.compile(preprocessed_pattern)
-        for email in emails:
-            if pat.match(email) != None:
-                return True
-    return False
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])
