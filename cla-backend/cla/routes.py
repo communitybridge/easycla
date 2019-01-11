@@ -1303,9 +1303,18 @@ def get_project_gerrit_instance(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/gerrits
 
-    Returns all CLA Gerrit instances. 
+    Returns all CLA Gerrit instances for this project.  
     """
     return cla.controllers.gerrit.get_gerrit_by_project_id(project_id)
+
+@hug.get('/gerrit/{gerrit_id}', versions=2)
+def get_gerrit_instance(gerrit_id: hug.types.uuid):
+    """
+    GET: /gerrit/gerrit_id
+
+    Returns Gerrit instance with the given gerrit id.
+    """
+    return cla.controllers.gerrit.get_gerrit(gerrit_id)
 
 
 @hug.post('/gerrit', versions=1)

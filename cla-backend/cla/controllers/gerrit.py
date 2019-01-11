@@ -19,14 +19,22 @@ lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secr
 def get_gerrit_by_project_id(project_id):
     gerrit = get_gerrit_instance()
     try:
-        gerrit = gerrit.get_gerrit_by_project_id(project_id)
+        gerrits = gerrit.get_gerrit_by_project_id(project_id)
     except DoesNotExist as err:
         return {'errors': {'a gerrit instance does not exist with the given project ID. ': str(err)}}
 
-    if gerrit is None:
+    if gerrits is None:
         return []
 
-    return [gerrit.to_dict()]
+    return [gerrit.to_dict() for gerrit in get_gerrit_instance().all()] 
+
+def get_gerrit(gerrit_id):
+    gerrit = get_gerrit_instance()
+    try:
+        gerrit.load(gerrit_id)
+    except DoesNotExist as err:
+        return {'errors': {'a gerrit instance does not exist with the given Gerrit ID. ': str(err)}}
+    return gerrit.to_dict()
 
 
 def create_gerrit(project_id, 
