@@ -343,28 +343,6 @@ class DocuSign(signing_service_interface.SigningService):
         user.set_user_company_id(str(company_id))
         user.save()
 
-        # Retrieve Gerrit Ids by Project reference ID
-        try:
-            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
-        except DoesNotExist:
-            cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
-            return
-
-        # Get lf_username from User 
-        lf_username = user.get_user_lf_username()
-        # Keep track of Gerrit Ids for the signature reference. 
-        gerrit_ids = []
-        for gerrit in gerrits:
-            # For every Gerrit Instance of this project, add the user to the LDAP Group.
-            group_id = gerrit.get_group_id_ccla()
-            # Add the user to the LDAP Group
-            try:
-                lf_group.add_user_to_group(group_id, lf_username)
-            except Exception as e:
-                cla.log.error('Failed in adding user to the LDAP group.%s', e)
-                return
-            # Apppend to list of gerrit ids
-            gerrit_ids.append(gerrit.get_gerrit_id())
 
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
@@ -376,9 +354,38 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_signed=True,
                                 signature_approved=True,
                                 signature_return_url=return_url,
-                                signature_user_ccla_company_id=company_id,
-                                signature_gerrit_reference_id=gerrit_ids)
+                                signature_user_ccla_company_id=company_id)
+
+        
+        # Retrieve Gerrits by Project reference ID
+        try:
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+        except DoesNotExist:
+            cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
+            return
+
+        # Get lf_username from User 
+        lf_username = user.get_user_lf_username()
+        # Keep track of Gerrit Ids for signature reference. 
+        gerrit_ids = []
+        for gerrit in gerrits:
+            gerrit_ids.append(gerrit.get_gerrit_id())
+
+        # Save the gerrit reference ids to signature
+        new_signature.set_signature_gerrit_reference_id(gerrit_ids)
+        # Save signature before adding user to the LDAP Group. 
         new_signature.save()
+
+        for gerrit in gerrits:
+            # For every Gerrit Instance of this project, add the user to the LDAP Group.
+            # this way we are able to keep track of signed signatures when user fails to be added to the LDAP GROUP.
+            group_id = gerrit.get_group_id_ccla()
+            # Add the user to the LDAP Group
+            try:
+                lf_group.add_user_to_group(group_id, lf_username)
+            except Exception as e:
+                cla.log.error('Failed in adding user to the LDAP group.%s', e)
+                return
 
         return new_signature.to_dict() 
 
@@ -697,6 +704,10 @@ class DocuSign(signing_service_interface.SigningService):
                             content)
                 return
             
+            # Save signature before adding user to LDAP Groups.
+            signature.set_signature_signed(True)
+            signature.save()
+
             for gerrit_id in gerrit_ids:
                 gerrit = cla.utils.get_gerrit_instance()
                 gerrit.load(gerrit_id)
@@ -711,9 +722,6 @@ class DocuSign(signing_service_interface.SigningService):
                     cla.log.error('Failed in adding user to the LDAP group: %s', e)
                     return
 
-            # Save signature in DB
-            signature.set_signature_signed(True)
-            signature.save()
 
             # Send user their signed document.
             self.send_signed_document(envelope_id, user)
@@ -752,32 +760,34 @@ class DocuSign(signing_service_interface.SigningService):
             signature = company.get_latest_signature(str(project_id))
             signature_id = signature.get_signature_id()
 
+
+        # Get User
+        user = cla.utils.get_user_instance()
+        user.load(signature.get_signature_reference_id())
+
         # Check if the callback is for a Gerrit Instance
-        gerrit_id = signature.get_signature_gerrit_reference_id()    
-        if gerrit_id is not None: 
-            # Get User
-            user = cla.utils.get_user_instance()
-            user.load(signature.get_signature_reference_id())
+        gerrit_ids = signature.get_signature_gerrit_reference_id()    
+        if len(gerrit_ids): 
+            for gerrit_id in gerrit_ids:
+                # Get Gerrit id of signature
+                gerrit = cla.utils.get_gerrit_instance()
+                try:
+                    gerrit.load(gerrit_id)
+                except DoesNotExist:
+                    cla.log.error('DocuSign Gerrit CCLA callback returned signed info on invalid signature: %s',
+                                content)
+                    return
+                
+                # Get Gerrit Group ID
+                group_id = gerrit.get_group_id_ccla()
+                lf_username = user.get_user_lf_username()
 
-            # Get Gerrit id of signature
-            gerrit = cla.utils.get_gerrit_instance()
-            try:
-                gerrit.load(gerrit_id)
-            except DoesNotExist:
-                cla.log.error('DocuSign Gerrit CCLA callback returned signed info on invalid signature: %s',
-                            content)
-                return
-            
-            # Get Gerrit Group ID
-            group_id = gerrit.get_group_id_ccla()
-            lf_username = user.get_user_lf_username()
-
-            # Add the user to the LDAP Group (corporate authority)
-            try:
-                lf_group.add_user_to_group(group_id, lf_username)
-            except Exception as e:
-                cla.log.error('Failed in adding user to the LDAP group: %s', e)
-                return
+                # Add the user to the LDAP Group (corporate authority)
+                try:
+                    lf_group.add_user_to_group(group_id, lf_username)
+                except Exception as e:
+                    cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                    return
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
