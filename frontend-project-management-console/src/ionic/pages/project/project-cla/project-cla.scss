@@ -174,4 +174,17 @@ project-cla {
     border-bottom: 1px solid lightgray;
     padding-bottom: 30px;
   }
+
+  .code_snippet {
+    padding: 15px;
+    background-color: #f3f3f3;
+    font-family: monospace;
+    margin-top: 20px;
+    font-size: 10px;
+  }
+
+  small {
+    margin-top: 20px;
+    display: block;
+  }
 }
