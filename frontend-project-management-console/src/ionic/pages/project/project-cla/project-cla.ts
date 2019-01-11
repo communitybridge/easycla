@@ -69,6 +69,7 @@ export class ProjectClaPage {
         this.claProjects = projects;
         this.loading.claProjects = false;
         for (let project of projects) {
+
           //Get Github Orgs. 
           this.claService
             .getProjectOrganizations(project.project_id)
@@ -91,6 +92,7 @@ export class ProjectClaPage {
                 }
               }
             });
+
             //Get Gerrit Instances
             this.claService
               .getGerritInstances(project.project_id)
