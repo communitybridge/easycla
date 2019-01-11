@@ -88,8 +88,12 @@ def delete_gerrit(gerrit_id):
 
 
 def get_agreement_html(project_id, contract_type):
-    base_url = cla.conf['CLA_CONSOLE_ENDPOINT']
+    contributor_base_url = cla.conf['CONTRIBUTOR_BASE_URL']
     return """
         <html>
-            <a href="{base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Click on the link to Sign the CLA Agreement. </a>
-        <html>""".format(base_url=base_url,project_id=project_id, contract_type=contract_type)
+            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Click on the link to Sign the CLA Agreement. </a>
+        <html>""".format(
+            contributor_base_url = contributor_base_url,
+            project_id = project_id,
+            contract_type = contract_type
+        )
