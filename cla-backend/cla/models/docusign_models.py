@@ -162,9 +162,14 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'project_id': str(err)}}
 
         try:
-            gerrit = Gerrit().get_gerrit_by_project_id(project_id)
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
         except DoesNotExist as err:
             return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
+
+        gerrit_ids = []
+        for gerrit in gerrits:
+            # Apppend to list of gerrit ids
+            gerrit_ids.append(gerrit.get_gerrit_id())
 
         try:
             document = project.get_project_individual_document()
@@ -182,7 +187,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_reference_type='user',
                                 signature_type='cla',
                                 signature_return_url_type = 'Gerrit',
-                                signature_gerrit_reference_id = gerrit.get_gerrit_id(),
+                                signature_gerrit_reference_id = gerrit_ids,
                                 signature_signed=False,
                                 signature_approved=True,
                                 signature_return_url=return_url,
@@ -338,26 +343,28 @@ class DocuSign(signing_service_interface.SigningService):
         user.set_user_company_id(str(company_id))
         user.save()
 
-        # Add this user to the approperiate LDAP Group 
-        # Get Gerrit id of signature
-        gerrit = cla.utils.get_gerrit_instance()
+        # Retrieve Gerrit Ids by Project reference ID
         try:
-            gerrit.get_gerrit_by_project_id(project_id)
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
         except DoesNotExist:
             cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
             return
 
-        gerrit_id = gerrit.get_gerrit_id()
-        # Get Gerrit Group ID
-        group_id = gerrit.get_group_id_ccla()
+        # Get lf_username from User 
         lf_username = user.get_user_lf_username()
-
-        # Add the user to the LDAP Group
-        try:
-            lf_group.add_user_to_group(group_id, lf_username)
-        except Exception as e:
-            cla.log.error('Failed in adding user to the LDAP group.%s', e)
-            return
+        # Keep track of Gerrit Ids for the signature reference. 
+        gerrit_ids = []
+        for gerrit in gerrits:
+            # For every Gerrit Instance of this project, add the user to the LDAP Group.
+            group_id = gerrit.get_group_id_ccla()
+            # Add the user to the LDAP Group
+            try:
+                lf_group.add_user_to_group(group_id, lf_username)
+            except Exception as e:
+                cla.log.error('Failed in adding user to the LDAP group.%s', e)
+                return
+            # Apppend to list of gerrit ids
+            gerrit_ids.append(gerrit.get_gerrit_id())
 
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
@@ -370,7 +377,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id,
-                                signature_gerrit_reference_id=gerrit_id)
+                                signature_gerrit_reference_id=gerrit_ids)
         new_signature.save()
 
         return new_signature.to_dict() 
@@ -471,7 +478,15 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Get Gerrit reference ID for signing a Gerrit Project.
         if return_url_type == "Gerrit": 
-            signature.set_signature_gerrit_reference_id(return_url_type)
+            try:
+                gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+            except DoesNotExist as err:
+                return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
+                
+            gerrit_ids = []
+            for gerrit in gerrits:
+                gerrit_ids.append(gerrit.get_gerrit_id())    
+            signature.set_signature_gerrit_reference_id(gerrit_ids)
 
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
@@ -675,24 +690,26 @@ class DocuSign(signing_service_interface.SigningService):
             user.load(signature.get_signature_reference_id())
 
             # Get Gerrit id of signature
-            gerrit = cla.utils.get_gerrit_instance()
             try:
-                gerrit.load(signature.get_signature_gerrit_reference_id())
+                gerrit_ids = signature.get_signature_gerrit_reference_id()
             except DoesNotExist:
                 cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
                             content)
                 return
             
-            # Get Gerrit Group ID
-            group_id = gerrit.get_group_id_icla()
-            lf_username = user.get_user_lf_username()
+            for gerrit_id in gerrit_ids:
+                gerrit = cla.utils.get_gerrit_instance()
+                gerrit.load(gerrit_id)
+                # Get Gerrit Group ID
+                group_id = gerrit.get_group_id_icla()
+                lf_username = user.get_user_lf_username()
 
-            # Add the user to the LDAP Group
-            try:
-                lf_group.add_user_to_group(group_id, lf_username)
-            except Exception as e:
-                cla.log.error('Failed in adding user to the LDAP group: %s', e)
-                return
+                # Add the user to the LDAP Group
+                try:
+                    lf_group.add_user_to_group(group_id, lf_username)
+                except Exception as e:
+                    cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                    return
 
             # Save signature in DB
             signature.set_signature_signed(True)
