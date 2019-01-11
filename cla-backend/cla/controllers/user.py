@@ -70,6 +70,7 @@ def create_user(user_email, user_name=None, user_company_id=None, user_github_id
     user.save()
     return user.to_dict()
 
+
 def update_user(user_id, user_email=None, user_name=None,
                 user_company_id=None, user_github_id=None):
     """
@@ -281,7 +282,7 @@ def get_user_project_last_signature(user_id, project_id):
         user.load(str(user_id))
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
-    last_signature = cla.utils.get_user_latest_signature(user, str(project_id))
+    last_signature = user.get_latest_signature(str(project_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
         latest_doc = cla.utils.get_project_latest_individual_document(str(project_id))
@@ -308,7 +309,7 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
         user.load(str(user_id))
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
-    last_signature = cla.utils.get_user_latest_signature(user, str(project_id), company_id=str(company_id))
+    last_signature = user.get_latest_signature(str(project_id), company_id=str(company_id))
     if last_signature is not None:
         last_signature = last_signature.to_dict()
         latest_doc = cla.utils.get_project_latest_corporate_document(str(project_id))
@@ -319,7 +320,16 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
 
 def get_or_create_user(user):
     # Helper for gerrit users to retrieve or create user id as necessary. 
+    lf_username = user.data['https://sso.linuxfoundation.org/claims/username']
     existingUser = get_user_instance().get_user_by_email(str(user.email).lower())
     if existingUser is None:
-        return create_user(user.email)
-    return existingUser.to_dict() 
+        new_user = get_user_instance()
+        new_user.set_user_id(str(uuid.uuid4()))
+        new_user.set_user_email(str(user.email).lower())
+        new_user.set_user_lf_username(str(lf_username).lower())
+        new_user.save()
+        return user.to_dict()    
+    if existingUser.get_user_lf_username() is None:
+        existingUser.set_user_lf_username(lf_username)
+        existingUser.save()
+    return existingUser.to_dict()

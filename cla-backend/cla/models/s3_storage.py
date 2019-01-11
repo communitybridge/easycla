@@ -10,7 +10,7 @@ import cla
 from cla.models import storage_service_interface
 
 stage = os.environ.get('STAGE', '')
-region = os.environ.get('REGION', '')
+signature_files_bucket = os.environ.get('CLA_SIGNATURE_FILES_BUCKET', '')
 
 class S3Storage(storage_service_interface.StorageService):
     """
@@ -18,28 +18,16 @@ class S3Storage(storage_service_interface.StorageService):
     """
     def __init__(self):
         self.bucket = None
-        self.access_key = None
-        self.secret_key = None
 
     def initialize(self, config):
-        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY'])
-        self.secret_key = os.environ.get('AWS_SECRET', config['S3_SECRET_KEY'])
-        self.bucket = 'cla-{}-files'.format(stage)
-
+        self.bucket = signature_files_bucket
 
     def _get_client(self):
         """Mockable method to get the S3 client."""
-        if stage == 'dev':
-            return boto3.client('s3',
-                                endpoint_url='http://localhost:8001',
-                                aws_access_key_id=self.access_key,
-                                aws_secret_access_key=self.secret_key)
-        return boto3.client('s3',
-                            region,
-                            aws_access_key_id=self.access_key,
-                            aws_secret_access_key=self.secret_key)
+        if stage == 'local':
+            return boto3.client('s3', endpoint_url='http://localhost:8001')
 
-
+        return boto3.client('s3')
 
     def store(self, filename, data):
         cla.log.info('Storing filename content in S3 bucket %s: %s', self.bucket, filename)
