@@ -8,7 +8,7 @@ GH_OAUTH_CLIENT_ID=''
 GH_OAUTH_SECRET=''
 GH_APP_PUBLIC_LINK=''
 GH_APP_WEBHOOK_SECRET=''
-GH_APP_PRIVATE_KEY=''
+GH_APP_PRIVATE_KEY_PATH='' # This is a filename
 
 ENV=''
 PROFILE=''
@@ -48,8 +48,7 @@ if [ -n "$GH_APP_WEBHOOK_SECRET" ]; then
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-webhook-secret-$ENV" --description "Github webhook secret" --value "$GH_APP_WEBHOOK_SECRET" --type "String" --overwrite
 fi
 
-# Use scripts/feed_pem_key_to_ssm.py instead
-if [ -n "$GH_APP_PRIVATE_KEY" ]; then
-    echo "updating private key: $GH_APP_PRIVATE_KEY"
-    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-private-key-$ENV" --description "Github private key" --value "$GH_APP_PRIVATE_KEY" --type "SecureString" --overwrite
+if [ -n "$GH_APP_PRIVATE_KEY_PATH" ]; then
+    echo "updating private key: $GH_APP_PRIVATE_KEY_PATH"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-private-key-$ENV" --description "Github private key" --value "file://$GH_APP_PRIVATE_KEY_PATH" --type "SecureString" --overwrite
 fi
