@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+import cla
 
 class LFGroup():
     def __init__(self, lf_base_url, client_id, client_secret, refresh_token):
@@ -16,16 +17,29 @@ class LFGroup():
             'scope': 'manage_groups'
         }
         oauth_url = os.path.join(self.lf_base_url, 'oauth2/token')
-        response = requests.post(oauth_url, data=data, auth=(self.client_id, self.client_secret)).json()
 
-        return response['access_token']
+        try:
+            response = requests.post(oauth_url, data=data, auth=(self.client_id, self.client_secret)).json()
+        except requests.exceptions.RequestException as e:
+            cla.log.error(e)
+            return None
+
+        return response.get('access_token')
 
     # get LDAP group 
     def get_group(self, group_id):
         access_token = self._get_access_token()
+        if access_token is None:
+            return {'error': 'Unable to retrieve access token'}
+
         headers = { 'Authorization': 'bearer ' + access_token }
         get_group_url = os.path.join(self.lf_base_url, 'rest/auth0/og/', str(group_id))
-        response = requests.get(get_group_url, headers=headers)
+
+        try:
+            response = requests.get(get_group_url, headers=headers)
+        except requests.exceptions.RequestException as e:
+            cla.log.error(e)
+            return {'error': 'Unable to get group'}
 
         if response.status_code == 200:
             return response.json()
@@ -35,6 +49,9 @@ class LFGroup():
     # add user to LDAP group
     def add_user_to_group(self, group_id, username): 
         access_token = self._get_access_token()
+        if access_token is None:
+            return {'error': 'Unable to retrieve access token'}
+
         headers = {
             'Authorization': 'bearer ' + access_token,
             'Content-Type': 'application/json',
@@ -42,7 +59,12 @@ class LFGroup():
         }
         data = { "username": username }
         add_user_url = os.path.join(self.lf_base_url, 'rest/auth0/og/', str(group_id))
-        response = requests.put(add_user_url, headers=headers, data=json.dumps(data))
+
+        try:
+            response = requests.put(add_user_url, headers=headers, data=json.dumps(data))
+        except requests.exceptions.RequestException as e:
+            cla.log.error(e)
+            return {'error': 'Unable to update group'}
 
         if response.status_code == 200:
             return response.json()
