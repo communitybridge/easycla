@@ -3,7 +3,10 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
+from falcon import HTTP_401
+
 import cla
+import cla.auth
 import cla.hug_types
 import cla.controllers.user
 import cla.controllers.project
@@ -17,7 +20,6 @@ import cla.controllers.gerrit
 
 import cla.salesforce
 
-from cla.auth import staff_required
 from cla.user import cla_user
 from cla.utils import get_supported_repository_providers, \
                       get_supported_document_content_types, \
@@ -50,6 +52,17 @@ def process_data(request, response, resource):
 #                      }
 #            }
 
+@hug.directive()
+def check_auth(request=None, **kwargs):
+    """Returns the authenticated user"""
+    return request and cla.auth.authenticate_user(request)
+
+@hug.exception(cla.auth.AuthError)
+def handle_auth_error(exception, response=None, **kwargs):
+    """Handles authentication errors"""
+    response.status = HTTP_401
+    return exception.response
+
 #
 # Health check route.
 #
@@ -67,20 +80,20 @@ def get_health(request):
 #
 # User routes.
 #
-@hug.get('/user', versions=1)
-@staff_required
-def get_users():
-    """
-    GET: /user
+# @hug.get('/user', versions=1)
+# def get_users():
+#     """
+#     GET: /user
 
-    Returns all CLA users.
-    """
-    # staff_verify(user)
-    return cla.controllers.user.get_users()
+#     Returns all CLA users.
+#     """
+#     # staff_verify(user)
+#     return cla.controllers.user.get_users()
 
 
 @hug.get('/user/{user_id}', versions=2)
-def get_user(user_id: hug.types.uuid):
+def get_user(hug_check_auth,
+                user_id: hug.types.uuid):
     """
     GET: /user/{user_id}
 
