@@ -26,7 +26,7 @@ def get_gerrit_by_project_id(project_id):
     if gerrits is None:
         return []
 
-    return [gerrit.to_dict() for gerrit in get_gerrit_instance().all()] 
+    return [gerrit.to_dict() for gerrit in gerrits] 
 
 def get_gerrit(gerrit_id):
     gerrit = get_gerrit_instance()
