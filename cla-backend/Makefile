@@ -32,5 +32,8 @@ run_lambda:
 
 .PHONY: deploy
 deploy:
+	# Stop deployment if env.json exists
+	test ! -s ./env.json || exit 1
+
 	source ~/.env/lf-cla/bin/activate; \
 	node_modules/.bin/serverless deploy --stage ${STAGE} --region us-east-1; \
