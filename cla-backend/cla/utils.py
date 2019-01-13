@@ -587,8 +587,7 @@ def get_redirect_uri(repository_service, installation_id, github_repository_id, 
               'github_repository_id': github_repository_id,
               'change_request_id': change_request_id}
     params = urllib.parse.urlencode(params)
-    return cla.conf['BASE_URL'] + '/v2/repository-provider/' + repository_service + \
-           '/oauth2_redirect?' + params
+    return 'https://{}/v2/repository-provider/{}/oauth2_redirect?{}'.format(cla.conf['API_BASE_URL'], repository_service, params)
 
 def get_full_sign_url(repository_service, installation_id, github_repository_id, change_request_id):
     """
@@ -609,8 +608,7 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
         'gitlab'.
     :type change_request_id: int
     """
-    return cla.conf['BASE_URL'] + '/v2/repository-provider/' + repository_service + '/sign/' + \
-           str(installation_id) + '/' + str(github_repository_id) + '/' + str(change_request_id)
+    return 'https://{}/v2/repository-provider/{}/sign/{}/{}/{}'.format(cla.conf['API_BASE_URL'], repository_service, str(installation_id), str(github_repository_id), str(change_request_id))
 
 def get_comment_badge(repository_type, all_signed, sign_url):
     """
@@ -625,7 +623,7 @@ def get_comment_badge(repository_type, all_signed, sign_url):
     :param sign_url: The URL for the user to click in order to initiate signing.
     :type sign_url: string
     """
-    badge_url = cla.conf['BASE_URL'] + '/v2/repository-provider/' + repository_type + '/icon.svg'
+    badge_url = 'https://{}/v2/repository-provider/{}/icon.svg'.format(cla.conf['API_BASE_URL'], repository_type)
     if all_signed:
         badge_url += '?signed=1'
     else:

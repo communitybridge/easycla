@@ -3,7 +3,10 @@
 # This script updates additional vars needed for the CLA
 # projects. Only parameters provided in the list below are updated.
 
-CLA_API_URL='';
+CLA_API_BASE='';
+CLA_CONTRIBUTOR_BASE='';
+CORPORATE_BASE_URL='';
+CLA_API_URL=''; # Needed for frontend
 CORP_CONSOLE_LINK='';
 CLA_BUCKET_LOGO_URL='';
 CLA_SIGNATURE_FILES_BUCKET='';
@@ -29,6 +32,22 @@ if [ -z "$PROFILE" ]; then
     exit 1
 fi
 
+if [ -n "$CLA_API_BASE" ]; then
+    echo "updating api base URL: $CLA_API_BASE"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-api-base-$ENV" --description "CLA api base url" --value "$CLA_API_BASE" --type "String" --overwrite
+fi
+
+if [ -n "$CLA_CONTRIBUTOR_BASE" ]; then
+    echo "updating contributor base URL: $CLA_CONTRIBUTOR_BASE"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-contributor-base-$ENV" --description "CLA contributor base url" --value "$CLA_CONTRIBUTOR_BASE" --type "String" --overwrite
+fi
+
+if [ -n "$CORPORATE_BASE_URL" ]; then
+    echo "updating corporate base URL: $CORPORATE_BASE_URL"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-corporate-base-$ENV" --description "CLA contributor base url" --value "$CORPORATE_BASE_URL" --type "String" --overwrite
+fi
+
+# Needed for frontend
 if [ -n "$CLA_API_URL" ]; then
     echo "updating API URL: $CLA_API_URL"
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-cla-api-url-$ENV" --description "CLA API URL" --value "$CLA_API_URL" --type "String" --overwrite
