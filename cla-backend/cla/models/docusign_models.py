@@ -629,7 +629,7 @@ class DocuSign(signing_service_interface.SigningService):
         if(not send_as_email):
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
-            return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
+            return_url = 'https://{}/v2/return-url/{}'.format(cla.conf['API_BASE_URL'], str(recipient.clientUserId))
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
