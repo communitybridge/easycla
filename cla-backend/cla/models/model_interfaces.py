@@ -345,6 +345,9 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_lf_email(self):
+        raise NotImplementedError()
+
     def get_user_email(self):
         """
         Getter for the user's first email address.
@@ -399,12 +402,15 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def get_user_lf_username(self):
+    def get_lf_username(self):
         """
         Getter for the user's Linux Foundation Username.
         """
         
         raise NotImplementedError() 
+
+    def get_lf_sub(self):
+        raise NotImplementedError()
 
     def set_user_id(self, user_id):
         """
@@ -422,6 +428,9 @@ class User(object):
         :param user_external_id: The External ID for this user.
         :type user_external_id: string
         """
+        raise NotImplementedError()
+
+    def set_lf_email(self, lf_email):
         raise NotImplementedError()
 
     def set_user_email(self, user_email):
@@ -478,14 +487,17 @@ class User(object):
         """
         raise NotImplementedError()
 
-    def set_user_lf_username(self, user_lf_username):
+    def set_lf_username(self, lf_username):
         """
         Setter for the user's Linux Foundation Username.
-        :param user_lf_username: The user's LF Username. 
-        :type user_lf_username: string
+        :param lf_username: The user's LF Username. 
+        :type lf_username: string
         """
         
         raise NotImplementedError() 
+
+    def set_lf_sub(self, sub):
+        raise NotImplementedError()
 
     def get_user_by_email(self, user_email):
         """
@@ -507,6 +519,9 @@ class User(object):
         :return: The user object with the GitHub ID, or None if not found.
         :rtype: cla.models.model_interfaces.User | None
         """
+        raise NotImplementedError()
+
+    def get_user_by_username(self, username):
         raise NotImplementedError()
 
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):

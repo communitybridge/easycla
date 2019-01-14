@@ -15,6 +15,16 @@ class AuthError(Exception):
     def __init__(self, response):
         self.response = response
 
+class AuthUser(object):
+    """
+    This user object is built from Auth0 JWT claims.
+    """
+    def __init__(self, auth_claims):
+        self.name = auth_claims.get('name')
+        self.email = auth_claims.get('email')
+        self.username = auth_claims.get(auth0_username_claim)
+        self.sub = auth_claims.get('sub')
+
 def get_auth_token(headers):
     """
     Obtains the Access Token from the Authorization Header
@@ -36,15 +46,16 @@ def get_auth_token(headers):
 
     return parts[1]
 
-def authenticate_user(request):
+def authenticate_user(headers):
     """
     Determines if the Access Token is valid
     """
-    token = get_auth_token(request.headers)
+    token = get_auth_token(headers)
     try:
         jwks_url = os.path.join('https://', auth0_base_url, '.well-known/jwks.json')
         jwks = requests.get(jwks_url).json()
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
+        cla.log.error(e)
         raise AuthError('unable to fetch well known jwks')
 
     try:
@@ -70,7 +81,6 @@ def authenticate_user(request):
                 rsa_key,
                 algorithms=algorithms,
                 audience=auth0_audience_claim,
-                # issuer="https://"+auth0_base_url+"/"
                 options={
                     'verify_at_hash': False
                 }
@@ -89,9 +99,9 @@ def authenticate_user(request):
         if username is None:
             raise AuthError('username not found')
 
-        payload['username'] = username
+        auth_user = AuthUser(payload)
 
-        return payload
+        return auth_user
 
     raise AuthError({"code": "invalid_header",
                     "description": "Unable to find appropriate key"})
