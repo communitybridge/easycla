@@ -365,7 +365,7 @@ class DocuSign(signing_service_interface.SigningService):
             return
 
         # Get lf_username from User 
-        lf_username = user.get_user_lf_username()
+        lf_username = user.get_lf_username()
         # Keep track of Gerrit Ids for signature reference. 
         gerrit_ids = []
         for gerrit in gerrits:
@@ -448,6 +448,9 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Checking if a signature exists')
         latest_signature = company.get_latest_signature(str(project_id))
         last_document = project.get_latest_corporate_document()
+        if last_document is None:
+            return {'error': 'No CCLA found for project'}
+
         if latest_signature is not None and \
         last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
@@ -489,7 +492,10 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrits = Gerrit().get_gerrit_by_project_id(project_id)
             except DoesNotExist as err:
                 return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
-                
+
+            if gerrits is None:
+                return {'error': 'Gerrit Instance does not exist for the given project ID.'}
+
             gerrit_ids = []
             for gerrit in gerrits:
                 gerrit_ids.append(gerrit.get_gerrit_id())    
@@ -713,7 +719,7 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrit.load(gerrit_id)
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_icla()
-                lf_username = user.get_user_lf_username()
+                lf_username = user.get_lf_username()
 
                 # Add the user to the LDAP Group
                 try:
@@ -780,7 +786,7 @@ class DocuSign(signing_service_interface.SigningService):
                 
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_ccla()
-                lf_username = user.get_user_lf_username()
+                lf_username = user.get_lf_username()
 
                 # Add the user to the LDAP Group (corporate authority)
                 try:
