@@ -396,7 +396,7 @@ class DocuSign(signing_service_interface.SigningService):
         """
         return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
 
-    def _get_corporate_signature_callback_url(self, project_id, company_id, return_url_type):
+    def _get_corporate_signature_callback_url(self, project_id, company_id):
         """
         Helper function to get the callback_url of a CCLA signature.
 
@@ -407,10 +407,7 @@ class DocuSign(signing_service_interface.SigningService):
         :return: The callback URL hit by the signing provider once the signature is complete.
         :rtype: string
         """
-        if return_url_type == "Github":
-            return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
-        elif return_url_type == "Gerrit":
-            return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/corporate/' + str(project_id) + '/' + str(company_id)
+        return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
 
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
     authority_name=None, authority_email=None, return_url_type=None, return_url=None):
@@ -448,9 +445,6 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Checking if a signature exists')
         latest_signature = company.get_latest_signature(str(project_id))
         last_document = project.get_latest_corporate_document()
-        if last_document is None:
-            return {'error': 'No CCLA found for project'}
-
         if latest_signature is not None and \
         last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
@@ -463,7 +457,7 @@ class DocuSign(signing_service_interface.SigningService):
                     cla.log.info('CCLA signature object still missing signature')
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
-                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id), return_url_type)
+                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
                     self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -482,7 +476,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_signed=False,
                                 signature_approved=True)
 
-        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id), return_url_type)
+        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
 
@@ -492,10 +486,7 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrits = Gerrit().get_gerrit_by_project_id(project_id)
             except DoesNotExist as err:
                 return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
-
-            if gerrits is None:
-                return {'error': 'Gerrit Instance does not exist for the given project ID.'}
-
+                
             gerrit_ids = []
             for gerrit in gerrits:
                 gerrit_ids.append(gerrit.get_gerrit_id())    
@@ -635,7 +626,7 @@ class DocuSign(signing_service_interface.SigningService):
         if(not send_as_email):
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
-            return_url = 'https://{}/v2/return-url/{}'.format(cla.conf['API_BASE_URL'], str(recipient.clientUserId))
+            return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
@@ -719,7 +710,7 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrit.load(gerrit_id)
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_icla()
-                lf_username = user.get_lf_username()
+                lf_username = user.get_user_lf_username()
 
                 # Add the user to the LDAP Group
                 try:
@@ -771,29 +762,6 @@ class DocuSign(signing_service_interface.SigningService):
         user = cla.utils.get_user_instance()
         user.load(signature.get_signature_reference_id())
 
-        # Check if the callback is for a Gerrit Instance
-        gerrit_ids = signature.get_signature_gerrit_reference_id()    
-        if len(gerrit_ids): 
-            for gerrit_id in gerrit_ids:
-                # Get Gerrit id of signature
-                gerrit = cla.utils.get_gerrit_instance()
-                try:
-                    gerrit.load(gerrit_id)
-                except DoesNotExist:
-                    cla.log.error('DocuSign Gerrit CCLA callback returned signed info on invalid signature: %s',
-                                content)
-                    return
-                
-                # Get Gerrit Group ID
-                group_id = gerrit.get_group_id_ccla()
-                lf_username = user.get_lf_username()
-
-                # Add the user to the LDAP Group (corporate authority)
-                try:
-                    lf_group.add_user_to_group(group_id, lf_username)
-                except Exception as e:
-                    cla.log.error('Failed in adding user to the LDAP group: %s', e)
-                    return
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
@@ -809,6 +777,30 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('CCLA signature signed (%s)', signature_id)
             signature.set_signature_signed(True)
             signature.save()
+            # Check if the callback is for a Gerrit Instance
+            gerrit_ids = signature.get_signature_gerrit_reference_id()    
+            if len(gerrit_ids): 
+                for gerrit_id in gerrit_ids:
+                    # Get Gerrit id of signature
+                    gerrit = cla.utils.get_gerrit_instance()
+                    try:
+                        gerrit.load(gerrit_id)
+                    except DoesNotExist:
+                        cla.log.error('DocuSign CCLA callback returned signed info about an invalid Gerrit Instance. : %s',
+                                    content)
+                        return
+                    
+                    # Get Gerrit Group ID
+                    group_id = gerrit.get_group_id_ccla()
+                    lf_username = user.get_user_lf_username()
+
+                    # Add the user to the LDAP Group (corporate authority)
+                    try:
+                        lf_group.add_user_to_group(group_id, lf_username)
+                    except Exception as e:
+                        cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                        return
+
             # Send manager their signed document.
             manager = User()
             manager.load(company.get_company_manager_id())
