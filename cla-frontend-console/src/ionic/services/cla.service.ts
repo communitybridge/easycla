@@ -452,6 +452,12 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getProjectWithAuthToken(projectId) {
+    return this.http
+      .securedGet(this.claApiUrl + "/v2/project/" + projectId)
+      .map(res => res.json());
+  }
+
   getProjectsByExternalId(externalId) {
     return this.http
       .get(this.claApiUrl + "/v1/project/external/" + externalId)
