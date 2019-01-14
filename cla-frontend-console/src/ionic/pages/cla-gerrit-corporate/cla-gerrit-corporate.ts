@@ -10,7 +10,7 @@ import { Restricted } from "../../decorators/restricted";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'cla/gerrit/:gerritId/corporate'
+  segment: 'cla/gerrit/project/:gerritId/corporate'
 })
 @Component({
   selector: 'cla-gerrit-corporate',
