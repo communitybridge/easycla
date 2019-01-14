@@ -63,6 +63,7 @@ export class ClaSelectCompanyModal {
       project_id: this.projectId,
       company_id: company.company_id,
       user_id: this.userId,
+      return_url_type: "Github",
     };
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
