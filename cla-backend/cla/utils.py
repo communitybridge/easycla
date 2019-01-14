@@ -176,17 +176,6 @@ def get_document_instance(conf=None):
     """
     return get_database_models(conf)['Document']()
 
-def get_user_permissions_instance(conf=None):
-    """
-    Helper function to get a database UserPermissions model instance based on CLA configuration.
-
-    :param conf: Same as get_database_models().
-    :type conf: dict
-    :return: A UserPermissions model instance based on configuration specified.
-    :rtype: cla.models.model_interfaces.UserPermissions
-    """
-    return get_database_models(conf)['UserPermissions']()
-
 def get_email_service(conf=None, initialize=True):
     """
     Helper function to get the configured email service instance.
@@ -470,7 +459,7 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
     :rtype: boolean
     """
     # Check ICLA.
-    signature = get_user_latest_signature(user, project_id)
+    signature = user.get_latest_signature(project_id)
     if signature is not None:
         cla.log.info('Signature found for this user on project %s: %s',
                      project_id, signature.get_signature_id())
@@ -504,7 +493,7 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
     # Check employee signature.
     company_id = user.get_user_company_id()
     if company_id is not None:
-        signature = get_user_latest_signature(user, project_id, company_id=company_id)
+        signature = user.get_latest_signature(project_id, company_id=company_id)
         # Don't check the version for employee signatures.
         if signature is not None and signature.get_signature_signed() and signature.get_signature_approved():
             cla.log.info('User has employee CLA signed and approved for project: %s', project_id)
@@ -527,35 +516,9 @@ def get_user_signature_by_github_repository(installation_id, user, company_id=No
     :rtype: cla.models.model_interfaces.Signature | None
     """
     project_id = get_project_id_from_installation_id(installation_id)
-    signature = get_user_latest_signature(user, project_id, company_id=company_id)
+    signature = user.get_latest_signature(project_id, company_id=company_id)
+
     return signature
-
-# TODO Heller remove
-def get_company_latest_signature(company, project_id):
-    """
-    Helper function to get a company's latest signature for a project.
-
-    :param company: The company object to check for.
-    :type company: cla.models.model_interfaces.Company
-    :param project_id: The ID of the project to check for.
-    :type project_id: string
-    :return: The latest versioned signature object if it exists.
-    :rtype: cla.models.model_interfaces.Signature or None
-    """
-    signatures = company.get_company_signatures(project_id=project_id)
-    latest = None
-    for signature in signatures:
-        if latest is None:
-            latest = signature
-            continue
-        if signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
-            latest = signature
-            continue
-        if signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
-           signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
-            latest = signature
-            continue
-    return latest
 
 def get_project_id_from_installation_id(installation_id):
     """

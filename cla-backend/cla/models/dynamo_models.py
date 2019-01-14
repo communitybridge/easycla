@@ -51,7 +51,6 @@ def delete_database():
         if table.exists():
             table.delete_table()
 
-
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by GitHub ID.
@@ -67,6 +66,20 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+class LFUsernameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying users by LF Username.
+    """
+    class Meta:
+        """Meta class for LF Username index."""
+        index_name = 'lf-username-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    lf_username = NumberAttribute(hash_key=True)
 
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
@@ -697,8 +710,8 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
         self.model.project_ccla_requires_icla_signature = ccla_requires_icla_signature
 
-    def set_project_acl(self, project_acl_user_id):
-        self.model.project_acl = set([project_acl_user_id])
+    def set_project_acl(self, project_acl_username):
+        self.model.project_acl = set([project_acl_username])
 
 
     def get_project_repositories(self):
@@ -715,13 +728,13 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_approved=signature_approved,
                                                      signature_signed=signature_signed)
 
-    def get_projects_by_external_id(self, project_external_id, user_id):
+    def get_projects_by_external_id(self, project_external_id, username):
         project_generator = self.model.project_external_id_index.query(project_external_id)
         projects = []
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            if user_id in project.get_project_acl():
+            if username in project.get_project_acl():
                 projects.append(project)
         return projects
 
@@ -767,20 +780,23 @@ class UserModel(BaseModel):
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
     user_external_id = UnicodeAttribute(null=True)
+    # User Emails are specifically GitHub Emails
     user_emails = UnicodeSetAttribute(default=set())
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
-    user_lf_username = UnicodeAttribute(null=True)
-
+    lf_email = UnicodeAttribute(null=True)
+    lf_username = UnicodeAttribute(null=True)
+    lf_username_index = LFUsernameIndex()
+    lf_sub = UnicodeAttribute(null=True)
 
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, user_lf_username=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, lf_username=None, lf_sub=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -788,7 +804,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
-        self.model.user_lf_username = user_lf_username
+        self.model.lf_username = lf_username
+        self.model.lf_sub = lf_sub
 
     def to_dict(self):
         ret = dict(self.model)
@@ -814,8 +831,17 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_id(self):
         return self.model.user_id
 
+    def get_lf_username(self):
+        return self.model.lf_username
+
     def get_user_external_id(self):
         return self.model.user_id
+
+    def get_lf_email(self):
+        return self.model.lf_email
+
+    def get_lf_sub(self):
+        return self.model.lf_sub
 
     def get_user_email(self):
         if len(self.model.user_emails) > 0:
@@ -835,28 +861,31 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_github_id(self):
         return self.model.user_github_id
 
-    def get_user_ldap_id(self):
-        return self.model.user_ldap_id
-
-    def get_user_lf_username(self):
-        return self.model.user_lf_username
+    # def get_user_ldap_id(self):
+    #     return self.model.user_ldap_id
 
     def set_user_id(self, user_id):
         self.model.user_id = user_id
 
-    def set_user_lf_username(self, user_lf_username):
-        self.model.user_lf_username = user_lf_username
+    def set_lf_username(self, lf_username):
+        self.model.lf_username = lf_username
 
     def set_user_external_id(self, user_external_id):
         self.model.user_external_id = user_external_id
+
+    def set_lf_email(self, lf_email):
+        self.model.lf_email = lf_email
+
+    def set_lf_sub(self, sub):
+        self.model.sub = sub
 
     def set_user_email(self, user_email):
         # Standard set/list operations (add or append) don't work as expected.
         # Seems to apply the operations on the class attribute which means that
         # all future user objects have all the other user's emails as well.
         # Explicitly creating new list and casting to set seems to work as expected.
-        self.model.user_emails = list(self.model.user_emails) + [user_email]
-        self.model.user_emails = set(self.model.user_emails)
+        email_list = list(self.model.user_emails) + [user_email]
+        self.model.user_emails = set(email_list)
 
     def set_user_emails(self, user_emails):
         self.model.user_emails = user_emails
@@ -870,8 +899,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
 
-    def set_user_ldap_id(self, user_ldap_id):
-        self.model.user_ldap_id = user_ldap_id
+    # def set_user_ldap_id(self, user_ldap_id):
+    #     self.model.user_ldap_id = user_ldap_id
 
     def get_user_by_email(self, user_email):
         user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
@@ -883,6 +912,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
 
     def get_user_by_github_id(self, user_github_id):
         user_generator = self.model.user_github_id_index.query(user_github_id)
+        for user_model in user_generator:
+            user = User()
+            user.model = user_model
+            return user
+        return None
+
+    def get_user_by_username(self, username):
+        user_generator = self.model.lf_username_index.query(username)
         for user_model in user_generator:
             user = User()
             user.model = user_model
@@ -1438,8 +1475,8 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def set_company_whitelist(self, whitelist):
         self.model.company_whitelist = [str(wl) for wl in whitelist]
 
-    def set_company_acl(self, company_acl_user_id):
-        self.model.company_acl = set([company_acl_user_id])
+    def set_company_acl(self, company_acl_username):
+        self.model.company_acl = set([company_acl_username])
 
     def add_company_whitelist(self, whitelist_item):
         if self.model.company_whitelist is None:
@@ -1812,20 +1849,19 @@ class UserPermissionsModel(BaseModel):
         table_name = 'cla-{}-user-permissions'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
-    user_id = UnicodeAttribute(hash_key=True)
+    username = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
-    companies = UnicodeSetAttribute(default=set())
 
 class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB UserPermissions model.
     """
-    def __init__(self, user_id=None, projects=None, companies=None):
+    def __init__(self, username=None, projects=None):
         super(UserPermissions).__init__()
         self.model = UserPermissionsModel()
-        self.model.user_id = user_id
-        self.model.projects = projects
-        self.model.companies = companies
+        self.model.username = username
+        if projects is not None:
+            self.model.projects = set(projects)
 
     def to_dict(self):
         ret = dict(self.model)
@@ -1834,21 +1870,12 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
     def save(self):
         self.model.save()
 
-    def load(self, user_id):
+    def load(self, username):
         try:
-            user_permissions = self.model.get(str(user_id))
+            user_permissions = self.model.get(str(username))
         except UserPermissionsModel.DoesNotExist:
             raise cla.models.DoesNotExist('User Permissions not found')
         self.model = user_permissions
 
     def delete(self):
         self.model.delete()
-
-    def all(self):
-        orgs = self.model.scan()
-        ret = []
-        for organization in orgs:
-            org = GitHubOrg()
-            org.model = organization
-            ret.append(org)
-        return ret
