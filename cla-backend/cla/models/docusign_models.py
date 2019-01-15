@@ -16,6 +16,7 @@ from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, GitHubOrg, User, \
                                         Project, Company, Gerrit
 
+api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
 username = os.environ.get('DOCUSIGN_USERNAME', '')
 password = os.environ.get('DOCUSIGN_PASSWORD', '')
@@ -161,15 +162,16 @@ class DocuSign(signing_service_interface.SigningService):
                         project_id)
             return {'errors': {'project_id': str(err)}}
 
-        try:
-            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
-        except DoesNotExist as err:
-            return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
-
-        gerrit_ids = []
-        for gerrit in gerrits:
-            # Apppend to list of gerrit ids
-            gerrit_ids.append(gerrit.get_gerrit_id())
+        if return_url is None:       
+            try:
+                gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+                if len(gerrits) >= 1:
+                    # Github sends the user back to the pull request. Gerrit should send it back to the Gerrit instance url. 
+                    return_url = gerrits[0].get_gerrit_url()    
+            except DoesNotExist as err:
+                cla.log.error('Gerrit Instance not found by the given project ID: %s',
+                            project_id)
+                return {'errors': {'project_id': str(err)}}
 
         try:
             document = project.get_project_individual_document()
@@ -388,7 +390,7 @@ class DocuSign(signing_service_interface.SigningService):
         Helper function to get a user's active signature callback URL for Gerrit
 
         """
-        return cla.conf['SIGNED_CALLBACK_URL'] + '/gerrit/individual/' + str(user_id)
+        return api_base_url + '/v2/signed/gerrit/individual/' + str(user_id)
 
     def _get_corporate_signature_callback_url(self, project_id, company_id):
         """
@@ -401,7 +403,7 @@ class DocuSign(signing_service_interface.SigningService):
         :return: The callback URL hit by the signing provider once the signature is complete.
         :rtype: string
         """
-        return cla.conf['SIGNED_CALLBACK_URL'] + '/corporate/' + str(project_id) + '/' + str(company_id)
+        return api_base_url + '/v2/signed/corporate/' + str(project_id) + '/' + str(company_id)
 
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
     authority_name=None, authority_email=None, return_url_type=None, return_url=None):
@@ -607,14 +609,12 @@ class DocuSign(signing_service_interface.SigningService):
                                            recipients=[signer])
         envelope = self.prepare_sign_request(envelope)
 
-        print("Envelope: {}".format(envelope))
-
         recipient = envelope.recipients[0]
 
         if(not send_as_email):
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
-            return_url = cla.conf['API_BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
+            return_url = api_base_url + '/v2/return-url/' + str(recipient.clientUserId)
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
