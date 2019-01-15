@@ -1144,7 +1144,6 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_reference_index = ReferenceSignatureIndex()
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
-    signature_gerrit_reference_id = UnicodeSetAttribute(default=set())
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1166,8 +1165,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
-                 signature_return_url_type=None,
-                 signature_gerrit_reference_id=None):
+                 signature_return_url_type=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1185,7 +1183,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_return_url_type = signature_return_url_type
-        self.model.signature_gerrit_reference_id = signature_gerrit_reference_id
 
     def to_dict(self):
         return dict(self.model)
@@ -1249,9 +1246,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
-    def get_signature_gerrit_reference_id(self):
-        return self.model.signature_gerrit_reference_id
-
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1296,9 +1290,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
-
-    def set_signature_gerrit_reference_id(self, gerrit_id):
-        self.model.signature_gerrit_reference_id = gerrit_id
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
