@@ -120,7 +120,7 @@ def post_or_get_user_gerrit(auth_user: check_auth):
     For a Gerrit user, there is a case where a user with an lfid may be a user in the db. 
     An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent. 
     """
-    return cla.controllers.user.get_or_create_user(auth_user)
+    return cla.controllers.user.get_or_create_user(auth_user).to_dict()
 
 
 # @hug.get('/user/github/{user_github_id}', versions=1)

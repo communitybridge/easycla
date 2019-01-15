@@ -333,7 +333,7 @@ def get_or_create_user(auth_user):
         user.set_lf_sub(auth_user.sub)
 
         user.save()
-    
-        return user.to_dict()
 
-    return existing_user.to_dict()
+        return user
+
+    return existing_user
