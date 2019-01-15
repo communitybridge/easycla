@@ -844,7 +844,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         return self.model.lf_sub
 
     def get_user_email(self):
-        if len(self.model.user_emails) > 0:
+        if self.model.lf_email is not None:
+            return self.model.lf_email
+        elif len(self.model.user_emails) > 0:
             # Ordering not guaranteed, better to use get_user_emails.
             return next(iter(self.model.user_emails))
         return None
