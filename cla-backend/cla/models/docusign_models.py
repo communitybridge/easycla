@@ -710,7 +710,7 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrit.load(gerrit_id)
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_icla()
-                lf_username = user.get_user_lf_username()
+                lf_username = user.get_lf_username()
 
                 # Add the user to the LDAP Group
                 try:
@@ -792,7 +792,7 @@ class DocuSign(signing_service_interface.SigningService):
                     
                     # Get Gerrit Group ID
                     group_id = gerrit.get_group_id_ccla()
-                    lf_username = user.get_user_lf_username()
+                    lf_username = user.get_lf_username()
 
                     # Add the user to the LDAP Group (corporate authority)
                     try:
@@ -836,6 +836,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Second, prepare the email to the user.
         subject = 'CLA Signed Document'
         body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
+
         recipient = user.get_user_email()
         filename = recipient + '-cla.pdf'
         attachment = {'type': 'content',
