@@ -162,6 +162,12 @@ class DocuSign(signing_service_interface.SigningService):
                         project_id)
             return {'errors': {'project_id': str(err)}}
 
+        # the github flow has an option to have the return_url as a blank field, 
+        # and retrieves the return_url from the signature's metadata (github org id, PR id, etc.)
+        # It will return the user to the pull request page.
+        # For Gerrit users, we want the return_url to be the link to the Gerrit Instance's page.
+        # Since Gerrit users will be able to make changes once they are part of the LDAP Group, 
+        # They do not need to be directed to a specific code submission on Gerrit. 
         if return_url is None:       
             try:
                 gerrits = Gerrit().get_gerrit_by_project_id(project_id)
@@ -390,7 +396,7 @@ class DocuSign(signing_service_interface.SigningService):
         Helper function to get a user's active signature callback URL for Gerrit
 
         """
-        return api_base_url + '/v2/signed/gerrit/individual/' + str(user_id)
+        return os.path.join(api_base_url, 'v2/signed/gerrit/individual', str(user_id))
 
     def _get_corporate_signature_callback_url(self, project_id, company_id):
         """
@@ -403,7 +409,7 @@ class DocuSign(signing_service_interface.SigningService):
         :return: The callback URL hit by the signing provider once the signature is complete.
         :rtype: string
         """
-        return api_base_url + '/v2/signed/corporate/' + str(project_id) + '/' + str(company_id)
+        return os.path.join(api_base_url, 'v2/signed/corporate', str(project_id), str(company_id))
 
     def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
     authority_name=None, authority_email=None, return_url_type=None, return_url=None):
@@ -614,7 +620,8 @@ class DocuSign(signing_service_interface.SigningService):
         if(not send_as_email):
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
-            return_url = api_base_url + '/v2/return-url/' + str(recipient.clientUserId)
+            return_url = os.path.join(api_base_url, 'v2/return-url', str(recipient.clientUserId))
+            
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
@@ -757,19 +764,19 @@ class DocuSign(signing_service_interface.SigningService):
             signature.save()
             
             # Check if the callback is for a Gerrit Instance
-            gerrit = Gerrit()
             try:
-                gerrits = gerrit.get_gerrit_by_project_id(signature.get_signature_project_id())
+                gerrits = Gerrit().get_gerrit_by_project_id(signature.get_signature_project_id())
             except DoesNotExist:
                 gerrits = []
 
             # Get LF user name. 
             lf_username = user.get_lf_username()
-            if len(gerrits) >= 1: 
-                for gerrit in gerrits:
-                    # Get Gerrit Group ID
-                    group_id = gerrit.get_group_id_ccla()
+            for gerrit in gerrits:
+                # Get Gerrit Group ID
+                group_id = gerrit.get_group_id_ccla()
 
+                # Check if Group id is none
+                if group_id is not None:
                     # Add the user to the LDAP Group (corporate authority)
                     try:
                         lf_group.add_user_to_group(group_id, lf_username)
