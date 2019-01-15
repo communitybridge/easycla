@@ -187,7 +187,6 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_reference_type='user',
                                 signature_type='cla',
                                 signature_return_url_type = 'Gerrit',
-                                signature_gerrit_reference_id = gerrit_ids,
                                 signature_signed=False,
                                 signature_approved=True,
                                 signature_return_url=return_url,
@@ -364,17 +363,12 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
             return
 
-        # Get lf_username from User 
-        lf_username = user.get_lf_username()
-        # Keep track of Gerrit Ids for signature reference. 
-        gerrit_ids = []
-        for gerrit in gerrits:
-            gerrit_ids.append(gerrit.get_gerrit_id())
 
-        # Save the gerrit reference ids to signature
-        new_signature.set_signature_gerrit_reference_id(gerrit_ids)
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
+
+        # Get lf_username from User 
+        lf_username = user.get_lf_username()
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.
@@ -486,11 +480,6 @@ class DocuSign(signing_service_interface.SigningService):
                 gerrits = Gerrit().get_gerrit_by_project_id(project_id)
             except DoesNotExist as err:
                 return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
-                
-            gerrit_ids = []
-            for gerrit in gerrits:
-                gerrit_ids.append(gerrit.get_gerrit_id())    
-            signature.set_signature_gerrit_reference_id(gerrit_ids)
 
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
@@ -620,13 +609,12 @@ class DocuSign(signing_service_interface.SigningService):
 
         print("Envelope: {}".format(envelope))
 
-        #cla.log.info('New envelope created in DocuSign: %s' %envelope.envelopeId)
         recipient = envelope.recipients[0]
 
         if(not send_as_email):
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
-            return_url = cla.conf['BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
+            return_url = cla.conf['API_BASE_URL'] + '/v2/return-url/' + str(recipient.clientUserId)
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
@@ -692,22 +680,13 @@ class DocuSign(signing_service_interface.SigningService):
             # Get User
             user = cla.utils.get_user_instance()
             user.load(signature.get_signature_reference_id())
-
-            # Get Gerrit id of signature
-            try:
-                gerrit_ids = signature.get_signature_gerrit_reference_id()
-            except DoesNotExist:
-                cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
-                            content)
-                return
             
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
             signature.save()
 
-            for gerrit_id in gerrit_ids:
-                gerrit = cla.utils.get_gerrit_instance()
-                gerrit.load(gerrit_id)
+            gerrits = Gerrit().get_gerrit_by_project_id(signature.get_signature_project_id())
+            for gerrit in gerrits:
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_icla()
                 lf_username = user.get_lf_username()
@@ -718,7 +697,6 @@ class DocuSign(signing_service_interface.SigningService):
                 except Exception as e:
                     cla.log.error('Failed in adding user to the LDAP group: %s', e)
                     return
-
 
             # Send user their signed document.
             self.send_signed_document(envelope_id, user)
@@ -777,22 +755,20 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('CCLA signature signed (%s)', signature_id)
             signature.set_signature_signed(True)
             signature.save()
+            
             # Check if the callback is for a Gerrit Instance
-            gerrit_ids = signature.get_signature_gerrit_reference_id()    
-            if len(gerrit_ids): 
-                for gerrit_id in gerrit_ids:
-                    # Get Gerrit id of signature
-                    gerrit = cla.utils.get_gerrit_instance()
-                    try:
-                        gerrit.load(gerrit_id)
-                    except DoesNotExist:
-                        cla.log.error('DocuSign CCLA callback returned signed info about an invalid Gerrit Instance. : %s',
-                                    content)
-                        return
-                    
+            gerrit = Gerrit()
+            try:
+                gerrits = gerrit.get_gerrit_by_project_id(signature.get_signature_project_id())
+            except DoesNotExist:
+                gerrits = []
+
+            # Get LF user name. 
+            lf_username = user.get_lf_username()
+            if len(gerrits) >= 1: 
+                for gerrit in gerrits:
                     # Get Gerrit Group ID
                     group_id = gerrit.get_group_id_ccla()
-                    lf_username = user.get_lf_username()
 
                     # Add the user to the LDAP Group (corporate authority)
                     try:
