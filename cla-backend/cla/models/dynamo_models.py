@@ -79,7 +79,7 @@ class LFUsernameIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     # This attribute is the hash key for the index.
-    lf_username = NumberAttribute(hash_key=True)
+    lf_username = UnicodeAttribute(hash_key=True)
 
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
