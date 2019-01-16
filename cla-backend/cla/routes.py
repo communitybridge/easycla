@@ -1011,6 +1011,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
 def request_employee_signature(project_id: hug.types.uuid,
                                company_id: hug.types.uuid,
                                user_id: hug.types.uuid,
+                               return_url_type: hug.types.text,
                                return_url=None):
     """
     POST: /request-employee-signature
@@ -1025,7 +1026,7 @@ def request_employee_signature(project_id: hug.types.uuid,
     require a full DocuSign signature process, which means the sign/callback URLs and document
     versions may not be populated or reliable.
     """
-    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
+    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url_type, return_url)
 
 @hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def post_individual_signed(body,
