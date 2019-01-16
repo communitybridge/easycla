@@ -162,6 +162,21 @@ class DocuSign(signing_service_interface.SigningService):
                         project_id)
             return {'errors': {'project_id': str(err)}}
 
+
+        # Check for active signature object with this project. If the user has
+        # signed the most recent major version, they do not need to sign again.
+        latest_signature = user.get_latest_signature(user, str(project_id))
+        last_document = project.get_latest_individual_document()
+        if latest_signature is not None and \
+           last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
+            cla.log.info('User already has a signatures with this project: %s', \
+                         latest_signature.get_signature_id())
+            return {'user_id': user_id,
+                    'project_id': project_id,
+                    'signature_id': latest_signature.get_signature_id(),
+                    'sign_url': latest_signature.get_signature_sign_url()}
+
+
         # the github flow has an option to have the return_url as a blank field, 
         # and retrieves the return_url from the signature's metadata (github org id, PR id, etc.)
         # It will return the user to the pull request page.
@@ -713,6 +728,13 @@ class DocuSign(signing_service_interface.SigningService):
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
         
+        # Get Company with company ID. 
+        company = Company()
+        try:
+            company.load(str(company_id))
+        except DoesNotExist as err:
+            return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
+
         # Assume only one signature per signature.
         client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
         if client_user_id is not None: 
@@ -727,19 +749,17 @@ class DocuSign(signing_service_interface.SigningService):
         else:
             # If client_user_id is None, the callback came from the email that finished signing. 
             # Retrieve the latest signature with projectId and CompanyId.
-            company = Company()
-            try:
-                company.load(str(company_id))
-            except DoesNotExist as err:
-                return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
-
             signature = company.get_latest_signature(str(project_id))
             signature_id = signature.get_signature_id()
 
 
         # Get User
         user = cla.utils.get_user_instance()
-        user.load(signature.get_signature_reference_id())
+        if signature.get_signature_reference_type() == 'user':
+            user.load(signature.get_signature_reference_id())
+        elif signature.get_signature_reference_type() == 'company':
+            # Get company manager if reference id is of a company's ID. 
+            user.load(company.get_company_manager_id())
 
 
         # Iterate through recipients and update the signature signature status if changed.
