@@ -67,6 +67,8 @@ class LFGroup():
             return {'error': 'Unable to update group'}
 
         if response.status_code == 200:
+            cla.log.info('LFGroup; Successfully added user %s into group %s', username, str(group_id))
             return response.json()
         else:
+            cla.log.error('LFGroup; Failed adding user %s into group %s', username, str(group_id))
             return {'error' : 'failed to add a user to the ldap group.'}
