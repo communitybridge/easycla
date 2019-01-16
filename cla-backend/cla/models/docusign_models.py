@@ -482,13 +482,6 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
 
-        # Get Gerrit reference ID for signing a Gerrit Project.
-        if return_url_type == "Gerrit": 
-            try:
-                gerrits = Gerrit().get_gerrit_by_project_id(project_id)
-            except DoesNotExist as err:
-                return {'errors': {'Gerrit Instance does not exist for the given project ID. ': str(err)}}
-
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
@@ -591,7 +584,7 @@ class DocuSign(signing_service_interface.SigningService):
         doc_name = document.get_document_name()
         document = pydocusign.Document(name=doc_name,
                                        documentId=document_id,
-                                       data=pdf)
+                                       data=pdf)                         
 
         if callback_url is not None:
             # Webhook properties for callbacks after the user signs the document.
@@ -622,6 +615,7 @@ class DocuSign(signing_service_interface.SigningService):
             # This route will be in charge of extracting the signature's return_url and redirecting.
             return_url = os.path.join(api_base_url, 'v2/return-url', str(recipient.clientUserId))
             
+            cla.log.info("return-url " + return_url)
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
@@ -663,7 +657,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
-    def signed_individual_callback_gerrit(self, content):
+    def signed_individual_callback_gerrit(self, content, user_id):
         cla.log.debug('Docusign Gerrit ICLA signed callback POST data: %s', content)
         tree = ET.fromstring(content)
         # Get envelope ID.
@@ -686,7 +680,7 @@ class DocuSign(signing_service_interface.SigningService):
                          signature_id)
             # Get User
             user = cla.utils.get_user_instance()
-            user.load(signature.get_signature_reference_id())
+            user.load(user_id)
             
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
