@@ -14,6 +14,7 @@ export class ClaEmployeeCompanyTroubleshootPage {
   repositoryId: string;
   userId: string;
   companyId: string;
+  authenticated: boolean;
 
   project: any;
   company: any;
@@ -30,6 +31,7 @@ export class ClaEmployeeCompanyTroubleshootPage {
     this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
+    this.authenticated = navParams.get('authenticated'); 
   }
 
   getDefaults() {
@@ -72,6 +74,7 @@ export class ClaEmployeeCompanyTroubleshootPage {
       repositoryId: this.repositoryId,
       userId: this.userId,
       companyId: this.companyId,
+      authenticated: this.authenticated
     });
     modal.present();
   }

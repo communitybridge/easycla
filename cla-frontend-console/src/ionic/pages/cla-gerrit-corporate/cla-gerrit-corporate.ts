@@ -95,6 +95,7 @@ export class ClaGerritCorporatePage {
       project_id: this.projectId,
       company_id: company.company_id,
       return_url_type: "Gerrit",
+      user_id: this.userId
     };
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
@@ -145,6 +146,7 @@ export class ClaGerritCorporatePage {
       repositoryId: "",
       userId: this.userId,
       companyId: company.company_id,
+      authenticated: true
     });
   }
 }
