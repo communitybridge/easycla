@@ -14,6 +14,7 @@ export class ClaCompanyAdminYesnoModal {
   projectId: string;
   repositoryId: string;
   userId: string;
+  authenticated: boolean; //true if coming from gerrit/corporate
 
   consoleLink: string;
 
@@ -28,6 +29,7 @@ export class ClaCompanyAdminYesnoModal {
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
+    this.authenticated = navParams.get('authenticated');
     this.getDefaults();
   }
 
@@ -51,6 +53,7 @@ export class ClaCompanyAdminYesnoModal {
     let modal = this.modalCtrl.create('ClaCompanyAdminSendEmailModal', {
       projectId: this.projectId,
       userId: this.userId,
+      authenticated: this.authenticated,
     });
     modal.present();
     this.dismiss();

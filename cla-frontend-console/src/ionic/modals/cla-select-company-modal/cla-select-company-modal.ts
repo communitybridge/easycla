@@ -104,7 +104,8 @@ export class ClaSelectCompanyModal {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
-      userId: this.userId
+      userId: this.userId,
+      authenticated: false // Github users are not authenticated.
     });
     modal.present();
     this.dismiss();

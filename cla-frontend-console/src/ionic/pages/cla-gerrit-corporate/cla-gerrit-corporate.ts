@@ -82,14 +82,12 @@ export class ClaGerritCorporatePage {
 
   getUserInfo() {
     // retrieve userInfo from auth0 service
-    this.authService.getUserInfo().then(res => {
       this.claService.postOrGetUserForGerrit().subscribe(user => {
           this.userId = user.user_id;
           console.log(this.userId);
           // get signatureIntent object, similar to the Github flow. 
           //this.postSignatureRequest();
       })
-    })
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
@@ -135,7 +133,8 @@ export class ClaGerritCorporatePage {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
-      userId: this.userId
+      userId: this.userId,
+      authenticated: true
     });
     modal.present();
   }
