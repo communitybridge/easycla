@@ -27,7 +27,7 @@ CONTRIBUTOR_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_BASE', '')
 # Corporate Console base URL
 CORPORATE_BASE_URL = os.environ.get('CLA_CORPORATE_BASE', '')
 
-SIGNED_CALLBACK_URL = 'https://{}/v2/signed'.format(API_BASE_URL) #: Default callback once signature is completed.
+SIGNED_CALLBACK_URL = '{}/v2/signed'.format(API_BASE_URL) #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
@@ -51,7 +51,7 @@ AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on 
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 #: GitHub OAuth2 Callback URL.
-GITHUB_OAUTH_CALLBACK_URL = 'https://{}/v2/github/installation'.format(API_BASE_URL)
+GITHUB_OAUTH_CALLBACK_URL = '{}/v2/github/installation'.format(API_BASE_URL)
 #: GitHub OAuth2 Token URL.
 GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 #: How users get notified of CLA status in GitHub ('status', 'comment', or 'status+comment').
