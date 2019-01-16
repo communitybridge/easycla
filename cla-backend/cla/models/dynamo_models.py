@@ -970,6 +970,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         :rtype: bool
         """
         emails = self.get_user_emails()
+        if len(emails) == 0:
+            emails = [self.get_lf_email()]
         whitelist = company.get_company_whitelist()
         patterns = company.get_company_whitelist_patterns()
         for email in emails:
