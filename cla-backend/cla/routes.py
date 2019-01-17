@@ -1367,4 +1367,4 @@ def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text)
 
     
 # Session Middleware
-# __hug__.http.add_middleware(get_session_middleware())
+__hug__.http.add_middleware(get_session_middleware())
