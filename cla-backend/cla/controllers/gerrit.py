@@ -33,7 +33,7 @@ def get_gerrit_by_project_id(project_id):
 def get_gerrit(gerrit_id):
     gerrit = Gerrit()
     try:
-        gerrit.load(gerrit_id)
+        gerrit.load(str(gerrit_id))
     except DoesNotExist as err:
         return {'errors': {'a gerrit instance does not exist with the given Gerrit ID. ': str(err)}}
 

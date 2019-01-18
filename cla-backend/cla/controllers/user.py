@@ -324,6 +324,7 @@ def get_or_create_user(auth_user):
     user = User()
 
     existing_user = user.get_user_by_username(str(auth_user.username))
+    
     if existing_user is None:
         user.set_user_id(str(uuid.uuid4()))
         user.set_user_name(auth_user.name)
@@ -332,7 +333,7 @@ def get_or_create_user(auth_user):
         user.set_lf_sub(auth_user.sub)
 
         user.save()
-    
+
         return user
 
     return existing_user
