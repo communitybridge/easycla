@@ -7,9 +7,8 @@ from jose import jwt
 import cla
 
 auth0_base_url = os.environ.get('AUTH0_DOMAIN', '')
-auth0_username_claim = 'https://sso.linuxfoundation.org/claims/username'
-auth0_audience_claim = 'hquZHO8JNsaIScoayPtCS5VELdn7TnVq'
-algorithms = ['RS256']
+auth0_username_claim = os.environ.get('AUTH0_USERNAME_CLAIM', '')
+algorithms = [os.environ.get('AUTH0_ALGORITHM', '')]
 
 class AuthError(Exception):
     def __init__(self, response):
@@ -80,9 +79,9 @@ def authenticate_user(headers):
                 token,
                 rsa_key,
                 algorithms=algorithms,
-                audience=auth0_audience_claim,
                 options={
-                    'verify_at_hash': False
+                    'verify_at_hash': False,
+                    'verify_aud': False
                 }
             )
         except jwt.ExpiredSignatureError as e:
