@@ -17,8 +17,6 @@ import { ClaService } from "../../services/cla.service";
 export class ClaCorporatePage {
   projectId: string;
 
-  signatureType: string; 
-
   company: any;
   project: any;
   signatureIntent: any;
@@ -68,38 +66,27 @@ export class ClaCorporatePage {
   }
 
   postSignatureRequest() {
-    //check that 
-    this.claService.getProjectOrganizations(this.projectId).subscribe(organizations => {
-      //check if github orgs exist for this project. if none exists, this is a Gerrit Project.
-      if (organizations.count > 0) {
-        this.signatureType = "Github"
-      }
-      else {
-        this.signatureType = "Gerrit"
-      }
-      let signatureRequest = {
-        project_id: this.projectId,
-        company_id: this.company.company_id,
-        // TODO: Switch this to intermediary loading screen as docusign postback has delay
-        return_url_type: this.signatureType, // Gerrit / Github
-        return_url: this.getReturnUrl()
-      };
-  
-      this.claService
-        .postCorporateSignatureRequest(signatureRequest)
-        .subscribe(response => {
-          // returns {
-          //   user_id:
-          //   signature_id:
-          //   project_id:
-          //   sign_url: docusign.com/some-docusign-url
-          // }
-          if (response.errors) {
-            this.error = response;
-          }
-          this.signature = response;
-        });
-    })
+    let signatureRequest = {
+      project_id: this.projectId,
+      company_id: this.company.company_id,
+      // TODO: Switch this to intermediary loading screen as docusign postback has delay
+      return_url: this.getReturnUrl()
+    };
+
+    this.claService
+      .postCorporateSignatureRequest(signatureRequest)
+      .subscribe(response => {
+        // returns {
+        //   user_id:
+        //   signature_id:
+        //   project_id:
+        //   sign_url: docusign.com/some-docusign-url
+        // }
+        if (response.errors) {
+          this.error = response;
+        }
+        this.signature = response;
+      });
     
   }
 

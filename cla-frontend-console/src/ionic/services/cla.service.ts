@@ -73,6 +73,14 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getUserWithAuthToken(userId) {
+    return this.http
+      .securedGet(this.claApiUrl + "/v2/user/" + userId)
+      .map(res => res.json());
+  }
+
+
+
   deleteUser(userId) {
     return this.http
       .delete(this.claApiUrl + "/v1/user/" + userId)
@@ -452,6 +460,12 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getProjectWithAuthToken(projectId) {
+    return this.http
+      .securedGet(this.claApiUrl + "/v2/project/" + projectId)
+      .map(res => res.json());
+  }
+
   getProjectsByExternalId(externalId) {
     return this.http
       .get(this.claApiUrl + "/v1/project/external/" + externalId)
@@ -493,7 +507,7 @@ export class ClaService {
       .get(this.claApiUrl + "/v2/project/" + projectId + "/companies")
       .map(res => res.json());
   }
-
+  
   /**
    * /project/{project_id}/document/{document_type}
    **/

@@ -17,6 +17,7 @@ export class ClaEmployeeRequestAccessModal {
   repositoryId: string;
   userId: string;
   companyId: string;
+  authenticated: boolean;
 
   userEmails: Array<string>;
 
@@ -39,6 +40,7 @@ export class ClaEmployeeRequestAccessModal {
     this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
+    this.authenticated = navParams.get('authenticated'); 
     this.form = formBuilder.group({
       email:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       message:[''], // Validators.compose([Validators.required])
@@ -52,12 +54,21 @@ export class ClaEmployeeRequestAccessModal {
   ngOnInit() {
     this.getUser();
   }
-
+ 
   getUser() {
-    this.claService.getUser(this.userId).subscribe(user => {
-      this.userEmails = user.user_emails;
-    });
+    if (this.authenticated) { //Gerrit User
+      this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
+        if(user.lf_email) {
+          this.userEmails.push(user.lf_email)
+        }
+      })
+    } else { // Github User
+      this.claService.getUser(this.userId).subscribe(user => {
+        this.userEmails = user.user_emails;
+      });
+    }
   }
+
   // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();

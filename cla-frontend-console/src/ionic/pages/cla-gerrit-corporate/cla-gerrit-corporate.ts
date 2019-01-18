@@ -10,7 +10,7 @@ import { Restricted } from "../../decorators/restricted";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'cla/gerrit/:gerritId/corporate'
+  segment: 'cla/gerrit/project/:gerritId/corporate'
 })
 @Component({
   selector: 'cla-gerrit-corporate',
@@ -82,14 +82,12 @@ export class ClaGerritCorporatePage {
 
   getUserInfo() {
     // retrieve userInfo from auth0 service
-    this.authService.getUserInfo().then(res => {
       this.claService.postOrGetUserForGerrit().subscribe(user => {
           this.userId = user.user_id;
           console.log(this.userId);
           // get signatureIntent object, similar to the Github flow. 
           //this.postSignatureRequest();
       })
-    })
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
@@ -97,6 +95,7 @@ export class ClaGerritCorporatePage {
       project_id: this.projectId,
       company_id: company.company_id,
       return_url_type: "Gerrit",
+      user_id: this.userId
     };
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
@@ -135,7 +134,8 @@ export class ClaGerritCorporatePage {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
-      userId: this.userId
+      userId: this.userId,
+      authenticated: true
     });
     modal.present();
   }
@@ -146,6 +146,7 @@ export class ClaGerritCorporatePage {
       repositoryId: "",
       userId: this.userId,
       companyId: company.company_id,
+      authenticated: true
     });
   }
 }
