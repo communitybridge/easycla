@@ -79,10 +79,9 @@ class GitHub(repository_service_interface.RepositoryService):
         session['github_installation_id'] = installation_id
         session['github_repository_id'] = github_repository_id
         session['github_change_request_id'] = change_request_id
-        session['github_origin_url'] = self.get_return_url(github_repository_id,
-                                                           change_request_id,
-                                                           installation_id)
+
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
+        session['github_origin_url'] = origin_url
         if 'github_oauth2_token' in session:
             cla.log.info('Using existing session OAuth2 token')
             return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
