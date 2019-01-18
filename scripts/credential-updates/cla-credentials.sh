@@ -24,6 +24,8 @@ LF_GROUP_CLIENT_URL='';
 # Auth0 Credentials
 AUTH0_DOMAIN='';
 AUTH0_CLIENT_ID='';
+AUTH0_USERNAME_CLAIM='';
+AUTH0_ALGORITHM='';
 
 # DocuSign and Docraptor Credentials
 DOCRAPTOR_API_KEY=''
@@ -34,11 +36,11 @@ DOCUSIGN_ROOT_URL=''
 
 # Github Credentials
 GH_APP_ID=''
-GH_OAUTH_CLIENT_ID=''
-GH_OAUTH_SECRET=''
 GH_APP_PUBLIC_LINK=''
 GH_APP_WEBHOOK_SECRET=''
 GH_APP_PRIVATE_KEY_PATH='' # This is a filename
+GH_OAUTH_CLIENT_ID=''
+GH_OAUTH_SECRET=''
 
 # SFDC Credentials
 INSTANCE_URL=''
@@ -135,6 +137,16 @@ fi
 if [ -n "$AUTH0_CLIENT_ID" ]; then
     echo "updating Auth0 Client ID: $AUTH0_CLIENT_ID"
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-auth0-clientId-$ENV" --description "Auth0 Client ID" --value "$AUTH0_CLIENT_ID" --type "String" --overwrite
+fi
+
+if [ -n "$AUTH0_USERNAME_CLAIM" ]; then
+    echo "updating Auth0 Client ID: $AUTH0_USERNAME_CLAIM"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-auth0-username-claim-$ENV" --description "Auth0 username claim" --value "$AUTH0_USERNAME_CLAIM" --type "String" --overwrite
+fi
+
+if [ -n "$AUTH0_ALGORITHM" ]; then
+    echo "updating Auth0 Client ID: $AUTH0_ALGORITHM"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-auth0-algorithm-$ENV" --description "Auth0 algorithm" --value "$AUTH0_ALGORITHM" --type "String" --overwrite
 fi
 
 # DocuSign and Docraptor Credentials
