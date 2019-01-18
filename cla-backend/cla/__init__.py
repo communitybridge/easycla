@@ -37,11 +37,6 @@ class Config(dict):
             # Only load up capitalized attributes.
             if key.isupper():
                 self[key] = getattr(mod, key)
-        # Override all values specified in environment variables.
-        for env in os.environ:
-            if env.startswith('CLA_') and env.isupper():
-                env_key = env[4:]
-                self[env_key] = os.environ[env]
 
 def get_logger(configuration):
     """
