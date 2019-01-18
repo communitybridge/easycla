@@ -79,7 +79,7 @@ class LFUsernameIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     # This attribute is the hash key for the index.
-    lf_username = NumberAttribute(hash_key=True)
+    lf_username = UnicodeAttribute(hash_key=True)
 
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
@@ -844,7 +844,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         return self.model.lf_sub
 
     def get_user_email(self):
-        if len(self.model.user_emails) > 0:
+        if self.model.lf_email is not None:
+            return self.model.lf_email
+        elif len(self.model.user_emails) > 0:
             # Ordering not guaranteed, better to use get_user_emails.
             return next(iter(self.model.user_emails))
         return None
@@ -968,6 +970,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         :rtype: bool
         """
         emails = self.get_user_emails()
+        if len(emails) == 0:
+            emails = [self.get_lf_email()]
         whitelist = company.get_company_whitelist()
         patterns = company.get_company_whitelist_patterns()
         for email in emails:
@@ -1142,7 +1146,6 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_reference_index = ReferenceSignatureIndex()
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
-    signature_gerrit_reference_id = UnicodeSetAttribute(default=set())
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1164,8 +1167,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
-                 signature_return_url_type=None,
-                 signature_gerrit_reference_id=None):
+                 signature_return_url_type=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1183,7 +1185,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_return_url_type = signature_return_url_type
-        self.model.signature_gerrit_reference_id = signature_gerrit_reference_id
 
     def to_dict(self):
         return dict(self.model)
@@ -1247,9 +1248,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
-    def get_signature_gerrit_reference_id(self):
-        return self.model.signature_gerrit_reference_id
-
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1294,9 +1292,6 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
-
-    def set_signature_gerrit_reference_id(self, gerrit_id):
-        self.model.signature_gerrit_reference_id = gerrit_id
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,

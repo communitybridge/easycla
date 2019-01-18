@@ -10,7 +10,7 @@ import { Restricted } from "../../decorators/restricted";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: 'cla/gerrit/:gerritId/individual'
+  segment: 'cla/gerrit/project/:gerritId/individual'
 })
 @Component({
   selector: 'cla-gerrit-individual',
@@ -79,7 +79,7 @@ export class ClaGerritIndividualPage {
       this.projectId = gerrit.project_id;
       
       //retrieve project info with project Id
-      this.claService.getProject(gerrit.project_id).subscribe(project => {
+      this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe(project => {
         this.project = project;
 
           // retrieve userInfo from auth0 service

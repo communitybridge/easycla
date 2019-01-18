@@ -120,7 +120,7 @@ def post_or_get_user_gerrit(auth_user: check_auth):
     For a Gerrit user, there is a case where a user with an lfid may be a user in the db. 
     An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent. 
     """
-    return cla.controllers.user.get_or_create_user(auth_user)
+    return cla.controllers.user.get_or_create_user(auth_user).to_dict()
 
 
 # @hug.get('/user/github/{user_github_id}', versions=1)
@@ -1011,6 +1011,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
 def request_employee_signature(project_id: hug.types.uuid,
                                company_id: hug.types.uuid,
                                user_id: hug.types.uuid,
+                               return_url_type: hug.types.text,
                                return_url=None):
     """
     POST: /request-employee-signature
@@ -1025,7 +1026,7 @@ def request_employee_signature(project_id: hug.types.uuid,
     require a full DocuSign signature process, which means the sign/callback URLs and document
     versions may not be populated or reliable.
     """
-    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url)
+    return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url_type, return_url)
 
 @hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def post_individual_signed(body,
@@ -1366,4 +1367,4 @@ def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text)
 
     
 # Session Middleware
-# __hug__.http.add_middleware(get_session_middleware())
+__hug__.http.add_middleware(get_session_middleware())

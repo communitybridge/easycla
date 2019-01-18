@@ -39,6 +39,7 @@ export class ClaEmployeeCompanyConfirmPage {
     this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
+    this.signingType = navParams.get('signingType');
 
     this.getDefaults();
 
