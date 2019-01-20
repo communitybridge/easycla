@@ -1,11 +1,16 @@
 """
 Easily perform signing workflows using DocuSign signing service with pydocusign.
+
+NOTE: This integration uses DocuSign's Legacy Authentication REST API Integration.
+https://developers.docusign.com/esign-rest-api/guides/post-go-live
+
 """
 
 import io
 import os
 import uuid
 import urllib.request
+from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import pydocusign
 from cla.controllers.lf_group import LFGroup
@@ -54,6 +59,24 @@ class DocuSign(signing_service_interface.SigningService):
 
     def initialize(self, config):
         self.client = pydocusign.DocuSignClient(root_url=root_url,
+                                                username=username,
+                                                password=password,
+                                                integrator_key=integrator_key)
+
+        try:
+            login_data = self.client.login_information()
+            login_account = login_data['loginAccounts'][0]
+            base_url = login_account['baseUrl']
+            account_id = login_account['accountId']
+            url = urlparse(base_url)
+            parsed_root_url = '{}://{}/restapi/v2'.format(url.scheme, url.netloc)
+        except Exception as e:
+            cla.log.error('Error logging in to DocuSign: {}'.format(e))
+            return {'errors': {'Error initializing DocuSign'}}
+
+        self.client = pydocusign.DocuSignClient(root_url=parsed_root_url,
+                                                account_url=base_url,
+                                                account_id=account_id,
                                                 username=username,
                                                 password=password,
                                                 integrator_key=integrator_key)
