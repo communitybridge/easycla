@@ -6,6 +6,11 @@ setup:
 	source ~/.env/lf-cla/bin/activate; \
 	pip3 install -r requirements.txt; \
 
+.PHONY: setup_circle
+setup_circle:
+	npm install; \
+	sudo pip install -r requirements.txt; \
+
 .PHONY: add_user
 add_user:
 	aws dynamodb put-item \
