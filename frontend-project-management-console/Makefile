@@ -5,8 +5,8 @@ setup:
 .PHONY: run
 run:
 	cd src; \
-	npm run preserve:dev; \
-	npm run serve:dev; \
+	npm run preserve:${STAGE}; \
+	npm run serve:${STAGE}; \
 
 .PHONY: deploy
 deploy:
