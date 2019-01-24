@@ -203,7 +203,7 @@ fi
 
 if [ -n "$GH_APP_PRIVATE_KEY_PATH" ]; then
     echo "updating private key: $GH_APP_PRIVATE_KEY_PATH"
-    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-private-key-$ENV" --description "Github private key" --value "file://$GH_APP_PRIVATE_KEY_PATH" --type "SecureString" --overwrite
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-private-key-$ENV" --description "Github private key" --value "file://$GH_APP_PRIVATE_KEY_PATH" --type "String" --overwrite
 fi
 
 # SFDC Credentials
