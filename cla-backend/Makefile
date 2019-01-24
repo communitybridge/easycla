@@ -11,13 +11,20 @@ setup_circle:
 	npm install; \
 	sudo pip install -r requirements.txt; \
 
+# username: LFID username
+# projects: quoted list of SFDC project IDs. e.g. '\"abcd\",\"1234\"' 
 .PHONY: add_user
 add_user:
 	aws dynamodb put-item \
-		--table-name "cla-local-user-permissions" \
-		--item "{ \"user_id\": { \"S\": \"$(user_sub)\" }, \"projects\": { \"SS\": [\"a09J000000KHoZVIA1\",\"a09J000000KHoayIAD\"] } }" \
-		--profile lf-cla --region "us-east-1" \
-		--endpoint-url http://localhost:8000;
+		--table-name "cla-$(STAGE)-user-permissions" \
+		--item "{ \"username\": { \"S\": \"$(username)\" }, \"projects\": { \"SS\": [$(projects)] } }" \
+		--region "us-east-1";
+
+# local_file: path to local file
+# remote_filename: logo name, in the form of <SFDC_ID>.png
+.PHONY: upload_logo
+upload_logo:
+	aws s3 cp $(local_file) s3://cla-project-logo-$(STAGE)/$(remote_filename)
 
 .PHONY: run_dynamo
 run_dynamo:
