@@ -91,13 +91,22 @@ def get_health(request):
 
 
 @hug.get('/user/{user_id}', versions=2)
-def get_user(auth_user: check_auth,
-                user_id: hug.types.uuid):
+def get_user(request,
+             user_id: hug.types.uuid):
     """
     GET: /user/{user_id}
 
     Returns the requested user data based on ID.
     """
+
+    try:
+        auth_user = check_auth(request)
+    except cla.auth.AuthError as auth_err:
+        if auth_err.response == 'missing authorization header':
+            cla.log.info('getting github user: {}'.format(user_id))
+        else:
+            raise auth_err
+
     return cla.controllers.user.get_user(user_id=user_id)
 
 # @hug.get('/user/email/{user_email}', versions=1)
@@ -687,7 +696,7 @@ def get_projects(auth_user: check_auth):
     return projects
 
 @hug.get('/project/{project_id}', versions=2)
-def get_project(auth_user: check_auth, project_id: hug.types.uuid):
+def get_project(project_id: hug.types.uuid):
     """
     GET: /project/{project_id}
 

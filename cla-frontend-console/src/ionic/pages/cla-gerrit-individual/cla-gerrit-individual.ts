@@ -89,9 +89,6 @@ export class ClaGerritIndividualPage {
                 // get signatureIntent object, similar to the Github flow. 
                 this.postSignatureRequest();
             }); 
-        if (!this.project.logoRef) {
-          this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
-        }
       });
     })
   }

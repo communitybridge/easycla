@@ -22,7 +22,7 @@ import cla
 from cla.models import model_interfaces, key_value_store_interface
 
 stage = os.environ.get('STAGE', '')
-
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
 def create_database():
     """
@@ -533,6 +533,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         project_dict = dict(self.model)
         project_dict['project_individual_documents'] = individual_documents
         project_dict['project_corporate_documents'] = corporate_documents
+
+        project_dict['logoUrl'] = '{}/{}.png'.format(cla_logo_url, self.model.project_external_id)
+
         return project_dict
 
     def save(self):

@@ -6,12 +6,12 @@
       <!-- Logo and description -->
       <div class="project-title-wrapper">
         <div class="project-logo-wrapper">
-          <div *ngIf="!project.logoRef" text-center>
+          <div *ngIf="!project.logoUrl" text-center>
             <ion-icon class="no-logo-icon" name="image"></ion-icon>
             <!-- <ion-label>Change logo in <a class="project-details-link clickable" (click)="viewProjectDetails(projectId)">Project Details</a></ion-label> -->
           </div>
-          <div class="project-logo" *ngIf="project.logoRef">
-            <img src="{{ project.logoRef }}" alt="{{ project.name }} logo"/>
+          <div class="project-logo" *ngIf="project.logoUrl">
+            <img src="{{ project.logoUrl }}" alt="{{ project.name }} logo"/>
           </div>
         </div>
         <div class="project-description-wrapper">
