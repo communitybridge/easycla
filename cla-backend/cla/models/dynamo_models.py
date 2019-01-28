@@ -975,17 +975,36 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         emails = self.get_user_emails()
         if len(emails) == 0:
             emails = [self.get_lf_email()]
+
+        # Check email whitelist
         whitelist = company.get_company_whitelist()
-        patterns = company.get_company_whitelist_patterns()
-        for email in emails:
-            if email in whitelist:
-                return True
-        for pattern in patterns:
-            preprocessed_pattern = '^' + pattern.replace('*', '.*') + '$'
-            pat = re.compile(preprocessed_pattern)
+        if whitelist is not None:
             for email in emails:
-                if pat.match(email) != None:
+                if email in whitelist:
                     return True
+
+        # Check domain whitelist
+        # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
+        # so that sub-domains are not allowed.
+        # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
+        # which will allow subdomains.
+        patterns = company.get_company_whitelist_patterns()
+        if patterns is not None:
+            for pattern in patterns:
+
+                if pattern.startswith('*.'):
+                    pattern = pattern.replace('*.', '.*\.')
+                elif pattern.startswith('*'):
+                    pattern = pattern.replace('*', '.*\.')
+                elif pattern.startswith('.'):
+                    pattern = pattern.replace('.', '.*\.')
+
+                preprocessed_pattern = '^.*@' + pattern + '$'
+                pat = re.compile(preprocessed_pattern)
+                for email in emails:
+                    if pat.match(email) != None:
+                        return True
+
         return False
 
     def get_users_by_company(self, company_id):
