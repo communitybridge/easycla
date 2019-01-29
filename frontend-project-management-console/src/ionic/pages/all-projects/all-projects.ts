@@ -86,7 +86,20 @@ export class AllProjectsPage {
   }
 
   getAllProjectFromSFDC() {
-    this.claService.getAllProjectsFromSFDC().subscribe(response => {
+    var self = this;
+    this.claService.getAllProjectsFromSFDC({
+        "400":function(rawErrorObject) {
+          /* 
+            realize you get the whole error object here you can further 
+            breakdown possible paths depending on the actual output
+          */
+          // console.log(rawErrorObject);
+          self.navCtrl.setRoot("LoginPage");
+        },
+        "401":function(rawErrorObject) {
+          self.navCtrl.setRoot("LoginPage");
+        }
+    }).subscribe(response => {
       this.allProjects = response;
       this.allFilteredProjects = this.filterService.resetFilter(
         this.allProjects
