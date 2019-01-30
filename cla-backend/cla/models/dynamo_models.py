@@ -209,6 +209,7 @@ class DocumentTabModel(MapAttribute):
     document_tab_width = NumberAttribute(default=200)
     document_tab_height = NumberAttribute(default=20)
     document_tab_is_locked = BooleanAttribute(default=False)
+    document_tab_is_required = BooleanAttribute(default=True)
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -223,7 +224,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_position_y=None,
                  document_tab_width=None,
                  document_tab_height=None,
-                 document_tab_is_locked=False):
+                 document_tab_is_locked=False,
+                 document_tab_is_required=True):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
@@ -240,6 +242,7 @@ class DocumentTab(model_interfaces.DocumentTab):
         if document_tab_height is not None:
             self.model.document_tab_height = document_tab_height
         self.model.document_tab_is_locked = document_tab_is_locked
+        self.model.document_tab_is_required = document_tab_is_required
 
     def to_dict(self):
         return {'document_tab_type': self.model.document_tab_type,
@@ -250,7 +253,8 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_position_y': self.model.document_tab_position_y,
                 'document_tab_width': self.model.document_tab_width,
                 'document_tab_height': self.model.document_tab_height,
-                'document_tab_is_locked': self.model.document_tab_is_locked}
+                'document_tab_is_locked': self.model.document_tab_is_locked,
+                'document_tab_is_required': self.model.document_tab_is_required}
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
