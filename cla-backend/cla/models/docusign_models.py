@@ -13,9 +13,9 @@ import urllib.request
 from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import pydocusign
+from pydocusign.exceptions import DocuSignException
 from cla.controllers.lf_group import LFGroup
 import json
-from pydocusign.exceptions import DocuSignException
 import cla
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, GitHubOrg, User, \
@@ -480,11 +480,18 @@ class DocuSign(signing_service_interface.SigningService):
             (manager.get_user_name(), manager.get_user_email())
         ])
 
+        # Ensure the contract group has a CCLA
+        last_document = project.get_latest_corporate_document()
+        if last_document is None or \
+            last_document.get_document_major_version() is None or \
+            last_document.get_document_minor_version() is None:
+            cla.log.info('Contract Group does not have a CCLA: {}'.format(project_id))
+            return {'errors': {'project_id': 'Contract Group does not support CCLAs.'}}
+
         # Ensure the company doesn't already have a CCLA with this project. 
         # and the user is about to sign the ccla manually 
         cla.log.info('Checking if a signature exists')
         latest_signature = company.get_latest_signature(str(project_id))
-        last_document = project.get_latest_corporate_document()
         if latest_signature is not None and \
         last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object already exists for company %s on project %s', company_id, project_id)
@@ -989,20 +996,6 @@ def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
     """
     tabs = []
     for tab in document.get_document_tabs():
-        tab_type = tab.get_document_tab_type()
-        if tab_type == 'text':
-            tab_class = pydocusign.TextTab
-        elif tab_type == 'number':
-            tab_class = pydocusign.NumberTab
-        elif tab_type == 'sign':
-            tab_class = pydocusign.SignHereTab
-        elif tab_type == 'date':
-            tab_class = pydocusign.DateSignedTab
-        else:
-            cla.log.warning('Invalid tab type specified (%s) in document file ID %s',
-                            tab_type, document.get_document_file_id())
-            continue
-
         args = {
             'documentId': document_id,
             'pageNumber': tab.get_document_tab_page(),
@@ -1019,10 +1012,39 @@ def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
         if scheduleA is not None and tab.get_document_tab_id() == 'scheduleA':
             args['value'] = scheduleA
 
+        tab_type = tab.get_document_tab_type()
+        if tab_type == 'text':
+            tab_class = pydocusign.TextTab
+        elif tab_type == 'text_optional':
+            tab_class = TextOptionalTab
+            args['required'] = False
+        elif tab_type == 'number':
+            tab_class = pydocusign.NumberTab
+        elif tab_type == 'sign':
+            tab_class = pydocusign.SignHereTab
+        elif tab_type == 'date':
+            tab_class = pydocusign.DateSignedTab
+        else:
+            cla.log.warning('Invalid tab type specified (%s) in document file ID %s',
+                            tab_type, document.get_document_file_id())
+            continue
+
         tab_obj = tab_class(**args)
         tabs.append(tab_obj)
 
     return tabs
+
+class TextOptionalTab(pydocusign.Tab):
+    """Tab to show a free-form text field on the document.
+    """
+    attributes = pydocusign.Tab._common_attributes + pydocusign.Tab._formatting_attributes + [
+        'name',
+        'value',
+        'height',
+        'width',
+        'required'
+    ]
+    tabs_name = 'textTabs'
 
 # managers and contributors are tuples of (name, email)
 def generate_manager_and_contributor_list( managers, contributors=None):
