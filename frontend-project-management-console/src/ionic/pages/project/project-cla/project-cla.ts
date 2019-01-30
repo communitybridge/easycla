@@ -137,7 +137,7 @@ export class ProjectClaPage {
 
   openClaViewSignaturesModal(project_id) {
     let modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
-
+      claProjectId: project_id,
     }, {
       cssClass: 'medium'
     });
