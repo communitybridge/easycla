@@ -15,7 +15,7 @@ export class ClaOrganizationProviderModal {
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
-
+  responseErrors: string[] = [];
   claProjectId: any;
 
   constructor(
@@ -63,7 +63,18 @@ export class ClaOrganizationProviderModal {
       organization_name: this.form.value.orgName,
     };
     this.claService.postGithubOrganization(organization).subscribe((response) => {
-      this.dismiss()
+      this.responseErrors = [];
+
+      if (response.errors) {
+        this.form.controls['orgName'].setErrors({'incorrect': true});
+
+        for (let errorKey in response.errors) {
+          this.responseErrors.push(response.errors[errorKey]);
+        }
+
+      } else {
+        this.dismiss()
+      }
     });
   }
 
