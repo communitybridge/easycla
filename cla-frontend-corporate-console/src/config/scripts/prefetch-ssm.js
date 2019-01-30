@@ -10,6 +10,7 @@ async function prefetchSSM () {
   console.log(`Start to fetch SSM values at ${stageEnv}...`);
   result = await RetrieveSSMValues(configVarArray, stageEnv, region, profile);
 
+  // result['cla-api-url'] = 'http://localhost:5000';
   fs.writeFile (`./config/cla-env-config.json`, JSON.stringify(result), function(err) {
     if (err) throw new Error(`Couldn't save SSM paramters to disk with error ${err}`);
     console.log('Fetching completed...');});
