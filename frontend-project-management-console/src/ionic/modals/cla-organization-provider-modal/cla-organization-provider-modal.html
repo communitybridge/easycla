@@ -19,6 +19,7 @@
             <ion-label class="github-label">https://github.com/<b>{{ form.controls.orgName.value }}</b></ion-label>
             <ion-input formControlName="orgName"></ion-input>
           </ion-item>
+          <p class="form-message" *ngFor="let error of responseErrors">{{error}}</p>
         </ion-col>
       </ion-row>
     </ion-grid>
