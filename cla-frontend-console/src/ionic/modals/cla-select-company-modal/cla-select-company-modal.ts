@@ -73,6 +73,7 @@ export class ClaSelectCompanyModal {
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
+      this.selectCompanyModalActive = false;
       if (errors) {
         if (response.errors.hasOwnProperty('company_whitelist')) {
           // When the user is not whitelisted with the company: return {'errors': {'company_whitelist': 'User email (<email>) is not whitelisted for this company'}}
@@ -96,8 +97,6 @@ export class ClaSelectCompanyModal {
           signingType: "Github",
         });
       }
-      
-      this.selectCompanyModalActive = false;
     });
   } 
 
@@ -110,7 +109,6 @@ export class ClaSelectCompanyModal {
   }
   
   openClaCompanyAdminYesnoModal() {
-    this.selectCompanyModalActive = true;
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
       userId: this.userId
