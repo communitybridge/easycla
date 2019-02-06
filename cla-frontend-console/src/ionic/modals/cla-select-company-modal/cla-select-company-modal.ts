@@ -16,6 +16,7 @@ export class ClaSelectCompanyModal {
   projectId: string;
   repositoryId: string;
   userId: string;
+  selectCompanyModalActive: boolean = false;
 
   signature: string;
   
@@ -59,6 +60,11 @@ export class ClaSelectCompanyModal {
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
+    if(this.selectCompanyModalActive){
+      return false;
+    }
+    this.selectCompanyModalActive = true;
+
     let signatureRequest = {
       project_id: this.projectId,
       company_id: company.company_id,
@@ -82,13 +88,16 @@ export class ClaSelectCompanyModal {
         // No Errors, expect normal signature response
         this.signature = response;
 
-      this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
-        projectId: this.projectId,
-        repositoryId: this.repositoryId,
-        userId: this.userId,
-        companyId: company.company_id,
-      });
+        this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
+          projectId: this.projectId,
+          repositoryId: this.repositoryId,
+          userId: this.userId,
+          companyId: company.company_id,
+          signingType: "Github",
+        });
       }
+      
+      this.selectCompanyModalActive = false;
     });
   } 
 
@@ -101,6 +110,7 @@ export class ClaSelectCompanyModal {
   }
   
   openClaCompanyAdminYesnoModal() {
+    this.selectCompanyModalActive = true;
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
       userId: this.userId
