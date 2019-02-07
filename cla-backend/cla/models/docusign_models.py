@@ -474,9 +474,9 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'company_acl': 'It\'s empty'}}
 
         # Get CLA Managers. In the future, we will support contribuitors
-        scheduleA = []
-        for manager in managers:
-            scheduleA.append((manager.get_user_name(), manager.get_user_email()))
+        scheduleA = generate_manager_and_contributor_list(
+            [(manager.get_user_name(), manager.get_user_email()) for manager in managers]
+        )
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
