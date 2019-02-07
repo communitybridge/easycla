@@ -28,6 +28,8 @@ export class ProjectPage {
   loading: any;
   companyId: string;
   projectId: string;
+  company: ClaCompanyModel;
+  manager: ClaUserModel;
 
   project: any;
   users: any;
@@ -57,11 +59,21 @@ export class ProjectPage {
         sort: null
       }
     };
+    this.company = new ClaCompanyModel();
+
   }
 
   ngOnInit() {
     this.getProject();
     this.getProjectSignatures();
+    this.getCompany();
+  }
+
+  getCompany() {
+    this.claService.getCompany(this.companyId).subscribe(response => {
+      this.company = response;
+      this.getUser(this.company.company_manager_id);
+    });
   }
 
   getProject() {
@@ -86,8 +98,33 @@ export class ProjectPage {
     if (!this.users[userId]) {
       this.claService.getUser(userId).subscribe(response => {
         this.users[userId] = response;
+        this.manager = response;
       });
     }
+  }
+
+  openWhitelistEmailModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "email",
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
+  }
+
+  openWhitelistDomainModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "domain",
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getCompany();
+    });
+    modal.present();
   }
 
   sortMembers(prop) {
