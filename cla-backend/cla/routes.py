@@ -566,7 +566,7 @@ def get_companies(auth_user: check_auth):
 
     Returns all CLA companies associated with user.
     """
-
+    cla.controllers.user.get_or_create_user(auth_user) # Find or Create user -- For first login
     return cla.controllers.company.get_companies_by_user(auth_user.username)
 
 

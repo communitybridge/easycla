@@ -467,18 +467,16 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist as err:
             return {'errors': {'company_id': str(err)}}
 
-        # Ensure the manager exists
-        manager = User()
-        try:
-            manager.load(str(company.get_company_manager_id()))
-        except DoesNotExist as err:
-            return {'errors': {'company_manager_id': str(err)}}
+        # Ensure the managers list is not empty
+        company_model = Company()
+        managers = company_model.get_managers_by_company_acl(company.get_company_acl())
+        if len(managers) == 0:
+            return {'errors': {'company_acl': 'It\'s empty'}}
 
-        # Get CLA Manager. In the future, we will support multiple managers
-        # and contributors
-        scheduleA = generate_manager_and_contributor_list([
-            (manager.get_user_name(), manager.get_user_email())
-        ])
+        # Get CLA Managers. In the future, we will support contribuitors
+        scheduleA = []
+        for manager in managers:
+            scheduleA.append((manager.get_user_name(), manager.get_user_email()))
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
