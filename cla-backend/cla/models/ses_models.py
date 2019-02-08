@@ -7,6 +7,9 @@ import os
 import cla
 from cla.models import email_service_interface
 
+region = os.environ.get('REGION', '')
+sender_email_address = os.environ.get('SES_SENDER_EMAIL_ADDRESS', '')
+
 class SES(email_service_interface.EmailService):
     """
     AWS SES email client model.
@@ -14,16 +17,10 @@ class SES(email_service_interface.EmailService):
     def __init__(self):
         self.sender_email = None
         self.region = None
-        self.access_key = None
-        self.secret_key = None
 
     def initialize(self, config):
-        self.region = config['SES_REGION']
-        self.access_key = os.environ.get('AWS_KEY', config['S3_ACCESS_KEY'])
-        self.secret_key = os.environ.get('AWS_SECRET', config['S3_SECRET_KEY'])
-        self.sender_email = config['SES_SENDER_EMAIL_ADDRESS']
-
-        
+        self.region = region
+        self.sender_email = sender_email_address
 
     def send(self, subject, body, recipient, attachment=None):
         msg = self.get_email_message(subject, body, self.sender_email, recipient, attachment)
@@ -39,11 +36,7 @@ class SES(email_service_interface.EmailService):
         """
         Mockable method to get a connection to the SES service.
         """
-        return boto3.client('ses',
-                            aws_access_key_id=self.access_key,
-                            aws_secret_access_key=self.secret_key,
-                            region_name=self.region,
-                            )
+        return boto3.client('ses', region_name=self.region)
 
     def _send(self, connection, msg): # pylint: disable=no-self-use
         """

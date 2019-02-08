@@ -11,6 +11,8 @@
     "build": "./node_modules/.bin/ionic-app-scripts build",
     "prebuild:qa": "STAGE_ENV=qa node ./config/scripts/prefetch-ssm.js",
     "build:qa": "STAGE_ENV=qa ./node_modules/.bin/ionic-app-scripts build",
+    "prebuild:dev": "STAGE_ENV=dev node ./config/scripts/prefetch-ssm.js",
+    "build:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts build",
     "prebuild:staging": "STAGE_ENV=staging node ./config/scripts/prefetch-ssm.js",
     "build:staging": "STAGE_ENV=staging ./node_modules/.bin/ionic-app-scripts build",
     "prebuild:prod": "STAGE_ENV=prod node ./config/scripts/prefetch-ssm.js",
@@ -19,6 +21,8 @@
     "serve:staging": "STAGE_ENV=staging ./node_modules/.bin/ionic-app-scripts serve",
     "preserve:qa": "STAGE_ENV=qa node ./config/scripts/prefetch-ssm.js",
     "serve:qa": "STAGE_ENV=qa ./node_modules/.bin/ionic-app-scripts serve",
+    "preserve:dev": "STAGE_ENV=dev node ./config/scripts/prefetch-ssm.js",
+    "serve:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve",
     "preserve:prod": "STAGE_ENV=prod node ./config/scripts/prefetch-ssm.js",
     "serve:prod": "STAGE_ENV=prod ./node_modules/.bin/ionic-app-scripts serve --prod"
   },

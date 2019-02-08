@@ -4,7 +4,8 @@ import os
 import json
 from http import HTTPStatus
 
-import cla.utils
+import cla.auth
+from cla.models.dynamo_models import UserPermissions
 
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
@@ -17,6 +18,8 @@ sf_client_id = os.environ.get('SF_CLIENT_ID', '')
 sf_client_secret = os.environ.get('SF_CLIENT_SECRET', '')
 sf_username = os.environ.get('SF_USERNAME', '')
 sf_password = os.environ.get('SF_PASSWORD', '')
+
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
 def format_response(status_code, headers, body):
     """
@@ -42,6 +45,21 @@ def format_json_cors_response(status_code, body):
     response = format_response(status_code, cors_headers, body)
     return response
 
+def get_sf_oauth_access():
+    data = {
+        'grant_type': 'password',
+        'client_id': sf_client_id,
+        'client_secret': sf_client_secret,
+        'username': sf_username,
+        'password': sf_password
+    }
+
+    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
+    oauth_response = requests.post(token_url, data=data)
+    oauth_response = oauth_response.json()
+
+    return oauth_response
+
 def get_projects(event, context):
     """
     Gets list of all projects from Salesforce
@@ -49,41 +67,22 @@ def get_projects(event, context):
 
     cla.log.info('event: {}'.format(event))
 
-    # Get userID from token
-    if stage == 'dev':
-        headers = event.headers
-        bearer_token = headers.get('AUTHORIZATION')
-    else:
-        headers = event.get('headers')
-        bearer_token = headers.get('Authorization')
-
-    if headers is None:
-        cla.log.error('Error reading headers')
-        return format_json_cors_response(400, 'Error reading headers')
-
-    if bearer_token is None:
-        cla.log.error('Error reading authorization header')
-        return format_json_cors_response(400, 'Error reading authorization header')
-    
-    bearer_token = bearer_token.replace('Bearer ', '')
     try:
-        token_params = jwt.get_unverified_claims(bearer_token)
+        auth_user = cla.auth.authenticate_user(event.get('headers'))
+    except cla.auth.AuthError as e:
+        cla.log.error('Authorization error: {}'.format(e))
+        return format_json_cors_response(401, 'Error parsing Bearer token')
     except Exception as e:
-        cla.log.error('Error parsing Bearer token: {}'.format(e))
-        return format_json_cors_response(400, 'Error parsing Bearer token')
-
-    user_id = token_params.get('sub')
-    if user_id is None:
-        cla.log.error('Error parsing user ID. event')
-        return format_json_cors_response(400, 'Error parsing user ID')
+        cla.log.error('Unknown authorization error: {}'.format(e))
+        return format_json_cors_response(401, 'Error parsing Bearer token')
 
     # Get project access list for user
-    user_permissions = cla.utils.get_user_permissions_instance()
+    user_permissions = UserPermissions()
     try:
-        user_permissions.load(user_id)
+        user_permissions.load(auth_user.username)
     except Exception as e:
-        cla.log.error('Error invalid user ID: {}. error: {}'.format(user_id, e))
-        return format_json_cors_response(400, 'Error invalid user ID')
+        cla.log.error('Error invalid username: {}. error: {}'.format(auth_user.username, e))
+        return format_json_cors_response(400, 'Error invalid username')
 
     user_permissions = user_permissions.to_dict()
 
@@ -92,18 +91,20 @@ def get_projects(event, context):
         cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
 
-    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
-
-    oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
-    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
-    client_id=sf_client_id, username=sf_username, password=sf_password)
-
     project_list = ', '.join('\'' + project_id + '\'' for project_id in authorized_projects)
+
+    oauth_response = get_sf_oauth_access()
+    token = oauth_response['access_token']
+    instance_url = oauth_response['instance_url']
+
+    headers = {
+        'Authorization': 'Bearer {}'.format(token),
+        'Content-Type': 'application/json',
+    }
+
+    query_url = '{}/services/data/v20.0/query/'.format(instance_url)
     query = {'q': 'SELECT id, Name, Description__c from Project__c WHERE id IN ({})'.format(project_list)}
-    headers = {'Content-Type': 'application/json'}
-    url = '{}/services/data/v20.0/query/'.format(token['instance_url'])
-    cla.log.info('Calling salesforce api for project list...')
-    r = oauth2.request('GET', url, params=query, headers=headers)
+    r = requests.get(query_url, headers=headers, params=query)
 
     response = r.json()
     status_code = r.status_code
@@ -117,7 +118,7 @@ def get_projects(event, context):
         logo_url = None
         project_id = project.get('Id')
         if project_id:
-            logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, project_id)
+            logo_url = '{}/{}.png'.format(cla_logo_url, project_id)
 
         projects.append({
             'name': project.get('Name'),
@@ -135,44 +136,26 @@ def get_project(event, context):
 
     cla.log.info('event: {}'.format(event))
 
-    # Get userID from token
-    if stage == 'dev':
-        headers = event.headers
-        bearer_token = headers.get('AUTHORIZATION')
-        project_id = event.params
-        cla.log.info(project_id)
-    else:
-        headers = event.get('headers')
-        bearer_token = headers.get('Authorization')
-        project_id = event.get('queryStringParameters').get('id')
+    project_id = event.get('queryStringParameters').get('id')
+    if project_id is None:
+        return format_json_cors_response(400, 'Missing project ID')
 
-    if headers is None:
-        cla.log.error('Error reading headers. event')
-        return format_json_cors_response(400, 'Error reading headers')
-
-    if bearer_token is None:
-        cla.log.error('Error reading authorization header')
-        return format_json_cors_response(400, 'Error reading authorization header')
-
-    bearer_token = bearer_token.replace('Bearer ', '')
     try:
-        token_params = jwt.get_unverified_claims(bearer_token)
-    except:
-        cla.log.error('Error parsing Bearer token')
-        return format_json_cors_response(400, 'Error parsing Bearer token')
-
-    user_id = token_params.get('sub')
-    if user_id is None:
-        cla.log.error('Error parsing user ID')
-        return format_json_cors_response(400, 'Error parsing user ID')
+        auth_user = cla.auth.authenticate_user(event.get('headers'))
+    except cla.auth.AuthError as e:
+        cla.log.error('Authorization error: {}'.format(e))
+        return format_json_cors_response(401, 'Error parsing Bearer token')
+    except Exception as e:
+        cla.log.error('Unknown authorization error: {}'.format(e))
+        return format_json_cors_response(401, 'Error parsing Bearer token')
 
     # Get project access list for user
-    user_permissions = cla.utils.get_user_permissions_instance()
+    user_permissions = UserPermissions()
     try:
-        user_permissions.load(user_id)
+        user_permissions.load(auth_user.username)
     except:
-        cla.log.error('Error invalid user ID: {}'.format(user_id))
-        return format_json_cors_response(400, 'Error invalid user ID')
+        cla.log.error('Error invalid username: {}'.format(auth_user.username))
+        return format_json_cors_response(400, 'Error invalid username')
 
     user_permissions = user_permissions.to_dict()
 
@@ -180,20 +163,22 @@ def get_project(event, context):
     if authorized_projects is None:
         cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
-
     
     if project_id not in authorized_projects:
         cla.log.error('Error user not authorized')
         return format_json_cors_response(403, 'Error user not authorized')
 
-    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
-    oauth2 = OAuth2Session(client=LegacyApplicationClient(client_id=sf_client_id))
-    token = oauth2.fetch_token(token_url=token_url, client_secret=sf_client_secret,
-    client_id=sf_client_id, username=sf_username, password=sf_password)
+    oauth_response = get_sf_oauth_access()
+    token = oauth_response['access_token']
+    instance_url = oauth_response['instance_url']
 
-    url = '{}/services/data/v20.0/sobjects/Project__c/{}'.format(token['instance_url'], project_id)
+    headers = {
+        'Authorization': 'Bearer {}'.format(token)
+    }
+
+    url = '{}/services/data/v20.0/sobjects/Project__c/{}'.format(instance_url, project_id)
     cla.log.info('Calling salesforce api for project info..')
-    r = oauth2.request('GET', url)
+    r = requests.get(url, headers=headers)
 
     response = r.json()
     status_code = r.status_code
@@ -203,7 +188,7 @@ def get_project(event, context):
 
     logo_url = None
     if response.get('id'):
-        logo_url = 'https://s3.amazonaws.com/cla-logo-{}/{}.png'.format(stage, response.get('id'))
+        logo_url = '{}/{}.png'.format(cla_logo_url, response.get('id'))
 
     project = {
         'name': response.get('Name'),

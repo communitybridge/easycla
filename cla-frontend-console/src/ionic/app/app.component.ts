@@ -5,6 +5,11 @@ import { SplashScreen } from "@ionic-native/splash-screen";
 import { ClaService } from "../services/cla.service";
 import { EnvConfig } from "../services/cla.env.utils";
 
+import { AuthService } from "../services/auth.service";
+import { AuthPage } from "../pages/auth/auth";
+import { HttpClient } from "../services/http-client";
+import { KeycloakService } from "../services/keycloak/keycloak.service";
+
 @Component({
   templateUrl: "app.html",
   providers: []
@@ -12,17 +17,23 @@ import { EnvConfig } from "../services/cla.env.utils";
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
 
-  rootPage: any = "ClaLandingPage";
+  rootPage: any = AuthPage;
 
   constructor(
     public platform: Platform,
     public statusBar: StatusBar,
     public splashScreen: SplashScreen,
-    public claService: ClaService
+    public claService: ClaService,
+    public authService: AuthService,
+    public httpClient: HttpClient,
+    public keycloak: KeycloakService 
   ) {
     this.getDefaults();
     this.initializeApp();
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
+    this.claService.setHttp(httpClient);
+
+    this.authService.handleAuthentication();
   }
 
   getDefaults() {}
@@ -31,10 +42,6 @@ export class MyApp {
 
   initializeApp() {
     this.platform.ready().then(() => {
-      // Okay, so the platform is ready and our plugins are available.
-      // Here you can do any higher level native things you might need.
-      // this.statusBar.styleDefault();
-      // this.splashScreen.hide();
     });
   }
 

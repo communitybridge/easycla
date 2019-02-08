@@ -50,7 +50,7 @@
   </form>
 
   <div class="btn-wrapper">
-    <button form="form" type="submit" ion-button icon-right color="secondary" [disabled]="currentlySubmitting">
+    <button form="form" type="submit" ion-button icon-right color="secondary" [disabled]="currentlySubmitting || !form.get('templateName').valid">
       Save
     </button>
   </div>

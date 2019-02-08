@@ -8,6 +8,7 @@
     "install-frontend": "../scripts/install-frontend.sh"
   },
   "devDependencies": {
+    "serverless-cloudfront-invalidate": "^1.2.1",
     "serverless-finch": "^2.3.2"
   },
   "dependencies": {

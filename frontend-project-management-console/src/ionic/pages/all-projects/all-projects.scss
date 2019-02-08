@@ -76,12 +76,11 @@ all-projects {
     padding: 0 15px;
     position: relative;
     border-bottom: 1px solid lightgray;
-    height: 48px;
 
     .border-wrapper {
       display: flex;
       align-items: center;
-      max-width: 250px;
+      max-width: 90%;
       border-bottom: 3px solid #003764;
     }
 

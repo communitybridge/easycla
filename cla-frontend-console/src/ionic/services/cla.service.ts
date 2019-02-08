@@ -73,6 +73,14 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getUserWithAuthToken(userId) {
+    return this.http
+      .securedGet(this.claApiUrl + "/v2/user/" + userId)
+      .map(res => res.json());
+  }
+
+
+
   deleteUser(userId) {
     return this.http
       .delete(this.claApiUrl + "/v1/user/" + userId)
@@ -86,6 +94,13 @@ export class ClaService {
   getUserByEmail(userEmail) {
     return this.http
       .get(this.claApiUrl + "/v1/user/email/" + userEmail)
+      .map(res => res.json());
+  }
+
+  // creates a new account for Gerrit users, with email. 
+ postOrGetUserForGerrit() {
+    return this.http
+      .securedPost(this.claApiUrl + "/v1/user/gerrit")
       .map(res => res.json());
   }
 
@@ -445,6 +460,12 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getProjectWithAuthToken(projectId) {
+    return this.http
+      .securedGet(this.claApiUrl + "/v2/project/" + projectId)
+      .map(res => res.json());
+  }
+
   getProjectsByExternalId(externalId) {
     return this.http
       .get(this.claApiUrl + "/v1/project/external/" + externalId)
@@ -486,7 +507,7 @@ export class ClaService {
       .get(this.claApiUrl + "/v2/project/" + projectId + "/companies")
       .map(res => res.json());
   }
-
+  
   /**
    * /project/{project_id}/document/{document_type}
    **/
@@ -611,7 +632,8 @@ export class ClaService {
       {
         'project_id': <project-id>,
         'company_id': <company-id>,
-        'user_id': <user-id>
+        'user_id': <user-id>,
+        'return_url_type' "Github" / "Gerrit"
       }
      */
     return this.http
@@ -629,6 +651,7 @@ export class ClaService {
         'project_id': <project-id>,
         'company_id': <company-id>,
         'return_url': <optional-return-url>,
+        'return_url_type': "Github" / "Gerrit"
       }
      */
     return this.http
@@ -817,6 +840,13 @@ export class ClaService {
     return this.http
       .post(this.claApiUrl + "/v1/github/validate")
       .map(res => res.json());
+  }
+
+  getGerrit(gerritId) {
+    return this.http
+    .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
+    .map(res => res.json());
+
   }
 
   //////////////////////////////////////////////////////////////////////////////

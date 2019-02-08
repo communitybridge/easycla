@@ -4,6 +4,7 @@ Easily access CLA models backed by DynamoDB using pynamodb.
 
 import uuid
 import os
+import re
 import base64
 import datetime
 import dateutil.parser
@@ -21,7 +22,7 @@ import cla
 from cla.models import model_interfaces, key_value_store_interface
 
 stage = os.environ.get('STAGE', '')
-
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
 def create_database():
     """
@@ -29,7 +30,7 @@ def create_database():
     is expected to exist in all database storage wrappers.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Create all required tables.
     for table in tables:
         # Wait blocks until table is created.
@@ -44,12 +45,11 @@ def delete_database():
     WARNING: This will delete all existing table data.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel, \
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Delete all existing tables.
     for table in tables:
         if table.exists():
             table.delete_table()
-
 
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
@@ -66,6 +66,20 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+class LFUsernameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying users by LF Username.
+    """
+    class Meta:
+        """Meta class for LF Username index."""
+        index_name = 'lf-username-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    lf_username = UnicodeAttribute(hash_key=True)
 
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
@@ -194,6 +208,8 @@ class DocumentTabModel(MapAttribute):
     document_tab_position_y = NumberAttribute()
     document_tab_width = NumberAttribute(default=200)
     document_tab_height = NumberAttribute(default=20)
+    document_tab_is_locked = BooleanAttribute(default=False)
+    document_tab_is_required = BooleanAttribute(default=True)
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -207,7 +223,9 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_position_x=None,
                  document_tab_position_y=None,
                  document_tab_width=None,
-                 document_tab_height=None):
+                 document_tab_height=None,
+                 document_tab_is_locked=False,
+                 document_tab_is_required=True):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
@@ -223,6 +241,8 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_width = document_tab_width
         if document_tab_height is not None:
             self.model.document_tab_height = document_tab_height
+        self.model.document_tab_is_locked = document_tab_is_locked
+        self.model.document_tab_is_required = document_tab_is_required
 
     def to_dict(self):
         return {'document_tab_type': self.model.document_tab_type,
@@ -232,7 +252,9 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_position_x': self.model.document_tab_position_x,
                 'document_tab_position_y': self.model.document_tab_position_y,
                 'document_tab_width': self.model.document_tab_width,
-                'document_tab_height': self.model.document_tab_height}
+                'document_tab_height': self.model.document_tab_height,
+                'document_tab_is_locked': self.model.document_tab_is_locked,
+                'document_tab_is_required': self.model.document_tab_is_required}
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -258,6 +280,9 @@ class DocumentTab(model_interfaces.DocumentTab):
     def get_document_tab_height(self):
         return self.model.document_tab_height
 
+    def get_document_tab_is_locked(self):
+        return self.model.document_tab_is_locked
+
     def set_document_tab_type(self, tab_type):
         self.model.document_tab_type = tab_type
 
@@ -281,6 +306,9 @@ class DocumentTab(model_interfaces.DocumentTab):
 
     def set_document_tab_height(self, tab_height):
         self.model.document_tab_height = tab_height
+
+    def set_document_tab_is_locked(self, is_locked):
+        self.model.document_tab_is_locked = is_locked
 
 class DocumentModel(MapAttribute):
     """
@@ -464,7 +492,7 @@ class ProjectModel(BaseModel):
     class Meta:
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'      
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
@@ -509,6 +537,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         project_dict = dict(self.model)
         project_dict['project_individual_documents'] = individual_documents
         project_dict['project_corporate_documents'] = corporate_documents
+
+        project_dict['logoUrl'] = '{}/{}.png'.format(cla_logo_url, self.model.project_external_id)
+
         return project_dict
 
     def save(self):
@@ -558,16 +589,29 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def get_project_individual_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_individual_documents()
         num_documents = len(document_models)
+
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
+
         if major_version is None:
-            major_version, minor_version = cla.utils.get_last_version(document_models)
+            version = self._get_latest_version(document_models)
+            document = version[2]
+            return document
+
         # TODO Need to optimize this on the DB side.
         for document in document_models:
             if document.get_document_major_version() == major_version and \
                document.get_document_minor_version() == minor_version:
                 return document
+
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_individual_document(self):
+        document_models = self.get_project_individual_documents()
+        version = self._get_latest_version(document_models)
+        document = version[2]
+
+        return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
         document_models = self.get_project_corporate_documents()
@@ -582,6 +626,44 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                document.get_document_minor_version() == minor_version:
                 return document
         raise cla.models.DoesNotExist('Document revision not found')
+
+    def get_latest_corporate_document(self):
+        """
+        Helper function to return the latest corporate document belonging to a project.
+
+        :return: Latest CCLA document object for this project.
+        :rtype: cla.models.model_instances.Document
+        """
+        document_models = self.get_project_corporate_documents()
+        version = self._get_latest_version(document_models)
+        document = version[2]
+
+        return document
+
+    def _get_latest_version(self, documents):
+        """
+        Helper function to get the last version of the list of documents provided.
+
+        :param documents: List of documents to check.
+        :type documents: [cla.models.model_interfaces.Document]
+        :return: 2-item tuple containing (major, minor) version number.
+        :rtype: tuple
+        """
+        last_major = 0 # 0 will be returned if no document was found.
+        last_minor = -1 # -1 will be returned if no document was found.
+        current_document = None
+        for document in documents:
+            current_major = document.get_document_major_version()
+            current_minor = document.get_document_minor_version()
+            if current_major > last_major:
+                last_major = current_major
+                last_minor = current_minor
+                current_document = document
+                continue
+            if current_major == last_major and current_minor > last_minor:
+                last_minor = current_minor
+                current_document = document
+        return (last_major, last_minor, current_document)
 
     def get_project_ccla_requires_icla_signature(self):
         return self.model.project_ccla_requires_icla_signature
@@ -635,8 +717,8 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def set_project_ccla_requires_icla_signature(self, ccla_requires_icla_signature):
         self.model.project_ccla_requires_icla_signature = ccla_requires_icla_signature
 
-    def set_project_acl(self, project_acl_user_id):
-        self.model.project_acl = set([project_acl_user_id])
+    def set_project_acl(self, project_acl_username):
+        self.model.project_acl = set([project_acl_username])
 
 
     def get_project_repositories(self):
@@ -653,13 +735,13 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                                                      signature_approved=signature_approved,
                                                      signature_signed=signature_signed)
 
-    def get_projects_by_external_id(self, project_external_id, user_id):
+    def get_projects_by_external_id(self, project_external_id, username):
         project_generator = self.model.project_external_id_index.query(project_external_id)
         projects = []
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            if user_id in project.get_project_acl():
+            if username in project.get_project_acl():
                 projects.append(project)
         return projects
 
@@ -699,25 +781,29 @@ class UserModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-users'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
     user_id = UnicodeAttribute(hash_key=True)
     user_external_id = UnicodeAttribute(null=True)
+    # User Emails are specifically GitHub Emails
     user_emails = UnicodeSetAttribute(default=set())
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
     user_github_id = NumberAttribute(null=True)
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
-
+    lf_email = UnicodeAttribute(null=True)
+    lf_username = UnicodeAttribute(null=True)
+    lf_username_index = LFUsernameIndex()
+    lf_sub = UnicodeAttribute(null=True)
 
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, lf_username=None, lf_sub=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -725,6 +811,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
         self.model.user_ldap_id = user_ldap_id
+        self.model.lf_username = lf_username
+        self.model.lf_sub = lf_sub
 
     def to_dict(self):
         ret = dict(self.model)
@@ -750,11 +838,22 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_id(self):
         return self.model.user_id
 
+    def get_lf_username(self):
+        return self.model.lf_username
+
     def get_user_external_id(self):
         return self.model.user_id
 
+    def get_lf_email(self):
+        return self.model.lf_email
+
+    def get_lf_sub(self):
+        return self.model.lf_sub
+
     def get_user_email(self):
-        if len(self.model.user_emails) > 0:
+        if self.model.lf_email is not None:
+            return self.model.lf_email
+        elif len(self.model.user_emails) > 0:
             # Ordering not guaranteed, better to use get_user_emails.
             return next(iter(self.model.user_emails))
         return None
@@ -771,22 +870,31 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_github_id(self):
         return self.model.user_github_id
 
-    def get_user_ldap_id(self):
-        return self.model.user_ldap_id
+    # def get_user_ldap_id(self):
+    #     return self.model.user_ldap_id
 
     def set_user_id(self, user_id):
         self.model.user_id = user_id
 
+    def set_lf_username(self, lf_username):
+        self.model.lf_username = lf_username
+
     def set_user_external_id(self, user_external_id):
         self.model.user_external_id = user_external_id
+
+    def set_lf_email(self, lf_email):
+        self.model.lf_email = lf_email
+
+    def set_lf_sub(self, sub):
+        self.model.sub = sub
 
     def set_user_email(self, user_email):
         # Standard set/list operations (add or append) don't work as expected.
         # Seems to apply the operations on the class attribute which means that
         # all future user objects have all the other user's emails as well.
         # Explicitly creating new list and casting to set seems to work as expected.
-        self.model.user_emails = list(self.model.user_emails) + [user_email]
-        self.model.user_emails = set(self.model.user_emails)
+        email_list = list(self.model.user_emails) + [user_email]
+        self.model.user_emails = set(email_list)
 
     def set_user_emails(self, user_emails):
         self.model.user_emails = user_emails
@@ -800,8 +908,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
 
-    def set_user_ldap_id(self, user_ldap_id):
-        self.model.user_ldap_id = user_ldap_id
+    # def set_user_ldap_id(self, user_ldap_id):
+    #     self.model.user_ldap_id = user_ldap_id
 
     def get_user_by_email(self, user_email):
         user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
@@ -819,12 +927,89 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             return user
         return None
 
+    def get_user_by_username(self, username):
+        user_generator = self.model.lf_username_index.query(username)
+        for user_model in user_generator:
+            user = User()
+            user.model = user_model
+            return user
+        return None
+
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
         return Signature().get_signatures_by_reference(self.get_user_id(), 'user',
                                                        project_id=project_id,
                                                        user_ccla_company_id=company_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_latest_signature(self, project_id, company_id=None):
+        """
+        Helper function to get a user's latest signature for a project.
+
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :param company_id: The company ID if looking for an employee signature.
+        :type company_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+                signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
+
+    def is_whitelisted(self, company):
+        """
+        Helper function to determine whether at least one of the user's email
+        addresses are whitelisted for a particular company.
+
+        :param company: The company to check against.
+        :type company: cla.models.model_interfaces.Company
+        :return: True if at least one email is whitelisted, False otherwise.
+        :rtype: bool
+        """
+        emails = self.get_user_emails()
+        if len(emails) == 0:
+            emails = [self.get_lf_email()]
+
+        # Check email whitelist
+        whitelist = company.get_company_whitelist()
+        if whitelist is not None:
+            for email in emails:
+                if email in whitelist:
+                    return True
+
+        # Check domain whitelist
+        # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
+        # so that sub-domains are not allowed.
+        # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
+        # which will allow subdomains.
+        patterns = company.get_company_whitelist_patterns()
+        if patterns is not None:
+            for pattern in patterns:
+
+                if pattern.startswith('*.'):
+                    pattern = pattern.replace('*.', '.*\.')
+                elif pattern.startswith('*'):
+                    pattern = pattern.replace('*', '.*\.')
+                elif pattern.startswith('.'):
+                    pattern = pattern.replace('.', '.*\.')
+
+                preprocessed_pattern = '^.*@' + pattern + '$'
+                pat = re.compile(preprocessed_pattern)
+                for email in emails:
+                    if pat.match(email) != None:
+                        return True
+
+        return False
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
@@ -965,7 +1150,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     class Meta:
         """Meta class for Signature."""
         table_name = 'cla-{}-signatures'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -985,6 +1170,8 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_user_ccla_company_id = UnicodeAttribute(null=True)
     signature_project_index = ProjectSignatureIndex()
     signature_reference_index = ReferenceSignatureIndex()
+    # Callback type refers to either Gerrit or GitHub
+    signature_return_url_type = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
@@ -1005,7 +1192,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_sign_url=None,
                  signature_return_url=None,
                  signature_callback_url=None,
-                 signature_user_ccla_company_id=None):
+                 signature_user_ccla_company_id=None,
+                 signature_return_url_type=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1022,6 +1210,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_return_url = signature_return_url
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
+        self.model.signature_return_url_type = signature_return_url_type
 
     def to_dict(self):
         return dict(self.model)
@@ -1081,6 +1270,10 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_signature_user_ccla_company_id(self):
         return self.model.signature_user_ccla_company_id
 
+    def get_signature_return_url_type(self):
+        # Refers to either Gerrit or GitHub
+        return self.model.signature_return_url_type
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1122,6 +1315,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_user_ccla_company_id(self, company_id):
         self.model.signature_user_ccla_company_id = company_id
+
+    def set_signature_return_url_type(self, signature_return_url_type):
+        self.model.signature_return_url_type = signature_return_url_type
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
@@ -1214,7 +1410,7 @@ class CompanyModel(BaseModel):
     class Meta:
         """Meta class for Company."""
         table_name = 'cla-{}-companies'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
@@ -1300,8 +1496,8 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def set_company_whitelist(self, whitelist):
         self.model.company_whitelist = [str(wl) for wl in whitelist]
 
-    def set_company_acl(self, company_acl_user_id):
-        self.model.company_acl = set([company_acl_user_id])
+    def set_company_acl(self, company_acl_username):
+        self.model.company_acl = set([company_acl_username])
 
     def add_company_whitelist(self, whitelist_item):
         if self.model.company_whitelist is None:
@@ -1334,6 +1530,30 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                                                        project_id=project_id,
                                                        signature_approved=signature_approved,
                                                        signature_signed=signature_signed)
+
+    def get_latest_signature(self, project_id):
+        """
+        Helper function to get a company's latest signature for a project.
+
+        :param company: The company object to check for.
+        :type company: cla.models.model_interfaces.Company
+        :param project_id: The ID of the project to check for.
+        :type project_id: string
+        :return: The latest versioned signature object if it exists.
+        :rtype: cla.models.model_interfaces.Signature or None
+        """
+        signatures = self.get_company_signatures(project_id=project_id)
+        latest = None
+        for signature in signatures:
+            if latest is None:
+                latest = signature
+            elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
+                latest = signature
+            elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
+            signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                latest = signature
+
+        return latest
 
     def get_company_by_external_id(self, company_external_id):
         company_generator = self.model.company_external_id_index.query(company_external_id)
@@ -1373,7 +1593,7 @@ class StoreModel(Model):
     class Meta:
         """Meta class for Store."""
         table_name = 'cla-{}-store'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
@@ -1427,7 +1647,7 @@ class GitHubOrgModel(BaseModel):
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-github-orgs'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
     organization_name = UnicodeAttribute(hash_key=True)
     organization_company_id = UnicodeAttribute(null=True)
@@ -1527,6 +1747,120 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             ret.append(org)
         return ret
 
+class GerritModel(BaseModel):
+    """
+    Represents a Gerrit Instance in the database.
+    """
+    class Meta:
+        """Meta class for User."""
+        table_name = 'cla-{}-gerrit-instances'.format(stage)
+        if stage == 'local':
+            host = 'http://localhost:8000'
+    gerrit_id  = UnicodeAttribute(hash_key=True)
+    project_id = UnicodeAttribute()
+    gerrit_name = UnicodeAttribute()
+    gerrit_url = UnicodeAttribute()
+    group_id_icla = UnicodeAttribute()
+    group_id_ccla = UnicodeAttribute()
+    group_name_icla = UnicodeAttribute(null=True)
+    group_name_ccla = UnicodeAttribute(null=True)
+
+class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB Gerrit model.
+    """
+    def __init__(self, gerrit_id=None, gerrit_name=None, 
+    project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
+        super(Gerrit).__init__()
+        self.model = GerritModel()
+        self.model.gerrit_id = gerrit_id
+        self.model.gerrit_name = gerrit_name
+        self.model.project_id = project_id
+        self.model.gerrit_url = gerrit_url
+        self.model.group_id_icla = group_id_icla
+        self.model.group_id_ccla = group_id_ccla
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def load(self, gerrit_id):
+        try:
+            gerrit = self.model.get(str(gerrit_id))
+        except GerritModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Gerrit Instance not found')
+        self.model = gerrit
+
+    def get_gerrit_id(self):
+        return self.model.gerrit_id
+
+    def get_gerrit_name(self):
+        return self.model.gerrit_name
+
+    def get_project_id(self):
+        return self.model.project_id
+
+    def get_gerrit_url(self):
+        return self.model.gerrit_url
+
+    def get_group_id_icla(self):
+        return self.model.group_id_icla
+
+    def get_group_id_ccla(self):
+        return self.model.group_id_ccla
+
+    def set_gerrit_id(self, gerrit_id):
+        self.model.gerrit_id = gerrit_id
+
+    def set_gerrit_name(self, gerrit_name):
+        self.model.gerrit_name = gerrit_name
+
+    def set_project_id(self, project_id):
+        self.model.project_id = project_id
+
+    def set_gerrit_url(self, gerrit_url):
+        self.model.gerrit_url = gerrit_url
+
+    def set_group_id_icla(self, group_id_icla):
+        self.model.group_id_icla = group_id_icla
+
+    def set_group_id_ccla(self, group_id_ccla) :
+        self.model.group_id_ccla = group_id_ccla
+
+    def set_group_name_icla(self, group_name_icla):
+        self.model.group_name_icla = group_name_icla
+
+    def set_group_name_ccla(self, group_name_ccla) :
+        self.model.group_name_ccla = group_name_ccla
+
+    def save(self):
+        self.model.save()
+
+    def delete(self):
+        self.model.delete()
+        
+    def get_gerrit_by_project_id(self, project_id):
+        # Projects can each have at most 1 Gerrit Instance.
+        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
+        gerrits = []
+        for gerrit_model in gerrit_generator:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            gerrits.append(gerrit)
+        if len(gerrits) >= 1: 
+            return gerrits
+        else :
+            return None
+
+    def all(self):
+        gerrits = self.model.scan()
+        ret = []
+        for gerrit_model in gerrits:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            ret.append(gerrit)
+        return ret
+
 class UserPermissionsModel(BaseModel):
     """
     Represents user permissions in the database.
@@ -1534,22 +1868,21 @@ class UserPermissionsModel(BaseModel):
     class Meta:
         """Meta class for User Permissions."""
         table_name = 'cla-{}-user-permissions'.format(stage)
-        if stage == 'dev':
+        if stage == 'local':
             host = 'http://localhost:8000'
-    user_id = UnicodeAttribute(hash_key=True)
+    username = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
-    companies = UnicodeSetAttribute(default=set())
 
 class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB UserPermissions model.
     """
-    def __init__(self, user_id=None, projects=None, companies=None):
+    def __init__(self, username=None, projects=None):
         super(UserPermissions).__init__()
         self.model = UserPermissionsModel()
-        self.model.user_id = user_id
-        self.model.projects = projects
-        self.model.companies = companies
+        self.model.username = username
+        if projects is not None:
+            self.model.projects = set(projects)
 
     def to_dict(self):
         ret = dict(self.model)
@@ -1558,21 +1891,12 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
     def save(self):
         self.model.save()
 
-    def load(self, user_id):
+    def load(self, username):
         try:
-            user_permissions = self.model.get(str(user_id))
+            user_permissions = self.model.get(str(username))
         except UserPermissionsModel.DoesNotExist:
             raise cla.models.DoesNotExist('User Permissions not found')
         self.model = user_permissions
 
     def delete(self):
         self.model.delete()
-
-    def all(self):
-        orgs = self.model.scan()
-        ret = []
-        for organization in orgs:
-            org = GitHubOrg()
-            org.model = organization
-            ret.append(org)
-        return ret

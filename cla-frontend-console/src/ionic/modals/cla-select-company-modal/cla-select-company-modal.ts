@@ -63,6 +63,7 @@ export class ClaSelectCompanyModal {
       project_id: this.projectId,
       company_id: company.company_id,
       user_id: this.userId,
+      return_url_type: "Github",
     };
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
@@ -87,6 +88,7 @@ export class ClaSelectCompanyModal {
         repositoryId: this.repositoryId,
         userId: this.userId,
         companyId: company.company_id,
+        signingType: "Github",
       });
       }
     });
@@ -103,7 +105,8 @@ export class ClaSelectCompanyModal {
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
-      userId: this.userId
+      userId: this.userId,
+      authenticated: false // Github users are not authenticated.
     });
     modal.present();
     this.dismiss();
