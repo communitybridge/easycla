@@ -16,6 +16,7 @@ export class ClaEmployeeCompanyConfirmPage {
   repositoryId: string;
   userId: string;
   companyId: string;
+  signingType: string; // used to differentiate Github/Gerrit Users
 
   user: any;
   project: any;
@@ -38,6 +39,7 @@ export class ClaEmployeeCompanyConfirmPage {
     this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
+    this.signingType = navParams.get('signingType');
 
     this.getDefaults();
 
@@ -93,6 +95,7 @@ export class ClaEmployeeCompanyConfirmPage {
       project_id: this.projectId,
       company_id: this.companyId,
       user_id: this.userId,
+      return_url_type: this.signingType, //"Gerrit" / "Github"
     };
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
