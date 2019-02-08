@@ -1,106 +1,106 @@
 """
 auth.py contains all necessary objects and functions to perform authentication and authorization.
 """
-
-import hug
-import falcon
+import os
 import requests
-# from jose.exceptions import ExpiredSignatureError, JWSSignatureError, JWSAlgorithmError, \
-#                             JWTClaimsError, JWTSignatureError, JWTError
-# from keycloak import KeycloakOpenID
+from jose import jwt
 import cla
-import functools
 
-# kc = KeycloakOpenID()
-# kc.init(cla.conf['KEYCLOAK_ENDPOINT'],
-#         cla.conf['KEYCLOAK_CLIENT_ID'],
-#         cla.conf['KEYCLOAK_REALM'],
-#         cla.conf['KEYCLOAK_CLIENT_SECRET'])
-# kc_keys = kc.certs()
+auth0_base_url = os.environ.get('AUTH0_DOMAIN', '')
+auth0_username_claim = os.environ.get('AUTH0_USERNAME_CLAIM', '')
+algorithms = [os.environ.get('AUTH0_ALGORITHM', '')]
 
-# def decode_token(token):
-#     """
-#     Wrapper around the Keycloak decode_token function that will handle the pmc audience.
-#     """
-#     kc.client_id = 'pmc'
-#     token = kc.decode_token(token, kc_keys)
-#     kc.client_id = 'cla'
-#     return token
-#
-# def token_verify(token):
-#     if token.startswith('Bearer '):
-#         token = token[7:]
-#         try:
-#             return decode_token(token)
-#         except (ExpiredSignatureError, JWSSignatureError, JWSAlgorithmError, JWTClaimsError, \
-#                 JWTSignatureError, JWTError) as e:
-#             cla.log.warning('Invalid token (%s): %s' %(e, token))
-#     return False
-#
-# def pm_verify(user, project_id):
-#     """
-#     Helper function to ensure the request is made by a user who is manager for the project in question.
-#     """
-#     project = cla.utils.get_project_instance()
-#     project.load(str(project_id))
-#     external_project_id = project.get_project_external_id()
-#     pm_verify_external_id(user, external_project_id)
-#
-# def pm_verify_external_id(user, external_project_id):
-#     """
-#     Same as pm_verify() except it deals with external_project_id (CINCO project_id).
-#     """
-#     # TODO: Need to look into this - will fetching a new token every request cause issues?
-#     cla_token = kc.token('client_credentials')
-#     headers = {'Authorization': 'Bearer ' + cla_token['access_token']}
-#     req = requests.get(cla.conf['CINCO_ENDPOINT'] + '/project/' + external_project_id + '/managers', headers=headers)
-#     data = req.json()
-#     if req.status_code is 200:
-#         if user.user_id is not None and user.user_id in data:
-#             return True
-#         else:
-#             raise falcon.HTTPError('403 Not Authorized', 'authorization', 'Insufficient permissions')
-#     else:
-#         cla.log.error('Could not fetch project managers from CINCO: %s - %s', data['code'], data['message'])
-#         raise falcon.HTTPError('500 Internal Server Error', 'cinco_communication', 'Could not fetch project managers')
-#
-# def staff_verify(user):
-#     if 'engineering-team' in user.roles or \
-#        'STAFF_SUPER_ADMIN' in user.roles or \
-#        'integration-api-role' in user.roles:
-#         return True
-#     raise falcon.HTTPError('403 Not Authorized', 'authorization', 'Insufficient permissions')
-#
-# def company_manager_verify(user, company_id):
-#     user_obj = cla.utils.get_user_instance()
-#     user_obj = user_obj.get_user_by_email(user.email)
-#     comp = cla.utils.get_company_instance()
-#     companies = comp.get_companies_by_manager_id(user_obj.get_user_id())
-#     for company in companies:
-#         if company['company_id'] == company_id:
-#             return True
-#     raise falcon.HTTPError('403 Not Authorized', 'authorization', 'Not company manager')
-#
-# token_authentication = hug.authentication.token(token_verify)
+class AuthError(Exception):
+    def __init__(self, response):
+        self.response = response
 
+class AuthUser(object):
+    """
+    This user object is built from Auth0 JWT claims.
+    """
+    def __init__(self, auth_claims):
+        self.name = auth_claims.get('name')
+        self.email = auth_claims.get('email')
+        self.username = auth_claims.get(auth0_username_claim)
+        self.sub = auth_claims.get('sub')
 
-#
-# Verify staff decorator
-#
-def staff_required(func):
-    @functools.wraps(func)
-    def inner(request, *args, **kwargs):
-        #so here we can check user role from API-GW-Auth.
-        return func(*args, **kwargs)
-    return inner
-#
-# Verify company manager decorator
-#
-def require_company_manager():
-    pass
+def get_auth_token(headers):
+    """
+    Obtains the Access Token from the Authorization Header
+    """
+    auth = headers.get('Authorization')
+    if not auth:
+        auth = headers.get('AUTHORIZATION')
+    if not auth:
+        raise AuthError('missing authorization header')
 
-#
-# Verify project manager decorator
-#
-def require_project_manager():
-    pass
+    parts = auth.split()
+
+    if parts[0].lower() != 'bearer':
+        raise AuthError({'authorization header must begin with \"Bearer\"'})
+    elif len(parts) == 1:
+        raise AuthError('token not found')
+    elif len(parts) > 2:
+        raise AuthError('authorization header must be of the form \"Bearer token\"')
+
+    return parts[1]
+
+def authenticate_user(headers):
+    """
+    Determines if the Access Token is valid
+    """
+    token = get_auth_token(headers)
+    try:
+        jwks_url = os.path.join('https://', auth0_base_url, '.well-known/jwks.json')
+        jwks = requests.get(jwks_url).json()
+    except Exception as e:
+        cla.log.error(e)
+        raise AuthError('unable to fetch well known jwks')
+
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except jwt.JWTError as e:
+        cla.log.error(e)
+        raise AuthError('unable to decode claims')
+
+    rsa_key = {}
+    for key in jwks["keys"]:
+        if key["kid"] == unverified_header["kid"]:
+            rsa_key = {
+                "kty": key["kty"],
+                "kid": key["kid"],
+                "use": key["use"],
+                "n": key["n"],
+                "e": key["e"]
+            }
+    if rsa_key:
+        try:
+            payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=algorithms,
+                options={
+                    'verify_at_hash': False,
+                    'verify_aud': False
+                }
+            )
+        except jwt.ExpiredSignatureError as e:
+            cla.log.error(e)
+            raise AuthError('token is expired')
+        except jwt.JWTClaimsError as e:
+            cla.log.error(e)
+            raise AuthError('incorrect claims')
+        except Exception as e:
+            cla.log.error(e)
+            raise AuthError('unable to parse authentication')
+
+        username = payload.get(auth0_username_claim)
+        if username is None:
+            raise AuthError('username not found')
+
+        auth_user = AuthUser(payload)
+
+        return auth_user
+
+    raise AuthError({"code": "invalid_header",
+                    "description": "Unable to find appropriate key"})

@@ -18,6 +18,7 @@ export class ClaCompanyAdminSendEmailModal {
   repositoryId: string;
   userId: string;
   consoleLink: string; 
+  authenticated: boolean; // true if coming from gerrit/corporate 
 
   userEmails: Array<string>;
 
@@ -38,6 +39,7 @@ export class ClaCompanyAdminSendEmailModal {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
+    this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
       useremail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       adminemail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
@@ -55,9 +57,17 @@ export class ClaCompanyAdminSendEmailModal {
   }
 
   getUser() {
-    this.claService.getUser(this.userId).subscribe(user => {
-      this.userEmails = user.user_emails;
-    });
+    if (this.authenticated) {
+      this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
+        if(user.lf_email) {
+          this.userEmails.push(user.lf_email)
+        }
+      })
+    } else {
+      this.claService.getUser(this.userId).subscribe(user => {
+        this.userEmails = user.user_emails;
+      });
+    }
   }
 
   dismiss() {

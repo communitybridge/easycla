@@ -41,7 +41,7 @@ export class ClaContractViewSignaturesModal {
     public rolesService: RolesService,
     public events: Events
   ) {
-    this.claProjectId = this.navParams.get('projectId');
+    this.claProjectId = this.navParams.get('claProjectId');
     this.getDefaults();
 
     events.subscribe('modal:close', () => {

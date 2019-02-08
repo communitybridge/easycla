@@ -345,6 +345,9 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_lf_email(self):
+        raise NotImplementedError()
+
     def get_user_email(self):
         """
         Getter for the user's first email address.
@@ -399,6 +402,16 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_lf_username(self):
+        """
+        Getter for the user's Linux Foundation Username.
+        """
+        
+        raise NotImplementedError() 
+
+    def get_lf_sub(self):
+        raise NotImplementedError()
+
     def set_user_id(self, user_id):
         """
         Setter for the user's ID.
@@ -415,6 +428,9 @@ class User(object):
         :param user_external_id: The External ID for this user.
         :type user_external_id: string
         """
+        raise NotImplementedError()
+
+    def set_lf_email(self, lf_email):
         raise NotImplementedError()
 
     def set_user_email(self, user_email):
@@ -471,6 +487,18 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def set_lf_username(self, lf_username):
+        """
+        Setter for the user's Linux Foundation Username.
+        :param lf_username: The user's LF Username. 
+        :type lf_username: string
+        """
+        
+        raise NotImplementedError() 
+
+    def set_lf_sub(self, sub):
+        raise NotImplementedError()
+
     def get_user_by_email(self, user_email):
         """
         Fetches the user object that matches the email specified.
@@ -491,6 +519,9 @@ class User(object):
         :return: The user object with the GitHub ID, or None if not found.
         :rtype: cla.models.model_interfaces.User | None
         """
+        raise NotImplementedError()
+
+    def get_user_by_username(self, username):
         raise NotImplementedError()
 
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
@@ -1841,6 +1872,51 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
+class Gerrit(object):
+    """
+    Interface to the Gerrit model.
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model.
+        """
+        raise NotImplementedError()
+
+    def load(self, gerrit_id):
+        """
+        Simple abstraction around the supported ORMs to load a model.
+        Should populate the current object.
+
+        :param gerrit_id: The Gerrit instance's ID.
+        :type organization_id: string
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model.
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all gerrit instances in the CLA system.
+
+        :return: A list ofG Gerrit Instance objects.
+        :rtype: [cla.models.model_interfaces.Gerrit]
+        """
+        raise NotImplementedError()
+
 class UserPermissions(object):
     """
     Interface to the UserPermissions model.
@@ -1877,11 +1953,19 @@ class UserPermissions(object):
         """
         raise NotImplementedError()
 
+    def get_gerrit_by_project_id(self):
+        """
+        Gets all gerrit instances by a project ID.
+        """
+        raise NotImplementedError()
+    
     def all(self):
         """
         Fetches all github organizations in the CLA system.
 
-        :return: A list of GitHubOrg objects.
-        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        :return: A list of UserPermission objects.
+        :rtype: [cla.models.model_interfaces.UserPermission]
         """
         raise NotImplementedError()
+
+    

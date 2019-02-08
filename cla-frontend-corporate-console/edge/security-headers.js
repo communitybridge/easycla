@@ -26,14 +26,14 @@ function generateCSP(env, isDevServer) {
   const NONE = "'none'";
 
   let connectSources = [SELF,
-  'https://***REMOVED***.auth0.com/',
-  'https://linuxfoundation-dev.auth0.com/',
-  'https://linuxfoundation-staging.auth0.com/',
-  'https://sso.linuxfoundation.org/',
-  'https://pd9alkfok2.execute-api.us-east-1.amazonaws.com/qa/',
-  'https://wbkv5r3eyf.execute-api.us-east-1.amazonaws.com/staging/',
-  'https://ckr858t6zb.execute-api.us-east-1.amazonaws.com/prod/'
-];
+    'https://linuxfoundation-dev.auth0.com/',
+    'https://linuxfoundation-staging.auth0.com/',
+    'https://sso.linuxfoundation.org/',
+    'https://api.staging.lfcla.com/',
+    'https://api.dev.lfcla.com/',
+    'https://api.test.lfcla.com/',
+    'https://api.lfcla.com/'
+  ];
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
   let styleSources = [SELF, UNSAFE_INLINE];
 
@@ -50,7 +50,7 @@ function generateCSP(env, isDevServer) {
 
   const sources = {
     'default-src': [NONE],
-    'img-src': [SELF, 'data:', 'https://logo.url.com/'],
+    'img-src': [SELF, 'data:', 'https://s3.amazonaws.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
     'font-src': [SELF],
