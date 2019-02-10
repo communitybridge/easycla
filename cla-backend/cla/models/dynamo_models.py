@@ -186,6 +186,9 @@ class BaseModel(Model):
         """Used to convert model to dict for JSON-serialized string."""
         for name, attr in self._get_attributes().items():
             if isinstance(attr, ListAttribute):
+                if attr is None:
+                    yield name, []
+
                 values = attr.serialize(getattr(self, name))
                 if len(values) < 1:
                     yield name, []
@@ -1173,6 +1176,9 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
 
+    # whitelists are only used by CCLAs
+    domain_whitelist = ListAttribute()
+    email_whitelist = ListAttribute()
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1193,7 +1199,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
-                 signature_return_url_type=None):
+                 signature_return_url_type=None,
+                 domain_whitelist=[],
+                 email_whitelist=[]):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1211,6 +1219,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_return_url_type = signature_return_url_type
+        self.model.domain_whitelist = domain_whitelist
+        self.model.email_whitelist = email_whitelist
 
     def to_dict(self):
         return dict(self.model)
@@ -1274,6 +1284,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
+    def get_domain_whitelist(self):
+        return self.model.domain_whitelist
+
+    def get_email_whitelist(self):
+        return self.model.email_whitelist
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1318,6 +1334,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
+
+    def set_domain_whitelist(self, domain_whitelist):
+        self.model.domain_whitelist = domain_whitelist
+
+    def set_email_whitelist(self, email_whitelist):
+        self.model.email_whitelist = email_whitelist
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
@@ -1416,8 +1438,6 @@ class CompanyModel(BaseModel):
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
     company_name = UnicodeAttribute()
-    company_whitelist = ListAttribute()
-    company_whitelist_patterns = ListAttribute()
     company_external_id_index = ExternalCompanyIndex()
     company_acl = UnicodeSetAttribute(default=set())
 
@@ -1431,8 +1451,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                  company_external_id=None,
                  company_manager_id=None,
                  company_name=None,
-                 company_whitelist_patterns=None,
-                 company_whitelist=None,
                  company_acl=None,):
         super(Company).__init__()
         self.model = CompanyModel()
@@ -1440,8 +1458,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         self.model.company_external_id = company_external_id
         self.model.company_manager_id = company_manager_id
         self.model.company_name = company_name
-        self.model.company_whitelist = company_whitelist
-        self.model.company_whitelist_patterns = company_whitelist_patterns
         self.model.company_acl = company_acl
 
     def to_dict(self):
@@ -1472,12 +1488,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_company_name(self):
         return self.model.company_name
 
-    def get_company_whitelist(self):
-        return self.model.company_whitelist
-
-    def get_company_whitelist_patterns(self):
-        return self.model.company_whitelist_patterns
-
     def get_company_acl(self):
         return  self.model.company_acl
 
@@ -1493,34 +1503,8 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def set_company_name(self, company_name):
         self.model.company_name = str(company_name)
 
-    def set_company_whitelist(self, whitelist):
-        self.model.company_whitelist = [str(wl) for wl in whitelist]
-
     def set_company_acl(self, company_acl_username):
         self.model.company_acl = set([company_acl_username])
-
-    def add_company_whitelist(self, whitelist_item):
-        if self.model.company_whitelist is None:
-            self.model.company_whitelist = [str(whitelist_item)]
-        else:
-            self.model.company_whitelist.append(str(whitelist_item))
-
-    def remove_company_whitelist(self, whitelist_item):
-        if str(whitelist_item) in self.model.company_whitelist:
-            self.model.company_whitelist.remove(str(whitelist_item))
-
-    def set_company_whitelist_patterns(self, whitelist_patterns):
-        self.model.company_whitelist_patterns = [str(wp) for wp in whitelist_patterns]
-
-    def add_company_whitelist_pattern(self, whitelist_pattern):
-        if self.model.company_whitelist_patterns is None:
-            self.model.company_whitelist_patterns = [str(whitelist_pattern)]
-        else:
-            self.model.company_whitelist_patterns.append(str(whitelist_pattern))
-
-    def remove_company_whitelist_pattern(self, whitelist_pattern):
-        if str(whitelist_pattern) in self.model.company_whitelist_patterns:
-            self.model.company_whitelist_patterns.remove(str(whitelist_pattern))
 
     def get_company_signatures(self, # pylint: disable=arguments-differ
                                project_id=None,

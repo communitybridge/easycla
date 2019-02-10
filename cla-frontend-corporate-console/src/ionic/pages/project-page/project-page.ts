@@ -12,6 +12,7 @@ import { ClaSignatureModel } from "../../models/cla-signature";
 import { SortService } from "../../services/sort.service";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
+import { WhitelistModal } from "../../modals/whitelist-modal/whitelist-modal";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -24,7 +25,8 @@ import { Restricted } from "../../decorators/restricted";
   templateUrl: "project-page.html"
 })
 export class ProjectPage {
-  signatures: ClaSignatureModel[];
+  cclaSignature: ClaSignatureModel;
+  employeeSignatures: ClaSignatureModel[];
   loading: any;
   companyId: string;
   projectId: string;
@@ -60,7 +62,7 @@ export class ProjectPage {
       }
     };
     this.company = new ClaCompanyModel();
-
+    this.cclaSignature = new ClaSignatureModel();
   }
 
   ngOnInit() {
@@ -87,8 +89,13 @@ export class ProjectPage {
     this.claService
       .getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        this.signatures = response.filter(sig => sig.signature_type === "cla");
-        for (let signature of this.signatures) {
+        let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
+        if (cclaSignatures.length) {
+          this.cclaSignature = cclaSignatures[0];
+        }
+
+        this.employeeSignatures = response.filter(sig => sig.signature_type === 'cla');
+        for (let signature of this.employeeSignatures) {
           this.getUser(signature.signature_reference_id);
         }
       });
@@ -106,11 +113,12 @@ export class ProjectPage {
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
-      company: this.company
+      signatureId: this.cclaSignature.signature_id,
+      whitelist: this.cclaSignature.email_whitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
-      this.getCompany();
+      this.getProjectSignatures();
     });
     modal.present();
   }
@@ -118,16 +126,17 @@ export class ProjectPage {
   openWhitelistDomainModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "domain",
-      company: this.company
+      signatureId: this.cclaSignature.signature_id,
+      whitelist: this.cclaSignature.domain_whitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
-      this.getCompany();
+      this.getProjectSignatures();
     });
     modal.present();
   }
 
   sortMembers(prop) {
-    this.sortService.toggleSort(this.sort, prop, this.signatures);
+    this.sortService.toggleSort(this.sort, prop, this.employeeSignatures);
   }
 }
