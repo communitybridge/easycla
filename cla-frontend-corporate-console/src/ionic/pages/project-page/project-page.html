@@ -26,8 +26,8 @@
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let pattern of company.company_whitelist_patterns">
-                {{ pattern }}
+              <ion-item *ngFor="let domain of cclaSignature.domain_whitelist">
+                {{ domain }}
               </ion-item>
             </ion-list>
           </div>
@@ -39,8 +39,8 @@
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let whitelist of company.company_whitelist">
-                {{ whitelist }}
+              <ion-item *ngFor="let email of cclaSignature.email_whitelist">
+                {{ email }}
               </ion-item>
             </ion-list>
           </div>
@@ -69,7 +69,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let signature of signatures">
+              <tr *ngFor="let signature of employeeSignatures">
                 <td data-title="Name">
                   <span *ngIf="users[signature.signature_reference_id]">{{ users[signature.signature_reference_id].user_name }}</span>
                 </td>

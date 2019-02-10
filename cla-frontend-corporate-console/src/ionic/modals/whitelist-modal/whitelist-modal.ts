@@ -9,7 +9,7 @@ import {
 } from "ionic-angular";
 import { FormBuilder, FormGroup, Validators, FormArray } from "@angular/forms";
 import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
+import { ClaSignatureModel } from "../../models/cla-signature";
 
 @IonicPage({
   segment: "whitelist-modal"
@@ -24,7 +24,7 @@ export class WhitelistModal {
   currentlySubmitting: boolean;
 
   type: string;
-  company: ClaCompanyModel;
+  signatureId: string;
   whitelist: string[];
 
   constructor(
@@ -38,11 +38,9 @@ export class WhitelistModal {
 
   getDefaults() {
     this.type = this.navParams.get("type"); // ['email' | 'domain']
-    this.company = this.navParams.get("company");
-    this.whitelist =
-      this.type === "domain"
-        ? this.company.company_whitelist_patterns
-        : this.company.company_whitelist;
+    this.signatureId = this.navParams.get('signatureId');
+    this.whitelist = this.navParams.get('whitelist');
+
     this.form = this.formBuilder.group({
       whitelist: this.formBuilder.array([])
     });
@@ -113,14 +111,18 @@ export class WhitelistModal {
       // prevent submit
       return;
     }
+
+    let signature = new ClaSignatureModel()
+    signature.signature_id = this.signatureId;
+
     if (this.type === "domain") {
-      this.company.company_whitelist_patterns = this.extractWhitelist();
+      signature.domain_whitelist = this.extractWhitelist();
     } else {
       //email
-      this.company.company_whitelist = this.extractWhitelist();
+      signature.email_whitelist = this.extractWhitelist();
     }
-    delete this.company.company_manager_id;
-    this.claService.putCompany(this.company).subscribe(
+
+    this.claService.putSignature(signature).subscribe(
       response => {
         this.currentlySubmitting = false;
         this.dismiss();

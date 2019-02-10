@@ -18,6 +18,8 @@ export class ClaSignatureModel {
   signature_type: string;
   signature_user_ccla_company_id: string;
   version: string;
+  domain_whitelist: Array<string>;
+  email_whitelist: Array<string>;
 
   constructor() {
 
