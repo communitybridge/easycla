@@ -18,7 +18,9 @@
     <ion-row *ngIf="claProjects.length == 0">
       <ion-col col-12 class="no-claProjects">
         <ion-icon name="folder-open"></ion-icon>
-        <p>A contract group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a project. Currently this project does not have a contract group defined. Please click below to add a contract group.</p>
+        <p>A contract group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a
+          project. Currently this project does not have a contract group defined. Please click below to add a contract
+          group.</p>
         <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
           Add CLA Contract Group
         </button>
@@ -53,7 +55,8 @@
 
           <ion-row>
             <ng-container *ngFor="let documentType of ['corporate']">
-              <ion-col col-6 *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
+              <ion-col col-6
+                       *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
                 <ion-card class="contract-card">
                   <ion-card-content>
                     <ion-card-title>
@@ -74,7 +77,8 @@
                     <ng-container
                       *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
+                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required
+                        for
                         signature.
                       </p>
                       <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
@@ -82,7 +86,7 @@
                       </button>
                     </ng-container>
                     <ion-grid class="contract-details"
-                      *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                              *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                       <ion-row>
                         <ion-col>
                       <span>
@@ -136,7 +140,8 @@
                     <ng-container
                       *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required for
+                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required
+                        for
                         signature.
                       </p>
                       <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
@@ -144,7 +149,7 @@
                       </button>
                     </ng-container>
                     <ion-grid class="contract-details"
-                      *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                              *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                       <ion-row>
                         <ion-col>
                       <span>
@@ -231,6 +236,74 @@
           </ion-row>
         </div>
       </ion-col>
+
+      <ion-col col-12>
+        <div class="project-detail-card organizations-card">
+          <ion-row class="project-detail-card-header">
+            <ion-col col-6 class="project-title">
+              <h2>
+                Gerrit Instances
+              </h2>
+            </ion-col>
+            <ion-col col-6>
+              <ion-buttons end>
+                <button ion-button  (click)="openClaGerritModal(project.project_id)" color="secondary">
+                  Add Gerrit Instance
+                </button>
+              </ion-buttons>
+            </ion-col>
+          </ion-row>
+
+          <ion-row>
+            <ion-col col-12 *ngFor="let gerrit of project.gerrits">
+              <ion-card class="organization-card">
+                <ion-grid>
+                  <ion-row>
+                    <ion-col class="vertical-rule-right" col-12 col-md-6>
+                      <ion-card-content>
+                        <h1>{{ gerrit.gerrit_name }} </h1>
+                        <p><a target="_blank"
+                              href="{{ gerrit.gerrit_url }}">
+                          {{gerrit.gerrit_url }}
+                        </a></p>
+                      </ion-card-content>
+                    </ion-col>
+                    <ion-col class="vertical-rule-right" col-12 col-md-6>
+
+                      <ion-card-content>
+                        <div class="gerrit-actions">
+                          <button ion-button (click)="deleteGerritInstance(gerrit)" color="light">
+                            Delete
+                          </button>
+                        </div>
+
+                          <p class="code_snippet">
+                            [contributor-agreement "ICLA - {{ gerrit.gerrit_name }}"]<br>
+                            description = ICLA for Linux Foundation<br>
+                            agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/individual/agreementUrl.html" }}<br>
+                            accepted = group {{ gerrit.group_name_ccla }}<br>
+                          </p>
+
+                          <p class="code_snippet">
+                            [contributor-agreement "CCLA - {{ gerrit.gerrit_name }}"]<br>
+                            description = CCLA for Linux Foundation<br>
+                            agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/corporate/agreementUrl.html" }}<br>
+                            accepted = group {{ gerrit.group_name_ccla }}<br>
+                          </p>
+
+                        <small class="mt-10">
+                          Contact the Gerrit Instance's Administrator to include in project.config settings
+                        </small>
+                      </ion-card-content>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </div>
+      </ion-col>
+
     </ion-row>
   </ion-grid>
 </ion-content>
@@ -245,7 +318,7 @@
           </picture>
         </ion-col>
       </ion-row>
-      <hr />
+      <hr/>
       <ion-row>
         <ion-col>
           <small>&copy;2018 The Linux Foundation</small>

@@ -6,6 +6,9 @@ import docraptor
 import os
 from cla.models.pdf_service_interface import PDFService
 
+docraptor_key = os.environ['DOCRAPTOR_API_KEY']
+docraptor_test_mode = os.environ.get('DOCRAPTOR_TEST_MODE', '').lower() == 'true'
+
 class DocRaptor(PDFService):
     """
     Implementation of the DocRaptor PDF Service.
@@ -16,11 +19,11 @@ class DocRaptor(PDFService):
         self.javascript = False
 
     def initialize(self, config):
-        self.api_key = os.environ['DOCRAPTOR_API_KEY']
+        self.api_key = docraptor_key
         docraptor.configuration.username = self.api_key
-        self.debug_mode = True
+        self.debug_mode = False
         docraptor.configuration.debug = self.debug_mode
-        self.test_mode = True
+        self.test_mode = docraptor_test_mode
         self.javascript = True
 
     def generate(self, content, external_resource=False):

@@ -1,4 +1,11 @@
 // Move this to a shared css
+body {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  }
+  
 .button-md-secondary {
   box-shadow: none;
 }
@@ -160,6 +167,12 @@ project-cla {
     right: 25px;
   }
 
+  .gerrit-actions {
+    position: absolute;
+    top: 0;
+    right: 25px;
+  }
+
   .organizations-card {
     margin-top: 0px;
   }
@@ -167,5 +180,18 @@ project-cla {
   .project-row {
     border-bottom: 1px solid lightgray;
     padding-bottom: 30px;
+  }
+
+  .code_snippet {
+    padding: 15px;
+    background-color: #f3f3f3;
+    font-family: monospace;
+    margin-top: 20px;
+    font-size: 10px;
+  }
+
+  small {
+    margin-top: 20px;
+    display: block;
   }
 }
