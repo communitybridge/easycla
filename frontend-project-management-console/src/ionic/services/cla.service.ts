@@ -815,9 +815,9 @@ export class ClaService {
    * /salesforce/projects
    **/
 
-  getAllProjectsFromSFDC(errorHandlerObject: object) {
+  getAllProjectsFromSFDC() {
     return this.http
-      .get(this.claApiUrl + "/v1/salesforce/projects",errorHandlerObject)
+      .get(this.claApiUrl + "/v1/salesforce/projects")
       .map(res => res.json()
         .map(p => this.addProjectLogoFromS3(p))
       );
