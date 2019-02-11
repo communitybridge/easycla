@@ -19,15 +19,15 @@ LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)
 DEBUG = False #: Debug off in production
 
 # Base URL used for callbacks and OAuth2 redirects.
-if stage == 'prod':
-    BASE_URL = 'https://ckr858t6zb.execute-api.us-east-1.amazonaws.com/prod'
-elif stage == 'staging':
-    BASE_URL = 'https://wbkv5r3eyf.execute-api.us-east-1.amazonaws.com/staging'
-elif stage == 'qa':
-    BASE_URL = 'https://pd9alkfok2.execute-api.us-east-1.amazonaws.com/qa'
-else:
-    BASE_URL = '' #ADD YOUR DEV STAGE STAGE HERE
-SIGNED_CALLBACK_URL = BASE_URL + '/v2/signed' #: Default callback once signature is completed.
+API_BASE_URL = os.environ.get('CLA_API_BASE', '')
+
+# Contributor Console base URL
+CONTRIBUTOR_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_BASE', '')
+
+# Corporate Console base URL
+CORPORATE_BASE_URL = os.environ.get('CLA_CORPORATE_BASE', '')
+
+SIGNED_CALLBACK_URL = os.path.join(API_BASE_URL, 'v2/signed') #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.
 
 # Define the database we are working with.
@@ -41,26 +41,6 @@ DYNAMO_REGION = 'us-east-1' #: DynamoDB AWS region.
 DYNAMO_WRITE_UNITS = 1 #: DynamoDB table write units.
 DYNAMO_READ_UNITS = 1 #: DynamoDB table read units.
 
-# Endpoint where users end up to start the signing workflow.
-if stage == 'prod':
-    CLA_CONSOLE_ENDPOINT = 'https://d1fivluqxpmxmf.cloudfront.net'
-elif stage == 'staging':
-    CLA_CONSOLE_ENDPOINT = 'https://d7pvqqazh4kg5.cloudfront.net'
-elif stage == 'qa':
-    CLA_CONSOLE_ENDPOINT = 'https://d37jq4fjnidrq1.cloudfront.net'
-else:
-    CLA_CONSOLE_ENDPOINT = 'http://localhost:8100' #MODIFY HERE IF DEPLOYING TO DEV STAGE
-
-# Endpoint for corporate console.
-if stage == 'prod':
-    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
-elif stage == 'staging':
-    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
-elif stage == 'qa':
-    CORPORATE_CONSOLE_ENDPOINT = 'https://***REMOVED***.cloudfront.net'
-else:
-    CORPORATE_CONSOLE_ENDPOINT = 'http://localhost:8100'
-
 # Define the signing service to use.
 SIGNING_SERVICE = 'DocuSign' #: The signing service to use ('DocuSign', 'HelloSign', etc)
 
@@ -71,7 +51,7 @@ AUTO_CREATE_REPOSITORY = True #: Create repository in database automatically on 
 #: GitHub OAuth2 Authorize URL.
 GITHUB_OAUTH_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 #: GitHub OAuth2 Callback URL.
-GITHUB_OAUTH_CALLBACK_URL = BASE_URL + '/v2/github/installation'
+GITHUB_OAUTH_CALLBACK_URL = os.path.join(API_BASE_URL, 'v2/github/installation')
 #: GitHub OAuth2 Token URL.
 GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 #: How users get notified of CLA status in GitHub ('status', 'comment', or 'status+comment').
@@ -102,24 +82,11 @@ SMTP_SENDER_EMAIL_ADDRESS = 'test@cla.system'
 SMTP_HOST = '' #: Host of the SMTP service.
 SMTP_PORT = '0' #: Port of the SMTP service.
 
-# AWS SES Configuration.
-# SES sender email address - must be verified in SES.
-# Temporary email that has been verified through the SES Console. 
-SES_SENDER_EMAIL_ADDRESS = 'charlie@cofebe.com' 
-SES_REGION = 'us-east-1' #: The AWS region out of which the emails will be sent.
-SES_ACCESS_KEY = None #: AWS Access Key ID for the SES service.
-SES_SECRET_KEY = None #: AWS Secret Access Key for the SES service.
-
 # Storage Service.
 STORAGE_SERVICE = 'S3Storage' #: The storage service to use for storing CLAs.
 
 # LocalStorage Configuration.
 LOCAL_STORAGE_FOLDER = '/tmp/cla' #: Local folder when using the LocalStorage service.
-
-# S3Storage Configuration.
-# ADD KEYS IF DEPLOYING TO DEV STAGE
-S3_ACCESS_KEY = '' #: AWS Access Key ID for the S3 service.
-S3_SECRET_KEY = '' #: AWS Secret Access Key for the S3 service.
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'

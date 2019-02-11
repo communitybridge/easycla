@@ -10,7 +10,7 @@ from cla.utils import get_signing_service, get_signature_instance, get_project_i
                       get_company_instance, get_user_instance, get_email_service
 from cla.models import DoesNotExist
 
-def request_individual_signature(project_id, user_id, return_url=None):
+def request_individual_signature(project_id, user_id, return_url_type, return_url=None):
     """
     Handle POST request to send ICLA signature request to user.
 
@@ -18,13 +18,19 @@ def request_individual_signature(project_id, user_id, return_url=None):
     :type project_id: string
     :param user_id: The ID of the user that will sign.
     :type user_id: string
+    :param return_url_type: Refers to the return url provider type: Gerrit or Github
+    :type return_url_type: string
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_individual_signature(str(project_id), str(user_id), return_url)
+    signing_service = get_signing_service()
+    if return_url_type == "Gerrit":
+        return signing_service.request_individual_signature_gerrit(str(project_id), str(user_id), return_url)
+    elif return_url_type == "Github":
+        return signing_service.request_individual_signature(str(project_id), str(user_id), return_url)
 
-def request_corporate_signature(project_id, company_id, send_as_email=False, 
-                                authority_name=None, authority_email=None, return_url=None):
+def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False, 
+                                authority_name=None, authority_email=None, return_url_type=None, return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
 
@@ -35,9 +41,9 @@ def request_corporate_signature(project_id, company_id, send_as_email=False,
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_corporate_signature(str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url)
+    return get_signing_service().request_corporate_signature(auth_user, str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url_type, return_url)
 
-def request_employee_signature(project_id, company_id, user_id, return_url=None):
+def request_employee_signature(project_id, company_id, user_id, return_url_type, return_url=None):
     """
     Creates placeholder signature object that represents a user signing a CCLA as an employee.
 
@@ -47,9 +53,16 @@ def request_employee_signature(project_id, company_id, user_id, return_url=None)
     :type company_id: string
     :param user_id: The ID of the user.
     :type user_id: string
+    :param return_url_type: Refers to the return url provider type: Gerrit or Github
+    :type return_url_type: string
     :param return_url: The URL to return the user to after signing is complete.
     """
-    return get_signing_service().request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
+
+    signing_service = get_signing_service()
+    if return_url_type == "Gerrit":
+        return signing_service.request_employee_signature_gerrit(str(project_id), str(company_id), str(user_id), return_url)
+    elif return_url_type == "Github":
+        return signing_service.request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
 
 
 def send_authority_email(company_name, project_name, authority_name, authority_email):
@@ -88,6 +101,17 @@ def post_individual_signed(content, installation_id, github_repository_id, chang
     :type change_request_id: string
     """
     get_signing_service().signed_individual_callback(content, installation_id, github_repository_id, change_request_id)
+
+def post_individual_signed_gerrit(content, user_id):
+    """
+    Handle the posted callback from the signing service after ICLA signature for Gerrit.
+
+    :param content: The POST body from the signing service callback.
+    :type content: string
+    :param user_id: The ID of the user that signed. 
+    :type user_id: string
+    """
+    get_signing_service().signed_individual_callback_gerrit(content, user_id)
 
 def post_corporate_signed(content, project_id, company_id):
     """

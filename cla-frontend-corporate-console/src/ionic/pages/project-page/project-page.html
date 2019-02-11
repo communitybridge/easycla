@@ -1,15 +1,54 @@
-<ion-header>
+<ion-header class="cla-header">
   <ion-navbar>
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Project Signatures</ion-title>
+    <img class="navbar-logo" src="/assets/logo/cla-icon-logo.png" alt="">
   </ion-navbar>
 </ion-header>
 
 <ion-content padding headerspacing>
 
   <loading-spinner [loading]="loading.signatures"></loading-spinner>
+
+  <header>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-4>
+          <h3>Manager</h3>
+          <div *ngIf="manager">{{ manager.user_name }}</div>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <h3>
+            Domain Whitelist
+            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
+          </h3>
+          <div class="list-container">
+            <ion-list>
+              <ion-item *ngFor="let domain of cclaSignature.domain_whitelist">
+                {{ domain }}
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-col>
+        <ion-col col-12 col-md-4>
+          <h3>
+            Email Whitelist
+            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
+          </h3>
+          <div class="list-container">
+            <ion-list>
+              <ion-item *ngFor="let email of cclaSignature.email_whitelist">
+                {{ email }}
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </header>
+
   <ion-grid [loading-display]="loading.signatures">
     <ion-row justify-content-center>
       <ion-col col-6>
@@ -30,7 +69,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let signature of signatures">
+              <tr *ngFor="let signature of employeeSignatures">
                 <td data-title="Name">
                   <span *ngIf="users[signature.signature_reference_id]">{{ users[signature.signature_reference_id].user_name }}</span>
                 </td>

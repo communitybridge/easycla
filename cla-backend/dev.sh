@@ -18,14 +18,14 @@ if [ $1 = 'install' ]; then
     serverless config credentials --provider aws --profile lf-cla --key ' ' --secret ' ' -s devS &&\
     cd cla-backend
   echo '======> installing dynamodb local..'
-    sls dynamodb install -s dev &&\
+    sls dynamodb install -s 'local' &&\
   echo '======> installation has done. please run npm run add:user github|#######'
 
 elif [ $1 = 'add:user' ]; then
   if [ "x" != "x$2" ]; then
   echo '======> creating permission in local db'
    aws dynamodb put-item \
-    --table-name "cla-dev-user-permissions" \
+    --table-name "cla-local-user-permissions" \
     --item '{ "user_id": { "S": "'$2'" }, "projects": { "SS": ["a09J000000KHoZVIA1","a09J000000KHoayIAD"] } }' \
     --profile lf-cla --region "us-east-1" \
     --endpoint-url http://localhost:8000
@@ -38,15 +38,15 @@ elif [ $1 = 'start:lambda' ]; then
   echo '======> activating virtual enviroment'
     . ~/.env/lf-cla/bin/activate &&\
   echo '======> running local lambda server'
-    AWS_PROFILE=lf-cla sls wsgi serve -s dev
+    sls wsgi serve -s 'local'
 
 elif [ $1 = 'start:dynamodb' ]; then
   echo '======> running local dynamodb server'
-    AWS_PROFILE=lf-cla sls dynamodb start -s dev
+    sls dynamodb start -s 'local'
 
 elif [ $1 = 'start:s3' ]; then
   echo '======> running local s3 server'
-    AWS_PROFILE=lf-cla sls s3 start -s dev
+    sls s3 start -s 'local'
   
 else
   echo "option not valid"
