@@ -39,7 +39,7 @@ export class WhitelistModal {
   getDefaults() {
     this.type = this.navParams.get("type"); // ['email' | 'domain']
     this.signatureId = this.navParams.get('signatureId');
-    this.whitelist = this.navParams.get('whitelist');
+    this.whitelist = this.navParams.get('whitelist') || [];
 
     this.form = this.formBuilder.group({
       whitelist: this.formBuilder.array([])
