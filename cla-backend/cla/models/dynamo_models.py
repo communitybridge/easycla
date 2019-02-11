@@ -1576,6 +1576,15 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         companies_dict = [company_model.to_dict() for company_model in companies]
         return companies_dict
 
+    def get_managers_by_company_acl(self, company_acl):
+        managers = []
+        user_model = User()
+        for username in company_acl:
+            user = user_model.get_user_by_username(str(username))
+            if user is not None:
+                managers.append(user)
+        return managers
+
 
 class StoreModel(Model):
     """
