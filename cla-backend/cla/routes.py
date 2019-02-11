@@ -971,7 +971,8 @@ def request_individual_signature(project_id: hug.types.uuid,
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'company_id': 'some-company-uuid'}")
-def request_corporate_signature(project_id: hug.types.uuid,
+def request_corporate_signature(auth_user: check_auth,
+                                project_id: hug.types.uuid,
                                 company_id: hug.types.uuid,
                                 send_as_email=False,
                                 authority_name=None, 
@@ -1004,7 +1005,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
+    return cla.controllers.signing.request_corporate_signature(auth_user, project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
@@ -1084,9 +1085,11 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
     return cla.controllers.signing.return_url(signature_id, event)
 
 @hug.post('/send-authority-email', versions=2)
-def send_authority_email(company_name: hug.types.text, project_name: hug.types.text, 
-                        authority_name: hug.types.text, authority_email: cla.hug_types.email, 
-                        ):
+def send_authority_email(auth_user: check_auth,
+                         company_name: hug.types.text,
+                         project_name: hug.types.text,
+                         authority_name: hug.types.text,
+                         authority_email: cla.hug_types.email):
     """
     POST: /send-authority-email 
 
