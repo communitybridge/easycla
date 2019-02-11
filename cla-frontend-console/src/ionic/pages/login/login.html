@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>CLA Contributor Console</ion-title>
+  </ion-navbar>
+</ion-header>
+<ion-content padding headerspacing overflow-scroll="true">
+  <div class="login-container">
+    <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
+    <p class="error" *ngIf="userRoles.isAuthenticated && !canAccess">
+      Sorry, You don't have access to the resource you tried to reach.
+    </p>
+    <button id="sign-in" *ngIf="!userRoles.isAuthenticated" ion-button (click)="login()">
+      <span class="icon icon-login"></span>
+      <span class="btn-label">Sign in</span>
+    </button>
+    <button id="sign-out" *ngIf="userRoles.isAuthenticated" ion-button (click)="logout()">
+      <span class="icon icon-logout"></span>
+      <span class="btn-label">Sign out</span>
+    </button>
+  </div>
+</ion-content>

@@ -5,7 +5,6 @@ from github.GithubException import UnknownObjectException
 from jose import jwt
 import os
 
-
 class GitHubInstallation(object):
 
     @property

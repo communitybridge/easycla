@@ -54,9 +54,6 @@ export class ClaIndividualPage {
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
-      if (!this.project.logoRef) {
-        this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
-      }
     });
   }
 
@@ -76,6 +73,7 @@ export class ClaIndividualPage {
       'project_id': this.projectId,
       'user_id': this.userId,
       // TODO: Switch this to intermediary loading screen as docusign postback has delay
+      'return_url_type': "Github",
       'return_url': this.signatureIntent.return_url,
     };
 

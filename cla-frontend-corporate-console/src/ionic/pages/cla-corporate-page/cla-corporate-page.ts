@@ -87,6 +87,7 @@ export class ClaCorporatePage {
         }
         this.signature = response;
       });
+    
   }
 
   openClaAgreement() {

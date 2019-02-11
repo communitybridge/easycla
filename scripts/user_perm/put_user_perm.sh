@@ -40,7 +40,7 @@ if [ -z "$PROJECTS" ] && [ -z "$COMPANIES" ]; then
     exit 1
 fi
 
-USER="{ \"user_id\": { \"S\": \"$USERNAME\" } ";
+USER="{ \"username\": { \"S\": \"$USERNAME\" } ";
 if [ -n "$PROJECTS" ]; then
     USER="$USER, \"projects\": { \"SS\": [$PROJECTS] } "
 fi
@@ -52,5 +52,5 @@ USER="$USER }"
 aws dynamodb put-item \
     --table-name "cla-$STAGE-user-permissions" \
     --item "$USER" \
-    --profile lf-cla --region "$REGION" 
+    --region "$REGION" 
     #--endpoint-url http://localhost:8000 #local dev env

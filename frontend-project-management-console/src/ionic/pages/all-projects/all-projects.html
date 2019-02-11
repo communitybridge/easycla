@@ -25,10 +25,9 @@
         <ion-card class="cla-project-card" (click)="viewProjectCLA(project.id)">
           <div class="card-header clickable">
             <div class="border-wrapper">
-              <img *ngIf="project.logoRef" src="{{project.logoRef}}" alt="{{project.name}} logo"/>
+              <img *ngIf="project.logoUrl" src="{{project.logoUrl}}" alt="{{project.name}} logo"/>
               <ion-card-title>
-                {{ project.organization }}
-                Test Company
+                {{ project.name }}
               </ion-card-title>
             </div>
           </div>
@@ -46,7 +45,6 @@
                 </dd>
               </dl>
             </div>
-            <h2>{{ project.name }}</h2>
             <p>
               {{ project.description }}
             </p>

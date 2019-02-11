@@ -4,10 +4,10 @@ Controller related to company operations.
 
 import uuid
 import hug.types
-from cla.utils import get_company_instance
-from cla.utils import get_user_instance
 from cla.models import DoesNotExist
 import cla
+import cla.controllers.user
+from cla.models.dynamo_models import Company, User
 from falcon import HTTP_409, HTTP_200, HTTPForbidden
 
 def get_companies():
@@ -17,28 +17,25 @@ def get_companies():
     :return: List of companies in dict format.
     :rtype: [dict]
     """
-    return [company.to_dict() for company in get_company_instance().all()]
+    return [company.to_dict() for company in Company().all()]
 
-def get_companies_by_user(user_id):
+def get_companies_by_user(username):
     """
     Returns a list of companies for a user in the CLA system.
 
     :return: List of companies in dict format.
     :rtype: [dict]
     """
-    all_companies = [company.to_dict() for company in get_company_instance().all() if user_id in company.get_company_acl()]
-
+    all_companies = [company.to_dict() for company in Company().all() if username in company.get_company_acl()]
 
     return all_companies
 
-
-def company_acl_verify(user_id, company_obj):
-    if user_id in company_obj.get_company_acl():
+def company_acl_verify(username, company):
+    if username in company.get_company_acl():
         return True
 
     raise HTTPForbidden('Unauthorized',
         'Provided Token credentials does not have sufficient permissions to access resource')
-
 
 def get_company(company_id):
     """
@@ -49,7 +46,7 @@ def get_company(company_id):
     :return: dict representation of the company object.
     :rtype: dict
     """
-    company = get_company_instance()
+    company = Company()
     try:
         company.load(company_id=str(company_id))
     except DoesNotExist as err:
@@ -57,10 +54,8 @@ def get_company(company_id):
 
     return company.to_dict()
 
-
-def create_company(company_name=None,
-                   company_whitelist=None,
-                   company_whitelist_patterns=None,
+def create_company(auth_user,
+                   company_name=None,
                    company_manager_id=None,
                    company_manager_user_name=None,
                    company_manager_user_email=None,
@@ -70,10 +65,6 @@ def create_company(company_name=None,
 
     :param company_name: The company name.
     :type company_name: string
-    :param company_whitelist: The list of whitelisted domain names for this company.
-    :type company_whitelist: [string]
-    :param company_whitelist_patterns: List of whitelisted email patterns.
-    :type company_whitelist_patterns: [string]
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
     :param company_manager_user_name: The user name of the company manager user.
@@ -83,8 +74,8 @@ def create_company(company_name=None,
     :return: dict representation of the company object.
     :rtype: dict
     """
-    if company_manager_user_email is not None:
-        company_manager_id = get_or_create_user_as_manager(company_manager_user_email, company_manager_user_name)
+
+    manager = cla.controllers.user.get_or_create_user(auth_user)
 
     for company in get_companies():
         if company.get("company_name") == company_name:
@@ -93,14 +84,12 @@ def create_company(company_name=None,
                     "data": {"error":"Company already exists."}
                     }
 
-    company = get_company_instance()
+    company = Company()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
-    # TODO: Need to validate these values.
-    company.set_company_whitelist(company_whitelist)
-    company.set_company_whitelist_patterns(company_whitelist_patterns)
-    company.set_company_manager_id(str(company_manager_id))
-    company.set_company_acl(user_id)
+    company.set_company_manager_id(manager.get_user_id())
+    company.set_company_acl(manager.get_lf_username())
+
     company.save()
 
     return {"status_code": HTTP_200,
@@ -109,10 +98,8 @@ def create_company(company_name=None,
 
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
-                   company_whitelist=None,
-                   company_whitelist_patterns=None,
                    company_manager_id=None,
-                   user_id=None):
+                   username=None):
     """
     Updates an company and returns the newly updated company in dict format.
     A value of None means the field should not be updated.
@@ -121,40 +108,28 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     :type company_id: ID
     :param company_name: New company name.
     :type company_name: string | None
-    :param company_whitelist: New whitelist for this company.
-    :type company_whitelist: [string] | None
-    :param company_whitelist_patterns: New company whitelisted email patterns.
-    :type company_whitelist_patterns: [string] | None
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
     :return: dict representation of the company object.
     :rtype: dict
     """
-    company = get_company_instance()
+    company = Company()
     try:
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    company_acl_verify(user_id, company)
+    company_acl_verify(username, company)
 
     if company_name is not None:
         company.set_company_name(company_name)
-    # TODO: Need to validate these values.
-    if company_whitelist is not None:
-        val = hug.types.multiple(company_whitelist)
-        company.set_company_whitelist(val)
-    # TODO: Need to validate these values.
-    if company_whitelist_patterns is not None:
-        val = hug.types.multiple(company_whitelist_patterns)
-        company.set_company_whitelist_patterns(val)
     if company_manager_id is not None:
         val = hug.types.uuid(company_manager_id)
         company.set_company_manager_id(str(val))
     company.save()
     return company.to_dict()
 
-def update_company_whitelist_csv(content, company_id, user_id=None):
+def update_company_whitelist_csv(content, company_id, username=None):
     """
     Adds the CSV of email addresse to this company's whitelist.
 
@@ -163,13 +138,13 @@ def update_company_whitelist_csv(content, company_id, user_id=None):
     :param company_id: The ID of the company to add to the whitelist.
     :type company_id: UUID
     """
-    company = get_company_instance()
+    company = Company()
     try:
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    company_acl_verify(user_id, company)
+    company_acl_verify(username, company)
 
     # Ready email addresses.
     emails = content.split('\n')
@@ -180,52 +155,25 @@ def update_company_whitelist_csv(content, company_id, user_id=None):
     company.save()
     return company.to_dict()
 
-def delete_company(company_id, user_id=None):
+def delete_company(company_id, username=None):
     """
     Deletes an company based on ID.
 
     :param company_id: The ID of the company.
     :type company_id: ID
     """
-    company = get_company_instance()
+    company = Company()
     try:
         company.load(str(company_id))
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    company_acl_verify(user_id, company)
+    company_acl_verify(username, company)
 
     company.delete()
     return {'success': True}
 
 
 def get_manager_companies(manager_id):
-    companies = get_company_instance().get_companies_by_manager(manager_id)
+    companies = Company().get_companies_by_manager(manager_id)
     return companies
-
-def get_or_create_user_as_manager(user_email, user_name):
-    """
-    Helper method to either get or create a user as company manager based on the email address.
-    And return user id as manager id for a company.
-
-    :param email: The email address of a user who is creating a company.
-    :type email: string
-    :param user_name: The user name of a user who is creating a company.
-    :type user_name: string
-    :return: user_id
-    :type: string
-    """
-    user = get_user_instance()
-    found = user.get_user_by_email(user_email)
-    if found is not None:
-        # Found user by email, set the GitHub ID
-        cla.log.info('Loaded user by email: %s - (%s)', found.get_user_name(), found.get_user_emails())
-        return str(found.get_user_id())
-    # User not found, create.
-    cla.log.debug('Could not find user by email: %s', user_email)
-    user_uuid = str(uuid.uuid4())
-    user.set_user_id(user_uuid)
-    user.set_user_email(str(user_email).lower())
-    user.set_user_name(user_name)
-    user.save()
-    return user_uuid

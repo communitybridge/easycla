@@ -75,9 +75,6 @@ export class ClaLandingPage {
   getProject(projectId) {
     this.claService.getProject(projectId).subscribe(response => {
       this.project = response;
-      if (!this.project.logoRef) {
-        this.project.logoRef = "https://dummyimage.com/200x100/bbb/fff.png&text=+";
-      }
     });
   }
 

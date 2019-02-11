@@ -12,9 +12,8 @@ export class RolesService {
   public getData: any;
   private rolesFetched: boolean;
 
-  private LF_CUSTOM_CLAIM = "https://sso.linuxfoundation.org/claims/roles";
+  private LF_USERNAME_CLAIM = "https://sso.linuxfoundation.org/claims/username";
   private CLA_PROJECT_ADMIN = "cla-system-admin";
-  private projectSet = new Set(["cla-admin-project-mvp"]); // Here we may need to generate this array from Salesforce API ??
 
   constructor(
     private keycloak: KeycloakService,
@@ -44,7 +43,6 @@ export class RolesService {
   //////////////////////////////////////////////////////////////////////////////
 
   getUserRolesPromise() {
-    console.log("Get UserRole Promise.");
     if (this.authService.isAuthenticated()) {
       return this.authService
         .getIdToken()
@@ -52,21 +50,21 @@ export class RolesService {
           return this.authService.parseIdToken(token);
         })
         .then(tokenParsed => {
-          if (tokenParsed && tokenParsed[this.LF_CUSTOM_CLAIM]) {
-            let customRules = tokenParsed[this.LF_CUSTOM_CLAIM];
+          if (tokenParsed && tokenParsed[this.LF_USERNAME_CLAIM]) {
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
-              isPmcUser: this.isInProjectSet(customRules, this.projectSet),
+              isPmcUser: true,
               isStaffInc: false,
               isDirectorInc: false,
               isStaffDirect: false,
               isDirectorDirect: false,
               isExec: false,
-              isAdmin: this.isInArray(customRules, this.CLA_PROJECT_ADMIN)
+              isAdmin: false
             };
-            console.log(this.userRoles);
+
             return this.userRoles;
           }
+
           return this.userRoleDefaults;
         })
         .catch(error => {
@@ -85,17 +83,6 @@ export class RolesService {
       }
     }
     return false;
-  }
-
-  private isInProjectSet(roles, projectSet) {
-    return true;
-    
-    // for (let i = 0; i < roles.length; i++) {
-    //   if (projectSet.has(roles[i])) {
-    //     return true;
-    //   }
-    // }
-    // return false;
   }
 
   //////////////////////////////////////////////////////////////////////////////
