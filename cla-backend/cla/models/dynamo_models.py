@@ -8,6 +8,7 @@ import re
 import base64
 import datetime
 import dateutil.parser
+
 from pynamodb.models import Model
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.attributes import UTCDateTimeAttribute, \
@@ -186,15 +187,15 @@ class BaseModel(Model):
         """Used to convert model to dict for JSON-serialized string."""
         for name, attr in self._get_attributes().items():
             if isinstance(attr, ListAttribute):
-                if attr is None:
-                    yield name, []
-
-                values = attr.serialize(getattr(self, name))
-                if len(values) < 1:
-                    yield name, []
+                if attr is None or getattr(self, name) is None:
+                    yield name, None
                 else:
-                    key = list(values[0].keys())[0]
-                    yield name, [value[key] for value in values]
+                    values = attr.serialize(getattr(self, name))
+                    if len(values) < 1:
+                        yield name, []
+                    else:
+                        key = list(values[0].keys())[0]
+                        yield name, [value[key] for value in values]
             else:
                 yield name, attr.serialize(getattr(self, name))
 
@@ -864,6 +865,13 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_emails(self):
         return self.model.user_emails
 
+    def get_all_user_emails(self):
+        emails = self.model.user_emails
+        if self.model.lf_email is not None:
+            emails.add(self.model.lf_email)
+
+        return emails
+
     def get_user_name(self):
         return self.model.user_name
 
@@ -969,22 +977,21 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
 
         return latest
 
-    def is_whitelisted(self, company):
+    # Accepts a Signature object
+    def is_whitelisted(self, ccla_signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
-        addresses are whitelisted for a particular company.
+        addresses are whitelisted for a particular ccla signature.
 
-        :param company: The company to check against.
-        :type company: cla.models.model_interfaces.Company
+        :param ccla_signature: The ccla signature to check against.
+        :type ccla_signature: cla.models.Signature
         :return: True if at least one email is whitelisted, False otherwise.
         :rtype: bool
         """
-        emails = self.get_user_emails()
-        if len(emails) == 0:
-            emails = [self.get_lf_email()]
+        emails = self.get_all_user_emails()
 
         # Check email whitelist
-        whitelist = company.get_company_whitelist()
+        whitelist = ccla_signature.get_email_whitelist()
         if whitelist is not None:
             for email in emails:
                 if email in whitelist:
@@ -995,7 +1002,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         # so that sub-domains are not allowed.
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
-        patterns = company.get_company_whitelist_patterns()
+        patterns = ccla_signature.get_domain_whitelist()
         if patterns is not None:
             for pattern in patterns:
 
@@ -1177,8 +1184,8 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_return_url_type = UnicodeAttribute(null=True)
 
     # whitelists are only used by CCLAs
-    domain_whitelist = ListAttribute()
-    email_whitelist = ListAttribute()
+    domain_whitelist = ListAttribute(null=True)
+    email_whitelist = ListAttribute(null=True)
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1200,8 +1207,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
                  signature_return_url_type=None,
-                 domain_whitelist=[],
-                 email_whitelist=[]):
+                 domain_whitelist=None,
+                 email_whitelist=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1824,7 +1831,6 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
         self.model.delete()
         
     def get_gerrit_by_project_id(self, project_id):
-        # Projects can each have at most 1 Gerrit Instance.
         gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
         for gerrit_model in gerrit_generator:
@@ -1833,8 +1839,8 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             gerrits.append(gerrit)
         if len(gerrits) >= 1: 
             return gerrits
-        else :
-            return None
+        else:
+            raise cla.models.DoesNotExist('Gerrit instance does not exist')
 
     def all(self):
         gerrits = self.model.scan()
