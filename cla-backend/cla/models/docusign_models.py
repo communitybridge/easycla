@@ -472,8 +472,15 @@ class DocuSign(signing_service_interface.SigningService):
         """
         return os.path.join(api_base_url, 'v2/signed/corporate', str(project_id), str(company_id))
 
-    def request_corporate_signature(self, project_id, company_id, send_as_email=False, 
-    authority_name=None, authority_email=None, return_url_type=None, return_url=None):
+    def request_corporate_signature(self,
+                                    auth_user,
+                                    project_id,
+                                    company_id,
+                                    send_as_email=False,
+                                    authority_name=None,
+                                    authority_email=None,
+                                    return_url_type=None,
+                                    return_url=None):
         cla.log.info('Validating company %s on project %s', company_id, project_id)
 
         # Ensure the project exists
@@ -494,7 +501,15 @@ class DocuSign(signing_service_interface.SigningService):
         company_model = Company()
         managers = company_model.get_managers_by_company_acl(company.get_company_acl())
         if len(managers) == 0:
-            return {'errors': {'company_acl': 'It\'s empty'}}
+            return {'errors': {'company_acl': 'Company ACL is empty'}}
+
+        # Find the manager user object
+        for manager in managers:
+            if manager.get_lf_username() == auth_user.username:
+                break
+        else:
+            # Return an error if the manager is not found in the managers list
+            return {'errors': {'manager': 'CLA Manager not found'}}
 
         # Get CLA Managers. In the future, we will support contribuitors
         scheduleA = generate_manager_and_contributor_list(
