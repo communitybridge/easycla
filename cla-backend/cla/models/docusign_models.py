@@ -9,17 +9,21 @@ https://developers.docusign.com/esign-rest-api/guides/post-go-live
 import io
 import os
 import uuid
+import json
 import urllib.request
 from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
-import pydocusign
-from pydocusign.exceptions import DocuSignException
-from cla.controllers.lf_group import LFGroup
-import json
+from typing import Dict, Any, Optional, Tuple, List
+
+import pydocusign # type: ignore
+from pydocusign.exceptions import DocuSignException # type: ignore
+
 import cla
+from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, GitHubOrg, User, \
-                                        Project, Company, Gerrit
+                                        Project, Company, Gerrit, \
+                                        Document
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -32,6 +36,21 @@ lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
 lf_group_client_secret = os.environ.get('LF_GROUP_CLIENT_SECRET', '')
 lf_group_refresh_token = os.environ.get('LF_GROUP_REFRESH_TOKEN', '')
 lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
+
+class ProjectDoesNotExist(Exception):
+    pass
+
+class CompanyDoesNotExist(Exception):
+    pass
+
+class UserDoesNotExist(Exception):
+    pass
+
+class CCLANotFound(Exception):
+    pass
+
+class UserNotWhitelisted(Exception):
+    pass
 
 class DocuSign(signing_service_interface.SigningService):
     """
@@ -138,6 +157,8 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
 
+        default_cla_values = create_default_individual_values(user)
+
         # Create new Signature object
         signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
@@ -153,7 +174,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_callback_url=callback_url)
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url)
+        self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
         # Save signature
         signature.save()
@@ -224,6 +245,8 @@ class DocuSign(signing_service_interface.SigningService):
 
         callback_url = self._generate_individual_signature_callback_url_gerrit(user_id)
 
+        default_cla_values = create_default_individual_values(user)
+
         # Create new Signature object
         signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
@@ -238,7 +261,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_return_url=return_url,
                                 signature_callback_url=callback_url)
 
-        self.populate_sign_url(signature, callback_url)
+        self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
         # Save signature
         signature.save()
@@ -248,57 +271,90 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
-
-        # Ensure the project exists
+    # Returns the current project, user and employee Signature, if such
+    # a signature exists.
+    def check_and_prepare_employee_signature(self,
+                                             project_id: str,
+                                             company_id: str,
+                                             user_id: str
+                                             ) -> Tuple[
+                                                 Project,
+                                                 User,
+                                                 Optional[Signature]
+                                             ] :
+         # Ensure the project exists
         project = Project()
         try:
             project.load(str(project_id))
-        except DoesNotExist as err:
-            return {'errors': {'project_id': str(err)}}
+        except DoesNotExist:
+            raise ProjectDoesNotExist
 
         # Ensure the company exists
         company = Company()
         try:
             company.load(str(company_id))
-        except DoesNotExist as err:
-            return {'errors': {'company_id': str(err)}}
+        except DoesNotExist:
+            raise CompanyDoesNotExist
 
         # Ensure the user exists
         user = User()
         try:
             user.load(str(user_id))
-        except DoesNotExist as err:
-            return {'errors': {'user_id': str(err)}}
+        except DoesNotExist:
+            raise UserDoesNotExist
 
         # Ensure the company actually has a CCLA with this project.
-        existing_signatures = Signature().get_signatures_by_project(
+        ccla_signatures = Signature().get_signatures_by_project(
             project_id,
             signature_reference_type='company',
             signature_reference_id=company.get_company_id()
         )
-        if len(existing_signatures) < 1:
-            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+        if len(ccla_signatures) < 1:
+            raise CCLANotFound
+
+        ccla_signature = ccla_signatures[0]
 
         # Ensure user hasn't already signed this signature.
-        existing_signatures = Signature().get_signatures_by_project(
+        employee_signatures = Signature().get_signatures_by_project(
             project_id,
             signature_reference_type='user',
             signature_reference_id=user_id,
             signature_user_ccla_company_id=company_id
         )
-        if len(existing_signatures) > 0:
+        if len(employee_signatures) > 0:
             cla.log.info('Employee signature already exists for this project')
-            return existing_signatures[0].to_dict()
+            return project, user, employee_signatures[0]
 
         # Ensure user is whitelisted for this company.
-        if not user.is_whitelisted(company):
-            return {'errors': {'company_whitelist':
-                            'No user email whitelisted for this company'}}
+        if not user.is_whitelisted(ccla_signature):
+            raise UserNotWhitelisted
 
         # Assume this company is the user's employer.
         user.set_user_company_id(str(company_id))
         user.save()
+
+        return project, user, None
+
+    def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
+        try:
+            project, \
+            user, \
+            employee_signature = self.check_and_prepare_employee_signature(str(project_id),
+                                                                           str(company_id),
+                                                                           str(user_id))
+        except ProjectDoesNotExist:
+            return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
+        except CompanyDoesNotExist:
+            return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
+        except UserDoesNotExist:
+            return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
+        except CCLANotFound:
+            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+        except UserNotWhitelisted:
+            return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
+
+        if employee_signature is not None:
+            return employee_signature.to_dict()
 
         # Requires us to know where the user came from.
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
@@ -338,56 +394,32 @@ class DocuSign(signing_service_interface.SigningService):
         return new_signature.to_dict()
 
     def request_employee_signature_gerrit(self, project_id, company_id, user_id, return_url=None):
-        # Ensure the project exists
-        project = Project()
         try:
-            project.load(str(project_id))
-        except DoesNotExist as err:
-            return {'errors': {'project_id': str(err)}}
-
-        # Ensure the company exists
-        company = Company()
-        try:
-            company.load(str(company_id))
-        except DoesNotExist as err:
-            return {'errors': {'company_id': str(err)}}
-
-        # Ensure the user exists
-        user = User()
-        try:
-            user.load(str(user_id))
-        except DoesNotExist as err:
-            return {'errors': {'user_id': str(err)}}
-
-        # Ensure the company actually has a CCLA with this project.
-        existing_signatures = Signature().get_signatures_by_project(
-            project_id,
-            signature_reference_type='company',
-            signature_reference_id=company.get_company_id()
-        )
-        if len(existing_signatures) < 1:
+            _, \
+            user, \
+            employee_signature = self.check_and_prepare_employee_signature(str(project_id),
+                                                                           str(company_id),
+                                                                           str(user_id))
+        except ProjectDoesNotExist:
+            return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
+        except CompanyDoesNotExist:
+            return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
+        except UserDoesNotExist:
+            return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
+        except CCLANotFound:
             return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+        except UserNotWhitelisted:
+            return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
 
-        # Ensure user hasn't already signed this signature.
-        existing_signatures = Signature().get_signatures_by_project(
-            project_id,
-            signature_reference_type='user',
-            signature_reference_id=user_id,
-            signature_user_ccla_company_id=company_id
-        )
-        if len(existing_signatures) > 0:
-            cla.log.info('Employee signature already exists for this project')
-            return existing_signatures[0].to_dict()
+        if employee_signature is not None:
+            return employee_signature.to_dict()
 
-        # Ensure user is whitelisted for this company.
-        if not user.is_whitelisted(company):
-            return {'errors': {'company_whitelist':
-                            'No user email whitelisted for this company'}}
-
-        # Assume this company is the user's employer.
-        user.set_user_company_id(str(company_id))
-        user.save()
-
+        # Retrieve Gerrits by Project reference ID
+        try:
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+        except DoesNotExist as err:
+            cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
+            return {'errors': {'missing_gerrit': str(err)}}
 
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
@@ -400,15 +432,6 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id)
-
-        
-        # Retrieve Gerrits by Project reference ID
-        try:
-            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
-        except DoesNotExist:
-            cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
-            return
-
 
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
@@ -478,6 +501,8 @@ class DocuSign(signing_service_interface.SigningService):
             [(manager.get_user_name(), manager.get_user_email()) for manager in managers]
         )
 
+        default_cla_values = create_default_company_values(company, manager.get_user_name(), manager.get_user_email(), scheduleA)
+
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
         if last_document is None or \
@@ -503,12 +528,12 @@ class DocuSign(signing_service_interface.SigningService):
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
                     callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
-                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
+                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
                         'signature_id': latest_signature.get_signature_id(),
                         'sign_url': latest_signature.get_signature_sign_url()}  
-                                   
+
         # No signature exists, create the new Signature.
         cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
         signature = Signature(signature_id=str(uuid.uuid4()),
@@ -529,7 +554,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
 
-        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, scheduleA)
+        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
         signature.save()
 
         return {'company_id': str(company_id),
@@ -538,7 +563,7 @@ class DocuSign(signing_service_interface.SigningService):
                 'sign_url': signature.get_signature_sign_url()}
 
     def populate_sign_url(self, signature, callback_url=None, send_as_email=False,
-    authority_name=None, authority_email=None, scheduleA=None): # pylint: disable=too-many-locals
+    authority_name=None, authority_email=None, default_values: Optional[Dict[str, Any]] = None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
         user = User()
@@ -580,7 +605,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
-        tabs = get_docusign_tabs_from_document(document, document_id, scheduleA)
+        tabs = get_docusign_tabs_from_document(document, document_id, default_values=default_values)
 
         if send_as_email:
             # Sending email to authority
@@ -981,7 +1006,9 @@ def get_org_from_return_url(repo_provider_type, return_url, orgs):
     else:
         raise Exception('Repo service: {} not supported'.format(repo_provider_type))
 
-def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
+def get_docusign_tabs_from_document(document: Document,
+                                    document_id: int,
+                                    default_values: Optional[Dict[str, Any]] = None):
     """
     Helper function to extract the DocuSign tabs out of a document object.
 
@@ -1003,16 +1030,19 @@ def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
             'height': tab.get_document_tab_height(),
             'customTabId': tab.get_document_tab_id(),
             'tabLabel': tab.get_document_tab_id(),
-            'name': tab.get_document_tab_name(),
-            'locked': tab.get_document_tab_is_locked()
+            'name': tab.get_document_tab_name()
         }
 
-        if scheduleA is not None and tab.get_document_tab_id() == 'scheduleA':
-            args['value'] = scheduleA
+        if default_values is not None and \
+            default_values.get(tab.get_document_tab_id()) is not None:
+            args['value'] = default_values[tab.get_document_tab_id()]
 
         tab_type = tab.get_document_tab_type()
         if tab_type == 'text':
             tab_class = pydocusign.TextTab
+        elif tab_type == 'text_unlocked':
+            tab_class = TextUnlockedTab
+            args['locked'] = False
         elif tab_type == 'text_optional':
             tab_class = TextOptionalTab
             args['required'] = False
@@ -1032,6 +1062,44 @@ def get_docusign_tabs_from_document(document, document_id, scheduleA=None):
 
     return tabs
 
+# Returns a dictionary of document id to value
+def create_default_company_values(company: Company,
+                                    signatory_name: str,
+                                    signatory_email: str,
+                                    scheduleA: str) -> Dict[str, Any]:
+    values = {}
+
+    if company is not None and \
+        company.get_company_name() is not None:
+        values['corporation_name'] = company.get_company_name()
+        values['corporation'] = company.get_company_name()
+
+    if signatory_name is not None:
+        values['point_of_contact'] = signatory_name
+
+    if signatory_email is not None:
+        values['email'] = signatory_email
+
+    if scheduleA is not None:
+        values['scheduleA'] = scheduleA
+
+    return values
+
+def create_default_individual_values(user: User) -> Dict[str, Any]:
+    values = {}
+
+    if user is None:
+        return values
+    
+    if user.get_user_name() is not None:
+        values['full_name'] = user.get_user_name()
+        values['public_name'] = user.get_user_name()
+
+    if user.get_user_email() is not None:
+        values['email'] = user.get_user_email()
+
+    return values
+
 class TextOptionalTab(pydocusign.Tab):
     """Tab to show a free-form text field on the document.
     """
@@ -1040,7 +1108,20 @@ class TextOptionalTab(pydocusign.Tab):
         'value',
         'height',
         'width',
+        'locked',
         'required'
+    ]
+    tabs_name = 'textTabs'
+
+class TextUnlockedTab(pydocusign.Tab):
+    """Tab to show a free-form text field on the document.
+    """
+    attributes = pydocusign.Tab._common_attributes + pydocusign.Tab._formatting_attributes + [
+        'name',
+        'value',
+        'height',
+        'width',
+        'locked'
     ]
     tabs_name = 'textTabs'
 

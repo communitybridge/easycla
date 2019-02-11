@@ -368,7 +368,9 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
                   signature_signed=None,
                   signature_approved=None,
                   signature_return_url=None,
-                  signature_sign_url=None):
+                  signature_sign_url=None,
+                  domain_whitelist=None,
+                  email_whitelist=None):
     """
     PUT: /signature
 
@@ -388,8 +390,9 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
         signature_signed=signature_signed,
         signature_approved=signature_approved,
         signature_return_url=signature_return_url,
-        signature_sign_url=signature_sign_url)
-
+        signature_sign_url=signature_sign_url,
+        domain_whitelist=domain_whitelist,
+        email_whitelist=email_whitelist)
 
 @hug.delete('/signature/{signature_id}', versions=1)
 def delete_signature(auth_user: check_auth, signature_id: hug.types.uuid):
@@ -440,7 +443,6 @@ def get_signatures_company(auth_user: check_auth, company_id: hug.types.uuid):
     Get all signatures for company specified.
     """
     return cla.controllers.signature.get_company_signatures(company_id)
-
 
 @hug.get('/signatures/project/{project_id}', versions=1)
 def get_signatures_project(auth_user: check_auth, project_id: hug.types.uuid):
@@ -582,14 +584,10 @@ def get_company(company_id: hug.types.text):
 
 @hug.post('/company', versions=1,
           examples=" - {'company_name': 'Company Name', \
-                        'company_whitelist': ['user@safe.org'], \
-                        'company_whitelist_patterns': ['*@safe.org'], \
                         'company_manager_id': 'user-id'}")
 def post_company(response,
                  auth_user: check_auth,
                  company_name: hug.types.text,
-                 company_whitelist: hug.types.multiple,
-                 company_whitelist_patterns: hug.types.multiple,
                  company_manager_user_name=None,
                  company_manager_user_email=None,
                  company_manager_id=None):
@@ -597,8 +595,6 @@ def post_company(response,
     POST: /company
 
     DATA: {'company_name': 'Org Name',
-           'company_whitelist': ['safe@email.org'],
-           'company_whitelist': ['*@email.org'],
            'company_manager_id': <user-id>}
 
     Returns the CLA company that was just created.
@@ -607,8 +603,6 @@ def post_company(response,
     create_resp = cla.controllers.company.create_company(
         auth_user,
         company_name=company_name,
-        company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns,
         company_manager_id=company_manager_id,
         company_manager_user_name=company_manager_user_name,
         company_manager_user_email=company_manager_user_email)
@@ -625,8 +619,6 @@ def post_company(response,
 def put_company(auth_user: check_auth, # pylint: disable=too-many-arguments
                 company_id: hug.types.uuid,
                 company_name=None,
-                company_whitelist=None,
-                company_whitelist_patterns=None,
                 company_manager_id=None):
     """
     PUT: /company
@@ -640,8 +632,6 @@ def put_company(auth_user: check_auth, # pylint: disable=too-many-arguments
     return cla.controllers.company.update_company(
         company_id,
         company_name=company_name,
-        company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns,
         company_manager_id=company_manager_id,
         username=auth_user.username)
 

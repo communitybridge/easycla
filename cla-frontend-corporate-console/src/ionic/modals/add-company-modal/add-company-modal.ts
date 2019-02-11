@@ -72,9 +72,7 @@ export class AddCompanyModal {
     let company = {
       company_name: this.companyName,
       company_manager_user_email: this.userEmail,
-      company_manager_user_name: this.userName,
-      company_whitelist: [],
-      company_whitelist_patterns: []
+      company_manager_user_name: this.userName
     };
     this.claService.postCompany(company).subscribe(
       response => {
@@ -90,9 +88,7 @@ export class AddCompanyModal {
   updateCompany() {
     let company = {
       company_id: this.company.company_id,
-      company_name: this.companyName,
-      company_whitelist: this.company.company_whitelist,
-      company_whitelist_patterns: this.company.company_whitelist_patterns
+      company_name: this.companyName
     };
     this.claService.putCompany(company).subscribe(
       response => {
