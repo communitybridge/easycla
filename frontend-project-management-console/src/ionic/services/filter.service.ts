@@ -15,4 +15,5 @@ export class FilterService {
   resetFilter(data){
     return JSON.parse(JSON.stringify(data));
   }
+
 }
