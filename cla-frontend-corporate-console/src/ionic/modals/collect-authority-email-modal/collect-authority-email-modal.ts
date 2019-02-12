@@ -17,6 +17,8 @@ export class CollectAuthorityEmailModal {
   projectId: string;
   companyId: string;
 
+  signingType: string;
+
   projectName: string;
   companyName: string; 
 
@@ -39,6 +41,7 @@ export class CollectAuthorityEmailModal {
     this.companyName = navParams.get('companyName');
     this.projectId = navParams.get('projectId');
     this.companyId = navParams.get('companyId');
+    this.signingType = navParams.get('signingType');
     this.form = formBuilder.group({
       authorityemail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       authorityname:[''],
@@ -71,7 +74,6 @@ export class CollectAuthorityEmailModal {
       this.currentlySubmitting = false;
       return;
     }
-    console.log(this.projectName);
     let emailRequest = {
       project_id: this.projectId,
       company_id: this.companyId,
