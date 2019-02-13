@@ -1375,6 +1375,18 @@ def upload_logo(auth_user: check_auth,
                 project_sfdc_id: hug.types.text,
                 body):
     return cla.controllers.project_logo.upload_logo(auth_user, project_sfdc_id, body.read())
-    
+
+@hug.post('/project/permission', versions=1)
+def add_project_permission(auth_user: check_auth,
+                           username: hug.types.text,
+                           project_sfdc_id: hug.types.text):
+    return cla.controllers.project.add_permission(auth_user, username, project_sfdc_id)
+
+@hug.delete('/project/permission', versions=1)
+def remove_project_permission(auth_user: check_auth,
+                              username: hug.types.text,
+                              project_sfdc_id: hug.types.text):
+    return cla.controllers.project.remove_permission(auth_user, username, project_sfdc_id)
+
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())

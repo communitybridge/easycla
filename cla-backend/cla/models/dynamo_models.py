@@ -1883,6 +1883,14 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
         if projects is not None:
             self.model.projects = set(projects)
 
+    def add_project(self, project_id: str):
+        if self.model is not None and self.model.projects is not None:
+            self.model.projects.add(project_id)
+
+    def remove_project(self, project_id: str):
+        if project_id in self.model.projects:
+            self.model.projects.remove(project_id)
+
     def to_dict(self):
         ret = dict(self.model)
         return ret
