@@ -16,6 +16,7 @@ export class ClaSelectCompanyModal {
   projectId: string;
   repositoryId: string;
   userId: string;
+  selectCompanyModalActive: boolean = false;
 
   signature: string;
   
@@ -59,6 +60,11 @@ export class ClaSelectCompanyModal {
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
+    if(this.selectCompanyModalActive){
+      return false;
+    }
+    this.selectCompanyModalActive = true;
+
     let signatureRequest = {
       project_id: this.projectId,
       company_id: company.company_id,
@@ -68,6 +74,7 @@ export class ClaSelectCompanyModal {
 
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
+      this.selectCompanyModalActive = false;
       if (errors) {
         if (response.errors.hasOwnProperty('company_whitelist')) {
           // When the user is not whitelisted with the company: return {'errors': {'company_whitelist': 'User email (<email>) is not whitelisted for this company'}}
@@ -83,13 +90,13 @@ export class ClaSelectCompanyModal {
         // No Errors, expect normal signature response
         this.signature = response;
 
-      this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
-        projectId: this.projectId,
-        repositoryId: this.repositoryId,
-        userId: this.userId,
-        companyId: company.company_id,
-        signingType: "Github",
-      });
+        this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
+          projectId: this.projectId,
+          repositoryId: this.repositoryId,
+          userId: this.userId,
+          companyId: company.company_id,
+     signingType: "Github"
+        });
       }
     });
   } 

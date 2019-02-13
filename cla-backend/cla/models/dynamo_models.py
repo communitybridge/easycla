@@ -8,6 +8,7 @@ import re
 import base64
 import datetime
 import dateutil.parser
+
 from pynamodb.models import Model
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.attributes import UTCDateTimeAttribute, \
@@ -186,12 +187,15 @@ class BaseModel(Model):
         """Used to convert model to dict for JSON-serialized string."""
         for name, attr in self._get_attributes().items():
             if isinstance(attr, ListAttribute):
-                values = attr.serialize(getattr(self, name))
-                if len(values) < 1:
-                    yield name, []
+                if attr is None or getattr(self, name) is None:
+                    yield name, None
                 else:
-                    key = list(values[0].keys())[0]
-                    yield name, [value[key] for value in values]
+                    values = attr.serialize(getattr(self, name))
+                    if len(values) < 1:
+                        yield name, []
+                    else:
+                        key = list(values[0].keys())[0]
+                        yield name, [value[key] for value in values]
             else:
                 yield name, attr.serialize(getattr(self, name))
 
@@ -861,6 +865,13 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_emails(self):
         return self.model.user_emails
 
+    def get_all_user_emails(self):
+        emails = self.model.user_emails
+        if self.model.lf_email is not None:
+            emails.add(self.model.lf_email)
+
+        return emails
+
     def get_user_name(self):
         return self.model.user_name
 
@@ -966,22 +977,21 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
 
         return latest
 
-    def is_whitelisted(self, company):
+    # Accepts a Signature object
+    def is_whitelisted(self, ccla_signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
-        addresses are whitelisted for a particular company.
+        addresses are whitelisted for a particular ccla signature.
 
-        :param company: The company to check against.
-        :type company: cla.models.model_interfaces.Company
+        :param ccla_signature: The ccla signature to check against.
+        :type ccla_signature: cla.models.Signature
         :return: True if at least one email is whitelisted, False otherwise.
         :rtype: bool
         """
-        emails = self.get_user_emails()
-        if len(emails) == 0:
-            emails = [self.get_lf_email()]
+        emails = self.get_all_user_emails()
 
         # Check email whitelist
-        whitelist = company.get_company_whitelist()
+        whitelist = ccla_signature.get_email_whitelist()
         if whitelist is not None:
             for email in emails:
                 if email in whitelist:
@@ -992,7 +1002,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         # so that sub-domains are not allowed.
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
-        patterns = company.get_company_whitelist_patterns()
+        patterns = ccla_signature.get_domain_whitelist()
         if patterns is not None:
             for pattern in patterns:
 
@@ -1173,6 +1183,9 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
 
+    # whitelists are only used by CCLAs
+    domain_whitelist = ListAttribute(null=True)
+    email_whitelist = ListAttribute(null=True)
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1193,7 +1206,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
-                 signature_return_url_type=None):
+                 signature_return_url_type=None,
+                 domain_whitelist=None,
+                 email_whitelist=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1211,6 +1226,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_return_url_type = signature_return_url_type
+        self.model.domain_whitelist = domain_whitelist
+        self.model.email_whitelist = email_whitelist
 
     def to_dict(self):
         return dict(self.model)
@@ -1274,6 +1291,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
+    def get_domain_whitelist(self):
+        return self.model.domain_whitelist
+
+    def get_email_whitelist(self):
+        return self.model.email_whitelist
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1318,6 +1341,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
+
+    def set_domain_whitelist(self, domain_whitelist):
+        self.model.domain_whitelist = domain_whitelist
+
+    def set_email_whitelist(self, email_whitelist):
+        self.model.email_whitelist = email_whitelist
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
@@ -1425,8 +1454,6 @@ class CompanyModel(BaseModel):
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
     company_name = UnicodeAttribute()
-    company_whitelist = ListAttribute()
-    company_whitelist_patterns = ListAttribute()
     company_external_id_index = ExternalCompanyIndex()
     company_acl = UnicodeSetAttribute(default=set())
 
@@ -1440,8 +1467,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
                  company_external_id=None,
                  company_manager_id=None,
                  company_name=None,
-                 company_whitelist_patterns=None,
-                 company_whitelist=None,
                  company_acl=None,):
         super(Company).__init__()
         self.model = CompanyModel()
@@ -1449,8 +1474,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         self.model.company_external_id = company_external_id
         self.model.company_manager_id = company_manager_id
         self.model.company_name = company_name
-        self.model.company_whitelist = company_whitelist
-        self.model.company_whitelist_patterns = company_whitelist_patterns
         self.model.company_acl = company_acl
 
     def to_dict(self):
@@ -1481,12 +1504,6 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_company_name(self):
         return self.model.company_name
 
-    def get_company_whitelist(self):
-        return self.model.company_whitelist
-
-    def get_company_whitelist_patterns(self):
-        return self.model.company_whitelist_patterns
-
     def get_company_acl(self):
         return  self.model.company_acl
 
@@ -1502,34 +1519,15 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def set_company_name(self, company_name):
         self.model.company_name = str(company_name)
 
-    def set_company_whitelist(self, whitelist):
-        self.model.company_whitelist = [str(wl) for wl in whitelist]
-
     def set_company_acl(self, company_acl_username):
         self.model.company_acl = set([company_acl_username])
 
-    def add_company_whitelist(self, whitelist_item):
-        if self.model.company_whitelist is None:
-            self.model.company_whitelist = [str(whitelist_item)]
-        else:
-            self.model.company_whitelist.append(str(whitelist_item))
+    def add_company_acl(self, username):
+        self.model.company_acl.add(username)
 
-    def remove_company_whitelist(self, whitelist_item):
-        if str(whitelist_item) in self.model.company_whitelist:
-            self.model.company_whitelist.remove(str(whitelist_item))
-
-    def set_company_whitelist_patterns(self, whitelist_patterns):
-        self.model.company_whitelist_patterns = [str(wp) for wp in whitelist_patterns]
-
-    def add_company_whitelist_pattern(self, whitelist_pattern):
-        if self.model.company_whitelist_patterns is None:
-            self.model.company_whitelist_patterns = [str(whitelist_pattern)]
-        else:
-            self.model.company_whitelist_patterns.append(str(whitelist_pattern))
-
-    def remove_company_whitelist_pattern(self, whitelist_pattern):
-        if str(whitelist_pattern) in self.model.company_whitelist_patterns:
-            self.model.company_whitelist_patterns.remove(str(whitelist_pattern))
+    def remove_company_acl(self, username):
+        if username in self.model.company_acl:
+            self.model.company_acl.remove(username)
 
     def get_company_signatures(self, # pylint: disable=arguments-differ
                                project_id=None,
@@ -1593,6 +1591,15 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
             companies.append(company)
         companies_dict = [company_model.to_dict() for company_model in companies]
         return companies_dict
+
+    def get_managers_by_company_acl(self, company_acl):
+        managers = []
+        user_model = User()
+        for username in company_acl:
+            user = user_model.get_user_by_username(str(username))
+            if user is not None:
+                managers.append(user)
+        return managers
 
 
 class StoreModel(Model):
@@ -1849,7 +1856,6 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
         self.model.delete()
         
     def get_gerrit_by_project_id(self, project_id):
-        # Projects can each have at most 1 Gerrit Instance.
         gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
         for gerrit_model in gerrit_generator:
@@ -1858,8 +1864,8 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             gerrits.append(gerrit)
         if len(gerrits) >= 1: 
             return gerrits
-        else :
-            return None
+        else:
+            raise cla.models.DoesNotExist('Gerrit instance does not exist')
 
     def all(self):
         gerrits = self.model.scan()
@@ -1892,6 +1898,14 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
         self.model.username = username
         if projects is not None:
             self.model.projects = set(projects)
+
+    def add_project(self, project_id: str):
+        if self.model is not None and self.model.projects is not None:
+            self.model.projects.add(project_id)
+
+    def remove_project(self, project_id: str):
+        if project_id in self.model.projects:
+            self.model.projects.remove(project_id)
 
     def to_dict(self):
         ret = dict(self.model)
