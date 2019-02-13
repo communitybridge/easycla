@@ -387,9 +387,9 @@ export class ClaService {
     return this.http.get(this.claApiUrl + "/v1/project").map(res => res.json());
   }
 
-  getProjectsCcla() {
+  getCompanyUnsignedProjects(companyId) {
     return this.http
-      .get(this.claApiUrl + "/v1/project/ccla")
+      .get(this.claApiUrl + "/v2/company/" + companyId + "/project/unsigned")
       .map(res => res.json());
   }
 
