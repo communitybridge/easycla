@@ -19,8 +19,10 @@ class S3Storage(storage_service_interface.StorageService):
     def __init__(self):
         self.bucket = None
 
-    def initialize(self, config):
+    def initialize(self, config, bucket_name=None):
         self.bucket = signature_files_bucket
+        if bucket_name is not None:
+            self.bucket = bucket_name
 
     def _get_client(self):
         """Mockable method to get the S3 client."""

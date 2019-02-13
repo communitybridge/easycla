@@ -13,12 +13,48 @@ setup_circle:
 
 # username: LFID username
 # projects: quoted list of SFDC project IDs. e.g. '\"abcd\",\"1234\"' 
-.PHONY: add_user
-add_user:
+.PHONY: add_project_manager
+add_project_manager:
 	aws dynamodb put-item \
 		--table-name "cla-$(STAGE)-user-permissions" \
 		--item "{ \"username\": { \"S\": \"$(username)\" }, \"projects\": { \"SS\": [$(projects)] } }" \
 		--region "us-east-1";
+
+# company_id: company ID (UUID)
+# username: LFID username
+.PHONY: add_cla_manager
+add_cla_manager:
+	aws dynamodb update-item \
+		--table-name "cla-$(STAGE)-companies" \
+		--key "{\"company_id\": {\"S\": \"$(company_id)\"}}" \
+		--update-expression "ADD company_acl :value" \
+		--expression-attribute-values "{\":value\":{\"SS\": [\"$(username)\"]}}" \
+		--region "us-east-1" ;
+
+# username: LFID username
+# project_sfdc_id: project SFDC ID
+# bearer_token: Auth0 JWT
+# base_url: the base API url
+.PHONY: add_project_manager_permission
+add_project_manager_permission:
+	curl -XPOST \
+		-H "Content-type: application/json" \
+		-H "Authorization: Bearer $(bearer_token)" \
+		-d '{"username": "$(username)", "project_sfdc_id": "$(project_sfdc_id)"}' \
+		"$(base_url)/v1/project/permission"
+
+
+# username: LFID username
+# company_id: company ID
+# bearer_token: Auth0 JWT
+# base_url: the base API url
+.PHONY: add_cla_manager_permission
+add_cla_manager_permission:
+	curl -XPOST \
+		-H "Content-type: application/json" \
+		-H "Authorization: Bearer $(bearer_token)" \
+		-d '{"username": "$(username)", "company_id": "$(company_id)"}' \
+		"$(base_url)/v1/company/permission"
 
 # local_file: path to local file
 # remote_filename: logo name, in the form of <SFDC_ID>.png

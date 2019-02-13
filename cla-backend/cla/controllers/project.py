@@ -7,9 +7,11 @@ import urllib
 import io
 import cla
 import cla.resources.contract_templates
+from cla.auth import AuthUser, admin_list
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
+from cla.models.dynamo_models import UserPermissions
 from falcon import HTTPForbidden
 
 
@@ -447,3 +449,36 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
         project.remove_project_corporate_document(document)
     project.save()
     return {'success': True}
+
+def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('project ({}) added for user ({}) by {}'.format(project_sfdc_id, username, auth_user.username))
+
+    user_permission = UserPermissions()
+    try:
+        user_permission.load(username)
+    except Exception as err:
+        print('user not found. creating new user: {}'.format(err))
+        # create new user
+        user_permission = UserPermissions(username=username)
+
+    user_permission.add_project(project_sfdc_id)
+    user_permission.save()
+
+def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('project ({}) removed for ({}) by {}'.format(project_sfdc_id, username, auth_user.username))
+
+    user_permission = UserPermissions()
+    try:
+        user_permission.load(username)
+    except Exception as err:
+        print('Unable to update user permission: {}'.format(err))
+        return {'error': err}
+
+    user_permission.remove_project(project_sfdc_id)
+    user_permission.save()
