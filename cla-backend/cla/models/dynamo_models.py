@@ -1513,6 +1513,13 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def set_company_acl(self, company_acl_username):
         self.model.company_acl = set([company_acl_username])
 
+    def add_company_acl(self, username):
+        self.model.company_acl.add(username)
+
+    def remove_company_acl(self, username):
+        if username in self.model.company_acl:
+            self.model.company_acl.remove(username)
+
     def get_company_signatures(self, # pylint: disable=arguments-differ
                                project_id=None,
                                signature_signed=None,

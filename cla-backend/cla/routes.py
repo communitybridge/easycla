@@ -1388,5 +1388,17 @@ def remove_project_permission(auth_user: check_auth,
                               project_sfdc_id: hug.types.text):
     return cla.controllers.project.remove_permission(auth_user, username, project_sfdc_id)
 
+@hug.post('/company/permission', versions=1)
+def add_company_permission(auth_user: check_auth,
+                           username: hug.types.text,
+                           company_id: hug.types.text):
+    return cla.controllers.company.add_permission(auth_user, username, company_id)
+
+@hug.delete('/company/permission', versions=1)
+def remove_company_permission(auth_user: check_auth,
+                              username: hug.types.text,
+                              company_id: hug.types.text):
+    return cla.controllers.company.remove_permission(auth_user, username, company_id)
+
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
