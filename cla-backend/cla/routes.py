@@ -17,6 +17,7 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 import cla.controllers.gerrit
+import cla.controllers.project_logo
 
 import cla.salesforce
 
@@ -1367,6 +1368,13 @@ def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text)
     """
     return cla.controllers.gerrit.get_agreement_html(gerrit_id, contract_type)
 
+# The following routes are only provided for project and cla manager
+# permission management, and are not to be called by the UI Consoles.
+@hug.put('/project/logo/{project_sfdc_id}', versions=1)
+def upload_logo(auth_user: check_auth,
+                project_sfdc_id: hug.types.text,
+                body):
+    return cla.controllers.project_logo.upload_logo(auth_user, project_sfdc_id, body.read())
     
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
