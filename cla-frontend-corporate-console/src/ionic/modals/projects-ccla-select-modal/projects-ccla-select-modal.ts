@@ -41,13 +41,10 @@ export class ProjectsCclaSelectModal {
   }
 
   getProjectsCcla() {
-    this.claService.getProjects().subscribe(response => {
+    this.claService.getCompanyUnsignedProjects(this.company.company_id).subscribe(response => {
       this.projects = response;
     });
-    // TODO: update when endpoint is ready
-    // this.claService.getProjectsCcla().subscribe((response) => {
-    //   this.projects = response;
-    // });
+
   }
 
   selectProject(project) {

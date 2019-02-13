@@ -579,6 +579,15 @@ def get_company(company_id: hug.types.text):
     """
     return cla.controllers.company.get_company(company_id)
 
+@hug.get('/company/{company_id}/project/unsigned', versions=2)
+def get_projects_company_unsigned(company_id: hug.types.text):
+    """
+    GET: /company/{company_id}/project/unsigned
+
+    Returns a list of projects that the company has not signed CCLAs for. 
+    """
+    return cla.controllers.project.get_projects_company_unsigned(company_id)
+
 
 @hug.post('/company', versions=1,
           examples=" - {'company_name': 'Company Name', \

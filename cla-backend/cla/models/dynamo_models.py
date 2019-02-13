@@ -1390,6 +1390,15 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
 
+    def get_projects_by_company_signed(self, company_id):
+        # Query returns all the signatures that the company has signed a CCLA for.
+        # Loop through the signatures and retrieve only the project IDs referenced by the signatures. 
+        projects = []
+        queryResults = self.model.scan(signature_user_ccla_company_id__eq=str(company_id))
+        for signature in queryResults:
+            projects.append(signature.signature_project_id)
+        return projects
+
     def all(self, ids=None):
         if ids is None:
             signatures = self.model.scan()

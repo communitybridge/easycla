@@ -46,6 +46,31 @@ def get_project(project_id, user_id=None):
     return project.to_dict()
 
 
+def get_projects_company_unsigned(company_id):
+    """
+    Returns a list of projects that the company has not signed a CCLA for. 
+
+    :param company_id: The company's ID.
+    :type company_id: string
+    :return: dict representation of the projects object.
+    :rtype: [dict]
+    """
+    # Verify company is valid
+    company = get_company_instance()
+    try:
+        company.load(company_id)
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # get project ids that the company has signed the CCLAs for. 
+    signature = get_signature_instance()
+    signed_project_ids = signature.get_projects_by_company_signed(company_id)
+    cla.log.error(signed_project_ids)
+    # from all projects, retrieve projects that are not in the signed project ids
+    unsigned_projects = [project.to_dict() for project in get_project_instance().all() if project.get_project_id() not in signed_project_ids]
+    return unsigned_projects
+    
+
 def get_projects_by_external_id(project_external_id, username):
     """
     Returns the CLA projects requested by External ID.
