@@ -118,7 +118,9 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
                      signature_approved=None,
                      signature_signed=None,
                      signature_return_url=None,
-                     signature_sign_url=None):
+                     signature_sign_url=None,
+                     domain_whitelist=None,
+                     email_whitelist=None):
     """
     Updates an signature and returns the newly updated signature in dict format.
     A value of None means the field should not be updated.
@@ -193,6 +195,25 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
         except KeyError as err:
             return {'errors': {'signature_sign_url':
                                'Invalid value passed in for URL field'}}
+
+    if domain_whitelist is not None:
+        try:
+            domain_whitelist = hug.types.multiple(domain_whitelist)
+            signature.set_domain_whitelist(domain_whitelist)
+        except KeyError as err:
+            return {'errors': {
+                'domain_whitelist': 'Invalid value passed in for the domain whitelist'
+            }}
+
+    if email_whitelist is not None:
+        try:
+            email_whitelist = hug.types.multiple(email_whitelist)
+            signature.set_email_whitelist(email_whitelist)
+        except KeyError as err:
+            return {'errors': {
+                'email_whitelist': 'Invalid value passed in for the email whitelist'
+            }}
+
     signature.save()
     return signature.to_dict()
 
@@ -284,6 +305,7 @@ def get_company_signatures(company_id):
     """
     signatures = get_signature_instance().get_signatures_by_reference(company_id,
                                                                       'company')
+
     return [signature.to_dict() for signature in signatures]
 
 def get_project_signatures(project_id):

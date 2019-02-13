@@ -10,6 +10,10 @@ auth0_base_url = os.environ.get('AUTH0_DOMAIN', '')
 auth0_username_claim = os.environ.get('AUTH0_USERNAME_CLAIM', '')
 algorithms = [os.environ.get('AUTH0_ALGORITHM', '')]
 
+# This list represents admin users who can perform logo
+# uploads and project and cla manager permission updates
+admin_list = ['***REMOVED***', 'SellJamHere', 'vnaidu']
+
 class AuthError(Exception):
     def __init__(self, response):
         self.response = response
