@@ -7,6 +7,7 @@ import hug.types
 from cla.models import DoesNotExist
 import cla
 import cla.controllers.user
+from cla.auth import AuthUser, admin_list
 from cla.models.dynamo_models import Company, User
 from falcon import HTTP_409, HTTP_200, HTTPForbidden
 
@@ -177,3 +178,35 @@ def delete_company(company_id, username=None):
 def get_manager_companies(manager_id):
     companies = Company().get_companies_by_manager(manager_id)
     return companies
+
+def add_permission(auth_user: AuthUser, username: str, company_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('company ({}) added for user ({}) by {}'.format(company_id, username, auth_user.username))
+
+    company = Company()
+    try:
+        company.load(company_id)
+    except Exception as err:
+        print('Unable to update company permission: {}'.format(err))
+        return {'error': str(err)}
+
+    company.add_company_acl(username)
+    company.save()
+
+def remove_permission(auth_user: AuthUser, username: str, company_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('company ({}) removed for ({}) by {}'.format(company_id, username, auth_user.username))
+
+    company = Company()
+    try:
+        company.load(company_id)
+    except Exception as err:
+        print('Unable to update company permission: {}'.format(err))
+        return {'error': str(err)}
+
+    company.remove_company_acl(username)
+    company.save()
