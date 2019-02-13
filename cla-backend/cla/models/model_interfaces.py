@@ -1191,24 +1191,6 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_whitelist(self):
-        """
-        Getter for an company's whitelisted domain names.
-
-        :return: The company's configured whitelist of domains.
-        :rtype: [string]
-        """
-        raise NotImplementedError()
-
-    def get_company_whitelist_patterns(self):
-        """
-        Getter for an company's whitelist regex patterns.
-
-        :return: The company's configured whitelist patterns.
-        :rtype: [string]
-        """
-        raise NotImplementedError()
-
     def get_company_signatures(self,
                                project_id=None,
                                signature_signed=None,

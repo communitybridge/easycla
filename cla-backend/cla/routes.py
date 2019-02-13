@@ -17,6 +17,7 @@ import cla.controllers.company
 import cla.controllers.repository_service
 import cla.controllers.github
 import cla.controllers.gerrit
+import cla.controllers.project_logo
 
 import cla.salesforce
 
@@ -368,7 +369,9 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
                   signature_signed=None,
                   signature_approved=None,
                   signature_return_url=None,
-                  signature_sign_url=None):
+                  signature_sign_url=None,
+                  domain_whitelist=None,
+                  email_whitelist=None):
     """
     PUT: /signature
 
@@ -388,8 +391,9 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
         signature_signed=signature_signed,
         signature_approved=signature_approved,
         signature_return_url=signature_return_url,
-        signature_sign_url=signature_sign_url)
-
+        signature_sign_url=signature_sign_url,
+        domain_whitelist=domain_whitelist,
+        email_whitelist=email_whitelist)
 
 @hug.delete('/signature/{signature_id}', versions=1)
 def delete_signature(auth_user: check_auth, signature_id: hug.types.uuid):
@@ -440,7 +444,6 @@ def get_signatures_company(auth_user: check_auth, company_id: hug.types.uuid):
     Get all signatures for company specified.
     """
     return cla.controllers.signature.get_company_signatures(company_id)
-
 
 @hug.get('/signatures/project/{project_id}', versions=1)
 def get_signatures_project(auth_user: check_auth, project_id: hug.types.uuid):
@@ -566,7 +569,7 @@ def get_companies(auth_user: check_auth):
 
     Returns all CLA companies associated with user.
     """
-
+    cla.controllers.user.get_or_create_user(auth_user) # Find or Create user -- For first login
     return cla.controllers.company.get_companies_by_user(auth_user.username)
 
 
@@ -591,14 +594,10 @@ def get_projects_company_unsigned(company_id: hug.types.text):
 
 @hug.post('/company', versions=1,
           examples=" - {'company_name': 'Company Name', \
-                        'company_whitelist': ['user@safe.org'], \
-                        'company_whitelist_patterns': ['*@safe.org'], \
                         'company_manager_id': 'user-id'}")
 def post_company(response,
                  auth_user: check_auth,
                  company_name: hug.types.text,
-                 company_whitelist: hug.types.multiple,
-                 company_whitelist_patterns: hug.types.multiple,
                  company_manager_user_name=None,
                  company_manager_user_email=None,
                  company_manager_id=None):
@@ -606,8 +605,6 @@ def post_company(response,
     POST: /company
 
     DATA: {'company_name': 'Org Name',
-           'company_whitelist': ['safe@email.org'],
-           'company_whitelist': ['*@email.org'],
            'company_manager_id': <user-id>}
 
     Returns the CLA company that was just created.
@@ -616,8 +613,6 @@ def post_company(response,
     create_resp = cla.controllers.company.create_company(
         auth_user,
         company_name=company_name,
-        company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns,
         company_manager_id=company_manager_id,
         company_manager_user_name=company_manager_user_name,
         company_manager_user_email=company_manager_user_email)
@@ -634,8 +629,6 @@ def post_company(response,
 def put_company(auth_user: check_auth, # pylint: disable=too-many-arguments
                 company_id: hug.types.uuid,
                 company_name=None,
-                company_whitelist=None,
-                company_whitelist_patterns=None,
                 company_manager_id=None):
     """
     PUT: /company
@@ -649,8 +642,6 @@ def put_company(auth_user: check_auth, # pylint: disable=too-many-arguments
     return cla.controllers.company.update_company(
         company_id,
         company_name=company_name,
-        company_whitelist=company_whitelist,
-        company_whitelist_patterns=company_whitelist_patterns,
         company_manager_id=company_manager_id,
         username=auth_user.username)
 
@@ -990,7 +981,8 @@ def request_individual_signature(project_id: hug.types.uuid,
 @hug.post('/request-corporate-signature', versions=1,
           examples=" - {'project_id': 'some-proj-id', \
                         'company_id': 'some-company-uuid'}")
-def request_corporate_signature(project_id: hug.types.uuid,
+def request_corporate_signature(auth_user: check_auth,
+                                project_id: hug.types.uuid,
                                 company_id: hug.types.uuid,
                                 send_as_email=False,
                                 authority_name=None, 
@@ -1023,7 +1015,7 @@ def request_corporate_signature(project_id: hug.types.uuid,
     signing service provider.
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
-    return cla.controllers.signing.request_corporate_signature(project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
+    return cla.controllers.signing.request_corporate_signature(auth_user, project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url)
 
 @hug.post('/request-employee-signature', versions=2)
 def request_employee_signature(project_id: hug.types.uuid,
@@ -1103,9 +1095,11 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
     return cla.controllers.signing.return_url(signature_id, event)
 
 @hug.post('/send-authority-email', versions=2)
-def send_authority_email(company_name: hug.types.text, project_name: hug.types.text, 
-                        authority_name: hug.types.text, authority_email: cla.hug_types.email, 
-                        ):
+def send_authority_email(auth_user: check_auth,
+                         company_name: hug.types.text,
+                         project_name: hug.types.text,
+                         authority_name: hug.types.text,
+                         authority_email: cla.hug_types.email):
     """
     POST: /send-authority-email 
 
@@ -1383,6 +1377,37 @@ def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text)
     """
     return cla.controllers.gerrit.get_agreement_html(gerrit_id, contract_type)
 
-    
+# The following routes are only provided for project and cla manager
+# permission management, and are not to be called by the UI Consoles.
+@hug.put('/project/logo/{project_sfdc_id}', versions=1)
+def upload_logo(auth_user: check_auth,
+                project_sfdc_id: hug.types.text,
+                body):
+    return cla.controllers.project_logo.upload_logo(auth_user, project_sfdc_id, body.read())
+
+@hug.post('/project/permission', versions=1)
+def add_project_permission(auth_user: check_auth,
+                           username: hug.types.text,
+                           project_sfdc_id: hug.types.text):
+    return cla.controllers.project.add_permission(auth_user, username, project_sfdc_id)
+
+@hug.delete('/project/permission', versions=1)
+def remove_project_permission(auth_user: check_auth,
+                              username: hug.types.text,
+                              project_sfdc_id: hug.types.text):
+    return cla.controllers.project.remove_permission(auth_user, username, project_sfdc_id)
+
+@hug.post('/company/permission', versions=1)
+def add_company_permission(auth_user: check_auth,
+                           username: hug.types.text,
+                           company_id: hug.types.text):
+    return cla.controllers.company.add_permission(auth_user, username, company_id)
+
+@hug.delete('/company/permission', versions=1)
+def remove_company_permission(auth_user: check_auth,
+                              username: hug.types.text,
+                              company_id: hug.types.text):
+    return cla.controllers.company.remove_permission(auth_user, username, company_id)
+
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())

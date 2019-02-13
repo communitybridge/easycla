@@ -12,6 +12,7 @@ import { ClaSignatureModel } from "../../models/cla-signature";
 import { SortService } from "../../services/sort.service";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
+import { WhitelistModal } from "../../modals/whitelist-modal/whitelist-modal";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -24,10 +25,13 @@ import { Restricted } from "../../decorators/restricted";
   templateUrl: "project-page.html"
 })
 export class ProjectPage {
-  signatures: ClaSignatureModel[];
+  cclaSignature: ClaSignatureModel;
+  employeeSignatures: ClaSignatureModel[];
   loading: any;
   companyId: string;
   projectId: string;
+  company: ClaCompanyModel;
+  manager: ClaUserModel;
 
   project: any;
   users: any;
@@ -57,11 +61,21 @@ export class ProjectPage {
         sort: null
       }
     };
+    this.company = new ClaCompanyModel();
+    this.cclaSignature = new ClaSignatureModel();
   }
 
   ngOnInit() {
     this.getProject();
     this.getProjectSignatures();
+    this.getCompany();
+  }
+
+  getCompany() {
+    this.claService.getCompany(this.companyId).subscribe(response => {
+      this.company = response;
+      this.getUser(this.company.company_manager_id);
+    });
   }
 
   getProject() {
@@ -75,8 +89,13 @@ export class ProjectPage {
     this.claService
       .getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        this.signatures = response.filter(sig => sig.signature_type === "cla");
-        for (let signature of this.signatures) {
+        let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
+        if (cclaSignatures.length) {
+          this.cclaSignature = cclaSignatures[0];
+        }
+
+        this.employeeSignatures = response.filter(sig => sig.signature_type === 'cla');
+        for (let signature of this.employeeSignatures) {
           this.getUser(signature.signature_reference_id);
         }
       });
@@ -86,11 +105,38 @@ export class ProjectPage {
     if (!this.users[userId]) {
       this.claService.getUser(userId).subscribe(response => {
         this.users[userId] = response;
+        this.manager = response;
       });
     }
   }
 
+  openWhitelistEmailModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "email",
+      signatureId: this.cclaSignature.signature_id,
+      whitelist: this.cclaSignature.email_whitelist
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getProjectSignatures();
+    });
+    modal.present();
+  }
+
+  openWhitelistDomainModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "domain",
+      signatureId: this.cclaSignature.signature_id,
+      whitelist: this.cclaSignature.domain_whitelist
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getProjectSignatures();
+    });
+    modal.present();
+  }
+
   sortMembers(prop) {
-    this.sortService.toggleSort(this.sort, prop, this.signatures);
+    this.sortService.toggleSort(this.sort, prop, this.employeeSignatures);
   }
 }
