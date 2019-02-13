@@ -67,7 +67,6 @@ def get_projects_company_unsigned(company_id):
     # get project ids that the company has signed the CCLAs for. 
     signature = get_signature_instance()
     signed_project_ids = signature.get_projects_by_company_signed(company_id)
-    cla.log.error(signed_project_ids)
     # from all projects, retrieve projects that are not in the signed project ids
     unsigned_projects = [project.to_dict() for project in get_project_instance().all() if project.get_project_id() not in signed_project_ids]
     return unsigned_projects
