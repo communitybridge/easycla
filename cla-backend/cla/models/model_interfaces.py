@@ -1099,6 +1099,14 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_projects_by_company_unsigned(self, company_id):
+        """
+        Abstraction for returning a list of projects that the company has not signed CCLAs for. 
+
+        :param: company_id: The company ID we'll be fetching signatures for.
+        """
+        raise NotImplementedError()
+
     def all(self, ids=None):
         """
         Fetches all signatures in the CLA system.
