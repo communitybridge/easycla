@@ -37,6 +37,14 @@ body ion-app.wp {
   padding-right: 0;
 }
 
+ion-icon{
+  color: color($colors, gray);
+}
+
+ion-icon[name=menu] {
+  color: color($colors, white);
+}
+
 .item.item-md {
   padding-left: 0;
   .checkbox-md {
@@ -47,6 +55,7 @@ body ion-app.wp {
 .item-md.item-block .item-inner{
   padding-right: 0;
 }
+
 
 .card-md .item-md.item-block .item-inner {
   border-bottom: 1px solid #dedede;
