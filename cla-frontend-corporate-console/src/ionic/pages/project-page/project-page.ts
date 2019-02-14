@@ -85,16 +85,10 @@ export class ProjectPage {
   }
 
   getProjectSignatures() {
-    // TODO: remove this comment when EP is working correctly. currently returning cclas instead of employee clas. reported.
     this.claService
       .getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
-        if (cclaSignatures.length) {
-          this.cclaSignature = cclaSignatures[0];
-        }
-
-        this.employeeSignatures = response.filter(sig => sig.signature_type === 'cla');
+        this.employeeSignatures = response;
         for (let signature of this.employeeSignatures) {
           this.getUser(signature.signature_reference_id);
         }
