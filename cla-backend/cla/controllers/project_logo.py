@@ -6,11 +6,17 @@ import boto3
 import cla
 from cla.auth import AuthUser, admin_list
 
+stage = os.environ.get('STAGE', '')
+
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 logo_bucket_parts = urlsplit(cla_logo_url)
 logo_bucket = logo_bucket_parts.path.replace('/', '')
 
-s3_client = boto3.client('s3')
+endpoint_url = None
+if stage == 'local':
+    endpoint_url = 'http://localhost:8001'
+
+s3_client = boto3.client('s3', endpoint_url=endpoint_url)
 
 def create_signed_logo_url(auth_user: AuthUser, project_sfdc_id: str):
     if auth_user.username not in admin_list:
