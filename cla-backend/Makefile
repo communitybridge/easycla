@@ -56,11 +56,17 @@ add_cla_manager_permission:
 		-d '{"username": "$(username)", "company_id": "$(company_id)"}' \
 		"$(base_url)/v1/company/permission"
 
-# local_file: path to local file
-# remote_filename: logo name, in the form of <SFDC_ID>.png
+# file_path: path to local logo png
+# project_sfdc_id: project SFDC ID
+# bearer_token: Auth0 JWT
+# base_url: the base API url
 .PHONY: upload_logo
 upload_logo:
-	aws s3 cp $(local_file) s3://cla-project-logo-$(STAGE)/$(remote_filename)
+	file_path=$(file_path) \
+	project_sfdc_id=$(project_sfdc_id) \
+	bearer_token=$(bearer_token) \
+	base_url=$(base_url) \
+	../scripts/credential-updates/upload_logo.sh \
 
 .PHONY: run_dynamo
 run_dynamo:
