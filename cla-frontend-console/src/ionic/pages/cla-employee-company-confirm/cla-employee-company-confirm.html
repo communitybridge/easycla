@@ -32,7 +32,7 @@
             </ion-card-title>
             <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
               <p>
-                I hereby confirm that I am still affiliated with company {{ company.name }} and Lorem Ipsam Dolor Sit Legalese.
+                I hereby confirm that I am still affiliated with company {{ company.name }} and {{ user.user_name}}.
               </p>
               <p>
                 The button click will fire off a request to confirm if the user is associated with the company they say they are. If so, we send them back to github, or we present them with the icla if that is required. If not, they go to the troubleshooting page where they can contact their ccla manager
