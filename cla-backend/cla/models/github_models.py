@@ -487,19 +487,26 @@ def handle_commit_from_github_user(project_id, commit, author, signed, missing):
         Should be modified in-place to add a missing signer if found.
     :type missing: [github.GitAuthor.GitAuthor | github.NamedUser.NamedUser]
     """
+    
+    # Validate author name to show
+    if author.name is not None:
+        author_name = author.name # set name when available
+    else:
+        author_name = author.login # set username (login) when name not available
+
     user = cla.utils.get_user_instance().get_user_by_github_id(author.id)
     if user is None:
         # GitHub user not in system yet, signature does not exist for this user.
         cla.log.info('GitHub user (%s - %s - %s) not found',
                      author.id, author.login, author.email)
-        missing.append((commit.sha, author.name))
+        missing.append((commit.sha, author_name))
     else:
         cla.log.info('GitHub user found (%s - %s)',
                      user.get_user_emails(), user.get_user_github_id())
         if cla.utils.user_signed_project_signature(user, project_id):
-            signed.append((commit.sha, author.name))
+            signed.append((commit.sha, author_name))
         else:
-            missing.append((commit.sha, author.name))
+            missing.append((commit.sha, author_name))
 
 def handle_commit_from_git_author(project_id, commit, author, signed, missing):
     """
