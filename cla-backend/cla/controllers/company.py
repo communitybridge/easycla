@@ -7,6 +7,7 @@ import hug.types
 from cla.models import DoesNotExist
 import cla
 import cla.controllers.user
+from cla.auth import AuthUser, admin_list
 from cla.models.dynamo_models import Company, User
 from falcon import HTTP_409, HTTP_200, HTTPForbidden
 
@@ -56,8 +57,6 @@ def get_company(company_id):
 
 def create_company(auth_user,
                    company_name=None,
-                   company_whitelist=None,
-                   company_whitelist_patterns=None,
                    company_manager_id=None,
                    company_manager_user_name=None,
                    company_manager_user_email=None,
@@ -67,10 +66,6 @@ def create_company(auth_user,
 
     :param company_name: The company name.
     :type company_name: string
-    :param company_whitelist: The list of whitelisted domain names for this company.
-    :type company_whitelist: [string]
-    :param company_whitelist_patterns: List of whitelisted email patterns.
-    :type company_whitelist_patterns: [string]
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
     :param company_manager_user_name: The user name of the company manager user.
@@ -93,9 +88,6 @@ def create_company(auth_user,
     company = Company()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
-    # TODO: Need to validate these values.
-    company.set_company_whitelist(company_whitelist)
-    company.set_company_whitelist_patterns(company_whitelist_patterns)
     company.set_company_manager_id(manager.get_user_id())
     company.set_company_acl(manager.get_lf_username())
 
@@ -107,8 +99,6 @@ def create_company(auth_user,
 
 def update_company(company_id, # pylint: disable=too-many-arguments
                    company_name=None,
-                   company_whitelist=None,
-                   company_whitelist_patterns=None,
                    company_manager_id=None,
                    username=None):
     """
@@ -119,10 +109,6 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     :type company_id: ID
     :param company_name: New company name.
     :type company_name: string | None
-    :param company_whitelist: New whitelist for this company.
-    :type company_whitelist: [string] | None
-    :param company_whitelist_patterns: New company whitelisted email patterns.
-    :type company_whitelist_patterns: [string] | None
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
     :return: dict representation of the company object.
@@ -138,14 +124,6 @@ def update_company(company_id, # pylint: disable=too-many-arguments
 
     if company_name is not None:
         company.set_company_name(company_name)
-    # TODO: Need to validate these values.
-    if company_whitelist is not None:
-        val = hug.types.multiple(company_whitelist)
-        company.set_company_whitelist(val)
-    # TODO: Need to validate these values.
-    if company_whitelist_patterns is not None:
-        val = hug.types.multiple(company_whitelist_patterns)
-        company.set_company_whitelist_patterns(val)
     if company_manager_id is not None:
         val = hug.types.uuid(company_manager_id)
         company.set_company_manager_id(str(val))
@@ -200,3 +178,35 @@ def delete_company(company_id, username=None):
 def get_manager_companies(manager_id):
     companies = Company().get_companies_by_manager(manager_id)
     return companies
+
+def add_permission(auth_user: AuthUser, username: str, company_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('company ({}) added for user ({}) by {}'.format(company_id, username, auth_user.username))
+
+    company = Company()
+    try:
+        company.load(company_id)
+    except Exception as err:
+        print('Unable to update company permission: {}'.format(err))
+        return {'error': str(err)}
+
+    company.add_company_acl(username)
+    company.save()
+
+def remove_permission(auth_user: AuthUser, username: str, company_id: str):
+    if auth_user.username not in admin_list:
+        return {'error': 'unauthorized'}
+
+    cla.log.info('company ({}) removed for ({}) by {}'.format(company_id, username, auth_user.username))
+
+    company = Company()
+    try:
+        company.load(company_id)
+    except Exception as err:
+        print('Unable to update company permission: {}'.format(err))
+        return {'error': str(err)}
+
+    company.remove_company_acl(username)
+    company.save()
