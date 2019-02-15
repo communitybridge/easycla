@@ -50,11 +50,14 @@ export class ClaEmployeeCompanyConfirmPage {
 
   getDefaults() {
     this.project = {
-      name: '',
+      project_name: '',
     };
     this.company = {
-      name: '',
+      company_name: '',
     };
+    this.user = {
+      user_name: '',
+    }
     this.currentlySubmitting = false;
   }
 
