@@ -26,32 +26,6 @@
           <h3>Manager</h3>
           <div *ngIf="manager">{{ manager.user_name }}</div>
         </ion-col>
-        <ion-col col-12 col-md-4>
-          <h3>
-            Domain Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let pattern of company.company_whitelist_patterns">
-                {{ pattern }}
-              </ion-item>
-            </ion-list>
-          </div>
-        </ion-col>
-        <ion-col col-12 col-md-4>
-          <h3>
-            Email Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let whitelist of company.company_whitelist">
-                {{ whitelist }}
-              </ion-item>
-            </ion-list>
-          </div>
-        </ion-col>
       </ion-row>
     </ion-grid>
   </header>
