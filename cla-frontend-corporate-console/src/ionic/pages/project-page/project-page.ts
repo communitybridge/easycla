@@ -85,14 +85,26 @@ export class ProjectPage {
   }
 
   getProjectSignatures() {
+    // get CCLA signatures
     this.claService
       .getCompanyProjectSignatures(this.companyId, this.projectId)
+      .subscribe(response => {
+        let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
+        if (cclaSignatures.length > 0) {
+          this.cclaSignature = cclaSignatures[0];
+        }
+      });
+
+    // get employee signatures
+    this.claService
+      .getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
         this.employeeSignatures = response;
         for (let signature of this.employeeSignatures) {
           this.getUser(signature.signature_reference_id);
         }
-      });
+    });
+
   }
 
   getUser(userId) {
