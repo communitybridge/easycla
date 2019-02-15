@@ -264,6 +264,22 @@ export class ClaService {
       )
       .map(res => res.json());
   }
+  /**
+   * /signatures/company/{company_id}/project/{project_id}/employee
+   **/
+
+  getEmployeeProjectSignatures(companyId, projectId) {
+    return this.http
+      .get(
+        this.claApiUrl +
+          "/v1/signatures/company/" +
+          companyId +
+          "/project/" +
+          projectId + 
+          "/employee"
+      )
+      .map(res => res.json());
+  }
 
   /**
    * /signatures/project/{project_id}

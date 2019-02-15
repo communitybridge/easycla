@@ -1409,8 +1409,19 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return signatures
 
     def get_signatures_by_company_project(self, company_id, project_id):
+        signature_generator = self.model.signature_reference_index.\
+            query(company_id, SignatureModel.signature_project_id == project_id)
+        signatures = [] 
+        for signature_model in signature_generator:
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+        signatures_dict = [signature_model.to_dict() for signature_model in signatures]
+        return signatures_dict
+    
+    def get_employee_signatures_by_company_project(self, company_id, project_id):
         signature_generator = self.model.signature_project_index.query(project_id, SignatureModel.signature_user_ccla_company_id == company_id)
-        signatures = []
+        signatures = [] 
         for signature_model in signature_generator:
             signature = Signature()
             signature.model = signature_model
