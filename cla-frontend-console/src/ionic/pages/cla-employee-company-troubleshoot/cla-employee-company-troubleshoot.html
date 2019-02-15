@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>CLA - {{ project.name }} - {{ company.name }} CCLA</ion-title>
+    <ion-title>CLA - {{ project.project_name }} CCLA</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -12,10 +12,10 @@
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-2>
-          <img [src]='project.logoUrl' alt="{{ project.name }} Logo" />
+          <img [src]='project.logoUrl' alt="{{ project.project_name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
-          <h1>{{ company.name }}</h1>
+          <h1>{{ company.company_name }}</h1>
           <p>Your email address is not associated with the company. Contact your CLA manager.</p>
         </ion-col>
       </ion-row>
