@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>CLA - {{ project.name }} - {{ company.name }} CCLA</ion-title>
+    <ion-title>CLA - {{ project.project_name }} CCLA</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -12,11 +12,11 @@
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-2>
-          <img [src]='project.logoUrl' alt="{{ project.name }} Logo" />
+          <img [src]='project.logoUrl' alt="{{ project.project_name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
-          <h1>{{ company.name }}</h1>
-          <p>(Message that the CLA system couldn't find one of their emails associated with that company. Try contacting the cla manager.)</p>
+          <h1>{{ company.company_name }}</h1>
+          <p>Your email address is not associated with the company. Contact your CLA manager.</p>
         </ion-col>
       </ion-row>
     </ion-grid>
@@ -36,7 +36,7 @@
               </ng-container>
             </ion-card-title>
             <ion-item>
-              <p>More explanation of what is happening. Go back to {{ gitService }}, and if your company email address wasn't already added, add it now and restart this process from the status message of the PR. Feel free to close this page.</p>
+              <p>Go to GitHub and make sure your company has an email address. Then restart this process from the PR status message. Feel free to close this page.</p>
               <button ion-button (click)="openGitServiceEmailSettings()">
                 Open {{ gitService }} Email Settings
               </button>
@@ -51,7 +51,7 @@
               2. Contact the CLA Manager to request access.
             </ion-card-title>
             <ion-item>
-              <p>More explanation of what is happening.</p>
+              <p>You must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your work for a company. Contact your CLA manager to request authorization.</p>
               <button ion-button (click)="openClaEmployeeRequestAccessModal()">
                 Contact
               </button>

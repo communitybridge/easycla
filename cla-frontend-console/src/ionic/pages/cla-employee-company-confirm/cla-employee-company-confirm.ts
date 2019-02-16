@@ -50,11 +50,14 @@ export class ClaEmployeeCompanyConfirmPage {
 
   getDefaults() {
     this.project = {
-      name: '',
+      project_name: '',
     };
     this.company = {
-      name: '',
+      company_name: '',
     };
+    this.user = {
+      user_name: '',
+    }
     this.currentlySubmitting = false;
   }
 
@@ -100,8 +103,8 @@ export class ClaEmployeeCompanyConfirmPage {
     this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
-        if (response.errors.hasOwnProperty('company_whitelist')) {
-          // When the user is not whitelisted with the company: return {'errors': {'company_whitelist': 'User email (<email>) is not whitelisted for this company'}}
+        if (response.errors.hasOwnProperty('ccla_whitelist')) {
+          // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
           this.openClaEmployeeCompanyTroubleshootPage();
           this.currentlySubmitting = false;
           return;

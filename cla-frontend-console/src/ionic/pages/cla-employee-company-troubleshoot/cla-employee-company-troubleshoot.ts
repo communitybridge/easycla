@@ -35,28 +35,31 @@ export class ClaEmployeeCompanyTroubleshootPage {
   }
 
   getDefaults() {
-
+    this.project = {
+      project_name: '',
+      logoUrl: '',
+    };
+    this.company = {
+      company_name: '',
+    };
   }
 
   ngOnInit() {
-    this.getProject();
-    this.getCompany();
+    this.getProject(this.projectId);
+    this.getCompany(this.companyId);
     this.getGitService();
   }
 
-  getProject() {
-    this.project = {
-      id: '0000000001',
-      name: 'Project Name',
-      logoRef: 'https://dummyimage.com/225x102/d8d8d8/242424.png&text=Project+Logo',
-    };
+  getProject(projectId) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
   }
 
-  getCompany() {
-    this.company = {
-      name: 'Company Name',
-      id: '0000000001',
-    };
+  getCompany(companyId) {
+    this.claService.getCompany(companyId).subscribe(response => {
+      this.company = response;
+    });
   }
 
   getGitService() {
