@@ -162,6 +162,7 @@ def get_organization_repositories(organization_name):
     try:
         github_organization.load(str(organization_name))
         if github_organization.get_organization_installation_id() is not None:
+            print('GitHub Organization ID: {}'.format(github_organization.get_organization_installation_id()))
             installation = GitHubInstallation(github_organization.get_organization_installation_id())
             if installation.repos:
                 repos = []
