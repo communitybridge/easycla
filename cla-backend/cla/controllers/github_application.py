@@ -26,6 +26,10 @@ class GitHubInstallation(object):
         self.token = auth.token
         self.api_object = Github(self.token)
 
+        print('github installation_id: {}'.format(self.installation_id))
+        print('github app id: {}'.format(self.app_id))
+        print('github private key: {}'.format(self.private_key))
+
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
     def create_jwt(self):
@@ -39,4 +43,7 @@ class GithubCLAIntegration(GithubIntegration):
             "exp": now + 60,
             "iss": self.integration_id
         }
-        return jwt.encode(payload, self.private_key, 'RS256')
+        gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
+        print('github jwt: {}'.format(gh_jwt))
+
+        return gh_jwt
