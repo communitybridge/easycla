@@ -10,6 +10,8 @@
       <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
+          <p *ngIf="form.errors != null && form.errors.atLeastOne" class="form-message"> 
+          Specify at least a ICLA Group or CCLA Group.</p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -32,9 +34,9 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
+          <ion-item [class.ng-invalid]="!form.get('groupIdIcla').valid">
             <ion-label stacked>ICLA Group ID</ion-label>
-            <ion-input formControlName="groupIdIcla"></ion-input>
+            <ion-input formControlName="groupIdIcla" [(ngModel)]="gerrit.groupIdIcla"></ion-input>
           </ion-item>
           <p *ngIf="form.controls['groupIdIcla'].errors != null" class="form-message"> 
           {{ form.controls['groupIdIcla'].errors.groupNotExistentError }} </p>
@@ -42,9 +44,9 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
+          <ion-item [class.ng-invalid]="!form.get('groupIdCcla').valid">
             <ion-label stacked>CCLA Group ID</ion-label>
-            <ion-input formControlName="groupIdCcla"></ion-input>
+            <ion-input formControlName="groupIdCcla" [(ngModel)]="gerrit.groupIdCcla"></ion-input>
           </ion-item>
           <p *ngIf="form.controls['groupIdCcla'].errors != null" class="form-message"> 
           {{ form.controls['groupIdCcla'].errors.groupNotExistentError }} </p>

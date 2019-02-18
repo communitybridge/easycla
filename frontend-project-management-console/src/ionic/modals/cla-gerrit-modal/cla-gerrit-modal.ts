@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ExtraValidators } from '../../validators/requireSelfAnd';
 import { ClaService } from '../../services/cla.service';
 import { CincoService } from '../../services/cinco.service'
 import { Http } from '@angular/http';
@@ -32,8 +33,8 @@ export class ClaGerritModal {
     this.form = formBuilder.group({
       gerritName: ['', Validators.compose([Validators.required])],
       URL: ['', Validators.compose([Validators.required])],
-      groupIdIcla: ['', Validators.compose([Validators.required])],
-      groupIdCcla: ['', Validators.compose([Validators.required])],
+      groupIdIcla: ['', (control)=>{ return ExtraValidators.requireSelfOr(control, "groupIdCcla")}],
+      groupIdCcla: ['', (control)=>{ return ExtraValidators.requireSelfOr(control, "groupIdIcla")}],
     });
 
     events.subscribe('modal:close', () => {
@@ -68,9 +69,13 @@ export class ClaGerritModal {
       project_id: this.projectId,
       gerrit_name: this.form.value.gerritName,
       gerrit_url: this.form.value.URL,
-      group_id_icla: this.form.value.groupIdIcla,
-      group_id_ccla: this.form.value.groupIdCcla
     };
+    if (this.form.value.groupIdIcla && this.form.value.groupIdIcla != ''){
+      gerrit["group_id_icla"] = this.form.value.groupIdIcla
+    }
+    if (this.form.value.groupIdCcla && this.form.value.groupIdCcla != ''){
+      gerrit["group_id_ccla"] = this.form.value.groupIdCcla
+    }
     this.claService.postGerritInstance(gerrit).subscribe((response) => {
       if(response.error_icla) {
         this.form.controls['groupIdIcla'].setErrors({groupNotExistentError: "The specified LDAP group for ICLA does not exist."})

@@ -174,7 +174,6 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_reference_id = UnicodeAttribute(hash_key=True)
 
-
 class BaseModel(Model):
     """
     Base pynamodb model used for all CLA models.
@@ -1767,8 +1766,8 @@ class GerritModel(BaseModel):
     project_id = UnicodeAttribute()
     gerrit_name = UnicodeAttribute()
     gerrit_url = UnicodeAttribute()
-    group_id_icla = UnicodeAttribute()
-    group_id_ccla = UnicodeAttribute()
+    group_id_icla = UnicodeAttribute(null=True)
+    group_id_ccla = UnicodeAttribute(null=True)
     group_name_icla = UnicodeAttribute(null=True)
     group_name_ccla = UnicodeAttribute(null=True)
 
