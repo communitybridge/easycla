@@ -90,7 +90,7 @@ export class ProjectPage {
       .getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
         let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
-        if (cclaSignatures.length > 0) {
+        if (cclaSignatures.length) {
           this.cclaSignature = cclaSignatures[0];
         }
       });
