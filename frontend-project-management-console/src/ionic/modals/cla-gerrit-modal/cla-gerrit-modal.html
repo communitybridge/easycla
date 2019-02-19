@@ -36,7 +36,7 @@
         <ion-col col-12>
           <ion-item [class.ng-invalid]="!form.get('groupIdIcla').valid">
             <ion-label stacked>ICLA Group ID</ion-label>
-            <ion-input formControlName="groupIdIcla" [(ngModel)]="gerrit.groupIdIcla"></ion-input>
+            <ion-input formControlName="groupIdIcla"></ion-input>
           </ion-item>
           <p *ngIf="form.controls['groupIdIcla'].errors != null" class="form-message"> 
           {{ form.controls['groupIdIcla'].errors.groupNotExistentError }} </p>
@@ -46,7 +46,7 @@
         <ion-col col-12>
           <ion-item [class.ng-invalid]="!form.get('groupIdCcla').valid">
             <ion-label stacked>CCLA Group ID</ion-label>
-            <ion-input formControlName="groupIdCcla" [(ngModel)]="gerrit.groupIdCcla"></ion-input>
+            <ion-input formControlName="groupIdCcla"></ion-input>
           </ion-item>
           <p *ngIf="form.controls['groupIdCcla'].errors != null" class="form-message"> 
           {{ form.controls['groupIdCcla'].errors.groupNotExistentError }} </p>

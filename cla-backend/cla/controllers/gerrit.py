@@ -80,6 +80,7 @@ def create_gerrit(project_id,
         ldap_group_ccla = lf_group.get_group(group_id_ccla)
         if ldap_group_ccla.get('error') is not None:
             return {'error_ccla': 'The specified LDAP group for CCLA does not exist. '}
+
         gerrit.set_group_name_ccla(ldap_group_ccla.get('title'))
         gerrit.set_group_id_ccla(str(group_id_ccla))
 
