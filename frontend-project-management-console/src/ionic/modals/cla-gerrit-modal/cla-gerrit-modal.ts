@@ -70,10 +70,10 @@ export class ClaGerritModal {
       gerrit_name: this.form.value.gerritName,
       gerrit_url: this.form.value.URL,
     };
-    if (this.form.value.groupIdIcla && this.form.value.groupIdIcla != ''){
+    if (this.form.value.groupIdIcla && this.form.value.groupIdIcla.trim() != ''){
       gerrit["group_id_icla"] = this.form.value.groupIdIcla
     }
-    if (this.form.value.groupIdCcla && this.form.value.groupIdCcla != ''){
+    if (this.form.value.groupIdCcla && this.form.value.groupIdCcla.trim() != ''){
       gerrit["group_id_ccla"] = this.form.value.groupIdCcla
     }
     this.claService.postGerritInstance(gerrit).subscribe((response) => {
