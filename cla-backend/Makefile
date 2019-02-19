@@ -90,4 +90,4 @@ deploy:
 	test ! -s ./env.json || exit 1
 
 	source ~/.env/lf-cla/bin/activate; \
-	node_modules/.bin/serverless deploy --stage ${STAGE} --region us-east-1; \
+	node_modules/.bin/serverless deploy --force --stage ${STAGE} --region us-east-1; \
