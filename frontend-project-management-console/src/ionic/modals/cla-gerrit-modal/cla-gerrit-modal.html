@@ -10,8 +10,6 @@
       <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
           <p class="form-message">Please check the fields below for errors.</p>
-          <p *ngIf="form.errors != null && form.errors.atLeastOne" class="form-message"> 
-          Specify at least a ICLA Group or CCLA Group.</p>
         </ion-col>
       </ion-row>
       <ion-row>
