@@ -18,7 +18,7 @@ signed_url=$(echo $signed_url_resp | jq -r '.signed_url');
 
 echo "Signed url: $signed_url";
 
-curl -XPUT \
+curl -v -XPUT \
     -H "Content-Type: image/png" \
-    --data @$file_path \
+    -T "$file_path" \
     "$signed_url";

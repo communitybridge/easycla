@@ -28,11 +28,12 @@ def create_signed_logo_url(auth_user: AuthUser, project_sfdc_id: str):
 
     params = {
         'Bucket': logo_bucket,
-        'Key': file_path
+        'Key': file_path,
+        'ContentType': 'image/png'
     }
 
     try:
-        signed_url = s3_client.generate_presigned_url('put_object', Params=params, ExpiresIn=100)
+        signed_url = s3_client.generate_presigned_url('put_object', Params=params, ExpiresIn=300, HttpMethod='PUT')
         return {'signed_url': signed_url}
     except Exception as err:
         return {'error': err}
