@@ -405,7 +405,7 @@ export class ClaService {
 
   getCompanyUnsignedProjects(companyId) {
     return this.http
-      .get(this.claApiUrl + "/v2/company/" + companyId + "/project/unsigned")
+      .get(this.claApiUrl + "/v1/company/" + companyId + "/project/unsigned")
       .map(res => res.json());
   }
 
