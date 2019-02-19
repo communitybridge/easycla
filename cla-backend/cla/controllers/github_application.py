@@ -21,8 +21,16 @@ class GitHubInstallation(object):
 
     def __init__(self, installation_id):
         self.installation_id = installation_id
+
+        print('github installation_id: {}'.format(self.installation_id))
+        print('github app id: {}'.format(self.app_id))
+        print('github private key: {}'.format(self.private_key))
+
         integration = GithubCLAIntegration(self.app_id, self.private_key)
         auth = integration.get_access_token(self.installation_id)
+
+        print('github access token: {}'.format(auth))
+
         self.token = auth.token
         self.api_object = Github(self.token)
 
@@ -39,4 +47,7 @@ class GithubCLAIntegration(GithubIntegration):
             "exp": now + 60,
             "iss": self.integration_id
         }
-        return jwt.encode(payload, self.private_key, 'RS256')
+        gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
+        print('github jwt: {}'.format(gh_jwt))
+
+        return gh_jwt
