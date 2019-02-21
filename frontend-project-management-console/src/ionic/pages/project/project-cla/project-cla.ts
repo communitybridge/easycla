@@ -199,7 +199,7 @@ export class ProjectClaPage {
     });
   }
 
-  organizationPopover(ev, organization) {
+  deleteOrganizationAttemp(ev, organization) {
     let actions = {
       items: [
         {
