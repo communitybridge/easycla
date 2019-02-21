@@ -227,7 +227,7 @@
                   </ion-row>
                 </ion-grid>
                 <div class="organization-actions">
-                  <button ion-button (click)="deleteOrganizationAttemp($event, organization)" color="light">
+                  <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
                     Delete
                   </button>
                 </div>
@@ -272,7 +272,7 @@
 
                       <ion-card-content>
                         <div class="gerrit-actions">
-                          <button ion-button (click)="deleteGerritInstance(gerrit)" color="light">
+                          <button ion-button (click)="deleteConfirmation('Gerrit Instance', gerrit)" color="light">
                             Delete
                           </button>
                         </div>
