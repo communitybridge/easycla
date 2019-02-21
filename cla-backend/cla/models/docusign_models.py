@@ -106,6 +106,7 @@ class DocuSign(signing_service_interface.SigningService):
                                                 password=password,
                                                 integrator_key=integrator_key)
         self.s3storage = S3Storage()
+        self.s3storage.initialize(None)
 
     def request_individual_signature(self, project_id, user_id, return_url=None):
         cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
@@ -941,11 +942,11 @@ class DocuSign(signing_service_interface.SigningService):
         if (icla):
             if user_id is None:
                 raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
-            filename = urlparse('contract-group', project_id, 'icla', user_id, signature_id, '.pdf')
+            filename = str.join('/', ('', 'contract-group', project_id, 'icla', user_id, signature_id + '.pdf'))
         else:
             if company_id is None:
                 raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
-            filename = urlparse('contract-group', project_id, 'ccla', company_id, signature_id, '.pdf')
+            filename = str.join('/', ('', 'contract-group', project_id, 'ccla', company_id, signature_id + '.pdf'))
         
         self.s3storage.store(filename, document_data)
 
