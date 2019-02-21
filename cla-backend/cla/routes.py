@@ -1370,11 +1370,10 @@ def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text)
 
 # The following routes are only provided for project and cla manager
 # permission management, and are not to be called by the UI Consoles.
-@hug.put('/project/logo/{project_sfdc_id}', versions=1)
+@hug.get('/project/logo/{project_sfdc_id}', versions=1)
 def upload_logo(auth_user: check_auth,
-                project_sfdc_id: hug.types.text,
-                body):
-    return cla.controllers.project_logo.upload_logo(auth_user, project_sfdc_id, body.read())
+                project_sfdc_id: hug.types.text):
+    return cla.controllers.project_logo.create_signed_logo_url(auth_user, project_sfdc_id)
 
 @hug.post('/project/permission', versions=1)
 def add_project_permission(auth_user: check_auth,
