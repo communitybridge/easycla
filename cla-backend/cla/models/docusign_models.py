@@ -747,9 +747,16 @@ class DocuSign(signing_service_interface.SigningService):
             document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
+
+            # Verify user id exist for saving on storage
+            user_id = user.get_user_id()
+            if user_id is None:
+                raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
+
             # Store document on S3
             project_id = signature.get_signature_project_id()
-            self.send_to_s3(document_data, project_id, signature_id, user_id=user.get_user_id())
+            self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
+
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
@@ -799,9 +806,14 @@ class DocuSign(signing_service_interface.SigningService):
             document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
+            
+            # Verify user id exist for saving on storage
+            if user_id is None:
+                raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
+
             # Store document on S3
             project_id = signature.get_signature_project_id()
-            self.send_to_s3(document_data, project_id, signature_id, user_id=user_id)
+            self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """
@@ -890,8 +902,13 @@ class DocuSign(signing_service_interface.SigningService):
             document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
+
+            # verify company_id is not none
+            if company_id is None:
+                raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
+
             # Store document on S3
-            self.send_to_s3(document_data, project_id, signature_id, company_id=company_id, icla=False)
+            self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
 
     def get_signed_document(self, envelope_id, user):
         """Helper method to get the signed document from DocuSign."""
@@ -937,19 +954,12 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Sending signed CLA document to %s', recipient)
         cla.utils.get_email_service().send(subject, body, recipient, attachment)
 
-    def send_to_s3(self, document_data, project_id, signature_id, user_id=None, company_id=None, icla=True):
-        
-        if (icla):
-            if user_id is None:
-                raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
-            filename = str.join('/', ('', 'contract-group', project_id, 'icla', user_id, signature_id + '.pdf'))
-        else:
-            if company_id is None:
-                raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
-            filename = str.join('/', ('', 'contract-group', project_id, 'ccla', company_id, signature_id + '.pdf'))
-        
+    def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
+        # cla_type could be: icla or ccla (String)
+        # identifier could be: user_id or company_id
+        filename = str.join('/', ('', 'contract-group', project_id, cla_type, identifier, signature_id + '.pdf'))
         self.s3storage.store(filename, document_data)
-
+        
     def get_document_resource(self, url): # pylint: disable=no-self-use
         """
         Mockable method to fetch the PDF for signing.
