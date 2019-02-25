@@ -443,7 +443,7 @@ def get_signatures_company(auth_user: check_auth, company_id: hug.types.uuid):
 
     Get all signatures for company specified.
     """
-    return cla.controllers.signature.get_company_signatures(company_id)
+    return cla.controllers.signature.get_all_company_signatures(company_id)
 
 @hug.get('/signatures/project/{project_id}', versions=1)
 def get_signatures_project(auth_user: check_auth, project_id: hug.types.uuid):
@@ -1357,8 +1357,8 @@ def get_gerrit_instance(gerrit_id: hug.types.uuid):
 def create_gerrit_instance(project_id: hug.types.uuid,
                              gerrit_name: hug.types.text, 
                              gerrit_url: cla.hug_types.url,
-                             group_id_icla: hug.types.text, 
-                             group_id_ccla: hug.types.text):
+                             group_id_icla=None, 
+                             group_id_ccla=None):
     """
     POST: /gerrit
 
