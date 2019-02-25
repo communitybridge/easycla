@@ -793,14 +793,16 @@ class DocuSign(signing_service_interface.SigningService):
             for gerrit in gerrits:
                 # Get Gerrit Group ID
                 group_id = gerrit.get_group_id_icla()
-                lf_username = user.get_lf_username()
 
-                # Add the user to the LDAP Group
-                try:
-                    lf_group.add_user_to_group(group_id, lf_username)
-                except Exception as e:
-                    cla.log.error('Failed in adding user to the LDAP group: %s', e)
-                    return
+                # Check if Group id is none
+                if group_id is not None:
+                    lf_username = user.get_lf_username()
+                    # Add the user to the LDAP Group
+                    try:
+                        lf_group.add_user_to_group(group_id, lf_username)
+                    except Exception as e:
+                        cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                        return
 
             # Get signed document
             document_data = self.get_signed_document(self, envelope_id, user)

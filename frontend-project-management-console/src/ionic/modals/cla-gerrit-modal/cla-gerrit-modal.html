@@ -32,7 +32,7 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
+          <ion-item [class.ng-invalid]="!form.get('groupIdIcla').valid">
             <ion-label stacked>ICLA Group ID</ion-label>
             <ion-input formControlName="groupIdIcla"></ion-input>
           </ion-item>
@@ -42,7 +42,7 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
+          <ion-item [class.ng-invalid]="!form.get('groupIdCcla').valid">
             <ion-label stacked>CCLA Group ID</ion-label>
             <ion-input formControlName="groupIdCcla"></ion-input>
           </ion-item>
