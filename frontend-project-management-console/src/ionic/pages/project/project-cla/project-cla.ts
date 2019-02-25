@@ -3,12 +3,11 @@ import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage, Nav, Events
+  IonicPage, Nav, Events, AlertController
 } from "ionic-angular";
 import { CincoService } from "../../../services/cinco.service";
 import { KeycloakService } from "../../../services/keycloak/keycloak.service";
 import { SortService } from "../../../services/sort.service";
-import { PopoverController } from "ionic-angular";
 import { ClaService } from "../../../services/cla.service";
 import { RolesService } from "../../../services/roles.service";
 import { Restricted } from "../../../decorators/restricted";
@@ -41,7 +40,7 @@ export class ProjectClaPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    private popoverCtrl: PopoverController,
+    public alertCtrl: AlertController,
     public claService: ClaService,
     public rolesService: RolesService,
     public events: Events
@@ -93,11 +92,11 @@ export class ProjectClaPage {
               }
             });
 
-            //Get Gerrit Instances
-            this.claService
-              .getGerritInstance(project.project_id)
-              .subscribe(gerrits => {
-                project.gerrits = gerrits;
+          //Get Gerrit Instances
+          this.claService
+            .getGerritInstance(project.project_id)
+            .subscribe(gerrits => {
+              project.gerrits = gerrits;
             });
         }
       });
@@ -199,29 +198,34 @@ export class ProjectClaPage {
     });
   }
 
-  organizationPopover(ev, organization) {
-    let actions = {
-      items: [
+  deleteConfirmation(type, payload) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete ${type}`,
+      message: `Are you sure you want to delete this ${type}?`,
+      buttons: [
         {
-          label: "Delete",
-          callback: "deleteClaGithubOrganization",
-          callbackData: {
-            organization: organization
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {}
+        }, {
+          text: 'Delete',
+          handler: () => {
+            switch (type) {
+              case 'Github Organization':
+                this.deleteClaGithubOrganization(payload);
+                break;
+
+              case 'Gerrit Instance':
+                this.deleteGerritInstance(payload);
+                break;
+            }
           }
         }
       ]
-    };
-    let popover = this.popoverCtrl.create("ActionPopoverComponent", actions);
-
-    popover.present({
-      ev: ev
     });
 
-    popover.onDidDismiss(popoverData => {
-      if (popoverData) {
-        this.popoverResponse(popoverData);
-      }
-    });
+    alert.present();
   }
 
   deleteClaGithubOrganization(organization) {
