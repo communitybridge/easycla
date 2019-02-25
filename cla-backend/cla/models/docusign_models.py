@@ -21,6 +21,7 @@ from pydocusign.exceptions import DocuSignException # type: ignore
 import cla
 from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
+from cla.models.s3_storage import S3Storage
 from cla.models.dynamo_models import Signature, GitHubOrg, User, \
                                         Project, Company, Gerrit, \
                                         Document
@@ -52,6 +53,10 @@ class CCLANotFound(Exception):
 class UserNotWhitelisted(Exception):
     pass
 
+class SigningError(Exception):
+    def __init__(self, response):
+        self.response = response
+
 class DocuSign(signing_service_interface.SigningService):
     """
     CLA signing service backed by DocuSign.
@@ -75,6 +80,7 @@ class DocuSign(signing_service_interface.SigningService):
 
     def __init__(self):
         self.client = None
+        self.s3storage = None
 
     def initialize(self, config):
         self.client = pydocusign.DocuSignClient(root_url=root_url,
@@ -99,6 +105,8 @@ class DocuSign(signing_service_interface.SigningService):
                                                 username=username,
                                                 password=password,
                                                 integrator_key=integrator_key)
+        self.s3storage = S3Storage()
+        self.s3storage.initialize(None)
 
     def request_individual_signature(self, project_id, user_id, return_url=None):
         cla.log.info('Creating new signature for user %s on project %s', user_id, project_id)
@@ -735,8 +743,20 @@ class DocuSign(signing_service_interface.SigningService):
             user.load(signature.get_signature_reference_id())
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
+            # Get signed document
+            document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(envelope_id, user)
+            self.send_signed_document(document_data, user)
+
+            # Verify user id exist for saving on storage
+            user_id = user.get_user_id()
+            if user_id is None:
+                raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
+
+            # Store document on S3
+            project_id = signature.get_signature_project_id()
+            self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
+
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
@@ -782,9 +802,18 @@ class DocuSign(signing_service_interface.SigningService):
                     cla.log.error('Failed in adding user to the LDAP group: %s', e)
                     return
 
-            # Send user their signed document.
-            self.send_signed_document(envelope_id, user)
+            # Get signed document
+            document_data = self.get_signed_document(self, envelope_id, user)
+            # Send email with signed document.
+            self.send_signed_document(document_data, user)
+            
+            # Verify user id exist for saving on storage
+            if user_id is None:
+                raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
 
+            # Store document on S3
+            project_id = signature.get_signature_project_id()
+            self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """
@@ -869,12 +898,21 @@ class DocuSign(signing_service_interface.SigningService):
             # Send manager their signed document.
             manager = User()
             manager.load(company.get_company_manager_id())
+            # Get signed document
+            document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(envelope_id, manager, icla=False)
+            self.send_signed_document(document_data, user)
 
-    def send_signed_document(self, envelope_id, user, icla=True):
-        """Helper method to send the user their signed document."""
-        # First, get the signed document from DocuSign.
+            # verify company_id is not none
+            if company_id is None:
+                raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
+
+            # Store document on S3
+            self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
+
+    def get_signed_document(self, envelope_id, user):
+        """Helper method to get the signed document from DocuSign."""
+
         cla.log.debug('Fetching signed CLA document for envelope: %s', envelope_id)
         envelope = pydocusign.Envelope()
         envelope.envelopeId = envelope_id
@@ -893,25 +931,35 @@ class DocuSign(signing_service_interface.SigningService):
             return
         try:
             # TODO: Also send the signature certificate? envelope.get_certificate()
-            document_content = envelope.get_document(document['documentId'], self.client)
+            document_file = envelope.get_document(document['documentId'], self.client)
         except Exception as err:
             cla.log.error('Unknown error when trying to fetch signed document content ' + \
                           'for document ID %s: %s', document['documentId'], str(err))
             return
-        # Second, prepare the email to the user.
+        return document_file.read()
+
+    def send_signed_document(self, document_data, user, icla=True):
+        """Helper method to send the user their signed document."""
+
         subject = 'CLA Signed Document'
         body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
 
         recipient = user.get_user_email()
         filename = recipient + '-cla.pdf'
         attachment = {'type': 'content',
-                      'content': document_content.read(),
+                      'content': document_data,
                       'content-type': 'application/pdf',
                       'filename': filename}
         # Third, send the email.
         cla.log.info('Sending signed CLA document to %s', recipient)
         cla.utils.get_email_service().send(subject, body, recipient, attachment)
 
+    def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
+        # cla_type could be: icla or ccla (String)
+        # identifier could be: user_id or company_id
+        filename = str.join('/', ('', 'contract-group', project_id, cla_type, identifier, signature_id + '.pdf'))
+        self.s3storage.store(filename, document_data)
+        
     def get_document_resource(self, url): # pylint: disable=no-self-use
         """
         Mockable method to fetch the PDF for signing.
