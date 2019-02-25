@@ -11,8 +11,9 @@ ion-icon[name="menu"] {
 }
 
 .toolbar {
-  background-color: color($colors, primary);
-  color: color($colors, light);
+  background-color: color($colors, white);
+  color: color($colors, gray);
+  padding: 4px 25px;
   .bar-button {
     color: inherit;
     &:hover:not(.disable-hover) {
