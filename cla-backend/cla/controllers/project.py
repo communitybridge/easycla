@@ -11,7 +11,7 @@ from cla.auth import AuthUser, admin_list
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import UserPermissions
+from cla.models.dynamo_models import Signature, Project, Company, UserPermissions
 from falcon import HTTPForbidden
 
 
@@ -47,6 +47,30 @@ def get_project(project_id, user_id=None):
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
 
+
+def get_unsigned_projects_for_company(company_id):
+    """
+    Returns a list of projects that the company has not signed a CCLA for. 
+
+    :param company_id: The company's ID.
+    :type company_id: string
+    :return: dict representation of the projects object.
+    :rtype: [dict]
+    """
+    # Verify company is valid
+    company = Company()
+    try:
+        company.load(company_id)
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # get project ids that the company has signed the CCLAs for. 
+    signature = Signature()
+    signed_project_ids = signature.get_projects_by_company_signed(company_id)
+    # from all projects, retrieve projects that are not in the signed project ids
+    unsigned_projects = [project.to_dict() for project in Project().all() if project.get_project_id() not in signed_project_ids]
+    return unsigned_projects
+    
 
 def get_projects_by_external_id(project_external_id, username):
     """
