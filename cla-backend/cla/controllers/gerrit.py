@@ -62,6 +62,10 @@ def create_gerrit(project_id,
 
     gerrit = Gerrit()
 
+    # Check if at least ICLA or CCLA is specified 
+    if group_id_icla is None and group_id_ccla is None:
+        return {'error': 'Should specify at least a LDAP group for ICLA or CCLA.'}
+
     # Check if ICLA exists
     if group_id_icla is not None:
         ldap_group_icla = lf_group.get_group(group_id_icla)
@@ -76,6 +80,7 @@ def create_gerrit(project_id,
         ldap_group_ccla = lf_group.get_group(group_id_ccla)
         if ldap_group_ccla.get('error') is not None:
             return {'error_ccla': 'The specified LDAP group for CCLA does not exist. '}
+
         gerrit.set_group_name_ccla(ldap_group_ccla.get('title'))
         gerrit.set_group_id_ccla(str(group_id_ccla))
 
