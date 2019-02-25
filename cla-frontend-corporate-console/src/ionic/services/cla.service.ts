@@ -264,6 +264,22 @@ export class ClaService {
       )
       .map(res => res.json());
   }
+  /**
+   * /signatures/company/{company_id}/project/{project_id}/employee
+   **/
+
+  getEmployeeProjectSignatures(companyId, projectId) {
+    return this.http
+      .get(
+        this.claApiUrl +
+          "/v1/signatures/company/" +
+          companyId +
+          "/project/" +
+          projectId + 
+          "/employee"
+      )
+      .map(res => res.json());
+  }
 
   /**
    * /signatures/project/{project_id}
@@ -387,9 +403,9 @@ export class ClaService {
     return this.http.get(this.claApiUrl + "/v1/project").map(res => res.json());
   }
 
-  getProjectsCcla() {
+  getCompanyUnsignedProjects(companyId) {
     return this.http
-      .get(this.claApiUrl + "/v1/project/ccla")
+      .get(this.claApiUrl + "/v1/company/" + companyId + "/project/unsigned")
       .map(res => res.json());
   }
 

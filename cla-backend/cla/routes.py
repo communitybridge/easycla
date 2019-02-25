@@ -464,6 +464,15 @@ def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.t
      """
     return cla.controllers.signature.get_project_company_signatures(company_id, project_id)
 
+@hug.get('/signatures/company/{company_id}/project/{project_id}/employee', versions=1)
+def get_project_employee_signatures(company_id: hug.types.uuid, project_id: hug.types.uuid):
+    """
+     GET: /signatures/company/{company_id}/project/{project_id}
+
+     Get all employee signatures for project specified and a company specified
+     """
+    return cla.controllers.signature.get_project_employee_signatures(company_id, project_id)
+
 #
 # Repository Routes.
 #
@@ -581,6 +590,15 @@ def get_company(company_id: hug.types.text):
     Returns the CLA company requested by UUID.
     """
     return cla.controllers.company.get_company(company_id)
+
+@hug.get('/company/{company_id}/project/unsigned', versions=1)
+def get_unsigned_projects_for_company(company_id: hug.types.text):
+    """
+    GET: /company/{company_id}/project/unsigned
+
+    Returns a list of projects that the company has not signed CCLAs for. 
+    """
+    return cla.controllers.project.get_unsigned_projects_for_company(company_id)
 
 
 @hug.post('/company', versions=1,

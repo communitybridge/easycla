@@ -32,7 +32,7 @@ export class ClaCorporatePage {
   ) {
     this.getDefaults();
     this.projectId = navParams.get("projectId");
-    this.company = this.navParams.get("company");
+    this.company = navParams.get("company");
   }
 
   getDefaults() {
