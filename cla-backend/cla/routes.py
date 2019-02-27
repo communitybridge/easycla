@@ -1228,6 +1228,16 @@ def get_github_organization_repos(auth_user: check_auth, organization_name: hug.
     return cla.controllers.github.get_organization_repositories(organization_name)
 
 
+@hug.get('/github/organizations/sfdc/{sfid}', versions=1)
+def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text):
+    """
+    GET: /github/organizations/sfdc/{sfid}
+
+    Returns a list of Github Organizations under this SFDC ID.
+    """
+    return cla.controllers.github.get_organization_by_sfid(sfid)
+
+
 @hug.post('/github/organizations', versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
