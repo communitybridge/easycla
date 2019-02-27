@@ -1845,6 +1845,17 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
+    def get_organization_by_sfid(self, sfid):
+        """
+        Fetches the github organizations associated with a sfid
+
+        :param sfid: The SFDC ID to filter github organizations by.
+        :type sfid: string
+        :return: The organization associated with the project specified.
+        :rtype: [cla.models.model_interfaces.GitHubOrg]
+        """
+        raise NotImplementedError()
+
     def all(self):
         """
         Fetches all github organizations in the CLA system.

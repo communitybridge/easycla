@@ -175,6 +175,15 @@ def get_organization_repositories(organization_name):
         return {'errors': {'organization_name': str(err)}}
 
 
+def get_organization_by_sfid(sfid):
+    # Get all organizations under an SFDC ID
+    try:
+        organizations = get_github_organization_instance().get_organization_by_sfid(sfid)
+    except DoesNotExist as err:
+        return {'errors': {'sfid': str(err)}}
+    return [organization.to_dict() for organization in organizations]    
+
+
 def org_is_covered_by_cla(owner):
     orgs = get_organizations()
     for org in orgs:

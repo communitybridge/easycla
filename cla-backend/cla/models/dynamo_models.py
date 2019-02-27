@@ -143,6 +143,19 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     company_external_id = UnicodeAttribute(hash_key=True)
 
+class GithubOrgSFIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying github organizations by a Salesforce ID.
+    """
+    class Meta:
+        """Meta class for external ID github org index."""
+        index_name = 'github-org-sfid-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        projection = AllProjection()
+
+    organization_sfid = UnicodeAttribute(hash_key=True)
+
 class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by project ID.
@@ -1679,19 +1692,22 @@ class GitHubOrgModel(BaseModel):
     organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
     organization_project_id = UnicodeAttribute(null=True)
+    organization_sfid = UnicodeAttribute()
+    organization_sfid_index = GithubOrgSFIndex()
 
 
 class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
-    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None, organization_project_id=None):
+    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None, organization_project_id=None, organization_sfid=None):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
         self.model.organization_company_id = organization_company_id
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_project_id = organization_project_id
+        self.model.organization_sfid = organization_sfid
 
     def to_dict(self):
         ret = dict(self.model)
@@ -1726,6 +1742,9 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def get_organization_project_id(self):
         return self.model.organization_project_id
 
+    def get_organization_sfid(self):
+        return self.model.organization_sfid
+
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
 
@@ -1738,8 +1757,20 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def set_organization_project_id(self, organization_project_id):
         self.model.organization_project_id = organization_project_id
 
+    def set_organization_sfid(self, organization_sfid):
+        self.model.organization_sfid = organization_sfid
+
     def get_organizations_by_company_id(self, company_id):
         organization_generator = self.model.scan(organization_company_id__eq=str(company_id))
+        organizations = []
+        for org_model in organization_generator:
+            org = GitHubOrg()
+            org.model = org_model
+            organizations.append(org)
+        return organizations
+
+    def get_organization_by_sfid(self, sfid):
+        organization_generator = self.model.organization_sfid_index.query(sfid)
         organizations = []
         for org_model in organization_generator:
             org = GitHubOrg()
