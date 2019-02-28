@@ -7,7 +7,9 @@ import cla
 import os
 from pprint import pprint
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
+from cla.auth import AuthUser, admin_list
 from cla.models import DoesNotExist
+from cla.models.dynamo_models import UserPermissions
 from cla.controllers.github_application import GitHubInstallation
 
 
@@ -175,7 +177,20 @@ def get_organization_repositories(organization_name):
         return {'errors': {'organization_name': str(err)}}
 
 
-def get_organization_by_sfid(sfid):
+def get_organization_by_sfid(auth_user: AuthUser, sfid):
+    # Check if user has permissions
+    user_permissions = UserPermissions()
+    try: 
+        user_permissions.load(auth_user.username) 
+    except DoesNotExist as err:
+        return {'errors': {'user does not exist': str(err)}}
+
+    user_permissions_json = user_permissions.to_dict()
+
+    authorized_projects = user_permissions_json.get('projects')
+    if sfid not in authorized_projects: 
+        return {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}
+
     # Get all organizations under an SFDC ID
     try:
         organizations = get_github_organization_instance().get_organization_by_sfid(sfid)

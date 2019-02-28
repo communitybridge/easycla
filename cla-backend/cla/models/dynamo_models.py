@@ -1947,6 +1947,9 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
     def remove_project(self, project_id: str):
         if project_id in self.model.projects:
             self.model.projects.remove(project_id)
+    
+    def get_projects(self): 
+        return self.model.projects
 
     def to_dict(self):
         ret = dict(self.model)
