@@ -12,7 +12,7 @@ algorithms = [os.environ.get('AUTH0_ALGORITHM', '')]
 
 # This list represents admin users who can perform logo
 # uploads and project and cla manager permission updates
-admin_list = ['***REMOVED***', 'SellJamHere', 'vnaidu']
+admin_list = ['***REMOVED***', 'SellJamHere', 'vnaidu', 'mun5424']
 
 class AuthError(Exception):
     def __init__(self, response):
