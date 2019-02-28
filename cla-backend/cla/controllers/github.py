@@ -7,7 +7,7 @@ import cla
 import os
 from pprint import pprint
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
-from cla.auth import AuthUser, admin_list
+from cla.auth import AuthUser
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import UserPermissions
 from cla.controllers.github_application import GitHubInstallation
@@ -181,7 +181,7 @@ def get_organization_by_sfid(auth_user: AuthUser, sfid):
     # Check if user has permissions
     user_permissions = UserPermissions()
     try: 
-        user_permissions.load(auth_user.username) 
+        user_permissions.load(auth_user.username)
     except DoesNotExist as err:
         return {'errors': {'user does not exist': str(err)}}
 
