@@ -61,7 +61,6 @@ project-cla {
 
   .project-detail-card {
     background-color: white;
-    margin-top: 30px;
   }
 
   .project-detail-card-header {
@@ -173,13 +172,18 @@ project-cla {
     right: 25px;
   }
 
-  .organizations-card {
-    margin-top: 0px;
+  .mt-30 {
+    margin-top: 30px;
   }
 
   .project-row {
     border-bottom: 1px solid lightgray;
     padding-bottom: 30px;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
   }
 
   .code_snippet {
@@ -194,4 +198,14 @@ project-cla {
     margin-top: 20px;
     display: block;
   }
+}
+
+.section-title {
+  padding: 0 47px;
+  margin-top: 2em;
+  color: #7b7b7b;
+}
+
+h2 {
+  font-size: 2rem;
 }

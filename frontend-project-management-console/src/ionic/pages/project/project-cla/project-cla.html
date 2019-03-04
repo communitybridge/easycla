@@ -10,7 +10,7 @@
 
 <ion-content headerspacing>
 
-  <section-header [projectId]="projectId"></section-header>
+  <section-header [projectId]="sfdcProjectId"></section-header>
 
   <loading-spinner [loading]="loading.claProjects"></loading-spinner>
 
@@ -26,6 +26,56 @@
         </button>
       </ion-col>
     </ion-row>
+
+    <ion-col col-12>
+      <div class="project-detail-card mt-30">
+        <ion-row class="project-detail-card-header">
+          <ion-col col-6 class="project-title">
+            <h2>
+              GitHub Organizations
+            </h2>
+          </ion-col>
+          <ion-col col-6>
+            <ion-buttons end>
+              <button ion-button (click)="openClaOrganizationProviderModal(sfdcProjectId)" color="secondary">
+                Connect Github Organization
+              </button>
+            </ion-buttons>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col col-12 *ngFor="let organization of githubOrganizations">
+            <ion-card class="organization-card">
+              <ion-grid>
+                <ion-row>
+                  <ion-col class="vertical-rule-right" col-12 col-md-6>
+                    <ion-card-content *ngIf="organization.providerInfo">
+                      <ion-card-title>
+                        <ion-icon name="logo-github"></ion-icon>
+                        <span>{{ organization.providerInfo.name }}</span>
+                      </ion-card-title>
+                      <p><a target="_blank"
+                            href="https://github.com/{{ organization.organization_name }}">
+                        https://github.com/{{organization.organization_name }}
+                      </a></p>
+                      <p>{{ organization.providerInfo.bio }}</p>
+                    </ion-card-content>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+              <div class="organization-actions">
+                <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
+                  Delete
+                </button>
+              </div>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </div>
+    </ion-col>
+
+    <h1 class="section-title">Contract Groups</h1>
 
     <ion-row *ngFor="let project of claProjects" class="project-row">
       <ion-col col-12>
@@ -174,17 +224,17 @@
       </ion-col>
 
       <ion-col col-12>
-        <div class="project-detail-card organizations-card">
+        <div class="project-detail-card">
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
-                GitHub Organizations
+                GitHub Repositories
               </h2>
             </ion-col>
             <ion-col col-6>
               <ion-buttons end>
                 <button ion-button (click)="openClaOrganizationProviderModal(project.project_id)" color="secondary">
-                  Add GitHub Organization
+                  Configure Github Repositories
                 </button>
               </ion-buttons>
             </ion-col>
@@ -211,9 +261,6 @@
                     <ion-col col-12 col-md-6>
                       <ion-card-content>
                         <h1>Repositories</h1>
-                        <button *ngIf="!organization.organization_installation_id" ion-button
-                                (click)="openClaOrganizationAppModal()" color="secondary">Connect CLA App
-                        </button>
                         <div class="repositories" *ngIf="organization.organization_installation_id">
                           <ion-row *ngFor="let repository of organization.repositories">
                             <ion-col col-12 icon-left>
@@ -238,7 +285,7 @@
       </ion-col>
 
       <ion-col col-12>
-        <div class="project-detail-card organizations-card">
+        <div class="project-detail-card">
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
