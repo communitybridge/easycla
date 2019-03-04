@@ -25,7 +25,8 @@ import { Restricted } from "../../../decorators/restricted";
 export class ProjectClaPage {
   loading: any;
 
-  projectId: string;
+  sfdcProjectId: string;
+  githubOrganizations: any[] = [];
 
   claProjects: any;
 
@@ -45,7 +46,7 @@ export class ProjectClaPage {
     public rolesService: RolesService,
     public events: Events
   ) {
-    this.projectId = navParams.get("projectId");
+    this.sfdcProjectId = navParams.get("projectId");
     this.getDefaults();
   }
 
@@ -63,34 +64,36 @@ export class ProjectClaPage {
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService
-      .getProjectsByExternalId(this.projectId)
+      .getProjectsByExternalId(this.sfdcProjectId)
       .subscribe(projects => {
         this.claProjects = projects;
         this.loading.claProjects = false;
-        for (let project of projects) {
 
-          //Get Github Orgs. 
-          this.claService
-            .getProjectOrganizations(project.project_id)
-            .subscribe(organizations => {
-              project.organizations = organizations;
-              for (let organization of organizations) {
+        //Get Github Orgs.
+        this.claService
+          .getOrganizations(this.sfdcProjectId)
+          .subscribe(organizations => {
+            this.githubOrganizations = organizations;
+
+            for (let organization of organizations) {
+              this.claService
+                .getGithubGetNamespace(organization.organization_name)
+                .subscribe(providerInfo => {
+                  organization.providerInfo = providerInfo;
+                });
+              if (organization.organization_installation_id) {
                 this.claService
-                  .getGithubGetNamespace(organization.organization_name)
-                  .subscribe(providerInfo => {
-                    organization.providerInfo = providerInfo;
+                  .getGithubOrganizationRepositories(
+                    organization.organization_name
+                  )
+                  .subscribe(repositories => {
+                    organization.repositories = repositories;
                   });
-                if (organization.organization_installation_id) {
-                  this.claService
-                    .getGithubOrganizationRepositories(
-                      organization.organization_name
-                    )
-                    .subscribe(repositories => {
-                      organization.repositories = repositories;
-                    });
-                }
               }
-            });
+            }
+          });
+
+        for (let project of projects) {
 
           //Get Gerrit Instances
           this.claService
@@ -114,7 +117,7 @@ export class ProjectClaPage {
       });
     } else {
       modal = this.modalCtrl.create("ClaContractConfigModal", {
-        projectId: this.projectId
+        projectId: this.sfdcProjectId
       });
     }
     modal.onDidDismiss(data => {
