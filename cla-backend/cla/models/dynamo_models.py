@@ -1083,6 +1083,7 @@ class RepositoryModel(BaseModel):
     repository_name = UnicodeAttribute()
     repository_type = UnicodeAttribute() # Gerrit, GitHub, etc.
     repository_url = UnicodeAttribute()
+    repository_organization_name = UnicodeAttribute()
     repository_external_id = UnicodeAttribute(null=True)
     repository_project_index = ProjectRepositoryIndex()
     repository_sfdc_id = UnicodeAttribute(null=True)
@@ -1096,6 +1097,7 @@ class Repository(model_interfaces.Repository):
     """
     def __init__(self, repository_id=None, repository_project_id=None, # pylint: disable=too-many-arguments
                  repository_name=None, repository_type=None, repository_url=None,
+                 repository_organization_name=None,
                  repository_external_id=None, repository_sfdc_id=None):
         super(Repository).__init__()
         self.model = RepositoryModel()
@@ -1105,6 +1107,7 @@ class Repository(model_interfaces.Repository):
         self.model.repository_name = repository_name
         self.model.repository_type = repository_type
         self.model.repository_url = repository_url
+        self.model.repository_organization_name = repository_organization_name
         self.model.repository_external_id = repository_external_id
 
     def to_dict(self):
@@ -1140,6 +1143,9 @@ class Repository(model_interfaces.Repository):
 
     def get_repository_external_id(self):
         return self.model.repository_external_id
+    
+    def get_repository_organization_name(self):
+        return self.model.repository_organization_name
 
     def set_repository_id(self, repo_id):
         self.model.repository_id = str(repo_id)
@@ -1161,6 +1167,9 @@ class Repository(model_interfaces.Repository):
 
     def set_repository_sfdc_id(self, repository_sfdc_id):
         self.model.repository_sfdc_id = str(repository_sfdc_id)
+
+    def set_repository_organization_name(self, organization_name):
+        self.model.repository_organization_name = organization_name
 
     def get_repository_by_external_id(self, repository_external_id, repository_type):
         # TODO: Optimize this on the DB end.
@@ -1712,7 +1721,8 @@ class Store(key_value_store_interface.KeyValueStore):
 
 class GitHubOrgModel(BaseModel):
     """
-    Represents a user in the database.
+    Represents a user in the database. 
+    Company_id, installation_id, project_id are deprecated now that organizations are under an SFDC ID.
     """
     class Meta:
         """Meta class for User."""
