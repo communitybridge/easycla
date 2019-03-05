@@ -201,23 +201,6 @@ def delete_project(project_id, username=None):
     project.delete()
     return {'success': True}
 
-
-def get_project_repositories(project_id):
-    """
-    Get a project's repositories.
-
-    :param project_id: The ID of the project.
-    :type project_id: string
-    """
-    project = get_project_instance()
-    try:
-        project.load(str(project_id))
-    except DoesNotExist as err:
-        return {'errors': {'project_id': str(err)}}
-    repositories = project.get_project_repositories()
-    return [repository.to_dict() for repository in repositories]
-
-
 def get_project_organizations(project_id):
     """
     Get a project's tied organizations.
@@ -508,6 +491,24 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
 
+def get_project_repositories(auth_user: AuthUser, project_id):
+    """
+    Get a project's repositories.
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+
+    # Validate user is authorized for this project
+    can_access = authorize_project_user(auth_user, project_id)
+    if can_access['valid']:
+      project = can_access['project']
+    else:
+      return can_access['errors']
+
+    # Obtain repositories
+    repositories = project.get_project_repositories()
+    return [repository.to_dict() for repository in repositories]
 
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
     # Validate user is authorized for this project
