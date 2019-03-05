@@ -11,9 +11,35 @@ from cla.auth import AuthUser, admin_list
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Signature, Project, Company, UserPermissions
+from cla.models.dynamo_models import Signature, Project, Company, UserPermissions, Repository, \
+                                     GitHubOrg
 from falcon import HTTPForbidden
+from cla.controllers.github_application import GitHubInstallation
 
+def check_user_authorization(auth_user: AuthUser, project_id):
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
+
+    # Check if user has permissions on this project
+    user_permissions = UserPermissions()
+    try: 
+        user_permissions.load(auth_user.username)
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'user does not exist': str(err)}}}
+
+    user_permissions_json = user_permissions.to_dict()
+
+    authorized_projects = user_permissions_json.get('projects')
+    if sfid not in authorized_projects:
+        return {'valid': False, 'errors': {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}}
+
+    return {'valid': True, 'project': project}
 
 def get_projects():
     """
@@ -481,3 +507,83 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
 
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
+
+
+def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
+    # Validate user is authorized for this project
+    can_access = check_user_authorization(auth_user, project_id)
+    if can_access['valid']:
+        project = can_access['project']
+    else:
+      return can_access['errors']
+
+    # Obtain information for this project
+    orgs_and_repos = get_github_repositories_by_org(project)
+    repositories = get_sfdc_project_repositories(project)
+    return {
+        'orgs_and_repos': orgs_and_repos,
+        'repositories': repositories
+    }
+
+def get_github_repositories_by_org(project):
+    """
+    Gets organization with the project_id specified and all its repositories from Github API
+
+    :param project: The Project object
+    :type project: Project
+    :return: [] of organizations and its repositories
+    [{
+        'organization_name': ..
+        ...
+        'repositories': [{
+            'repository_github_id': ''
+            'repository_name': ''
+            'repository_type': ''
+            'repository_url': ''
+        }]
+    }]
+    :rtype: array
+    """
+
+    organization_dicts = []
+    # Get all organizations connected to this project
+    github_organizations = GitHubOrg().get_organization_by_project_id(project.get_project_id())
+    # Iterate over each organization
+    for github_organization in github_organizations:
+        installation_id = github_organization.get_organization_installation_id()
+        # Verify installation_id exist
+        if installation_id is not None:
+            installation = GitHubInstallation(installation_id)
+            # Prepare organization in dict 
+            organization_dict = github_organization.to_dict()
+            organization_dict['repositories'] = []
+            # Get repositories from Github API
+            github_repos = installation.repos
+            if github_repos is not None:
+                for repo in github_repos:
+                    # Convert repository entities from lib to a dict.
+                    repo_dict = {
+                        'repository_github_id': repo.id, 
+                        'repository_name': repo.full_name, 
+                        'repository_type': 'github', 
+                        'repository_url': repo.html_url
+                    }
+                    # Add repository to organization repositories list
+                    organization_dict['repositories'].append(repo_dict)
+            # Add organization dict to list
+            organization_dicts.append(organization_dict)
+    return organization_dicts
+
+def get_sfdc_project_repositories(project):
+    """
+    Gets all SFDC repositories and divide them for current contract group and other contract groups
+    :param project: The Project object
+    :type project: Project
+    :return: array of all sfdc project repositories
+    :rtype: dict
+    """
+
+    # Get all SFDC Project repositories
+    sfdc_id = project.get_project_external_id()
+    all_project_repositories = Repository().get_repository_by_sfdc_id(sfdc_id)
+    return [repo.to_dict() for repo in all_project_repositories]

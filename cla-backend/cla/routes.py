@@ -523,7 +523,8 @@ def post_repository(auth_user: check_auth, # pylint: disable=too-many-arguments
 
     Returns the CLA repository that was just created.
     """
-    return cla.controllers.repository.create_repository(repository_project_id,
+    return cla.controllers.repository.create_repository(auth_user,
+                                                        repository_project_id,
                                                         repository_name,
                                                         repository_type,
                                                         repository_url,
@@ -790,6 +791,17 @@ def get_project_repositories(project_id: hug.types.uuid):
     Gets the specified project's repositories.
     """
     return cla.controllers.project.get_project_repositories(project_id)
+
+@hug.get('/project/{project_id}/configuration_orgs_and_repos', versions=1)
+def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/configuration_orgs_and_repos
+    
+    Gets the repositories from github api
+    Gets all repositories for from an sfdc project ID
+    """
+
+    return cla.controllers.project.get_project_configuration_orgs_and_repos(auth_user, project_id)
 
 @hug.get('/project/{project_id}/organizations', version=1)
 def get_project_organizations(project_id: hug.types.uuid):

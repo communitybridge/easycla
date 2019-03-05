@@ -5,8 +5,9 @@ Controller related to repository operations.
 import uuid
 import cla.hug_types
 from cla.utils import get_repository_instance, get_supported_repository_providers
+from cla.models.dynamo_models import Project, Repository, UserPermissions
 from cla.models import DoesNotExist
-
+from cla.auth import AuthUser
 
 def get_repositories():
     """
@@ -35,7 +36,8 @@ def get_repository(repository_id):
     return repository.to_dict()
 
 
-def create_repository(repository_project_id, # pylint: disable=too-many-arguments
+def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
+                      repository_project_id,
                       repository_name,
                       repository_type,
                       repository_url,
@@ -56,9 +58,19 @@ def create_repository(repository_project_id, # pylint: disable=too-many-argument
     :return: dict representation of the new repository object.
     :rtype: dict
     """
+
+    # Validate user is authorized for this project
+    can_access = cla.controllers.project.check_user_authorization(auth_user, repository_project_id)
+    if can_access['valid']:
+        project = can_access['project']
+        sfdc_id = project.get_project_external_id()
+    else:
+      return can_access['errors']
+
     repository = get_repository_instance()
     repository.set_repository_id(str(uuid.uuid4()))
     repository.set_repository_project_id(str(repository_project_id))
+    repository.set_repository_sfdc_id(str(sfdc_id))
     repository.set_repository_name(repository_name)
     repository.set_repository_type(repository_type)
     repository.set_repository_url(repository_url)
@@ -93,7 +105,7 @@ def update_repository(repository_id, # pylint: disable=too-many-arguments
     :return: dict representation of the repository object.
     :rtype: dict
     """
-    repository = get_repository_instance()
+    repository = Repository()
     try:
         repository.load(str(repository_id))
     except DoesNotExist as err:

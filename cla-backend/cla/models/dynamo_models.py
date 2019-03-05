@@ -113,6 +113,21 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     repository_external_id = UnicodeAttribute(hash_key=True)
 
+class SFDCRepositoryIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying repositories by external ID.
+    """
+    class Meta:
+        """Meta class for external ID repository index."""
+        index_name = 'sfdc-repository-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    repository_sfdc_id = UnicodeAttribute(hash_key=True)
+
 class ExternalProjectIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying projects by external ID.
@@ -1070,7 +1085,9 @@ class RepositoryModel(BaseModel):
     repository_url = UnicodeAttribute()
     repository_external_id = UnicodeAttribute(null=True)
     repository_project_index = ProjectRepositoryIndex()
+    repository_sfdc_id = UnicodeAttribute(null=True)
     repository_external_index = ExternalRepositoryIndex()
+    repository_sfdc_index = SFDCRepositoryIndex()
 
 
 class Repository(model_interfaces.Repository):
@@ -1079,11 +1096,12 @@ class Repository(model_interfaces.Repository):
     """
     def __init__(self, repository_id=None, repository_project_id=None, # pylint: disable=too-many-arguments
                  repository_name=None, repository_type=None, repository_url=None,
-                 repository_external_id=None):
+                 repository_external_id=None, repository_sfdc_id=None):
         super(Repository).__init__()
         self.model = RepositoryModel()
         self.model.repository_id = repository_id
         self.model.repository_project_id = repository_project_id
+        self.model.repository_sfdc_id = repository_sfdc_id
         self.model.repository_name = repository_name
         self.model.repository_type = repository_type
         self.model.repository_url = repository_url
@@ -1141,6 +1159,9 @@ class Repository(model_interfaces.Repository):
     def set_repository_external_id(self, repository_external_id):
         self.model.repository_external_id = str(repository_external_id)
 
+    def set_repository_sfdc_id(self, repository_sfdc_id):
+        self.model.repository_sfdc_id = str(repository_sfdc_id)
+
     def get_repository_by_external_id(self, repository_external_id, repository_type):
         # TODO: Optimize this on the DB end.
         repository_generator = \
@@ -1151,6 +1172,16 @@ class Repository(model_interfaces.Repository):
                 repository.model = repository_model
                 return repository
         return None
+
+    def get_repository_by_sfdc_id(self, repository_sfdc_id):
+        repositories = \
+            self.model.repository_sfdc_index.query(str(repository_sfdc_id))
+        ret = []
+        for repository in repositories:
+            repo = Repository()
+            repo.model = repository
+            ret.append(repo)
+        return ret
 
     def all(self, ids=None):
         if ids is None:
