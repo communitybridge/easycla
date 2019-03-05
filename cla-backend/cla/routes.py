@@ -784,13 +784,13 @@ def delete_project(auth_user: check_auth, project_id: hug.types.uuid):
 
 
 @hug.get('/project/{project_id}/repositories', versions=1)
-def get_project_repositories(project_id: hug.types.uuid):
+def get_project_repositories(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/repositories
 
     Gets the specified project's repositories.
     """
-    return cla.controllers.project.get_project_repositories(project_id)
+    return cla.controllers.project.get_project_repositories(auth_user, project_id)
 
 @hug.get('/project/{project_id}/configuration_orgs_and_repos', versions=1)
 def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: hug.types.uuid):
