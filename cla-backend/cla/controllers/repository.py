@@ -73,7 +73,7 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     repository.set_repository_project_id(str(repository_project_id))
     repository.set_repository_sfdc_id(str(sfdc_id))
     repository.set_repository_name(repository_name)
-    repository.set_organization_name(organization_name)
+    repository.set_repository_organization_name(repository_organization_name)
     repository.set_repository_type(repository_type)
     repository.set_repository_url(repository_url)
     if repository_external_id is not None:
