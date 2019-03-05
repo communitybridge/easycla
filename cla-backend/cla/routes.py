@@ -795,7 +795,7 @@ def get_project_repositories(auth_user: check_auth, project_id: hug.types.uuid):
 @hug.get('/project/{project_id}/repositories_by_org', versions=1)
 def get_project_repositories_by_org(auth_user: check_auth, project_id: hug.types.uuid):
     """
-    GET: /project/{project_id}/repositories
+    GET: /project/{project_id}/repositories_by_org
 
     Gets the specified project's repositories. grouped by organization name
     """
