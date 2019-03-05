@@ -500,7 +500,7 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     """
 
     # Validate user is authorized for this project
-    can_access = authorize_project_user(auth_user, project_id)
+    can_access = check_user_authorization(auth_user, project_id)
     if can_access['valid']:
       project = can_access['project']
     else:
