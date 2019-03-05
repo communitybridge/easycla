@@ -1730,9 +1730,7 @@ class GitHubOrgModel(BaseModel):
         if stage == 'local':
             host = 'http://localhost:8000'
     organization_name = UnicodeAttribute(hash_key=True)
-    organization_company_id = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
-    organization_project_id = UnicodeAttribute(null=True)
     organization_sfid = UnicodeAttribute()
     organization_sfid_index = GithubOrgSFIndex()
 
@@ -1741,21 +1739,19 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     """
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
-    def __init__(self, organization_name=None, organization_company_id=None, organization_installation_id=None, organization_project_id=None, organization_sfid=None):
+    def __init__(self, organization_name=None, organization_installation_id=None,organization_sfid=None):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
-        self.model.organization_company_id = organization_company_id
         self.model.organization_installation_id = organization_installation_id
-        self.model.organization_project_id = organization_project_id
         self.model.organization_sfid = organization_sfid
 
     def to_dict(self):
         ret = dict(self.model)
         if ret['organization_installation_id'] == 'null':
             ret['organization_installation_id'] = None
-        if ret['organization_project_id'] == 'null':
-            ret['organization_project_id'] = None
+        if ret['organization_sfid'] == 'null':
+            ret['organization_sfid'] = None
         return ret
 
     def save(self):
@@ -1774,23 +1770,14 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def get_organization_name(self):
         return self.model.organization_name
 
-    def get_organization_company_id(self):
-        return self.model.organization_company_id
-
     def get_organization_installation_id(self):
         return self.model.organization_installation_id
-
-    def get_organization_project_id(self):
-        return self.model.organization_project_id
 
     def get_organization_sfid(self):
         return self.model.organization_sfid
 
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
-
-    def set_organization_company_id(self, organization_company_id):
-        self.model.organization_company_id = organization_company_id
 
     def set_organization_installation_id(self, organization_installation_id):
         self.model.organization_installation_id = organization_installation_id

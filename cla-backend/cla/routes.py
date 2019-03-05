@@ -1253,28 +1253,27 @@ def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text)
 @hug.post('/github/organizations', versions=1,
           examples=" - {'organization_project_id': '<project-id>', \
                         'organization_name': 'org-name'}")
-def post_github_organization(auth_user: check_auth,
-                             organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
+def post_github_organization(auth_user: check_auth, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
                              organization_sfid: hug.types.text,
-                             organization_installation_id=None):
+                             organization_installation_id: hug.types.number):
     """
     POST: /github/organizations
 
-    DATA: {'organization_project_id': '<project-id>',
-           'organization_name': 'org-name'}
+    DATA: {'organization_sfid': '<project-id>',
+           'organization_name': 'org-name'
+           'organization_installation_id': 'github's installation id'}
 
     Returns the CLA GitHub Organization that was just created.
     """
     # staff_verify(user) or pm_verify(user, organization_project_id)
     return cla.controllers.github.create_organization(organization_name,
-                                                      organization_project_id,
                                                       organization_installation_id,
                                                       organization_sfid)
 
 
 @hug.delete('/github/organizations/{organization_name}', versions=1)
-def delete_repository(auth_user: check_auth, organization_name: hug.types.text):
+def delete_organization(auth_user: check_auth, organization_name: hug.types.text):
     """
     DELETE: /github/organizations/{organization_name}
 
