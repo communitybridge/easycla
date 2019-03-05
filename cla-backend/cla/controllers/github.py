@@ -41,7 +41,6 @@ def get_organization(organization_name):
 
 
 def create_organization(organization_name,
-                        organization_project_id=None,
                         organization_installation_id=None, 
                         organization_sfid=None):
     """
@@ -60,20 +59,17 @@ def create_organization(organization_name,
     try:
         github_organization.load(str(organization_name))
     except DoesNotExist as err:
-        github_organization.set_organization_name(organization_name)
-        if organization_project_id:
-            github_organization.set_organization_project_id(str(organization_project_id))
+        github_organization.set_organization_name(str(organization_name))
         if organization_installation_id:
             github_organization.set_organization_installation_id(organization_installation_id)
         if organization_sfid:
-            github_organization.set_organization_sfid(organization_sfid)
+            github_organization.set_organization_sfid(str(organization_sfid))
         github_organization.save()
         return github_organization.to_dict()
     return {'errors': {'organization_name': 'This organization already exists'}}
 
 
 def update_organization(organization_name, # pylint: disable=too-many-arguments
-                        organization_project_id=None,
                         organization_installation_id=None,
                         organization_sfid=None):
     """
@@ -95,8 +91,6 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
     except DoesNotExist as err:
         return {'errors': {'repository_id': str(err)}}
     github_organization.set_organization_name(organization_name)
-    if organization_project_id:
-        github_organization.set_organization_company_id(str(organization_project_id))
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
     if organization_sfid:
@@ -138,7 +132,6 @@ def activity(body):
                 # TODO: Need a way of keeping track of new organizations that don't have projects yet.
                 org = create_organization(
                     body['installation']['account']['login'],
-                    None,
                     body['installation']['id'],
                     None
                 )
@@ -146,7 +139,6 @@ def activity(body):
             elif not existing['organization_installation_id']:
                 update_organization(
                     existing['organization_name'],
-                    existing['organization_company_id'],
                     body['installation']['id'],
                     existing['organization_sfid']
                 )
