@@ -510,6 +510,41 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
 
+def get_project_repositories_by_org(auth_user: AuthUser, project_id):
+    """
+    Get a project's repositories.
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+
+    # Validate user is authorized for this project
+    can_access = check_user_authorization(auth_user, project_id)
+    if can_access['valid']:
+      project = can_access['project']
+    else:
+      return can_access['errors']
+
+    # Obtain repositories
+    repositories = project.get_project_repositories()
+    repositories = [repository.to_dict() for repository in repositories]
+
+    # Group them by organization
+    organizations_dict = {}
+    for repository in repositories:
+        org_name = repository['repository_organization_name']
+        if org_name in organizations_dict:
+            organizations_dict[org_name].append(repository)
+        else:
+            organizations_dict[org_name] = [repository]
+    
+    organizations = {}
+    for key, value in organizations_dict.iteritems():
+        organizations.append({'name': key, 'repositories': value})
+
+    return organizations
+    
+
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
     # Validate user is authorized for this project
     can_access = check_user_authorization(auth_user, project_id)
