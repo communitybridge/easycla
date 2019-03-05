@@ -42,7 +42,8 @@ def get_organization(organization_name):
 
 def create_organization(organization_name,
                         organization_project_id=None,
-                        organization_installation_id=None):
+                        organization_installation_id=None, 
+                        organization_sfid=None):
     """
     Creates a github organization and returns the newly created github organization in dict format.
 
@@ -64,6 +65,8 @@ def create_organization(organization_name,
             github_organization.set_organization_project_id(str(organization_project_id))
         if organization_installation_id:
             github_organization.set_organization_installation_id(organization_installation_id)
+        if organization_sfid:
+            github_organization.set_organization_sfid(organization_sfid)
         github_organization.save()
         return github_organization.to_dict()
     return {'errors': {'organization_name': 'This organization already exists'}}
@@ -71,7 +74,8 @@ def create_organization(organization_name,
 
 def update_organization(organization_name, # pylint: disable=too-many-arguments
                         organization_project_id=None,
-                        organization_installation_id=None):
+                        organization_installation_id=None,
+                        organization_sfid=None):
     """
     Updates a github organization and returns the newly updated org in dict format.
     Values of None means the field will not be updated.
@@ -95,6 +99,8 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
         github_organization.set_organization_company_id(str(organization_project_id))
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
+    if organization_sfid:
+        github_organization.set_organization_sfid(organization_sfid)    
     github_organization.save()
     return github_organization.to_dict()
 
@@ -133,14 +139,16 @@ def activity(body):
                 org = create_organization(
                     body['installation']['account']['login'],
                     None,
-                    body['installation']['id']
+                    body['installation']['id'],
+                    None
                 )
                 return org
             elif not existing['organization_installation_id']:
                 update_organization(
                     existing['organization_name'],
                     existing['organization_company_id'],
-                    body['installation']['id']
+                    body['installation']['id'],
+                    existing['organization_sfid']
                 )
                 cla.log.info('Organization enrollment completed: %s', existing['organization_name'])
                 return {'status': 'Organization Enrollment Completed. CLA System is operational'}

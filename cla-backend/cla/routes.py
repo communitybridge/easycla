@@ -1256,6 +1256,7 @@ def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text)
 def post_github_organization(auth_user: check_auth,
                              organization_project_id: hug.types.uuid, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
+                             organization_sfid: hug.types.text,
                              organization_installation_id=None):
     """
     POST: /github/organizations
@@ -1268,7 +1269,8 @@ def post_github_organization(auth_user: check_auth,
     # staff_verify(user) or pm_verify(user, organization_project_id)
     return cla.controllers.github.create_organization(organization_name,
                                                       organization_project_id,
-                                                      organization_installation_id)
+                                                      organization_installation_id,
+                                                      organization_sfid)
 
 
 @hug.delete('/github/organizations/{organization_name}', versions=1)
