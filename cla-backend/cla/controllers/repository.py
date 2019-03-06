@@ -5,7 +5,7 @@ Controller related to repository operations.
 import uuid
 import cla.hug_types
 from cla.utils import get_repository_instance, get_supported_repository_providers
-from cla.models.dynamo_models import Project, Repository, UserPermissions
+from cla.models.dynamo_models import Project, Repository, UserPermissions, GitHubOrg
 from cla.models import DoesNotExist
 from cla.auth import AuthUser
 
@@ -60,12 +60,26 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     :rtype: dict
     """
 
+    # Check that organization exists 
+    github_organization = GitHubOrg()
+    try:
+        github_organization.load(str(repository_project_id))
+    except DoesNotExist as err:
+        return {'errors': {'organization_name': str(err)}}
+
+    # Check that project is valid. 
+    project = Project()
+    try:
+        project.load(str(repository_project_id))
+    except DoesNotExist as err:
+        return {'errors': {'organization_name': str(err)}}
+
+    # Get SFDC project identifier
+    sfdc_id = project.get_project_external_id()
+
     # Validate user is authorized for this project
-    can_access = cla.controllers.project.check_user_authorization(auth_user, repository_project_id)
-    if can_access['valid']:
-        project = can_access['project']
-        sfdc_id = project.get_project_external_id()
-    else:
+    can_access = cla.controllers.project.check_user_authorization(auth_user, sfdc_id)
+    if not can_access['valid']:
       return can_access['errors']
 
     repository = get_repository_instance()
