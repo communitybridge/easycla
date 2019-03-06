@@ -30,7 +30,7 @@ def check_user_authorization(auth_user: AuthUser, sfid):
     if sfid not in authorized_projects:
         return {'valid': False, 'errors': {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}}
 
-    return {'valid': True, 'project': authorized_projects}
+    return {'valid': True}
 
 def get_projects():
     """
@@ -485,11 +485,19 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
 
 
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
+
     # Validate user is authorized for this project
-    can_access = check_user_authorization(auth_user, project_id)
-    if can_access['valid']:
-        project = can_access['project']
-    else:
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
       return can_access['errors']
 
     # Obtain information for this project
