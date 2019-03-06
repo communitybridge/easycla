@@ -89,17 +89,6 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
     :rtype: dict
     """
 
-    if auth_user:
-        # Validate user is authorized for this SFDC ID. 
-        can_access = check_user_authorization(auth_user, organization_sfid)
-        if not can_access['valid']:
-            return can_access['errors']
-
-    # Validate user is authorized for this SFDC ID. 
-    can_access = check_user_authorization(auth_user, organization_sfid)
-    if not can_access['valid']:
-      return can_access['errors']
-
     github_organization = get_github_organization_instance()
     try:
         github_organization.load(str(organization_name))

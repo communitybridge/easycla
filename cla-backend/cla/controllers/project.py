@@ -16,16 +16,7 @@ from cla.models.dynamo_models import Signature, Project, Company, UserPermission
 from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
 
-def check_user_authorization(auth_user: AuthUser, project_id):
-    project = Project()
-    try:
-        project.load(project_id=str(project_id))
-    except DoesNotExist as err:
-        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
-
-    # Get SFDC project identifier
-    sfid = project.get_project_external_id()
-
+def check_user_authorization(auth_user: AuthUser, sfid):
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
     try: 
@@ -39,7 +30,7 @@ def check_user_authorization(auth_user: AuthUser, project_id):
     if sfid not in authorized_projects:
         return {'valid': False, 'errors': {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}}
 
-    return {'valid': True, 'project': project}
+    return {'valid': True, 'project': authorized_projects}
 
 def get_projects():
     """
@@ -531,7 +522,7 @@ def get_github_repositories_by_org(project):
 
     organization_dicts = []
     # Get all organizations connected to this project
-    github_organizations = GitHubOrg().get_organization_by_project_id(project.get_project_id())
+    github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
     # Iterate over each organization
     for github_organization in github_organizations:
         installation_id = github_organization.get_organization_installation_id()
