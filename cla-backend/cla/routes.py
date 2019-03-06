@@ -803,15 +803,6 @@ def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: 
 
     return cla.controllers.project.get_project_configuration_orgs_and_repos(auth_user, project_id)
 
-@hug.get('/project/{project_id}/organizations', version=1)
-def get_project_organizations(project_id: hug.types.uuid):
-    """
-    GET: /project/{project_id}/organizations.
-
-    Gets the specified project's tied GitHub organizations.
-    """
-    return cla.controllers.project.get_project_organizations(project_id)
-
 @hug.get('/project/{project_id}/document/{document_type}', versions=2)
 def get_project_document(project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
@@ -1255,21 +1246,19 @@ def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text)
                         'organization_name': 'org-name'}")
 def post_github_organization(auth_user: check_auth, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
-                             organization_sfid: hug.types.text,
-                             organization_installation_id: hug.types.number):
+                             organization_sfid: hug.types.text):
     """
     POST: /github/organizations
 
-    DATA: {'organization_sfid': '<project-id>',
-           'organization_name': 'org-name'
-           'organization_installation_id': 'github's installation id'}
+    DATA: { 'auth_user' : AuthUser to verify user permissions
+            'organization_sfid': '<project-id>',
+            'organization_name': 'org-name'}
 
     Returns the CLA GitHub Organization that was just created.
     """
-    # staff_verify(user) or pm_verify(user, organization_project_id)
-    return cla.controllers.github.create_organization(organization_name,
-                                                      organization_installation_id,
-                                                      organization_sfid)
+    return cla.controllers.github.create_organization(auth_user,
+                                                    organization_name,
+                                                    organization_sfid)
 
 
 @hug.delete('/github/organizations/{organization_name}', versions=1)
@@ -1280,7 +1269,7 @@ def delete_organization(auth_user: check_auth, organization_name: hug.types.text
     Deletes the specified Github Organization.
     """
     # staff_verify(user)
-    return cla.controllers.github.delete_organization(organization_name)
+    return cla.controllers.github.delete_organization(auth_user, organization_name)
 
 @hug.get('/github/installation', versions=2)
 def github_oauth2_callback(code, state, request):
@@ -1307,7 +1296,7 @@ def github_app_installation(body, request, response):
 
 
 @hug.post('/github/activity', versions=2)
-def github_app_activity(body, request, response):
+def github_app_activity(auth_user: check_auth, body, request, response):
     """
     POST: /github/activity
 
@@ -1319,7 +1308,7 @@ def github_app_activity(body, request, response):
     # valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request.stream.read())
     # cla.log.info(valid_request)
     # if valid_request:
-    return cla.controllers.github.activity(body)
+    return cla.controllers.github.activity(auth_user, body)
     # else:
     #     response.status = HTTP_403
     #     return {'status': 'Not Authorized'}
