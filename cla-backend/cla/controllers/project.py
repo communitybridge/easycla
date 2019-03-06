@@ -193,22 +193,6 @@ def delete_project(project_id, username=None):
     return {'success': True}
 
 
-def get_project_repositories(project_id):
-    """
-    Get a project's repositories.
-
-    :param project_id: The ID of the project.
-    :type project_id: string
-    """
-    project = get_project_instance()
-    try:
-        project.load(str(project_id))
-    except DoesNotExist as err:
-        return {'errors': {'project_id': str(err)}}
-    repositories = project.get_project_repositories()
-    return [repository.to_dict() for repository in repositories]
-
-
 def get_project_companies(project_id):
     """
     Get a project's associated companies (via CCLA link).
@@ -483,6 +467,73 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
 
+def get_project_repositories(auth_user: AuthUser, project_id):
+    """
+    Get a project's repositories.
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
+
+    # Validate user is authorized for this project
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
+      return can_access['errors']
+
+    # Obtain repositories
+    repositories = project.get_project_repositories()
+    return [repository.to_dict() for repository in repositories]
+
+def get_project_repositories_group_by_organization(auth_user: AuthUser, project_id):
+    """
+    Get a project's repositories.
+
+    :param project_id: The ID of the project.
+    :type project_id: string
+    """
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
+
+    # Validate user is authorized for this project
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
+      return can_access['errors']
+
+    # Obtain repositories
+    repositories = project.get_project_repositories()
+    repositories = [repository.to_dict() for repository in repositories]
+
+    # Group them by organization
+    organizations_dict = {}
+    for repository in repositories:
+        org_name = repository['repository_organization_name']
+        if org_name in organizations_dict:
+            organizations_dict[org_name].append(repository)
+        else:
+            organizations_dict[org_name] = [repository]
+    
+    organizations = []
+    for key, value in organizations_dict.items():
+        organizations.append({'name': key, 'repositories': value})
+
+    return organizations
+    
 
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
     # Load Project
