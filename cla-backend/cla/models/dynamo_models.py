@@ -1721,8 +1721,8 @@ class Store(key_value_store_interface.KeyValueStore):
 
 class GitHubOrgModel(BaseModel):
     """
-    Represents a user in the database. 
-    Company_id, installation_id, project_id are deprecated now that organizations are under an SFDC ID.
+    Represents a Github Organization in the database. 
+    Company_id, project_id are deprecated now that organizations are under an SFDC ID.
     """
     class Meta:
         """Meta class for User."""
@@ -1733,13 +1733,16 @@ class GitHubOrgModel(BaseModel):
     organization_installation_id = NumberAttribute(null=True)
     organization_sfid = UnicodeAttribute()
     organization_sfid_index = GithubOrgSFIndex()
+    organization_project_id = UnicodeAttribute(null=True)
+    organization_company_id = UnicodeAttribute(null=True)
+
 
 
 class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
-    def __init__(self, organization_name=None, organization_installation_id=None,organization_sfid=None):
+    def __init__(self, organization_name=None, organization_installation_id=None, organization_sfid=None):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
@@ -1788,15 +1791,6 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
     def set_organization_sfid(self, organization_sfid):
         self.model.organization_sfid = organization_sfid
 
-    def get_organizations_by_company_id(self, company_id):
-        organization_generator = self.model.scan(organization_company_id__eq=str(company_id))
-        organizations = []
-        for org_model in organization_generator:
-            org = GitHubOrg()
-            org.model = org_model
-            organizations.append(org)
-        return organizations
-
     def get_organization_by_sfid(self, sfid):
         organization_generator = self.model.organization_sfid_index.query(sfid)
         organizations = []
@@ -1805,15 +1799,6 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             org.model = org_model
             organizations.append(org)
         return organizations
-
-    def get_organization_by_project_id(self, project_id):
-        organization_generator = self.model.scan(organization_project_id__eq=str(project_id))
-        orgs = []
-        for org_model in organization_generator:
-            org = GitHubOrg()
-            org.model = org_model
-            orgs.append(org)
-        return orgs
 
     def get_organization_by_installation_id(self, installation_id):
         organization_generator = self.model.scan(organization_installation_id__eq=installation_id)
