@@ -191,7 +191,6 @@ def delete_project(project_id, username=None):
     project_acl_verify(username, project)
     project.delete()
     return {'success': True}
-  
 
 
 def get_project_companies(project_id):
@@ -475,31 +474,47 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     :param project_id: The ID of the project.
     :type project_id: string
     """
+    
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
 
     # Validate user is authorized for this project
-    can_access = check_user_authorization(auth_user, project_id)
-    if can_access['valid']:
-      project = can_access['project']
-    else:
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
       return can_access['errors']
 
     # Obtain repositories
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
 
-def get_project_repositories_by_org(auth_user: AuthUser, project_id):
+def get_project_repositories_group_by_organization(auth_user: AuthUser, project_id):
     """
     Get a project's repositories.
 
     :param project_id: The ID of the project.
     :type project_id: string
     """
+    
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
 
     # Validate user is authorized for this project
-    can_access = check_user_authorization(auth_user, project_id)
-    if can_access['valid']:
-      project = can_access['project']
-    else:
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
       return can_access['errors']
 
     # Obtain repositories
@@ -515,8 +530,8 @@ def get_project_repositories_by_org(auth_user: AuthUser, project_id):
         else:
             organizations_dict[org_name] = [repository]
     
-    organizations = {}
-    for key, value in organizations_dict.iteritems():
+    organizations = []
+    for key, value in organizations_dict.items():
         organizations.append({'name': key, 'repositories': value})
 
     return organizations
