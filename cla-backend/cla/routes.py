@@ -501,11 +501,13 @@ def get_repository(auth_user: check_auth, repository_id: hug.types.text):
           examples=" - {'repository_project_id': '<project-id>', \
                         'repository_external_id': 'repo1', \
                         'repository_name': 'Repo Name', \
+                        'repository_organization_name': 'Organization Name', \
                         'repository_type': 'github', \
                         'repository_url': 'http://url-to-repo.com'}")
 def post_repository(auth_user: check_auth, # pylint: disable=too-many-arguments
                     repository_project_id: hug.types.uuid,
                     repository_name: hug.types.text,
+                    repository_organization_name: hug.types.text,
                     repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
                     repository_url: cla.hug_types.url,
                     repository_external_id=None):
@@ -515,6 +517,7 @@ def post_repository(auth_user: check_auth, # pylint: disable=too-many-arguments
     DATA: {'repository_project_id': '<project-id>',
            'repository_external_id': 'repo1',
            'repository_name': 'Repo Name',
+           'repository_organization_name': 'Organization Name',
            'repository_type': 'github',
            'repository_url': 'http://url-to-repo.com'}
 
@@ -526,6 +529,7 @@ def post_repository(auth_user: check_auth, # pylint: disable=too-many-arguments
     return cla.controllers.repository.create_repository(auth_user,
                                                         repository_project_id,
                                                         repository_name,
+                                                        repository_organization_name,
                                                         repository_type,
                                                         repository_url,
                                                         repository_external_id)
@@ -792,14 +796,14 @@ def get_project_repositories(auth_user: check_auth, project_id: hug.types.uuid):
     """
     return cla.controllers.project.get_project_repositories(auth_user, project_id)
 
-@hug.get('/project/{project_id}/repositories_by_org', versions=1)
-def get_project_repositories_by_org(auth_user: check_auth, project_id: hug.types.uuid):
+@hug.get('/project/{project_id}/repositories_group_by_organization', versions=1)
+def get_project_repositories_group_by_organization(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/repositories_by_org
 
     Gets the specified project's repositories. grouped by organization name
     """
-    return cla.controllers.project.get_project_repositories_by_org(auth_user, project_id)
+    return cla.controllers.project.get_project_repositories_group_by_organization(auth_user, project_id)
 
 @hug.get('/project/{project_id}/configuration_orgs_and_repos', versions=1)
 def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: hug.types.uuid):
@@ -1251,7 +1255,7 @@ def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text)
 
 
 @hug.post('/github/organizations', versions=1,
-          examples=" - {'organization_project_id': '<project-id>', \
+          examples=" - {'organization_sfid': '<organization-sfid>', \
                         'organization_name': 'org-name'}")
 def post_github_organization(auth_user: check_auth, # pylint: disable=too-many-arguments
                              organization_name: hug.types.text,
@@ -1260,7 +1264,7 @@ def post_github_organization(auth_user: check_auth, # pylint: disable=too-many-a
     POST: /github/organizations
 
     DATA: { 'auth_user' : AuthUser to verify user permissions
-            'organization_sfid': '<project-id>',
+            'organization_sfid': '<sfid-id>',
             'organization_name': 'org-name'}
 
     Returns the CLA GitHub Organization that was just created.
