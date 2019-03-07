@@ -474,6 +474,7 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     :param project_id: The ID of the project.
     :type project_id: string
     """
+    
     # Load Project
     project = Project()
     try:
@@ -500,6 +501,7 @@ def get_project_repositories_group_by_organization(auth_user: AuthUser, project_
     :param project_id: The ID of the project.
     :type project_id: string
     """
+    
     # Load Project
     project = Project()
     try:
