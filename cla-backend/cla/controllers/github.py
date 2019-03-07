@@ -47,12 +47,12 @@ def create_organization(auth_user,
     """
     Creates a github organization and returns the newly created github organization in dict format.
 
+    :param auth_user: authorization for this user.
+    :type auth_user: AuthUser
     :param organization_name: The github organization name.
     :type organization_name: string 
-    :param organization_project_id: The ID of the github organization project.
-    :type organization_project_id: string/None
-    :param organization_installation_id: The github app installation id.
-    :type organization_installation_id: string/None
+    :param organization_sfid: The SFDC ID for the github organization. 
+    :type organization_sfid: string/None
     :return: dict representation of the new github organization object.
     :rtype: dict
     """
@@ -79,10 +79,10 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
     Updates a github organization and returns the newly updated org in dict format.
     Values of None means the field will not be updated.
 
-    :param organization_project_id: The ID of the github organization project.
-    :type organization_project_id: string/None
     :param organization_name: The github organization name.
     :type organization_name: string
+    :param organization_sfid: The SFDC identifier ID for the organization.
+    :type organization_sfid: string/None
     :param organization_installation_id: The github app installation id.
     :type organization_installation_id: string/None
     :return: dict representation of the new github organization object.
