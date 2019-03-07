@@ -16,16 +16,7 @@ from cla.models.dynamo_models import Signature, Project, Company, UserPermission
 from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
 
-def check_user_authorization(auth_user: AuthUser, project_id):
-    project = Project()
-    try:
-        project.load(project_id=str(project_id))
-    except DoesNotExist as err:
-        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
-
-    # Get SFDC project identifier
-    sfid = project.get_project_external_id()
-
+def check_user_authorization(auth_user: AuthUser, sfid):
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
     try: 
@@ -39,7 +30,7 @@ def check_user_authorization(auth_user: AuthUser, project_id):
     if sfid not in authorized_projects:
         return {'valid': False, 'errors': {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}}
 
-    return {'valid': True, 'project': project}
+    return {'valid': True}
 
 def get_projects():
     """
@@ -200,21 +191,7 @@ def delete_project(project_id, username=None):
     project_acl_verify(username, project)
     project.delete()
     return {'success': True}
-
-def get_project_organizations(project_id):
-    """
-    Get a project's tied organizations.
-
-    :param project_id: The ID of the project.
-    :type project_id: string
-    """
-    project = get_project_instance()
-    try:
-        project.load(str(project_id))
-    except DoesNotExist as err:
-        return {'errors': {'project_id': str(err)}}
-    organizations = get_github_organization_instance().get_organization_by_project_id(str(project_id))
-    return [organization.to_dict() for organization in organizations]
+  
 
 
 def get_project_companies(project_id):
@@ -546,11 +523,19 @@ def get_project_repositories_by_org(auth_user: AuthUser, project_id):
     
 
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
+    # Load Project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
+    
+    # Get SFDC project identifier
+    sfid = project.get_project_external_id()
+
     # Validate user is authorized for this project
-    can_access = check_user_authorization(auth_user, project_id)
-    if can_access['valid']:
-        project = can_access['project']
-    else:
+    can_access = check_user_authorization(auth_user, sfid)
+    if not can_access['valid']:
       return can_access['errors']
 
     # Obtain information for this project
@@ -583,7 +568,7 @@ def get_github_repositories_by_org(project):
 
     organization_dicts = []
     # Get all organizations connected to this project
-    github_organizations = GitHubOrg().get_organization_by_project_id(project.get_project_id())
+    github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
     # Iterate over each organization
     for github_organization in github_organizations:
         installation_id = github_organization.get_organization_installation_id()
