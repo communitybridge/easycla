@@ -1805,43 +1805,12 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
-    def set_organization_company_id(self, organization_company_id):
-        """
-        Setter for the github organization's company id.
-
-        :param organization_company_id: The company id for this github organization.
-        :type organization_company_id: string
-        """
-        raise NotImplementedError()
-
     def set_organization_installation_id(self, organization_installation_id):
         """
         Setter for the github organization's installation id.
 
         :param organization_installation_id: The github organization's installation id.
         :type organization_installation_id: string
-        """
-        raise NotImplementedError()
-
-    def get_organizations_by_company_id(self, company_id):
-        """
-        Fetches the github organizations associated with an company.
-
-        :param company_id: The company ID to filter github organizations by.
-        :type company_id: string
-        :return: The organizations associated with the company specified.
-        :rtype: [cla.models.model_interfaces.GitHubOrg]
-        """
-        raise NotImplementedError()
-
-    def get_organization_by_project_id(self, project_id):
-        """
-        Fetches the github organizations associated with a project.
-
-        :param project_id: The project ID to filter github organizations by.
-        :type project_id: string
-        :return: The organization associated with the project specified.
-        :rtype: [cla.models.model_interfaces.GitHubOrg]
         """
         raise NotImplementedError()
 
