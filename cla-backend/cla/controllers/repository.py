@@ -72,7 +72,7 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     try:
         project.load(str(repository_project_id))
     except DoesNotExist as err:
-        return {'errors': {'organization_name': str(err)}}
+        return {'errors': {'repository_project_id': str(err)}}
 
     # Get SFDC project identifier
     sfdc_id = project.get_project_external_id()
