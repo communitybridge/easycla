@@ -51,6 +51,8 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     :param repository_name: The new repository name.
     :type repository_name: string
     :param repository_type: The new repository type ('github', 'gerrit', etc).
+    :type repository_organization_name: string
+    :param repository_organization_name: The repository organization name
     :type repository_type: string
     :param repository_url: The new repository URL.
     :type repository_url: string
@@ -63,7 +65,7 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     # Check that organization exists 
     github_organization = GitHubOrg()
     try:
-        github_organization.load(str(repository_project_id))
+        github_organization.load(str(repository_organization_name))
     except DoesNotExist as err:
         return {'errors': {'organization_name': str(err)}}
 
