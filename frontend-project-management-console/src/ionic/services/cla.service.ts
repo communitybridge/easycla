@@ -459,6 +459,46 @@ export class ClaService {
   }
 
   /**
+   * /project/{project_id}/repositories_by_org
+   **/
+
+  getProjectRepositoriesByrOrg(projectId) {
+    return this.http
+      .get(this.claApiUrl + "/v1/project/" + projectId + "/repositories_group_by_organization")
+      .map(res => res.json());
+  }
+
+  /**
+   * /repository
+   **/
+
+  postProjectRepository(repository) {
+    return this.http
+      .post(this.claApiUrl + "/v1/repository/", repository)
+      .map(res => res.json());
+  }
+
+  /**
+   * /repository
+   **/
+
+  removeProjectRepository(repositoryId) {
+    return this.http
+      .delete(this.claApiUrl + "/v1/repository/" + repositoryId)
+      .map(res => res.json());
+  }
+
+  /**
+   * /project/{project_id}/configuration_orgs_and_repos
+   **/
+
+  getProjectConfigurationAndRepos(projectId) {
+    return this.http
+      .get(this.claApiUrl + "/v1/project/" + projectId + "/configuration_orgs_and_repos")
+      .map(res => res.json());
+  }
+
+  /**
    * /sfdc/${sfid}/github/organizations
    **/
 

@@ -3,6 +3,7 @@ import { NavController, NavParams, ViewController, IonicPage, Events } from 'ion
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { Http } from '@angular/http';
+import {EnvConfig} from "../../services/cla.env.utils";
 
 @IonicPage({
   segment: 'cla-organization-provider-modal'
@@ -38,14 +39,6 @@ export class ClaOrganizationProviderModal {
     });
   }
 
-  getDefaults() {
-
-  }
-
-  ngOnInit() {
-
-  }
-
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
@@ -59,7 +52,7 @@ export class ClaOrganizationProviderModal {
 
   postClaGithubOrganization() {
     let organization = {
-      organization_project_id: this.claProjectId,
+      organization_sfid: this.claProjectId,
       organization_name: this.form.value.orgName,
     };
     this.claService.postGithubOrganization(organization).subscribe((response) => {
@@ -73,13 +66,13 @@ export class ClaOrganizationProviderModal {
         }
 
       } else {
-        this.dismiss()
+        this.dismiss(true)
       }
     });
   }
 
-  dismiss() {
-    this.viewCtrl.dismiss();
+  dismiss(data = false) {
+    this.viewCtrl.dismiss(data);
   }
 
 }
