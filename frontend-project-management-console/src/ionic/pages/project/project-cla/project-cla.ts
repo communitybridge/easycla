@@ -5,12 +5,12 @@ import {
   NavParams,
   IonicPage, Nav, Events, AlertController
 } from "ionic-angular";
-import { CincoService } from "../../../services/cinco.service";
-import { KeycloakService } from "../../../services/keycloak/keycloak.service";
-import { SortService } from "../../../services/sort.service";
-import { ClaService } from "../../../services/cla.service";
-import { RolesService } from "../../../services/roles.service";
-import { Restricted } from "../../../decorators/restricted";
+import {CincoService} from "../../../services/cinco.service";
+import {KeycloakService} from "../../../services/keycloak/keycloak.service";
+import {SortService} from "../../../services/sort.service";
+import {ClaService} from "../../../services/cla.service";
+import {RolesService} from "../../../services/roles.service";
+import {Restricted} from "../../../decorators/restricted";
 
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
@@ -69,6 +69,12 @@ export class ProjectClaPage {
         this.claProjects = projects;
         this.loading.claProjects = false;
 
+        this.claProjects.map(project => {
+          this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
+            project.githubOrganizations = githubOrganizations;
+          })
+        });
+
         //Get Github Orgs.
         this.claService
           .getOrganizations(this.sfdcProjectId)
@@ -105,7 +111,7 @@ export class ProjectClaPage {
       });
   }
 
-  backToProjects () {
+  backToProjects() {
     this.events.publish('nav:allProjects');
   }
 
@@ -163,6 +169,19 @@ export class ProjectClaPage {
       claProjectId: claProjectId
     });
     modal.onDidDismiss(data => {
+      if (data) {
+        this.openClaOrganizationAppModal();
+        this.getClaProjects();
+      }
+    });
+    modal.present();
+  }
+
+  openClaConfigureGithubRepositoriesModal(claProjectId) {
+    let modal = this.modalCtrl.create("ClaConfigureGithubRepositoriesModal", {
+      claProjectId: claProjectId
+    });
+    modal.onDidDismiss(data => {
       this.getClaProjects();
     });
     modal.present();
@@ -178,10 +197,8 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  openClaOrganizationAppModal(orgName) {
-    let modal = this.modalCtrl.create("ClaOrganizationAppModal", {
-      orgName: orgName
-    });
+  openClaOrganizationAppModal() {
+    let modal = this.modalCtrl.create("ClaOrganizationAppModal", {});
     modal.onDidDismiss(data => {
       this.getClaProjects();
     });
@@ -210,7 +227,8 @@ export class ProjectClaPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => {}
+          handler: () => {
+          }
         }, {
           text: 'Delete',
           handler: () => {

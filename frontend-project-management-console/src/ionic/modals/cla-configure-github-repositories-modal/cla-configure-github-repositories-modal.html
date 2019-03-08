@@ -1,0 +1,49 @@
+<ion-header>
+  <modal-header>
+    Configure Github Repositories
+  </modal-header>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <ion-row *ngFor="let organization of orgAndRepositories">
+      <ion-col col-12 class="github-organization">
+        <ion-card>
+          <ion-card-content>
+            <div class="org-name">
+              {{ organization.organization_name }}
+            </div>
+            <div class="repositories">
+              <h4 class="repository"
+                  [ngClass]="{
+                    'disabled': repository.status === 'taken',
+                    'assigned': repository.status === 'assigned'
+                  }"
+                  *ngFor="let repository of organization.repositories">
+                {{ repository.repository_name }}
+                <button type="button" ion-button color="light" size="small"
+                        *ngIf="repository.status === 'free'"
+                        (click)="assignRepository(repository)">
+                  Add
+                </button>
+                <button type="button" ion-button color="light" size="small" class="remove"
+                        *ngIf="repository.status === 'assigned'"
+                        (click)="removeRepository(repository)">
+                  Remove
+                </button>
+                <button type="button" ion-button color="light" size="small" *ngIf="repository.status === 'taken'">Disabled</button>
+              </h4>
+            </div>
+            <p class="form-message" *ngFor="let error of responseErrors">{{error}}</p>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <div class="btn-wrapper">
+    <button ion-button color="secondary" (click)="dismiss()">
+      Close
+    </button>
+  </div>
+</ion-content>

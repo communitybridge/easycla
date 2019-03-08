@@ -25,7 +25,7 @@ export class HttpClient {
 
   handleRequestError (error) {
     // Auth Token Error
-    if(error.status == 401 && error.message === '"Error parsing Bearer token"'){
+    if(error.status == 401){
       window.location.href = '#/login'
     }
 
