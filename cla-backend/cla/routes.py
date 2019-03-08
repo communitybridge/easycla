@@ -1309,7 +1309,7 @@ def github_app_installation(body, request, response):
 
 
 @hug.post('/github/activity', versions=2)
-def github_app_activity(auth_user: check_auth, body, request, response):
+def github_app_activity(body, request, response):
     """
     POST: /github/activity
 
@@ -1321,7 +1321,7 @@ def github_app_activity(auth_user: check_auth, body, request, response):
     # valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request.stream.read())
     # cla.log.info(valid_request)
     # if valid_request:
-    return cla.controllers.github.activity(auth_user, body)
+    return cla.controllers.github.activity(body)
     # else:
     #     response.status = HTTP_403
     #     return {'status': 'Not Authorized'}
