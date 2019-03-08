@@ -1077,7 +1077,8 @@ class RepositoryModel(BaseModel):
     class Meta:
         """Meta class for Repository."""
         table_name = 'cla-{}-repositories'.format(stage)
-        host = 'http://localhost:8000'
+        if stage == 'local':
+            host = 'http://localhost:8000'
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
