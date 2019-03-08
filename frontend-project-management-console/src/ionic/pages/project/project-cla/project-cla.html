@@ -45,30 +45,31 @@
         </ion-row>
 
         <ion-row>
-          <ion-col col-12 *ngFor="let organization of githubOrganizations">
+          <ion-col col-12>
             <ion-card class="organization-card">
               <ion-grid>
                 <ion-row>
-                  <ion-col class="vertical-rule-right" col-12 col-md-6>
+                  <ion-col class="vertical-rule-right" col-12 col-md-6 *ngFor="let organization of githubOrganizations">
                     <ion-card-content *ngIf="organization.providerInfo">
                       <ion-card-title>
                         <ion-icon name="logo-github"></ion-icon>
-                        <span>{{ organization.providerInfo.name }}</span>
+                        <span>{{ organization.organization_name }}</span>
                       </ion-card-title>
                       <p><a target="_blank"
                             href="https://github.com/{{ organization.organization_name }}">
                         https://github.com/{{organization.organization_name }}
                       </a></p>
                       <p>{{ organization.providerInfo.bio }}</p>
+
+                      <div class="organization-actions">
+                        <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
+                          Delete
+                        </button>
+                      </div>
                     </ion-card-content>
                   </ion-col>
                 </ion-row>
               </ion-grid>
-              <div class="organization-actions">
-                <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
-                  Delete
-                </button>
-              </div>
             </ion-card>
           </ion-col>
         </ion-row>
@@ -233,7 +234,7 @@
             </ion-col>
             <ion-col col-6>
               <ion-buttons end>
-                <button ion-button (click)="openClaOrganizationProviderModal(project.project_id)" color="secondary">
+                <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)" color="secondary">
                   Configure Github Repositories
                 </button>
               </ion-buttons>
@@ -241,31 +242,30 @@
           </ion-row>
 
           <ion-row>
-            <ion-col col-12 *ngFor="let organization of project.organizations">
+            <ion-col col-12 *ngFor="let organization of project.githubOrganizations">
               <ion-card class="organization-card">
                 <ion-grid>
                   <ion-row>
                     <ion-col class="vertical-rule-right" col-12 col-md-6>
-                      <ion-card-content *ngIf="organization.providerInfo">
+                      <ion-card-content>
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
-                          <span>{{ organization.providerInfo.name }}</span>
+                          <span>{{ organization.name }}</span>
                         </ion-card-title>
                         <p><a target="_blank"
-                              href="https://github.com/{{ organization.organization_name }}">
-                          https://github.com/{{organization.organization_name }}
+                              href="https://github.com/{{ organization.name }}">
+                          https://github.com/{{organization.name }}
                         </a></p>
-                        <p>{{ organization.providerInfo.bio }}</p>
                       </ion-card-content>
                     </ion-col>
                     <ion-col col-12 col-md-6>
                       <ion-card-content>
-                        <h1>Repositories</h1>
-                        <div class="repositories" *ngIf="organization.organization_installation_id">
+                        <h2>Repositories</h2>
+                        <div class="repositories">
                           <ion-row *ngFor="let repository of organization.repositories">
                             <ion-col col-12 icon-left>
                               <ion-icon name="checkmark"></ion-icon>
-                              {{ repository }}
+                              {{ repository.repository_name }}
                             </ion-col>
                           </ion-row>
                         </div>

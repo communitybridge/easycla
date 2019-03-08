@@ -91,6 +91,13 @@ project-cla {
     ion-card-title {
       color: #7b7b7b;
       margin-bottom: 0;
+      display: flex;
+      align-items: center;
+
+      span {
+        margin-left: 10px;
+        font-size: 20px;
+      }
     }
 
     ion-card-content {
@@ -179,6 +186,7 @@ project-cla {
   .project-row {
     border-bottom: 1px solid lightgray;
     padding-bottom: 30px;
+    margin-bottom: 30px;
 
     &:last-child {
       border-bottom: none;
@@ -207,5 +215,6 @@ project-cla {
 }
 
 h2 {
-  font-size: 2rem;
+  font-size: 2rem !important;
+  color: #7b7b7b !important;
 }
