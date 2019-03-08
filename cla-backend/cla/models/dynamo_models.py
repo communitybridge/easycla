@@ -1143,7 +1143,10 @@ class Repository(model_interfaces.Repository):
 
     def get_repository_external_id(self):
         return self.model.repository_external_id
-    
+
+    def get_repository_sfdc_id(self):
+        return self.model.repository_sfdc_id
+
     def get_repository_organization_name(self):
         return self.model.repository_organization_name
 
