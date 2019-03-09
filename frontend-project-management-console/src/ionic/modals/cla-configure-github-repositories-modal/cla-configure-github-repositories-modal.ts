@@ -70,7 +70,7 @@ export class ClaConfigureGithubRepositoriesModal {
 
   isTaken(repository) {
     return this.assignedRepositories.some(assignedRepository => {
-      if (String(assignedRepository.repository_github_id) === String(repository.repository_external_id)) {
+      if (String(assignedRepository.repository_external_id) === String(repository.repository_github_id)) {
         repository.repository_project_id = assignedRepository.repository_project_id;
         repository.repository_id = assignedRepository.repository_id;
 
