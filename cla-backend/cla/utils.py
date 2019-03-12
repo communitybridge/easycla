@@ -8,6 +8,8 @@ import json
 import os
 import re
 import falcon
+from cla.models import DoesNotExist
+from cla.models.dynamo_models import Repository
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
 from hug.store import InMemoryStore as Store
@@ -840,8 +842,24 @@ def get_active_signature_return_url(user_id, metadata=None):
     if metadata is None:
         cla.log.error('Could not find active signature for user %s, return URL request failed' %user_id)
         return None
-    organizations = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
-    installation_id = organizations[0].get_organization_installation_id()
+
+    # Get Github ID from metadata
+    github_id = metadata['repository_id']
+    
+    # Get repository ID that references the github ID. 
+    repository = Repository()
+    try: 
+        repository.get_repository_by_external_id(github_id, 'github')
+    except DoesNotExist: 
+        cla.log.error('Could not find repository ID %s, return URL request failed.', github_id)
+        return None
+    
+    # Get Organization from this repository
+    organization = repository.get_repository_organization_name()
+
+    # Get this organization's installation ID 
+    installation_id = organization.get_organization_installation_id()
+
     github = cla.utils.get_repository_service('github')
     return github.get_return_url(metadata['repository_id'],
                                  metadata['pull_request_id'],
@@ -861,8 +879,24 @@ def get_individual_signature_callback_url(user_id, metadata=None):
     if metadata is None:
         cla.log.error('Could not find active signature for user %s, callback URL request failed' %user_id)
         return None
-    organizations = cla.utils.get_github_organization_instance().get_organization_by_project_id(metadata['project_id'])
-    installation_id = organizations[0].get_organization_installation_id()
+    
+    # Get Github ID from metadata
+    github_id = metadata['repository_id']
+    
+    # Get repository ID that references the github ID. 
+    repository = Repository()
+    try: 
+        repository.get_repository_by_external_id(github_id, 'github')
+    except DoesNotExist: 
+        cla.log.error('Could not find repository ID %s, return URL request failed.', github_id)
+        return None
+    
+    # Get Organization from this repository
+    organization = repository.get_repository_organization_name()
+
+    # Get this organization's installation ID 
+    installation_id = organization.get_organization_installation_id()
+    
     return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])
