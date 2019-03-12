@@ -121,8 +121,9 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         #origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
+        api_base_url = os.environ.get('CLA_API_BASE', '')
         return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
-                                                     cla.conf['GITHUB_OAUTH_CALLBACK_URL'],
+                                                     os.path.join(api_base_url, 'v2/github/installation'),
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
 
@@ -163,7 +164,16 @@ class GitHub(repository_service_interface.RepositoryService):
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
         console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
-        project_id = cla.utils.get_project_id_from_installation_id(installation_id)
+        # Get repository using github's repository ID.
+        repository = Repository().get_repository_by_external_id(repository_id, "github")
+        if repository is None:  
+            cla.log.error('Could not find repository with the following repository_id: %s', repository_id)
+            return None
+        
+        # Get project ID from this repository
+        project_id = repository.get_repository_project_id()
+
+
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
         # TODO: Skipping this for now - we can do this for ICLAs but there's no easy way of doing
