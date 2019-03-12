@@ -24,7 +24,7 @@ from cla.models import signing_service_interface, DoesNotExist
 from cla.models.s3_storage import S3Storage
 from cla.models.dynamo_models import Signature, GitHubOrg, User, \
                                         Project, Company, Gerrit, \
-                                        Document
+                                        Document, Repository
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -387,12 +387,22 @@ class DocuSign(signing_service_interface.SigningService):
         # signature metadata.
         if not project.get_project_ccla_requires_icla_signature():
             cla.log.info('Project does not requires ICLA signature from employee - updating PR')
-            organization = GitHubOrg()
-            orgs = organization.get_organization_by_project_id(str(project_id))
-            target_org = get_org_from_return_url('github', return_url, orgs)
-            installation_id = target_org.get_organization_installation_id()
             github_repository_id = signature_metadata['repository_id']
             change_request_id = signature_metadata['pull_request_id']
+            
+            # Get repository
+            repository = Repository() 
+            try: 
+                repository.get_repository_by_external_id(github_repository_id, 'github')
+            except DoesNotExist:
+                return {'errors': {'repository_id': 'The given repository_id does not exist. '}}
+                
+            # Get organization that the repository is configured for
+            organization = cla.utils.get_github_organization_instance()
+            organization.get_organization(repository.get_repository_organization_name())
+            
+            # Get installation ID of the organization.
+            installation_id = organization.get_organization_installation_id()
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
             cla.utils.delete_active_signature_metadata(user.get_user_id())
@@ -805,6 +815,7 @@ class DocuSign(signing_service_interface.SigningService):
                         return
 
             # Get signed document
+            #TODO:remove self.
             document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
@@ -901,6 +912,7 @@ class DocuSign(signing_service_interface.SigningService):
             manager = User()
             manager.load(company.get_company_manager_id())
             # Get signed document
+            #TODO: remove self
             document_data = self.get_signed_document(self, envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
