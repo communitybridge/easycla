@@ -815,8 +815,7 @@ class DocuSign(signing_service_interface.SigningService):
                         return
 
             # Get signed document
-            #TODO:remove self.
-            document_data = self.get_signed_document(self, envelope_id, user)
+            document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
             
@@ -912,8 +911,7 @@ class DocuSign(signing_service_interface.SigningService):
             manager = User()
             manager.load(company.get_company_manager_id())
             # Get signed document
-            #TODO: remove self
-            document_data = self.get_signed_document(self, envelope_id, user)
+            document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
 
