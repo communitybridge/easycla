@@ -210,3 +210,45 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
 
     company.remove_company_acl(username)
     company.save()
+
+def add_manager(username, company_id, lfid):
+    # Find company
+    company = Company()
+    try:
+        company.load(str(company_id))
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # Validate user is the manager of the company
+    if username not in company.get_company_acl():
+        return {'errors': {'user': "You are not authorized to manage this company."}}
+    # TODO: Validate if lfid is valid
+
+    # Add lfid to company acl
+    company.add_company_acl(lfid)
+    company.save()
+
+    return company.to_dict()
+
+def remove_manager(username, company_id, lfid):
+    # Find company
+    company = Company()
+    try:
+        company.load(str(company_id))
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # Validate user is the manager of the company
+    if username not in company.get_company_acl():
+        return {'errors': {'user': "You are not authorized to manage this company."}}
+    # TODO: Validate if lfid is valid
+
+    # Avoid to have an empty acl
+    if len(company.get_company_acl()) == 1 and username == lfid:
+        return {'errors': {'user': "You are can't remove this manager because it is the last one."}}
+    # Add lfid to company acl
+    company.remove_company_acl(lfid)
+    company.save()
+
+    return company.to_dict()
+
