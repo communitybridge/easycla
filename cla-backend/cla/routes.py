@@ -354,7 +354,8 @@ def post_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
                                                       signature_signed=signature_signed,
                                                       signature_approved=signature_approved,
                                                       signature_return_url=signature_return_url,
-                                                      signature_sign_url=signature_sign_url)
+                                                      signature_sign_url=signature_sign_url,
+                                                      signature_acl=auth_user.username)
 
 
 @hug.put('/signature', versions=1,
@@ -443,7 +444,7 @@ def get_signatures_company(auth_user: check_auth, company_id: hug.types.uuid):
 
     Get all signatures for company specified.
     """
-    return cla.controllers.signature.get_company_signatures(company_id)
+    return cla.controllers.signature.get_company_signatures_by_acl(auth_user.username, company_id)
 
 @hug.get('/signatures/project/{project_id}', versions=1)
 def get_signatures_project(auth_user: check_auth, project_id: hug.types.uuid):
