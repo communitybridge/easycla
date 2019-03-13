@@ -844,14 +844,25 @@ def get_active_signature_return_url(user_id, metadata=None):
         return None
 
     # Get Github ID from metadata
-    github_id = metadata['repository_id']
-    
+    github_repository_id = metadata['repository_id']
+
+    # Get installation id through a helper function
+    installation_id = get_installation_id_from_github_repository(github_repository_id)
+    if installation_id is None:
+        cla.log.error('Could not find installation ID that is configured for this repository ID: %s', github_repository_id)
+        return None
+
+    github = cla.utils.get_repository_service('github')
+    return github.get_return_url(metadata['repository_id'],
+                                 metadata['pull_request_id'],
+                                 installation_id)
+
+def get_installation_id_from_github_repository(github_repository_id):
     # Get repository ID that references the github ID. 
     repository = Repository()
     try: 
-        repository.get_repository_by_external_id(github_id, 'github')
+        repository.get_repository_by_external_id(github_repository_id, 'github')
     except DoesNotExist: 
-        cla.log.error('Could not find repository ID %s, return URL request failed.', github_id)
         return None
     
     # Get Organization from this repository
@@ -859,11 +870,7 @@ def get_active_signature_return_url(user_id, metadata=None):
 
     # Get this organization's installation ID 
     installation_id = organization.get_organization_installation_id()
-
-    github = cla.utils.get_repository_service('github')
-    return github.get_return_url(metadata['repository_id'],
-                                 metadata['pull_request_id'],
-                                 installation_id)
+    return installation_id                                 
 
 def get_individual_signature_callback_url(user_id, metadata=None):
     """
@@ -881,22 +888,14 @@ def get_individual_signature_callback_url(user_id, metadata=None):
         return None
     
     # Get Github ID from metadata
-    github_id = metadata['repository_id']
-    
-    # Get repository ID that references the github ID. 
-    repository = Repository()
-    try: 
-        repository.get_repository_by_external_id(github_id, 'github')
-    except DoesNotExist: 
-        cla.log.error('Could not find repository ID %s, return URL request failed.', github_id)
-        return None
-    
-    # Get Organization from this repository
-    organization = repository.get_repository_organization_name()
+    github_repository_id = metadata['repository_id']
 
-    # Get this organization's installation ID 
-    installation_id = organization.get_organization_installation_id()
-    
+    # Get installation id through a helper function
+    installation_id = get_installation_id_from_github_repository(github_repository_id)
+    if installation_id is None:
+        cla.log.error('Could not find installation ID that is configured for this repository ID: %s', github_repository_id)
+        return None
+
     return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
                                                               str(metadata['repository_id']) + '/' + \
                                                               str(metadata['pull_request_id'])
