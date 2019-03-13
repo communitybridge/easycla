@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { ClaLoadingPage } from './cla-loading';
+import { LayoutModule } from "../../layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -8,6 +9,7 @@ import { ClaLoadingPage } from './cla-loading';
   ],
   imports: [
     IonicPageModule.forChild(ClaLoadingPage),
+    LayoutModule
   ],
   entryComponents: [
     ClaLoadingPage

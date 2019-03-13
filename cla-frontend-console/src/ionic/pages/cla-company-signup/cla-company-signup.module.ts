@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { ClaCompanySignupPage } from './cla-company-signup';
+import { LayoutModule } from "../../layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -8,6 +9,7 @@ import { ClaCompanySignupPage } from './cla-company-signup';
   ],
   imports: [
     IonicPageModule.forChild(ClaCompanySignupPage),
+    LayoutModule
   ],
   entryComponents: [
     ClaCompanySignupPage

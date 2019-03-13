@@ -3,6 +3,7 @@ import { IonicPageModule } from 'ionic-angular';
 import { LoginPage } from './login-page';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
+import { LayoutModule } from "../../layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -11,6 +12,7 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
+    LayoutModule,
     IonicPageModule.forChild(LoginPage),
   ],
   entryComponents: [
