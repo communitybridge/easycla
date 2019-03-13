@@ -9,7 +9,7 @@ import os
 import re
 import falcon
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Repository
+from cla.models.dynamo_models import Repository, GitHubOrg
 from requests_oauthlib import OAuth2Session
 from hug.middleware import SessionMiddleware
 from hug.store import InMemoryStore as Store
@@ -866,7 +866,11 @@ def get_installation_id_from_github_repository(github_repository_id):
         return None
     
     # Get Organization from this repository
-    organization = repository.get_repository_organization_name()
+    organization = GitHubOrg()
+    try:
+        organization.load(repository.get_repository_organization_name())
+    except DoesNotExist:
+        return None
 
     # Get this organization's installation ID 
     installation_id = organization.get_organization_installation_id()
