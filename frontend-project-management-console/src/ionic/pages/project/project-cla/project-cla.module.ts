@@ -6,6 +6,7 @@ import { LoadingDisplayDirectiveModule } from '../../../directives/loading-displ
 import { SortingDisplayComponentModule } from '../../../components/sorting-display/sorting-display.module';
 import { SectionHeaderComponentModule } from '../../../components/section-header/section-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
+import { LayoutModule } from "../../../layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { ProjectNavigationComponentModule } from '../../../components/project-na
     SortingDisplayComponentModule,
     SectionHeaderComponentModule,
     ProjectNavigationComponentModule,
-    IonicPageModule.forChild(ProjectClaPage)
+    IonicPageModule.forChild(ProjectClaPage),
+    LayoutModule
   ],
   entryComponents: [
     ProjectClaPage,

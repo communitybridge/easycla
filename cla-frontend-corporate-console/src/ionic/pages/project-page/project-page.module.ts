@@ -4,6 +4,7 @@ import { ProjectPage } from './project-page';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
+import { LayoutModule } from "../../layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -13,7 +14,8 @@ import { SortingDisplayComponentModule } from '../../components/sorting-display/
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
-    IonicPageModule.forChild(ProjectPage)
+    IonicPageModule.forChild(ProjectPage),
+    LayoutModule
   ],
   entryComponents: [
     ProjectPage,
