@@ -391,21 +391,10 @@ class DocuSign(signing_service_interface.SigningService):
             change_request_id = signature_metadata['pull_request_id']
             
             # Get repository
-            repository = Repository() 
-            try: 
-                repository.get_repository_by_external_id(github_repository_id, 'github')
-            except DoesNotExist:
-                return {'errors': {'repository_id': 'The given repository_id does not exist. '}}
-                
-            # Get organization that the repository is configured for
-            organization = GitHubOrg()
-            try:
-                organization.load(repository.get_repository_organization_name())
-            except DoesNotExist: 
-                return {'errors': {'organization_name': 'The given organization does not exist. '}} 
+            installation_id = cla.utils.get_installation_id_from_github_repository(github_repository_id)
+            if installation_id is None:
+                return {'errors': {'github_repository_id': 'The given github repository ID does not exist. '}}
 
-            # Get installation ID of the organization.
-            installation_id = organization.get_organization_installation_id()
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
             cla.utils.delete_active_signature_metadata(user.get_user_id())
