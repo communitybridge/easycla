@@ -212,6 +212,16 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
     company.save()
 
 def add_manager(username, company_id, lfid):
+    """
+    Adds the lfid to the company acl
+
+    :param username: username of the user
+    :type username: string
+    :param company_id: The ID of the company
+    :type company_id: UUID
+    :param lfid: the lfid (manager username) to be added to the company acl
+    :type lfid: string
+    """
     # Find company
     company = Company()
     try:
@@ -231,6 +241,16 @@ def add_manager(username, company_id, lfid):
     return company.to_dict()
 
 def remove_manager(username, company_id, lfid):
+    """
+    Removes the lfid to the company acl
+
+    :param username: username of the user
+    :type username: string
+    :param company_id: The ID of the company
+    :type company_id: UUID
+    :param lfid: the lfid (manager username) to be removed to the company acl
+    :type lfid: string
+    """
     # Find company
     company = Company()
     try:
