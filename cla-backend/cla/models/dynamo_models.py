@@ -1234,6 +1234,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_return_url = UnicodeAttribute(null=True)
     signature_callback_url = UnicodeAttribute(null=True)
     signature_user_ccla_company_id = UnicodeAttribute(null=True)
+    signature_acl = UnicodeSetAttribute(default=set())
     signature_project_index = ProjectSignatureIndex()
     signature_reference_index = ReferenceSignatureIndex()
     # Callback type refers to either Gerrit or GitHub
@@ -1262,6 +1263,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url=None,
                  signature_callback_url=None,
                  signature_user_ccla_company_id=None,
+                 signature_acl=None,
                  signature_return_url_type=None,
                  domain_whitelist=None,
                  email_whitelist=None):
@@ -1281,6 +1283,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_return_url = signature_return_url
         self.model.signature_callback_url = signature_callback_url
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
+        self.model.signature_acl = signature_acl
         self.model.signature_return_url_type = signature_return_url_type
         self.model.domain_whitelist = domain_whitelist
         self.model.email_whitelist = email_whitelist
@@ -1343,6 +1346,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_signature_user_ccla_company_id(self):
         return self.model.signature_user_ccla_company_id
 
+    def get_signature_acl(self):
+        return self.model.signature_acl
+
     def get_signature_return_url_type(self):
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
@@ -1395,6 +1401,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def set_signature_user_ccla_company_id(self, company_id):
         self.model.signature_user_ccla_company_id = company_id
 
+    def set_signature_acl(self, signature_acl_username):
+        self.model.signature_acl = set([signature_acl_username])
+
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
 
@@ -1403,6 +1412,13 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_email_whitelist(self, email_whitelist):
         self.model.email_whitelist = email_whitelist
+
+    def add_signature_acl(self, username):
+        self.model.signature_acl.add(username)
+
+    def remove_signature_acl(self, username):
+        if username in self.model.signature_acl:
+            self.model.signature_acl.remove(username)
 
     def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
                                     reference_id,
