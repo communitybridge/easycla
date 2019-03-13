@@ -873,8 +873,8 @@ def get_installation_id_from_github_repository(github_repository_id):
         return None
 
     # Get this organization's installation ID 
-    installation_id = organization.get_organization_installation_id()
-    return installation_id                                 
+    return organization.get_organization_installation_id()
+                                  
 
 def get_individual_signature_callback_url(user_id, metadata=None):
     """
