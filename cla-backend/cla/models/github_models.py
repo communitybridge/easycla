@@ -11,6 +11,7 @@ from github.GithubException import UnknownObjectException, BadCredentialsExcepti
 from requests_oauthlib import OAuth2Session
 import cla
 from cla.models import repository_service_interface, DoesNotExist
+from cla.models.dynamo_models import Repository, GitHubOrg
 from cla.controllers.github_application import GitHubInstallation
 
 
@@ -120,8 +121,9 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         #origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
+        api_base_url = os.environ.get('CLA_API_BASE', '')
         return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
-                                                     cla.conf['GITHUB_OAUTH_CALLBACK_URL'],
+                                                     os.path.join(api_base_url, 'v2/github/installation'),
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
 
@@ -162,7 +164,16 @@ class GitHub(repository_service_interface.RepositoryService):
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
         console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
-        project_id = cla.utils.get_project_id_from_installation_id(installation_id)
+        # Get repository using github's repository ID.
+        repository = Repository().get_repository_by_external_id(repository_id, "github")
+        if repository is None:  
+            cla.log.error('Could not find repository with the following repository_id: %s', repository_id)
+            return None
+        
+        # Get project ID from this repository
+        project_id = repository.get_repository_project_id()
+
+
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
         # TODO: Skipping this for now - we can do this for ICLAs but there's no easy way of doing
@@ -233,14 +244,37 @@ class GitHub(repository_service_interface.RepositoryService):
                                              installation_id)
         # Get all unique users involved in this PR.
         commit_authors = get_pull_request_commit_authors(pull_request)
-        # Get the project_id based on installation_id.
-        github_org = cla.utils.get_github_organization_instance()
-        github_org = github_org.get_organization_by_installation_id(installation_id)
-        if github_org is None:
-            cla.log.error('Could not find Github Organization with installation_id: %s', installation_id)
+        # Get existing repository info using the repository's external ID, which is the repository ID assigned by github. 
+        repository = Repository()
+        try: 
+            repository.get_repository_by_external_id(github_repository_id, "github")
+        except DoesNotExist:
+            cla.log.error('Could not find repository with the repository ID: %s', github_repository_id)
             cla.log.error('Failed to update change request %s of repository %s', change_request_id, github_repository_id)
             return
-        project_id = github_org.get_organization_project_id()
+
+        # Get Github Organization name that the repository is configured to. 
+        organization_name = repository.get_repository_organization_name()
+
+        # Check that the Github Organization exists.
+        github_org = GitHubOrg()
+        try:
+            github_org.load(organization_name)
+        except DoesNotExist:
+            cla.log.error('Could not find Github Organization with the following organization name: %s', organization_name)
+            cla.log.error('Failed to update change request %s of repository %s', change_request_id, github_repository_id)
+            return 
+    
+        # Ensure that installation ID for this organization matches the given installation ID
+        if github_org.get_organization_installation_id() != installation_id:
+            cla.log.error('The installation ID: %s of this organization does not match installation ID: %s given by the pull request.', 
+                                                                        github_org.get_organization_installation_id(), installation_id)
+            cla.log.error('Failed to update change request %s of repository %s', change_request_id, github_repository_id)
+            return
+
+        # Retrieve project ID from the repository. 
+        project_id = repository.get_repository_project_id() 
+
         # Find users who have signed and who have not signed.
         signed = []
         missing = []
