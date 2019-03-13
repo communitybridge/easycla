@@ -398,9 +398,12 @@ class DocuSign(signing_service_interface.SigningService):
                 return {'errors': {'repository_id': 'The given repository_id does not exist. '}}
                 
             # Get organization that the repository is configured for
-            organization = cla.utils.get_github_organization_instance()
-            organization.get_organization(repository.get_repository_organization_name())
-            
+            organization = GitHubOrg()
+            try:
+                organization.load(repository.get_repository_organization_name())
+            except DoesNotExist: 
+                return {'errors': {'organization_name': 'The given organization does not exist. '}} 
+
             # Get installation ID of the organization.
             installation_id = organization.get_organization_installation_id()
             update_repository_provider(installation_id, github_repository_id, change_request_id)
