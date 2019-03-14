@@ -268,8 +268,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_callback_url=callback_url)
-        
-        # Populate sign url
+
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
         # Save signature
@@ -382,7 +381,6 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id)
-
         new_signature.save()
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
@@ -580,9 +578,6 @@ class DocuSign(signing_service_interface.SigningService):
         if(not send_as_email): #get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
-
-        # Set signature ACL
-        signature.set_signature_acl(manager.get_lf_username())
 
         self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
         signature.save()
