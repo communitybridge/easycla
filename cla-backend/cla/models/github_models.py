@@ -245,9 +245,9 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get all unique users involved in this PR.
         commit_authors = get_pull_request_commit_authors(pull_request)
         # Get existing repository info using the repository's external ID, which is the repository ID assigned by github. 
-        repository = Repository()
+        
         try: 
-            repository.get_repository_by_external_id(github_repository_id, "github")
+            repository = Repository().get_repository_by_external_id(github_repository_id, "github")
         except DoesNotExist:
             cla.log.error('Could not find repository with the repository ID: %s', github_repository_id)
             cla.log.error('Failed to update change request %s of repository %s', change_request_id, github_repository_id)
