@@ -211,9 +211,9 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
     company.remove_company_acl(username)
     company.save()
 
-def add_manager(username, company_id, lfid):
+def add_company_manager(username, company_id, lfid):
     """
-    Adds the lfid to the company acl
+    Adds the LFID to the company ACL
 
     :param username: username of the user
     :type username: string
@@ -240,9 +240,9 @@ def add_manager(username, company_id, lfid):
 
     return company.to_dict()
 
-def remove_manager(username, company_id, lfid):
+def remove_company_manager(username, company_id, lfid):
     """
-    Removes the lfid to the company acl
+    Removes the LFID from the company ACL
 
     :param username: username of the user
     :type username: string
@@ -265,7 +265,7 @@ def remove_manager(username, company_id, lfid):
 
     # Avoid to have an empty acl
     if len(company.get_company_acl()) == 1 and username == lfid:
-        return {'errors': {'user': "You are can't remove this manager because it is the last one."}}
+        return {'errors': {'user': "You cannot remove this manager because a company must have at least one CLA manager."}}
     # Add lfid to company acl
     company.remove_company_acl(lfid)
     company.save()
