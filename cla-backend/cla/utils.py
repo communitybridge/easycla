@@ -859,9 +859,8 @@ def get_active_signature_return_url(user_id, metadata=None):
 
 def get_installation_id_from_github_repository(github_repository_id):
     # Get repository ID that references the github ID. 
-    repository = Repository()
     try: 
-        repository.get_repository_by_external_id(github_repository_id, 'github')
+        repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
     except DoesNotExist: 
         return None
     
