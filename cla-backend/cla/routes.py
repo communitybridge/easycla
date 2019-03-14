@@ -598,28 +598,28 @@ def get_company(company_id: hug.types.text):
     return cla.controllers.company.get_company(company_id)
 
 @hug.post('/company/{company_id}/manager', versions=1,
-          examples=" - {'lfid': 'user_lfid'}")
-def post_company_manager(auth_user: check_auth, 
+          examples=" - {'lfid': '<lf-username>'}")
+def add_company_manager(auth_user: check_auth, 
                          company_id: hug.types.text,
                          lfid: hug.types.text):
     """
-    GET: /company/{company_id}/add_manager
+    POST: /company/{company_id}/manager
 
     Returns the CLA company with the new manager added
     """
-    return cla.controllers.company.add_manager(auth_user.username, company_id, lfid)
+    return cla.controllers.company.add_company_manager(auth_user.username, company_id, lfid)
 
 @hug.delete('/company/{company_id}/manager', versions=1,
-          examples=" - {'lfid': 'user_lfid'}")
-def delete_company_manager(auth_user: check_auth, 
+          examples=" - {'lfid': '<lf-username>'}")
+def remove_company_manager(auth_user: check_auth, 
                          company_id: hug.types.text,
                          lfid: hug.types.text):
     """
-    GET: /company/{company_id}/manager
+    DELETE: /company/{company_id}/manager
 
     Returns the CLA company with the new manager removed
     """
-    return cla.controllers.company.remove_manager(auth_user.username, company_id, lfid)
+    return cla.controllers.company.remove_company_manager(auth_user.username, company_id, lfid)
 
 @hug.get('/company/{company_id}/project/unsigned', versions=1)
 def get_unsigned_projects_for_company(company_id: hug.types.text):
