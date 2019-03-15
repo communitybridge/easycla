@@ -15,6 +15,8 @@ from hug.middleware import SessionMiddleware
 from hug.store import InMemoryStore as Store
 import cla
 
+api_base_url = os.environ.get('CLA_API_BASE', '')
+
 def get_cla_path():
     """Returns the CLA code root directory on the current system."""
     cla_folder_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -502,37 +504,6 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
             return True
     return False
 
-def get_user_signature_by_github_repository(installation_id, user, company_id=None):
-    """
-    Helper function to get a user's signature for a specified repository.
-
-    :TODO: Update comments.
-
-    :param repository: The Repository object.
-    :type repository: cla.models.model_interfaces.Repository
-    :param user: The user object that represents the signature signer.
-    :type user: cla.models.model_interfaces.User
-    :param company_id: The ID of the company to filter by (for CCLAs).
-    :type company_id: string
-    :return: The signature for this user on this repository, or None if not found.
-    :rtype: cla.models.model_interfaces.Signature | None
-    """
-    project_id = get_project_id_from_installation_id(installation_id)
-    signature = user.get_latest_signature(project_id, company_id=company_id)
-
-    return signature
-
-def get_project_id_from_installation_id(installation_id):
-    """
-    Helper function to get a project ID based on the installation ID on GitHub.
-
-    :param installation_id: The ID of the GitHub App installation.
-    :type installation_id: string
-    """
-    github_org = get_github_organization_instance()
-    github_org = github_org.get_organization_by_installation_id(int(installation_id))
-    return github_org.get_organization_project_id()
-
 def get_redirect_uri(repository_service, installation_id, github_repository_id, change_request_id):
     """
     Function to generate the redirect_uri parameter for a repository service's OAuth2 process.
@@ -873,6 +844,16 @@ def get_installation_id_from_github_repository(github_repository_id):
 
     # Get this organization's installation ID 
     return organization.get_organization_installation_id()
+
+def get_project_id_from_github_repository(github_repository_id):
+    # Get repository ID that references the github ID. 
+    try: 
+        repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
+    except DoesNotExist: 
+        return None
+
+    # Get project ID (contract group ID) of this repository
+    return repository.get_repository_project_id()
                                   
 
 def get_individual_signature_callback_url(user_id, metadata=None):
@@ -899,9 +880,7 @@ def get_individual_signature_callback_url(user_id, metadata=None):
         cla.log.error('Could not find installation ID that is configured for this repository ID: %s', github_repository_id)
         return None
 
-    return cla.conf['SIGNED_CALLBACK_URL'] + '/individual/' + str(installation_id) + '/' + \
-                                                              str(metadata['repository_id']) + '/' + \
-                                                              str(metadata['pull_request_id'])
+    return os.path.join(api_base_url,'v2/signed/individual', str(installation_id), str(metadata['repository_id']), str(metadata['pull_request_id']))
 
 def request_individual_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
@@ -919,13 +898,14 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
         <SIGNED_CALLBACK_URL>/<repo_id>/<change_request_id>.
     :type callback_url: string
     """
-    project_id = get_project_id_from_installation_id(installation_id)
+    project_id = get_project_id_from_github_repository(github_repository_id)
     repo_service = get_repository_service('github')
     return_url = repo_service.get_return_url(github_repository_id,
-                                             change_request_id)
+                                             change_request_id,
+                                             installation_id)
     if callback_url is None:
-        callback_url = cla.conf['SIGNED_CALLBACK_URL'] + \
-                       '/' + str(installation_id) + '/' + str(change_request_id)
+        callback_url = os.path.join(api_base_url, 'v2/signed/individual', str(installation_id), str(change_request_id))
+                       
     signing_service = get_signing_service()
     return_url_type = 'Github'
     signature_data = signing_service.request_individual_signature(project_id,
