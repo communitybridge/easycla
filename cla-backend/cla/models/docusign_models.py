@@ -746,7 +746,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
             # Get signed document
-            document_data = self.get_signed_document(self, envelope_id, user)
+            document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
 
