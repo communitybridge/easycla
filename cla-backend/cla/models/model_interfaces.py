@@ -723,6 +723,18 @@ class Repository(object):
         :type repository_type: string
         """
         raise NotImplementedError()
+    
+    def get_repositories_by_organization(self, organization_name):
+
+        """
+        Loads all repositories configured under this organization.
+
+        :param organization_name: The organization name 
+        :type organization_name: string
+        """
+        raise NotImplementedError()
+
+
 
     def all(self, ids=None):
         """
