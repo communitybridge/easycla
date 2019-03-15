@@ -52,6 +52,7 @@ project-cla {
 
   .scroll-content {
     margin-top: 96px !important;
+    padding-bottom: 162px;
   }
 
   .toolbar .toolbar-title {
@@ -217,4 +218,9 @@ project-cla {
 h2 {
   font-size: 2rem !important;
   color: #7b7b7b !important;
+}
+
+.not-configured-warning {
+  margin-top: -5px !important;
+  color: #db4e4e !important;
 }

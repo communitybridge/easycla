@@ -55,6 +55,10 @@
                         <ion-icon name="logo-github"></ion-icon>
                         <span>{{ organization.organization_name }}</span>
                       </ion-card-title>
+                      <h3 *ngIf="!organization.organization_installation_id"
+                          class="not-configured-warning">
+                        Not Configured. Please install the CLA App to the Github Org.
+                      </h3>
                       <p><a target="_blank"
                             href="https://github.com/{{ organization.organization_name }}">
                         https://github.com/{{organization.organization_name }}
@@ -273,11 +277,6 @@
                     </ion-col>
                   </ion-row>
                 </ion-grid>
-                <div class="organization-actions">
-                  <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
-                    Delete
-                  </button>
-                </div>
               </ion-card>
             </ion-col>
           </ion-row>
