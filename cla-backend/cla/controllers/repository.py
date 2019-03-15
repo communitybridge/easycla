@@ -84,7 +84,15 @@ def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
     if not can_access['valid']:
       return can_access['errors']
 
-    repository = get_repository_instance()
+    # Validate if exist already repository linked to a contract group
+    if repository_external_id is not None:
+        # Seach for the repository
+        linked_repository = Repository().get_repository_by_external_id(repository_external_id, repository_type)
+        # If found return an error
+        if linked_repository is not None:
+            return {'errors': {'repository_external_id': 'This repository is alredy configured for a contract group.'}}
+
+    repository = Repository()
     repository.set_repository_id(str(uuid.uuid4()))
     repository.set_repository_project_id(str(repository_project_id))
     repository.set_repository_sfdc_id(str(sfdc_id))
@@ -131,10 +139,6 @@ def update_repository(repository_id, # pylint: disable=too-many-arguments
     # TODO: Ensure project_id exists.
     if repository_project_id is not None:
         repository.set_repository_project_id(str(repository_project_id))
-    if repository_external_id is not None:
-        repository.set_repository_external_id(repository_external_id)
-    if repository_name is not None:
-        repository.set_repository_name(repository_name)
     if repository_type is not None:
         supported_repo_types = get_supported_repository_providers().keys()
         if repository_type in supported_repo_types:
@@ -143,6 +147,16 @@ def update_repository(repository_id, # pylint: disable=too-many-arguments
             return {'errors': {'repository_type':
                                'Invalid value passed. The accepted values are: (%s)' \
                                %'|'.join(supported_repo_types)}}
+    if repository_external_id is not None:
+        # Find a repository is already linked with this external_id
+        linked_repository = Repository().get_repository_by_external_id(repository_external_id, repository.get_repository_type())
+        # If found return an error
+        if linked_repository is not None:
+            return {'errors': {'repository_external_id': 'This repository is alredy configured for a contract group.'}}
+
+        repository.set_repository_external_id(repository_external_id)
+    if repository_name is not None:
+        repository.set_repository_name(repository_name)
     if repository_url is not None:
         try:
             val = cla.hug_types.url(repository_url)
@@ -160,7 +174,7 @@ def delete_repository(repository_id):
     :param repository_id: The ID of the repository.
     :type repository_id: ID
     """
-    repository = get_repository_instance()
+    repository = Repository()
     try:
         repository.load(str(repository_id))
     except DoesNotExist as err:
