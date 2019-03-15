@@ -9,7 +9,7 @@ from pprint import pprint
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
 from cla.auth import AuthUser
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import UserPermissions
+from cla.models.dynamo_models import UserPermissions, Repository
 from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
 
@@ -124,6 +124,10 @@ def delete_organization(auth_user, organization_name):
     if not can_access['valid']:
         return can_access['errors']
 
+    # Find all repositories that are under this organization 
+    repositories = Repository().get_repositories_by_organization(organization_name)
+    for repository in repositories:
+        repository.delete()
     github_organization.delete()
     return {'success': True}
 
