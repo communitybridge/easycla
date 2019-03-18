@@ -213,6 +213,13 @@ project-cla {
   padding: 0 47px;
   margin-top: 2em;
   color: #7b7b7b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    margin: 0;
+  }
 }
 
 h2 {

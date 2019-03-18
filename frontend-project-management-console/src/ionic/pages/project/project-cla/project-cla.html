@@ -80,7 +80,15 @@
       </div>
     </ion-col>
 
-    <h1 class="section-title">CLA Groups</h1>
+    <div class="section-title">
+      <h1>CLA Groups</h1>
+
+      <button ion-button (click)="openClaContractConfigModal()" color="secondary">
+        Add CLA Group
+      </button>
+    </div>
+
+
 
     <ion-row *ngFor="let project of claProjects" class="project-row">
       <ion-col col-12>
@@ -100,9 +108,6 @@
               <ion-buttons end>
                 <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
                   View Signatures
-                </button>
-                <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-                  Add CLA Group
                 </button>
               </ion-buttons>
             </ion-col>
