@@ -50,10 +50,22 @@ def get_company(company_id):
     company = Company()
     try:
         company.load(company_id=str(company_id))
+        
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    return company.to_dict()
+    # Generate managers dict
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in company.get_managers()]
+
+    # Assign managers to company and conver it to dict
+    company_dict = company.to_dict()
+    company_dict['managers'] = managers_dict
+
+    return company_dict
 
 def create_company(auth_user,
                    company_name=None,
