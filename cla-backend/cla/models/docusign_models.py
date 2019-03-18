@@ -961,7 +961,7 @@ class DocuSign(signing_service_interface.SigningService):
     def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
         # cla_type could be: icla or ccla (String)
         # identifier could be: user_id or company_id
-        filename = str.join('/', ('', 'contract-group', str(project_id), cla_type, str(identifier), str(signature_id) + '.pdf'))
+        filename = str.join('/', ('contract-group', str(project_id), cla_type, str(identifier), str(signature_id) + '.pdf'))
         self.s3storage.store(filename, document_data)
         
     def get_document_resource(self, url): # pylint: disable=no-self-use
