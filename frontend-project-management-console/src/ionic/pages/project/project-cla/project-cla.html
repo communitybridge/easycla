@@ -18,11 +18,11 @@
     <ion-row *ngIf="claProjects.length == 0">
       <ion-col col-12 class="no-claProjects">
         <ion-icon name="folder-open"></ion-icon>
-        <p>A contract group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a
-          project. Currently this project does not have a contract group defined. Please click below to add a contract
+        <p>A CLA group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a
+          project. Currently this project does not have a CLA group defined. Please click below to add a contract
           group.</p>
         <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
-          Add CLA Contract Group
+          Add CLA Group
         </button>
       </ion-col>
     </ion-row>
@@ -80,7 +80,7 @@
       </div>
     </ion-col>
 
-    <h1 class="section-title">Contract Groups</h1>
+    <h1 class="section-title">CLA Groups</h1>
 
     <ion-row *ngFor="let project of claProjects" class="project-row">
       <ion-col col-12>
@@ -102,7 +102,7 @@
                   View Signatures
                 </button>
                 <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-                  Add Contract Group
+                  Add CLA Group
                 </button>
               </ion-buttons>
             </ion-col>
