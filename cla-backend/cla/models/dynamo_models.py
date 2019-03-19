@@ -1612,6 +1612,9 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         if username in self.model.company_acl:
             self.model.company_acl.remove(username)
 
+    def get_managers(self):
+        return self.get_managers_by_company_acl(self.get_company_acl())
+
     def get_company_signatures(self, # pylint: disable=arguments-differ
                                project_id=None,
                                signature_signed=None,
