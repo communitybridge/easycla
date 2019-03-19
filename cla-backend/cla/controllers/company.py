@@ -222,3 +222,65 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
 
     company.remove_company_acl(username)
     company.save()
+
+def add_company_manager(username, company_id, lfid):
+    """
+    Adds the LFID to the company ACL
+
+    :param username: username of the user
+    :type username: string
+    :param company_id: The ID of the company
+    :type company_id: UUID
+    :param lfid: the lfid (manager username) to be added to the company acl
+    :type lfid: string
+    """
+    # Find company
+    company = Company()
+    try:
+        company.load(str(company_id))
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # Validate user is the manager of the company
+    if username not in company.get_company_acl():
+        return {'errors': {'user': "You are not authorized to manage this company."}}
+    # TODO: Validate if lfid is valid
+
+    # Add lfid to company acl
+    company.add_company_acl(lfid)
+    company.save()
+
+    return company.to_dict()
+
+def remove_company_manager(username, company_id, lfid):
+    """
+    Removes the LFID from the company ACL
+
+    :param username: username of the user
+    :type username: string
+    :param company_id: The ID of the company
+    :type company_id: UUID
+    :param lfid: the lfid (manager username) to be removed to the company acl
+    :type lfid: string
+    """
+    # Find company
+    company = Company()
+    try:
+        company.load(str(company_id))
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+    # Validate user is the manager of the company
+    if username not in company.get_company_acl():
+        return {'errors': {'user': "You are not authorized to manage this company."}}
+    # TODO: Validate if lfid is valid
+
+    # Avoid to have an empty acl
+    if len(company.get_company_acl()) == 1 and username == lfid:
+        return {'errors': {'user': "You cannot remove this manager because a company must have at least one CLA manager."}}
+    # Add lfid to company acl
+    company.remove_company_acl(lfid)
+    company.save()
+
+    return company.to_dict()
+
