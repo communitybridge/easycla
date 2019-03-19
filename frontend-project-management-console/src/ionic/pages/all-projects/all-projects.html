@@ -11,7 +11,13 @@
 <ion-content padding headerspacing overflow-scroll="true">
 
   <loading-spinner [loading]="loading.projects"></loading-spinner>
-  <ion-grid class="all-projects" [loading-display]="loading.projects">
+
+  <h3 class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }} <br>
+    <a href="#/login">Go back to login</a>
+  </h3>
+
+  <ion-grid class="all-projects" [loading-display]="loading.projects" *ngIf="!errorMessage">
     <ion-row>
       <ion-col>
         <ion-item no-lines class="transparent">
