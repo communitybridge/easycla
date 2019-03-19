@@ -597,8 +597,7 @@ def get_company(company_id: hug.types.text):
     """
     return cla.controllers.company.get_company(company_id)
 
-@hug.post('/company/{company_id}/manager', versions=1,
-          examples=" - {'lfid': '<lf-username>'}")
+@hug.post('/company/{company_id}/manager', versions=1)
 def add_company_manager(auth_user: check_auth, 
                          company_id: hug.types.text,
                          lfid: hug.types.text):
@@ -609,8 +608,7 @@ def add_company_manager(auth_user: check_auth,
     """
     return cla.controllers.company.add_company_manager(auth_user.username, company_id, lfid)
 
-@hug.delete('/company/{company_id}/manager', versions=1,
-          examples=" - {'lfid': '<lf-username>'}")
+@hug.delete('/company/{company_id}/manager', versions=1)
 def remove_company_manager(auth_user: check_auth, 
                          company_id: hug.types.text,
                          lfid: hug.types.text):
