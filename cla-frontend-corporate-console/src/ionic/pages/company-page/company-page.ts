@@ -3,7 +3,7 @@ import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage
+  IonicPage, AlertController
 } from "ionic-angular";
 import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
@@ -35,6 +35,7 @@ export class CompanyPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
+    public alertCtrl: AlertController,
     public modalCtrl: ModalController,
     private rolesService: RolesService // for @Restricted
   ) {
@@ -103,6 +104,18 @@ export class CompanyPage {
     modal.present();
   }
 
+  openManagerModal() {
+    let modal = this.modalCtrl.create("AddManagerModal", {
+      company: this.company
+    });
+    modal.onDidDismiss(data => {
+      if (data) {
+        this.getCompany();
+      }
+    });
+    modal.present();
+  }
+
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
@@ -136,5 +149,33 @@ export class CompanyPage {
       this.getCompany();
     });
     modal.present();
+  }
+
+  deleteManagerConfirmation(payload) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete Manager`,
+      message: `Are you sure you want to delete this Manager?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        }, {
+          text: 'Delete',
+          handler: () => {
+            this.deleteManager(payload);
+          }
+        }
+      ]
+    });
+
+    alert.present();
+  }
+
+  deleteManager (payload) {
+    this.claService.deleteCompanyManager(this.company.company_id, payload)
+      .subscribe(() => this.getCompany())
   }
 }

@@ -396,6 +396,26 @@ export class ClaService {
   }
 
   /**
+   * /company/{company_id}/manager
+   **/
+
+  postCompanyManager (companyId, payload) {
+    return this.http
+      .post(`${this.claApiUrl}/v1/company/${companyId}/manager`, {lfid: payload.managerLFID})
+      .map(res => res.json());
+  }
+
+  /**
+   * /company/{company_id}/manager/{lfid}
+   **/
+
+  deleteCompanyManager (companyId, payload) {
+    return this.http
+      .delete(`${this.claApiUrl}/v1/company/${companyId}/manager/${payload.lfid}`)
+      .map(res => res.json());
+  }
+
+  /**
    * /project
    **/
 

@@ -20,42 +20,66 @@
         </ion-col>
       </ion-row>
     </ion-grid>
-    <ion-grid>
-      <ion-row>
-        <ion-col col-12 col-md-4>
-          <h3>Manager</h3>
-          <div *ngIf="manager">{{ manager.user_name }}</div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
   </header>
 
   <ion-grid>
     <ion-row justify-content-center>
-      <ion-col col-6>
-        <h2>Signed Project CCLAs</h2>
+      <ion-col col-4>
+        <ion-card>
+          <ion-card-content class="managers-card">
+            <ion-card-title>
+              CLA Managers
+            </ion-card-title>
+            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <ion-list>
+              <ion-item *ngFor="let manager of company.managers">
+                <div class="manager">
+                  <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                  <div class="manager-details">
+                    <div class="manager-name">
+                      <span>{{ manager.name }}</span>
+                      <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                    </div>
+                    <h4>{{ manager.email }}</h4>
+                  </div>
+                </div>
+              </ion-item>
+            </ion-list>
+            <button bottom right ion-fab mini class="add-manager-btn" (click)="openManagerModal()">
+              <ion-icon name="add"></ion-icon>
+            </button>
+          </ion-card-content>
+        </ion-card>
       </ion-col>
-    </ion-row>
-  </ion-grid>
-  <loading-spinner [loading]="loading.projects"></loading-spinner>
-  <ion-grid [loading-display]="loading.projects">
-    <ion-row justify-content-center>
-      <ion-col col-6>
-        <ion-list>
-          <button ion-item *ngFor="let signature of companySignatures" (click)="openProjectPage(signature.signature_project_id)">
-            <ion-label class="company-name">
-              <span *ngIf="projects[signature.signature_project_id]">{{ projects[signature.signature_project_id].project_name }}</span>
-            </ion-label>
-          </button>
-        </ion-list>
+      <ion-col col-8>
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+              Signed Project CCLAs
+            </ion-card-title>
+            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <ion-list>
+              <button ion-item *ngFor="let signature of companySignatures"
+                      (click)="openProjectPage(signature.signature_project_id)">
+                <ion-label class="company-name">
+                  <span *ngIf="projects[signature.signature_project_id]">{{ projects[signature.signature_project_id].project_name }}</span>
+                </ion-label>
+              </button>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
 
   <ion-fab right bottom>
-    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+    <button ion-fab mini>
+      <ion-icon name="add"></ion-icon>
+    </button>
     <ion-fab-list side="top">
-      <button title="Sign New Project CCLA" ion-fab (click)="openProjectsCclaSelectModal()"><ion-icon name="document"></ion-icon></button>
+      <button title="Sign New Project CCLA" ion-fab (click)="openProjectsCclaSelectModal()">
+        <ion-icon name="document"></ion-icon>
+      </button>
     </ion-fab-list>
   </ion-fab>
 </ion-content>
