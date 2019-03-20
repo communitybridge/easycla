@@ -827,7 +827,7 @@ def get_project_document(project_id: hug.types.uuid,
     return cla.controllers.project.get_project_document(project_id, document_type)
 
 @hug.get('/project/{project_id}/document/{document_type}/pdf', version=2)
-def get_project_document(response, auth_user: check_auth, project_id: hug.types.uuid,
+def get_project_document_raw(response, auth_user: check_auth, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate'])):
     """
     GET: /project/{project_id}/document/{document_type}/pdf
@@ -838,7 +838,7 @@ def get_project_document(response, auth_user: check_auth, project_id: hug.types.
     return cla.controllers.project.get_project_document_raw(project_id, document_type)
 
 @hug.get('/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}', version=1)
-def get_project_document(response, auth_user: check_auth, project_id: hug.types.uuid,
+def get_project_document_matching_version(response, auth_user: check_auth, project_id: hug.types.uuid,
                          document_type: hug.types.one_of(['individual', 'corporate']),
                          document_major_version: hug.types.number,
                          document_minor_version: hug.types.number):
@@ -1062,6 +1062,22 @@ def request_employee_signature(project_id: hug.types.uuid,
     versions may not be populated or reliable.
     """
     return cla.controllers.signing.request_employee_signature(project_id, company_id, user_id, return_url_type, return_url)
+
+@hug.post('/check-prepare-employee-signature', versions=2)
+def check_and_prepare_employee_signature(project_id: hug.types.uuid,
+                               company_id: hug.types.uuid,
+                               user_id: hug.types.uuid):
+    """
+    POST: /check-employee-ccla-and-whitelist
+
+    DATA: {'project_id': <project-id>,
+           'company_id': <company-id>,
+           'user_id': <user-id> 
+           }
+
+    Checks if an employee is ready to sign a CCLA for a company. 
+    """
+    return cla.controllers.signing.check_and_prepare_employee_signature(project_id, company_id, user_id)
 
 @hug.post('/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}', versions=2)
 def post_individual_signed(body,
