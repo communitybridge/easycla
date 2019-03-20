@@ -2,4 +2,46 @@ project-page {
   .scroll-content {
     padding: 60px 45px !important;
   }
+
+  .manager {
+    display: flex;
+    align-items: center;
+  }
+
+  .manager-details {
+    display: flex;
+    flex-direction: column;
+    margin-left: 5px;
+    width: 100%;
+
+    h3 {
+      font-size: 16px;
+    }
+  }
+
+  .manager-name {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .managers-card {
+    position: relative;
+    padding-bottom: 75px;
+  }
+
+  .add-manager-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+
+    ion-icon:before {
+      color: white;
+    }
+  }
+
+  .delete-btn {
+    font-size: 12px;
+    color: #db4e4e;
+    cursor: pointer;
+  }
 }

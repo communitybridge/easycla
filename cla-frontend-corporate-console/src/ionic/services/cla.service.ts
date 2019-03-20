@@ -396,22 +396,32 @@ export class ClaService {
   }
 
   /**
-   * /company/{company_id}/manager
+   * /project/{project_id}/manager
    **/
 
-  postCompanyManager (companyId, payload) {
+  getProjectManagers (projectId) {
     return this.http
-      .post(`${this.claApiUrl}/v1/company/${companyId}/manager`, {lfid: payload.managerLFID})
+      .get(`${this.claApiUrl}/v1/project/${projectId}/manager`)
       .map(res => res.json());
   }
 
   /**
-   * /company/{company_id}/manager/{lfid}
+   * /project/{project_id}/manager
    **/
 
-  deleteCompanyManager (companyId, payload) {
+  postProjectManager (projectId, payload) {
     return this.http
-      .delete(`${this.claApiUrl}/v1/company/${companyId}/manager/${payload.lfid}`)
+      .post(`${this.claApiUrl}/v1/project/${projectId}/manager`, {lfid: payload.managerLFID})
+      .map(res => res.json());
+  }
+
+  /**
+   * /project/{project_id}/manager/{lfid}
+   **/
+
+  deleteProjectManager (projectId, payload) {
+    return this.http
+      .delete(`${this.claApiUrl}/v1/project/${projectId}/manager/${payload.lfid}`)
       .map(res => res.json());
   }
 
