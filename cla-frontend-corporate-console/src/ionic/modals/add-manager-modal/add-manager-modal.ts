@@ -19,14 +19,14 @@ export class AddManagerModal {
   form: FormGroup;
   submitAttempt: boolean = false;
 
-  company: ClaCompanyModel;
+  projectId: string;
   managerLFID: string;
 
   constructor(public viewCtrl: ViewController,
               public navParams: NavParams,
               public formBuilder: FormBuilder,
               private claService: ClaService) {
-    this.company = this.navParams.get("company");
+    this.projectId = this.navParams.get("projectId");
 
     this.form = this.formBuilder.group({
       managerLFID: [this.managerLFID, Validators.compose([Validators.required])],
@@ -40,7 +40,7 @@ export class AddManagerModal {
   }
 
   addManager() {
-    this.claService.postCompanyManager(this.company.company_id, this.form.getRawValue())
+    this.claService.postProjectManager(this.projectId, this.form.getRawValue())
       .subscribe(() => this.dismiss(true));
   }
 
