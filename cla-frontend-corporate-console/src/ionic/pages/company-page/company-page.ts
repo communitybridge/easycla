@@ -3,7 +3,7 @@ import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage, AlertController
+  IonicPage
 } from "ionic-angular";
 import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
