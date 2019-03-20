@@ -3,12 +3,13 @@ import {
   NavController,
   ModalController,
   NavParams,
-  IonicPage
+  IonicPage, AlertController
 } from "ionic-angular";
 import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
 import { ClaUserModel } from "../../models/cla-user";
 import { ClaSignatureModel } from "../../models/cla-signature";
+import { ClaManager } from "../../models/cla-manager";
 import { SortService } from "../../services/sort.service";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
@@ -30,6 +31,7 @@ export class ProjectPage {
   loading: any;
   companyId: string;
   projectId: string;
+  managers: ClaManager[];
   company: ClaCompanyModel;
   manager: ClaUserModel;
 
@@ -42,6 +44,7 @@ export class ProjectPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
+    public alertCtrl: AlertController,
     public modalCtrl: ModalController,
     private rolesService: RolesService, // for @Restricted
     private sortService: SortService
@@ -81,6 +84,13 @@ export class ProjectPage {
   getProject() {
     this.claService.getProject(this.projectId).subscribe(response => {
       this.project = response;
+      this.getProjectManagers();
+    });
+  }
+
+  getProjectManagers() {
+    this.claService.getProjectManagers(this.projectId).subscribe(response => {
+      this.managers = response;
     });
   }
 
@@ -144,5 +154,45 @@ export class ProjectPage {
 
   sortMembers(prop) {
     this.sortService.toggleSort(this.sort, prop, this.employeeSignatures);
+  }
+
+  deleteManagerConfirmation(payload: ClaManager) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete Manager`,
+      message: `Are you sure you want to delete this Manager?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        }, {
+          text: 'Delete',
+          handler: () => {
+            this.deleteManager(payload);
+          }
+        }
+      ]
+    });
+
+    alert.present();
+  }
+
+  deleteManager (payload: ClaManager) {
+    this.claService.deleteProjectManager(this.projectId, payload)
+      .subscribe(() => this.getProjectManagers())
+  }
+
+  openManagerModal() {
+    let modal = this.modalCtrl.create("AddManagerModal", {
+      projectId: this.projectId
+    });
+    modal.onDidDismiss(data => {
+      if (data) {
+        this.getProjectManagers();
+      }
+    });
+    modal.present();
   }
 }
