@@ -751,6 +751,12 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
     def set_project_acl(self, project_acl_username):
         self.model.project_acl = set([project_acl_username])
 
+    def add_project_acl(self, username):
+        self.model.project_acl.add(username)
+
+    def remove_project_acl(self, username):
+        if username in self.model.project_acl:
+            self.model.project_acl.remove(username)
 
     def get_project_repositories(self):
         repository_generator = RepositoryModel.repository_project_index.query(self.get_project_id())
@@ -775,6 +781,18 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             if username in project.get_project_acl():
                 projects.append(project)
         return projects
+
+    def get_managers(self):
+        return self.get_managers_by_project_acl(self.get_project_acl())
+
+    def get_managers_by_project_acl(self, project_acl):
+        managers = []
+        user_model = User()
+        for username in project_acl:
+            user = user_model.get_user_by_username(str(username))
+            if user is not None:
+                managers.append(user)
+        return managers
 
     def all(self, project_ids=None):
         if project_ids is None:
