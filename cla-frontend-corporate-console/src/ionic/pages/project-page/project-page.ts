@@ -74,7 +74,7 @@ export class ProjectPage {
   getCompany() {
     this.claService.getCompany(this.companyId).subscribe(response => {
       this.company = response;
-      this.getUser(this.company.company_manager_id);
+      this.getManager(this.company.company_manager_id);
     });
   }
 
@@ -107,11 +107,16 @@ export class ProjectPage {
 
   }
 
+  getManager(userId) {
+      this.claService.getUser(userId).subscribe(response => {
+        this.manager = response;
+      });
+  }
+
   getUser(userId) {
     if (!this.users[userId]) {
       this.claService.getUser(userId).subscribe(response => {
         this.users[userId] = response;
-        this.manager = response;
       });
     }
   }
