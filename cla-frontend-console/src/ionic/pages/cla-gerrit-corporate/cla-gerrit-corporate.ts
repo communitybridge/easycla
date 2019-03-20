@@ -91,14 +91,13 @@ export class ClaGerritCorporatePage {
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
-    let signatureRequest = {
+    let data = {
       project_id: this.projectId,
       company_id: company.company_id,
-      return_url_type: "Gerrit",
       user_id: this.userId
     };
 
-    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
+    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
         if (response.errors.hasOwnProperty('ccla_whitelist')) {

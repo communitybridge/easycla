@@ -613,6 +613,24 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  
+  /**
+   * /check-prepare-employee-signature
+   **/
+
+  postCheckedAndPreparedEmployeeSignature(data) {
+    /*
+      {
+        'project_id': '<project-id>',
+        'company_id': <company-id>,
+        'user_id': '<user-id>',
+      }
+     */
+    return this.http
+    .post(this.claApiUrl + "/v2/check-prepare-employee-signature", data)
+    .map(res => res.json());
+  }
+  
   /**
    * /request-employee-signature
    **/
