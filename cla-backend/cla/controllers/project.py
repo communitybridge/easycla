@@ -64,6 +64,27 @@ def get_project(project_id, user_id=None):
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
 
+def get_project_managers(username, project_id):
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    if username not in project.get_project_acl():
+        return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
+
+    # Get managers
+    managers = project.get_managers()
+
+    # Generate managers dict
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in managers]
+
+    return managers_dict
 
 def get_unsigned_projects_for_company(company_id):
     """
@@ -623,3 +644,85 @@ def get_sfdc_project_repositories(project):
     sfdc_id = project.get_project_external_id()
     all_project_repositories = Repository().get_repository_by_sfdc_id(sfdc_id)
     return [repo.to_dict() for repo in all_project_repositories]
+
+def add_project_manager(username, project_id, lfid):
+    """
+    Adds the LFID to the project ACL
+
+    :param username: username of the user
+    :type username: string
+    :param project_id: The ID of the project
+    :type project_id: UUID
+    :param lfid: the lfid (manager username) to be added to the project acl
+    :type lfid: string
+    """
+    # Find project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    # Validate user is the manager of the project
+    if username not in project.get_project_acl():
+        return {'errors': {'user': "You are not authorized to manage this CCLA."}}
+    # TODO: Validate if lfid is valid
+
+    # Add lfid to project acl
+    project.add_project_acl(lfid)
+    project.save()
+
+    # Get managers
+    managers = project.get_managers()
+
+    # Generate managers dict
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in managers]
+
+    return managers_dict
+
+def remove_project_manager(username, project_id, lfid):
+    """
+    Removes the LFID from the project ACL
+
+    :param username: username of the user
+    :type username: string
+    :param project_id: The ID of the project
+    :type project_id: UUID
+    :param lfid: the lfid (manager username) to be removed to the project acl
+    :type lfid: string
+    """
+    # Find project
+    project = Project()
+    try:
+        project.load(project_id=str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    # Validate user is the manager of the project
+    if username not in project.get_project_acl():
+        return {'errors': {'user': "You are not authorized to manage this CCLA."}}
+    # TODO: Validate if lfid is valid
+
+    # Avoid to have an empty acl
+    if len(project.get_project_acl()) == 1 and username == lfid:
+        return {'errors': {'user': "You cannot remove this manager because a CCLA must have at least one CLA manager."}}
+    # Add lfid to project acl
+    project.remove_project_acl(lfid)
+    project.save()
+
+    # Get managers
+    managers = project.get_managers()
+    
+    # Generate managers dict
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in managers]
+
+    return managers_dict
+
