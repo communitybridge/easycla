@@ -65,7 +65,7 @@ def get_project(project_id, user_id=None):
     return project.to_dict()
 
 def get_project_managers(username, project_id):
-    project = get_project_instance()
+    project = Project()
     try:
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
@@ -657,7 +657,7 @@ def add_project_manager(username, project_id, lfid):
     :type lfid: string
     """
     # Find project
-    project = get_project_instance()
+    project = Project()
     try:
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
@@ -696,7 +696,7 @@ def remove_project_manager(username, project_id, lfid):
     :type lfid: string
     """
     # Find project
-    project = get_project_instance()
+    project = Project()
     try:
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
