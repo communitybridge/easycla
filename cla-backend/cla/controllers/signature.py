@@ -326,7 +326,7 @@ def get_company_signatures_by_acl(username, company_id):
     for signature in all_signatures:
         project_id = signature.get_signature_project_id()
 
-        project = get_project_instance()
+        project = Project()
         try:
             project.load(project_id=str(project_id))
         except DoesNotExist as err:
