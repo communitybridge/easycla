@@ -8,6 +8,7 @@ import cla.hug_types
 from cla.utils import get_signature_instance, get_user_instance, get_company_instance, \
                       get_project_instance, get_email_service
 from cla.models import DoesNotExist
+from cla.models.dynamo_models import Project, Signature
 
 def get_signatures():
     """
