@@ -96,6 +96,7 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
             document = project.get_project_corporate_document()
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
+
     signature.set_signature_document_minor_version(document.get_document_minor_version())
     signature.set_signature_document_major_version(document.get_document_major_version())
     signature.set_signature_reference_id(str(signature_reference_id))
@@ -307,6 +308,35 @@ def get_company_signatures(company_id):
                                                                       'company')
 
     return [signature.to_dict() for signature in signatures]
+
+def get_company_signatures_by_acl(username, company_id):
+    """
+    Get all signatures for company filtered by it's acl
+
+    :param username: The username of the authenticated user
+    :type username: string
+    :param company_id: The ID of the company in question.
+    :type company_id: string
+    """
+    # Get signatures by company reference
+    all_signatures = Signature().get_signatures_by_reference(company_id, 'company')
+    # Filter signatures which manager is authorired to see
+    signatures = []
+    for signature in all_signatures:
+        project_id = signature.get_signature_project_id()
+
+        project = Project()
+        try:
+            project.load(project_id=str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+
+        if username in project.get_project_acl():
+            signatures.append(signature)
+
+    signatures_dict = [signature.to_dict() for signature in signatures]
+
+    return signatures_dict
 
 def get_project_signatures(project_id):
     """
