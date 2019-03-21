@@ -14,11 +14,7 @@
 
   <header>
     <ion-grid>
-      <ion-row>
-        <ion-col col-12 col-md-4>
-          <h3>Manager</h3>
-          <div *ngIf="manager">{{ manager.user_name }}</div>
-        </ion-col>
+      <ion-row justify-content-center>
         <ion-col col-12 col-md-4>
           <h3>
             Domain Whitelist
@@ -51,7 +47,34 @@
 
   <ion-grid [loading-display]="loading.signatures">
     <ion-row justify-content-center>
-      <ion-col col-6>
+      <ion-col col-4>
+        <ion-card>
+          <ion-card-content class="managers-card">
+            <ion-card-title>
+              CLA Managers
+            </ion-card-title>
+            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <ion-list>
+              <ion-item *ngFor="let manager of managers">
+                <div class="manager">
+                  <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                  <div class="manager-details">
+                    <div class="manager-name">
+                      <span>{{ manager.name }}</span>
+                      <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                    </div>
+                    <h4>{{ manager.email }}</h4>
+                  </div>
+                </div>
+              </ion-item>
+            </ion-list>
+            <button bottom right ion-fab mini class="add-manager-btn" (click)="openManagerModal()">
+              <ion-icon name="add"></ion-icon>
+            </button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col col-8>
         <div class="table-responsive-vertical">
           <table class="table table-hover">
             <thead>
