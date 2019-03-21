@@ -893,7 +893,7 @@ def get_project_companies(project_id: hug.types.uuid):
     return cla.controllers.project.get_project_companies(project_id)
 
 @hug.post('/project/{project_id}/document/{document_type}', versions=1,
-          examples=" - {'document_name': 'doc_name.pdf', \get
+          examples=" - {'document_name': 'doc_name.pdf', \
                         'document_content_type': 'url+pdf', \
                         'document_content': 'http://url.com/doc.pdf', \
                         'new_major_version': true}")
