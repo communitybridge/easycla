@@ -50,6 +50,7 @@ def get_company(company_id):
     company = Company()
     try:
         company.load(company_id=str(company_id))
+        
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
