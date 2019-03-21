@@ -1214,6 +1214,15 @@ class Repository(model_interfaces.Repository):
             ret.append(repo)
         return ret
 
+    def get_repositories_by_organization(self, organization_name):
+        repository_generator = self.model.scan(repository_organization_name__eq=organization_name)
+        repositories = []
+        for repository_model in repository_generator:
+            repository = Repository()
+            repository.model = repository_model
+            repositories.append(repository)
+        return repositories
+
     def all(self, ids=None):
         if ids is None:
             repositories = self.model.scan()

@@ -13,7 +13,9 @@ export class ExtraValidators {
       return null
     } else {
       if (Validators.required(control) === null){ // Valid
-        control.parent.controls[otherControl].updateValueAndValidity()
+        if (Validators.required(control.parent.controls[otherControl]) !== null) {
+          control.parent.controls[otherControl].updateValueAndValidity({ onlySelf: true, emitEvent: false })
+        }
         return null
       } else { // Not valid
         if (Validators.required(control.parent.controls[otherControl]) === null){ // valid

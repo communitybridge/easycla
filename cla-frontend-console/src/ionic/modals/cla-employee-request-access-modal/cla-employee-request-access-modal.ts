@@ -87,17 +87,19 @@ export class ClaEmployeeRequestAccessModal {
       message: this.form.value.message,
     };
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
-      this.openClaMessageSentPage();
+      this.emailSent();
+
     });
   }
 
-  openClaMessageSentPage() {
-    this.navCtrl.push('ClaMessageSentPage', {
-      projectId: this.projectId,
-      repositoryId: this.repositoryId,
-      userId: this.userId,
-      companyId: this.companyId,
+  emailSent() {
+    let alert = this.alertCtrl.create({
+      title: 'E-Mail Successfully Sent!',
+      subTitle: 'Thank you for contacting your CLA Manager. Once they get your message they should be able to resolve your affiliation with your company, however you will need to go through the process again from the pull request message in order to complete the process.',
+      buttons: ['Dismiss']
     });
+    alert.onDidDismiss(() => this.dismiss());
+    alert.present();
   }
 
 }

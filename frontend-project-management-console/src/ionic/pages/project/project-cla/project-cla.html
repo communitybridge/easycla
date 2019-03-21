@@ -18,11 +18,11 @@
     <ion-row *ngIf="claProjects.length == 0">
       <ion-col col-12 class="no-claProjects">
         <ion-icon name="folder-open"></ion-icon>
-        <p>A contract group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a
-          project. Currently this project does not have a contract group defined. Please click below to add a contract
+        <p>A CLA group defines one or more CLAs that may need signed as a prerequisite to someone contributing to a
+          project. Currently this project does not have a CLA group defined. Please click below to add a contract
           group.</p>
         <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
-          Add CLA Contract Group
+          Add CLA Group
         </button>
       </ion-col>
     </ion-row>
@@ -55,6 +55,10 @@
                         <ion-icon name="logo-github"></ion-icon>
                         <span>{{ organization.organization_name }}</span>
                       </ion-card-title>
+                      <h3 *ngIf="!organization.organization_installation_id"
+                          class="not-configured-warning">
+                        Not Configured. Please install the CLA App to the Github Org.
+                      </h3>
                       <p><a target="_blank"
                             href="https://github.com/{{ organization.organization_name }}">
                         https://github.com/{{organization.organization_name }}
@@ -76,7 +80,16 @@
       </div>
     </ion-col>
 
-    <h1 class="section-title">Contract Groups</h1>
+  <ion-col col-12 *ngIf="claProjects.length != 0">
+    <div class="section-title">
+      <h1>CLA Groups</h1>
+
+      <button ion-button (click)="openClaContractConfigModal()" color="secondary">
+        Add CLA Group
+      </button>
+    </div>
+
+
 
     <ion-row *ngFor="let project of claProjects" class="project-row">
       <ion-col col-12>
@@ -96,9 +109,6 @@
               <ion-buttons end>
                 <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
                   View Signatures
-                </button>
-                <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-                  Add Contract Group
                 </button>
               </ion-buttons>
             </ion-col>
@@ -174,10 +184,11 @@
                 <ion-card class="contract-card">
                   <ion-card-content>
                     <ion-card-title>
-                      <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
-                      <span>{{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA</span>
+                      <ion-icon name="briefcase" item-left class="icon-md" *ngIf="documentType === 'corporate'"></ion-icon>
+                      <ion-icon name="person" item-left class="icon-md" *ngIf="documentType !== 'corporate'"></ion-icon>
+                      <span>{{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA</span>
                       <div class="contract-title-buttons"
-                           *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                           *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                         <button ion-button icon-only clear round
                                 (click)="openClaContractUploadModal(project.project_id, documentType)">
                           <ion-icon name="cloud-upload" class="icon-sm"></ion-icon>
@@ -189,9 +200,9 @@
                       </div>
                     </ion-card-title>
                     <ng-container
-                      *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
+                      *ngIf="documentType === 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required
+                        Select the {{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA contract required
                         for
                         signature.
                       </p>
@@ -200,7 +211,7 @@
                       </button>
                     </ng-container>
                     <ion-grid class="contract-details"
-                              *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                              *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                       <ion-row>
                         <ion-col>
                       <span>
@@ -273,11 +284,6 @@
                     </ion-col>
                   </ion-row>
                 </ion-grid>
-                <div class="organization-actions">
-                  <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
-                    Delete
-                  </button>
-                </div>
               </ion-card>
             </ion-col>
           </ion-row>
@@ -328,7 +334,7 @@
                             [contributor-agreement "ICLA - {{ gerrit.gerrit_name }}"]<br>
                             description = ICLA for Linux Foundation<br>
                             agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/individual/agreementUrl.html" }}<br>
-                            accepted = group {{ gerrit.group_name_ccla }}<br>
+                            accepted = group {{ gerrit.group_name_icla }}<br>
                           </p>
 
                           <p class="code_snippet">
@@ -352,6 +358,7 @@
       </ion-col>
 
     </ion-row>
+  </ion-col>
   </ion-grid>
 </ion-content>
 
