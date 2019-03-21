@@ -730,8 +730,7 @@ def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
 
     Returns the CLA project managers.
     """
-    managers = cla.controllers.project.get_project_managers(auth_user.username, project_id)
-    return managers
+    return cla.controllers.project.get_project_managers(auth_user.username, project_id)
 
 @hug.post('/project/{project_id}/manager', versions=1)
 def add_project_manager(auth_user: check_auth, 
