@@ -354,8 +354,7 @@ def post_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
                                                       signature_signed=signature_signed,
                                                       signature_approved=signature_approved,
                                                       signature_return_url=signature_return_url,
-                                                      signature_sign_url=signature_sign_url,
-                                                      signature_acl=auth_user.username)
+                                                      signature_sign_url=signature_sign_url)
 
 
 @hug.put('/signature', versions=1,
