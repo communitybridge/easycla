@@ -44,8 +44,7 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
                      signature_signed=False,
                      signature_return_url=None,
                      signature_sign_url=None,
-                     signature_user_ccla_company_id=None,
-                     signature_acl=None):
+                     signature_user_ccla_company_id=None):
     """
     Creates an signature and returns the newly created signature in dict format.
 
@@ -98,10 +97,6 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
             document = project.get_project_corporate_document()
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
-
-    # Set username to this signature ACL
-    if signature_acl is not None:
-        signature.set_signature_acl(signature_acl)
 
     signature.set_signature_document_minor_version(document.get_document_minor_version())
     signature.set_signature_document_major_version(document.get_document_major_version())
@@ -325,9 +320,22 @@ def get_company_signatures_by_acl(username, company_id):
     :type company_id: string
     """
     # Get signatures by company reference
-    signatures = Signature().get_signatures_by_reference(company_id, 'company')
+    all_signatures = Signature().get_signatures_by_reference(company_id, 'company')
     # Filter signatures which manager is authorired to see
-    signatures_dict = [signature.to_dict() for signature in signatures if username in signature.get_signature_acl()]
+    signatures = []
+    for signature in all_signatures:
+        project_id = signature.get_signature_project_id()
+
+        project = get_project_instance()
+        try:
+            project.load(project_id=str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+
+        if username in project.get_project_acl():
+            signatures.append(signature)
+
+    signatures_dict = [signature.to_dict() for signature in signatures]
 
     return signatures_dict
 
