@@ -581,9 +581,6 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
 
-        # Set signature ACL
-        signature.set_signature_acl(manager.get_lf_username())
-
         self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
         signature.save()
 
