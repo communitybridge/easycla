@@ -722,6 +722,37 @@ def get_project(project_id: hug.types.uuid):
         del project['project_external_id']
     return project
 
+@hug.get('/project/{project_id}/manager', versions=1)
+def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/managers
+
+    Returns the CLA project managers.
+    """
+    return cla.controllers.project.get_project_managers(auth_user.username, project_id)
+
+@hug.post('/project/{project_id}/manager', versions=1)
+def add_project_manager(auth_user: check_auth, 
+                         project_id: hug.types.text,
+                         lfid: hug.types.text):
+    """
+    POST: /project/{project_id}/manager
+
+    Returns the new list of CCLA managers
+    """
+    return cla.controllers.project.add_project_manager(auth_user.username, project_id, lfid)
+
+@hug.delete('/project/{project_id}/manager/{lfid}', versions=1)
+def remove_project_manager(auth_user: check_auth, 
+                         project_id: hug.types.text,
+                         lfid: hug.types.text):
+    """
+    DELETE: /project/{project_id}/project/{lfid}
+
+    Returns a success message if it was deleted
+    """
+    return cla.controllers.project.remove_project_manager(auth_user.username, project_id, lfid)
+
 @hug.get('/project/external/{project_external_id}', version=1)
 def get_external_project(auth_user: check_auth, project_external_id: hug.types.text):
     """
