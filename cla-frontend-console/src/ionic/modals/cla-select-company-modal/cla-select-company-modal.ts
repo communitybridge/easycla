@@ -65,14 +65,20 @@ export class ClaSelectCompanyModal {
     }
     this.selectCompanyModalActive = true;
 
-    let signatureRequest = {
+    let data = {
       project_id: this.projectId,
       company_id: company.company_id,
-      user_id: this.userId,
-      return_url_type: "Github",
+      user_id: this.userId
     };
 
-    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
+    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
+      /* 
+      Before an employee begins the signing process, ensure that
+      1. The given project, company, and user exists 
+      2. The company signatory has signed the CCLA for their company. 
+      3. The user is included as part of the whitelist of the CCLA that the company signed. 
+      the CLA service will throw an error if any of the above is false. 
+      */ 
       let errors = response.hasOwnProperty('errors');
       this.selectCompanyModalActive = false;
       if (errors) {
@@ -95,7 +101,7 @@ export class ClaSelectCompanyModal {
           repositoryId: this.repositoryId,
           userId: this.userId,
           companyId: company.company_id,
-     signingType: "Github"
+          signingType: "Github"
         });
       }
     });
