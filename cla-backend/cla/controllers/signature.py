@@ -5,9 +5,8 @@ Controller related to signature operations.
 import uuid
 import hug.types
 import cla.hug_types
-from cla.utils import get_signature_instance, get_user_instance, \
+from cla.utils import get_signature_instance, get_user_instance, get_company_instance, \
                       get_project_instance, get_email_service
-from cla.models.dynamo_models import Signature, Project, User, Company
 from cla.models import DoesNotExist
 
 def get_signatures():
@@ -69,16 +68,16 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     :return: A dict of a newly created signature.
     :rtype: dict
     """
-    signature = Signature()
+    signature = get_signature_instance()
     signature.set_signature_id(str(uuid.uuid4()))
-    project = Project()
+    project = get_project_instance()
     try:
         project.load(project_id=str(signature_project_id))
     except DoesNotExist as err:
         return {'errors': {'signature_project_id': str(err)}}
     signature.set_signature_project_id(str(signature_project_id))
     if signature_reference_type == 'user':
-        user = User()
+        user = get_user_instance()
         try:
             user.load(signature_reference_id)
         except DoesNotExist as err:
@@ -88,7 +87,7 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     else:
-        company = Company()
+        company = get_company_instance()
         try:
             company.load(signature_reference_id)
         except DoesNotExist as err:
@@ -305,8 +304,8 @@ def get_company_signatures(company_id):
     :param company_id: The ID of the company in question.
     :type company_id: string
     """
-    # Get signatures by company reference
-    signatures = Signature().get_signatures_by_reference(company_id, 'company')
+    signatures = get_signature_instance().get_signatures_by_reference(company_id,
+                                                                      'company')
 
     return [signature.to_dict() for signature in signatures]
 
