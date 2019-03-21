@@ -596,28 +596,6 @@ def get_company(company_id: hug.types.text):
     """
     return cla.controllers.company.get_company(company_id)
 
-@hug.post('/company/{company_id}/manager', versions=1)
-def add_company_manager(auth_user: check_auth, 
-                         company_id: hug.types.text,
-                         lfid: hug.types.text):
-    """
-    POST: /company/{company_id}/manager
-
-    Returns the CLA company with the new manager added
-    """
-    return cla.controllers.company.add_company_manager(auth_user.username, company_id, lfid)
-
-@hug.delete('/company/{company_id}/manager', versions=1)
-def remove_company_manager(auth_user: check_auth, 
-                         company_id: hug.types.text,
-                         lfid: hug.types.text):
-    """
-    DELETE: /company/{company_id}/manager
-
-    Returns the CLA company with the new manager removed
-    """
-    return cla.controllers.company.remove_company_manager(auth_user.username, company_id, lfid)
-
 @hug.get('/company/{company_id}/project/unsigned', versions=1)
 def get_unsigned_projects_for_company(company_id: hug.types.text):
     """
@@ -743,6 +721,37 @@ def get_project(project_id: hug.types.uuid):
     if 'project_external_id' in project:
         del project['project_external_id']
     return project
+
+@hug.get('/project/{project_id}/manager', versions=1)
+def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/managers
+
+    Returns the CLA project managers.
+    """
+    return cla.controllers.project.get_project_managers(auth_user.username, project_id)
+
+@hug.post('/project/{project_id}/manager', versions=1)
+def add_project_manager(auth_user: check_auth, 
+                         project_id: hug.types.text,
+                         lfid: hug.types.text):
+    """
+    POST: /project/{project_id}/manager
+
+    Returns the new list of CCLA managers
+    """
+    return cla.controllers.project.add_project_manager(auth_user.username, project_id, lfid)
+
+@hug.delete('/project/{project_id}/manager/{lfid}', versions=1)
+def remove_project_manager(auth_user: check_auth, 
+                         project_id: hug.types.text,
+                         lfid: hug.types.text):
+    """
+    DELETE: /project/{project_id}/project/{lfid}
+
+    Returns a success message if it was deleted
+    """
+    return cla.controllers.project.remove_project_manager(auth_user.username, project_id, lfid)
 
 @hug.get('/project/external/{project_external_id}', version=1)
 def get_external_project(auth_user: check_auth, project_external_id: hug.types.text):
