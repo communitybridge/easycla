@@ -279,37 +279,34 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    # Returns the current project, user and employee Signature, if such
-    # a signature exists.
-    def check_and_prepare_employee_signature(self,
-                                             project_id: str,
-                                             company_id: str,
-                                             user_id: str
-                                             ) -> Tuple[
-                                                 Project,
-                                                 User,
-                                                 Optional[Signature]
-                                             ] :
+    def check_and_prepare_employee_signature(self, project_id, company_id, user_id):
+
+        # Before an employee begins the signing process, ensure that 
+        # 1. The given project, company, and user exists 
+        # 2. The company signatory has signed the CCLA for their company. 
+        # 3. The user is included as part of the whitelist of the CCLA that the company signed. 
+        # Returns an error if any of the above is false. 
+                                             
          # Ensure the project exists
         project = Project()
         try:
             project.load(str(project_id))
         except DoesNotExist:
-            raise ProjectDoesNotExist
-
+            return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
+ 
         # Ensure the company exists
         company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist:
-            raise CompanyDoesNotExist
+            return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
 
         # Ensure the user exists
         user = User()
         try:
             user.load(str(user_id))
         except DoesNotExist:
-            raise UserDoesNotExist
+            return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
 
         # Ensure the company actually has a CCLA with this project.
         ccla_signatures = Signature().get_signatures_by_project(
@@ -318,10 +315,28 @@ class DocuSign(signing_service_interface.SigningService):
             signature_reference_id=company.get_company_id()
         )
         if len(ccla_signatures) < 1:
-            raise CCLANotFound
+            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
 
         ccla_signature = ccla_signatures[0]
 
+        # Ensure user is whitelisted for this company.
+        if not user.is_whitelisted(ccla_signature):
+            return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
+
+        # Assume this company is the user's employer.
+        user.set_user_company_id(str(company_id))
+        user.save()
+
+        return {'success': {'the employee is ready to sign the CCLA'} }
+
+
+    def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
+        
+        check_and_prepare_signature = self.check_and_prepare_employee_signature(project_id, company_id, user_id)
+        # Check if there are any errors while preparing the signature. 
+        if 'errors' in check_and_prepare_signature:
+            return check_and_prepare_signature
+            
         # Ensure user hasn't already signed this signature.
         employee_signatures = Signature().get_signatures_by_project(
             project_id,
@@ -329,40 +344,9 @@ class DocuSign(signing_service_interface.SigningService):
             signature_reference_id=user_id,
             signature_user_ccla_company_id=company_id
         )
+        # Return existing signature if employee already signed it. 
         if len(employee_signatures) > 0:
-            cla.log.info('Employee signature already exists for this project')
-            return project, user, employee_signatures[0]
-
-        # Ensure user is whitelisted for this company.
-        if not user.is_whitelisted(ccla_signature):
-            raise UserNotWhitelisted
-
-        # Assume this company is the user's employer.
-        user.set_user_company_id(str(company_id))
-        user.save()
-
-        return project, user, None
-
-    def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
-        try:
-            project, \
-            user, \
-            employee_signature = self.check_and_prepare_employee_signature(str(project_id),
-                                                                           str(company_id),
-                                                                           str(user_id))
-        except ProjectDoesNotExist:
-            return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
-        except CompanyDoesNotExist:
-            return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
-        except UserDoesNotExist:
-            return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
-        except CCLANotFound:
-            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-        except UserNotWhitelisted:
-            return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
-
-        if employee_signature is not None:
-            return employee_signature.to_dict()
+            return employee_signatures[0].to_dict()
 
         # Requires us to know where the user came from.
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
@@ -383,6 +367,10 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_user_ccla_company_id=company_id)
         new_signature.save()
 
+        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
+        project = Project()
+        project.load(project_id)
+
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
         if not project.get_project_ccla_requires_icla_signature():
@@ -397,32 +385,29 @@ class DocuSign(signing_service_interface.SigningService):
 
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
-            cla.utils.delete_active_signature_metadata(user.get_user_id())
+            cla.utils.delete_active_signature_metadata(user_id)
         else:
             cla.log.info('Project requires ICLA signature from employee - PR has been left unchanged')
 
         return new_signature.to_dict()
 
     def request_employee_signature_gerrit(self, project_id, company_id, user_id, return_url=None):
-        try:
-            _, \
-            user, \
-            employee_signature = self.check_and_prepare_employee_signature(str(project_id),
-                                                                           str(company_id),
-                                                                           str(user_id))
-        except ProjectDoesNotExist:
-            return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
-        except CompanyDoesNotExist:
-            return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
-        except UserDoesNotExist:
-            return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
-        except CCLANotFound:
-            return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-        except UserNotWhitelisted:
-            return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
 
-        if employee_signature is not None:
-            return employee_signature.to_dict()
+        check_and_prepare_signature = self.check_and_prepare_employee_signature(project_id, company_id, user_id)
+        # Check if there are any errors while preparing the signature. 
+        if 'errors' in check_and_prepare_signature:
+            return check_and_prepare_signature
+            
+        # Ensure user hasn't already signed this signature.
+        employee_signatures = Signature().get_signatures_by_project(
+            project_id,
+            signature_reference_type='user',
+            signature_reference_id=user_id,
+            signature_user_ccla_company_id=company_id
+        )
+        # Return existing signature if employee already signed it. 
+        if len(employee_signatures) > 0:
+            return employee_signatures[0].to_dict()
 
         # Retrieve Gerrits by Project reference ID
         try:
@@ -445,6 +430,10 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
+
+        # user has already been checked through check_and_prepare_employee_signature. Load user
+        user = User()
+        user.load(user_id)
 
         # Get lf_username from User 
         lf_username = user.get_lf_username()
