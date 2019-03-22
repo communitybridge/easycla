@@ -11,8 +11,8 @@ from cla.auth import AuthUser, admin_list
 from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
                       get_company_instance, get_pdf_service, get_github_organization_instance
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Signature, Project, Company, UserPermissions, Repository, \
-                                     GitHubOrg
+from cla.models.dynamo_models import User, Signature, Project, Company, UserPermissions, \
+                                     Repository, GitHubOrg
 from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
 
@@ -65,6 +65,16 @@ def get_project(project_id, user_id=None):
     return project.to_dict()
 
 def get_project_managers(username, project_id):
+    """
+    Returns the CLA project managers from the project's ID
+
+    :param username: The LF username
+    :type username: string
+    :param project_id: The project's ID.
+    :type project_id: string
+    :return: dict representation of the project managers.
+    :rtype: dict
+    """
     project = Project()
     try:
         project.load(project_id=str(project_id))
@@ -74,15 +84,23 @@ def get_project_managers(username, project_id):
     if username not in project.get_project_acl():
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
 
-    # Get managers
-    managers = project.get_managers()
-
     # Generate managers dict
-    managers_dict = [{
-        'name': manager.get_user_name(),
-        'email': manager.get_user_email(),
-        'lfid': manager.get_lf_username()
-    } for manager in managers]
+    managers_dict = []
+    for lfid in project.get_project_acl():
+        user = User()
+        user = user.get_user_by_username(str(lfid))
+        if user is not None:
+            # Manager found, fill with it's information
+            managers_dict.append({
+                'name': user.get_user_name(),
+                'email': user.get_user_email(),
+                'lfid': user.get_lf_username()
+            })
+        else:
+            # Manager not in database yet, only set the lfid
+            managers_dict.append({
+                'lfid': str(lfid)
+            })
 
     return managers_dict
 
