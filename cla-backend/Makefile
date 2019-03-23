@@ -91,3 +91,9 @@ deploy:
 
 	source ~/.env/lf-cla/bin/activate; \
 	node_modules/.bin/serverless deploy --force --stage ${STAGE} --region us-east-1; \
+
+.PHONY: deploy-dynamodb-backups
+deploy-dynamodb-backups:
+	source ~/.env/lf-cla/bin/activate; \
+	cd serverless-dynamodb-backups; \
+	../node_modules/.bin/serverless deploy --region us-east-1; \
