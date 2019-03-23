@@ -131,7 +131,7 @@ class CNCFTemplate(ContractTemplate):
             ]
         else:
             return [
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation_name',
                  'name': 'Corporation Name',
                  'position_x': 148,
@@ -211,7 +211,7 @@ class CNCFTemplate(ContractTemplate):
                  'width': 430,
                  'height': 20,
                  'page': 3},
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation',
                  'name': 'Corporation',
                  'position_x': 120,
@@ -322,7 +322,7 @@ class OpenBMCTemplate(ContractTemplate):
             ]
         else:
             return [
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation_name',
                  'name': 'Corporation Name',
                  'position_x': 151,
@@ -402,7 +402,7 @@ class OpenBMCTemplate(ContractTemplate):
                  'width': 430,
                  'height': 20,
                  'page': 3},
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation',
                  'name': 'Corporation',
                  'position_x': 126,
@@ -513,7 +513,7 @@ class TungstenFabricTemplate(ContractTemplate):
             ]
         else:
             return [
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation_name',
                  'name': 'Corporation Name',
                  'position_x': 151,
@@ -593,7 +593,7 @@ class TungstenFabricTemplate(ContractTemplate):
                  'width': 430,
                  'height': 20,
                  'page': 3},
-                {'type': 'text_unlocked',
+                {'type': 'text',
                  'id': 'corporation',
                  'name': 'Corporation',
                  'position_x': 126,
