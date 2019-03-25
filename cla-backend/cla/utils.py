@@ -626,8 +626,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     :type missing: [(string, string)]
     """
     cla.log.info('Getting comment body for repository type: %s', repository_type)
-    unchecked = ':white_large_square:'
-    checked = ':white_check_mark:'
+    failed = ':x:'
+    success = ':white_check_mark:'
     committers_comment = ''
     num_signed = len(signed)
     num_missing = len(missing)
@@ -643,7 +643,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         # Print author commit information.
         committers_comment += '<ul>'
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>' + checked + '  ' + author + \
+            committers_comment += '<li>' + success + '  ' + author + \
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
@@ -660,7 +660,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         # Print author commit information.
         committers_comment += '<ul>'
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>[' + unchecked + '](' + sign_url + ')  ' + \
+            committers_comment += '<li>[' + failed + '](' + sign_url + ')  ' + \
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment
