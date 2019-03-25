@@ -6,7 +6,7 @@ import uuid
 import hug
 from cla.utils import get_user_instance, get_company_instance, get_email_service
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import User
+from cla.models.dynamo_models import User, Company, Project
 import cla
 
 def get_users():
@@ -47,89 +47,6 @@ def get_user(user_id=None, user_email=None, user_github_id=None):
             return {'errors': {'user_github_id': 'User not found'}}
     return user.to_dict()
 
-# def create_user(user_email, user_name=None, user_company_id=None, user_github_id=None):
-#     """
-#     Creates a user and returns it in dict format.
-
-#     :param user_email: The email address of the new user.
-#     :type user_email: string
-#     :param user_name: The name of the new user.
-#     :type user_name: string
-#     :param user_company_id: The company ID the user belongs to.
-#     :type user_company_id: string
-#     :param user_github_id: The GitHub ID of the user (optional).
-#     :type user_github_id: integer | None
-#     :return: dict object containing user data.
-#     :rtype: dict
-#     """
-#     user = get_user_instance()
-#     user.set_user_id(str(uuid.uuid4()))
-#     user.set_user_email(str(user_email).lower())
-#     user.set_user_name(user_name)
-#     user.set_user_company_id(user_company_id)
-#     user.set_user_github_id(user_github_id)
-#     user.save()
-#     return user.to_dict()
-
-
-# def update_user(user_id, user_email=None, user_name=None,
-#                 user_company_id=None, user_github_id=None):
-#     """
-#     Updates a user and returns it in dict format.
-
-#     :param user_id: The user ID of the user to update.
-#     :type user_id: string
-#     :param user_email: The new email address for the user.
-#     :type user_email: string
-#     :param user_name: The new name for the user.
-#     :type user_name: string
-#     :param user_company_id: The new company ID for the user.
-#     :type user_company_id: string
-#     :param user_github_id: The new GitHub ID of the user (optional).
-#     :type user_github_id: integer | None
-#     :return: dict object containing the updated user data.
-#     :rtype: dict
-#     """
-#     user = get_user_instance()
-#     try:
-#         user.load(user_id)
-#     except DoesNotExist as err:
-#         return {'errors': {'user_id': str(err)}}
-#     if user_email is not None:
-#         try:
-#             val = cla.hug_types.email(user_email)
-#             user.set_user_email(val)
-#         except ValueError as err:
-#             return {'errors': {'user_email': 'Invalid email specified'}}
-#     if user_name is not None:
-#         user.set_user_name(str(user_name))
-#     if user_company_id is not None:
-#         # TODO: Ensure user_company_id exists.
-#         user.set_user_company_id(user_company_id)
-#     if user_github_id is not None:
-#         try:
-#             val = hug.types.number(user_github_id)
-#             user.set_user_github_id(val)
-#         except ValueError as err:
-#             return {'errors': {'user_github_id': 'Invalid GitHub ID specified'}}
-#     user.save()
-#     return user.to_dict()
-
-# def delete_user(user_id):
-#     """
-#     Deletes a user based on their ID.
-
-#     :param user_id: The ID of the user to delete.
-#     :type user_id: string
-#     """
-#     user = get_user_instance()
-#     try:
-#         user.load(user_id)
-#     except DoesNotExist as err:
-#         return {'errors': {'user_id': str(err)}}
-#     user.delete()
-#     return {'success': True}
-
 def get_user_signatures(user_id):
     """
     Given a user ID, returns the user's signatures.
@@ -159,7 +76,7 @@ def get_users_company(user_company_id):
     users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]
 
-def request_company_whitelist(user_id, company_id, user_email, message=None):
+def request_company_whitelist(user_id, company_id, user_email, project_id, message=None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
     added to their whitelist.
@@ -174,7 +91,7 @@ def request_company_whitelist(user_id, company_id, user_email, message=None):
     :param messsage: A custom message to add to the email sent out to the manager.
     :type message: string
     """
-    user = get_user_instance()
+    user = User()
     try:
         user.load(user_id)
     except DoesNotExist as err:
@@ -182,13 +99,24 @@ def request_company_whitelist(user_id, company_id, user_email, message=None):
     emails = user.get_user_emails()
     if user_email not in emails:
         return {'errors': {'user_email': 'Must provide one of the user\'s existing emails'}}
-    company = get_company_instance()
+    company = Company()
     try:
         company.load(company_id)
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
-    subject = 'CLA: User requesting to be whitelisted'
-    body = '''The following user is requesting to be whitelisted as a contributor for your organization (%s):
+    project = Project()
+    try: 
+        project.load(project_id)
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    user_name = user.get_user_name()    
+    company_name = company.get_company_name()
+    project_name = project.get_project_name()
+
+    subject = '''CLA: %s is requesting to be whitelisted for %s project ''' %(user_name, project_name)
+
+    body = '''%s is requesting to be whitelisted as a contributor for your organization (%s):
 
     %s <%s>
 
@@ -196,16 +124,17 @@ The message that was attached to the request:
 
     %s
 
-
-You can whitelist the user in the CLA console.
-If the user email above is the personal email of one of you employees, please request that they add
-their organization email to their GitHub profile and try signing the CLA again.
-If you are unsure about this request - it may be prudent to get in touch with the user to clarify.
-
+You can whitelist %s in the CLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request - it may be prudent to get in touch with %s to clarify.
 Please follow up with the user as necessary.
 
+Click on the following link to navigate to the CLA Corporate Console.
+
+ %s  
+
 - Linux Foundation CLA System
-''' %(company.get_company_name(), user.get_user_name(), user_email, message)
+''' %(user_name, company_name, user_name, user_email, message,
+    user_name, user_name, 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+
     manager_id = company.get_company_manager_id()
     manager = get_user_instance()
     try:
