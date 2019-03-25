@@ -21,18 +21,18 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>After you click send you will have to wait for your company's CCLA Manager to add you to their whitelist before you can complete your employee contributor CLA process.</p>
+          <p>After you click send you will have to wait for your company's CLA Manager to add you to their whitelist before you can complete your employee contributor CLA process.</p>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Email</ion-label>
+            <ion-label stacked>Email to Authorize</ion-label>
             <ion-select formControlName="email" interface="popover">
               <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
             </ion-select>
           </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your company's CCLA Manager to whitelist.</p>
+          <p class="field-description">Select the email address attached to your account that you would like your company's CLA Manager to whitelist.</p>
           <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>
@@ -42,7 +42,7 @@
             <ion-label stacked>Message:</ion-label>
             <ion-textarea formControlName="message"></ion-textarea>
           </ion-item>
-          <p class="field-description">Give your cla manager some context on who you are and why you're making this request.</p>
+          <p class="field-description">Explain to your CLA Manager who you are and why you would like to contribute.</p>
         </ion-col>
       </ion-row>
     </ion-grid>
