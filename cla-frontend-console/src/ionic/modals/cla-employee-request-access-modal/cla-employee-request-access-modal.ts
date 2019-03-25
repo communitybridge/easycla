@@ -95,7 +95,7 @@ export class ClaEmployeeRequestAccessModal {
   emailSent() {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'Thank you for contacting your CLA Manager. Once your are authorized, you will have to complete the CLA process from your existing pull request.',
+      subTitle: 'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());
