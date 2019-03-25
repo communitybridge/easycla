@@ -647,8 +647,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you! Please sign our [Contributor License Agreement](' + \
-               sign_url + ') before we can accept your contribution:'
+        text = 'Thank you. Unfortunately, your account is not authorized under' + \
+               'a signed CLA. Please click here to proceed:'
         # Group commits by author.
         committers = {}
         for commit, author in missing:
