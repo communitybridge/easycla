@@ -31,6 +31,7 @@ export class ClaEmployeeCompanyTroubleshootPage {
     this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
+    this.gitService = navParams.get('gitService');
     this.authenticated = navParams.get('authenticated'); 
   }
 
@@ -47,7 +48,6 @@ export class ClaEmployeeCompanyTroubleshootPage {
   ngOnInit() {
     this.getProject(this.projectId);
     this.getCompany(this.companyId);
-    this.getGitService();
   }
 
   getProject(projectId) {
@@ -60,11 +60,6 @@ export class ClaEmployeeCompanyTroubleshootPage {
     this.claService.getCompany(companyId).subscribe(response => {
       this.company = response;
     });
-  }
-
-  getGitService() {
-    // GitHub, GitLab, Gerrit
-    this.gitService = 'GitHub';
   }
 
   openGitServiceEmailSettings() {
