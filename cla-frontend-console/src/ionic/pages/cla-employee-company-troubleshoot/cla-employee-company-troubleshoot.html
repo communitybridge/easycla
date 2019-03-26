@@ -25,14 +25,11 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-        <ion-card>
+        <ion-card *ngIf="gitService == 'GitHub'">
           <ion-card-content>
             <ion-card-title>
-              <ng-container *ngIf="gitService == 'GitHub' || gitService == 'GitLab'">
+              <ng-container >
                 1. Make sure your employee email is verified in your {{ gitService }} account settings.
-              </ng-container>
-              <ng-container *ngIf="gitService == 'Gerrit'">
-                1. Make sure your {{ gitService }}/LFID email is set correctly.
               </ng-container>
             </ion-card-title>
             <ion-item>
