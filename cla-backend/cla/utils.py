@@ -582,7 +582,7 @@ def assemble_cla_status(author_name, signed=False):
         author_name = 'Unknown'
     if signed:
         return (author_name, 'Thank you for signing the CLA.')
-    return (author_name, 'Still missing CLA signature.')
+    return (author_name, 'Missing CLA Authorization.')
 
 def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
     """
