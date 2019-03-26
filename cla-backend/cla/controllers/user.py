@@ -124,7 +124,7 @@ The message that was attached to the request:
 
     %s
 
-You can whitelist %s in the CLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request - it may be prudent to get in touch with %s to clarify.
+You can whitelist %s in the CLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with %s to clarify.
 Please follow up with the user as necessary.
 
 Click on the following link to navigate to the CLA Corporate Console.
