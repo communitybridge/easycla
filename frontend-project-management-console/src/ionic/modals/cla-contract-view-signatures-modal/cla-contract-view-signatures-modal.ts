@@ -94,35 +94,41 @@ export class ClaContractViewSignaturesModal {
 
   getSignatures() {
     this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
-      console.log("signatures");
-      console.log(signatures);
-      let userSignatures = signatures.filter(item => item.signature_reference_type == 'user')
-      for (let signature of userSignatures) {
-        // extend fields
-        // create singular version field
+      for (let signature of signatures) {
         signature.documentVersion = signature.signature_document_major_version + '.' + signature.signature_document_minor_version;
-        // create simplified signature type
-        signature.signatureType = this.determineSignatureType(signature);
-        // embed reference_entity
-        // TODO: pass this off to a function that builds an object of users keyed
-        //       by ID, and will only run new GET if we haven't already gotten user.
-        //       This value must still be set in the signature object however for
-        //       array sorting purposes.
-        this.claService.getUser(signature.signature_reference_id).subscribe(user => {
-          user.name = user.user_name;
-          signature.referenceEntity = user;
-        });
+        if (signature.signature_reference_type == "user") {
+          // ICLA, Employee CCLA
+          this.claService.getUser(signature.signature_reference_id).subscribe(user => {
+            if (user)  {
+              signature.user = user;
+              //Employee CCLA if signature includes a ccla_company_id
+              if (signature.signature_user_ccla_company_id) {
+                this.claService.getCompany(signature.signature_user_ccla_company_id).subscribe(company => {
+                  if (company) {
+                    signature.company = company;
+                  }
+                })
+              }
+            }
+          });
+        }
+        else if (signature.signature_reference_type == "company") {
+          // CCLA signed by company authority
+          this.claService.getCompany(signature.signature_reference_id).subscribe(company => {
+            if(company) {
+              signature.company = company;
+              this.claService.getUser(company.company_manager_id).subscribe(user => {
+                if (user) {
+                  signature.user = user; 
+                }
+              })
+            }
+          });
+        }
       }
-      this.signatures = userSignatures;
+      this.signatures = signatures;
       this.loading.signatures = false;
     });
-  }
-
-  determineSignatureType(signature) {
-    if (signature.signature_user_ccla_company_id) {
-      return 'employee';
-    }
-    return 'individual';
   }
 
   sortMembers(prop) {
