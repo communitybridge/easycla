@@ -181,6 +181,9 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_return_url=return_url,
                                 signature_callback_url=callback_url)
 
+        # Set signature ACL
+        signature.set_signature_acl(user.get_lf_username())
+
         # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
@@ -269,6 +272,10 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_return_url=return_url,
                                 signature_callback_url=callback_url)
 
+        # Set signature ACL
+        signature.set_signature_acl(user.get_lf_username())
+
+        # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
         # Save signature
@@ -365,6 +372,13 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_approved=True,
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id)
+
+        # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
+        user = User()
+        user = User().load(str(user_id))
+        new_signature.set_signature_acl(user.get_lf_username())
+
+        # Save signature
         new_signature.save()
 
         # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
@@ -428,15 +442,13 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_return_url=return_url,
                                 signature_user_ccla_company_id=company_id)
 
+        # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
+        user = User()
+        user = User().load(str(user_id))
+        new_signature.set_signature_acl(user.get_lf_username())
+
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
-
-        # user has already been checked through check_and_prepare_employee_signature. Load user
-        user = User()
-        user.load(user_id)
-
-        # Get lf_username from User 
-        lf_username = user.get_lf_username()
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.
@@ -444,7 +456,7 @@ class DocuSign(signing_service_interface.SigningService):
             group_id = gerrit.get_group_id_ccla()
             # Add the user to the LDAP Group
             try:
-                lf_group.add_user_to_group(group_id, lf_username)
+                lf_group.add_user_to_group(group_id, user.get_lf_username())
             except Exception as e:
                 cla.log.error('Failed in adding user to the LDAP group.%s', e)
                 return
@@ -497,16 +509,18 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'company_id': str(err)}}
 
         # Ensure the managers list is not empty
-        company_model = Company()
-        managers = company_model.get_managers_by_company_acl(company.get_company_acl())
+        managers = company.get_managers()
         if len(managers) == 0:
             return {'errors': {'company_acl': 'Company ACL is empty'}}
 
         # Find the manager user object
+        user = None
         for manager in managers:
             if manager.get_lf_username() == auth_user.username:
+                user = manager
                 break
-        else:
+
+        if user is None:
             # Return an error if the manager is not found in the managers list
             return {'errors': {'manager': 'CLA Manager not found'}}
 
@@ -515,7 +529,7 @@ class DocuSign(signing_service_interface.SigningService):
             [(manager.get_user_name(), manager.get_user_email()) for manager in managers]
         )
 
-        default_cla_values = create_default_company_values(company, manager.get_user_name(), manager.get_user_email(), scheduleA)
+        default_cla_values = create_default_company_values(company, user.get_user_name(), user.get_user_email(), scheduleA)
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
@@ -542,7 +556,10 @@ class DocuSign(signing_service_interface.SigningService):
                 else:
                     #signature object exists and the user wants to send it to a corp authority.
                     callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
+
+                    # Populate sign url
                     self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
+                
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
                         'signature_id': latest_signature.get_signature_id(),
@@ -568,7 +585,13 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
 
+        # Set signature ACL
+        signature.set_signature_acl(user.get_lf_username())
+
+        # Populate sign url
         self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
+        
+        # Save signature
         signature.save()
 
         return {'company_id': str(company_id),
@@ -728,6 +751,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
                          signature_id)
             signature.set_signature_signed(True)
+            # Save signature
             signature.save()
             # Send user their signed document.
             user = User()
@@ -778,6 +802,7 @@ class DocuSign(signing_service_interface.SigningService):
             
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
+            # Save signature
             signature.save()
 
             gerrits = Gerrit().get_gerrit_by_project_id(signature.get_signature_project_id())
@@ -865,6 +890,7 @@ class DocuSign(signing_service_interface.SigningService):
         if status == 'Completed' and not signature.get_signature_signed():
             cla.log.info('CCLA signature signed (%s)', signature_id)
             signature.set_signature_signed(True)
+            # Save signature
             signature.save()
             
             # Check if the callback is for a Gerrit Instance
