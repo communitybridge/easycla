@@ -497,16 +497,18 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'company_id': str(err)}}
 
         # Ensure the managers list is not empty
-        company_model = Company()
-        managers = company_model.get_managers_by_company_acl(company.get_company_acl())
+        managers = company.get_managers()
         if len(managers) == 0:
             return {'errors': {'company_acl': 'Company ACL is empty'}}
 
         # Find the manager user object
+        user = None
         for manager in managers:
             if manager.get_lf_username() == auth_user.username:
+                user = manager
                 break
-        else:
+
+        if user is None:
             # Return an error if the manager is not found in the managers list
             return {'errors': {'manager': 'CLA Manager not found'}}
 
@@ -515,7 +517,7 @@ class DocuSign(signing_service_interface.SigningService):
             [(manager.get_user_name(), manager.get_user_email()) for manager in managers]
         )
 
-        default_cla_values = create_default_company_values(company, manager.get_user_name(), manager.get_user_email(), scheduleA)
+        default_cla_values = create_default_company_values(company, user.get_user_name(), user.get_user_email(), scheduleA)
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
