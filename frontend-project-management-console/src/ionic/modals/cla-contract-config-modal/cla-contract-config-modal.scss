@@ -23,6 +23,11 @@ cla-contract-config-modal {
   ion-icon.icon-md {
     font-size: 18px !important;
   }
+
+  .no-elipsis {
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 
 
