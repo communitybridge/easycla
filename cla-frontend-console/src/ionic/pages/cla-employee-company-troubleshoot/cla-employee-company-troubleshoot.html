@@ -25,14 +25,11 @@
   <ion-grid>
     <ion-row>
       <ion-col col-12>
-        <ion-card>
+        <ion-card *ngIf="gitService == 'GitHub'">
           <ion-card-content>
             <ion-card-title>
-              <ng-container *ngIf="gitService == 'GitHub' || gitService == 'GitLab'">
-                1. Make sure your employee email is verified in your {{ gitService }} account settings.
-              </ng-container>
-              <ng-container *ngIf="gitService == 'Gerrit'">
-                1. Make sure your {{ gitService }}/LFID email is set correctly.
+              <ng-container >
+                Make sure your employee email is verified in your {{ gitService }} account settings.
               </ng-container>
             </ion-card-title>
             <ion-item>
@@ -49,7 +46,7 @@
         <ion-card>
           <ion-card-content>
             <ion-card-title >
-              2. Contact the CLA Manager to request access.
+              Contact the CLA Manager to request access.
             </ion-card-title>
             <ion-item>
               <p>You must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your work for a company. Contact your CLA manager to request authorization.</p>
