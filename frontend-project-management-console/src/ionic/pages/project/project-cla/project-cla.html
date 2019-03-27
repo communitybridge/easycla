@@ -57,7 +57,7 @@
                       </ion-card-title>
                       <h3 *ngIf="!organization.organization_installation_id"
                           class="not-configured-warning">
-                        Not Configured. Please install the CLA App to the Github Org.
+                        Not Configured. <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
                       </h3>
                       <p><a target="_blank"
                             href="https://github.com/{{ organization.organization_name }}">
