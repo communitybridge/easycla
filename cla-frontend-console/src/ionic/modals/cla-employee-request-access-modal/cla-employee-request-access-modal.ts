@@ -85,6 +85,7 @@ export class ClaEmployeeRequestAccessModal {
     let message = {
       user_email: this.form.value.email,
       message: this.form.value.message,
+      project_id: this.projectId,
     };
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
       this.emailSent();

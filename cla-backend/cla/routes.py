@@ -221,7 +221,7 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=2)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
-                              user_email: cla.hug_types.email, message=None):
+                              user_email: cla.hug_types.email, project_id: hug.types.uuid, message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
 
@@ -230,7 +230,7 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
     """
-    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
+    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, project_id, message)
 
 @hug.post('/user/{user_id}/invite-company-admin', versions=2)
 def invite_company_admin(user_id: hug.types.uuid, user_email: cla.hug_types.email, 
