@@ -582,7 +582,7 @@ def assemble_cla_status(author_name, signed=False):
         author_name = 'Unknown'
     if signed:
         return (author_name, 'Thank you for signing the CLA.')
-    return (author_name, 'Still missing CLA signature.')
+    return (author_name, 'Missing CLA Authorization.')
 
 def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
     """
@@ -626,8 +626,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     :type missing: [(string, string)]
     """
     cla.log.info('Getting comment body for repository type: %s', repository_type)
-    unchecked = ':white_large_square:'
-    checked = ':white_check_mark:'
+    failed = ':x:'
+    success = ':white_check_mark:'
     committers_comment = ''
     num_signed = len(signed)
     num_missing = len(missing)
@@ -643,12 +643,12 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         # Print author commit information.
         committers_comment += '<ul>'
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>' + checked + '  ' + author + \
+            committers_comment += '<li>' + success + '  ' + author + \
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you! Please sign our [Contributor License Agreement](' + \
-               sign_url + ') before we can accept your contribution:'
+        text = 'Thank you. Unfortunately, your account is not authorized under ' + \
+               'a signed CLA. [Please click here to proceed](' + sign_url + ').'
         # Group commits by author.
         committers = {}
         for commit, author in missing:
@@ -660,7 +660,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         # Print author commit information.
         committers_comment += '<ul>'
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>[' + unchecked + '](' + sign_url + ')  ' + \
+            committers_comment += '<li>[' + failed + '](' + sign_url + ')  ' + \
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment

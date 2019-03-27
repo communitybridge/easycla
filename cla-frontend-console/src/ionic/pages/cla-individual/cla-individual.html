@@ -31,8 +31,7 @@
             </ion-card-title>
             <div *ngIf="activeSignatures">
               <p>
-                We are generating a document to sign for the purposes of your
-                Individual Contributers License Agreement. Please fill out
+                We are generating a document to sign for the purposes of your CLA. Please fill out
                 accurately and complete the signing process.
               </p>
               <p>
@@ -40,7 +39,7 @@
                 the button below:
               </p>
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
-                Open ICLA Agreement
+                Open CLA
               </button>
             </div>
             <div *ngIf="!activeSignatures">
