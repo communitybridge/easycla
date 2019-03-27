@@ -230,4 +230,10 @@ h2 {
 .not-configured-warning {
   margin-top: -5px !important;
   color: #db4e4e !important;
+
+  a {
+    text-decoration: underline;
+    color: #db4e4e !important;
+    cursor: pointer;
+  }
 }
