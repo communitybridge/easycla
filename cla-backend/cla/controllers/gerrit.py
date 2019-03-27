@@ -112,7 +112,7 @@ def get_agreement_html(project_id, contract_type):
     contributor_base_url = cla.conf['CONTRIBUTOR_BASE_URL']
     return """
         <html>
-            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Click on the link to Sign the CLA Agreement. </a>
+            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Thank you. Unfortunately, your account is not authorized under a signed CLA. Please click here to proceed. </a>
         <html>""".format(
             contributor_base_url = contributor_base_url,
             project_id = project_id,
