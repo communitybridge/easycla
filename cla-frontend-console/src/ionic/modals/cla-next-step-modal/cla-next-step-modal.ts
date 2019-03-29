@@ -21,6 +21,8 @@ export class ClaNextStepModal {
   userIsDone: boolean;
   loading: any;
 
+  signingType: string; // "Gerrit" / "Github" 
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -32,6 +34,7 @@ export class ClaNextStepModal {
     this.userId = navParams.get('userId');
     this.project = navParams.get('project');
     this.signature = navParams.get('signature');
+    this.signingType = navParams.get('signingType');
     this.getDefaults();
   }
 

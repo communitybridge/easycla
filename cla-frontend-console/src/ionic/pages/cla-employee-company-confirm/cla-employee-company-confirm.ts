@@ -130,6 +130,7 @@ export class ClaEmployeeCompanyConfirmPage {
       userId: this.userId,
       project: this.project,
       signature: this.signature,
+      signingType: this.signingType
     });
     modal.present();
   }
