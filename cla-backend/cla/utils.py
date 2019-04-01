@@ -664,7 +664,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment
-    text = 'All committers have signed the CLA:'
+    text = 'All committers are now authorized under a signed CLA.'
     return text + committers_comment
 
 def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_url):
