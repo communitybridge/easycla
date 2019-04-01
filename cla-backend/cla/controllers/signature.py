@@ -316,7 +316,9 @@ def get_company_signatures(company_id):
 
 def get_company_signatures_by_acl(username, company_id):
     """
-    Get all signatures for company filtered by it's acl
+    Get all signatures for company filtered by it's ACL.
+    A company's signature will be returned only if the provided
+    username appears in the signature's ACL.
 
     :param username: The username of the authenticated user
     :type username: string
@@ -325,23 +327,14 @@ def get_company_signatures_by_acl(username, company_id):
     """
     # Get signatures by company reference
     all_signatures = Signature().get_signatures_by_reference(company_id, 'company')
-    # Filter signatures which manager is authorired to see
+
+    # Filter signatures this manager is authorized to see
     signatures = []
     for signature in all_signatures:
-        project_id = signature.get_signature_project_id()
-
-        project = Project()
-        try:
-            project.load(project_id=str(project_id))
-        except DoesNotExist as err:
-            return {'errors': {'project_id': str(err)}}
-
-        if username in project.get_project_acl():
+        if username in signature.get_signature_acl():
             signatures.append(signature)
 
-    signatures_dict = [signature.to_dict() for signature in signatures]
-
-    return signatures_dict
+    return [signature.to_dict() for signature in signatures]
 
 def get_project_signatures(project_id):
     """
