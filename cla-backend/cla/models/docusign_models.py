@@ -558,7 +558,7 @@ class DocuSign(signing_service_interface.SigningService):
                     callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
 
                     # Populate sign url
-                    self.populate_sign_url(latest_signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
+                    self.populate_sign_url(latest_signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
                 
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -589,7 +589,7 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_acl(user.get_lf_username())
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url, send_as_email, authority_name, authority_email, default_values=default_cla_values)
+        self.populate_sign_url(signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
         
         # Save signature
         signature.save()
@@ -599,7 +599,7 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, signature, callback_url=None, send_as_email=False,
+    def populate_sign_url(self, signature, callback_url=None, cla_manager_name=None, cla_manager_email=None, send_as_email=False,
     authority_name=None, authority_email=None, default_values: Optional[Dict[str, Any]] = None): # pylint: disable=too-many-locals
         cla.log.debug('Populating sign_url for signature %s', signature.get_signature_id())
         sig_type = signature.get_signature_reference_type()
@@ -653,14 +653,17 @@ class DocuSign(signing_service_interface.SigningService):
             email = user.get_user_email()
 
         if send_as_email: 
-            # Not assigning a clientUserId sends an email. 
+            # Not assigning a clientUserId sends an email.
+            project_name = project.get_project_name()
+            email_subject = 'CLA Sign Request for {}'.format(project_name)
+            email_body = '{} has requested that you sign a CLA for {}, which will allow your employees to contribute to the project.\n\nIf you have additional questions, please contact {} at {}.'.format(cla_manager_name, project_name, cla_manager_name, cla_manager_email)
+
             signer = pydocusign.Signer(email=email,
                                     name=name,
                                     recipientId=1,
                                     tabs=tabs, 
-                                    emailSubject='CLA Sign Request',
-                                    emailBody='CLA Sign Request for %s'
-                                    %authority_email,
+                                    emailSubject=email_subject,
+                                    emailBody=email_body,
                                     supportedLanguage='en',
                                     )
         else:
