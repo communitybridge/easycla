@@ -97,7 +97,7 @@ export class ClaCompanyAdminSendEmailModal {
         user_email: this.form.value.useremail,
         admin_email: this.form.value.adminemail,
         admin_name: this.form.value.adminname,
-        project_name: project.name
+        project_name: project.project_name
       };
       this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(response => {
         this.emailSent();
