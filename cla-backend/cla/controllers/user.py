@@ -146,16 +146,15 @@ Click on the following link to navigate to the CLA Corporate Console.
     email_service.send(subject, body, recipient)
 
 
-def invite_company_admin(user_id, user_email, admin_name, admin_email):
+def invite_company_admin(user_id, user_email, admin_name, admin_email, project_name):
     """
-    Sends email to the specified company administrator to sign up through the CCLA console and add the requested user to the whitelist. 
+    Sends email to the specified company administrator to sign up through the Corporate console and add the requested user to the whitelist. 
 
     :param user_id: The ID of the user requesting to be added to the company's whitelist.
     :type user_id: string
     :param user_email: The email address that this user wants to be whitelisted. Must exist in the
         user's list of emails.
     :type user_email: string
-    :param messsage: A message to be sent out to the administrator. 
     """
     user = get_user_instance()
     try:
@@ -163,19 +162,19 @@ def invite_company_admin(user_id, user_email, admin_name, admin_email):
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
 
-    subject = 'CLA: Invitation to Sign Up for Corporate CLA'
+    subject = 'CLA: Invitation to Sign the {} Corporate CLA'.format(project_name)
     body = '''Hello %s, 
-    
-    The following user is requesting to be whitelisted as a contributor for your organization:
+
+The following contributor would like to submit a contribution to %s and is requesting to be whitelisted as a contributor for your organization:
 
     %s <%s>
 
-Please click the following link to sign up for Corporate CLA and add this user to your organization. 
+Before the contribution can be accepted, your organization must sign a CLA. Please click the following link to create an account in the CLA Corporate Console. Complete the CLA for the %s project, and add this contributor to the CLA whitelist. Please notify the contributor once they are added so that they may complete the contribution process.
 
 %s
 
 - Linux Foundation CLA System
-''' %(admin_name, user.get_user_name(), user.get_user_email(), 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+''' %(admin_name, project_name, user.get_user_name(), user_email, project_name, 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
     recipient = admin_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
