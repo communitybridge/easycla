@@ -67,7 +67,6 @@ def get_project(project_id, user_id=None):
 def get_project_managers(username, project_id):
     """
     Returns the CLA project managers from the project's ID
-
     :param username: The LF username
     :type username: string
     :param project_id: The project's ID.
@@ -103,6 +102,7 @@ def get_project_managers(username, project_id):
             })
 
     return managers_dict
+
 
 def get_unsigned_projects_for_company(company_id):
     """
@@ -666,7 +666,6 @@ def get_sfdc_project_repositories(project):
 def add_project_manager(username, project_id, lfid):
     """
     Adds the LFID to the project ACL
-
     :param username: username of the user
     :type username: string
     :param project_id: The ID of the project
@@ -705,7 +704,6 @@ def add_project_manager(username, project_id, lfid):
 def remove_project_manager(username, project_id, lfid):
     """
     Removes the LFID from the project ACL
-
     :param username: username of the user
     :type username: string
     :param project_id: The ID of the project
@@ -743,4 +741,3 @@ def remove_project_manager(username, project_id, lfid):
     } for manager in managers]
 
     return managers_dict
-
