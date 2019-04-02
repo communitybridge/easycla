@@ -64,30 +64,44 @@ def get_project(project_id, user_id=None):
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
 
-def get_cla_managers(username, signature_id):
+def get_project_managers(username, project_id):
     """
-    Returns CLA managers from the CCLA signature ID.
-
+    Returns the CLA project managers from the project's ID
     :param username: The LF username
     :type username: string
-    :param signature_id: The Signature ID of the CCLA signed. 
-    :type signature_id: string
+    :param project_id: The project's ID.
+    :type project_id: string
     :return: dict representation of the project managers.
     :rtype: dict
     """
-    signature = Signature()
+    project = Project()
     try:
-        signature.load(str(signature_id))
+        project.load(project_id=str(project_id))
     except DoesNotExist as err:
-        return {'errors': {'signature_id': str(err)}}
+        return {'errors': {'project_id': str(err)}}
 
-    # Get Signature ACL
-    signature_acl = signature.get_signature_acl()
-
-    if username not in signature.get_signature_acl():
+    if username not in project.get_project_acl():
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
 
-    return get_managers_dict(signature_acl)
+    # Generate managers dict
+    managers_dict = []
+    for lfid in project.get_project_acl():
+        user = User()
+        user = user.get_user_by_username(str(lfid))
+        if user is not None:
+            # Manager found, fill with it's information
+            managers_dict.append({
+                'name': user.get_user_name(),
+                'email': user.get_user_email(),
+                'lfid': user.get_lf_username()
+            })
+        else:
+            # Manager not in database yet, only set the lfid
+            managers_dict.append({
+                'lfid': str(lfid)
+            })
+
+    return managers_dict
 
 
 def get_unsigned_projects_for_company(company_id):
@@ -649,40 +663,47 @@ def get_sfdc_project_repositories(project):
     all_project_repositories = Repository().get_repository_by_sfdc_id(sfdc_id)
     return [repo.to_dict() for repo in all_project_repositories]
 
-def add_cla_manager(username, signature_id, lfid):
+def add_project_manager(username, project_id, lfid):
     """
-    Adds the LFID to the signature ACL and returns a new list of CLA Managers. 
-
+    Adds the LFID to the project ACL
     :param username: username of the user
     :type username: string
-    :param signature_id: The ID of the project
-    :type signature_id: UUID
+    :param project_id: The ID of the project
+    :type project_id: UUID
     :param lfid: the lfid (manager username) to be added to the project acl
     :type lfid: string
     """
     # Find project
-    signature = Signature()
+    project = Project()
     try:
-        signature.load(str(signature_id))
+        project.load(project_id=str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
 
-    # Get Signature ACL
-    signature_acl = signature.get_signature_acl()
+    # Validate user is the manager of the project
+    if username not in project.get_project_acl():
+        return {'errors': {'user': "You are not authorized to manage this CCLA."}}
+    # TODO: Validate if lfid is valid
 
-    if username not in signature_acl:
-        return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
+    # Add lfid to project acl
+    project.add_project_acl(lfid)
+    project.save()
 
-    # Add lfid to acl
-    signature.add_signature_acl(lfid)
-    signature.save()
+    # Get managers
+    managers = project.get_managers()
 
-    return get_managers_dict(signature_acl)
+    # Generate managers dict
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in managers]
 
-def remove_cla_manager(username, signature_id, lfid):
+    return managers_dict
+
+def remove_project_manager(username, project_id, lfid):
     """
     Removes the LFID from the project ACL
-
     :param username: username of the user
     :type username: string
     :param project_id: The ID of the project
@@ -691,47 +712,32 @@ def remove_cla_manager(username, signature_id, lfid):
     :type lfid: string
     """
     # Find project
-    signature = Signature()
+    project = Project()
     try:
-        signature.load(str(signature_id))
+        project.load(project_id=str(project_id))
     except DoesNotExist as err:
-        return {'errors': {'signature_id': str(err)}}
+        return {'errors': {'project_id': str(err)}}
 
     # Validate user is the manager of the project
-    signature_acl = signature.get_signature_acl()
-    if username not in signature_acl:
+    if username not in project.get_project_acl():
         return {'errors': {'user': "You are not authorized to manage this CCLA."}}
+    # TODO: Validate if lfid is valid
 
     # Avoid to have an empty acl
-    if len(signature_acl) == 1 and username == lfid:
+    if len(project.get_project_acl()) == 1 and username == lfid:
         return {'errors': {'user': "You cannot remove this manager because a CCLA must have at least one CLA manager."}}
+    # Add lfid to project acl
+    project.remove_project_acl(lfid)
+    project.save()
+
+    # Get managers
+    managers = project.get_managers()
     
-    # Remove LFID from the acl
-    signature.remove_signature_acl(lfid)
-    signature.save()
-
-    # Return modified managers
-    return get_managers_dict(signature_acl)
-
-
-def get_managers_dict(signature_acl):
-    # Helper function to get a list of all cla managers from a CCLA Signature ACL
     # Generate managers dict
-    managers_dict = []
-    for lfid in signature_acl:
-        user = User()
-        user = user.get_user_by_username(str(lfid))
-        if user is not None:
-            # Manager found, fill with it's information
-            managers_dict.append({
-                'name': user.get_user_name(),
-                'email': user.get_user_email(),
-                'lfid': user.get_lf_username()
-            })
-        else:
-            # Manager not in database yet, only set the lfid
-            managers_dict.append({
-                'lfid': str(lfid)
-            })
+    managers_dict = [{
+        'name': manager.get_user_name(),
+        'email': manager.get_user_email(),
+        'lfid': manager.get_lf_username()
+    } for manager in managers]
 
     return managers_dict
