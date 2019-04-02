@@ -477,6 +477,39 @@ def get_project_employee_signatures(company_id: hug.types.uuid, project_id: hug.
      """
     return cla.controllers.signature.get_project_employee_signatures(company_id, project_id)
 
+
+@hug.get('/signature/{signature_id}/manager', versions=1)
+def get_cla_managers(auth_user: check_auth, signature_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/managers
+
+    Returns the CLA Managers from a CCLA's signature ACL.
+    """
+    return cla.controllers.signature.get_cla_managers(auth_user.username, signature_id)
+
+@hug.post('/signature/{signature_id}/manager', versions=1)
+def add_cla_manager(auth_user: check_auth, 
+                         signature_id: hug.types.uuid,
+                         lfid: hug.types.text):
+    """
+    POST: /project/{project_id}/manager
+
+    Adds CLA Manager to a CCLA's signature ACL and returns the new list of CLA managers.
+    """
+    return cla.controllers.signature.add_cla_manager(auth_user.username, signature_id, lfid)
+
+@hug.delete('/signature/{signature_id}/manager/{lfid}', versions=1)
+def remove_cla_manager(auth_user: check_auth, 
+                         signature_id: hug.types.uuid,
+                         lfid: hug.types.text):
+    """
+    DELETE: /signature/{signature_id}/manager/{lfid}
+
+    Removes a CLA Manager from a CCLA's signature ACL and returns the modified list of CLA Managers. 
+    """
+    return cla.controllers.signature.remove_cla_manager(auth_user.username, signature_id, lfid)
+
+
 #
 # Repository Routes.
 #
@@ -730,7 +763,6 @@ def get_project(project_id: hug.types.uuid):
 def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/managers
-
     Returns the CLA project managers.
     """
     return cla.controllers.project.get_project_managers(auth_user.username, project_id)
@@ -741,8 +773,7 @@ def add_project_manager(auth_user: check_auth,
                          lfid: hug.types.text):
     """
     POST: /project/{project_id}/manager
-
-    Returns the new list of CCLA managers
+    Returns the new list of project managers
     """
     return cla.controllers.project.add_project_manager(auth_user.username, project_id, lfid)
 
@@ -752,10 +783,10 @@ def remove_project_manager(auth_user: check_auth,
                          lfid: hug.types.text):
     """
     DELETE: /project/{project_id}/project/{lfid}
-
     Returns a success message if it was deleted
     """
     return cla.controllers.project.remove_project_manager(auth_user.username, project_id, lfid)
+
 
 @hug.get('/project/external/{project_external_id}', version=1)
 def get_external_project(auth_user: check_auth, project_external_id: hug.types.text):

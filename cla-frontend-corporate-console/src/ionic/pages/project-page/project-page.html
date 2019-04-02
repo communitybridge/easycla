@@ -61,7 +61,7 @@
                   <div class="manager-details" *ngIf="manager.email">
                     <div class="manager-name">
                       <span>{{ manager.name }}</span>
-                      <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                     </div>
                     <h4>{{ manager.email }}</h4>
                   </div>
