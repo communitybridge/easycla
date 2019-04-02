@@ -58,12 +58,15 @@ export class ClaCompanyAdminSendEmailModal {
 
   getUser() {
     if (this.authenticated) {
+      // Gerrit Users
       this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
-        if(user.lf_email) {
-          this.userEmails.push(user.lf_email)
+        this.userEmails = user.user_emails;
+        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+          this.userEmails.push(user.lf_email) 
         }
       })
     } else {
+      // Github Users
       this.claService.getUser(this.userId).subscribe(user => {
         this.userEmails = user.user_emails;
       });
