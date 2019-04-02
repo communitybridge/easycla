@@ -28,7 +28,6 @@ export class ClaContractConfigModal {
     public events: Events
   ) {
     this.projectId = this.navParams.get('projectId');
-    console.log("projectId" + this.projectId);
     this.claProject = this.navParams.get('claProject');
     this.getDefaults();
     this.form = formBuilder.group({
@@ -59,7 +58,7 @@ export class ClaContractConfigModal {
   }
 
   ngOnInit() {
-
+    this.form.controls['cclaAndIcla'].setValue(true);
   }
 
   submit() {
@@ -71,12 +70,14 @@ export class ClaContractConfigModal {
       return;
     }
     if (this.newClaProject) {
-      console.log('post');
       this.postProject();
     } else {
-      console.log('put');
       this.putProject();
     }
+  }
+
+  checkMandatory () {
+    this.form.controls['cclaAndIcla'].setValue(true);
   }
 
   postProject() {
