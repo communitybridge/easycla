@@ -395,6 +395,36 @@ export class ClaService {
       .map(res => res.json());
   }
 
+/**
+   * /project/{project_id}/manager
+   **/
+
+  getProjectManagers (projectId) {
+    return this.http
+      .get(`${this.claApiUrl}/v1/project/${projectId}/manager`)
+      .map(res => res.json());
+  }
+
+  /**
+   * /project/{project_id}/manager
+   **/
+
+  postProjectManager (projectId, payload) {
+    return this.http
+      .post(`${this.claApiUrl}/v1/project/${projectId}/manager`, {lfid: payload.managerLFID})
+      .map(res => res.json());
+  }
+
+  /**
+   * /project/{project_id}/manager/{lfid}
+   **/
+
+  deleteProjectManager (projectId, payload) {
+    return this.http
+      .delete(`${this.claApiUrl}/v1/project/${projectId}/manager/${payload.lfid}`)
+      .map(res => res.json());
+  }
+
   /**
    * /signature/{signature_id}/manager
    **/
