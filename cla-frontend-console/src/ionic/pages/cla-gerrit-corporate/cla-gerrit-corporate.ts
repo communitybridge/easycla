@@ -145,7 +145,7 @@ export class ClaGerritCorporatePage {
       repositoryId: "",
       userId: this.userId,
       companyId: company.company_id,
-      authenticated: true
+      gitService: 'Gerrit'
     });
   }
 }

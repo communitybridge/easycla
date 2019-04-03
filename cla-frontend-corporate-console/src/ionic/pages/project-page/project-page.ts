@@ -70,7 +70,6 @@ export class ProjectPage {
 
   ngOnInit() {
     this.getProject();
-    this.getProjectSignatures();
     this.getCompany();
   }
 
@@ -84,12 +83,12 @@ export class ProjectPage {
   getProject() {
     this.claService.getProject(this.projectId).subscribe(response => {
       this.project = response;
-      this.getProjectManagers();
+      this.getProjectSignatures();
     });
   }
 
-  getProjectManagers() {
-    this.claService.getProjectManagers(this.projectId).subscribe(response => {
+  getCLAManagers() {
+    this.claService.getCLAManagers(this.cclaSignature.signature_id).subscribe(response => {
       this.managers = response;
     });
   }
@@ -102,6 +101,7 @@ export class ProjectPage {
         let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
         if (cclaSignatures.length) {
           this.cclaSignature = cclaSignatures[0];
+          this.getCLAManagers();
         }
       });
 
@@ -185,17 +185,17 @@ export class ProjectPage {
   }
 
   deleteManager (payload: ClaManager) {
-    this.claService.deleteProjectManager(this.projectId, payload)
-      .subscribe(() => this.getProjectManagers())
+    this.claService.deleteCLAManager(this.cclaSignature.signature_id, payload)
+      .subscribe(() => this.getCLAManagers())
   }
 
   openManagerModal() {
     let modal = this.modalCtrl.create("AddManagerModal", {
-      projectId: this.projectId
+      signatureId: this.cclaSignature.signature_id
     });
     modal.onDidDismiss(data => {
       if (data) {
-        this.getProjectManagers();
+        this.getCLAManagers();
       }
     });
     modal.present();

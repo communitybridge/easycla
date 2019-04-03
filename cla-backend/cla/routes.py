@@ -221,7 +221,7 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=2)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
-                              user_email: cla.hug_types.email, message=None):
+                              user_email: cla.hug_types.email, project_id: hug.types.uuid, message=None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
 
@@ -230,23 +230,27 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
     """
-    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, message)
+    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, project_id, message)
 
 @hug.post('/user/{user_id}/invite-company-admin', versions=2)
-def invite_company_admin(user_id: hug.types.uuid, user_email: cla.hug_types.email, 
-                        admin_name: hug.types.text, admin_email: cla.hug_types.email):
+def invite_company_admin(user_id: hug.types.uuid,
+                        user_email: cla.hug_types.email, 
+                        admin_name: hug.types.text,
+                        admin_email: cla.hug_types.email,
+                        project_name: hug.types.text):
     """
     POST: /user/{user_id}/invite-company-admin
 
     DATA: {
             'admin_name': John Doe,
             'admin_email': admin@example.com,
-            'user_email': user@example.com, 
+            'user_email': user@example.com,
+            'project_name': Project Name
         }
 
     Sends an Email to the user's admin to sign up through the ccla console. 
     """
-    return cla.controllers.user.invite_company_admin(user_id, user_email, admin_name, admin_email)
+    return cla.controllers.user.invite_company_admin(user_id, user_email, admin_name, admin_email, project_name)
 
 @hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
@@ -472,6 +476,39 @@ def get_project_employee_signatures(company_id: hug.types.uuid, project_id: hug.
      Get all employee signatures for project specified and a company specified
      """
     return cla.controllers.signature.get_project_employee_signatures(company_id, project_id)
+
+
+@hug.get('/signature/{signature_id}/manager', versions=1)
+def get_cla_managers(auth_user: check_auth, signature_id: hug.types.uuid):
+    """
+    GET: /project/{project_id}/managers
+
+    Returns the CLA Managers from a CCLA's signature ACL.
+    """
+    return cla.controllers.signature.get_cla_managers(auth_user.username, signature_id)
+
+@hug.post('/signature/{signature_id}/manager', versions=1)
+def add_cla_manager(auth_user: check_auth, 
+                         signature_id: hug.types.uuid,
+                         lfid: hug.types.text):
+    """
+    POST: /project/{project_id}/manager
+
+    Adds CLA Manager to a CCLA's signature ACL and returns the new list of CLA managers.
+    """
+    return cla.controllers.signature.add_cla_manager(auth_user.username, signature_id, lfid)
+
+@hug.delete('/signature/{signature_id}/manager/{lfid}', versions=1)
+def remove_cla_manager(auth_user: check_auth, 
+                         signature_id: hug.types.uuid,
+                         lfid: hug.types.text):
+    """
+    DELETE: /signature/{signature_id}/manager/{lfid}
+
+    Removes a CLA Manager from a CCLA's signature ACL and returns the modified list of CLA Managers. 
+    """
+    return cla.controllers.signature.remove_cla_manager(auth_user.username, signature_id, lfid)
+
 
 #
 # Repository Routes.
@@ -726,7 +763,6 @@ def get_project(project_id: hug.types.uuid):
 def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/managers
-
     Returns the CLA project managers.
     """
     return cla.controllers.project.get_project_managers(auth_user.username, project_id)
@@ -737,8 +773,7 @@ def add_project_manager(auth_user: check_auth,
                          lfid: hug.types.text):
     """
     POST: /project/{project_id}/manager
-
-    Returns the new list of CCLA managers
+    Returns the new list of project managers
     """
     return cla.controllers.project.add_project_manager(auth_user.username, project_id, lfid)
 
@@ -748,10 +783,10 @@ def remove_project_manager(auth_user: check_auth,
                          lfid: hug.types.text):
     """
     DELETE: /project/{project_id}/project/{lfid}
-
     Returns a success message if it was deleted
     """
     return cla.controllers.project.remove_project_manager(auth_user.username, project_id, lfid)
+
 
 @hug.get('/project/external/{project_external_id}', version=1)
 def get_external_project(auth_user: check_auth, project_external_id: hug.types.text):

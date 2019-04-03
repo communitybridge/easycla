@@ -56,15 +56,28 @@ export class ClaEmployeeRequestAccessModal {
   }
  
   getUser() {
-    if (this.authenticated) { //Gerrit User
+    if (this.authenticated) {
+      // Gerrit Users
       this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
-        if(user.lf_email) {
-          this.userEmails.push(user.lf_email)
+        if (user) {
+          this.userEmails = user.user_emails || [];
+          if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+            this.userEmails.push(user.lf_email) 
+          }
+        }
+        else {
+          console.log("Unable to retrieve user.")
         }
       })
-    } else { // Github User
+    } else {
+      // Github Users
       this.claService.getUser(this.userId).subscribe(user => {
-        this.userEmails = user.user_emails;
+        if (user) {
+          this.userEmails = user.user_emails || [];
+        }
+        else {
+          console.log("Unable to retrieve user.")
+        }
       });
     }
   }
@@ -85,6 +98,7 @@ export class ClaEmployeeRequestAccessModal {
     let message = {
       user_email: this.form.value.email,
       message: this.form.value.message,
+      project_id: this.projectId,
     };
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
       this.emailSent();
@@ -95,7 +109,7 @@ export class ClaEmployeeRequestAccessModal {
   emailSent() {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'Thank you for contacting your CLA Manager. Once they get your message they should be able to resolve your affiliation with your company, however you will need to go through the process again from the pull request message in order to complete the process.',
+      subTitle: 'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());

@@ -80,6 +80,7 @@ def check_and_prepare_employee_signature(project_id, company_id, user_id):
     """
     return get_signing_service().check_and_prepare_employee_signature(str(project_id), str(company_id), str(user_id))
 
+# Deprecated in favor of sending the email through DocuSign
 def send_authority_email(company_name, project_name, authority_name, authority_email):
     """
     Sends email to the specified corporate authority to sign the CCLA Docusign file. 

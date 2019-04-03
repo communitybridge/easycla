@@ -58,14 +58,27 @@ export class ClaCompanyAdminSendEmailModal {
 
   getUser() {
     if (this.authenticated) {
+      // Gerrit Users
       this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
-        if(user.lf_email) {
-          this.userEmails.push(user.lf_email)
+        if (user) {
+          this.userEmails = user.user_emails || [];
+          if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+            this.userEmails.push(user.lf_email) 
+          }
+        }
+        else {
+          console.log("Unable to retrieve user.")
         }
       })
     } else {
+      // Github Users
       this.claService.getUser(this.userId).subscribe(user => {
-        this.userEmails = user.user_emails;
+        if (user) {
+          this.userEmails = user.user_emails || [];
+        }
+        else {
+          console.log("Unable to retrieve user.")
+        }
       });
     }
   }
@@ -76,8 +89,8 @@ export class ClaCompanyAdminSendEmailModal {
 
   emailSent() {
     let alert = this.alertCtrl.create({
-      title: 'E-Mail Successfully Sent!',
-      subTitle: 'An E-Mail has been successfully sent. Please wait for your corporate administrator to add you to your company whitelist',
+      title: 'E-Mail Sent!',
+      subTitle: 'An E-Mail has been sent. Please wait for your CLA Manager to add you to your company whitelist.',
       buttons: ['Dismiss']
     });
     alert.present();
@@ -91,15 +104,18 @@ export class ClaCompanyAdminSendEmailModal {
       // prevent submit
       return;
     }
-    let data = {
-      user_email: this.form.value.useremail,
-      admin_email: this.form.value.adminemail,
-      admin_name: this.form.value.adminname,
-    };
-    this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(response => {
-      this.emailSent();
-      this.dismiss();
+
+    this.claService.getProject(this.projectId).subscribe(project => {
+      let data = {
+        user_email: this.form.value.useremail,
+        admin_email: this.form.value.adminemail,
+        admin_name: this.form.value.adminname,
+        project_name: project.project_name
+      };
+      this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(response => {
+        this.emailSent();
+        this.dismiss();
+      });
     });
   }
-
 }
