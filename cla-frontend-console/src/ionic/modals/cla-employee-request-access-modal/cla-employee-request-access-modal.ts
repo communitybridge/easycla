@@ -59,15 +59,25 @@ export class ClaEmployeeRequestAccessModal {
     if (this.authenticated) {
       // Gerrit Users
       this.claService.getUserWithAuthToken(this.userId).subscribe(user => {
-        this.userEmails = user.user_emails;
-        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-          this.userEmails.push(user.lf_email) 
+        if (user) {
+          this.userEmails = user.user_emails || [];
+          if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+            this.userEmails.push(user.lf_email) 
+          }
+        }
+        else {
+          console.log("Unable to retrieve user.")
         }
       })
     } else {
       // Github Users
       this.claService.getUser(this.userId).subscribe(user => {
-        this.userEmails = user.user_emails;
+        if (user) {
+          this.userEmails = user.user_emails || [];
+        }
+        else {
+          console.log("Unable to retrieve user.")
+        }
       });
     }
   }
