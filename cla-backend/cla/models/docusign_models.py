@@ -376,7 +376,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
         user = User()
         user = User().load(str(user_id))
-        new_signature.set_signature_acl(user.get_lf_username())
+        new_signature.set_signature_acl(user.get_user_github_id())
 
         # Save signature
         new_signature.save()
