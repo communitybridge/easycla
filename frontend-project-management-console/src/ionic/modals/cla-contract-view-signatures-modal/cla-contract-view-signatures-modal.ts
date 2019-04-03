@@ -95,8 +95,8 @@ export class ClaContractViewSignaturesModal {
   getSignatures() {
     this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
       for (let signature of signatures) {
-        signature.documentVersion = signature.signature_document_major_version + '.' + signature.signature_document_minor_version;
-        if (signature.signature_reference_type == "user") {
+        signature.documentVersion = `${signature.signature_document_major_version}.${signature.signature_document_minor_version}`;
+        if (signature.signature_reference_type === "user") {
           // ICLA, Employee CCLA
           this.claService.getUser(signature.signature_reference_id).subscribe(user => {
             if (user)  {
@@ -112,7 +112,7 @@ export class ClaContractViewSignaturesModal {
             }
           });
         }
-        else if (signature.signature_reference_type == "company") {
+        else if (signature.signature_reference_type === "company") {
           // CCLA signed by company authority
           this.claService.getCompany(signature.signature_reference_id).subscribe(company => {
             if(company) {
