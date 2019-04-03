@@ -28,12 +28,11 @@
             </ion-card-title>
             <div *ngIf="!error">
               <p>
-                We are generating a document to sign for the purposes of your
-                Corporate Contributers License Agreement. Please fill out
+                We are generating a document to sign for the purposes of your CLA. Please fill out
                 accurately and complete the signing process.
               </p>
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
-                Open CCLA Agreement
+                Open CLA
               </button>
             </div>
             <div *ngIf="error">

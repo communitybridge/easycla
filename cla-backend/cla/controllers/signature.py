@@ -5,10 +5,9 @@ Controller related to signature operations.
 import uuid
 import hug.types
 import cla.hug_types
-from cla.utils import get_signature_instance, get_user_instance, get_company_instance, \
-                      get_project_instance, get_email_service
+from cla.utils import get_email_service
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Project, Signature
+from cla.models.dynamo_models import User, Project, Signature, Company
 
 def get_signatures():
     """
@@ -17,7 +16,7 @@ def get_signatures():
     :return: List of signatures in dict format.
     :rtype: [dict]
     """
-    signatures = [signature.to_dict() for signature in get_signature_instance().all()]
+    signatures = [signature.to_dict() for signature in Signature().all()]
     return signatures
 
 def get_signature(signature_id):
@@ -29,7 +28,7 @@ def get_signature(signature_id):
     :return: dict representation of the signature object.
     :rtype: dict
     """
-    signature = get_signature_instance()
+    signature = Signature()
     try:
         signature.load(signature_id=str(signature_id))
     except DoesNotExist as err:
@@ -44,7 +43,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
                      signature_signed=False,
                      signature_return_url=None,
                      signature_sign_url=None,
-                     signature_user_ccla_company_id=None):
+                     signature_user_ccla_company_id=None,
+                     signature_acl=None):
     """
     Creates an signature and returns the newly created signature in dict format.
 
@@ -69,16 +69,16 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     :return: A dict of a newly created signature.
     :rtype: dict
     """
-    signature = get_signature_instance()
+    signature = Signature()
     signature.set_signature_id(str(uuid.uuid4()))
-    project = get_project_instance()
+    project = Project()
     try:
         project.load(project_id=str(signature_project_id))
     except DoesNotExist as err:
         return {'errors': {'signature_project_id': str(err)}}
     signature.set_signature_project_id(str(signature_project_id))
     if signature_reference_type == 'user':
-        user = get_user_instance()
+        user = User()
         try:
             user.load(signature_reference_id)
         except DoesNotExist as err:
@@ -88,7 +88,7 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     else:
-        company = get_company_instance()
+        company = Company()
         try:
             company.load(signature_reference_id)
         except DoesNotExist as err:
@@ -97,6 +97,10 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
             document = project.get_project_corporate_document()
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
+
+    # Set username to this signature ACL
+    if signature_acl is not None:
+        signature.set_signature_acl(signature_acl)
 
     signature.set_signature_document_minor_version(document.get_document_minor_version())
     signature.set_signature_document_major_version(document.get_document_major_version())
@@ -148,7 +152,7 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
     :return: dict representation of the signature object.
     :rtype: dict
     """
-    signature = get_signature_instance()
+    signature = Signature()
     try: # Try to load the signature to update.
         signature.load(str(signature_id))
     except DoesNotExist as err:
@@ -234,9 +238,9 @@ def get_signature_approved_email_content(signature): # pylint: disable=invalid-n
         cla.log.info('Not sending signature approved emails for CCLAs')
         return
     subject = 'CLA Signature Approved'
-    user = get_user_instance()
+    user = User()
     user.load(signature.get_signature_reference_id())
-    project = get_project_instance()
+    project = Project()
     project.load(signature.get_signature_project_id())
     recipients = [user.get_user_id()]
     body = 'Hello %s. Your Contributor License Agreement for %s has been approved!' \
@@ -250,7 +254,7 @@ def delete_signature(signature_id):
     :param signature_id: The UUID of the signature.
     :type signature_id: UUID
     """
-    signature = get_signature_instance()
+    signature = Signature()
     try: # Try to load the signature to delete.
         signature.load(str(signature_id))
     except DoesNotExist as err:
@@ -266,7 +270,7 @@ def get_user_signatures(user_id):
     :param user_id: The ID of the user in question.
     :type user_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_reference(str(user_id), 'user')
+    signatures = Signature().get_signatures_by_reference(str(user_id), 'user')
     return [signature.to_dict() for signature in signatures]
 
 def get_user_project_signatures(user_id, project_id, signature_type=None):
@@ -282,7 +286,7 @@ def get_user_project_signatures(user_id, project_id, signature_type=None):
     :return: The list of signatures requested.
     :rtype: [cla.models.model_interfaces.Signature]
     """
-    sig = get_signature_instance()
+    sig = Signature()
     signatures = sig.get_signatures_by_project(str(project_id),
                                                signature_reference_type='user',
                                                signature_reference_id=str(user_id))
@@ -305,14 +309,16 @@ def get_company_signatures(company_id):
     :param company_id: The ID of the company in question.
     :type company_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_reference(company_id,
+    signatures = Signature().get_signatures_by_reference(company_id,
                                                                       'company')
 
     return [signature.to_dict() for signature in signatures]
 
 def get_company_signatures_by_acl(username, company_id):
     """
-    Get all signatures for company filtered by it's acl
+    Get all signatures for company filtered by it's ACL.
+    A company's signature will be returned only if the provided
+    username appears in the signature's ACL.
 
     :param username: The username of the authenticated user
     :type username: string
@@ -321,23 +327,14 @@ def get_company_signatures_by_acl(username, company_id):
     """
     # Get signatures by company reference
     all_signatures = Signature().get_signatures_by_reference(company_id, 'company')
-    # Filter signatures which manager is authorired to see
+
+    # Filter signatures this manager is authorized to see
     signatures = []
     for signature in all_signatures:
-        project_id = signature.get_signature_project_id()
-
-        project = Project()
-        try:
-            project.load(project_id=str(project_id))
-        except DoesNotExist as err:
-            return {'errors': {'project_id': str(err)}}
-
-        if username in project.get_project_acl():
+        if username in signature.get_signature_acl():
             signatures.append(signature)
 
-    signatures_dict = [signature.to_dict() for signature in signatures]
-
-    return signatures_dict
+    return [signature.to_dict() for signature in signatures]
 
 def get_project_signatures(project_id):
     """
@@ -346,7 +343,7 @@ def get_project_signatures(project_id):
     :param project_id: The ID of the project in question.
     :type project_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_project(str(project_id))
+    signatures = Signature().get_signatures_by_project(str(project_id))
     return [signature.to_dict() for signature in signatures]
 
 
@@ -359,7 +356,7 @@ def get_project_company_signatures(company_id, project_id):
     :type company_id: string
     :type project_id: string
     """
-    signatures = get_signature_instance().get_signatures_by_company_project(str(company_id),
+    signatures = Signature().get_signatures_by_company_project(str(company_id),
                                                                             str(project_id))
     return signatures
 
@@ -372,6 +369,121 @@ def get_project_employee_signatures(company_id, project_id):
     :type company_id: string
     :type project_id: string
     """
-    signatures = get_signature_instance().get_employee_signatures_by_company_project(str(company_id),
+    signatures = Signature().get_employee_signatures_by_company_project(str(company_id),
                                                                             str(project_id))
     return signatures
+
+def get_cla_managers(username, signature_id):
+    """
+    Returns CLA managers from the CCLA signature ID.
+
+    :param username: The LF username
+    :type username: string
+    :param signature_id: The Signature ID of the CCLA signed. 
+    :type signature_id: string
+    :return: dict representation of the project managers.
+    :rtype: dict
+    """
+    signature = Signature()
+    try:
+        signature.load(str(signature_id))
+    except DoesNotExist as err:
+        return {'errors': {'signature_id': str(err)}}
+
+    # Get Signature ACL
+    signature_acl = signature.get_signature_acl()
+
+    if username not in signature_acl:
+        return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
+
+    return get_managers_dict(signature_acl)
+
+
+
+
+def add_cla_manager(username, signature_id, lfid):
+    """
+    Adds the LFID to the signature ACL and returns a new list of CLA Managers. 
+
+    :param username: username of the user
+    :type username: string
+    :param signature_id: The ID of the project
+    :type signature_id: UUID
+    :param lfid: the lfid (manager username) to be added to the project acl
+    :type lfid: string
+    """
+    # Find project
+    signature = Signature()
+    try:
+        signature.load(str(signature_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    # Get Signature ACL
+    signature_acl = signature.get_signature_acl()
+
+    if username not in signature_acl:
+        return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
+
+    # Add lfid to acl
+    signature.add_signature_acl(lfid)
+    signature.save()
+
+    return get_managers_dict(signature_acl)
+
+def remove_cla_manager(username, signature_id, lfid):
+    """
+    Removes the LFID from the project ACL
+
+    :param username: username of the user
+    :type username: string
+    :param project_id: The ID of the project
+    :type project_id: UUID
+    :param lfid: the lfid (manager username) to be removed to the project acl
+    :type lfid: string
+    """
+    # Find project
+    signature = Signature()
+    try:
+        signature.load(str(signature_id))
+    except DoesNotExist as err:
+        return {'errors': {'signature_id': str(err)}}
+
+    # Validate user is the manager of the project
+    signature_acl = signature.get_signature_acl()
+    if username not in signature_acl:
+        return {'errors': {'user': "You are not authorized to manage this CCLA."}}
+
+    # Avoid to have an empty acl
+    if len(signature_acl) == 1 and username == lfid:
+        return {'errors': {'user': "You cannot remove this manager because a CCLA must have at least one CLA manager."}}
+    
+    # Remove LFID from the acl
+    signature.remove_signature_acl(lfid)
+    signature.save()
+
+    # Return modified managers
+    return get_managers_dict(signature_acl)
+
+
+def get_managers_dict(signature_acl):
+    # Helper function to get a list of all cla managers from a CCLA Signature ACL
+    # Generate managers dict
+    managers_dict = []
+    for lfid in signature_acl:
+        user = User()
+        user = user.get_user_by_username(str(lfid))
+        if user is not None:
+            # Manager found, fill with it's information
+            managers_dict.append({
+                'name': user.get_user_name(),
+                'email': user.get_user_email(),
+                'lfid': user.get_lf_username()
+            })
+        else:
+            # Manager not in database yet, only set the lfid
+            managers_dict.append({
+                'lfid': str(lfid)
+            })
+
+    return managers_dict

@@ -28,7 +28,11 @@
             <h1>
               You are done!
             </h1>
-            <p>You've completed the CLA steps necessary to contribute. You can now return to writing awesome stuff. If you had a pull request in process you may need to refresh the page to see the updated checks.</p>
+            <p>You've completed the CLA steps necessary to contribute. You can now return to writing awesome stuff. <p> 
+            <p *ngIf="signingType == 'Github'"> 
+            If you had a pull request in process you may need to refresh the page to see the updated checks.</p>
+            <p *ngIf="signingType == 'Gerrit'"> 
+            If you were logged in to your Gerrit Instance, you may need to log out and sign-in again. </p>
             <button *ngIf="signature.signature_return_url" ion-button (click)="gotoRepo()">
               Return to Repo
             </button>
