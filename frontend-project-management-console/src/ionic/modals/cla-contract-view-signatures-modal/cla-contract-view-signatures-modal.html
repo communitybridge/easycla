@@ -44,13 +44,13 @@
             <tbody>
             <tr *ngFor="let signature of signatures">
               <td data-title="Entity Type">
-                    <span *ngIf="signature.signature_reference_type == 'user' && signature.signature_user_ccla_company_id == null  ">
+                    <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
                       <ion-icon name="person"></ion-icon> Individual
                     </span>
-                    <span *ngIf="signature.signature_reference_type == 'company'">
+                    <span *ngIf="signature.signature_reference_type === 'company'">
                       <ion-icon name="briefcase"></ion-icon> Company
                     </span>
-                    <span *ngIf="signature.signature_user_ccla_company_id != null  ">
+                    <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
                       <ion-icon name="person"></ion-icon> Employee
                     </span>
               </td>
