@@ -44,27 +44,29 @@
             <tbody>
             <tr *ngFor="let signature of signatures">
               <td data-title="Entity Type">
-                    <span *ngIf="signature.signatureType == 'individual'">
-                      <ion-icon name="person"></ion-icon>
+                    <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
+                      <ion-icon name="person"></ion-icon> Individual
                     </span>
-                <span *ngIf="signature.signatureType == 'employee'">
-                      <ion-icon name="briefcase"></ion-icon>
-                      <ion-icon name="person"></ion-icon>
+                    <span *ngIf="signature.signature_reference_type === 'company'">
+                      <ion-icon name="briefcase"></ion-icon> Company
+                    </span>
+                    <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
+                      <ion-icon name="person"></ion-icon> Employee
                     </span>
               </td>
               <td data-title="Name">
-                    <span *ngIf="signature.referenceEntity">
-                      {{ signature.referenceEntity.user_name }}
+                    <span *ngIf="signature.user">
+                      {{ signature.user.user_name }}
                     </span>
               </td>
               <td data-title="Company">
-                    <span *ngIf="signature.signature_user_ccla_company_id">
-                      {{ signature.signature_user_ccla_company_id }}
+                    <span *ngIf="signature.company">
+                      {{ signature.company.company_name }}
                     </span>
               </td>
               <td data-title="GitHub ID">
-                    <span *ngIf="signature.referenceEntity">
-                      {{ signature.referenceEntity.user_github_id }}
+                    <span *ngIf="signature.user?.user_github_id">
+                      {{ signature.user?.user_github_id }}
                     </span>
               </td>
               <td data-title="Version">

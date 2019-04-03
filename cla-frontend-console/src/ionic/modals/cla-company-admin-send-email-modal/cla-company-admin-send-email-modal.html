@@ -21,27 +21,27 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-            <p>Please send an E-Mail to your company's administrator to set up a Corporate CLA account and add you to their whitelist. </p>
+            <p>Please send an E-Mail to your CLA's manager to set up a Corporate CLA account and add you to their whitelist. </p>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col col-12>
             <ion-item>
-              <ion-label stacked>Administrator Name:</ion-label>
+              <ion-label stacked>CLA Manager Name:</ion-label>
               <ion-textarea formControlName="adminname"></ion-textarea>
             </ion-item>
-            <p class="field-description">Enter your administrator's name.</p>
+            <p class="field-description">Enter your CLA manager's name.</p>
         </ion-col>  
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Administrator E-Mail:</ion-label>
+            <ion-label stacked>CLA Manager E-Mail:</ion-label>
             <ion-textarea formControlName="adminemail"></ion-textarea>
           </ion-item>
           <p class="field-description">Enter an E-Mail.</p>
         </ion-col>
         <ion-col col-12>
             <ion-item>
-              <ion-label stacked>Email</ion-label>
+              <ion-label stacked>Your E-mail</ion-label>
               <ion-select formControlName="useremail" interface="popover">
                 <ion-option *ngFor="let useremail of userEmails" value="{{ useremail }}">{{ useremail }}</ion-option>
               </ion-select>
