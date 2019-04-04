@@ -550,15 +550,10 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.info('CCLA signature object already signed')
                 return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
             else:
-                if not send_as_email:
-                    #signature object exists but still has not been manually signed.
-                    cla.log.info('CCLA signature object still missing signature')
-                else:
-                    #signature object exists and the user wants to send it to a corp authority.
-                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
+                callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
 
-                    # Populate sign url
-                    self.populate_sign_url(latest_signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
+                # Populate sign url
+                self.populate_sign_url(latest_signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
                 
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
