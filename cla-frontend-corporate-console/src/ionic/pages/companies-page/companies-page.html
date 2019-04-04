@@ -17,8 +17,8 @@
         <ion-card>
           <ion-card-title>
             <h1>Companies</h1>
-            <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-              Add CLA Group
+            <button ion-button (click)="openCompanyModal()" color="secondary">
+              Add Company
             </button>
           </ion-card-title>
           <ion-card-content>
@@ -33,13 +33,6 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-
-  <ion-fab class="add-company-btn">
-    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
-    <ion-fab-list side="top">
-      <button title="Add Company" ion-fab (click)="openCompanyModal()"><ion-icon name="briefcase"></ion-icon></button>
-    </ion-fab-list>
-  </ion-fab>
 
 </ion-content>
 
