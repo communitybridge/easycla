@@ -635,6 +635,13 @@ class DocuSign(signing_service_interface.SigningService):
                                CLA document set', project.get_project_id())
                 return
 
+        # Void the existing envelope to prevent multiple envelopes pending for a signer. 
+        envelope_id = signature.get_signature_envelope_id()
+        if envelope_id is not None:
+            message = "You are getting this message because your DocuSign Session for project {} expired. A new session will be in place for your signing process. ".format(project.get_project_name())
+            self.client.void_envelope(envelope_id, message)
+
+
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
         tabs = get_docusign_tabs_from_document(document, document_id, default_values=default_values)
@@ -722,6 +729,11 @@ class DocuSign(signing_service_interface.SigningService):
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
+
+        # Save Envelope ID in signature.
+        signature.set_signature_envelope_id(envelope.envelopeId)
+        signature.save()
+
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
