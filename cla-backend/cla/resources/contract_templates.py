@@ -428,6 +428,102 @@ class OpenBMCTemplate(ContractTemplate):
                  'page': 5}
             ]
 
+
+class OpenColorIOTemplate(ContractTemplate):
+    def __init__(self, document_type='Individual', major_version=1, minor_version=1):
+        super().__init__(document_type, major_version, minor_version)
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        fname = '%s/opencolorio-%s-cla.html' %(cwd, document_type.lower())
+        self.body = open(fname).read()
+
+    def get_tabs(self):
+        if self.document_type == 'Individual':
+            return [
+                {'type': 'sign',
+                 'id': 'sign',
+                 'name': 'Please Sign',
+                 'position_x': 180,
+                 'position_y': 317,
+                 'width': 0,
+                 'height': 0,
+                 'page': 1},
+                {'type': 'text_unlocked',
+                 'id': 'name',
+                 'name': 'Name',
+                 'position_x': 85,
+                 'position_y': 382,
+                 'width': 300,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'date',
+                 'id': 'date',
+                 'name': 'Date',
+                 'position_x': 157,
+                 'position_y': 412,
+                 'width': 0,
+                 'height': 0,
+                 'page': 1}
+            ]
+        else:
+            return [
+                {'type': 'text',
+                 'id': 'cla_manager_name',
+                 'name': 'CLA Manager Name',
+                 'position_x': 86,
+                 'position_y': 525,
+                 'width': 200,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'text',
+                 'id': 'cla_manager_email',
+                 'name': 'CLA Manager Email',
+                 'position_x': 304,
+                 'position_y': 525,
+                 'width': 200,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'text_unlocked',
+                 'id': 'corporation_name',
+                 'name': 'Company Name',
+                 'position_x': 135,
+                 'position_y': 608,
+                 'width': 300,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'sign',
+                 'id': 'sign',
+                 'name': 'Please Sign',
+                 'position_x': 180,
+                 'position_y': 603,
+                 'width': 0,
+                 'height': 0,
+                 'page': 1},
+                {'type': 'text_unlocked',
+                 'id': 'name',
+                 'name': 'Name',
+                 'position_x': 85,
+                 'position_y': 665,
+                 'width': 300,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'text_unlocked',
+                 'id': 'title',
+                 'name': 'Title',
+                 'position_x': 78,
+                 'position_y': 692,
+                 'width': 300,
+                 'height': 20,
+                 'page': 1},
+                {'type': 'date',
+                 'id': 'date',
+                 'name': 'Date',
+                 'position_x': 149,
+                 'position_y': 720,
+                 'width': 0,
+                 'height': 0,
+                 'page': 1}
+            ]
+
 class TungstenFabricTemplate(ContractTemplate):
     def __init__(self, document_type='Individual', major_version=1, minor_version=0):
         super().__init__(document_type, major_version, minor_version)
