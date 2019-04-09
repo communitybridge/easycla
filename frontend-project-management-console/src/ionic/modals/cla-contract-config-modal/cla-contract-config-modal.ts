@@ -58,7 +58,6 @@ export class ClaContractConfigModal {
   }
 
   ngOnInit() {
-    this.form.controls['cclaAndIcla'].setValue(true);
   }
 
   submit() {
@@ -76,8 +75,8 @@ export class ClaContractConfigModal {
     }
   }
 
-  checkMandatory () {
-    this.form.controls['cclaAndIcla'].setValue(true);
+  checkMandatory (value: boolean = true) {
+    this.form.controls['cclaAndIcla'].setValue(value);
   }
 
   postProject() {
