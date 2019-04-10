@@ -32,12 +32,13 @@
 
           <ion-item no-lines>
             <ion-label><ion-icon name="person"></ion-icon> Individual CLA: to be signed as an individual contributing</ion-label>
-            <ion-checkbox color="secondary" formControlName="icla"></ion-checkbox>
+            <ion-checkbox color="secondary" formControlName="icla" (ionChange)="checkMandatory(form.controls.icla.value)"></ion-checkbox>
           </ion-item>
 
           <ion-item class="indented" no-lines>
             <ion-label class="no-elipsis">Contributors under Corporate CLA must also sign Individual CLA</ion-label>
-            <ion-checkbox color="secondary" formControlName="cclaAndIcla"></ion-checkbox>
+            <ion-checkbox color="secondary" formControlName="cclaAndIcla"
+                          [disabled]="!form.controls.icla.value" (ionChange)="checkMandatory(form.controls.icla.value)"></ion-checkbox>
           </ion-item>
         </ion-col>
       </ion-row>
