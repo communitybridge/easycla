@@ -1264,6 +1264,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_acl = UnicodeSetAttribute(default=set())
     signature_project_index = ProjectSignatureIndex()
     signature_reference_index = ReferenceSignatureIndex()
+    signature_envelope_id = UnicodeAttribute(null=True)
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
 
@@ -1292,6 +1293,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_user_ccla_company_id=None,
                  signature_acl=None,
                  signature_return_url_type=None,
+                 signature_envelope_id=None,
                  domain_whitelist=None,
                  email_whitelist=None):
         super(Signature).__init__()
@@ -1312,6 +1314,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_user_ccla_company_id = signature_user_ccla_company_id
         self.model.signature_acl = signature_acl
         self.model.signature_return_url_type = signature_return_url_type
+        self.model.signature_envelope_id = signature_envelope_id
         self.model.domain_whitelist = domain_whitelist
         self.model.email_whitelist = email_whitelist
 
@@ -1380,11 +1383,15 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         # Refers to either Gerrit or GitHub
         return self.model.signature_return_url_type
 
+    def get_signature_envelope_id(self):
+        return self.model.signature_envelope_id
+
     def get_domain_whitelist(self):
         return self.model.domain_whitelist
 
     def get_email_whitelist(self):
         return self.model.email_whitelist
+        
 
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
@@ -1433,6 +1440,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
+
+    def set_signature_envelope_id(self, signature_envelope_id):
+        self.model.signature_envelope_id = signature_envelope_id
 
     def set_domain_whitelist(self, domain_whitelist):
         self.model.domain_whitelist = domain_whitelist
