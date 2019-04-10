@@ -987,6 +987,7 @@ def post_project_document_template(auth_user: check_auth,
                                        'CNCFTemplate',
                                        'OpenBMCTemplate',
                                        'TungstenFabricTemplate',
+                                       'OpenColorIOTemplate',
                                        'OpenVDBTemplate'
                                     ]),
                                    new_major_version=None):
