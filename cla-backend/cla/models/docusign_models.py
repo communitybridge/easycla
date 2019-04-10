@@ -360,11 +360,18 @@ class DocuSign(signing_service_interface.SigningService):
         if return_url is None:
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
 
+        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
+        project = Project()
+        project.load(project_id)
+
+        # Get project's latest corporate document to get major/minor version numbers. 
+        last_document = project.get_latest_corporate_document()
+    
         # return_url may still be empty at this point - the console will deal with it
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
-                                signature_document_minor_version=0,
-                                signature_document_major_version=0,
+                                signature_document_minor_version=last_document.get_document_minor_version(),
+                                signature_document_major_version=last_document.get_document_major_version(),
                                 signature_reference_id=user_id,
                                 signature_reference_type='user',
                                 signature_type='cla',
@@ -376,14 +383,10 @@ class DocuSign(signing_service_interface.SigningService):
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
         user = User()
         user.load(str(user_id))
-        new_signature.set_signature_acl(user.get_user_github_id())
+        new_signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
 
         # Save signature
         new_signature.save()
-
-        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
-        project = Project()
-        project.load(project_id)
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
@@ -430,10 +433,17 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
             return {'errors': {'missing_gerrit': str(err)}}
 
+        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
+        project = Project()
+        project.load(project_id)
+
+        # Get project's latest corporate document to get major/minor version numbers. 
+        last_document = project.get_latest_corporate_document()
+
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
-                                signature_document_minor_version=0,
-                                signature_document_major_version=0,
+                                signature_document_minor_version=last_document.get_document_minor_version(),
+                                signature_document_major_version=last_document.get_document_major_version(),
                                 signature_reference_id=user_id,
                                 signature_reference_type='user',
                                 signature_type='cla',
