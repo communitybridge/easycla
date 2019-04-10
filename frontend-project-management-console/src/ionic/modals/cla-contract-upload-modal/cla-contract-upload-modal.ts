@@ -56,6 +56,7 @@ export class ClaContractUploadModal {
       CNCFTemplate: 'CNCF Template',
       OpenBMCTemplate: 'OpenBMC Template',
       TungstenFabricTemplate: 'Tungsten Fabric Template',
+      OpenColorIOTemplate: 'OpenColorIO Template',
       OpenVDBTemplate: 'OpenVDB Template'
     };
   }
