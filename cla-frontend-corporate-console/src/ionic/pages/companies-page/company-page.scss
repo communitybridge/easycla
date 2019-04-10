@@ -1,0 +1,50 @@
+company-page {
+  .scroll-content {
+    margin-top: 96px !important;
+  }
+
+  .add-company-btn {
+    bottom: 155px;
+    right: 15px;
+  }
+
+  ion-header {
+    border-bottom: 40px solid #4C79B6;
+
+    .toolbar {
+      color: #7b7b7b;
+      background-color: white;
+
+      ion-icon {
+        color: #7b7b7b;
+        line-height: 6px;
+
+        &:before {
+          font-size: 19px;
+        }
+      }
+    }
+
+    .navbar-logo {
+      width: 40px;
+      position: absolute;
+      left: calc(50% - 20px);
+      top: 7px;
+    }
+  }
+
+  header {
+    padding-left: 40px;
+    &:after {
+      background-image: none !important;
+    }
+  }
+}
+
+ion-card-title {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
