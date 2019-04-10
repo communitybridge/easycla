@@ -32,20 +32,20 @@
         </ion-col>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Manager email:</ion-label>
-            <ion-input name="userEmail" formControlName="userEmail" [(ngModel)]="userEmail" [readonly]="true" [disabled]="isDisbled"></ion-input>
+            <ion-label stacked>Your email:</ion-label>
+            <ion-input name="userEmail" formControlName="userEmail" [(ngModel)]="userEmail" [readonly]="true" [disabled]="true"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.userEmail.valid && (form.controls.userEmail.touched || submitAttempt)" no-lines>
-            <p>* A manager email is required.</p>
+            <p>* Your email is required.</p>
           </ion-item>
         </ion-col>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Manager name:</ion-label>
-            <ion-input name="userName" formControlName="userName" [(ngModel)]="userName" [readonly]="true" [disabled]="isDisbled"></ion-input>
+            <ion-label stacked>Your name:</ion-label>
+            <ion-input name="userName" formControlName="userName" [(ngModel)]="userName" [readonly]="true" [disabled]="true"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.userName.valid && (form.controls.userName.touched || submitAttempt)" no-lines>
-            <p>* A manager name is required.</p>
+            <p>* Your name is required.</p>
           </ion-item>
         </ion-col>
       </ion-row>
