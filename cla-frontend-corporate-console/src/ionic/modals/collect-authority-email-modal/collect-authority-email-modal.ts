@@ -68,7 +68,7 @@ export class CollectAuthorityEmailModal {
           text: 'Dismiss',
           role: 'dismiss',
           handler: () => {
-            this.navCtrl.push(CompanyPage, {companyId: this.companyId});
+            this.navCtrl.pop();
           }
         }]
     });

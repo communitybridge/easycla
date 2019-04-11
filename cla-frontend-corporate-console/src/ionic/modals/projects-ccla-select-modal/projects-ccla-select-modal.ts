@@ -52,6 +52,8 @@ export class ProjectsCclaSelectModal {
       projectId: project.project_id,
       company: this.company
     });
+
+    this.dismiss();
   }
 
   dismiss() {
