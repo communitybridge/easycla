@@ -34,3 +34,13 @@ companies-page {
     top: 7px;
   }
 }
+
+.card-md {
+  box-shadow: none !important;
+  padding: 30px;
+}
+
+ion-card-title {
+  display: flex !important;
+  justify-content: space-between;
+}

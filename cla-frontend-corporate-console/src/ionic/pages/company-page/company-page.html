@@ -28,7 +28,10 @@
         <ion-card>
           <ion-card-content>
             <ion-card-title>
-              Signed Project CCLAs
+              <h1>Signed CLAs</h1>
+              <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
+                New CLA
+              </button>
             </ion-card-title>
             <loading-spinner [loading]="loading.projects"></loading-spinner>
             <ion-list>
@@ -44,15 +47,6 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-
-  <ion-fab class="add-company-btn">
-    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
-    <ion-fab-list side="top">
-      <button title="Sign New Project CCLA" ion-fab (click)="openProjectsCclaSelectModal()">
-        <ion-icon name="document"></ion-icon>
-      </button>
-    </ion-fab-list>
-  </ion-fab>
 </ion-content>
 
 <cla-footer></cla-footer>
