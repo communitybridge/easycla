@@ -182,7 +182,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_callback_url=callback_url)
 
         # Set signature ACL
-        signature.set_signature_acl(user.get_lf_username())
+        signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
 
         # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
