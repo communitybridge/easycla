@@ -1166,8 +1166,8 @@ def get_docusign_tabs_from_document(document: Document,
 
 # Returns a dictionary of document id to value
 def create_default_company_values(company: Company,
-                                    signatory_name: str,
-                                    signatory_email: str,
+                                    manager_name: str,
+                                    manager_email: str,
                                     scheduleA: str) -> Dict[str, Any]:
     values = {}
 
@@ -1176,14 +1176,17 @@ def create_default_company_values(company: Company,
         values['corporation_name'] = company.get_company_name()
         values['corporation'] = company.get_company_name()
 
-    if signatory_name is not None:
-        values['point_of_contact'] = signatory_name
+    if manager_name is not None:
+        values['point_of_contact'] = manager_name
+        values['cla_manager_name'] = manager_name
 
-    if signatory_email is not None:
-        values['email'] = signatory_email
+    if manager_email is not None:
+        values['email'] = manager_email
+        values['cla_manager_email'] = manager_email
 
     if scheduleA is not None:
         values['scheduleA'] = scheduleA
+
 
     return values
 
