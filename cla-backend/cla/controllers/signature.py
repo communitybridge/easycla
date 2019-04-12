@@ -8,6 +8,7 @@ import cla.hug_types
 from cla.utils import get_email_service
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Project, Signature, Company
+from cla.controllers import company
 
 def get_signatures():
     """
@@ -398,10 +399,7 @@ def get_cla_managers(username, signature_id):
 
     return get_managers_dict(signature_acl)
 
-
-
-
-def add_cla_manager(username, signature_id, lfid):
+def add_cla_manager(auth_user, signature_id, lfid):
     """
     Adds the LFID to the signature ACL and returns a new list of CLA Managers. 
 
@@ -422,8 +420,10 @@ def add_cla_manager(username, signature_id, lfid):
     # Get Signature ACL
     signature_acl = signature.get_signature_acl()
 
-    if username not in signature_acl:
+    if auth_user.username not in signature_acl:
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
+
+    company.add_permission(auth_user, lfid, signature.get_signature_reference_id(), ignore_auth_user=True)
 
     # Add lfid to acl
     signature.add_signature_acl(lfid)

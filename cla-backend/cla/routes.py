@@ -496,7 +496,7 @@ def add_cla_manager(auth_user: check_auth,
 
     Adds CLA Manager to a CCLA's signature ACL and returns the new list of CLA managers.
     """
-    return cla.controllers.signature.add_cla_manager(auth_user.username, signature_id, lfid)
+    return cla.controllers.signature.add_cla_manager(auth_user, signature_id, lfid)
 
 @hug.delete('/signature/{signature_id}/manager/{lfid}', versions=1)
 def remove_cla_manager(auth_user: check_auth, 
