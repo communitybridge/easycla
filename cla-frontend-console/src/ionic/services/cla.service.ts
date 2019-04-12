@@ -854,7 +854,12 @@ export class ClaService {
     return this.http
     .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
     .map(res => res.json());
+  }
 
+  getProjectGerrits(projectId) {
+    return this.http
+    .securedGet(this.claApiUrl + "/v1/project/" + projectId + "/gerrits")
+    .map(res => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
