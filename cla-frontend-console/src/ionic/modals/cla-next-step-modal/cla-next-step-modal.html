@@ -20,7 +20,10 @@
           <div *ngIf="!userIsDone">
             <h1>You need to sign an ICLA</h1>
             <p>{{ project.project_name }} requires users covered by a ccla to also sign an icla. Click the button below to start that process</p>
-            <button ion-button (click)="openIclaPage()">
+            <button *ngIf="signingType == 'Github'" ion-button (click)="openIclaPage()">
+              Open ICLA Page
+            </button>
+            <button *ngIf="signingType == 'Gerrit'" ion-button (click)="openGerritIclaPage()">
               Open ICLA Page
             </button>
           </div>
