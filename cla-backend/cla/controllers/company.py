@@ -180,8 +180,8 @@ def get_manager_companies(manager_id):
     companies = Company().get_companies_by_manager(manager_id)
     return companies
 
-def add_permission(auth_user: AuthUser, username: str, company_id: str):
-    if auth_user.username not in admin_list:
+def add_permission(auth_user: AuthUser, username: str, company_id: str, ignore_auth_user=False):
+    if not ignore_auth_user and auth_user.username not in admin_list:
         return {'error': 'unauthorized'}
 
     cla.log.info('company ({}) added for user ({}) by {}'.format(company_id, username, auth_user.username))
