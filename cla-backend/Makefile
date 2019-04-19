@@ -43,6 +43,17 @@ add_project_manager_permission:
 		-d '{"username": "$(username)", "project_sfdc_id": "$(project_sfdc_id)"}' \
 		"$(base_url)/v1/project/permission"
 
+# username: LFID username
+# project_sfdc_id: project SFDC ID
+# bearer_token: Auth0 JWT
+# base_url: the base API url
+.PHONY: remove_project_manager_permission
+remove_project_manager_permission:
+	curl -XDELETE \
+		-H "Content-type: application/json" \
+		-H "Authorization: Bearer $(bearer_token)" \
+		-d '{"username": "$(username)", "project_sfdc_id": "$(project_sfdc_id)"}' \
+		"$(base_url)/v1/project/permission"
 
 # username: LFID username
 # company_id: company ID

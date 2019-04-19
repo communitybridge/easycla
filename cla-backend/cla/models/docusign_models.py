@@ -182,7 +182,7 @@ class DocuSign(signing_service_interface.SigningService):
                                 signature_callback_url=callback_url)
 
         # Set signature ACL
-        signature.set_signature_acl(user.get_lf_username())
+        signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
 
         # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
@@ -360,11 +360,18 @@ class DocuSign(signing_service_interface.SigningService):
         if return_url is None:
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
 
+        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
+        project = Project()
+        project.load(project_id)
+
+        # Get project's latest corporate document to get major/minor version numbers. 
+        last_document = project.get_latest_corporate_document()
+    
         # return_url may still be empty at this point - the console will deal with it
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
-                                signature_document_minor_version=0,
-                                signature_document_major_version=0,
+                                signature_document_minor_version=last_document.get_document_minor_version(),
+                                signature_document_major_version=last_document.get_document_major_version(),
                                 signature_reference_id=user_id,
                                 signature_reference_type='user',
                                 signature_type='cla',
@@ -376,14 +383,10 @@ class DocuSign(signing_service_interface.SigningService):
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
         user = User()
         user.load(str(user_id))
-        new_signature.set_signature_acl(user.get_user_github_id())
+        new_signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
 
         # Save signature
         new_signature.save()
-
-        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
-        project = Project()
-        project.load(project_id)
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
@@ -430,10 +433,17 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.error('Cannot load Gerrit instance for the given project: %s',project_id)
             return {'errors': {'missing_gerrit': str(err)}}
 
+        # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
+        project = Project()
+        project.load(project_id)
+
+        # Get project's latest corporate document to get major/minor version numbers. 
+        last_document = project.get_latest_corporate_document()
+
         new_signature = Signature(signature_id=str(uuid.uuid4()),
                                 signature_project_id=project_id,
-                                signature_document_minor_version=0,
-                                signature_document_major_version=0,
+                                signature_document_minor_version=last_document.get_document_minor_version(),
+                                signature_document_major_version=last_document.get_document_major_version(),
                                 signature_reference_id=user_id,
                                 signature_reference_type='user',
                                 signature_type='cla',
@@ -550,15 +560,10 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.info('CCLA signature object already signed')
                 return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
             else:
-                if not send_as_email:
-                    #signature object exists but still has not been manually signed.
-                    cla.log.info('CCLA signature object still missing signature')
-                else:
-                    #signature object exists and the user wants to send it to a corp authority.
-                    callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
+                callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
 
-                    # Populate sign url
-                    self.populate_sign_url(latest_signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
+                # Populate sign url
+                self.populate_sign_url(latest_signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email, authority_name, authority_email, default_values=default_cla_values)
                 
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -639,6 +644,13 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.error('Could not get sign url for project %s: Project has no individual \
                                CLA document set', project.get_project_id())
                 return
+
+        # Void the existing envelope to prevent multiple envelopes pending for a signer. 
+        envelope_id = signature.get_signature_envelope_id()
+        if envelope_id is not None:
+            message = "You are getting this message because your DocuSign Session for project {} expired. A new session will be in place for your signing process. ".format(project.get_project_name())
+            self.client.void_envelope(envelope_id, message)
+
 
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1<<16)-1 # Random 16bit integer -.pylint: disable=no-member
@@ -727,6 +739,11 @@ class DocuSign(signing_service_interface.SigningService):
             sign_url = self.get_sign_url(envelope, recipient, return_url)
             cla.log.info('Setting signature sign_url to %s', sign_url)
             signature.set_signature_sign_url(sign_url)
+
+        # Save Envelope ID in signature.
+        signature.set_signature_envelope_id(envelope.envelopeId)
+        signature.save()
+
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
@@ -1149,8 +1166,8 @@ def get_docusign_tabs_from_document(document: Document,
 
 # Returns a dictionary of document id to value
 def create_default_company_values(company: Company,
-                                    signatory_name: str,
-                                    signatory_email: str,
+                                    manager_name: str,
+                                    manager_email: str,
                                     scheduleA: str) -> Dict[str, Any]:
     values = {}
 
@@ -1159,14 +1176,17 @@ def create_default_company_values(company: Company,
         values['corporation_name'] = company.get_company_name()
         values['corporation'] = company.get_company_name()
 
-    if signatory_name is not None:
-        values['point_of_contact'] = signatory_name
+    if manager_name is not None:
+        values['point_of_contact'] = manager_name
+        values['cla_manager_name'] = manager_name
 
-    if signatory_email is not None:
-        values['email'] = signatory_email
+    if manager_email is not None:
+        values['email'] = manager_email
+        values['cla_manager_email'] = manager_email
 
     if scheduleA is not None:
         values['scheduleA'] = scheduleA
+
 
     return values
 
