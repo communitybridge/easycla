@@ -5,6 +5,7 @@ import { Validators } from '@angular/forms';
 import { EmailValidator } from  '../../validators/email';
 import { ClaService } from '../../services/cla.service';
 import { EnvConfig } from '../../services/cla.env.utils';
+import { CompanyPage } from "../../pages/company-page/company-page";
 
 @IonicPage({
   segment: 'cla/project/:projectId/collect-authority-email'
@@ -62,7 +63,14 @@ export class CollectAuthorityEmailModal {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Sent!',
       subTitle: 'An E-Mail has been sent. Please wait for your CLA Signatory to review and sign the CLA.',
-      buttons: ['Dismiss']
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'dismiss',
+          handler: () => {
+            this.navCtrl.pop();
+          }
+        }]
     });
     alert.present();
   }

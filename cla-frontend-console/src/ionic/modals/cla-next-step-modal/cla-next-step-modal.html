@@ -19,8 +19,11 @@
         <div *ngIf="!loading.icla">
           <div *ngIf="!userIsDone">
             <h1>You need to sign an ICLA</h1>
-            <p>{{ project.project_name }} requires users covered by a ccla to also sign an icla. Click the button below to start that process</p>
-            <button ion-button (click)="openIclaPage()">
+            <p>{{ project.project_name }} requires contributors covered by a corporate CLA to also sign an individual CLA. Click the button below to sign an individual CLA.</p>
+            <button *ngIf="signingType == 'Github'" ion-button (click)="openIclaPage()">
+              Open ICLA Page
+            </button>
+            <button *ngIf="signingType == 'Gerrit'" ion-button (click)="openGerritIclaPage()">
               Open ICLA Page
             </button>
           </div>

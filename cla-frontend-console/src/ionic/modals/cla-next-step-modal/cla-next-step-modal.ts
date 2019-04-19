@@ -84,6 +84,19 @@ export class ClaNextStepModal {
     });
   }
 
+  openGerritIclaPage() {
+    this.claService.getProjectGerrits(this.projectId).subscribe(gerrits => {
+      if (gerrits.length) {
+        // picking the first Gerrit Instance will suffice in supplying a Gerrit ID,
+        // since all Gerrit Instances in the response will be under the same CLA Group. 
+        let gerrit = gerrits[0];
+        this.navCtrl.push('ClaGerritIndividualPage', {
+          gerritId: gerrit.gerrit_id
+        });
+      }
+    })
+  }
+
   gotoRepo() {
     window.open(this.signature.signature_return_url, '_blank');
   }
