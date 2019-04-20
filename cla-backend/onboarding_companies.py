@@ -8,6 +8,10 @@ from datetime import datetime, timedelta
 from pynamodb.models import Model
 from cla.models.dynamo_models import User, Signature, Project, Company
 
+# boto3 requires AWS credentials. Please set either AWS_PROFILE or
+# (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY) environment variables
+# prior to running.
+
 dry_run = False
 company_input_file = 'tungsten_fabric.json'
 stage = os.environ['STAGE']
@@ -34,22 +38,27 @@ def main(event, context):
             print('\n\nConfiguring company: {} ({})'.format(company, company_id))
 
             # Create user for each CLA Manager specified
+            cla_manager_id = None
             for user in company['company_acl']:
                 user_id = str(uuid.uuid4())
                 print('Creating user: {} ({})'.format(user, user_id))
                 if not dry_run:
                     try:
                         create_user(user, user_id)
+                        cla_manager_id = user_id
                     except Exception as e:
                         print("Error creating user data. \nError: {err}".format(err=str(e)))
 
+            if cla_manager_id == None:
+                print('No cla manager. Skipping company: ({})'.format(company['company_name']))
+
             print('Creating company: {}'.format(company))
             # Create Company
+            cla_manager_LFIDs = [user['username'] for user in company['company_acl']]
             if not dry_run:
                 # Get the LFIDs of the company managers
-                cla_manager_LFIDs = [user['username'] for user in company['company_acl']]
                 try:
-                    create_company(company, cla_manager_LFIDs)
+                    create_company(company, cla_manager_LFIDs, cla_manager_id)
                 except Exception as e:
                     print("Error creating company data. \nError: {err}".format(err=str(e)))
                     # Iterate to the next company
@@ -60,7 +69,7 @@ def main(event, context):
             print('Creating signature ({}) for company: {} project: {}'.format(signature_id, company, project_id))
             if not dry_run:
                 try:
-                    create_company_signature(signature_id, company, project_id, cla_manager_LFIDs)
+                    create_company_signature(signature_id, company['company_id'], project_id, cla_manager_LFIDs)
                 except Exception as e:
                     print("Error creating company signature data. \nError: {err}".format(err=str(e)))
                     continue
@@ -73,22 +82,23 @@ def create_user(user, user_id):
     user_model.set_lf_username(user['username'])
     user_model.save()
 
-def create_company(company, cla_managers):
+def create_company(company, cla_managers, cla_manager_id):
     company_model = Company(
         company_id=company['company_id'],
         company_name=company['company_name'],
+        company_manager_id=cla_manager_id,
         company_acl=set(cla_managers)
     )
 
     company_model.save()
 
-def create_company_signature(signature_id, company, project_id, cla_managers):
+def create_company_signature(signature_id, company_id, project_id, cla_managers):
     # Use Constructor to include Signature ACL
     signature_model = Signature(
         signature_id=signature_id,
         signature_project_id=project_id,
         signature_reference_type='company',
-        signature_reference_id=company['company_id'],
+        signature_reference_id=company_id,
         signature_document_major_version=1,
         signature_document_minor_version=1,
         signature_type='ccla',
