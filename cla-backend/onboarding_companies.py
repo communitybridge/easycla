@@ -4,74 +4,100 @@ import re
 import uuid
 
 from datetime import datetime, timedelta
+
 from pynamodb.models import Model
 from cla.models.dynamo_models import User, Signature, Project, Company
 
+dry_run = False
+company_input_file = 'tungsten_fabric.json'
+stage = os.environ['STAGE']
 
 def main(event, context):
-    with open('sample.json') as json_file:  
-        input = json.load(json_file)
-        for company in input['companies']: 
-            # Create company ID
-            company_id = str(uuid.uuid4()) 
+    if dry_run:
+        print('Performing dry run')
+    else:
+        exit_cmd = input('This is NOT a dry run. You are running the script for the {} environment. Press enter to continue ("exit" to exit): '.format(stage))
+        if exit_cmd == 'exit':
+            return
+
+    with open(company_input_file) as json_file:
+        input_file = json.load(json_file)
+        project_id = input_file['project']['project_id']
+        if project_id == "":
+            print('project_id is required')
+            return
+
+        for company in input_file['companies']:
+            # Generate company ID
+            company_id = str(uuid.uuid4())
             company['company_id'] = company_id
-            project = input['project']
-            
-            # Create users in database from company ACL
-            for user in company['company_acl']: 
+            print('\n\nConfiguring company: {} ({})'.format(company, company_id))
+
+            # Create user for each CLA Manager specified
+            for user in company['company_acl']:
+                user_id = str(uuid.uuid4())
+                print('Creating user: {} ({})'.format(user, user_id))
+                if not dry_run:
+                    try:
+                        create_user(user, user_id)
+                    except Exception as e:
+                        print("Error creating user data. \nError: {err}".format(err=str(e)))
+
+            print('Creating company: {}'.format(company))
+            # Create Company
+            if not dry_run:
+                # Get the LFIDs of the company managers
+                cla_manager_LFIDs = [user['username'] for user in company['company_acl']]
                 try:
-                    create_user(user)
+                    create_company(company, cla_manager_LFIDs)
                 except Exception as e:
-                    print("Error creating user data. \nError: {err}".format(err=str(e)))
-            
-            # Get only the LFIDs of the company managers
-            cla_managers = [user['username'] for user in company['company_acl']]
-            print(cla_managers)
-            try:
-                create_company(company, cla_managers)
-            except Exception as e:
-                print("Error creating company data. \nError: {err}".format(err=str(e)))
-                # Iterate to the next company
-                continue
-            try:
-                create_company_signature(company, project, cla_managers)
-            except Exception as e: 
-                print("Error creating company signature data. \nError: {err}".format(err=str(e)))
+                    print("Error creating company data. \nError: {err}".format(err=str(e)))
+                    # Iterate to the next company
+                    continue
 
-    
-def create_company(company, cla_managers):
-    # Use Constructor to include Company ACL
-    company_model = Company(
-        company_acl=set(cla_managers)
-    )
-    company_model.set_company_id(company['company_id'])
-    company_model.set_company_name(company['company_name'] )
-    company_model.save()
+            # Create CCLA signature for the company for the project
+            signature_id = str(uuid.uuid4())
+            print('Creating signature ({}) for company: {} project: {}'.format(signature_id, company, project_id))
+            if not dry_run:
+                try:
+                    create_company_signature(signature_id, company, project_id, cla_manager_LFIDs)
+                except Exception as e:
+                    print("Error creating company signature data. \nError: {err}".format(err=str(e)))
+                    continue
 
-def create_company_signature(company, project, cla_managers):
-    # Use Constructor to include Signature ACL
-    signature_model = Signature(
-        signature_acl = set(cla_managers)
-    )
-    signature_model.set_signature_id(str(uuid.uuid4()))
-    signature_model.set_signature_project_id(project['project_id'])
-    signature_model.set_signature_reference_id(company['company_id'])
-    signature_model.set_signature_reference_type('company')
-    signature_model.set_signature_document_major_version("1")
-    signature_model.set_signature_document_minor_version("1")
-    signature_model.set_signature_type('ccla')
-    signature_model.set_signature_signed(True)
-    signature_model.set_signature_approved(True)
-    signature_model.save()
-
-def create_user(user):
+def create_user(user, user_id):
     user_model = User()
-    user_model.set_user_id(str(uuid.uuid4()))
+    user_model.set_user_id(user_id)
     user_model.set_user_name(user['name'])
     user_model.set_lf_email(user['email'])
     user_model.set_lf_username(user['username'])
     user_model.save()
 
+def create_company(company, cla_managers):
+    company_model = Company(
+        company_id=company['company_id'],
+        company_name=company['company_name'],
+        company_acl=set(cla_managers)
+    )
+
+    company_model.save()
+
+def create_company_signature(signature_id, company, project_id, cla_managers):
+    # Use Constructor to include Signature ACL
+    signature_model = Signature(
+        signature_id=signature_id,
+        signature_project_id=project_id,
+        signature_reference_type='company',
+        signature_reference_id=company['company_id'],
+        signature_document_major_version=1,
+        signature_document_minor_version=1,
+        signature_type='ccla',
+        signature_signed=True,
+        signature_approved=True,
+        signature_acl = set(cla_managers)
+    )
+
+    signature_model.save()
 
 if __name__ == "__main__":
     main('', '')
