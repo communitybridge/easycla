@@ -62,7 +62,18 @@ export class WhitelistModal {
   }
 
   addWhitelistItem(item) {
-    let regexForItem = this.type === "domain" ? /[a-z0-9]{1,}\.[a-z]{2,}$/i : /^.+@.+\..+$/i;
+
+    let regexForItem;
+    if (this.type === "domain") {
+      // domains
+      regexForItem = /[a-z0-9]{1,}\.[a-z]{2,}$/i
+    } else if (this.type === "email") {
+      // emails
+      regexForItem = /^.+@.+\..+$/i;
+    } else { 
+      // github usernames
+      regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i
+    }
 
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
@@ -76,7 +87,17 @@ export class WhitelistModal {
   }
 
   addNewWhitelistItem() {
-    let regexForItem = this.type === "domain" ? /[a-z0-9]{1,}\.[a-z]{2,}$/i : /^.+@.+\..+$/i;
+    let regexForItem;
+    if (this.type === "domain") {
+      // domains
+      regexForItem = /[a-z0-9]{1,}\.[a-z]{2,}$/i
+    } else if (this.type === "email") {
+      // emails
+      regexForItem = /^.+@.+\..+$/i;
+    } else { 
+      // github usernames
+      regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,}$/i
+    }
 
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.insert(
@@ -117,9 +138,12 @@ export class WhitelistModal {
 
     if (this.type === "domain") {
       signature.domain_whitelist = this.extractWhitelist();
-    } else {
+    } else if (this.type === "email") {
       //email
       signature.email_whitelist = this.extractWhitelist();
+    } else {
+      //github username
+      signature.github_whitelist = this.extractWhitelist();
     }
 
     this.claService.putSignature(signature).subscribe(
