@@ -1,5 +1,5 @@
 import { Component,  } from '@angular/core';
-import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
+import { NavController, NavParams, ViewController, ModalController, IonicPage, AlertController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -19,15 +19,16 @@ export class ClaSelectCompanyModal {
   selectCompanyModalActive: boolean = false;
 
   signature: string;
-  
+
   companies: any;
-  
+
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
+    public alertCtrl: AlertController,
     private claService: ClaService,
   ) {
     this.projectId = navParams.get('projectId');
@@ -78,7 +79,7 @@ export class ClaSelectCompanyModal {
       2. The company signatory has signed the CCLA for their company. 
       3. The user is included as part of the whitelist of the CCLA that the company signed. 
       the CLA service will throw an error if any of the above is false. 
-      */ 
+      */
       let errors = response.hasOwnProperty('errors');
       this.selectCompanyModalActive = false;
       if (errors) {
@@ -87,10 +88,29 @@ export class ClaSelectCompanyModal {
           this.openClaEmployeeCompanyTroubleshootPage(company);
           return;
         }
+
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-          // The user shouldn't get here if they are using the console properly
-          return;
+
+          let alert = this.alertCtrl.create({
+            subTitle: `Error`,
+            message: `Your company ${company.company_name} has not signed a Corporate CLA yet. Would you like to send an E-Mail Notification to the Company Administrators to sign the Corporate CLA ?`,
+            buttons: [
+              {
+                text: 'Cancel',
+                role: 'cancel',
+                cssClass: 'secondary',
+                handler: () => {}
+              }, {
+                text: 'Send E-Mail to Administrators',
+                handler: () => {
+                  this.emailSent();
+                }
+              }
+            ]
+          });
+
+          alert.present();
         }
       } else {
         // No Errors, expect normal signature response
@@ -105,8 +125,17 @@ export class ClaSelectCompanyModal {
         });
       }
     });
-  } 
+  }
 
+  emailSent() {
+    let alert = this.alertCtrl.create({
+      title: 'E-Mail Successfully Sent!',
+      subTitle: 'An E-Mail has been sent to the Company Administrators. They will be notified to sign the Corporate CLA..',
+      buttons: ['Dismiss']
+    });
+    alert.onDidDismiss(() => this.dismiss());
+    alert.present();
+  }
 
   openClaNewCompanyModal() {
     let modal = this.modalCtrl.create('ClaNewCompanyModal', {
@@ -114,7 +143,7 @@ export class ClaSelectCompanyModal {
     });
     modal.present();
   }
-  
+
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
@@ -135,5 +164,5 @@ export class ClaSelectCompanyModal {
       gitService: 'GitHub'
     });
   }
-  
+
 }
