@@ -17,6 +17,7 @@ export class ClaSelectCompanyModal {
   repositoryId: string;
   userId: string;
   selectCompanyModalActive: boolean = false;
+  authenticated: boolean;
 
   signature: string;
 
@@ -33,6 +34,7 @@ export class ClaSelectCompanyModal {
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
+    this.authenticated = navParams.get('authenticated');
     this.getDefaults();
   }
 
@@ -92,25 +94,7 @@ export class ClaSelectCompanyModal {
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
 
-          let alert = this.alertCtrl.create({
-            subTitle: `Error`,
-            message: `Your company ${company.company_name} has not signed a Corporate CLA yet. Would you like to send an E-Mail Notification to the Company Administrators to sign the Corporate CLA ?`,
-            buttons: [
-              {
-                text: 'Cancel',
-                role: 'cancel',
-                cssClass: 'secondary',
-                handler: () => {}
-              }, {
-                text: 'Send E-Mail to Administrators',
-                handler: () => {
-                  this.emailSent();
-                }
-              }
-            ]
-          });
-
-          alert.present();
+          this.openClaSelectClaManagerEmailModal(company);
         }
       } else {
         // No Errors, expect normal signature response
@@ -120,26 +104,19 @@ export class ClaSelectCompanyModal {
           projectId: this.projectId,
           repositoryId: this.repositoryId,
           userId: this.userId,
-          companyId: company.company_id,
-          signingType: "Github"
+          companyId: company.company_id
         });
       }
     });
   }
 
-  emailSent() {
-    let alert = this.alertCtrl.create({
-      title: 'E-Mail Successfully Sent!',
-      subTitle: 'An E-Mail has been sent to the Company Administrators. They will be notified to sign the Corporate CLA..',
-      buttons: ['Dismiss']
-    });
-    alert.onDidDismiss(() => this.dismiss());
-    alert.present();
-  }
-
-  openClaNewCompanyModal() {
-    let modal = this.modalCtrl.create('ClaNewCompanyModal', {
+  openClaSelectClaManagerEmailModal(company) {
+    let modal = this.modalCtrl.create('ClaSelectClaManagerEmailModal', {
       projectId: this.projectId,
+      repositoryId: this.repositoryId,
+      userId: this.userId,
+      companyId: company.company_id,
+      authenticated: this.authenticated
     });
     modal.present();
   }
