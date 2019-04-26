@@ -107,9 +107,12 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   emailSent() {
+    let message = this.authenticated ? 
+    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process' : 
+    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.'
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
+      subTitle: message,
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());
