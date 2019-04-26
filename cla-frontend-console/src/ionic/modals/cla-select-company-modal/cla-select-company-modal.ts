@@ -83,18 +83,12 @@ export class ClaSelectCompanyModal {
       let errors = response.hasOwnProperty('errors');
       this.selectCompanyModalActive = false;
       if (errors) {
-        if (response.errors.hasOwnProperty('ccla_whitelist')) {
-          // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
-          this.openClaEmployeeCompanyTroubleshootPage(company);
-          return;
-        }
 
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-
           let alert = this.alertCtrl.create({
             subTitle: `Error`,
-            message: `Your company ${company.company_name} has not signed a Corporate CLA yet. Would you like to send an E-Mail Notification to the Company Administrators to sign the Corporate CLA ?`,
+            message: `Your company ${company.company_name} has not signed a CLA. Would you like to send a request to your company's administrators so they can sign it and add you to their whitelist?`,
             buttons: [
               {
                 text: 'Cancel',
@@ -112,6 +106,13 @@ export class ClaSelectCompanyModal {
 
           alert.present();
         }
+
+        if (response.errors.hasOwnProperty('ccla_whitelist')) {
+          // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
+          this.openClaEmployeeCompanyTroubleshootPage(company);
+          return;
+        }
+
       } else {
         // No Errors, expect normal signature response
         this.signature = response;
@@ -130,7 +131,7 @@ export class ClaSelectCompanyModal {
   emailSent() {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'An E-Mail has been sent to the Company Administrators. They will be notified to sign the Corporate CLA..',
+      subTitle: 'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process.',
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());
