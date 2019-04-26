@@ -230,7 +230,7 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
     """
-    return cla.controllers.user.request_company_whitelist(user_id, company_id, user_email, project_id, message)
+    return cla.controllers.user.request_company_whitelist(user_id, str(company_id), str(user_email), str(project_id), message)
 
 @hug.post('/user/{user_id}/invite-company-admin', versions=2)
 def invite_company_admin(user_id: hug.types.uuid,
@@ -250,7 +250,7 @@ def invite_company_admin(user_id: hug.types.uuid,
 
     Sends an Email to the user's admin to sign up through the ccla console. 
     """
-    return cla.controllers.user.invite_company_admin(user_id, user_email, admin_name, admin_email, project_name)
+    return cla.controllers.user.invite_company_admin(user_id, str(user_email), str(admin_name), str(admin_email), project_name)
 
 @hug.post('/user/{user_id}/request-company-ccla', versions=2)
 def request_company_ccla(user_id: hug.types.uuid,
@@ -262,7 +262,7 @@ def request_company_ccla(user_id: hug.types.uuid,
 
     Sends an Email to an admin of an existing company to sign a CCLA. 
     """
-    return cla.controllers.user.request_company_ccla(user_id, user_email, company_id, project_id)
+    return cla.controllers.user.request_company_ccla(str(user_id), str(user_email), str(company_id), str(project_id))
 
 @hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
