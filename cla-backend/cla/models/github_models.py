@@ -399,6 +399,7 @@ class GitHub(repository_service_interface.RepositoryService):
         user.set_user_emails(emails)
         user.set_user_name(github_user['name'])
         user.set_user_github_id(github_user['id'])
+        user.set_user_github_username(github_user['login'])
         user.save()
         return user
 
