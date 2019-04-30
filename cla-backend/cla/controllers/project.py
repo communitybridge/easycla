@@ -134,12 +134,28 @@ def get_projects_by_external_id(project_external_id, username):
 
     :param project_external_id: The project's External ID.
     :type project_external_id: string
+    :param username: username of the user 
+    :type username: string
     :return: dict representation of the project object.
     :rtype: dict
     """
+
+    # Check if user has permissions on this project
+    user_permissions = UserPermissions()
+    try: 
+        user_permissions.load(username)
+    except DoesNotExist as err:
+        return {'errors': {'username': 'user does not exist. '}}
+
+    user_permissions_json = user_permissions.to_dict()
+    authorized_projects = user_permissions_json.get('projects')
+
+    if project_external_id not in authorized_projects:
+        return {'errors': {'username': 'user is not authorized for this Salesforce ID. '}}
+
     try:
-        p_instance = get_project_instance()
-        projects = p_instance.get_projects_by_external_id(str(project_external_id), username)
+        project = Project()
+        projects = project.get_projects_by_external_id(str(project_external_id), username)
     except DoesNotExist as err:
         return {'errors': {'project_external_id': str(err)}}
     return [project.to_dict() for project in projects]
