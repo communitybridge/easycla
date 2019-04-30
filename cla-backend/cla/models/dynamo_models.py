@@ -778,8 +778,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            if username in project.get_project_acl():
-                projects.append(project)
+            projects.append(project)
         return projects
 
     def get_managers(self):
@@ -1437,7 +1436,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_acl(self, signature_acl_username):
         self.model.signature_acl = set([signature_acl_username])
-
+ 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
 
