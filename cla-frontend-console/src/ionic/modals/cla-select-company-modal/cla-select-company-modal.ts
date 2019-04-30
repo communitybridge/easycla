@@ -105,7 +105,8 @@ export class ClaSelectCompanyModal {
           projectId: this.projectId,
           repositoryId: this.repositoryId,
           userId: this.userId,
-          companyId: company.company_id
+          companyId: company.company_id,
+          signingType: "Github"
         });
       }
     });
