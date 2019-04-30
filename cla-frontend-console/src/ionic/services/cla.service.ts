@@ -171,7 +171,24 @@ export class ClaService {
       )
       .map(res => res.json());
   }
+  
 
+  /**
+   * /user/{user_id}/request-company-ccla
+   **/
+  postUserCCLARequestToManager(userId, data) {
+    return this.http
+      .post(
+        this.claApiUrl +
+          "/v2/user/" +
+          userId +
+          "/request-company-ccla/"
+          ,
+          data
+      )
+      .map(res => res.json());
+
+  }
   /**
    * /user/{user_id}/active-signature
    **/
