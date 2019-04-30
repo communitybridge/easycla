@@ -988,7 +988,8 @@ def post_project_document_template(auth_user: check_auth,
                                        'OpenBMCTemplate',
                                        'TungstenFabricTemplate',
                                        'OpenColorIOTemplate',
-                                       'OpenVDBTemplate'
+                                       'OpenVDBTemplate',
+                                       'ONAPTemplate'
                                     ]),
                                    new_major_version=None):
     """
