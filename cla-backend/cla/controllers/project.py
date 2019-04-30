@@ -260,16 +260,10 @@ def get_project_companies(project_id):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    # Get all reference_ids of signatures that match project_id AND are of reference type 'company'.
-    # Return all the companies matching those reference_ids.
-    signature = get_signature_instance()
-    signatures = signature.get_signatures_by_project(str(project_id),
-                                                     signature_signed=True,
-                                                     signature_approved=True,
-                                                     signature_reference_type='company')
-    company_ids = list(set([signature.get_signature_reference_id() for signature in signatures]))
-    company = get_company_instance()
-    return [comp.to_dict() for comp in company.all(company_ids)]
+
+    # Get all companies
+    company = Company()
+    return [comp.to_dict() for comp in company.all()]
 
 def _get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
