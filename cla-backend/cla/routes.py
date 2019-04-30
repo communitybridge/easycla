@@ -375,7 +375,8 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
                   signature_return_url=None,
                   signature_sign_url=None,
                   domain_whitelist=None,
-                  email_whitelist=None):
+                  email_whitelist=None, 
+                  github_whitelist=None):
     """
     PUT: /signature
 
@@ -397,7 +398,8 @@ def put_signature(auth_user: check_auth, # pylint: disable=too-many-arguments
         signature_return_url=signature_return_url,
         signature_sign_url=signature_sign_url,
         domain_whitelist=domain_whitelist,
-        email_whitelist=email_whitelist)
+        email_whitelist=email_whitelist, 
+        github_whitelist=github_whitelist)
 
 @hug.delete('/signature/{signature_id}', versions=1)
 def delete_signature(auth_user: check_auth, signature_id: hug.types.uuid):

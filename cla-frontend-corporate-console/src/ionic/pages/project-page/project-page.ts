@@ -157,6 +157,20 @@ export class ProjectPage {
     modal.present();
   }
 
+  openWhitelistGithubModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "github",
+      signatureId: this.cclaSignature.signature_id,
+      whitelist: this.cclaSignature.github_whitelist
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getProjectSignatures();
+    });
+    modal.present();
+    
+  }
+
   sortMembers(prop) {
     this.sortService.toggleSort(this.sort, prop, this.employeeSignatures);
   }
