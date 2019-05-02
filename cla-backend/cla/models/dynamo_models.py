@@ -1064,6 +1064,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         :rtype: bool
         """
         emails = self.get_all_user_emails()
+        if len(emails) > 0:
+            # remove leading and trailing whitespace before checking emails
+            emails = [email.strip() for email in emails]
 
         # Check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
@@ -1097,6 +1100,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         # Check github whitelist
         github_username = self.get_github_username()
         if github_username is not None:   
+            # remove leading and trailing whitespace from github username
+            github_username = github_username.strip()
             github_whitelist = ccla_signature.get_github_whitelist() 
             if github_whitelist is not None:
                  if github_username in github_whitelist:
@@ -1487,14 +1492,16 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def set_signature_envelope_id(self, signature_envelope_id):
         self.model.signature_envelope_id = signature_envelope_id
 
+    # Remove leading and trailing whitespace for all items before setting whitelist
+
     def set_domain_whitelist(self, domain_whitelist):
-        self.model.domain_whitelist = domain_whitelist
+        self.model.domain_whitelist = [domain.strip() for domain in domain_whitelist]
 
     def set_email_whitelist(self, email_whitelist):
-        self.model.email_whitelist = email_whitelist
+        self.model.email_whitelist = [email.strip() for email in email_whitelist]
     
     def set_github_whitelist(self, github_whitelist):
-        self.model.github_whitelist = github_whitelist
+        self.model.github_whitelist = [github_user.strip() for github_user in github_whitelist]
 
     def add_signature_acl(self, username):
         self.model.signature_acl.add(username)
