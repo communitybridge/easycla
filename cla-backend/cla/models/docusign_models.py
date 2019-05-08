@@ -1135,6 +1135,16 @@ def get_docusign_tabs_from_document(document: Document,
             'name': tab.get_document_tab_name()
         }
 
+        if tab.get_document_tab_anchor_string() is not None:
+            # Set only when anchor string exists 
+            args['anchorString'] = tab.get_document_tab_anchor_string()
+            args['anchorIgnoreIfNotPresent'] = tab.get_document_tab_anchor_ignore_if_not_present()
+            args['anchorXOffset'] = tab.get_document_tab_anchor_x_offset()
+            args['anchorYOffset'] = tab.get_document_tab_anchor_y_offset()
+            # Remove x,y coordinates since offsets will define them
+           # del args['xPosition'] 
+           # del args['yPosition'] 
+
         if default_values is not None and \
             default_values.get(tab.get_document_tab_id()) is not None:
             args['value'] = default_values[tab.get_document_tab_id()]
