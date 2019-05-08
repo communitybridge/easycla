@@ -22,7 +22,13 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>CLA Manager LFID:</ion-label>
+            <ion-label stacked>
+              <b>CLA Manager LFID:</b>
+            <span>
+              If they do not know their Linux Foundation identification username, or have not created one, please ask them to sign in (or sign up) at
+              <a href="https://identity.linuxfoundation.org" target="_blank">https://identity.linuxfoundation.org</a>. Their username will display after signing in.
+            </span>
+            </ion-label>
             <ion-input name="managerLFID" formControlName="managerLFID"></ion-input>
           </ion-item>
           <ion-item *ngIf="!form.controls.managerLFID.valid && (form.controls.managerLFID.touched || submitAttempt)" no-lines>

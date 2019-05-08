@@ -100,12 +100,15 @@ export class ClaGerritCorporatePage {
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
+        
+        if (response.errors.hasOwnProperty('missing_ccla')) {
+          // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
+          this.openClaSendClaManagerEmailModal(company);
+        }
+
         if (response.errors.hasOwnProperty('ccla_whitelist')) {
           // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
           this.openClaEmployeeCompanyTroubleshootPage(company);
-          return;
-        }
-        if (response.errors.hasOwnProperty('missing_ccla')) {
           return;
         }
       } else {
@@ -121,6 +124,16 @@ export class ClaGerritCorporatePage {
     });
   } 
 
+
+  openClaSendClaManagerEmailModal(company) {
+    let modal = this.modalCtrl.create('ClaSendClaManagerEmailModal', {
+      projectId: this.projectId,
+      userId: this.userId,
+      companyId: company.company_id,
+      authenticated: true
+    });
+    modal.present();
+  }
 
 
   openClaNewCompanyModal() {

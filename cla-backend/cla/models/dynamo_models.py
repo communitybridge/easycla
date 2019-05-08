@@ -67,6 +67,21 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+
+class GitHubUsernameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying users by github username.
+    """
+    class Meta:
+        index_name = 'github-username-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    user_github_username = UnicodeAttribute(hash_key=True)
+
+
 class LFUsernameIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by LF Username.
@@ -185,7 +200,6 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     signature_project_id = UnicodeAttribute(hash_key=True)
-
 
 class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
@@ -778,8 +792,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         for project_model in project_generator:
             project = Project()
             project.model = project_model
-            if username in project.get_project_acl():
-                projects.append(project)
+            projects.append(project)
         return projects
 
     def get_managers(self):
@@ -841,6 +854,8 @@ class UserModel(BaseModel):
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
     user_github_id = NumberAttribute(null=True)
+    user_github_username = UnicodeAttribute(null=True)
+    user_github_username_index = GitHubUsernameIndex()
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
     lf_email = UnicodeAttribute(null=True)
@@ -852,13 +867,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_ldap_id=None, lf_username=None, lf_sub=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None,user_github_username=None, user_ldap_id=None, lf_username=None, lf_sub=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
             self.set_user_email(user_email)
         self.model.user_external_id = user_external_id
         self.model.user_github_id = user_github_id
+        self.model.user_github_username = user_github_username
         self.model.user_ldap_id = user_ldap_id
         self.model.lf_username = lf_username
         self.model.lf_sub = lf_sub
@@ -926,6 +942,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def get_user_github_id(self):
         return self.model.user_github_id
 
+    def get_github_username(self):
+        return self.model.user_github_username
+
     # def get_user_ldap_id(self):
     #     return self.model.user_ldap_id
 
@@ -964,6 +983,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
 
+    def set_user_github_username(self, user_github_username): 
+        self.model.user_github_username = user_github_username
+
     # def set_user_ldap_id(self, user_ldap_id):
     #     self.model.user_ldap_id = user_ldap_id
 
@@ -985,6 +1007,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
 
     def get_user_by_username(self, username):
         user_generator = self.model.lf_username_index.query(username)
+        for user_model in user_generator:
+            user = User()
+            user.model = user_model
+            return user
+        return None
+
+    def get_user_by_github_username(self, github_username):
+        user_generator = self.model.user_github_username_index.query(github_username)
         for user_model in user_generator:
             user = User()
             user.model = user_model
@@ -1034,6 +1064,9 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         :rtype: bool
         """
         emails = self.get_all_user_emails()
+        if len(emails) > 0:
+            # remove leading and trailing whitespace before checking emails
+            emails = [email.strip() for email in emails]
 
         # Check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
@@ -1063,6 +1096,16 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                 for email in emails:
                     if pat.match(email) != None:
                         return True
+
+        # Check github whitelist
+        github_username = self.get_github_username()
+        if github_username is not None:   
+            # remove leading and trailing whitespace from github username
+            github_username = github_username.strip()
+            github_whitelist = ccla_signature.get_github_whitelist() 
+            if github_whitelist is not None:
+                 if github_username in github_whitelist:
+                     return True        
 
         return False
 
@@ -1271,6 +1314,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     # whitelists are only used by CCLAs
     domain_whitelist = ListAttribute(null=True)
     email_whitelist = ListAttribute(null=True)
+    github_whitelist = ListAttribute(null=True)
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1295,7 +1339,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_return_url_type=None,
                  signature_envelope_id=None,
                  domain_whitelist=None,
-                 email_whitelist=None):
+                 email_whitelist=None,
+                 github_whitelist=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1317,6 +1362,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.signature_envelope_id = signature_envelope_id
         self.model.domain_whitelist = domain_whitelist
         self.model.email_whitelist = email_whitelist
+        self.model.github_whitelist = github_whitelist
 
     def to_dict(self):
         return dict(self.model)
@@ -1391,7 +1437,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def get_email_whitelist(self):
         return self.model.email_whitelist
-        
+
+    def get_github_whitelist(self):
+        return self.model.github_whitelist
 
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
@@ -1437,18 +1485,23 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_acl(self, signature_acl_username):
         self.model.signature_acl = set([signature_acl_username])
-
+ 
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
 
     def set_signature_envelope_id(self, signature_envelope_id):
         self.model.signature_envelope_id = signature_envelope_id
 
+    # Remove leading and trailing whitespace for all items before setting whitelist
+
     def set_domain_whitelist(self, domain_whitelist):
-        self.model.domain_whitelist = domain_whitelist
+        self.model.domain_whitelist = [domain.strip() for domain in domain_whitelist]
 
     def set_email_whitelist(self, email_whitelist):
-        self.model.email_whitelist = email_whitelist
+        self.model.email_whitelist = [email.strip() for email in email_whitelist]
+    
+    def set_github_whitelist(self, github_whitelist):
+        self.model.github_whitelist = [github_user.strip() for github_user in github_whitelist]
 
     def add_signature_acl(self, username):
         self.model.signature_acl.add(username)
