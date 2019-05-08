@@ -127,7 +127,8 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
                      signature_return_url=None,
                      signature_sign_url=None,
                      domain_whitelist=None,
-                     email_whitelist=None):
+                     email_whitelist=None,
+                     github_whitelist=None):
     """
     Updates an signature and returns the newly updated signature in dict format.
     A value of None means the field should not be updated.
@@ -219,6 +220,15 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
         except KeyError as err:
             return {'errors': {
                 'email_whitelist': 'Invalid value passed in for the email whitelist'
+            }}
+
+    if github_whitelist is not None:
+        try:
+            github_whitelist = hug.types.multiple(github_whitelist)
+            signature.set_github_whitelist(github_whitelist)
+        except KeyError as err:
+            return {'errors': {
+                'github_whitelist': 'Invalid value passed in for the github whitelist'
             }}
 
     signature.save()
