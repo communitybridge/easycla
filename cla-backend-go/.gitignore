@@ -1,0 +1,30 @@
+# Project specific ignores
+cla-backend-go
+cla
+*env.json
+db/schema.sql
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+.idea/*
+
+# Serverless directories
+.serverless
+
+# golang output binary directory
+bin
+
+# golang vendor (dependencies) directory
+vendor
+
+# Terraform plugins
+.terraform
+
+.env
+
+gen
