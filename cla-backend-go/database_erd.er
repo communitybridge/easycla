@@ -1,0 +1,124 @@
+title {label: "CLA Entity-Relationship Diagram", size: "20"}
+
+# red #fcecec
+# blue #ececfc
+# green #d0e0d0
+# yellow #fbfbdb
+# orange #eee0a0
+
+# Entities
+
+[project_manager] {bgcolor: "#ffc5c3"}
+  user_id {label: "TEXT, not null"}
+  project_sfdc_id {label: "TEXT, not null"}
+
+[cla_manager] {bgcolor: "#ffc5c3"}
+  user_id {label: "TEXT, not null"}
+  corporate_cla_group_id {label: "UUID, not null"}
+
+[user] {bgcolor: "#d0e0d0"}
+  *user_id {label: "UUID, not null"}
+  name {label: "TEXT"}
+
+[user_email] {bgcolor: "#d0e0d0"}
+  *+user_id {label: "UUID, not null"}
+  email {label: "TEXT"}
+
+[user_auth_provider] {bgcolor: "#d0e0d0"}
+  *+user_id {label: "UUID, not null"}
+  provider {label: "TEXT, not null"}
+  provider_user_id {label: "TEXT, not null"}
+  UNIQUE {label: "provider, provider_user_id"}
+
+[individual_cla] {bgcolor: "#85d8d9"}
+  *individual_cla_id {label: "UUID, not null"}
+  *+contract_template_id {label: "UUID"}
+  *+user_id {label: "UUID, not null"}
+  *+docusign_id {label: "UUID"}
+  signed {label: "BOOLEAN"}
+
+[corporate_cla_group_confirmed_users] {bgcolor: "#d0e0d0"}
+  *+user_id {label: "UUID, not null"}
+  *+corporate_cla_group_id {label: "UUID, not null"}
+
+[company] {bgcolor: "#ececfc"}
+  *company_id {label: "UUID, not null"}
+  name {label: "TEXT"}
+
+[corporate_cla_group] {bgcolor: "#ececfc"}
+  *corporate_cla_group_id {label: "UUID, not null"}
+  email_whitelist {label: "jsonb"}
+  domain_whitelist {label: "jsonb"}
+  *+company_id {label: "UUID, not null"}
+  *+contract_group_id {label: "UUID, not null"}
+  UNIQUE {label: "company_id, contract_group_id"}
+
+[corporate_cla] {bgcolor: "#ececfc"}
+  *corporate_cla_id {label: "UUID, not null"}
+  *+corporate_cla_group_id {label: "UUID, not null"}
+  *+contract_template_id {label: "UUID"}
+  *+docusign_id {label: "UUID"}
+  signatory_email {label: "TEXT"}
+  signed_by {label: "UUID"}
+  signed {label: "BOOLEAN"}
+
+[contract_template] {bgcolor: "#eee0a0"}
+  *contract_template_id {label: "UUID, not null"}
+  *+contract_group_id {label: "UUID, not null"}
+  type {label: "contract_template_type, not null"}
+  document {label: "jsonb"}
+  major_version {label: "INT, not null"}
+  minor_version {label: "INT, not null"}
+  UNIQUE {label: "contract_group_id, type, major_version, minor_version"}
+
+[contract_group] {bgcolor: "#eee0a0"}
+  *contract_group_id {label: "UUID, not null"}
+  project_sfdc_id {label: "TEXT, not null"}
+  name {label: "TEXT"}
+  corporate_cla_requires_individual_cla {label: "BOOLEAN"}
+
+[github_organization] {bgcolor: "#fcecec"}
+  *github_organization_id {label: "UUID, not null"}
+  *+contract_group_id {label: "UUID, not null"}
+  name {label: "TEXT"}
+  installation_id {label: "TEXT"}
+  authorizing_user_name {label: "TEXT"}
+  authorizing_github_id {label: "TEXT"}
+  *+created_by {label: "UUID, not null"}
+  created_at {label: "INT, not null"}
+  *+modified_by {label: "UUID, not null"}
+  modified_at {label: "INT, not null"}
+
+[gerrit_instance] {bgcolor: "#fcecec"}
+  *gerrit_instance_id {label: "UUID, not null"}
+  *+contract_group_id {label: "UUID, not null"}
+  ldap_group_id {label: "INT"}
+  ldap_group_name {label: "TEXT"}
+  url {label: "TEXT"}
+  *+created_by {label: "UUID, not null"}
+  created_at {label: "INT, not null"}
+  *+modified_by {label: "UUID, not null"}
+  modified_at {label: "INT, not null"}
+
+[docusign] {bgcolor: "#adcced"}
+  *docusign_id {label: "UUID, not null"}
+  envelope_id {label: "INT"}
+  callback_url {label: "TEXT"}
+  sign_url {label: "TEXT"}
+  return_url {label: "TEXT"}
+
+user 1--* user_email
+user 1--* user_auth_provider
+user 1--* corporate_cla_group_confirmed_users
+user 1--* individual_cla
+corporate_cla_group 1--* corporate_cla_group_confirmed_users
+corporate_cla_group 1--* corporate_cla
+contract_group 1--* corporate_cla_group
+company 1--* corporate_cla_group
+contract_template 1--* corporate_cla
+contract_template 1--* individual_cla
+contract_group 1--* contract_template
+contract_group 1--* github_organization
+contract_group 1--* gerrit_instance
+corporate_cla 1--1 docusign
+individual_cla 1--1 docusign
