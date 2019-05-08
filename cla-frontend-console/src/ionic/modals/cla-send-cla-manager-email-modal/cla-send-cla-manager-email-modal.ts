@@ -6,18 +6,20 @@ import { EmailValidator } from  '../../validators/email';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
-  segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
+  segment: 'cla/project/:projectId/user/:userId/employee/company/contact'
 })
 @Component({
-  selector: 'cla-employee-request-access-modal',
-  templateUrl: 'cla-employee-request-access-modal.html',
+  selector: 'cla-send-cla-manager-email-modal',
+  templateUrl: 'cla-send-cla-manager-email-modal.html',
 })
-export class ClaEmployeeRequestAccessModal {
+export class ClaSendClaManagerEmailModal {
   projectId: string;
   repositoryId: string;
   userId: string;
   companyId: string;
   authenticated: boolean;
+
+  company: any;
 
   userEmails: Array<string>;
 
@@ -37,10 +39,9 @@ export class ClaEmployeeRequestAccessModal {
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
-    this.authenticated = navParams.get('authenticated'); 
+    this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
       email:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       message:[''], // Validators.compose([Validators.required])
@@ -49,10 +50,14 @@ export class ClaEmployeeRequestAccessModal {
 
   getDefaults() {
     this.userEmails = [];
+    this.company = {
+      company_name: '',
+    };
   }
 
   ngOnInit() {
     this.getUser();
+    this.getCompany();
   }
  
   getUser() {
@@ -82,6 +87,12 @@ export class ClaEmployeeRequestAccessModal {
     }
   }
 
+  getCompany() {
+    this.claService.getCompany(this.companyId).subscribe(response => {
+      this.company = response;
+    });
+  }
+
   // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
@@ -95,24 +106,20 @@ export class ClaEmployeeRequestAccessModal {
       // prevent submit
       return;
     }
-    let message = {
+    let data = {
       user_email: this.form.value.email,
-      message: this.form.value.message,
+      company_id: this.companyId,
       project_id: this.projectId,
     };
-    this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
+    this.claService.postUserCCLARequestToManager(this.userId, data).subscribe(response => {
       this.emailSent();
-
     });
   }
 
   emailSent() {
-    let message = this.authenticated ? 
-    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process' : 
-    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.'
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: message,
+      subTitle: 'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());

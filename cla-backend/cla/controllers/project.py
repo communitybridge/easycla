@@ -134,12 +134,28 @@ def get_projects_by_external_id(project_external_id, username):
 
     :param project_external_id: The project's External ID.
     :type project_external_id: string
+    :param username: username of the user 
+    :type username: string
     :return: dict representation of the project object.
     :rtype: dict
     """
+
+    # Check if user has permissions on this project
+    user_permissions = UserPermissions()
+    try: 
+        user_permissions.load(username)
+    except DoesNotExist as err:
+        return {'errors': {'username': 'user does not exist. '}}
+
+    user_permissions_json = user_permissions.to_dict()
+    authorized_projects = user_permissions_json.get('projects')
+
+    if project_external_id not in authorized_projects:
+        return {'errors': {'username': 'user is not authorized for this Salesforce ID. '}}
+
     try:
-        p_instance = get_project_instance()
-        projects = p_instance.get_projects_by_external_id(str(project_external_id), username)
+        project = Project()
+        projects = project.get_projects_by_external_id(str(project_external_id), username)
     except DoesNotExist as err:
         return {'errors': {'project_external_id': str(err)}}
     return [project.to_dict() for project in projects]
@@ -244,16 +260,10 @@ def get_project_companies(project_id):
         project.load(str(project_id))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-    # Get all reference_ids of signatures that match project_id AND are of reference type 'company'.
-    # Return all the companies matching those reference_ids.
-    signature = get_signature_instance()
-    signatures = signature.get_signatures_by_project(str(project_id),
-                                                     signature_signed=True,
-                                                     signature_approved=True,
-                                                     signature_reference_type='company')
-    company_ids = list(set([signature.get_signature_reference_id() for signature in signatures]))
-    company = get_company_instance()
-    return [comp.to_dict() for comp in company.all(company_ids)]
+
+    # Get all companies
+    company = Company()
+    return [comp.to_dict() for comp in company.all()]
 
 def _get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
