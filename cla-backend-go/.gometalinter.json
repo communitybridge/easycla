@@ -1,0 +1,14 @@
+{
+  "Sort": [
+    "path",
+    "line",
+    "column"
+  ],
+  "Deadline": "2m",
+  "vendor": true,
+  "deadline": "300s",
+  "exclude": ["exported \\w+ (\\S*['.]*)([a-zA-Z'.*]*) should have comment or be unexported",
+    "gen",
+    "node_modules"
+             ]
+}

@@ -1,0 +1,601 @@
+swagger: '2.0'
+info:
+  title: CLA API
+  version: '1.0'
+basePath: /v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  OauthSecurity:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth'
+    tokenUrl: 'https://www.googleapis.com/oauth2/v4/token'
+    scopes:
+      admin: LF Admin scope
+      project: Project Manager scope
+      company: CLA Manager scope
+      contrib: Contributor scope
+paths:
+  /ops/health:
+    get:
+      summary: API Health Check
+      security:
+        - OauthSecurity:
+          - admin
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/health'
+        '503':
+          description: ''
+          schema:
+            $ref: '#/definitions/health'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project:
+    get:
+      summary: Get Project IDs based on PM
+      security: []
+      operationId: getProjects
+      tags:
+        - project
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project/{projectSfdcId}/:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+    get:
+      summary: Get Project by ID from SFDC
+      security: []
+      operationId: getProjectById
+      tags:
+        - project
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project/{projectSfdcId}/contract-group:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+    get:
+      summary: Get contract groups
+      security: []
+      operationId: getContractGroups
+      tags:
+        - contractGroup
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/contract-group'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+    post:
+      summary: Create new Contract Group
+      security: []
+      operationId: createContractGroup
+      tags:
+        - contractGroup
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/contract-group'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /contract-group/{contractGroupId}/contract-template:
+    parameters:
+      - name: contractGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Create new Contract Template
+      security: []
+      operationId: createContractTemplate
+      tags:
+        - contractGroup
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/contract-template'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /contract-group/{contractGroupId}/github:
+    parameters:
+      - name: contractGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Adds a GitHub instance to the contract group
+      security: []
+      operationId: addGitHubOrg
+      tags:
+        - contractGroup
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/github'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+      - name: contractGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Adds a Gerrit instance to the contract group
+      security: []
+      operationId: addGerritInstance
+      tags:
+        - contractGroup
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/gerrit'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit/{gerritInstanceId}:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+      - name: contractGroupId
+        in: path
+        type: string
+        required: true
+      - name: gerritInstanceId
+        in: path
+        type: string
+        required: true
+    delete:
+      summary: Delete a Gerrit Instance
+      security: []
+      operationId: deleteGerritInstance
+      tags:
+        - contractGroup
+      responses:
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /project/{projectSfdcID}/contract-group/{contractGroupId}/signature:
+    parameters:
+      - name: projectSfdcID
+        in: path
+        type: string
+        required: true
+      - name: contractGroupId
+        in: path
+        type: string
+        required: true
+    get:
+      summary: Get Contract Group Signatures
+      security: []
+      operationId: getContractGroupSignatures
+      tags:
+        - contractGroup
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/contract-group-signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+definitions:
+  project:
+    type: object
+    x-nullable: false
+    title: Project
+    description: Project object that gets returned
+    properties:
+      sfdcId:
+        type: string
+      name: 
+        type: string 
+      description:
+        type: string
+      logoUrl:
+        type: string
+  contract-group:
+    type: object
+    x-nullable: false
+    title: Contract Group
+    description: Contract Group object that gets returned
+    properties:
+      contractGroupId:
+        type: string
+        readOnly: true
+      projectSfdcId:
+        type: string
+      name:
+        type: string
+      corporateClaEnabled:
+        type: boolean
+        default: false
+      individualClaEnabled:
+        type: boolean
+        default: false
+      corporateClaRequiresIndividualCla:
+        type: boolean
+      cclaTemplate:
+        type: object
+        $ref: '#/definitions/contract-template'
+      iclaTemplate:
+        type: object
+        $ref: '#/definitions/contract-template'
+      githubOrganizations:
+        type: array
+        items:
+          $ref: '#/definitions/github'
+        readOnly: true
+      gerritInstances:
+        type: array
+        items:
+          $ref: '#/definitions/gerrit'
+        readOnly: true
+    required:
+    - name
+  contract-template:
+    type: object
+    x-nullable: false
+    title: Contract Template
+    description: Create Contract Template object
+    properties:
+      contractTemplateId:
+        type: string
+        readOnly: true
+      contractGroupId:
+        type: string
+      type:
+        type: string
+        enum:
+        - CCLA
+        - ICLA
+      document:
+        type: string
+      majorVersion:
+        type: integer
+      minorVersion:
+        type: integer
+      createdAt:
+        type: string
+      name:
+        type: string
+  github:
+    type: object
+    x-nullable: false
+    title: Add a GitHub organization
+    description: Adds a GitHub organization to the contract group
+    properties:
+      githubOrganizationId:
+        readOnly: true
+        type: string
+      contractGroupId:
+        type: string
+      name:
+        type: string
+      installationId:
+        readOnly: true
+        type: string
+      authorizingGithubId:
+        readOnly: true
+      authorizingUserName:
+        readOnly: true
+        type: string
+      createdBy:
+        readOnly: true
+        type: string
+      updatedBy:
+        readOnly: true
+        type: string
+  gerrit:
+    type: object
+    x-nullable: false
+    title: Adds a Gerrit instance
+    description: Adds a Gerrit instance to the contract group
+    properties:
+      gerritInstanceId:
+        readOnly: true
+        type: string
+      contractGroupId:
+        readOnly: true
+        type: string
+      ldapGroupId:
+        type: string
+      ldapGroupName:
+        type: string
+      url: 
+        type: string
+      createdBy:
+        readOnly: true
+        type: string
+      updatedBy:
+        readOnly: true
+        type: string
+    required:
+    - ldapGroupId
+    - ldapGroupName
+    - url
+  contract-group-signatures:
+    type: object
+    x-nullable: false
+    title: Contract Group Signatures Details
+    description: Signature Details for a Contract Group
+    properties:
+      contractGroupId:
+        type: string
+        readOnly: true
+      projectSfdcID:
+        type: string
+      cclaSignatures:
+        type: array
+        items: 
+          $ref: '#/definitions/ccla-signature-details'
+      iclaSignatures:
+        type: array
+        items:
+          $ref: '#/definitions/icla-signature-details'
+  ccla-signatures:
+    type: object
+    x-nullable: false 
+    title: CCLA Signatures
+    description: CCLA Signatures model
+    properties:
+      corporateClaID:
+        type: string
+      corporateClaGroupID:
+        type: string
+      contractTemplateID:
+        type: string
+      docusignID:
+        type: string
+      signatoryEmail:
+        type: string
+      signedBy:
+        type: string
+      signed:
+        type: boolean
+  icla-signatures:
+    type: object
+    x-nullable: false
+    title: ICLA Signatures
+    description: ICLA Signature model
+    properties:
+      individualClaID:
+        type: string
+      contractTemplateID:
+        type: string
+      userID:
+        type: string
+      docusignID:
+        type: string
+      signed:
+        type: boolean
+  ccla-signature-details:
+      type: object
+      x-nullable: false
+      title: ICLA Signature details
+      description: ICLA Signatures Details
+      properties:
+        userName:
+          type: string
+        companyName:
+          type: string
+        githubUserId:
+          type: string
+        minorVersion: 
+          type: integer
+        majorVersion:
+          type: integer
+        signedOn:
+          type: string
+        signed:
+          type: boolean
+  icla-signature-details:
+      type: object
+      x-nullable: false
+      title: ICLA Signature details
+      description: ICLA Signatures Details
+      properties:
+        userName:
+          type: string
+        githubUserId:
+          type: string
+        minorVersion: 
+          type: integer
+        majorVersion:
+          type: integer
+        signedOn:
+          type: string
+        signed: 
+          type: boolean
+  service:
+    title: Service
+    description: The properties that are shared amongst all versions of the Service model.
+    type: object
+    properties:
+      ID:
+        type: string
+      Name:
+        type: string
+      Description:
+        type: string
+  error-response:
+    type: object
+    x-nullable: false
+    title: Error Response
+    description: Standard error format
+    properties:
+      Code:
+        type: string
+      Message:
+        type: string
+  health:
+    type: object
+    title: Health
+    properties:
+      TimeStamp:
+        type: string
+      Status:
+        type: string
+      Githash:
+        type: string
+      BuildTimeStamp:
+        type: string
+      Healths:
+        type: array
+        items:
+          $ref: '#/definitions/health-status'
+  health-status:
+    type: object
+    properties:
+      Name:
+        type: string
+      Duration:
+        type: string
+      Healthy:
+        type: boolean
+      Error:
+        type: string
+      TimeStamp:
+        type: string
+    title: Health Status
+tags:
+  - name: services
+parameters:
+  pageSize:
+    name: pageSize
+    in: query
+    type: integer
+    format: int64
+    default: 100
+  offset:
+    name: offset
+    in: query
+    type: integer
+    format: int64
+    default: 0
+  filter:
+    name: filter
+    in: query
+    type: string
+  orderBy:
+    name: orderBy
+    in: query
+    type: string
+responses:
+  unauthorized:
+    description: Unauthorized
+    schema:
+      $ref: '#/definitions/error-response'
+  invalid-request:
+    description: Invalid request
+    schema:
+      $ref: '#/definitions/error-response'
+  forbidden:
+    description: Insufficient privilege to execute action.
+    schema:
+      $ref: '#/definitions/error-response'
+  not-found:
+    description: Not found.
+    schema:
+      type: 'null'
