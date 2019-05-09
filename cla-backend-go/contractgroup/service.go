@@ -2,8 +2,10 @@ package contractgroup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/aymerick/raymond"
 )
 
 var (
@@ -32,6 +34,91 @@ func NewService(contractGroupRepo Repository) service {
 	return service{
 		contractGroupRepo: contractGroupRepo,
 	}
+}
+
+type projectInput struct {
+	projectName  string
+	shortName    string
+	contactEmail string
+}
+
+type MetaField struct {
+	Name             string
+	TemplateVariable string
+}
+
+type Field struct {
+	AnchorString string
+	Type         string
+	IsOptional   bool
+	IsEditable   bool
+	Width        int
+	Height       int
+	OffsetX      int
+	OffSetY      int
+}
+type ICLAField struct {
+	AnchorString string
+	Type         string
+	IsOptional   bool
+	IsEditable   bool
+	Width        int
+	Height       int
+	OffsetX      int
+	OffSetY      int
+}
+
+type CCLAField struct {
+	AnchorString string
+	Type         string
+	IsOptional   bool
+	IsEditable   bool
+	Width        int
+	Height       int
+	OffsetX      int
+	OffSetY      int
+}
+
+type Template struct {
+	Name        string
+	TemplateID  string
+	Description string
+	HtmlBody    string
+	MetaFields  []MetaField
+	ICLAFields  []ICLAField
+	CCLAFields  []CCLAField
+}
+
+func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
+	template := `<html>
+    <body>
+        <p style="text-align: center">
+            {{projectName}}<br />
+            {{documentType}} Contributor License Agreement ("Agreement") v{{majorVersion}}.{{minorVersion}}
+        </p>
+       	<p>
+	Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.
+	</p>
+	<p>
+If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.
+	</p>
+    </body>
+</html>`
+	fieldsMap := map[string]string{
+		"projectName":      projectName,
+		"shortProjectName": shortProjectName,
+		"documentType":     documentType,
+		"majorVersion":     majorVersion,
+		"minorVersion":     minorVersion,
+		"contactEmail":     contactEmail,
+	}
+
+	result, err := raymond.Render(template, fieldsMap)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return result
 }
 
 func (s service) CreateContractGroup(ctx context.Context, projectSfdcID string, contractGroup models.ContractGroup) (models.ContractGroup, error) {
