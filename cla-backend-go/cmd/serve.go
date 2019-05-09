@@ -5,23 +5,15 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/auth"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/config"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/contractgroup"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/project"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/user"
 
 	"github.com/go-openapi/loads"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/lytics/logrus"
 	"github.com/rs/cors"
-	"github.com/serenize/snaker"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,20 +37,20 @@ var serveCmd = &cobra.Command{
 			"Host":      host,
 		}).Info("Service Startup")
 
-		configFile, err := config.LoadConfig(configFile, "")
-		if err != nil {
-			log.Panicln("Unable to load config", err)
-		}
+		// configFile, err := config.LoadConfig(configFile, "")
+		// if err != nil {
+		// 	log.Panicln("Unable to load config", err)
+		// }
 
-		db, err := sqlx.Connect("postgres", viper.GetString("POSTGRESQL_CONNECTION"))
-		if err != nil {
-			log.Panicln("unable to connect to DB", err)
-		}
+		// db, err := sqlx.Connect("postgres", viper.GetString("POSTGRESQL_CONNECTION"))
+		// if err != nil {
+		// 	log.Panicln("unable to connect to DB", err)
+		// }
 
-		db.SetMaxOpenConns(viper.GetInt("DB_MAX_CONNECTIONS"))
-		db.SetMaxIdleConns(5)
-		db.SetConnMaxLifetime(15 * time.Minute)
-		db.MapperFunc(snaker.CamelToSnake)
+		// db.SetMaxOpenConns(viper.GetInt("DB_MAX_CONNECTIONS"))
+		// db.SetMaxIdleConns(5)
+		// db.SetConnMaxLifetime(15 * time.Minute)
+		// db.MapperFunc(snaker.CamelToSnake)
 
 		swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 		if err != nil {
@@ -67,34 +59,34 @@ var serveCmd = &cobra.Command{
 
 		api := operations.NewClaAPI(swaggerSpec)
 
-		auth0Validator, err := auth.NewAuth0Validator(
-			configFile.Auth0.Domain,
-			configFile.Auth0.ClientID,
-			configFile.Auth0.UsernameClaim,
-			configFile.Auth0.Algorithm)
-		if err != nil {
-			logrus.Panic(err)
-		}
+		// auth0Validator, err := auth.NewAuth0Validator(
+		// 	configFile.Auth0.Domain,
+		// 	configFile.Auth0.ClientID,
+		// 	configFile.Auth0.UsernameClaim,
+		// 	configFile.Auth0.Algorithm)
+		// if err != nil {
+		// 	logrus.Panic(err)
+		// }
 
 		var (
-			userRepo          = user.NewRepository(db)
-			projectRepo       = project.NewRepository(db)
-			contractGroupRepo = contractgroup.NewRepository(db)
+		// userRepo          = user.NewRepository(db)
+		// projectRepo       = project.NewRepository(db)
+		// contractGroupRepo = contractgroup.NewRepository(db)
 		)
 
 		var (
-			healthService        = health.New(db, GitHash, BuildStamp)
-			projectService       = project.NewService(projectRepo)
-			contractGroupService = contractgroup.NewService(contractGroupRepo)
-			userService          = user.NewService(userRepo)
-			authorizer           = auth.NewAuthorizer(auth0Validator, userService)
+			healthService = health.New(GitHash, BuildStamp)
+			// projectService       = project.NewService(projectRepo)
+			// contractGroupService = contractgroup.NewService(contractGroupRepo)
+			// userService          = user.NewService(userRepo)
+			//authorizer = auth.NewAuthorizer(auth0Validator)
 		)
 
-		api.OauthSecurityAuth = authorizer.SecurityAuth
+		//api.OauthSecurityAuth = authorizer.SecurityAuth
 
 		health.Configure(api, healthService)
-		project.Configure(api, projectService)
-		contractgroup.Configure(api, contractGroupService)
+		// project.Configure(api, projectService)
+		// contractgroup.Configure(api, contractGroupService)
 
 		// flag.Parse()
 		apiHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares))
