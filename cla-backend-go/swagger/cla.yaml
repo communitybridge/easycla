@@ -278,6 +278,25 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+  /template:
+    parameters: []
+    get:
+      summary: Get Available Templates
+      security: []
+      operationId: getTemplates
+      tags:
+        - template
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/template'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
 definitions:
   project:
     type: object
@@ -506,6 +525,62 @@ definitions:
           type: string
         signed: 
           type: boolean
+  template: 
+      type: object
+      x-nullable: false
+      title: CLA Template
+      description: CLA Template
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        htmlBody: 
+          type: string
+        metaFields:
+          type: array
+          items: 
+            $ref: '#/definitions/meta-field'
+        iclaFields:
+          type: array
+          items: 
+            $ref: '#/definitions/field'
+        cclaFields:
+          type: array
+          items: 
+            $ref: '#/definitions/field'
+  meta-field:
+    title: MetaField
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      templateVariable:
+        type: string
+  field:
+    title: Field
+    type: object
+    properties:
+      name: 
+        type: string
+      anchorString:
+        type: string
+      fieldType:
+        type: string
+      isOptional:
+        type: boolean
+      isEditable:
+        type: boolean
+      width:
+        type: integer
+      height:
+        type: integer
+      offsetX:
+        type: integer
+      offsetY:
+        type: integer
   service:
     title: Service
     description: The properties that are shared amongst all versions of the Service model.
