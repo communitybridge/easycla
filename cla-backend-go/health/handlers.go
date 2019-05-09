@@ -3,7 +3,6 @@ package health
 import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -11,7 +10,7 @@ import (
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service service) {
 
-	api.HealthCheckHandler = operations.HealthCheckHandlerFunc(func(params operations.HealthCheckParams, user *user.CLAUser) middleware.Responder {
+	api.HealthCheckHandler = operations.HealthCheckHandlerFunc(func(params operations.HealthCheckParams) middleware.Responder {
 		result, err := service.HealthCheck(params.HTTPRequest.Context(), params)
 		if err != nil {
 			return operations.NewHealthCheckBadRequest().WithPayload(errorResponse(err))

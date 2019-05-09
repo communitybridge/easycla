@@ -24,9 +24,7 @@ paths:
   /ops/health:
     get:
       summary: API Health Check
-      security:
-        - OauthSecurity:
-          - admin
+      security: []
       operationId: healthCheck
       responses:
         '200':
