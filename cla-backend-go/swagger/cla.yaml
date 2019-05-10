@@ -279,7 +279,6 @@ paths:
         '403':
           $ref: '#/responses/forbidden'
   /template:
-    parameters: []
     get:
       summary: Get Available Templates
       security: []
@@ -290,7 +289,9 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/template'
+            type: array
+            items:
+              $ref: '#/definitions/template'
         '400':
           $ref: '#/responses/invalid-request'
         '401':

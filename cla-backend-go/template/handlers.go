@@ -10,14 +10,13 @@ import (
 
 func Configure(api *operations.ClaAPI, service service) {
 	// Retrieve a list of available templates
-	api.TemplateGetTemplateHandler = template.GetTemplateHandlerFunc(func(template template.NewGetTemplatesParams) middleware.Responder {
+	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams) middleware.Responder {
 
-		template, err := service.getTemplate(template.HTTPRequest.Context(), params)
+		templates, err := service.GetTemplates(params.HTTPRequest.Context())
 		if err != nil {
-			return template.NewGetTemplateBadRequest().WithPayload(errorResponse(err))
+			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
-		NewGetTemplatesParams
-		return template.NewGetTemplateOK().WithPayload(template)
+		return template.NewGetTemplatesOK().WithPayload(templates)
 	})
 }
 
