@@ -58,7 +58,8 @@ export class ClaContractUploadModal {
       TungstenFabricTemplate: 'Tungsten Fabric Template',
       OpenColorIOTemplate: 'OpenColorIO Template',
       OpenVDBTemplate: 'OpenVDB Template',
-      ONAPTemplate: 'ONAP Template'
+      ONAPTemplate: 'ONAP Template',
+      TektonTemplate: 'Tekton Template'
     };
   }
 
