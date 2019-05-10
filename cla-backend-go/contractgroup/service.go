@@ -3,6 +3,8 @@ package contractgroup
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/aymerick/raymond"
@@ -89,8 +91,43 @@ type Template struct {
 	CCLAFields  []CCLAField
 }
 
+func (s Service) SaveTemplateToDynamoDB() {
+
+}
+
+func (s Service) SaveFileToS3Bucket(body io.Reader) {
+
+}
+
+func (s Service) SendHTMLToDocRaptor(HTML string) {
+	DocRaptorAPIURL := "https://YOUR_API_KEY@docraptor.com/docs"
+
+	document := `{
+  		"type": "pdf",
+  		"document_content": "%s"
+	}`
+	document = fmt.Sprintf(document, HTML)
+
+	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, body)
+	if err != nil {
+		fmt.Printf("failed to create request to submit data to API: %s", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("API Response Status Code: %d\n", resp.Status)
+
+	return resp.Body
+}
+
 func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
-	template := `<html>
+	templateBefore := `<html>
     <body>
         <p style="text-align: center">
             {{projectName}}<br />
@@ -113,12 +150,12 @@ If you have not already done so, please complete and sign this Agreement using t
 		"contactEmail":     contactEmail,
 	}
 
-	result, err := raymond.Render(template, fieldsMap)
+	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return result
+	return templateAfter
 }
 
 func (s service) CreateContractGroup(ctx context.Context, projectSfdcID string, contractGroup models.ContractGroup) (models.ContractGroup, error) {
