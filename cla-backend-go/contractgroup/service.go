@@ -7,6 +7,9 @@ import (
 	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
 )
 
@@ -95,7 +98,26 @@ func (s Service) SaveTemplateToDynamoDB() {
 
 }
 
-func (s Service) SaveFileToS3Bucket(body io.Reader) {
+func (s Service) SaveFileToS3Bucket(file io.Reader, bucketName string) {
+	myKey := "pdfFile"
+	myBuckdet := bucketName
+	// The session the S3 Uploader will use
+	sess := session.Must(session.NewSession())
+
+	// Create an uploader with the session and default options
+	uploader := s3manager.NewUploader(sess)
+
+	// Upload the file to S3.
+	// need bucket and key info
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(myBucket),
+		Key:    aws.String(myKey),
+		Body:   file,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload file, %v", err)
+	}
+	fmt.Printf("file uploaded to, %s\n", aws.StringValue(result.Location))
 
 }
 
