@@ -9,6 +9,7 @@ import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/template"
 
 	"github.com/go-openapi/loads"
 	_ "github.com/lib/pq"
@@ -69,9 +70,10 @@ var serveCmd = &cobra.Command{
 		// }
 
 		var (
-		// userRepo          = user.NewRepository(db)
-		// projectRepo       = project.NewRepository(db)
-		// contractGroupRepo = contractgroup.NewRepository(db)
+			// userRepo          = user.NewRepository(db)
+			// projectRepo       = project.NewRepository(db)
+			// contractGroupRepo = contractgroup.NewRepository(db)
+			templateRepo = template.NewRepository()
 		)
 
 		var (
@@ -79,12 +81,14 @@ var serveCmd = &cobra.Command{
 			// projectService       = project.NewService(projectRepo)
 			// contractGroupService = contractgroup.NewService(contractGroupRepo)
 			// userService          = user.NewService(userRepo)
+			templateService = template.NewService(templateRepo)
 			//authorizer = auth.NewAuthorizer(auth0Validator)
 		)
 
 		//api.OauthSecurityAuth = authorizer.SecurityAuth
 
 		health.Configure(api, healthService)
+		template.Configure(api, templateService)
 		// project.Configure(api, projectService)
 		// contractgroup.Configure(api, contractGroupService)
 
