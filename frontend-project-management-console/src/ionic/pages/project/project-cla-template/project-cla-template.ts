@@ -1,15 +1,10 @@
 import {Component, ViewChild} from "@angular/core";
 import {
   NavController,
-  ModalController,
   NavParams,
   IonicPage, Nav, Events, AlertController
 } from "ionic-angular";
-import {CincoService} from "../../../services/cinco.service";
-import {KeycloakService} from "../../../services/keycloak/keycloak.service";
-import {SortService} from "../../../services/sort.service";
 import {ClaService} from "../../../services/cla.service";
-import {RolesService} from "../../../services/roles.service";
 import {Restricted} from "../../../decorators/restricted";
 
 @Restricted({
@@ -27,20 +22,16 @@ export class ProjectClaTemplatePage {
   sfdcProjectId: string;
   projectTemplateId: string;
   templates: any[] = [];
+  selectedTemplate = {};
+  templateValues = {};
+  step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService,
-    private sortService: SortService,
-    public modalCtrl: ModalController,
-    private keycloak: KeycloakService,
-    public alertCtrl: AlertController,
     public claService: ClaService,
-    public rolesService: RolesService,
-    public events: Events
   ) {
     this.sfdcProjectId = navParams.get("projectId");
     this.projectTemplateId = navParams.get("projectTemplateId");
@@ -52,28 +43,25 @@ export class ProjectClaTemplatePage {
   }
 
   getTemplates () {
-    this.templates = [
-      {
-        name: 'Apache',
-        description: 'Lorem ipsum...'
-      },
-      {
-        name: 'DCO',
-        description: 'Lorem ipsum...'
-      },
-      {
-        name: 'Custom',
-        description: 'Lorem ipsum...'
-      }
-    ];
+    this.claService.getTemplates().subscribe(templates => {
+      this.templates = templates;
+    });
   }
 
   ngOnInit() {
   }
 
   selectTemplate (template) {
+    this.selectedTemplate = template;
+    this.step = 'values';
+  }
 
-    this.backToProject();
+  reviewSelectedTemplate () {
+
+  }
+
+  goToFirstStep () {
+    this.step = 'selection';
   }
 
   backToProject() {
