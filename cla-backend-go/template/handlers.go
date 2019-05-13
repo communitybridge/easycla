@@ -1,22 +1,22 @@
-package health
+package template
 
 import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations/template"
 
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service service) {
+	// Retrieve a list of available templates
+	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams) middleware.Responder {
 
-	api.HealthCheckHandler = operations.HealthCheckHandlerFunc(func(params operations.HealthCheckParams) middleware.Responder {
-		result, err := service.HealthCheck(params.HTTPRequest.Context(), params)
+		templates, err := service.GetTemplates(params.HTTPRequest.Context())
 		if err != nil {
-			return operations.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
+			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
-
-		return operations.NewHealthCheckOK().WithPayload(result)
+		return template.NewGetTemplatesOK().WithPayload(templates)
 	})
 }
 
