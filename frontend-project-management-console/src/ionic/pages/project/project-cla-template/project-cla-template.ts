@@ -5,12 +5,12 @@ import {
   NavParams,
   IonicPage, Nav, Events, AlertController
 } from "ionic-angular";
-import {CincoService} from "../../../services/cinco.service";
-import {KeycloakService} from "../../../services/keycloak/keycloak.service";
-import {SortService} from "../../../services/sort.service";
-import {ClaService} from "../../../services/cla.service";
-import {RolesService} from "../../../services/roles.service";
-import {Restricted} from "../../../decorators/restricted";
+import { CincoService } from "../../../services/cinco.service";
+import { KeycloakService } from "../../../services/keycloak/keycloak.service";
+import { SortService } from "../../../services/sort.service";
+import { ClaService } from "../../../services/cla.service";
+import { RolesService } from "../../../services/roles.service";
+import { Restricted } from "../../../decorators/restricted";
 
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
@@ -52,20 +52,11 @@ export class ProjectClaTemplatePage {
   }
 
   getTemplates () {
-    this.templates = [
-      {
-        name: 'Apache',
-        description: 'Lorem ipsum...'
-      },
-      {
-        name: 'DCO',
-        description: 'Lorem ipsum...'
-      },
-      {
-        name: 'Custom',
-        description: 'Lorem ipsum...'
-      }
-    ];
+    this.claService
+      .getTemplates()
+      .subscribe(templates => {
+        this.templates = templates
+      })
   }
 
   ngOnInit() {
