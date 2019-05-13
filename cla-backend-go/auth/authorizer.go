@@ -25,10 +25,10 @@ type Authorizer struct {
 	userPermissioner UserPermissioner
 }
 
-func NewAuthorizer(auth0Validator Auth0Validator, userPermissioner UserPermissioner) Authorizer {
+func NewAuthorizer(auth0Validator Auth0Validator) Authorizer {
 	return Authorizer{
-		auth0Validator:   auth0Validator,
-		userPermissioner: userPermissioner,
+		auth0Validator: auth0Validator,
+		//	userPermissioner: userPermissioner,
 	}
 }
 
