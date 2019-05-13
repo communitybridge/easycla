@@ -10,6 +10,8 @@ import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
 )
@@ -42,60 +44,33 @@ func NewService(contractGroupRepo Repository) service {
 	}
 }
 
-type projectInput struct {
-	projectName  string
-	shortName    string
-	contactEmail string
-}
+func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) {
+	// Initialize a session in us-west-2 that the SDK will use to load
+	// credentials from the shared credentials file ~/.aws/credentials.
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
 
-type MetaField struct {
-	Name             string
-	TemplateVariable string
-}
+	// Create DynamoDB client
+	svc := dynamodb.New(sess)
 
-type Field struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
-type ICLAField struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
+	item := dynamodbattribute.MarshalMap(template)
 
-type CCLAField struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
+	// Create item in table Movies
+	input := &dynamodb.PutItemInput{
+		Template:  item,
+		TableName: aws.String(tableName),
+	}
 
-type Template struct {
-	Name        string
-	TemplateID  string
-	Description string
-	HtmlBody    string
-	MetaFields  []MetaField
-	ICLAFields  []ICLAField
-	CCLAFields  []CCLAField
-}
+	result, err = svc.PutItem(input)
 
-func (s Service) SaveTemplateToDynamoDB() {
+	if err != nil {
+		fmt.Println("Error putting item in database: ", err)
+		return err
+	}
+
+	fmt.Println("Successfully put item in database.")
+	return nil
 
 }
 
