@@ -1,0 +1,37 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title (click)="backToProject()">Back to project</ion-title>
+    <img class="navbar-logo" src="/assets/img/cla-icon-logo.png" alt="">
+  </ion-navbar>
+</ion-header>
+
+<ion-content headerspacing>
+  <ion-grid class="project-grid">
+    <ion-row>
+      <h1>Select a template</h1>
+    </ion-row>
+
+    <ion-row>
+      <ion-col>
+        <ion-card class="contract-card">
+          <ion-card-content>
+            <ion-grid>
+              <ion-row *ngFor="let template of templates">
+                <ion-col col-2 class="template-selector">
+                  <button ion-button (click)="selectTemplate(template)" color="secondary">
+                    {{ template.name }}
+                  </button>
+                </ion-col>
+                <ion-col class="template-description">
+                  {{ template.description }}
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
+<cla-footer></cla-footer>
