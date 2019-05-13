@@ -896,5 +896,13 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  getTemplates() { 
+    // .get(this.claApiUrl + `/v3/template'`)
+    return this.http
+      .get('http://localhost:8080/v1/template')
+      .map(res => res.json())
+
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 }
