@@ -1,6 +1,7 @@
 package contractgroup
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -98,39 +99,41 @@ func (s Service) SaveTemplateToDynamoDB() {
 
 }
 
-func (s Service) SaveFileToS3Bucket(file io.Reader, bucketName string) {
-	myKey := "pdfFile"
-	myBuckdet := bucketName
-	// The session the S3 Uploader will use
-	sess := session.Must(session.NewSession())
-
+func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	},
+	))
 	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(sess)
 
 	// Upload the file to S3.
-	// need bucket and key info
 	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(myBucket),
-		Key:    aws.String(myKey),
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(fileName),
 		Body:   file,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to upload file, %v", err)
+		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
 	}
-	fmt.Printf("file uploaded to, %s\n", aws.StringValue(result.Location))
+	fmt.Printf("file uploaded to, %s\n", result.Location)
+
+	defer file.Close()
+
+	return nil
 
 }
-
-func (s Service) SendHTMLToDocRaptor(HTML string) {
-	DocRaptorAPIURL := "https://YOUR_API_KEY@docraptor.com/docs"
+func (s Service) SendHTMLToDocRaptor(HTML string) io.Reader {
+	DocRaptorAPIURL := "https://JMgaW58AX1CHmVmbKZCn@docraptor.com/docs"
 
 	document := `{
   		"type": "pdf",
-  		"document_content": "%s"
+  		"document_content": "%s",
+  		"test":true
 	}`
 	document = fmt.Sprintf(document, HTML)
 
-	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, body)
+	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, bytes.NewBufferString(document))
 	if err != nil {
 		fmt.Printf("failed to create request to submit data to API: %s", err)
 	}
@@ -141,28 +144,15 @@ func (s Service) SendHTMLToDocRaptor(HTML string) {
 	if err != nil {
 		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
 	}
-	defer resp.Body.Close()
 
-	fmt.Printf("API Response Status Code: %d\n", resp.Status)
+	fmt.Printf("API Response Status Code: %s\n", resp.Status)
 
 	return resp.Body
 }
 
 func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
-	templateBefore := `<html>
-    <body>
-        <p style="text-align: center">
-            {{projectName}}<br />
-            {{documentType}} Contributor License Agreement ("Agreement") v{{majorVersion}}.{{minorVersion}}
-        </p>
-       	<p>
-	Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.
-	</p>
-	<p>
-If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.
-	</p>
-    </body>
-</html>`
+	// DocRaptor API likes HTML in single line
+	templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
 	fieldsMap := map[string]string{
 		"projectName":      projectName,
 		"shortProjectName": shortProjectName,
@@ -174,7 +164,7 @@ If you have not already done so, please complete and sign this Agreement using t
 
 	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Failed to enter fields into HTML", err)
 	}
 
 	return templateAfter
