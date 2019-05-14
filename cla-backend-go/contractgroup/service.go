@@ -1,12 +1,18 @@
 package contractgroup
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
 )
 
@@ -38,77 +44,71 @@ func NewService(contractGroupRepo Repository) service {
 	}
 }
 
-type projectInput struct {
-	projectName  string
-	shortName    string
-	contactEmail string
-}
+func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) {
+	// Initialize a session in us-west-2 that the SDK will use to load
+	// credentials from the shared credentials file ~/.aws/credentials.
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
 
-type MetaField struct {
-	Name             string
-	TemplateVariable string
-}
+	// Create DynamoDB client
+	svc := dynamodb.New(sess)
 
-type Field struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
-type ICLAField struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
+	item := dynamodbattribute.MarshalMap(template)
 
-type CCLAField struct {
-	AnchorString string
-	Type         string
-	IsOptional   bool
-	IsEditable   bool
-	Width        int
-	Height       int
-	OffsetX      int
-	OffSetY      int
-}
+	// Create item in table Movies
+	input := &dynamodb.PutItemInput{
+		Template:  item,
+		TableName: aws.String(tableName),
+	}
 
-type Template struct {
-	Name        string
-	TemplateID  string
-	Description string
-	HtmlBody    string
-	MetaFields  []MetaField
-	ICLAFields  []ICLAField
-	CCLAFields  []CCLAField
-}
+	result, err = svc.PutItem(input)
 
-func (s Service) SaveTemplateToDynamoDB() {
+	if err != nil {
+		fmt.Println("Error putting item in database: ", err)
+		return err
+	}
+
+	fmt.Println("Successfully put item in database.")
+	return nil
 
 }
 
-func (s Service) SaveFileToS3Bucket(body io.Reader) {
+func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	},
+	))
+	// Create an uploader with the session and default options
+	uploader := s3manager.NewUploader(sess)
+
+	// Upload the file to S3.
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(fileName),
+		Body:   file,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
+	}
+	fmt.Printf("file uploaded to, %s\n", result.Location)
+
+	defer file.Close()
+
+	return nil
 
 }
-
-func (s Service) SendHTMLToDocRaptor(HTML string) {
-	DocRaptorAPIURL := "https://YOUR_API_KEY@docraptor.com/docs"
+func (s Service) SendHTMLToDocRaptor(HTML string) io.Reader {
+	DocRaptorAPIURL := "https://JMgaW58AX1CHmVmbKZCn@docraptor.com/docs"
 
 	document := `{
   		"type": "pdf",
-  		"document_content": "%s"
+  		"document_content": "%s",
+  		"test":true
 	}`
 	document = fmt.Sprintf(document, HTML)
 
-	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, body)
+	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, bytes.NewBufferString(document))
 	if err != nil {
 		fmt.Printf("failed to create request to submit data to API: %s", err)
 	}
@@ -119,28 +119,15 @@ func (s Service) SendHTMLToDocRaptor(HTML string) {
 	if err != nil {
 		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
 	}
-	defer resp.Body.Close()
 
-	fmt.Printf("API Response Status Code: %d\n", resp.Status)
+	fmt.Printf("API Response Status Code: %s\n", resp.Status)
 
 	return resp.Body
 }
 
 func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
-	templateBefore := `<html>
-    <body>
-        <p style="text-align: center">
-            {{projectName}}<br />
-            {{documentType}} Contributor License Agreement ("Agreement") v{{majorVersion}}.{{minorVersion}}
-        </p>
-       	<p>
-	Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.
-	</p>
-	<p>
-If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.
-	</p>
-    </body>
-</html>`
+	// DocRaptor API likes HTML in single line
+	templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
 	fieldsMap := map[string]string{
 		"projectName":      projectName,
 		"shortProjectName": shortProjectName,
@@ -152,7 +139,7 @@ If you have not already done so, please complete and sign this Agreement using t
 
 	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Failed to enter fields into HTML", err)
 	}
 
 	return templateAfter
