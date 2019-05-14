@@ -18,6 +18,15 @@ func Configure(api *operations.ClaAPI, service service) {
 		}
 		return template.NewGetTemplatesOK().WithPayload(templates)
 	})
+
+	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams) middleware.Responder {
+		err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, params.Body)
+		if err != nil {
+			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
+		}
+		return template.NewCreateCLAGroupTemplateOK()
+	})
+
 }
 
 type codedResponse interface {

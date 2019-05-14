@@ -38,7 +38,7 @@ type service struct {
 	contractGroupRepo Repository
 }
 
-func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) error {
+func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) error {
 	// Initialize a session in us-west-2 that the SDK will use to load
 	// credentials from the shared credentials file ~/.aws/credentials.
 	sess, err := session.NewSession(&aws.Config{
@@ -68,7 +68,7 @@ func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableNa
 
 }
 
-func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	},
@@ -92,7 +92,7 @@ func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, re
 	return nil
 
 }
-func (s Service) SendHTMLToDocRaptor(URL, HTML string) io.Reader {
+func (s service) SendHTMLToDocRaptor(URL, HTML string) io.Reader {
 	document := `{
   		"type": "pdf",
   		"document_content": "%s",
