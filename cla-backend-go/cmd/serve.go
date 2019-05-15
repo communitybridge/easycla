@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
@@ -59,6 +60,13 @@ var serveCmd = &cobra.Command{
 		}
 
 		api := operations.NewClaAPI(swaggerSpec)
+		docraptorClient, err := docraptor.NewDocraptorClient("key")
+		// docraptorClient, err := docraptor.NewDocraptorClient(
+		// 	configFile.Docraptor.APIKey,
+		// )
+		// if err != nil {
+		// 	logrus.Panic(err)
+		// }
 
 		// auth0Validator, err := auth.NewAuth0Validator(
 		// 	configFile.Auth0.Domain,
@@ -81,12 +89,11 @@ var serveCmd = &cobra.Command{
 			// projectService       = project.NewService(projectRepo)
 			// contractGroupService = contractgroup.NewService(contractGroupRepo)
 			// userService          = user.NewService(userRepo)
-			templateService = template.NewService(templateRepo)
+			templateService = template.NewService(templateRepo, docraptorClient)
 			//authorizer = auth.NewAuthorizer(auth0Validator)
 		)
 
 		//api.OauthSecurityAuth = authorizer.SecurityAuth
-
 		health.Configure(api, healthService)
 		template.Configure(api, templateService)
 		// project.Configure(api, projectService)
