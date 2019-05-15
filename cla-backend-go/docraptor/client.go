@@ -11,28 +11,23 @@ import (
 )
 
 type DocraptorClient struct {
-	APIKey    string
-	HTMLInput string
+	APIKey string
+	URL    string
 }
 
-func NewDocraptorClient(key, html string) (DocraptorClient, error) {
+func NewDocraptorClient(key string) (DocraptorClient, error) {
 	if key == "" {
 		return DocraptorClient{}, errors.New("invalid key")
 	}
-
-	if html == "" {
-		return DocraptorClient{}, errors.New("invalid html")
-	}
+	URL := fmt.Sprint("https://%s@docraptor.com/docs", APIKey)
 
 	return DocRaptorClient{
-		APIKey:    key,
-		HTMLInput: html,
+		APIKey: key,
+		URL:    URL,
 	}, nil
 }
 
-func (dc DocraptorClient) SendHTMLToDocRaptor(APIKey, HTML string) io.ReadCloser {
-	URL = "https://%s@docraptor.com/docs"
-	URL = fmt.Sprint(URL, APIKey)
+func (dc DocraptorClient) CreatePDF(HTML string) io.ReadCloser {
 	document := `{
   		"type": "pdf",
   		"document_content": "%s",
@@ -40,7 +35,7 @@ func (dc DocraptorClient) SendHTMLToDocRaptor(APIKey, HTML string) io.ReadCloser
 	}`
 	document = fmt.Sprintf(document, HTML)
 
-	request, err := http.NewRequest(http.MethodPost, URL, bytes.NewBufferString(document))
+	request, err := http.NewRequest(http.MethodPost, dc.URL, bytes.NewBufferString(document))
 	if err != nil {
 		fmt.Printf("failed to create request to submit data to API: %s", err)
 	}
