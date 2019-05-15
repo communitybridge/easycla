@@ -3,8 +3,14 @@ package template
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
 )
 
@@ -20,6 +26,17 @@ func NewService(templateRepo Repository) service {
 	return service{
 		templateRepo: templateRepo,
 	}
+}
+
+func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaTemplateGroup) error {
+	// template, err := s.templateRepo.CreateCLAGroupTemplate(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	fmt.Println("CreateCLAGroupTemplate Method")
+	// InjectProjectInformationIntoTemplate() --> docraptorclient --> PDF ---> Save to S3 Bucket
+	// Save Template to Dynamodb
+	return nil
 }
 
 func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
@@ -42,12 +59,57 @@ func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectN
 	return templateAfter
 }
 
-func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaTemplateGroup) error {
-	// template, err := s.templateRepo.CreateCLAGroupTemplate(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	fmt.Println("CreateCLAGroupTemplate Method")
+func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) error {
+	// Initialize a session in us-west-2 that the SDK will use to load
+	// credentials from the shared credentials file ~/.aws/credentials.
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
+
+	// Create DynamoDB client
+	svc := dynamodb.New(sess)
+
+	item := dynamodbattribute.MarshalMap(template)
+
+	// Create item in table
+	input := &dynamodb.PutItemInput{
+		Item:      item,
+		TableName: aws.String(tableName),
+	}
+
+	_, err = svc.PutItem(input)
+
+	if err != nil {
+		fmt.Println("Error putting item in database: ", err)
+		return err
+	}
+
+	fmt.Println("Successfully put item in database.")
+	return nil
+
+}
+
+func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	},
+	))
+	// Create an uploader with the session and default options
+	uploader := s3manager.NewUploader(sess)
+
+	// Upload the file to S3.
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(fileName),
+		Body:   file,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
+	}
+	fmt.Printf("file uploaded to, %s\n", result.Location)
+
+	defer file.Close()
+
 	return nil
 }
 
