@@ -33,15 +33,6 @@ func NewService(templateRepo Repository, docraptorClient docraptor.DocraptorClie
 }
 
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaTemplateGroup) error {
-	// template, err := s.templateRepo.CreateCLAGroupTemplate(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// DocRaptor API likes HTML in single line
-	// template := s.repo.GetTemplate(claGroupFields.TemplateID)
-	// for testing template := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
-	template := ""
 	HTML := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	PDF := s.docraptorClient.CreatePDF(HTML)
 	err := s.SaveFileToS3Bucket(PDF)
@@ -57,7 +48,6 @@ func (s service) InjectProjectInformationIntoTemplate(template string, fields []
 	templateBefore := template
 	fieldsMap := map[string]string{}
 	for _, field := range fields {
-
 		fieldsMap[field.TemplateVariable] = field.Value
 	}
 
