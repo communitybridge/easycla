@@ -6,7 +6,7 @@ import {
 } from "ionic-angular";
 import {ClaService} from "../../../services/cla.service";
 import {Restricted} from "../../../decorators/restricted";
-
+import { DomSanitizer } from '@angular/platform-browser';
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
 })
@@ -24,6 +24,11 @@ export class ProjectClaTemplatePage {
   templates: any[] = [];
   selectedTemplate = {};
   templateValues = {};
+  pdfPath = {
+    ccla: '/assets/sample-cla-pdf.pdf',
+    icla: '/assets/sample-cla-pdf.pdf'
+  };
+  currentPDF = 'ccla';
   step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
@@ -32,6 +37,7 @@ export class ProjectClaTemplatePage {
     public navCtrl: NavController,
     public navParams: NavParams,
     public claService: ClaService,
+    public sanitizer: DomSanitizer
   ) {
     this.sfdcProjectId = navParams.get("projectId");
     this.projectTemplateId = navParams.get("projectTemplateId");
@@ -42,29 +48,39 @@ export class ProjectClaTemplatePage {
     this.getTemplates();
   }
 
-  getTemplates () {
-    this.claService.getTemplates().subscribe(templates => {
-      this.templates = templates;
-    });
+  getTemplates() {
+    this.claService.getTemplates().subscribe(templates => this.templates = templates);
   }
 
   ngOnInit() {
   }
 
-  selectTemplate (template) {
+  getPdfPath() {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
+  }
+
+  showPDF (type) {
+    this.currentPDF = type;
+  }
+
+  selectTemplate(template) {
     this.selectedTemplate = template;
     this.step = 'values';
   }
 
-  reviewSelectedTemplate () {
-
+  reviewSelectedTemplate() {
+    this.step = 'review';
   }
 
-  goToFirstStep () {
-    this.step = 'selection';
+  goToStep(step) {
+    this.step = step;
   }
 
   backToProject() {
     this.navCtrl.pop();
   }
+
+  viewDocusign() {}
+
+  submit() {}
 }
