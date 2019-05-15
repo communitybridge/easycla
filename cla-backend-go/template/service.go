@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
+	"github.com/spf13/viper"
 )
 
 type Service interface {
@@ -37,15 +38,13 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// 	return nil, err
 	// }
 
-	// use some methods to retrieve template from repository using templateID
+	// DocRaptor API likes HTML in single line
 	// template := s.repo.GetTemplate(claGroupFields.TemplateID)
-	template := "testvalue"
-	bucketName := "testvalue"
-	fileName := "testvalue"
-	region := "testvalue"
+	// for testing template := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
+	template := ""
 	HTML := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	PDF := s.docraptorClient.CreatePDF(HTML)
-	err := s.SaveFileToS3Bucket(PDF, bucketName, fileName, region)
+	err := s.SaveFileToS3Bucket(PDF)
 	if err != nil {
 		fmt.Println("Error saving to S3 bucket : ", err)
 		return err
@@ -55,12 +54,11 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 }
 
 func (s service) InjectProjectInformationIntoTemplate(template string, fields []*models.MetaField) string {
-	// DocRaptor API likes HTML in single line
-	//templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
-	// add logic to parse fields to inject metafields in proper places
-	// loop through fields to populate map
 	templateBefore := template
 	fieldsMap := map[string]string{}
+	for _, field := range fields {
+		fieldsMap[field.Name] = field.Value
+	}
 
 	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
 	if err != nil {
@@ -101,13 +99,11 @@ func (s service) SaveTemplateToDynamoDB(template models.Template, templateName, 
 
 	fmt.Println("Successfully put item in database.")
 	return nil
-
 }
 
-func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
-
+func (s service) SaveFileToS3Bucket(file io.ReadCloser) error {
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(region),
+		Region: aws.String(viper.GetString("AWS_REGION")),
 	},
 	))
 	// Create an uploader with the session and default options
@@ -115,8 +111,8 @@ func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, re
 
 	// Upload the file to S3.
 	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(fileName),
+		Bucket: aws.String(viper.GetString("AWS_BUCKET_NAME")),
+		Key:    aws.String("savedFile"),
 		Body:   file,
 	})
 	if err != nil {
