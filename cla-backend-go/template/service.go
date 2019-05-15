@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -19,12 +20,14 @@ type Service interface {
 }
 
 type service struct {
-	templateRepo Repository
+	templateRepo    Repository
+	docraptorClient docraptor.DocraptorClient
 }
 
-func NewService(templateRepo Repository) service {
+func NewService(templateRepo Repository, docraptorClient docraptor.DocraptorClient) service {
 	return service{
-		templateRepo: templateRepo,
+		templateRepo:    templateRepo,
+		docraptorClient: docraptorClient,
 	}
 }
 
@@ -33,23 +36,31 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// if err != nil {
 	// 	return nil, err
 	// }
-	fmt.Println("CreateCLAGroupTemplate Method")
-	// InjectProjectInformationIntoTemplate() --> docraptorclient --> PDF ---> Save to S3 Bucket
-	// Save Template to Dynamodb
+
+	// use some methods to retrieve template from repository using templateID
+	// template := s.repo.GetTemplate(claGroupFields.TemplateID)
+	template := "testvalue"
+	bucketName := "testvalue"
+	fileName := "testvalue"
+	region := "testvalue"
+	HTML := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
+	PDF := s.docraptorClient.CreatePDF(HTML)
+	err := s.SaveFileToS3Bucket(PDF, bucketName, fileName, region)
+	if err != nil {
+		fmt.Println("Error saving to S3 bucket : ", err)
+		return err
+	}
+	// Save Template to Dynamodb once method is finalized
 	return nil
 }
 
-func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
+func (s service) InjectProjectInformationIntoTemplate(template string, fields []*models.MetaField) string {
 	// DocRaptor API likes HTML in single line
-	templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
-	fieldsMap := map[string]string{
-		"projectName":      projectName,
-		"shortProjectName": shortProjectName,
-		"documentType":     documentType,
-		"majorVersion":     majorVersion,
-		"minorVersion":     minorVersion,
-		"contactEmail":     contactEmail,
-	}
+	//templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
+	// add logic to parse fields to inject metafields in proper places
+	// loop through fields to populate map
+	templateBefore := template
+	fieldsMap := map[string]string{}
 
 	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
 	if err != nil {
@@ -59,7 +70,7 @@ func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectN
 	return templateAfter
 }
 
-func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) error {
+func (s service) SaveTemplateToDynamoDB(template models.Template, templateName, tableName, contractGroupID, region string) error {
 	// Initialize a session in us-west-2 that the SDK will use to load
 	// credentials from the shared credentials file ~/.aws/credentials.
 	sess, err := session.NewSession(&aws.Config{
@@ -69,7 +80,11 @@ func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableNa
 	// Create DynamoDB client
 	svc := dynamodb.New(sess)
 
-	item := dynamodbattribute.MarshalMap(template)
+	item, err := dynamodbattribute.MarshalMap(template)
+	if err != nil {
+		fmt.Println("Error marshaling values into item: ", err)
+		return err
+	}
 
 	// Create item in table
 	input := &dynamodb.PutItemInput{
@@ -90,6 +105,7 @@ func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableNa
 }
 
 func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	},
