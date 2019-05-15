@@ -24,6 +24,7 @@ func Configure(api *operations.ClaAPI, service service) {
 		if err != nil {
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
+
 		return template.NewCreateCLAGroupTemplateOK()
 	})
 
