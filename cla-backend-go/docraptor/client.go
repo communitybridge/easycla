@@ -25,8 +25,8 @@ func NewDocraptorClient(key, html string) (Client, error) {
 	}
 
 	return DocRaptorClient{
-		APIKey:   key,
-		HTMLPage: html,
+		APIKey:    key,
+		HTMLInput: html,
 	}, nil
 }
 
