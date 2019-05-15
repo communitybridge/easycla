@@ -15,7 +15,7 @@ type DocraptorClient struct {
 	HTMLInput string
 }
 
-func NewDocraptorClient(key, html string) (Client, error) {
+func NewDocraptorClient(key, html string) (DocraptorClient, error) {
 	if key == "" {
 		return DocraptorClient{}, errors.New("invalid key")
 	}
