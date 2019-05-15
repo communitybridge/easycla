@@ -1,11 +1,9 @@
 package contractgroup
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/aymerick/raymond"
 )
 
 var (
@@ -38,6 +35,12 @@ type service struct {
 	contractGroupRepo Repository
 }
 
+func NewService(contractGroupRepo Repository) service {
+	return service{
+		contractGroupRepo: contractGroupRepo,
+	}
+}
+
 func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) error {
 	// Initialize a session in us-west-2 that the SDK will use to load
 	// credentials from the shared credentials file ~/.aws/credentials.
@@ -50,7 +53,7 @@ func (s service) SaveTemplateToDynamoDB(template Template, templateName, tableNa
 
 	item := dynamodbattribute.MarshalMap(template)
 
-	// Create item in table Movies
+	// Create item in table
 	input := &dynamodb.PutItemInput{
 		Item:      item,
 		TableName: aws.String(tableName),
@@ -91,56 +94,6 @@ func (s service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, re
 
 	return nil
 
-}
-func (s service) SendHTMLToDocRaptor(URL, HTML string) io.Reader {
-	document := `{
-  		"type": "pdf",
-  		"document_content": "%s",
-  		"test":true
-	}`
-	document = fmt.Sprintf(document, HTML)
-
-	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBufferString(document))
-	if err != nil {
-		fmt.Printf("failed to create request to submit data to API: %s", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
-	}
-
-	fmt.Printf("API Response Status Code: %s\n", resp.Status)
-
-	return resp.Body
-}
-
-func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
-	// DocRaptor API likes HTML in single line
-	templateBefore := `<html><body><p style=\"text-align: center\">{{projectName}}<br />{{documentType}} Contributor License Agreement (\"Agreement\")v{{majorVersion}}.{{minorVersion}}</p><p>Thank you for your interest in {{projectName}} project (“{{shortProjectName}}”) of The Linux Foundation (the “Foundation”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Foundation must have a Contributor License Agreement (“CLA”) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of {{shortProjectName}}, the Foundation and its users; it does not change your rights to use your own Contributions for any other purpose.</p><p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Foundation or its third-party service providers, or email a PDF of the signed agreement to {{contactEmail}}. Please read this document carefully before signing and keep a copy for your records.</p></body></html>`
-	fieldsMap := map[string]string{
-		"projectName":      projectName,
-		"shortProjectName": shortProjectName,
-		"documentType":     documentType,
-		"majorVersion":     majorVersion,
-		"minorVersion":     minorVersion,
-		"contactEmail":     contactEmail,
-	}
-
-	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
-	if err != nil {
-		fmt.Println("Failed to enter fields into HTML", err)
-	}
-
-	return templateAfter
-}
-
-func NewService(contractGroupRepo Repository) service {
-	return service{
-		contractGroupRepo: contractGroupRepo,
-	}
 }
 
 func (s service) CreateContractGroup(ctx context.Context, projectSfdcID string, contractGroup models.ContractGroup) (models.ContractGroup, error) {
