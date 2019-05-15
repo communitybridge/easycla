@@ -3,8 +3,13 @@ package contractgroup
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -29,6 +34,29 @@ type Repository interface {
 
 type repository struct {
 	db *sqlx.DB
+}
+
+type DynamoProjectDocument struct {
+	DocumentName         string        `json:"document_name"`
+	DocumentFileID       string        `json:"document_file_id"`
+	DocumentContentType  string        `json:"document_content_type"`
+	DocumentMajorVersion int64         `json:"document_major_version"`
+	DocumentMinorVersion int64         `json:"document_minor_version"`
+	DocumentTabs         []DocumentTab `json:"document_tabs`
+}
+
+type DocumentTab struct {
+	DocumentTabType                     string `json:"document_tab_type"`
+	DocumentTabID                       string `json:"document_tab_id"`
+	DocumentTabName                     string `json:"document_tab_name"`
+	DocumentTabPage                     int64  `json:"document_tab_page"`
+	DocumentTabWidth                    int64  `json:"document_tab_width"`
+	DocumentTabHeight                   int64  `json:"document_tab_height"`
+	DocumentTabIsLocked                 bool   `json:"document_tab_is_locked"`
+	DocumentTabAnchorString             string `json:"document_tab_anchor_string"`
+	DocumentTabAnchorIgnoreIfNotPresent bool   `json:"document_tab_anchor_ignore_if_not_present"`
+	DocumentTabAnchorXOffset            int64  `json:"document_tab_anchor_x_offset"`
+	DocumentTabAnchorYOffset            int64  `json:"document_tab_anchor_y_offset"`
 }
 
 func NewRepository(db *sqlx.DB) repository {
@@ -471,4 +499,72 @@ func (repo repository) GetContractGroupICLASignatures(ctx context.Context, proje
 	}
 
 	return iclaSignatures, nil
+}
+
+func (repo repository) AddContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) (models.ContractGroup, error) {
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1")},
+	)
+
+	// Create DynamoDB client
+	svc := dynamodb.New(sess)
+
+	tableName := "cla-dev-projects"
+
+	// Map the fields to the dynamo model as the attribute names are different
+
+	// Map Template Fields into DocumentTab
+	cclaDocumentTabs := []DocumentTab{}
+
+	for _, field := range template.CclaFields {
+		dynamoTab := DocumentTab{
+			DocumentTabType:                     field.FieldType,
+			DocumentTabID:                       field.Name,
+			DocumentTabPage:                     1,
+			DocumentTabWidth:                    field.Width,
+			DocumentTabHeight:                   field.Height,
+			DocumentTabIsLocked:                 field.IsEditable,
+			DocumentTabAnchorString:             field.AnchorString,
+			DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
+			DocumentTabAnchorXOffset:            field.OffsetX,
+			DocumentTabAnchorYOffset:            field.OffsetY,
+		}
+		cclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
+	}
+
+	// Map Template to Document
+	dynamoCorporateProjectDocument := DynamoProjectDocument{
+		DocumentName:         template.Name,
+		DocumentFileID:       template.ID,
+		DocumentContentType:  "storage+pdf",
+		DocumentMajorVersion: 1,
+		DocumentMinorVersion: 1,
+		DocumentTabs:         cclaDocumentTabs,
+	}
+
+	expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProjectDocument)
+	if err != nil {
+		fmt.Println("Error marshalling Template:")
+	}
+
+	key := map[string]*dynamodb.AttributeValue{
+		"project_id": {
+			S: aws.String(ContractGroupID),
+		},
+	}
+
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: expr,
+		TableName:                 aws.String(tableName),
+		Key:                       key,
+		ReturnValues:              aws.String("UPDATED_NEW"),
+		UpdateExpression:          aws.String("set project_corporate_documents = :project_corporate_documents"),
+	}
+
+	_, err = svc.UpdateItem(input)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 }
