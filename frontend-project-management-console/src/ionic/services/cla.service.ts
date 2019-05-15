@@ -901,9 +901,213 @@ export class ClaService {
    **/
 
   getTemplates () {
-    return this.http
-      .get(this.claApiUrl + "/v1/template")
-      .map(res => res.json());
+    return Observable.of([
+      {
+        "cclaFields":[
+          {
+            "anchorString":"Corporation Name:",
+            "fieldType":"text",
+            "height":20,
+            "name":"Corporation Name",
+            "offsetX":140,
+            "offsetY":-5,
+            "width":355
+          },
+          {
+            "anchorString":"Corporation Address:",
+            "fieldType":"text",
+            "height":20,
+            "name":"Corporation Address1",
+            "offsetX":140,
+            "offsetY":-8,
+            "width":340
+          },
+          {
+            "anchorString":"Corporation Address:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Corporation Address2",
+            "offsetY":29,
+            "width":400
+          },
+          {
+            "anchorString":"Corporation Address:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Corporation Address3",
+            "offsetY":64,
+            "width":400
+          },
+          {
+            "anchorString":"Point of Contact:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Point of Contact",
+            "offsetX":120,
+            "offsetY":-7,
+            "width":340
+          },
+          {
+            "anchorString":"E-Mail:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Email",
+            "offsetX":50,
+            "offsetY":-7,
+            "width":340
+          },
+          {
+            "anchorString":"Telephone:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Telephone",
+            "offsetX":70,
+            "offsetY":-7,
+            "width":405
+          },
+          {
+            "anchorString":"Please sign:",
+            "fieldType":"sign",
+            "name":"Please Sign",
+            "offsetX":140,
+            "offsetY":-6
+          },
+          {
+            "anchorString":"Date:",
+            "fieldType":"date",
+            "name":"Date",
+            "offsetX":80,
+            "offsetY":-7
+          },
+          {
+            "anchorString":"Title:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Title",
+            "offsetX":40,
+            "offsetY":-7,
+            "width":430
+          },
+          {
+            "anchorString":"Corporation:",
+            "fieldType":"text",
+            "height":20,
+            "name":"Corporation",
+            "offsetX":100,
+            "offsetY":-7,
+            "width":385
+          },
+          {
+            "anchorString":"Schedule A:",
+            "fieldType":"text",
+            "height":600,
+            "name":"Schedule A",
+            "offsetY":150,
+            "width":550
+          }
+        ],
+        "description":"For use of projects under the Apache style of CLA. ",
+        "htmlBody":"<html> </html>",
+        "iclaFields":[
+          {
+            "anchorString":"Full name:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Full Name",
+            "offsetX":72,
+            "offsetY":-8,
+            "width":360
+          },
+          {
+            "anchorString":"Public name:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Public Name",
+            "offsetX":84,
+            "offsetY":-7,
+            "width":345
+          },
+          {
+            "anchorString":"Mailing Address:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Mailing Address1",
+            "offsetX":117,
+            "offsetY":-7,
+            "width":325
+          },
+          {
+            "anchorString":"Mailing Address:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Mailing Address2",
+            "offsetY":29,
+            "width":420
+          },
+          {
+            "anchorString":"Country:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "isOptional":true,
+            "name":"Country",
+            "offsetX":60,
+            "offsetY":-7,
+            "width":350
+          },
+          {
+            "anchorString":"Telephone:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "isOptional":true,
+            "name":"Telephone",
+            "offsetX":70,
+            "offsetY":-7,
+            "width":350
+          },
+          {
+            "anchorString":"E-Mail:",
+            "fieldType":"text_unlocked",
+            "height":20,
+            "name":"Email",
+            "offsetX":50,
+            "offsetY":-7,
+            "width":380
+          },
+          {
+            "anchorString":"Please Sign:",
+            "fieldType":"sign",
+            "name":"Please Sign",
+            "offsetX":140,
+            "offsetY":-5
+          },
+          {
+            "anchorString":"Date:",
+            "fieldType":"date",
+            "name":"Date",
+            "offsetX":60,
+            "offsetY":-7
+          }
+        ],
+        "metaFields":[
+          {
+            "description":"Project's Full Name.",
+            "name":"Project Name",
+            "templateVariable":"PROJECT_NAME"
+          },
+          {
+            "description":"The short version of the project’s name, used as a reference in the CLA.",
+            "name":"Short Project Name",
+            "templateVariable":"SHORT_PROJECT_NAME"
+          },
+          {
+            "description":"The E-Mail Address of the Person managing the CLA. ",
+            "name":"Contact Email Address",
+            "templateVariable":"CONTACT_EMAIL"
+          }
+        ],
+        "name":"Apache Style"
+      }
+    ]);
   }
 
   //////////////////////////////////////////////////////////////////////////////
