@@ -31,7 +31,7 @@
             <ion-grid *ngIf="step === 'values'">
               <ion-row>
                 <ion-col>
-                  <button ion-button (click)="goToFirstStep()" color="light">
+                  <button ion-button (click)="goToStep('selection')" color="light">
                     <ion-icon name="arrow-back"></ion-icon>
                     Back to template selection
                   </button>
@@ -54,6 +54,46 @@
                 <ion-col>
                   <button ion-button (click)="reviewSelectedTemplate()" color="secondary">
                     Review
+                  </button>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+
+            <ion-grid *ngIf="step === 'review'">
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="goToStep('values')" color="light">
+                    <ion-icon name="arrow-back"></ion-icon>
+                    Back to template values
+                  </button>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="showPDF('ccla')" color="secondary" [disabled]="currentPDF === 'ccla'">
+                    View CCLA
+                  </button>
+                  <button ion-button (click)="showPDF('icla')" color="secondary" [disabled]="currentPDF === 'icla'">
+                    View ICLA
+                  </button>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <embed [src]="getPdfPath()" class="pdf-viewer"
+                         type="application/pdf">
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="viewDocusign()" color="light">
+                    View Docusign
+                  </button>
+                  <button ion-button (click)="Submit()" color="secondary">
+                    Submit
                   </button>
                 </ion-col>
               </ion-row>
