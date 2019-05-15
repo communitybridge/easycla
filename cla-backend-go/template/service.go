@@ -57,7 +57,8 @@ func (s service) InjectProjectInformationIntoTemplate(template string, fields []
 	templateBefore := template
 	fieldsMap := map[string]string{}
 	for _, field := range fields {
-		fieldsMap[field.Name] = field.Value
+
+		fieldsMap[field.TemplateVariable] = field.Value
 	}
 
 	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
