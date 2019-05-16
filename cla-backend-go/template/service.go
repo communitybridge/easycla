@@ -2,6 +2,7 @@ package template
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -94,9 +95,26 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 
 func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, error) {
 	// TODO: Verify all template fields in template.MetaFields are present
+
+	lookupMap := map[string]models.MetaField{}
+	for _, field := range template.MetaFields {
+		lookupMap[field.Name] = field
+	}
+
 	fieldsMap := map[string]string{}
 	for _, field := range fields {
-		fieldsMap[field.TemplateVariable] = field.Value
+
+		val, ok := lookupMap[field.Name]
+		if !ok {
+			continue
+		}
+
+		if val.Name == field.Name && val.TemplateVariable == field.TemplateVariable {
+			fieldsMap[field.TemplateVariable] = field.Value
+		}
+	}
+	if len(template.MetaFields != len(fieldsMap)) {
+		return "", errors.New("Required fields for template were not found")
 	}
 
 	templateHTML, err := raymond.Render(template.HTMLBody, fieldsMap)
