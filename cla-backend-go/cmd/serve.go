@@ -72,14 +72,14 @@ var serveCmd = &cobra.Command{
 		var (
 			// userRepo          = user.NewRepository(db)
 			// projectRepo       = project.NewRepository(db)
-			// contractGroupRepo = contractgroup.NewRepository(db)
+			//contractGroupRepo = contractgroup.NewRepository()
 			templateRepo = template.NewRepository()
 		)
 
 		var (
 			healthService = health.New(GitHash, BuildStamp)
 			// projectService       = project.NewService(projectRepo)
-			// contractGroupService = contractgroup.NewService(contractGroupRepo)
+			//contractGroupService = contractgroup.NewService(contractGroupRepo)
 			// userService          = user.NewService(userRepo)
 			templateService = template.NewService(templateRepo)
 			//authorizer = auth.NewAuthorizer(auth0Validator)
