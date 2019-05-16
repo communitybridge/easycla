@@ -298,6 +298,35 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+  /clagroup/{claGroupId}/template:
+    parameters:
+      - name: claGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Create contract template for CLA Group
+      security: []
+      operationId: createCLAGroupTemplate
+      tags:
+        - template
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/create-cla-group-template'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
 definitions:
   project:
     type: object
@@ -378,6 +407,16 @@ definitions:
         type: string
       name:
         type: string
+  create-cla-group-template:
+    title: CreateCLAGroupTemplate
+    type: object
+    properties:
+      TemplateID:
+        type: string
+      MetaFields:
+        type: array
+        items:
+          $ref: '#/definitions/meta-field'
   github:
     type: object
     x-nullable: false
@@ -533,6 +572,8 @@ definitions:
       description: CLA Template
       properties:
         name:
+          type: string
+        ID:
           type: string
         description:
           type: string
