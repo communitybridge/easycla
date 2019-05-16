@@ -1,18 +1,10 @@
 package contractgroup
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
 )
 
@@ -44,86 +36,86 @@ func NewService(contractGroupRepo Repository) service {
 	}
 }
 
-func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) {
-	// Initialize a session in us-west-2 that the SDK will use to load
-	// credentials from the shared credentials file ~/.aws/credentials.
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region)},
-	)
+// func (s Service) SaveTemplateToDynamoDB(template Template, templateName, tableName, contractGroupID, region string) {
+// 	// Initialize a session in us-west-2 that the SDK will use to load
+// 	// credentials from the shared credentials file ~/.aws/credentials.
+// 	sess, err := session.NewSession(&aws.Config{
+// 		Region: aws.String(region)},
+// 	)
 
-	// Create DynamoDB client
-	svc := dynamodb.New(sess)
+// 	// Create DynamoDB client
+// 	svc := dynamodb.New(sess)
 
-	item := dynamodbattribute.MarshalMap(template)
+// 	item := dynamodbattribute.MarshalMap(template)
 
-	// Create item in table Movies
-	input := &dynamodb.PutItemInput{
-		Template:  item,
-		TableName: aws.String(tableName),
-	}
+// 	// Create item in table Movies
+// 	input := &dynamodb.PutItemInput{
+// 		Template:  item,
+// 		TableName: aws.String(tableName),
+// 	}
 
-	result, err = svc.PutItem(input)
+// 	result, err = svc.PutItem(input)
 
-	if err != nil {
-		fmt.Println("Error putting item in database: ", err)
-		return err
-	}
+// 	if err != nil {
+// 		fmt.Println("Error putting item in database: ", err)
+// 		return err
+// 	}
 
-	fmt.Println("Successfully put item in database.")
-	return nil
+// 	fmt.Println("Successfully put item in database.")
+// 	return nil
 
-}
+// }
 
-func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	},
-	))
-	// Create an uploader with the session and default options
-	uploader := s3manager.NewUploader(sess)
+// func (s Service) SaveFileToS3Bucket(file io.ReadCloser, bucketName, fileName, region string) error {
+// 	sess := session.Must(session.NewSession(&aws.Config{
+// 		Region: aws.String(region),
+// 	},
+// 	))
+// 	// Create an uploader with the session and default options
+// 	uploader := s3manager.NewUploader(sess)
 
-	// Upload the file to S3.
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(fileName),
-		Body:   file,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
-	}
-	fmt.Printf("file uploaded to, %s\n", result.Location)
+// 	// Upload the file to S3.
+// 	result, err := uploader.Upload(&s3manager.UploadInput{
+// 		Bucket: aws.String(bucketName),
+// 		Key:    aws.String(fileName),
+// 		Body:   file,
+// 	})
+// 	if err != nil {
+// 		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
+// 	}
+// 	fmt.Printf("file uploaded to, %s\n", result.Location)
 
-	defer file.Close()
+// 	defer file.Close()
 
-	return nil
+// 	return nil
 
-}
-func (s Service) SendHTMLToDocRaptor(HTML string) io.Reader {
-	DocRaptorAPIURL := "https://JMgaW58AX1CHmVmbKZCn@docraptor.com/docs"
+// }
+// func (s Service) SendHTMLToDocRaptor(HTML string) io.Reader {
+// 	DocRaptorAPIURL := "https://JMgaW58AX1CHmVmbKZCn@docraptor.com/docs"
 
-	document := `{
-  		"type": "pdf",
-  		"document_content": "%s",
-  		"test":true
-	}`
-	document = fmt.Sprintf(document, HTML)
+// 	document := `{
+//   		"type": "pdf",
+//   		"document_content": "%s",
+//   		"test":true
+// 	}`
+// 	document = fmt.Sprintf(document, HTML)
 
-	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, bytes.NewBufferString(document))
-	if err != nil {
-		fmt.Printf("failed to create request to submit data to API: %s", err)
-	}
+// 	req, err := http.NewRequest(http.MethodPost, DocRaptorAPIURL, bytes.NewBufferString(document))
+// 	if err != nil {
+// 		fmt.Printf("failed to create request to submit data to API: %s", err)
+// 	}
 
-	req.Header.Set("Content-Type", "application/json")
+// 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
-	}
+// 	resp, err := http.DefaultClient.Do(req)
+// 	if err != nil {
+// 		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
+// 	}
 
-	fmt.Printf("API Response Status Code: %s\n", resp.Status)
+// 	fmt.Printf("API Response Status Code: %s\n", resp.Status)
 
-	return resp.Body
-}
+// 	return resp.Body
+// }
 
 func (s service) InjectProjectInformationIntoTemplate(projectName, shortProjectName, documentType, majorVersion, minorVersion, contactEmail string) string {
 	// DocRaptor API likes HTML in single line
@@ -245,4 +237,14 @@ func (s service) GetContractGroupSignatures(ctx context.Context, projectSFDCID s
 	}
 
 	return contractGoupSignatures, nil
+}
+
+func (s service) CreateContractTemplates(ctx context.Context, contractGroupID string, template models.Template) error {
+	err := s.contractGroupRepo.AddContractGroupTemplates(ctx, contractGroupID, template)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

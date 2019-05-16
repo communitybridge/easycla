@@ -20,6 +20,7 @@ type Repository interface {
 
 	CreateContractTemplate(ctx context.Context, contractID string, contractTemplate models.ContractTemplate) (string, error)
 	GetLatestContractTemplate(ctx context.Context, contractGroupID string, contractType string) (models.ContractTemplate, error)
+	AddContractGroupTemplates(ctx context.Context, contractGroupID string, template models.Template) error
 
 	CreateGitHubOrganization(ctx context.Context, contractID, userID string, githubOrg models.Github) (string, error)
 	GetGithubOrganizatons(ctx context.Context, contractGroupID string) ([]models.Github, error)
@@ -33,7 +34,8 @@ type Repository interface {
 }
 
 type repository struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	session *session.Session
 }
 
 type DynamoProjectDocument struct {
@@ -504,8 +506,8 @@ func (repo repository) GetContractGroupICLASignatures(ctx context.Context, proje
 func (repo repository) AddContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) (models.ContractGroup, error) {
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1")},
-	)
+		Region: aws.String("us-east-1"),
+	})
 
 	// Create DynamoDB client
 	svc := dynamodb.New(sess)
@@ -567,4 +569,5 @@ func (repo repository) AddContractGroupTemplates(ctx context.Context, ContractGr
 		fmt.Println(err.Error())
 	}
 
+	return models.ContractGroup{}, err
 }

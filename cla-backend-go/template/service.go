@@ -8,6 +8,7 @@ import (
 
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
+	AddContractGroupTemplates(ctx context.Context, contractGroupID string) error
 }
 
 type service struct {
@@ -27,4 +28,21 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	}
 
 	return templates, nil
+}
+
+func (s service) AddContractGroupTemplates(ctx context.Context, contractGroupID string) error {
+	templates, err := s.templateRepo.GetTemplates(ctx)
+	if err != nil {
+		return err
+	}
+
+	template := templates[0]
+
+	err = s.templateRepo.AddContractGroupTemplates(ctx, contractGroupID, template)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
