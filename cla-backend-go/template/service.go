@@ -7,13 +7,13 @@ import (
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
-	"github.com/spf13/viper"
 )
 
 type Service interface {
@@ -23,40 +23,88 @@ type Service interface {
 type service struct {
 	templateRepo    Repository
 	docraptorClient docraptor.DocraptorClient
+	s3Client        *s3manager.Uploader
 }
 
-func NewService(templateRepo Repository, docraptorClient docraptor.DocraptorClient) service {
+func NewService(templateRepo Repository, docraptorClient docraptor.DocraptorClient, awsSession *session.Session) service {
 	return service{
 		templateRepo:    templateRepo,
 		docraptorClient: docraptorClient,
+		s3Client:        s3manager.NewUploader(awsSession),
 	}
+}
+
+func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
+	templates, err := s.templateRepo.GetTemplates()
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove HTML from template
+	for i, template := range templates {
+		template.HTMLBody = ""
+		templates[i] = template
+	}
+
+	return templates, nil
 }
 
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaTemplateGroup) error {
-	HTML := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
-	PDF := s.docraptorClient.CreatePDF(HTML)
-	err := s.SaveFileToS3Bucket(PDF)
+	// Verify claGroupID matches an existing CLA Group
+	_, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
-		fmt.Println("Error saving to S3 bucket : ", err)
 		return err
 	}
-	// Save Template to Dynamodb once method is finalized
+
+	// Verify the caller is authorized for the project that owns this CLA Group
+
+	// Get Template
+	template, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
+	if err != nil {
+		return err
+	}
+
+	// Apply template fields
+	templateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
+	if err != nil {
+		return err
+	}
+
+	// Create PDF
+	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
+	if err != nil {
+		return err
+	}
+	defer pdf.Close()
+
+	// Save PDF to S3
+	bucket := "cla-signature-files-dev"
+	fileNameTemplate := "contract-group/%s/template/%s"
+	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
+	// cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+	err = s.SaveTemplateToS3(bucket, iclaFileName, pdf)
+	if err != nil {
+		return err
+	}
+
+	// Save Template to Dynamodb
+
 	return nil
 }
 
-func (s service) InjectProjectInformationIntoTemplate(template string, fields []*models.MetaField) string {
-	templateBefore := template
+func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, error) {
+	// TODO: Verify all template fields in template.MetaFields are present
 	fieldsMap := map[string]string{}
 	for _, field := range fields {
 		fieldsMap[field.TemplateVariable] = field.Value
 	}
 
-	templateAfter, err := raymond.Render(templateBefore, fieldsMap)
+	templateHTML, err := raymond.Render(template.HTMLBody, fieldsMap)
 	if err != nil {
-		fmt.Println("Failed to enter fields into HTML", err)
+		return "", err
 	}
 
-	return templateAfter
+	return templateHTML, nil
 }
 
 func (s service) SaveTemplateToDynamoDB(template models.Template, templateName, tableName, contractGroupID, region string) error {
@@ -92,35 +140,19 @@ func (s service) SaveTemplateToDynamoDB(template models.Template, templateName, 
 	return nil
 }
 
-func (s service) SaveFileToS3Bucket(file io.ReadCloser) error {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(viper.GetString("AWS_REGION")),
-	},
-	))
-	// Create an uploader with the session and default options
-	uploader := s3manager.NewUploader(sess)
+func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadCloser) error {
+	defer template.Close()
 
 	// Upload the file to S3.
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(viper.GetString("AWS_BUCKET_NAME")),
-		Key:    aws.String("savedFile"),
-		Body:   file,
+	_, err := s.s3Client.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(filepath),
+		Body:   template,
+		ACL:    aws.String("public-read"),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
 	}
-	fmt.Printf("file uploaded to, %s\n", result.Location)
-
-	defer file.Close()
 
 	return nil
-}
-
-func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
-	templates, err := s.templateRepo.GetTemplates(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return templates, nil
 }

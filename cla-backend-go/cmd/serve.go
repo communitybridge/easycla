@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/config"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/template"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-openapi/loads"
 	_ "github.com/lib/pq"
 	"github.com/lytics/logrus"
@@ -39,10 +42,10 @@ var serveCmd = &cobra.Command{
 			"Host":      host,
 		}).Info("Service Startup")
 
-		// configFile, err := config.LoadConfig(configFile, "")
-		// if err != nil {
-		// 	log.Panicln("Unable to load config", err)
-		// }
+		configFile, err := config.LoadConfig(configFile, "")
+		if err != nil {
+			log.Panicln("Unable to load config", err)
+		}
 
 		// db, err := sqlx.Connect("postgres", viper.GetString("POSTGRESQL_CONNECTION"))
 		// if err != nil {
@@ -60,13 +63,17 @@ var serveCmd = &cobra.Command{
 		}
 
 		api := operations.NewClaAPI(swaggerSpec)
-		docraptorClient, err := docraptor.NewDocraptorClient("key")
-		// docraptorClient, err := docraptor.NewDocraptorClient(
-		// 	configFile.Docraptor.APIKey,
-		// )
-		// if err != nil {
-		// 	logrus.Panic(err)
-		// }
+		docraptorClient, err := docraptor.NewDocraptorClient(configFile.Docraptor.APIKey, configFile.Docraptor.TestMode)
+		if err != nil {
+			logrus.Panic(err)
+		}
+
+		awsSession := session.Must(session.NewSession(
+			&aws.Config{
+				Region:                        aws.String(configFile.AWS.Region),
+				CredentialsChainVerboseErrors: aws.Bool(true),
+			},
+		))
 
 		// auth0Validator, err := auth.NewAuth0Validator(
 		// 	configFile.Auth0.Domain,
@@ -81,7 +88,7 @@ var serveCmd = &cobra.Command{
 			// userRepo          = user.NewRepository(db)
 			// projectRepo       = project.NewRepository(db)
 			// contractGroupRepo = contractgroup.NewRepository(db)
-			templateRepo = template.NewRepository()
+			templateRepo = template.NewRepository(awsSession)
 		)
 
 		var (
@@ -89,7 +96,7 @@ var serveCmd = &cobra.Command{
 			// projectService       = project.NewService(projectRepo)
 			// contractGroupService = contractgroup.NewService(contractGroupRepo)
 			// userService          = user.NewService(userRepo)
-			templateService = template.NewService(templateRepo, docraptorClient)
+			templateService = template.NewService(templateRepo, docraptorClient, awsSession)
 			//authorizer = auth.NewAuthorizer(auth0Validator)
 		)
 
