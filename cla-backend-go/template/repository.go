@@ -1,26 +1,83 @@
 package template
 
 import (
-	"context"
+	"errors"
+	"fmt"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+)
+
+var (
+	ErrTemplateNotFound = errors.New("template not found")
 )
 
 type Repository interface {
-	GetTemplates(ctx context.Context) ([]models.Template, error)
+	GetTemplates() ([]models.Template, error)
+	GetTemplate(templateID string) (models.Template, error)
+	GetCLAGroup(claGroupID string) (CLAGroup, error)
 }
 
 type repository struct {
+	dynamoDBClient *dynamodb.DynamoDB
 }
 
-func NewRepository() repository {
-	return repository{}
+func NewRepository(awsSession *session.Session) repository {
+	return repository{
+		dynamoDBClient: dynamodb.New(awsSession),
+	}
 }
 
-func (repo repository) GetTemplates(ctx context.Context) ([]models.Template, error) {
-	apacheTemplate := models.Template{
+func (r repository) GetTemplates() ([]models.Template, error) {
+	templates := []models.Template{}
+	for _, template := range templateMap {
+		templates = append(templates, template)
+	}
+
+	return templates, nil
+}
+
+func (r repository) GetTemplate(templateID string) (models.Template, error) {
+	template, ok := templateMap[templateID]
+	if !ok {
+		return models.Template{}, ErrTemplateNotFound
+	}
+
+	return template, nil
+}
+
+type CLAGroup struct {
+}
+
+// This method belongs in the contractgroup package. We are leaving it here
+// because it accesses DynamoDB, but the contractgroup repository is designed
+// to connect to postgres
+func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
+	result, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String("cla-dev-projects"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"project_id": {
+				S: aws.String(claGroupID),
+			},
+		},
+	})
+	if err != nil {
+		return CLAGroup{}, err
+	}
+
+	fmt.Println(result)
+
+	return CLAGroup{}, nil
+}
+
+var templateMap = map[string]models.Template{
+	"fb4cc144-a76c-4c17-8a52-c648f158fded": models.Template{
+		TemplateID:  "fb4cc144-a76c-4c17-8a52-c648f158fded",
 		Name:        "Apache Style",
-		Description: "For use of projects under the Apache style of CLA. ",
+		Description: "For use of projects under the Apache style of CLA.",
 		MetaFields: []*models.MetaField{
 			&models.MetaField{
 				Name:             "Project Name",
@@ -273,10 +330,6 @@ func (repo repository) GetTemplates(ctx context.Context) ([]models.Template, err
 				OffsetY:      150,
 			},
 		},
-		HTMLBody: "<html> </html>",
-	}
-	templates := []models.Template{}
-
-	templates = append(templates, apacheTemplate)
-	return templates, nil
+		HTMLBody: `<html>Hello World!</html>`,
+	},
 }
