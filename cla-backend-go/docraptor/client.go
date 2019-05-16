@@ -8,44 +8,53 @@ import (
 	"net/http"
 )
 
+var (
+	errInvalidKey = errors.New("invalid key")
+)
+
+const (
+	docraptorURL = "https://%s@docraptor.com/docs"
+)
+
 type DocraptorClient struct {
-	APIKey string
-	URL    string
+	apiKey   string
+	url      string
+	testMode bool
 }
 
-func NewDocraptorClient(key string) (DocraptorClient, error) {
+func NewDocraptorClient(key string, testMode bool) (DocraptorClient, error) {
 	if key == "" {
-		return DocraptorClient{}, errors.New("invalid key")
+		return DocraptorClient{}, errInvalidKey
 	}
-	URL := fmt.Sprintf("https://%s@docraptor.com/docs", key)
+
+	url := fmt.Sprintf(docraptorURL, key)
 
 	return DocraptorClient{
-		APIKey: key,
-		URL:    URL,
+		apiKey:   key,
+		url:      url,
+		testMode: testMode,
 	}, nil
 }
 
-func (dc DocraptorClient) CreatePDF(HTML string) io.ReadCloser {
+func (dc DocraptorClient) CreatePDF(html string) (io.ReadCloser, error) {
 	document := `{
   		"type": "pdf",
   		"document_content": "%s",
-  		"test":true
+  		"test": %v
 	}`
-	document = fmt.Sprintf(document, HTML)
+	document = fmt.Sprintf(document, html, dc.testMode)
 
-	req, err := http.NewRequest(http.MethodPost, dc.URL, bytes.NewBufferString(document))
+	req, err := http.NewRequest(http.MethodPost, dc.url, bytes.NewBufferString(document))
 	if err != nil {
-		fmt.Printf("failed to create request to submit data to API: %s", err)
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("failed to submit data to DocRaptorAPI: %s", err)
+		return nil, err
 	}
 
-	fmt.Printf("API Response Status Code: %s\n", resp.Status)
-
-	return resp.Body
+	return resp.Body, nil
 }

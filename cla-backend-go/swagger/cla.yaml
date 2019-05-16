@@ -21,35 +21,6 @@ securityDefinitions:
       company: CLA Manager scope
       contrib: Contributor scope
 paths:
-  /clagroup/{claGroupId}/template:
-    parameters:
-      - name: claGroupId
-        in: path
-        type: string
-        required: true
-    post:
-      summary: Create contract template for CLA Group
-      security: []
-      operationId: createCLAGroupTemplate
-      tags:
-        - template
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: '#/definitions/create-cla-template-group'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
   /ops/health:
     get:
       summary: API Health Check
@@ -327,6 +298,35 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+  /clagroup/{claGroupId}/template:
+    parameters:
+      - name: claGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Create contract template for CLA Group
+      security: []
+      operationId: createCLAGroupTemplate
+      tags:
+        - template
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/create-cla-template-group'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
 definitions:
   project:
     type: object
@@ -561,21 +561,23 @@ definitions:
       title: CLA Template
       description: CLA Template
       properties:
-        name:
+        TemplateID:
           type: string
-        description:
+        Name:
           type: string
-        htmlBody: 
+        Description:
           type: string
-        metaFields:
+        HtmlBody: 
+          type: string
+        MetaFields:
           type: array
           items: 
             $ref: '#/definitions/meta-field'
-        iclaFields:
+        IclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
-        cclaFields:
+        CclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
@@ -583,35 +585,35 @@ definitions:
     title: MetaField
     type: object
     properties:
-      name:
+      Name:
         type: string
-      value:
+      Value:
         type: string  
-      description:
+      Description:
         type: string
-      templateVariable:
+      TemplateVariable:
         type: string
   field:
     title: Field
     type: object
     properties:
-      name: 
+      Name:
         type: string
-      anchorString:
+      AnchorString:
         type: string
-      fieldType:
+      FieldType:
         type: string
-      isOptional:
+      IsOptional:
         type: boolean
-      isEditable:
+      IsEditable:
         type: boolean
-      width:
+      Width:
         type: integer
-      height:
+      Height:
         type: integer
-      offsetX:
+      OffsetX:
         type: integer
-      offsetY:
+      OffsetY:
         type: integer
   create-cla-template-group:
     title: CreateCLATemplateGroup
