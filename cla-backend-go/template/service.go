@@ -98,7 +98,7 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 
 	lookupMap := map[string]models.MetaField{}
 	for _, field := range template.MetaFields {
-		lookupMap[field.Name] = field
+		lookupMap[field.Name] = *field
 	}
 
 	fieldsMap := map[string]string{}
@@ -113,7 +113,7 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 			fieldsMap[field.TemplateVariable] = field.Value
 		}
 	}
-	if len(template.MetaFields != len(fieldsMap)) {
+	if len(template.MetaFields) != len(fieldsMap) {
 		return "", errors.New("Required fields for template were not found")
 	}
 
