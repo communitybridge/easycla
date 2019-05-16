@@ -257,8 +257,8 @@ class DocumentTabModel(MapAttribute):
     document_tab_is_required = BooleanAttribute(default=True)
     document_tab_anchor_string = UnicodeAttribute(default=None)
     document_tab_anchor_ignore_if_not_present = BooleanAttribute(default=True)
-    document_tab_anchor_x_offset = UnicodeAttribute()
-    document_tab_anchor_y_offset = UnicodeAttribute()
+    document_tab_anchor_x_offset = NumberAttribute()
+    document_tab_anchor_y_offset = NumberAttribute()
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
