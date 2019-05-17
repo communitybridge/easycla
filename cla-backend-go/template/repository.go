@@ -35,6 +35,10 @@ type DynamoProjectCorporateDocuments struct {
 	DynamoProjectDocument []DynamoProjectDocument `json:":project_corporate_documents"`
 }
 
+type DynamoProjectIndividualDocuments struct {
+	DynamoProjectDocument []DynamoProjectDocument `json:":project_individual_documents"`
+}
+
 type DynamoProjectDocument struct {
 	DocumentName         string        `json:"document_name"`
 	DocumentFileID       string        `json:"document_file_id"`
@@ -48,14 +52,14 @@ type DocumentTab struct {
 	DocumentTabType                     string `json:"document_tab_type"`
 	DocumentTabID                       string `json:"document_tab_id"`
 	DocumentTabName                     string `json:"document_tab_name"`
-	DocumentTabPage                     int    `json:"document_tab_page"`
-	DocumentTabWidth                    int    `json:"document_tab_width"`
-	DocumentTabHeight                   int    `json:"document_tab_height"`
+	DocumentTabPage                     int64  `json:"document_tab_page"`
+	DocumentTabWidth                    int64  `json:"document_tab_width"`
+	DocumentTabHeight                   int64  `json:"document_tab_height"`
 	DocumentTabIsLocked                 bool   `json:"document_tab_is_locked"`
 	DocumentTabAnchorString             string `json:"document_tab_anchor_string"`
 	DocumentTabAnchorIgnoreIfNotPresent bool   `json:"document_tab_anchor_ignore_if_not_present"`
-	DocumentTabAnchorXOffset            int    `json:"document_tab_anchor_x_offset"`
-	DocumentTabAnchorYOffset            int    `json:"document_tab_anchor_y_offset"`
+	DocumentTabAnchorXOffset            int64  `json:"document_tab_anchor_x_offset"`
+	DocumentTabAnchorYOffset            int64  `json:"document_tab_anchor_y_offset"`
 }
 
 func NewRepository(awsSession *session.Session) repository {
@@ -122,13 +126,13 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 			DocumentTabType:                     field.FieldType,
 			DocumentTabID:                       field.Name,
 			DocumentTabPage:                     1,
-			DocumentTabWidth:                    int(field.Width),
-			DocumentTabHeight:                   int(field.Height),
+			DocumentTabWidth:                    field.Width,
+			DocumentTabHeight:                   field.Height,
 			DocumentTabIsLocked:                 field.IsEditable,
 			DocumentTabAnchorString:             field.AnchorString,
 			DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
-			DocumentTabAnchorXOffset:            int(field.OffsetX),
-			DocumentTabAnchorYOffset:            int(field.OffsetY),
+			DocumentTabAnchorXOffset:            field.OffsetX,
+			DocumentTabAnchorYOffset:            field.OffsetY,
 		}
 		cclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
 	}
@@ -143,6 +147,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		DocumentTabs:         cclaDocumentTabs,
 	}
 
+	// project_corporate_documents is a List type, and thus the item needs to be in a slice
 	dynamoCorporateProjectDocuments := []DynamoProjectDocument{}
 	dynamoCorporateProjectDocuments = append(dynamoCorporateProjectDocuments, dynamoCorporateProjectDocument)
 
@@ -150,13 +155,13 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		DynamoProjectDocument: dynamoCorporateProjectDocuments,
 	}
 
+	// Marshal object into dynamodb attribute
 	expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProject)
 	if err != nil {
 		fmt.Println("Error marshalling Template:")
 	}
 
-	fmt.Println(expr)
-
+	// Find Contract Group to update the Templates on
 	key := map[string]*dynamodb.AttributeValue{
 		"project_id": {
 			S: aws.String(ContractGroupID),
@@ -176,52 +181,59 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		fmt.Println(err.Error())
 	}
 
-	// // Map ICLA Template Fields into DocumentTab
-	// iclaDocumentTabs := []DocumentTab{}
+	// Map ICLA Template Fields into DocumentTab
+	iclaDocumentTabs := []DocumentTab{}
 
-	// for _, field := range template.IclaFields {
-	// 	dynamoTab := DocumentTab{
-	// 		DocumentTabType:                     field.FieldType,
-	// 		DocumentTabID:                       field.Name,
-	// 		DocumentTabPage:                     1,
-	// 		DocumentTabWidth:                    field.Width,
-	// 		DocumentTabHeight:                   field.Height,
-	// 		DocumentTabIsLocked:                 field.IsEditable,
-	// 		DocumentTabAnchorString:             field.AnchorString,
-	// 		DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
-	// 		DocumentTabAnchorXOffset:            field.OffsetX,
-	// 		DocumentTabAnchorYOffset:            field.OffsetY,
-	// 	}
-	// 	iclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
-	// }
+	for _, field := range template.IclaFields {
+		dynamoTab := DocumentTab{
+			DocumentTabType:                     field.FieldType,
+			DocumentTabID:                       field.Name,
+			DocumentTabPage:                     1,
+			DocumentTabWidth:                    field.Width,
+			DocumentTabHeight:                   field.Height,
+			DocumentTabIsLocked:                 field.IsEditable,
+			DocumentTabAnchorString:             field.AnchorString,
+			DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
+			DocumentTabAnchorXOffset:            field.OffsetX,
+			DocumentTabAnchorYOffset:            field.OffsetY,
+		}
+		iclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
+	}
 
-	// // Map Template to Document
-	// dynamoIndividualDocument := DynamoProjectDocument{
-	// 	DocumentName:         template.Name,
-	// 	DocumentFileID:       template.ID,
-	// 	DocumentContentType:  "storage+pdf",
-	// 	DocumentMajorVersion: 1,
-	// 	DocumentMinorVersion: 1,
-	// 	DocumentTabs:         iclaDocumentTabs,
-	// }
+	// Map Template to Document
+	dynamoIndividualDocument := DynamoProjectDocument{
+		DocumentName:         template.Name,
+		DocumentFileID:       template.ID,
+		DocumentContentType:  "storage+pdf",
+		DocumentMajorVersion: 1,
+		DocumentMinorVersion: 1,
+		DocumentTabs:         iclaDocumentTabs,
+	}
 
-	// expr, err = dynamodbattribute.MarshalMap(dynamoIndividualDocument)
-	// if err != nil {
-	// 	fmt.Println("Error marshalling Template:")
-	// }
+	dynamoProjectIndividualDocuments := []DynamoProjectDocument{}
+	dynamoProjectIndividualDocuments = append(dynamoProjectIndividualDocuments, dynamoIndividualDocument)
 
-	// input = &dynamodb.UpdateItemInput{
-	// 	ExpressionAttributeValues: expr,
-	// 	TableName:                 aws.String(tableName),
-	// 	Key:                       key,
-	// 	ReturnValues:              aws.String("UPDATED_NEW"),
-	// 	UpdateExpression:          aws.String("set project_individual_documents = :project_individual_documents"),
-	// }
+	dynamoIndividualProject := DynamoProjectIndividualDocuments{
+		DynamoProjectDocument: dynamoProjectIndividualDocuments,
+	}
 
-	// _, err = svc.UpdateItem(input)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
+	expr, err = dynamodbattribute.MarshalMap(dynamoIndividualProject)
+	if err != nil {
+		fmt.Println("Error marshalling Template:")
+	}
+
+	input = &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: expr,
+		TableName:                 aws.String(tableName),
+		Key:                       key,
+		ReturnValues:              aws.String("UPDATED_NEW"),
+		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
+	}
+
+	_, err = svc.UpdateItem(input)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	return err
 }
