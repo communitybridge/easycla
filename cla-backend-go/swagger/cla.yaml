@@ -567,7 +567,9 @@ definitions:
           type: string
         Description:
           type: string
-        HtmlBody: 
+        IclaHtmlBody:
+          type: string
+        CclaHtmlBody: 
           type: string
         MetaFields:
           type: array

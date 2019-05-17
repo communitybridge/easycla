@@ -64,6 +64,14 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	if err != nil {
 		return err
 	}
+	// iclaTemplate, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
+	// if err != nil {
+	// 	return err
+	// }
+	// cclaTemplate, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Apply template fields
 	templateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
@@ -71,24 +79,50 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		return err
 	}
 
+	// iclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(iclaTemplate, fields)
+	// if err != nil {
+	// 	return err
+	// }
+	// cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(cclaTemplate, fields)
+	// if err != nil {
+	// 	return err
+	// }
+
 	// Create PDF
 	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
 	if err != nil {
 		return err
 	}
 	defer pdf.Close()
+	// iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplate)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer iclaPdf.Close()
+	// cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplate)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer cclaPdf.Close()
 
 	// Save PDF to S3
 	bucket := "cla-signature-files-dev"
 	fileNameTemplate := "contract-group/%s/template/%s"
 	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
 	// cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+
+	// err = s.SaveTemplateToS3(bucket,cclaFileName,pdf)
+	// if err != nil {
+	// 	return err
+	//}
 	err = s.SaveTemplateToS3(bucket, iclaFileName, pdf)
 	if err != nil {
 		return err
 	}
 
 	// Save Template to Dynamodb
+	//template.IclaHTMLBody = iclaTemplateHTML
+	//template.CclaHTMLBody = ccleTemplateHTML
 
 	return nil
 }
