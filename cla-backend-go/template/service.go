@@ -42,7 +42,8 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 
 	// Remove HTML from template
 	for i, template := range templates {
-		template.HTMLBody = ""
+		template.IclaHTMLBody = ""
+		template.CclaHTMLBody = ""
 		templates[i] = template
 	}
 
@@ -65,24 +66,35 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	}
 
 	// Apply template fields
-	templateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
+	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
 		return err
 	}
 
 	// Create PDF
-	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
+	iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplateHTML)
 	if err != nil {
 		return err
 	}
-	defer pdf.Close()
+	defer iclaPdf.Close()
+	cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplateHTML)
+	if err != nil {
+		return err
+	}
+	defer cclaPdf.Close()
 
 	// Save PDF to S3
 	bucket := "cla-signature-files-dev"
 	fileNameTemplate := "contract-group/%s/template/%s"
 	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
-	// cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
-	err = s.SaveTemplateToS3(bucket, iclaFileName, pdf)
+	cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+
+	err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
+	if err != nil {
+		return err
+	}
+
+	err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
 	if err != nil {
 		return err
 	}
@@ -93,11 +105,13 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	if err != nil {
 		return err
 	}
+	template.IclaHTMLBody = iclaTemplateHTML
+	template.CclaHTMLBody = cclaTemplateHTML
 
 	return nil
 }
 
-func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, error) {
+func (s service) InjectProjectInformationIntoTemplate(template models.Template, metaFields []*models.MetaField) (string, string, error) {
 	// TODO: Verify all template fields in template.MetaFields are present
 
 	lookupMap := map[string]models.MetaField{}
@@ -105,28 +119,33 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 		lookupMap[field.Name] = *field
 	}
 
-	fieldsMap := map[string]string{}
-	for _, field := range fields {
+	metaFieldsMap := map[string]string{}
+	for _, metaField := range metaFields {
 
-		val, ok := lookupMap[field.Name]
+		val, ok := lookupMap[metaField.Name]
 		if !ok {
 			continue
 		}
 
-		if val.Name == field.Name && val.TemplateVariable == field.TemplateVariable {
-			fieldsMap[field.TemplateVariable] = field.Value
+		if val.Name == metaField.Name && val.TemplateVariable == metaField.TemplateVariable {
+			metaFieldsMap[metaField.TemplateVariable] = metaField.Value
 		}
 	}
-	if len(template.MetaFields) != len(fieldsMap) {
-		return "", errors.New("Required fields for template were not found")
+	if len(template.MetaFields) != len(metaFieldsMap) {
+		return "", "", errors.New("Required fields for template were not found")
 	}
 
-	templateHTML, err := raymond.Render(template.HTMLBody, fieldsMap)
+	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, metaFieldsMap)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return templateHTML, nil
+	cclaTemplateHTML, err := raymond.Render(template.CclaHTMLBody, metaFieldsMap)
+	if err != nil {
+		return "", "", err
+	}
+
+	return iclaTemplateHTML, cclaTemplateHTML, nil
 }
 
 func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadCloser) error {
