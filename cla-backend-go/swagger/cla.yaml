@@ -625,8 +625,8 @@ definitions:
         type: integer
       OffsetY:
         type: integer
-  create-cla-template-group:
-    title: CreateCLATemplateGroup
+  create-cla-group-template:
+    title: CreateCLAGroupTemplate
     type: object
     properties:
       TemplateID:
