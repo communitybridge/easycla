@@ -115,28 +115,28 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 		lookupMap[field.Name] = *field
 	}
 
-	fieldsMap := map[string]string{}
-	for _, field := range metaFields {
+	metaFieldsMap := map[string]string{}
+	for _, metaField := range metaFields {
 
-		val, ok := lookupMap[field.Name]
+		val, ok := lookupMap[metaField.Name]
 		if !ok {
 			continue
 		}
 
-		if val.Name == field.Name && val.TemplateVariable == field.TemplateVariable {
-			fieldsMap[field.TemplateVariable] = field.Value
+		if val.Name == metaField.Name && val.TemplateVariable == metaField.TemplateVariable {
+			metaFieldsMap[metaField.TemplateVariable] = metaField.Value
 		}
 	}
-	if len(template.MetaFields) != len(fieldsMap) {
+	if len(template.MetaFields) != len(metaFieldsMap) {
 		return "", "", errors.New("Required fields for template were not found")
 	}
 
-	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, fieldsMap)
+	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, metaFieldsMap)
 	if err != nil {
 		return "", "", err
 	}
 
-	cclaTemplateHTML, err := raymond.Render(template.CclaHTMLBody, fieldsMap)
+	cclaTemplateHTML, err := raymond.Render(template.CclaHTMLBody, metaFieldsMap)
 	if err != nil {
 		return "", "", err
 	}
