@@ -247,3 +247,27 @@ h2 {
   align-items: center;
   display: flex;
 }
+
+.template-field {
+  border-bottom: 1px solid #7b7b7b;
+}
+
+.item {
+  margin-bottom: 20px;
+}
+
+ion-icon {
+  color: #4C79B6;
+  line-height: 6px;
+  margin-left: -15px;
+  margin-right: 15px;
+
+  &:before {
+    font-size: 19px;
+  }
+}
+
+.pdf-viewer {
+  width: 100%;
+  height: 400px;
+}
