@@ -255,6 +255,10 @@ class DocumentTabModel(MapAttribute):
     document_tab_height = NumberAttribute(default=20)
     document_tab_is_locked = BooleanAttribute(default=False)
     document_tab_is_required = BooleanAttribute(default=True)
+    document_tab_anchor_string = UnicodeAttribute(default=None)
+    document_tab_anchor_ignore_if_not_present = BooleanAttribute(default=True)
+    document_tab_anchor_x_offset = NumberAttribute()
+    document_tab_anchor_y_offset = NumberAttribute()
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -270,13 +274,21 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_width=None,
                  document_tab_height=None,
                  document_tab_is_locked=False,
-                 document_tab_is_required=True):
+                 document_tab_is_required=True,
+                 document_tab_anchor_string=None,
+                 document_tab_anchor_ignore_if_not_present=True, 
+                 document_tab_anchor_x_offset=None,
+                 document_tab_anchor_y_offset=None
+                 ):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
         self.model.document_tab_name = document_tab_name
-        self.model.document_tab_position_x = document_tab_position_x
-        self.model.document_tab_position_y = document_tab_position_y
+        # x,y coordinates are None when anchor x,y offsets are supplied.
+        if document_tab_position_x is not None: 
+            self.model.document_tab_position_x = document_tab_position_x
+        if document_tab_position_y is not None:
+            self.model.document_tab_position_y = document_tab_position_y
         # Use defaults if None is provided for the following attributes.
         if document_tab_type is not None:
             self.model.document_tab_type = document_tab_type
@@ -288,18 +300,32 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_height = document_tab_height
         self.model.document_tab_is_locked = document_tab_is_locked
         self.model.document_tab_is_required = document_tab_is_required
+        # Anchor string properties
+        if document_tab_anchor_string is not None:
+            self.model.document_tab_anchor_string = document_tab_anchor_string
+        self.model.document_tab_anchor_ignore_if_not_present = document_tab_anchor_ignore_if_not_present
+        if document_tab_anchor_x_offset is not None:
+            self.model.document_tab_anchor_x_offset = document_tab_anchor_x_offset
+        if document_tab_anchor_y_offset is not None:
+            self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
     def to_dict(self):
-        return {'document_tab_type': self.model.document_tab_type,
-                'document_tab_id': self.model.document_tab_id,
-                'document_tab_name': self.model.document_tab_name,
-                'document_tab_page': self.model.document_tab_page,
-                'document_tab_position_x': self.model.document_tab_position_x,
-                'document_tab_position_y': self.model.document_tab_position_y,
-                'document_tab_width': self.model.document_tab_width,
-                'document_tab_height': self.model.document_tab_height,
-                'document_tab_is_locked': self.model.document_tab_is_locked,
-                'document_tab_is_required': self.model.document_tab_is_required}
+        if self.model.document_tab_anchor_string is None: 
+            # Fixed Tab
+            return {'document_tab_type': self.model.document_tab_type,
+                    'document_tab_id': self.model.document_tab_id,
+                    'document_tab_name': self.model.document_tab_name,
+                    'document_tab_page': self.model.document_tab_page,
+                    'document_tab_position_x': self.model.document_tab_position_x,
+                    'document_tab_position_y': self.model.document_tab_position_y,
+                    'document_tab_width': self.model.document_tab_width,
+                    'document_tab_height': self.model.document_tab_height,
+                    'document_tab_is_locked': self.model.document_tab_is_locked,
+                    'document_tab_is_required': self.model.document_tab_is_required,
+                    'document_tab_anchor_string': self.model.document_tab_anchor_string,
+                    'document_tab_anchor_ignore_if_not_present': self.model.document_tab_anchor_ignore_if_not_present,
+                    'document_tab_anchor_x_offset': self.model.document_tab_anchor_x_offset,
+                    'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset }
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -328,6 +354,18 @@ class DocumentTab(model_interfaces.DocumentTab):
     def get_document_tab_is_locked(self):
         return self.model.document_tab_is_locked
 
+    def get_document_tab_anchor_string(self):
+        return self.model.document_tab_anchor_string
+
+    def get_document_tab_anchor_ignore_if_not_present(self):
+        return self.model.document_tab_anchor_ignore_if_not_present
+
+    def get_document_tab_anchor_x_offset(self):
+        return self.model.document_tab_anchor_x_offset
+
+    def get_document_tab_anchor_y_offset(self):
+        return self.model.document_tab_anchor_y_offset
+
     def set_document_tab_type(self, tab_type):
         self.model.document_tab_type = tab_type
 
@@ -354,6 +392,18 @@ class DocumentTab(model_interfaces.DocumentTab):
 
     def set_document_tab_is_locked(self, is_locked):
         self.model.document_tab_is_locked = is_locked
+
+    def set_document_tab_anchor_string(self, document_tab_anchor_string):
+        self.model.document_tab_anchor_string = document_tab_anchor_string
+
+    def set_document_tab_anchor_ignore_if_not_present(self, document_tab_anchor_ignore_if_not_present):
+        self.model.document_tab_anchor_ignore_if_not_present = document_tab_anchor_ignore_if_not_present
+
+    def set_document_tab_anchor_x_offset(self, document_tab_anchor_x_offset):
+        self.model.document_tab_anchor_x_offset = document_tab_anchor_x_offset
+
+    def set_document_tab_anchor_y_offset(self, document_tab_anchor_y_offset):
+        self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
 class DocumentModel(MapAttribute):
     """
@@ -523,11 +573,21 @@ class Document(model_interfaces.Document):
         tab.set_document_tab_type(tab_data['type'])
         tab.set_document_tab_id(tab_data['id'])
         tab.set_document_tab_name(tab_data['name'])
-        tab.set_document_tab_position_x(tab_data['position_x'])
-        tab.set_document_tab_position_y(tab_data['position_y'])
+        if 'position_x' in tab_data: 
+            tab.set_document_tab_position_x(tab_data['position_x'])
+        if 'position_y' in tab_data:
+            tab.set_document_tab_position_y(tab_data['position_y'])
         tab.set_document_tab_width(tab_data['width'])
         tab.set_document_tab_height(tab_data['height'])
         tab.set_document_tab_page(tab_data['page'])
+        if 'anchor_string' in tab_data: 
+            tab.set_document_tab_anchor_string(tab_data['anchor_string'])
+        if 'anchor_ignore_if_not_present' in tab_data: 
+            tab.set_document_tab_anchor_ignore_if_not_present(tab_data['anchor_ignore_if_not_present'])
+        if 'anchor_x_offset' in tab_data: 
+            tab.set_document_tab_anchor_x_offset(tab_data['anchor_x_offset'])
+        if 'anchor_y_offset' in tab_data: 
+            tab.set_document_tab_anchor_y_offset(tab_data['anchor_y_offset'])
         self.add_document_tab(tab)
 
 class ProjectModel(BaseModel):
