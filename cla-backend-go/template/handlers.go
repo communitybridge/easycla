@@ -1,8 +1,6 @@
 package template
 
 import (
-	"fmt"
-
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations/template"
@@ -21,16 +19,15 @@ func Configure(api *operations.ClaAPI, service service) {
 		return template.NewGetTemplatesOK().WithPayload(templates)
 	})
 
-	// Add Templates to a CLA Group
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams) middleware.Responder {
-
-		err := service.AddContractGroupTemplates(params.HTTPRequest.Context(), params.ClaGroupID)
+		err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, params.Body)
 		if err != nil {
-			fmt.Print(err)
+			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
-		dummy := models.Template{}
-		return template.NewCreateCLAGroupTemplateOK().WithPayload(dummy)
+
+		return template.NewCreateCLAGroupTemplateOK()
 	})
+
 }
 
 type codedResponse interface {
