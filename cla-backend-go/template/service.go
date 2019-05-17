@@ -43,7 +43,8 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 
 	// Remove HTML from template
 	for i, template := range templates {
-		template.HTMLBody = ""
+		template.IclaHTMLBody = ""
+		template.CclaHTMLBody = ""
 		templates[i] = template
 	}
 
@@ -64,77 +65,55 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	if err != nil {
 		return err
 	}
-	// iclaTemplate, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
-	// if err != nil {
-	// 	return err
-	// }
-	// cclaTemplate, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
-	// if err != nil {
-	// 	return err
-	// }
 
 	// Apply template fields
-	templateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
+	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
 		return err
 	}
-
-	// iclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(iclaTemplate, fields)
-	// if err != nil {
-	// 	return err
-	// }
-	// cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(cclaTemplate, fields)
-	// if err != nil {
-	// 	return err
-	// }
 
 	// Create PDF
-	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
+	iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplateHTML)
 	if err != nil {
 		return err
 	}
-	defer pdf.Close()
-	// iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplate)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer iclaPdf.Close()
-	// cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplate)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer cclaPdf.Close()
+	defer iclaPdf.Close()
+	cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplateHTML)
+	if err != nil {
+		return err
+	}
+	defer cclaPdf.Close()
 
 	// Save PDF to S3
 	bucket := "cla-signature-files-dev"
 	fileNameTemplate := "contract-group/%s/template/%s"
 	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
-	// cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+	cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
 
-	// err = s.SaveTemplateToS3(bucket,cclaFileName,pdf)
-	// if err != nil {
-	// 	return err
-	//}
-	err = s.SaveTemplateToS3(bucket, iclaFileName, pdf)
+	err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
+	if err != nil {
+		return err
+	}
+	err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
 	if err != nil {
 		return err
 	}
 
 	// Save Template to Dynamodb
-	//template.IclaHTMLBody = iclaTemplateHTML
-	//template.CclaHTMLBody = ccleTemplateHTML
+	template.IclaHTMLBody = iclaTemplateHTML
+	template.CclaHTMLBody = cclaTemplateHTML
 
 	return nil
 }
 
-func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, error) {
+func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, string, error) {
 	// TODO: Verify all template fields in template.MetaFields are present
 
 	lookupMap := map[string]models.MetaField{}
 	for _, field := range template.MetaFields {
 		lookupMap[field.Name] = *field
 	}
-
+	// only checking against metafields of icla, ccla metafields should be identical
 	fieldsMap := map[string]string{}
 	for _, field := range fields {
 
@@ -148,15 +127,19 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 		}
 	}
 	if len(template.MetaFields) != len(fieldsMap) {
-		return "", errors.New("Required fields for template were not found")
+		return "", "", errors.New("Required fields for template were not found")
 	}
 
-	templateHTML, err := raymond.Render(template.HTMLBody, fieldsMap)
+	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, fieldsMap)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+	cclaTemplateHTML, err := raymond.Render(template.CclaHTMLBody, fieldsMap)
+	if err != nil {
+		return "", "", err
 	}
 
-	return templateHTML, nil
+	return iclaTemplateHTML, cclaTemplateHTML, nil
 }
 
 func (s service) SaveTemplateToDynamoDB(template models.Template, templateName, tableName, contractGroupID, region string) error {
