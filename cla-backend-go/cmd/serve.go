@@ -127,6 +127,7 @@ func init() {
 
 	viper.SetDefault("PORT", 8080)
 	viper.SetDefault("DB_MAX_CONNECTIONS", 1)
+	viper.SetDefault("STAGE", "dev")
 
 	// Here you will define your flags and configuration settings.
 
