@@ -94,6 +94,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	if err != nil {
 		return err
 	}
+
 	err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
 	if err != nil {
 		return err
@@ -106,16 +107,16 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	return nil
 }
 
-func (s service) InjectProjectInformationIntoTemplate(template models.Template, fields []*models.MetaField) (string, string, error) {
+func (s service) InjectProjectInformationIntoTemplate(template models.Template, metaFields []*models.MetaField) (string, string, error) {
 	// TODO: Verify all template fields in template.MetaFields are present
 
 	lookupMap := map[string]models.MetaField{}
 	for _, field := range template.MetaFields {
 		lookupMap[field.Name] = *field
 	}
-	// only checking against metafields of icla, ccla metafields should be identical
+
 	fieldsMap := map[string]string{}
-	for _, field := range fields {
+	for _, field := range metaFields {
 
 		val, ok := lookupMap[field.Name]
 		if !ok {
@@ -134,6 +135,7 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 	if err != nil {
 		return "", "", err
 	}
+
 	cclaTemplateHTML, err := raymond.Render(template.CclaHTMLBody, fieldsMap)
 	if err != nil {
 		return "", "", err
