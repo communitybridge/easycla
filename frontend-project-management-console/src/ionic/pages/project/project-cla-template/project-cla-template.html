@@ -15,7 +15,7 @@
       <ion-col>
         <ion-card class="contract-card">
           <ion-card-content>
-            <ion-grid>
+            <ion-grid *ngIf="step === 'selection'">
               <ion-row *ngFor="let template of templates">
                 <ion-col col-2 class="template-selector">
                   <button ion-button (click)="selectTemplate(template)" color="secondary">
@@ -27,11 +27,81 @@
                 </ion-col>
               </ion-row>
             </ion-grid>
+
+            <ion-grid *ngIf="step === 'values'">
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="goToStep('selection')" color="light">
+                    <ion-icon name="arrow-back"></ion-icon>
+                    Back to Template Selection
+                  </button>
+                </ion-col>
+              </ion-row>
+
+              <ion-row *ngFor="let field of selectedTemplate.metaFields">
+                <ion-col col-6>
+                  <ion-item>
+                    <ion-label stacked>{{ field.name }}</ion-label>
+                    <ion-input class="template-field" type="text"
+                               [(ngModel)]="templateValues[field.templateVariable]">
+                    </ion-input>
+                    <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="reviewSelectedTemplate()" color="secondary">
+                    Review
+                  </button>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+
+            <ion-grid *ngIf="step === 'review'">
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="goToStep('values')" color="light">
+                    <ion-icon name="arrow-back"></ion-icon>
+                    Back to Template Information
+                  </button>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="showPDF('ccla')" color="secondary" [disabled]="currentPDF === 'ccla'">
+                    View CCLA
+                  </button>
+                  <button ion-button (click)="showPDF('icla')" color="secondary" [disabled]="currentPDF === 'icla'">
+                    View ICLA
+                  </button>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <embed [src]="getPdfPath()" class="pdf-viewer"
+                         type="application/pdf">
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col>
+                  <button ion-button (click)="viewDocusign()" color="light">
+                    View DocuSign
+                  </button>
+                  <button ion-button (click)="Submit()" color="secondary">
+                    Submit
+                  </button>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
           </ion-card-content>
         </ion-card>
       </ion-col>
     </ion-row>
   </ion-grid>
 </ion-content>
-
 <cla-footer></cla-footer>
