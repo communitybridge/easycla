@@ -571,23 +571,23 @@ definitions:
       title: CLA Template
       description: CLA Template
       properties:
-        name:
+        Name:
           type: string
         ID:
           type: string
         description:
           type: string
-        htmlBody: 
+        HtmlBody: 
           type: string
-        metaFields:
+        MetaFields:
           type: array
           items: 
             $ref: '#/definitions/meta-field'
-        iclaFields:
+        IclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
-        cclaFields:
+        CclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
@@ -595,34 +595,46 @@ definitions:
     title: MetaField
     type: object
     properties:
-      name:
+      Name:
         type: string
-      description:
+      Value:
+        type: string  
+      Description:
         type: string
-      templateVariable:
+      TemplateVariable:
         type: string
   field:
     title: Field
     type: object
     properties:
-      name: 
+      Name:
         type: string
-      anchorString:
+      AnchorString:
         type: string
-      fieldType:
+      FieldType:
         type: string
-      isOptional:
+      IsOptional:
         type: boolean
-      isEditable:
+      IsEditable:
         type: boolean
-      width:
+      Width:
         type: integer
-      height:
+      Height:
         type: integer
-      offsetX:
+      OffsetX:
         type: integer
-      offsetY:
+      OffsetY:
         type: integer
+  create-cla-template-group:
+    title: CreateCLATemplateGroup
+    type: object
+    properties:
+      TemplateID:
+        type: string
+      MetaFields:
+        type: array
+        items:
+          $ref: '#/definitions/meta-field'
   service:
     title: Service
     description: The properties that are shared amongst all versions of the Service model.
