@@ -1,17 +1,12 @@
 import {Component, ViewChild} from "@angular/core";
 import {
   NavController,
-  ModalController,
   NavParams,
   IonicPage, Nav, Events, AlertController
 } from "ionic-angular";
-import { CincoService } from "../../../services/cinco.service";
-import { KeycloakService } from "../../../services/keycloak/keycloak.service";
-import { SortService } from "../../../services/sort.service";
-import { ClaService } from "../../../services/cla.service";
-import { RolesService } from "../../../services/roles.service";
-import { Restricted } from "../../../decorators/restricted";
-
+import {ClaService} from "../../../services/cla.service";
+import {Restricted} from "../../../decorators/restricted";
+import { DomSanitizer } from '@angular/platform-browser';
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
 })
@@ -27,20 +22,22 @@ export class ProjectClaTemplatePage {
   sfdcProjectId: string;
   projectTemplateId: string;
   templates: any[] = [];
+  selectedTemplate = {};
+  templateValues = {};
+  pdfPath = {
+    ccla: '/assets/sample-cla-pdf.pdf',
+    icla: '/assets/sample-cla-pdf.pdf'
+  };
+  currentPDF = 'ccla';
+  step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService,
-    private sortService: SortService,
-    public modalCtrl: ModalController,
-    private keycloak: KeycloakService,
-    public alertCtrl: AlertController,
     public claService: ClaService,
-    public rolesService: RolesService,
-    public events: Events
+    public sanitizer: DomSanitizer
   ) {
     this.sfdcProjectId = navParams.get("projectId");
     this.projectTemplateId = navParams.get("projectTemplateId");
@@ -51,23 +48,39 @@ export class ProjectClaTemplatePage {
     this.getTemplates();
   }
 
-  getTemplates () {
-    this.claService
-      .getTemplates()
-      .subscribe(templates => {
-        this.templates = templates
-      })
+  getTemplates() {
+    this.claService.getTemplates().subscribe(templates => this.templates = templates);
   }
 
   ngOnInit() {
   }
 
-  selectTemplate (template) {
+  getPdfPath() {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
+  }
 
-    this.backToProject();
+  showPDF (type) {
+    this.currentPDF = type;
+  }
+
+  selectTemplate(template) {
+    this.selectedTemplate = template;
+    this.step = 'values';
+  }
+
+  reviewSelectedTemplate() {
+    this.step = 'review';
+  }
+
+  goToStep(step) {
+    this.step = step;
   }
 
   backToProject() {
     this.navCtrl.pop();
   }
+
+  viewDocusign() {}
+
+  submit() {}
 }
