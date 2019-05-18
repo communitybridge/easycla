@@ -898,10 +898,15 @@ export class ClaService {
 
   getTemplates() { 
     return this.http
-      .get(this.claApiUrl + `/v3/template'`)
+      .get(this.claApiUrl + `/v3/template`)
       .map(res => res.json())
 
   }
 
+  postClaGroupTemplate(projectId, data) {
+    return this.http
+      .post(this.claApiUrl + `/v3/clagroup/${projectId}/template`, data)
+      .map(res => res.json());
+  }
   //////////////////////////////////////////////////////////////////////////////
 }
