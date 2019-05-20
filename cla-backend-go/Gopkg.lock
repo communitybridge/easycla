@@ -26,6 +26,20 @@
   version = "v9"
 
 [[projects]]
+  digest = "1:95fd14230b48a74765db94f7064f0b5617f52739a164f6d41e5b57bec5b3ff9b"
+  name = "github.com/aws/aws-lambda-go"
+  packages = [
+    "events",
+    "lambda",
+    "lambda/handlertrace",
+    "lambda/messages",
+    "lambdacontext",
+  ]
+  pruneopts = "UT"
+  revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
+  version = "v1.10.0"
+
+[[projects]]
   digest = "1:b96210868389a0dd3c64de917574eefdd3cc983e4f5601d076fc1da720751c48"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -75,6 +89,17 @@
   pruneopts = "UT"
   revision = "49378c3c0300fe39e80f4e4794a8b62daae83139"
   version = "v1.19.29"
+
+[[projects]]
+  digest = "1:3775497e4fe8e60feaf23e564250b1d18c39b41da4253c64c376e7e84ab20bd6"
+  name = "github.com/awslabs/aws-lambda-go-api-proxy"
+  packages = [
+    "core",
+    "httpadapter",
+  ]
+  pruneopts = "UT"
+  revision = "d3c54874bf27f3a7726803bf5916eed852b3ade3"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:4333e9d9cc731d01e67e19c33da46e95860b95f8b8032bc586d69b169e1b0c1b"
@@ -438,12 +463,14 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/dynamodb",
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
     "github.com/aws/aws-sdk-go/service/ssm",
+    "github.com/awslabs/aws-lambda-go-api-proxy/httpadapter",
     "github.com/aymerick/raymond",
     "github.com/dgrijalva/jwt-go",
     "github.com/go-openapi/errors",
