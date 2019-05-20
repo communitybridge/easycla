@@ -25,10 +25,10 @@ export class ProjectClaTemplatePage {
   selectedTemplate = {};
   templateValues = {};
   pdfPath = {
-    ccla: '/assets/sample-cla-pdf.pdf',
-    icla: '/assets/sample-cla-pdf.pdf'
+    CorporatePDFURL: '/assets/sample-cla-pdf.pdf',
+    IndividualPDFURL: '/assets/sample-cla-pdf.pdf'
   };
-  currentPDF = 'ccla';
+  currentPDF = 'cclaPdfUrl';
   step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
@@ -69,7 +69,11 @@ export class ProjectClaTemplatePage {
   }
 
   reviewSelectedTemplate() {
-    this.step = 'review';
+    this.claService.postClaGroupTemplate(this.projectTemplateId, this.templateValues)
+      .subscribe(response => {
+        this.pdfPath = response;
+        this.goToStep('review');
+      })
   }
 
   goToStep(step) {
