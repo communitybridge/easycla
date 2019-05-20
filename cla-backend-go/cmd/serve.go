@@ -88,7 +88,7 @@ var serveCmd = &cobra.Command{
 			// userRepo          = user.NewRepository(db)
 			// projectRepo       = project.NewRepository(db)
 			// contractGroupRepo = contractgroup.NewRepository(db)
-			templateRepo = template.NewRepository(awsSession)
+			templateRepo = template.NewRepository(awsSession, viper.GetString("STAGE"))
 		)
 
 		var (
@@ -96,7 +96,7 @@ var serveCmd = &cobra.Command{
 			// projectService       = project.NewService(projectRepo)
 			//contractGroupService = contractgroup.NewService(contractGroupRepo)
 			// userService          = user.NewService(userRepo)
-			templateService = template.NewService(templateRepo, docraptorClient, awsSession)
+			templateService = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
 			//authorizer = auth.NewAuthorizer(auth0Validator)
 		)
 

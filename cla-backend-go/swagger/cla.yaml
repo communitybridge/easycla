@@ -320,7 +320,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            type: object
+            $ref: '#/definitions/template-pdfs'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -410,6 +410,7 @@ definitions:
   create-cla-group-template:
     title: CreateCLAGroupTemplate
     type: object
+    x-nullable: false
     properties:
       TemplateID:
         type: string
@@ -417,6 +418,15 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/meta-field'
+  template-pdfs:
+    title: TemplatePDFs
+    type: object
+    x-nullable: false
+    properties:
+      IndividualPDFURL:
+        type: string
+      CorporatePDFURL:
+        type: string
   github:
     type: object
     x-nullable: false

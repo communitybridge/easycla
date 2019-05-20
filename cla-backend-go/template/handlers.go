@@ -8,7 +8,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func Configure(api *operations.ClaAPI, service service) {
+func Configure(api *operations.ClaAPI, service Service) {
 	// Retrieve a list of available templates
 	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams) middleware.Responder {
 
@@ -25,7 +25,7 @@ func Configure(api *operations.ClaAPI, service service) {
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return template.NewCreateCLAGroupTemplateOK().WithPayload(pdfUrls)
+		return template.NewCreateCLAGroupTemplateOK().WithPayload(&pdfUrls)
 	})
 
 }
