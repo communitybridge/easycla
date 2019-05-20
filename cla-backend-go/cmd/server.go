@@ -29,101 +29,10 @@ const (
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
-	Use:   "serve",
+	Use:   "server",
 	Short: "Run the backend server",
 	Long:  `Run the backend server which listens for http requests over a given port.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		host, err := os.Hostname()
-		if err != nil {
-			logrus.Panicln("unable to get Hostname", err)
-		}
-
-		logrus.SetFormatter(&logrus.JSONFormatter{})
-		logrus.SetLevel(logrus.DebugLevel)
-		logrus.WithFields(logrus.Fields{
-			"BuildTime": BuildStamp,
-			"GitHash":   GitHash,
-			"Host":      host,
-		}).Info("Service Startup")
-
-		awsSession := session.Must(session.NewSession(
-			&aws.Config{
-				Region:                        aws.String(awsRegion),
-				CredentialsChainVerboseErrors: aws.Bool(true),
-			},
-		))
-
-		configFile, err := config.LoadConfig(configFile, awsSession, viper.GetString("STAGE"))
-		if err != nil {
-			log.Panicln("Unable to load config", err)
-		}
-
-		// db, err := sqlx.Connect("postgres", viper.GetString("POSTGRESQL_CONNECTION"))
-		// if err != nil {
-		// 	log.Panicln("unable to connect to DB", err)
-		// }
-
-		// db.SetMaxOpenConns(viper.GetInt("DB_MAX_CONNECTIONS"))
-		// db.SetMaxIdleConns(5)
-		// db.SetConnMaxLifetime(15 * time.Minute)
-		// db.MapperFunc(snaker.CamelToSnake)
-
-		swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
-		if err != nil {
-			logrus.Panicln("Invalid swagger file for initializing cla", err)
-		}
-
-		api := operations.NewClaAPI(swaggerSpec)
-		docraptorClient, err := docraptor.NewDocraptorClient(configFile.Docraptor.APIKey, configFile.Docraptor.TestMode)
-		if err != nil {
-			logrus.Panic(err)
-		}
-
-		// auth0Validator, err := auth.NewAuth0Validator(
-		// 	configFile.Auth0.Domain,
-		// 	configFile.Auth0.ClientID,
-		// 	configFile.Auth0.UsernameClaim,
-		// 	configFile.Auth0.Algorithm)
-		// if err != nil {
-		// 	logrus.Panic(err)
-		// }
-
-		var (
-			// userRepo          = user.NewRepository(db)
-			// projectRepo       = project.NewRepository(db)
-			// contractGroupRepo = contractgroup.NewRepository(db)
-			templateRepo = template.NewRepository(awsSession, viper.GetString("STAGE"))
-		)
-
-		var (
-			healthService = health.New(GitHash, BuildStamp)
-			// projectService       = project.NewService(projectRepo)
-			//contractGroupService = contractgroup.NewService(contractGroupRepo)
-			// userService          = user.NewService(userRepo)
-			templateService = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
-			//authorizer = auth.NewAuthorizer(auth0Validator)
-		)
-
-		//api.OauthSecurityAuth = authorizer.SecurityAuth
-		health.Configure(api, healthService)
-		template.Configure(api, templateService)
-		// project.Configure(api, projectService)
-		// contractgroup.Configure(api, contractGroupService)
-
-		// flag.Parse()
-		apiHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares))
-
-		server := restapi.NewServer(api)
-		defer server.Shutdown() // nolint
-		server.Port = viper.GetInt("PORT")
-
-		server.SetHandler(apiHandler)
-
-		err = server.Serve()
-		if err != nil {
-			log.Fatal(err)
-		}
-	},
+	Run:   runServer,
 }
 
 func init() {
@@ -142,6 +51,92 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// Universal server function called by
+// environment specific server functions
+func server() http.Handler {
+	host, err := os.Hostname()
+	if err != nil {
+		logrus.Panicln("unable to get Hostname", err)
+	}
+
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.WithFields(logrus.Fields{
+		"BuildTime": BuildStamp,
+		"GitHash":   GitHash,
+		"Host":      host,
+	}).Info("Service Startup")
+
+	awsSession := session.Must(session.NewSession(
+		&aws.Config{
+			Region:                        aws.String(awsRegion),
+			CredentialsChainVerboseErrors: aws.Bool(true),
+		},
+	))
+
+	configFile, err := config.LoadConfig(configFile, awsSession, viper.GetString("STAGE"))
+	if err != nil {
+		log.Panicln("Unable to load config", err)
+	}
+
+	// db, err := sqlx.Connect("postgres", viper.GetString("POSTGRESQL_CONNECTION"))
+	// if err != nil {
+	// 	log.Panicln("unable to connect to DB", err)
+	// }
+
+	// db.SetMaxOpenConns(viper.GetInt("DB_MAX_CONNECTIONS"))
+	// db.SetMaxIdleConns(5)
+	// db.SetConnMaxLifetime(15 * time.Minute)
+	// db.MapperFunc(snaker.CamelToSnake)
+
+	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	if err != nil {
+		logrus.Panicln("Invalid swagger file for initializing cla", err)
+	}
+
+	api := operations.NewClaAPI(swaggerSpec)
+	docraptorClient, err := docraptor.NewDocraptorClient(configFile.Docraptor.APIKey, configFile.Docraptor.TestMode)
+	if err != nil {
+		logrus.Panic(err)
+	}
+
+	// auth0Validator, err := auth.NewAuth0Validator(
+	// 	configFile.Auth0.Domain,
+	// 	configFile.Auth0.ClientID,
+	// 	configFile.Auth0.UsernameClaim,
+	// 	configFile.Auth0.Algorithm)
+	// if err != nil {
+	// 	logrus.Panic(err)
+	// }
+
+	var (
+		// userRepo          = user.NewRepository(db)
+		// projectRepo       = project.NewRepository(db)
+		// contractGroupRepo = contractgroup.NewRepository(db)
+		templateRepo = template.NewRepository(awsSession, viper.GetString("STAGE"))
+	)
+
+	var (
+		healthService = health.New(GitHash, BuildStamp)
+		// projectService       = project.NewService(projectRepo)
+		//contractGroupService = contractgroup.NewService(contractGroupRepo)
+		// userService          = user.NewService(userRepo)
+		templateService = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
+		//authorizer = auth.NewAuthorizer(auth0Validator)
+	)
+
+	//api.OauthSecurityAuth = authorizer.SecurityAuth
+	health.Configure(api, healthService)
+	template.Configure(api, templateService)
+	// project.Configure(api, projectService)
+	// contractgroup.Configure(api, contractGroupService)
+
+	// flag.Parse()
+	apiHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares))
+
+	return apiHandler
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
