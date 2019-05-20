@@ -21,10 +21,11 @@ type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
 	GetCLAGroup(claGroupID string) (CLAGroup, error)
-	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, tableName string, template models.Template) error
+	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) error
 }
 
 type repository struct {
+	stage          string // The AWS stage (dev, staging, prod)
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
@@ -62,8 +63,9 @@ type DocumentTab struct {
 	DocumentTabAnchorYOffset            int64  `json:"document_tab_anchor_y_offset"`
 }
 
-func NewRepository(awsSession *session.Session) repository {
+func NewRepository(awsSession *session.Session, stage string) repository {
 	return repository{
+		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
 	}
 }
@@ -90,7 +92,7 @@ func (r repository) GetTemplate(templateID string) (models.Template, error) {
 // because it accesses DynamoDB, but the contractgroup repository is designed
 // to connect to postgres
 func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
-	result, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+	_, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String("cla-dev-projects"),
 		Key: map[string]*dynamodb.AttributeValue{
 			"project_id": {
@@ -102,22 +104,13 @@ func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
 		return CLAGroup{}, err
 	}
 
-	fmt.Println(result)
-
 	return CLAGroup{}, nil
 }
 
-func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, tableName string, template models.Template) error {
-
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1")},
-	)
-
-	// Create dynamodb Client
-	svc := dynamodb.New(sess)
+func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) error {
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// Map the fields to the dynamo model as the attribute names are different
-
 	// Map Template Fields into DocumentTab
 	cclaDocumentTabs := []DocumentTab{}
 
@@ -158,7 +151,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 	// Marshal object into dynamodb attribute
 	expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProject)
 	if err != nil {
-		fmt.Println("Error marshalling Template:")
+		return err
 	}
 
 	// Find Contract Group to update the Templates on
@@ -176,9 +169,9 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
 	}
 
-	_, err = svc.UpdateItem(input)
+	_, err = repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println(err.Error())
+		return err
 	}
 
 	// Map ICLA Template Fields into DocumentTab
@@ -219,7 +212,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 
 	expr, err = dynamodbattribute.MarshalMap(dynamoIndividualProject)
 	if err != nil {
-		fmt.Println("Error marshalling Template:")
+		return err
 	}
 
 	input = &dynamodb.UpdateItemInput{
@@ -230,12 +223,12 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
 	}
 
-	_, err = svc.UpdateItem(input)
+	_, err = repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println(err.Error())
+		return err
 	}
 
-	return err
+	return nil
 }
 
 var templateMap = map[string]models.Template{

@@ -1,7 +1,6 @@
 package template
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -14,27 +13,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aymerick/raymond"
-	"github.com/spf13/viper"
 )
 
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
-	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (string, string, error)
+	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error)
 }
 
 type service struct {
+	stage           string // The AWS stage (dev, staging, prod)
 	templateRepo    Repository
 	docraptorClient docraptor.DocraptorClient
 	s3Client        *s3manager.Uploader
 }
 
-type pdfUrls struct {
-	iclaPdfUrl string
-	cclaPdfUrl string
-}
-
-func NewService(templateRepo Repository, docraptorClient docraptor.DocraptorClient, awsSession *session.Session) service {
+func NewService(stage string, templateRepo Repository, docraptorClient docraptor.DocraptorClient, awsSession *session.Session) service {
 	return service{
+		stage:           stage,
 		templateRepo:    templateRepo,
 		docraptorClient: docraptorClient,
 		s3Client:        s3manager.NewUploader(awsSession),
@@ -57,11 +52,11 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	return templates, nil
 }
 
-func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (pdfUrls, error) {
+func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error) {
 	// Verify claGroupID matches an existing CLA Group
 	_, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 
 	// Verify the caller is authorized for the project that owns this CLA Group
@@ -69,73 +64,61 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Get Template
 	template, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 
 	// Apply template fields
 	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 
 	// Create PDF
 	iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplateHTML)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 	defer iclaPdf.Close()
 	cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplateHTML)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 	defer cclaPdf.Close()
 
-	// Concatenate s3 bucket name with stage
-	var buffer bytes.Buffer
-	buffer.WriteString("cla-signature-files-")
-	buffer.WriteString(viper.GetString("STAGE"))
-
 	// Save PDF to S3
-	bucket := buffer.String()
+	bucket := fmt.Sprintf("cla-signature-files-%s", s.stage)
 	fileNameTemplate := "contract-group/%s/template/%s"
 	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
 	cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
 
 	iclaFileURL, err := s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
 
 	cclaFileURL, err := s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
-
-	// Concatenate tablename with stage
-	buffer.Reset()
-	buffer.WriteString("cla-")
-	buffer.WriteString(viper.GetString("STAGE"))
-	buffer.WriteString("-projects")
 
 	// Save Template to Dynamodb
-	tableName := buffer.String()
-	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, tableName, template)
+	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template)
 	if err != nil {
-		return pdfUrls{}, err
+		return models.TemplatePdfs{}, err
 	}
+
 	template.IclaHTMLBody = iclaTemplateHTML
 	template.CclaHTMLBody = cclaTemplateHTML
 
-	pdfUrls := pdfUrls{
-		iclaPdfUrl: iclaFileURL,
-		cclaPdfUrl: cclaFileURL,
+	pdfUrls := models.TemplatePdfs{
+		IndividualPDFURL: iclaFileURL,
+		CorporatePDFURL:  cclaFileURL,
 	}
+
 	return pdfUrls, nil
 }
 
 func (s service) InjectProjectInformationIntoTemplate(template models.Template, metaFields []*models.MetaField) (string, string, error) {
-	// TODO: Verify all template fields in template.MetaFields are present
-
 	lookupMap := map[string]models.MetaField{}
 	for _, field := range template.MetaFields {
 		lookupMap[field.Name] = *field
