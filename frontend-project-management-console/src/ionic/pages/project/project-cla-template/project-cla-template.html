@@ -71,10 +71,12 @@
 
               <ion-row>
                 <ion-col>
-                  <button ion-button (click)="showPDF('ccla')" color="secondary" [disabled]="currentPDF === 'ccla'">
+                  <button ion-button (click)="showPDF('CorporatePDFURL')" color="secondary"
+                          [disabled]="currentPDF === 'CorporatePDFURL'">
                     View CCLA
                   </button>
-                  <button ion-button (click)="showPDF('icla')" color="secondary" [disabled]="currentPDF === 'icla'">
+                  <button ion-button (click)="showPDF('IndividualPDFURL')" color="secondary"
+                          [disabled]="currentPDF === 'IndividualPDFURL'">
                     View ICLA
                   </button>
                 </ion-col>
@@ -92,7 +94,7 @@
                   <button ion-button (click)="viewDocusign()" color="light">
                     View DocuSign
                   </button>
-                  <button ion-button (click)="Submit()" color="secondary">
+                  <button ion-button (click)="submit()" color="secondary">
                     Submit
                   </button>
                 </ion-col>
