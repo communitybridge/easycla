@@ -1,8 +1,9 @@
 package config
 
 import (
-	"log"
+	"errors"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/lytics/logrus"
 )
 
@@ -41,8 +42,10 @@ type AWS struct {
 	Region string `json:"region"`
 }
 
-func LoadConfig(configFilePath string, awsStage string) (Config, error) {
+func LoadConfig(configFilePath string, awsSession *session.Session, awsStage string) (Config, error) {
 	if configFilePath != "" {
+		logrus.Info("Loading local config")
+
 		// Read from local env.json
 		localConfig, err := loadLocalConfig(configFilePath)
 		if err != nil {
@@ -52,10 +55,17 @@ func LoadConfig(configFilePath string, awsStage string) (Config, error) {
 		return localConfig, nil
 	}
 
-	logrus.Info("Local config not found")
-
 	// Read from SSM
-	log.Fatal("SSM Config not supported")
+	if awsSession != nil {
+		logrus.Info("Loading SSM config")
 
-	return Config{}, nil
+		ssmConfig, err := loadSSMConfig(awsSession, awsStage)
+		if err != nil {
+			return Config{}, err
+		}
+
+		return ssmConfig, nil
+	}
+
+	return Config{}, errors.New("config not found")
 }

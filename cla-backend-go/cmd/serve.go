@@ -23,6 +23,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	awsRegion = "us-east-1"
+)
+
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -42,7 +46,14 @@ var serveCmd = &cobra.Command{
 			"Host":      host,
 		}).Info("Service Startup")
 
-		configFile, err := config.LoadConfig(configFile, "")
+		awsSession := session.Must(session.NewSession(
+			&aws.Config{
+				Region:                        aws.String(awsRegion),
+				CredentialsChainVerboseErrors: aws.Bool(true),
+			},
+		))
+
+		configFile, err := config.LoadConfig(configFile, awsSession, viper.GetString("STAGE"))
 		if err != nil {
 			log.Panicln("Unable to load config", err)
 		}
@@ -67,13 +78,6 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			logrus.Panic(err)
 		}
-
-		awsSession := session.Must(session.NewSession(
-			&aws.Config{
-				Region:                        aws.String(configFile.AWS.Region),
-				CredentialsChainVerboseErrors: aws.Bool(true),
-			},
-		))
 
 		// auth0Validator, err := auth.NewAuth0Validator(
 		// 	configFile.Auth0.Domain,
