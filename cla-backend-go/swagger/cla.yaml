@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: CLA API
   version: '1.0'
-basePath: /v1
+basePath: /v3
 schemes:
   - http
 consumes:
