@@ -2,6 +2,7 @@ package docraptor
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,21 +38,19 @@ func NewDocraptorClient(key string, testMode bool) (DocraptorClient, error) {
 }
 
 func (dc DocraptorClient) CreatePDF(html string) (io.ReadCloser, error) {
-	document := `{
-  		"type": "pdf",
-  		"document_content": "%s",
-  		"test": %v
-	}`
-	document = fmt.Sprintf(document, html, dc.testMode)
+	document := map[string]interface{}{
+		"document_type":    "pdf",
+		"document_content": html,
+		"name":             "docraptor-go.pdf",
+		"test":             dc.testMode,
+	}
 
-	req, err := http.NewRequest(http.MethodPost, dc.url, bytes.NewBufferString(document))
+	documentBytes, err := json.Marshal(document)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.Post(dc.url, "application/json", bytes.NewBuffer(documentBytes))
 	if err != nil {
 		return nil, err
 	}
