@@ -134,8 +134,8 @@ export class ProjectClaPage {
 
   goToSelectTemplatePage (projectId) {
     this.navCtrl.push("ProjectClaTemplatePage", {
-      projectId: this.sfdcProjectId,
-      projectTemplateId: projectId
+      sfdcProjectId: this.sfdcProjectId,
+      projectId: projectId
     });
   }
 
