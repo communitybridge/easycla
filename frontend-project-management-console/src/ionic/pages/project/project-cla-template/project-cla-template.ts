@@ -7,6 +7,7 @@ import {
 import {ClaService} from "../../../services/cla.service";
 import {Restricted} from "../../../decorators/restricted";
 import { DomSanitizer } from '@angular/platform-browser';
+
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
 })
@@ -20,15 +21,15 @@ import { DomSanitizer } from '@angular/platform-browser';
 export class ProjectClaTemplatePage {
   loading: any;
   sfdcProjectId: string;
-  projectTemplateId: string;
+  projectId: string;
   templates: any[] = [];
-  selectedTemplate = {};
+  selectedTemplate: any;
   templateValues = {};
   pdfPath = {
-    CorporatePDFURL: '/assets/sample-cla-pdf.pdf',
-    IndividualPDFURL: '/assets/sample-cla-pdf.pdf'
+    CorporatePDFURL: '',
+    IndividualPDFURL: ''
   };
-  currentPDF = 'cclaPdfUrl';
+  currentPDF = 'CorporatePDFURL';
   step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
@@ -39,8 +40,8 @@ export class ProjectClaTemplatePage {
     public claService: ClaService,
     public sanitizer: DomSanitizer
   ) {
-    this.sfdcProjectId = navParams.get("projectId");
-    this.projectTemplateId = navParams.get("projectTemplateId");
+    this.sfdcProjectId = navParams.get("sfdcProjectId");
+    this.projectId = navParams.get("projectId");
     this.getDefaults();
   }
 
@@ -69,9 +70,23 @@ export class ProjectClaTemplatePage {
   }
 
   reviewSelectedTemplate() {
-    this.claService.postClaGroupTemplate(this.projectTemplateId, this.templateValues)
+
+    var metaFields = this.selectedTemplate.MetaFields; 
+    metaFields.forEach(metaField => {
+      if ( this.templateValues.hasOwnProperty(metaField.TemplateVariable)) {
+        metaField.Value = this.templateValues[metaField.TemplateVariable]
+      }
+
+    });
+    let data = {
+      TemplateID: this.selectedTemplate.ID,
+      MetaFields: metaFields
+    }
+
+    this.claService.postClaGroupTemplate(this.projectId,  data)
       .subscribe(response => {
         this.pdfPath = response;
+        console.log(this.pdfPath)
         this.goToStep('review');
       })
   }
