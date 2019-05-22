@@ -619,6 +619,8 @@ definitions:
     title: Field
     type: object
     properties:
+      ID:
+        type: string
       Name:
         type: string
       AnchorString:
