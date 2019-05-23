@@ -21,7 +21,7 @@ type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
 	GetCLAGroup(claGroupID string) (CLAGroup, error)
-	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) error
+	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error
 }
 
 type repository struct {
@@ -50,6 +50,7 @@ type DynamoProjectDocument struct {
 	DocumentPreamble        string        `json:"document_preamble"`
 	DocumentLegalEntityName string        `json:"document_legal_entity_name"`
 	DocumentAuthorName      string        `json:"document_author_name"`
+	DocumentS3URL           string        `json:"document_s3_url"`
 	DocumentTabs            []DocumentTab `json:"document_tabs"`
 }
 
@@ -114,7 +115,7 @@ func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
 	return CLAGroup{}, nil
 }
 
-func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template) error {
+func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// Map the fields to the dynamo model as the attribute names are different
@@ -154,6 +155,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		DocumentPreamble:        template.Name,
 		DocumentLegalEntityName: template.Name,
 		DocumentAuthorName:      template.Name,
+		DocumentS3URL:           pdfUrls.CorporatePDFURL,
 		DocumentTabs:            cclaDocumentTabs,
 	}
 
@@ -226,6 +228,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		DocumentPreamble:        template.Name,
 		DocumentLegalEntityName: template.Name,
 		DocumentAuthorName:      template.Name,
+		DocumentS3URL:           pdfUrls.IndividualPDFURL,
 		DocumentTabs:            iclaDocumentTabs,
 	}
 
@@ -260,7 +263,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 var templateMap = map[string]models.Template{
 	"fb4cc144-a76c-4c17-8a52-c648f158fded": models.Template{
 		ID:          "fb4cc144-a76c-4c17-8a52-c648f158fded",
-		Name:        "Apache_Style",
+		Name:        "Apache Style",
 		Description: "For use of projects under the Apache style of CLA.",
 		MetaFields: []*models.MetaField{
 			&models.MetaField{
@@ -287,7 +290,7 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   false,
 				IsEditable:   false,
-				Width:        360,
+				Width:        340,
 				Height:       20,
 				OffsetX:      72,
 				OffsetY:      -8,
@@ -299,10 +302,10 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   false,
 				IsEditable:   false,
-				Width:        345,
+				Width:        340,
 				Height:       20,
 				OffsetX:      84,
-				OffsetY:      -7,
+				OffsetY:      -8,
 			},
 			&models.Field{
 				ID:           "mailing_address1",
@@ -311,9 +314,9 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   false,
 				IsEditable:   false,
-				Width:        325,
+				Width:        300,
 				Height:       20,
-				OffsetX:      117,
+				OffsetX:      112,
 				OffsetY:      -7,
 			},
 			&models.Field{
@@ -323,10 +326,22 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   false,
 				IsEditable:   false,
-				Width:        420,
+				Width:        340,
 				Height:       20,
 				OffsetX:      0,
 				OffsetY:      29,
+			},
+			&models.Field{
+				ID:           "mailing_address3",
+				Name:         "Mailing Address",
+				AnchorString: "Mailing Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   true,
+				IsEditable:   false,
+				Width:        340,
+				Height:       20,
+				OffsetX:      0,
+				OffsetY:      65,
 			},
 			&models.Field{
 				ID:           "country",
@@ -335,7 +350,7 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   true,
 				IsEditable:   false,
-				Width:        350,
+				Width:        300,
 				Height:       20,
 				OffsetX:      60,
 				OffsetY:      -7,
@@ -358,10 +373,10 @@ var templateMap = map[string]models.Template{
 				FieldType:    "text_unlocked",
 				IsOptional:   false,
 				IsEditable:   false,
-				Width:        380,
+				Width:        320,
 				Height:       20,
 				OffsetX:      50,
-				OffsetY:      -7,
+				OffsetY:      -8,
 			},
 			&models.Field{
 				ID:           "sign",
@@ -435,7 +450,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      64,
+				OffsetY:      65,
 			},
 			&models.Field{
 				ID:           "point_of_contact",
@@ -447,7 +462,7 @@ var templateMap = map[string]models.Template{
 				Width:        260,
 				Height:       20,
 				OffsetX:      120,
-				OffsetY:      -7,
+				OffsetY:      -8,
 			},
 			&models.Field{
 				ID:           "email",
@@ -458,7 +473,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      50,
+				OffsetX:      110,
 				OffsetY:      -7,
 			},
 			&models.Field{
