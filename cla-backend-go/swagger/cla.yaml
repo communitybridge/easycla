@@ -587,19 +587,19 @@ definitions:
           type: string
         description:
           type: string
-        IclaHtmlBody:
+        iclaHtmlBody:
           type: string
-        CclaHtmlBody: 
+        cclaHtmlBody: 
           type: string
-        MetaFields:
+        metaFields:
           type: array
           items: 
             $ref: '#/definitions/meta-field'
-        IclaFields:
+        iclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
-        CclaFields:
+        cclaFields:
           type: array
           items: 
             $ref: '#/definitions/field'
@@ -607,45 +607,45 @@ definitions:
     title: MetaField
     type: object
     properties:
-      Name:
+      name:
         type: string
-      Value:
+      value:
         type: string  
-      Description:
+      description:
         type: string
-      TemplateVariable:
+      templateVariable:
         type: string
   field:
     title: Field
     type: object
     properties:
-      ID:
+      id:
         type: string
-      Name:
+      name:
         type: string
-      AnchorString:
+      anchorString:
         type: string
-      FieldType:
+      fieldType:
         type: string
-      IsOptional:
+      isOptional:
         type: boolean
-      IsEditable:
+      isEditable:
         type: boolean
-      Width:
+      width:
         type: integer
-      Height:
+      height:
         type: integer
-      OffsetX:
+      offsetX:
         type: integer
-      OffsetY:
+      offsetY:
         type: integer
   create-cla-group-template:
     title: CreateCLAGroupTemplate
     type: object
     properties:
-      TemplateID:
+      templateID:
         type: string
-      MetaFields:
+      metaFields:
         type: array
         items:
           $ref: '#/definitions/meta-field'
