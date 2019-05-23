@@ -418,6 +418,7 @@ class DocumentModel(MapAttribute):
     document_creation_date = UnicodeAttribute()
     document_preamble = UnicodeAttribute(null=True)
     document_legal_entity_name = UnicodeAttribute(null=True)
+    document_s3_url = UnicodeAttribute(null=True)
     document_tabs = ListAttribute(of=DocumentTabModel, default=[])
 
 class Document(model_interfaces.Document):
@@ -434,7 +435,8 @@ class Document(model_interfaces.Document):
                  document_author_name=None,
                  document_creation_date=None,
                  document_preamble=None,
-                 document_legal_entity_name=None):
+                 document_legal_entity_name=None,
+                 document_s3_url=None):
         super().__init__()
         self.model = DocumentModel()
         self.model.document_name = document_name
@@ -445,6 +447,7 @@ class Document(model_interfaces.Document):
             self.model.document_content = self.set_document_content(document_content)
         self.model.document_preamble = document_preamble
         self.model.document_legal_entity_name = document_legal_entity_name
+        self.model.document_s3_url = document_s3_url
         # Use defaults if None is provided for the following attributes.
         if document_major_version is not None:
             self.model.document_major_version = document_major_version
@@ -466,6 +469,7 @@ class Document(model_interfaces.Document):
                 'document_creation_date': self.model.document_creation_date,
                 'document_preamble': self.model.document_preamble,
                 'document_legal_entity_name': self.model.document_legal_entity_name,
+                'document_s3_url': self.model.document_s3_url,
                 'document_tabs': self.model.document_tabs}
 
     def get_document_name(self):
@@ -480,15 +484,13 @@ class Document(model_interfaces.Document):
     def get_document_author_name(self):
         return self.model.document_author_name
 
-    def get_document_content(self, project_id, signature_type):
-        if signature_type == 'cla':
-            signature_type = 'icla'
+    def get_document_content(self):
         content_type = self.get_document_content_type()
         if content_type is None:
             cla.log.warning('Empty content type for document - not sure how to retrieve content')
         else:
             if content_type.startswith('storage+'):
-                filename = 'contract-group/{}/template/{}.pdf'.format(project_id, signature_type)
+                filename = self.get_document_file_id()
                 return cla.utils.get_storage_service().retrieve(filename)
         return self.model.document_content
 
@@ -506,6 +508,9 @@ class Document(model_interfaces.Document):
 
     def get_document_legal_entity_name(self):
         return self.model.document_legal_entity_name
+
+    def get_document_s3_url(self):
+        return self.model.document_s3_url
 
     def get_document_tabs(self):
         tabs = []
@@ -556,6 +561,9 @@ class Document(model_interfaces.Document):
 
     def set_document_legal_entity_name(self, entity_name):
         self.model.document_legal_entity_name = entity_name
+
+    def set_document_s3_url(self, document_s3_url):
+        self.model.document_s3_url = document_s3_url
 
     def set_document_tabs(self, tabs):
         self.model.document_tabs = tabs
@@ -698,16 +706,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
 
-        if major_version is None:
-            version = self._get_latest_version(document_models)
-            document = version[2]
-            return document
-
-        # TODO Need to optimize this on the DB side.
-        for document in document_models:
-            if document.get_document_major_version() == major_version and \
-               document.get_document_minor_version() == minor_version:
-                return document
+        version = self._get_latest_version(document_models)
+        document = version[2]
+        return document
 
         raise cla.models.DoesNotExist('Document revision not found')
 
@@ -715,7 +716,6 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         document_models = self.get_project_individual_documents()
         version = self._get_latest_version(document_models)
         document = version[2]
-
         return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
@@ -723,13 +723,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         num_documents = len(document_models)
         if num_documents < 1:
             raise cla.models.DoesNotExist('No corporate document exists for this project')
-        if major_version is None:
-            major_version, minor_version = cla.utils.get_last_version(document_models)
-        # TODO Need to optimize this on the DB side.
-        for document in document_models:
-            if document.get_document_major_version() == major_version and \
-               document.get_document_minor_version() == minor_version:
-                return document
+        version = self._get_latest_version(document_models)
+        document = version[2]
+        return document
         raise cla.models.DoesNotExist('Document revision not found')
 
     def get_latest_corporate_document(self):
@@ -756,6 +752,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         """
         last_major = 0 # 0 will be returned if no document was found.
         last_minor = -1 # -1 will be returned if no document was found.
+        latest_date = None
         current_document = None
         for document in documents:
             current_major = document.get_document_major_version()
@@ -768,6 +765,11 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             if current_major == last_major and current_minor > last_minor:
                 last_minor = current_minor
                 current_document = document
+            # Retrieve document that has the latest date
+            if not latest_date or document.get_document_creation_date() > latest_date:
+                latest_date = document.get_document_creation_date()
+                current_document = document
+        cla.log.info(current_document.to_dict())
         return (last_major, last_minor, current_document)
 
     def get_project_ccla_requires_icla_signature(self):

@@ -695,13 +695,14 @@ class DocuSign(signing_service_interface.SigningService):
                                     )
         
         content_type = document.get_document_content_type()
-        signature_type = signature.get_signature_type()
         project_id = project.get_project_id()
-        if content_type.startswith('url+'):
-            pdf_url = document.get_document_content(project_id, signature_type)
+        if document.get_document_s3_url() is not None:
+            pdf = self.get_document_resource(document.get_document_s3_url())
+        elif content_type.startswith('url+'):
+            pdf_url = document.get_document_content()
             pdf = self.get_document_resource(pdf_url)
         else:
-            content = document.get_document_content(project_id, signature_type)
+            content = document.get_document_content()
             pdf = io.BytesIO(content)
         doc_name = document.get_document_name()
         document = pydocusign.Document(name=doc_name,
