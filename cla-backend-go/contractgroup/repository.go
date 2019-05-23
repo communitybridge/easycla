@@ -33,29 +33,6 @@ type repository struct {
 	session *session.Session
 }
 
-type DynamoProjectDocument struct {
-	DocumentName         string        `json:"document_name"`
-	DocumentFileID       string        `json:"document_file_id"`
-	DocumentContentType  string        `json:"document_content_type"`
-	DocumentMajorVersion int64         `json:"document_major_version"`
-	DocumentMinorVersion int64         `json:"document_minor_version"`
-	DocumentTabs         []DocumentTab `json:"document_tabs`
-}
-
-type DocumentTab struct {
-	DocumentTabType                     string `json:"document_tab_type"`
-	DocumentTabID                       string `json:"document_tab_id"`
-	DocumentTabName                     string `json:"document_tab_name"`
-	DocumentTabPage                     int64  `json:"document_tab_page"`
-	DocumentTabWidth                    int64  `json:"document_tab_width"`
-	DocumentTabHeight                   int64  `json:"document_tab_height"`
-	DocumentTabIsLocked                 bool   `json:"document_tab_is_locked"`
-	DocumentTabAnchorString             string `json:"document_tab_anchor_string"`
-	DocumentTabAnchorIgnoreIfNotPresent bool   `json:"document_tab_anchor_ignore_if_not_present"`
-	DocumentTabAnchorXOffset            int64  `json:"document_tab_anchor_x_offset"`
-	DocumentTabAnchorYOffset            int64  `json:"document_tab_anchor_y_offset"`
-}
-
 func NewRepository(db *sqlx.DB) repository {
 	return repository{
 		db: db,
