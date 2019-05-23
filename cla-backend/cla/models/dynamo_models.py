@@ -310,22 +310,20 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
     def to_dict(self):
-        if self.model.document_tab_anchor_string is None: 
-            # Fixed Tab
-            return {'document_tab_type': self.model.document_tab_type,
-                    'document_tab_id': self.model.document_tab_id,
-                    'document_tab_name': self.model.document_tab_name,
-                    'document_tab_page': self.model.document_tab_page,
-                    'document_tab_position_x': self.model.document_tab_position_x,
-                    'document_tab_position_y': self.model.document_tab_position_y,
-                    'document_tab_width': self.model.document_tab_width,
-                    'document_tab_height': self.model.document_tab_height,
-                    'document_tab_is_locked': self.model.document_tab_is_locked,
-                    'document_tab_is_required': self.model.document_tab_is_required,
-                    'document_tab_anchor_string': self.model.document_tab_anchor_string,
-                    'document_tab_anchor_ignore_if_not_present': self.model.document_tab_anchor_ignore_if_not_present,
-                    'document_tab_anchor_x_offset': self.model.document_tab_anchor_x_offset,
-                    'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset }
+        return {'document_tab_type': self.model.document_tab_type,
+                'document_tab_id': self.model.document_tab_id,
+                'document_tab_name': self.model.document_tab_name,
+                'document_tab_page': self.model.document_tab_page,
+                'document_tab_position_x': self.model.document_tab_position_x,
+                'document_tab_position_y': self.model.document_tab_position_y,
+                'document_tab_width': self.model.document_tab_width,
+                'document_tab_height': self.model.document_tab_height,
+                'document_tab_is_locked': self.model.document_tab_is_locked,
+                'document_tab_is_required': self.model.document_tab_is_required,
+                'document_tab_anchor_string': self.model.document_tab_anchor_string,
+                'document_tab_anchor_ignore_if_not_present': self.model.document_tab_anchor_ignore_if_not_present,
+                'document_tab_anchor_x_offset': self.model.document_tab_anchor_x_offset,
+                'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset }
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -482,13 +480,15 @@ class Document(model_interfaces.Document):
     def get_document_author_name(self):
         return self.model.document_author_name
 
-    def get_document_content(self):
+    def get_document_content(self, project_id, signature_type):
+        if signature_type == 'cla':
+            signature_type = 'icla'
         content_type = self.get_document_content_type()
         if content_type is None:
             cla.log.warning('Empty content type for document - not sure how to retrieve content')
         else:
             if content_type.startswith('storage+'):
-                filename = self.get_document_file_id()
+                filename = 'contract-group/{}/template/{}.pdf'.format(project_id, signature_type)
                 return cla.utils.get_storage_service().retrieve(filename)
         return self.model.document_content
 
