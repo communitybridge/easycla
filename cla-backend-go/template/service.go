@@ -101,19 +101,19 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		return models.TemplatePdfs{}, err
 	}
 
+	pdfUrls := models.TemplatePdfs{
+		IndividualPDFURL: iclaFileURL,
+		CorporatePDFURL:  cclaFileURL,
+	}
+
 	// Save Template to Dynamodb
-	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template)
+	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls)
 	if err != nil {
 		return models.TemplatePdfs{}, err
 	}
 
 	template.IclaHTMLBody = iclaTemplateHTML
 	template.CclaHTMLBody = cclaTemplateHTML
-
-	pdfUrls := models.TemplatePdfs{
-		IndividualPDFURL: iclaFileURL,
-		CorporatePDFURL:  cclaFileURL,
-	}
 
 	return pdfUrls, nil
 }
@@ -164,7 +164,7 @@ func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadClose
 		ACL:    aws.String("public-read"),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to upload file to S3 Bucket, %v", err)
+		return "", fmt.Errorf("failed to upload file to S3 Bucket: %s / %s, %v", bucket, filepath, err)
 	}
 
 	return result.Location, nil
