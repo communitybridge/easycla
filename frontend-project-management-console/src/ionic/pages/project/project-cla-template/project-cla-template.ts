@@ -73,8 +73,8 @@ export class ProjectClaTemplatePage {
 
     var metaFields = this.selectedTemplate.metaFields; 
     metaFields.forEach(metaField => {
-      if ( this.templateValues.hasOwnProperty(metaField.TemplateVariable)) {
-        metaField.Value = this.templateValues[metaField.TemplateVariable]
+      if ( this.templateValues.hasOwnProperty(metaField.templateVariable)) {
+        metaField.value = this.templateValues[metaField.templateVariable]
       }
 
     });
