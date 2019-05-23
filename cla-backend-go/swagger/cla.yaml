@@ -423,9 +423,9 @@ definitions:
     type: object
     x-nullable: false
     properties:
-      IndividualPDFURL:
+      individualPDFURL:
         type: string
-      CorporatePDFURL:
+      corporatePDFURL:
         type: string
   github:
     type: object
