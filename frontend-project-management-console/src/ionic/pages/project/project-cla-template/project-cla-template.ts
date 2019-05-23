@@ -26,10 +26,10 @@ export class ProjectClaTemplatePage {
   selectedTemplate: any;
   templateValues = {};
   pdfPath = {
-    CorporatePDFURL: '',
-    IndividualPDFURL: ''
+    corporatePDFURL: '',
+    individualPDFURL: ''
   };
-  currentPDF = 'CorporatePDFURL';
+  currentPDF = 'corporatePDFURL';
   step = 'selection';
 
   @ViewChild(Nav) nav: Nav;
@@ -71,7 +71,7 @@ export class ProjectClaTemplatePage {
 
   reviewSelectedTemplate() {
 
-    var metaFields = this.selectedTemplate.MetaFields; 
+    var metaFields = this.selectedTemplate.metaFields; 
     metaFields.forEach(metaField => {
       if ( this.templateValues.hasOwnProperty(metaField.TemplateVariable)) {
         metaField.Value = this.templateValues[metaField.TemplateVariable]
@@ -79,8 +79,8 @@ export class ProjectClaTemplatePage {
 
     });
     let data = {
-      TemplateID: this.selectedTemplate.ID,
-      MetaFields: metaFields
+      templateID: this.selectedTemplate.ID,
+      metaFields: metaFields
     }
 
     this.claService.postClaGroupTemplate(this.projectId,  data)

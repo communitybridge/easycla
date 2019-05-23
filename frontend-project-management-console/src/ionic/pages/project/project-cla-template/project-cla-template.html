@@ -38,14 +38,14 @@
                 </ion-col>
               </ion-row>
 
-              <ion-row *ngFor="let field of selectedTemplate.MetaFields">
+              <ion-row *ngFor="let field of selectedTemplate.metaFields">
                 <ion-col col-8>
                   <ion-item>
-                    <ion-label stacked>{{ field.Name }}</ion-label>
+                    <ion-label stacked>{{ field.name }}</ion-label>
                     <ion-input class="template-field" type="text"
-                               [(ngModel)]="templateValues[field.TemplateVariable]">
+                               [(ngModel)]="templateValues[field.templateVariable]">
                     </ion-input>
-                    <ion-label class="field-description" stacked>{{ field.Description }}</ion-label>
+                    <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
                   </ion-item>
                 </ion-col>
               </ion-row>
@@ -71,12 +71,12 @@
 
               <ion-row>
                 <ion-col>
-                  <button ion-button (click)="showPDF('CorporatePDFURL')" color="secondary"
-                          [disabled]="currentPDF === 'CorporatePDFURL'">
+                  <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
+                          [disabled]="currentPDF === 'corporatePDFURL'">
                     View CCLA
                   </button>
-                  <button ion-button (click)="showPDF('IndividualPDFURL')" color="secondary"
-                          [disabled]="currentPDF === 'IndividualPDFURL'">
+                  <button ion-button (click)="showPDF('individualPDFURL')" color="secondary"
+                          [disabled]="currentPDF === 'individualPDFURL'">
                     View ICLA
                   </button>
                 </ion-col>
