@@ -1003,7 +1003,8 @@ def post_project_document_template(auth_user: check_auth,
                                        'TungstenFabricTemplate',
                                        'OpenColorIOTemplate',
                                        'OpenVDBTemplate',
-                                       'ONAPTemplate'
+                                       'ONAPTemplate',
+                                       'TektonTemplate'
                                     ]),
                                    new_major_version=None):
     """
