@@ -768,7 +768,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             # Retrieve document that has the latest date
             if not latest_date or document.get_document_creation_date() > latest_date:
                 latest_date = document.get_document_creation_date()
-                current_document = documents
+                current_document = document
         return (last_major, last_minor, current_document)
 
     def get_project_ccla_requires_icla_signature(self):
