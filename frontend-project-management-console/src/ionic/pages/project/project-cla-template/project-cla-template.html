@@ -84,8 +84,9 @@
 
               <ion-row>
                 <ion-col>
-                  <embed [src]="getPdfPath()" class="pdf-viewer"
-                         type="application/pdf">
+                <object [data]="getPdfPath()" type="application/pdf" class="pdf-viewer">
+                  <embed [src]="getPdfPath()"  type="application/pdf" />
+                </object>
                 </ion-col>
               </ion-row>
 
