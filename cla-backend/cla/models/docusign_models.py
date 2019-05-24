@@ -132,7 +132,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Check for active signature object with this project. If the user has
         # signed the most recent major version, they do not need to sign again.
-        latest_signature = user.get_latest_signature(user, str(project_id))
+        latest_signature = user.get_latest_signature(str(project_id))
         last_document = project.get_latest_individual_document()
         if latest_signature is not None and \
            last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
@@ -220,7 +220,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Check for active signature object with this project. If the user has
         # signed the most recent major version, they do not need to sign again.
-        latest_signature = user.get_latest_signature(user, str(project_id))
+        latest_signature = user.get_latest_signature(str(project_id))
         last_document = project.get_latest_individual_document()
         if latest_signature is not None and \
            last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():

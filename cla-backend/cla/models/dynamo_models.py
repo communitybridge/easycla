@@ -1584,7 +1584,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         for signature_model in signature_generator:
             if signature_model.signature_reference_type != reference_type:
                 continue
-            if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
+            if user_ccla_company_id and signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 continue
             if project_id is not None and \
                signature_model.signature_project_id != project_id:
