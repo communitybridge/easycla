@@ -667,8 +667,15 @@ class DocuSign(signing_service_interface.SigningService):
         if send_as_email: 
             # Not assigning a clientUserId sends an email.
             project_name = project.get_project_name()
+            company_name = company.get_company_name()
             email_subject = 'CLA Sign Request for {}'.format(project_name)
-            email_body = '{} has requested that you sign a CLA for {}, which will allow your employees to contribute to the project.\n\nIf you have additional questions, please contact {} at {}.'.format(cla_manager_name, project_name, cla_manager_name, cla_manager_email)
+            email_body = '''{cla_manager_name} has designated you as being an authorized signatory for {company_name}. In order for employees of your company to contribute to the open source project {project_name}, they must do so under a Contributor License Agreement signed by someone with authority to sign on behalf of your company.
+
+After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to maintain the list of specific employees authorized to contribute to the project under this signed CLA.
+
+If you have questions, or if you are not an authorized signatory of this company, please contact the requester at {cla_manager_email}.
+
+            '''.format(cla_manager_name=cla_manager_name, company_name=company_name,project_name=project_name, cla_manager_email=cla_manager_email)
 
             signer = pydocusign.Signer(email=email,
                                     name=name,
