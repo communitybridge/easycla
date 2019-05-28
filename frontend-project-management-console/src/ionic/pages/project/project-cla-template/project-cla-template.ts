@@ -99,7 +99,4 @@ export class ProjectClaTemplatePage {
     this.navCtrl.pop();
   }
 
-  viewDocusign() {}
-
-  submit() {}
 }
