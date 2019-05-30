@@ -39,9 +39,9 @@
             <button *ngIf="signature.signature_return_url" ion-button (click)="gotoRepo()">
               Return to Repo
             </button>
-            <button *ngIf="!signature.signature_return_url" ion-button (click)="closeClaApp()">
-              Close CLA App
-            </button>
+            <h2 *ngIf="!signature.signature_return_url">
+              You may close this browser tab now and return to your repository page.
+            </h2>
           </div>
         </div>
       </ion-col>
