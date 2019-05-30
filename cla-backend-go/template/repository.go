@@ -100,8 +100,10 @@ func (r repository) GetTemplate(templateID string) (models.Template, error) {
 // because it accesses DynamoDB, but the contractgroup repository is designed
 // to connect to postgres
 func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
+	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
+
 	_, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("cla-dev-projects"),
+		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"project_id": {
 				S: aws.String(claGroupID),
@@ -115,8 +117,8 @@ func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
 	return CLAGroup{}, nil
 }
 
-func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error {
-	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error {
+	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
 
 	// Map the fields to the dynamo model as the attribute names are different
 	// Map Template Fields into DocumentTab
@@ -188,7 +190,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
 	}
 
-	_, err = repo.dynamoDBClient.UpdateItem(input)
+	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
 		return err
 	}
@@ -252,7 +254,7 @@ func (repo repository) UpdateDynamoContractGroupTemplates(ctx context.Context, C
 		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
 	}
 
-	_, err = repo.dynamoDBClient.UpdateItem(input)
+	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
 		return err
 	}
