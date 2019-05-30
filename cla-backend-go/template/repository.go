@@ -294,7 +294,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      72,
+				OffsetX:      62,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -306,7 +306,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      84,
+				OffsetX:      74,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -318,7 +318,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        300,
 				Height:       20,
-				OffsetX:      112,
+				OffsetX:      102,
 				OffsetY:      -7,
 			},
 			&models.Field{
@@ -331,7 +331,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      29,
+				OffsetY:      24,
 			},
 			&models.Field{
 				ID:           "mailing_address3",
@@ -343,7 +343,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      65,
+				OffsetY:      44,
 			},
 			&models.Field{
 				ID:           "country",
@@ -427,7 +427,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        230,
 				Height:       20,
-				OffsetX:      140,
+				OffsetX:      100,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -440,19 +440,19 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      29,
+				OffsetY:      24,
 			},
 			&models.Field{
 				ID:           "corporation_address3",
 				Name:         "Corporation Address3",
 				AnchorString: "Corporation Address:",
 				FieldType:    "text_unlocked",
-				IsOptional:   false,
+				IsOptional:   true,
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      65,
+				OffsetY:      44,
 			},
 			&models.Field{
 				ID:           "point_of_contact",
@@ -463,7 +463,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      120,
+				OffsetX:      100,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -475,7 +475,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      110,
+				OffsetX:      90,
 				OffsetY:      -7,
 			},
 			&models.Field{
