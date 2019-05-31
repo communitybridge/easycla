@@ -428,7 +428,7 @@ var templateMap = map[string]models.Template{
 				Width:        230,
 				Height:       20,
 				OffsetX:      100,
-				OffsetY:      -8,
+				OffsetY:      -6,
 			},
 			&models.Field{
 				ID:           "corporation_address2",
@@ -452,7 +452,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      47,
+				OffsetY:      49,
 			},
 			&models.Field{
 				ID:           "point_of_contact",
@@ -463,7 +463,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      100,
+				OffsetX:      95,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -475,7 +475,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      100,
+				OffsetX:      95,
 				OffsetY:      -7,
 			},
 			&models.Field{
@@ -523,7 +523,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        385,
 				Height:       20,
-				OffsetX:      140,
+				OffsetX:      130,
 				OffsetY:      -7,
 			},
 			&models.Field{
@@ -535,7 +535,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        385,
 				Height:       20,
-				OffsetX:      140,
+				OffsetX:      130,
 				OffsetY:      -7,
 			},
 		},
