@@ -427,7 +427,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        230,
 				Height:       20,
-				OffsetX:      60,
+				OffsetX:      100,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -463,7 +463,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      60,
+				OffsetX:      100,
 				OffsetY:      -8,
 			},
 			&models.Field{
@@ -475,7 +475,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        260,
 				Height:       20,
-				OffsetX:      50,
+				OffsetX:      100,
 				OffsetY:      -7,
 			},
 			&models.Field{
