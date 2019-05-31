@@ -331,7 +331,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      23,
+				OffsetY:      24,
 			},
 			&models.Field{
 				ID:           "mailing_address3",
@@ -389,7 +389,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        0,
 				Height:       0,
-				OffsetX:      50,
+				OffsetX:      70,
 				OffsetY:      -5,
 			},
 			&models.Field{
