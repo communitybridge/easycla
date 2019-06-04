@@ -1582,13 +1582,20 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
         signatures = []
         for signature_model in signature_generator:
+            # Skip signatures that are not the same reference type: user/company
             if signature_model.signature_reference_type != reference_type:
                 continue
-            if user_ccla_company_id and signature_model.signature_user_ccla_company_id != user_ccla_company_id:
+            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present. 
+            # if user_ccla_company_id and signature_user_ccla_company_id are both none
+            # it loads the ICLA signatures for a user. 
+            if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 continue
+            # Skip signatures that are not of the same project
             if project_id is not None and \
                signature_model.signature_project_id != project_id:
                 continue
+            # SKip signatures that do not have the same signed flags 
+            # e.g. retrieving only signed / approved signatures 
             if signature_signed is not None and \
                signature_model.signature_signed != signature_signed:
                 continue
