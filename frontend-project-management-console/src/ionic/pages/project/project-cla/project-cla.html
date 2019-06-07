@@ -107,6 +107,9 @@
             </ion-col>
             <ion-col col-6>
               <ion-buttons end>
+                <button ion-button (click)="goToSelectTemplatePage(project.project_id)" color="light">
+                  Select Template
+                </button>
                 <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
                   View Signatures
                 </button>
@@ -126,10 +129,6 @@
                       <div class="contract-title-buttons"
                            *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                         <button ion-button icon-only clear round
-                                (click)="openClaContractUploadModal(project.project_id, documentType)">
-                          <ion-icon name="cloud-upload" class="icon-sm"></ion-icon>
-                        </button>
-                        <button ion-button icon-only clear round
                                 (click)="openClaContractVersionModal(project.project_id, documentType, project.project_corporate_documents)">
                           <ion-icon name="time" class="icon-sm"></ion-icon>
                         </button>
@@ -138,13 +137,8 @@
                     <ng-container
                       *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Select the {{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA contract required
-                        for
-                        signature.
+                        No Template selected.
                       </p>
-                      <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
-                              color="secondary">Select a template
-                      </button>
                     </ng-container>
                     <ion-grid class="contract-details"
                               *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
@@ -190,10 +184,6 @@
                       <div class="contract-title-buttons"
                            *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
                         <button ion-button icon-only clear round
-                                (click)="openClaContractUploadModal(project.project_id, documentType)">
-                          <ion-icon name="cloud-upload" class="icon-sm"></ion-icon>
-                        </button>
-                        <button ion-button icon-only clear round
                                 (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
                           <ion-icon name="time" class="icon-sm"></ion-icon>
                         </button>
@@ -202,13 +192,8 @@
                     <ng-container
                       *ngIf="documentType === 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
                       <p>
-                        Select the {{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA contract required
-                        for
-                        signature.
+                        No template selected.
                       </p>
-                      <button ion-button (click)="openClaContractUploadModal(project.project_id, documentType)"
-                              color="secondary">Select a template
-                      </button>
                     </ng-container>
                     <ion-grid class="contract-details"
                               *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">

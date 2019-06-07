@@ -255,6 +255,10 @@ class DocumentTabModel(MapAttribute):
     document_tab_height = NumberAttribute(default=20)
     document_tab_is_locked = BooleanAttribute(default=False)
     document_tab_is_required = BooleanAttribute(default=True)
+    document_tab_anchor_string = UnicodeAttribute(default=None)
+    document_tab_anchor_ignore_if_not_present = BooleanAttribute(default=True)
+    document_tab_anchor_x_offset = NumberAttribute()
+    document_tab_anchor_y_offset = NumberAttribute()
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -270,13 +274,21 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_width=None,
                  document_tab_height=None,
                  document_tab_is_locked=False,
-                 document_tab_is_required=True):
+                 document_tab_is_required=True,
+                 document_tab_anchor_string=None,
+                 document_tab_anchor_ignore_if_not_present=True, 
+                 document_tab_anchor_x_offset=None,
+                 document_tab_anchor_y_offset=None
+                 ):
         super().__init__()
         self.model = DocumentTabModel()
         self.model.document_tab_id = document_tab_id
         self.model.document_tab_name = document_tab_name
-        self.model.document_tab_position_x = document_tab_position_x
-        self.model.document_tab_position_y = document_tab_position_y
+        # x,y coordinates are None when anchor x,y offsets are supplied.
+        if document_tab_position_x is not None: 
+            self.model.document_tab_position_x = document_tab_position_x
+        if document_tab_position_y is not None:
+            self.model.document_tab_position_y = document_tab_position_y
         # Use defaults if None is provided for the following attributes.
         if document_tab_type is not None:
             self.model.document_tab_type = document_tab_type
@@ -288,6 +300,14 @@ class DocumentTab(model_interfaces.DocumentTab):
             self.model.document_tab_height = document_tab_height
         self.model.document_tab_is_locked = document_tab_is_locked
         self.model.document_tab_is_required = document_tab_is_required
+        # Anchor string properties
+        if document_tab_anchor_string is not None:
+            self.model.document_tab_anchor_string = document_tab_anchor_string
+        self.model.document_tab_anchor_ignore_if_not_present = document_tab_anchor_ignore_if_not_present
+        if document_tab_anchor_x_offset is not None:
+            self.model.document_tab_anchor_x_offset = document_tab_anchor_x_offset
+        if document_tab_anchor_y_offset is not None:
+            self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
     def to_dict(self):
         return {'document_tab_type': self.model.document_tab_type,
@@ -299,7 +319,11 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_width': self.model.document_tab_width,
                 'document_tab_height': self.model.document_tab_height,
                 'document_tab_is_locked': self.model.document_tab_is_locked,
-                'document_tab_is_required': self.model.document_tab_is_required}
+                'document_tab_is_required': self.model.document_tab_is_required,
+                'document_tab_anchor_string': self.model.document_tab_anchor_string,
+                'document_tab_anchor_ignore_if_not_present': self.model.document_tab_anchor_ignore_if_not_present,
+                'document_tab_anchor_x_offset': self.model.document_tab_anchor_x_offset,
+                'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset }
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -328,6 +352,18 @@ class DocumentTab(model_interfaces.DocumentTab):
     def get_document_tab_is_locked(self):
         return self.model.document_tab_is_locked
 
+    def get_document_tab_anchor_string(self):
+        return self.model.document_tab_anchor_string
+
+    def get_document_tab_anchor_ignore_if_not_present(self):
+        return self.model.document_tab_anchor_ignore_if_not_present
+
+    def get_document_tab_anchor_x_offset(self):
+        return self.model.document_tab_anchor_x_offset
+
+    def get_document_tab_anchor_y_offset(self):
+        return self.model.document_tab_anchor_y_offset
+
     def set_document_tab_type(self, tab_type):
         self.model.document_tab_type = tab_type
 
@@ -355,6 +391,18 @@ class DocumentTab(model_interfaces.DocumentTab):
     def set_document_tab_is_locked(self, is_locked):
         self.model.document_tab_is_locked = is_locked
 
+    def set_document_tab_anchor_string(self, document_tab_anchor_string):
+        self.model.document_tab_anchor_string = document_tab_anchor_string
+
+    def set_document_tab_anchor_ignore_if_not_present(self, document_tab_anchor_ignore_if_not_present):
+        self.model.document_tab_anchor_ignore_if_not_present = document_tab_anchor_ignore_if_not_present
+
+    def set_document_tab_anchor_x_offset(self, document_tab_anchor_x_offset):
+        self.model.document_tab_anchor_x_offset = document_tab_anchor_x_offset
+
+    def set_document_tab_anchor_y_offset(self, document_tab_anchor_y_offset):
+        self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
+
 class DocumentModel(MapAttribute):
     """
     Represents a document in the project model.
@@ -370,6 +418,7 @@ class DocumentModel(MapAttribute):
     document_creation_date = UnicodeAttribute()
     document_preamble = UnicodeAttribute(null=True)
     document_legal_entity_name = UnicodeAttribute(null=True)
+    document_s3_url = UnicodeAttribute(null=True)
     document_tabs = ListAttribute(of=DocumentTabModel, default=[])
 
 class Document(model_interfaces.Document):
@@ -386,7 +435,8 @@ class Document(model_interfaces.Document):
                  document_author_name=None,
                  document_creation_date=None,
                  document_preamble=None,
-                 document_legal_entity_name=None):
+                 document_legal_entity_name=None,
+                 document_s3_url=None):
         super().__init__()
         self.model = DocumentModel()
         self.model.document_name = document_name
@@ -397,6 +447,7 @@ class Document(model_interfaces.Document):
             self.model.document_content = self.set_document_content(document_content)
         self.model.document_preamble = document_preamble
         self.model.document_legal_entity_name = document_legal_entity_name
+        self.model.document_s3_url = document_s3_url
         # Use defaults if None is provided for the following attributes.
         if document_major_version is not None:
             self.model.document_major_version = document_major_version
@@ -418,6 +469,7 @@ class Document(model_interfaces.Document):
                 'document_creation_date': self.model.document_creation_date,
                 'document_preamble': self.model.document_preamble,
                 'document_legal_entity_name': self.model.document_legal_entity_name,
+                'document_s3_url': self.model.document_s3_url,
                 'document_tabs': self.model.document_tabs}
 
     def get_document_name(self):
@@ -456,6 +508,9 @@ class Document(model_interfaces.Document):
 
     def get_document_legal_entity_name(self):
         return self.model.document_legal_entity_name
+
+    def get_document_s3_url(self):
+        return self.model.document_s3_url
 
     def get_document_tabs(self):
         tabs = []
@@ -507,6 +562,9 @@ class Document(model_interfaces.Document):
     def set_document_legal_entity_name(self, entity_name):
         self.model.document_legal_entity_name = entity_name
 
+    def set_document_s3_url(self, document_s3_url):
+        self.model.document_s3_url = document_s3_url
+
     def set_document_tabs(self, tabs):
         self.model.document_tabs = tabs
 
@@ -523,11 +581,21 @@ class Document(model_interfaces.Document):
         tab.set_document_tab_type(tab_data['type'])
         tab.set_document_tab_id(tab_data['id'])
         tab.set_document_tab_name(tab_data['name'])
-        tab.set_document_tab_position_x(tab_data['position_x'])
-        tab.set_document_tab_position_y(tab_data['position_y'])
+        if 'position_x' in tab_data: 
+            tab.set_document_tab_position_x(tab_data['position_x'])
+        if 'position_y' in tab_data:
+            tab.set_document_tab_position_y(tab_data['position_y'])
         tab.set_document_tab_width(tab_data['width'])
         tab.set_document_tab_height(tab_data['height'])
         tab.set_document_tab_page(tab_data['page'])
+        if 'anchor_string' in tab_data: 
+            tab.set_document_tab_anchor_string(tab_data['anchor_string'])
+        if 'anchor_ignore_if_not_present' in tab_data: 
+            tab.set_document_tab_anchor_ignore_if_not_present(tab_data['anchor_ignore_if_not_present'])
+        if 'anchor_x_offset' in tab_data: 
+            tab.set_document_tab_anchor_x_offset(tab_data['anchor_x_offset'])
+        if 'anchor_y_offset' in tab_data: 
+            tab.set_document_tab_anchor_y_offset(tab_data['anchor_y_offset'])
         self.add_document_tab(tab)
 
 class ProjectModel(BaseModel):
@@ -638,16 +706,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         if num_documents < 1:
             raise cla.models.DoesNotExist('No individual document exists for this project')
 
-        if major_version is None:
-            version = self._get_latest_version(document_models)
-            document = version[2]
-            return document
-
-        # TODO Need to optimize this on the DB side.
-        for document in document_models:
-            if document.get_document_major_version() == major_version and \
-               document.get_document_minor_version() == minor_version:
-                return document
+        version = self._get_latest_version(document_models)
+        document = version[2]
+        return document
 
         raise cla.models.DoesNotExist('Document revision not found')
 
@@ -655,7 +716,6 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         document_models = self.get_project_individual_documents()
         version = self._get_latest_version(document_models)
         document = version[2]
-
         return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
@@ -663,13 +723,9 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         num_documents = len(document_models)
         if num_documents < 1:
             raise cla.models.DoesNotExist('No corporate document exists for this project')
-        if major_version is None:
-            major_version, minor_version = cla.utils.get_last_version(document_models)
-        # TODO Need to optimize this on the DB side.
-        for document in document_models:
-            if document.get_document_major_version() == major_version and \
-               document.get_document_minor_version() == minor_version:
-                return document
+        version = self._get_latest_version(document_models)
+        document = version[2]
+        return document
         raise cla.models.DoesNotExist('Document revision not found')
 
     def get_latest_corporate_document(self):
@@ -696,6 +752,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         """
         last_major = 0 # 0 will be returned if no document was found.
         last_minor = -1 # -1 will be returned if no document was found.
+        latest_date = None
         current_document = None
         for document in documents:
             current_major = document.get_document_major_version()
@@ -707,6 +764,10 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
                 continue
             if current_major == last_major and current_minor > last_minor:
                 last_minor = current_minor
+                current_document = document
+            # Retrieve document that has the latest date
+            if not latest_date or document.get_document_creation_date() > latest_date:
+                latest_date = document.get_document_creation_date()
                 current_document = document
         return (last_major, last_minor, current_document)
 
@@ -1521,13 +1582,20 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
         signatures = []
         for signature_model in signature_generator:
+            # Skip signatures that are not the same reference type: user/company
             if signature_model.signature_reference_type != reference_type:
                 continue
+            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present. 
+            # if user_ccla_company_id and signature_user_ccla_company_id are both none
+            # it loads the ICLA signatures for a user. 
             if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 continue
+            # Skip signatures that are not of the same project
             if project_id is not None and \
                signature_model.signature_project_id != project_id:
                 continue
+            # SKip signatures that do not have the same signed flags 
+            # e.g. retrieving only signed / approved signatures 
             if signature_signed is not None and \
                signature_model.signature_signed != signature_signed:
                 continue
