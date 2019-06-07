@@ -100,10 +100,4 @@ export class ClaNextStepModal {
   gotoRepo() {
     window.open(this.signature.signature_return_url, '_blank');
   }
-
-  closeClaApp() {
-    // Scripts may close only the windows that were opened by it.
-    window.close();
-  }
-
 }

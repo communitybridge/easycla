@@ -132,6 +132,13 @@ export class ProjectClaPage {
     modal.present();
   }
 
+  goToSelectTemplatePage (projectId) {
+    this.navCtrl.push("ProjectClaTemplatePage", {
+      sfdcProjectId: this.sfdcProjectId,
+      projectId: projectId
+    });
+  }
+
   openClaContractUploadModal(claProjectId, documentType) {
     let modal = this.modalCtrl.create("ClaContractUploadModal", {
       claProjectId: claProjectId,
