@@ -132,7 +132,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Check for active signature object with this project. If the user has
         # signed the most recent major version, they do not need to sign again.
-        latest_signature = user.get_latest_signature(user, str(project_id))
+        latest_signature = user.get_latest_signature(str(project_id))
         last_document = project.get_latest_individual_document()
         if latest_signature is not None and \
            last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
@@ -220,7 +220,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Check for active signature object with this project. If the user has
         # signed the most recent major version, they do not need to sign again.
-        latest_signature = user.get_latest_signature(user, str(project_id))
+        latest_signature = user.get_latest_signature(str(project_id))
         last_document = project.get_latest_individual_document()
         if latest_signature is not None and \
            last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
@@ -667,8 +667,15 @@ class DocuSign(signing_service_interface.SigningService):
         if send_as_email: 
             # Not assigning a clientUserId sends an email.
             project_name = project.get_project_name()
+            company_name = company.get_company_name()
             email_subject = 'CLA Sign Request for {}'.format(project_name)
-            email_body = '{} has requested that you sign a CLA for {}, which will allow your employees to contribute to the project.\n\nIf you have additional questions, please contact {} at {}.'.format(cla_manager_name, project_name, cla_manager_name, cla_manager_email)
+            email_body = '''{cla_manager_name} has designated you as being an authorized signatory for {company_name}. In order for employees of your company to contribute to the open source project {project_name}, they must do so under a Contributor License Agreement signed by someone with authority to sign on behalf of your company.
+
+After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to maintain the list of specific employees authorized to contribute to the project under this signed CLA.
+
+If you have questions, or if you are not an authorized signatory of this company, please contact the requester at {cla_manager_email}.
+
+            '''.format(cla_manager_name=cla_manager_name, company_name=company_name,project_name=project_name, cla_manager_email=cla_manager_email)
 
             signer = pydocusign.Signer(email=email,
                                     name=name,
@@ -695,7 +702,10 @@ class DocuSign(signing_service_interface.SigningService):
                                     )
         
         content_type = document.get_document_content_type()
-        if content_type.startswith('url+'):
+        project_id = project.get_project_id()
+        if document.get_document_s3_url() is not None:
+            pdf = self.get_document_resource(document.get_document_s3_url())
+        elif content_type.startswith('url+'):
             pdf_url = document.get_document_content()
             pdf = self.get_document_resource(pdf_url)
         else:
@@ -1134,6 +1144,16 @@ def get_docusign_tabs_from_document(document: Document,
             'tabLabel': tab.get_document_tab_id(),
             'name': tab.get_document_tab_name()
         }
+
+        if tab.get_document_tab_anchor_string() is not None:
+            # Set only when anchor string exists 
+            args['anchorString'] = tab.get_document_tab_anchor_string()
+            args['anchorIgnoreIfNotPresent'] = tab.get_document_tab_anchor_ignore_if_not_present()
+            args['anchorXOffset'] = tab.get_document_tab_anchor_x_offset()
+            args['anchorYOffset'] = tab.get_document_tab_anchor_y_offset()
+            # Remove x,y coordinates since offsets will define them
+           # del args['xPosition'] 
+           # del args['yPosition'] 
 
         if default_values is not None and \
             default_values.get(tab.get_document_tab_id()) is not None:
