@@ -14,3 +14,4 @@ python-dateutil==2.6.1
 requests_oauthlib==0.8.0
 Werkzeug==0.13
 newrelic
+mysql-connector-python==8.0.16
