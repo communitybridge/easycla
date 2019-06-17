@@ -41,6 +41,8 @@ GH_APP_WEBHOOK_SECRET=''
 GH_APP_PRIVATE_KEY_PATH='' # This is a filename
 GH_OAUTH_CLIENT_ID=''
 GH_OAUTH_SECRET=''
+GH_OAUTH_CLIENT_ID_GO_BACKEND=''
+GH_OAUTH_SECRET_GO_BACKEND=''
 
 # SFDC Credentials
 INSTANCE_URL=''
@@ -49,6 +51,10 @@ PASSWORD=''
 SECURITY_TOKEN=''
 CONSUMER_KEY=''
 CONSUMER_SECRET=''
+
+# Needed for go backend
+SESSION_STORE_TABLE_NAME=''
+ALLOWED_ORIGINS_COMMA_SEPARATED=''
 
 ENV='';
 PROFILE='';
@@ -206,6 +212,16 @@ if [ -n "$GH_APP_PRIVATE_KEY_PATH" ]; then
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-app-private-key-$ENV" --description "Github private key" --value "file://$GH_APP_PRIVATE_KEY_PATH" --type "String" --overwrite
 fi
 
+if [ -n "$GH_OAUTH_CLIENT_ID_GO_BACKEND" ]; then
+    echo "updating oauth client ID: $GH_OAUTH_CLIENT_ID_GO_BACKEND"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-oauth-client-id-go-backend-$ENV" --description "Github oauth client ID for go backend" --value "$GH_OAUTH_CLIENT_ID_GO_BACKEND" --type "String" --overwrite
+fi
+
+if [ -n "$GH_OAUTH_SECRET_GO_BACKEND" ]; then
+    echo "updating oauth secret: $GH_OAUTH_SECRET_GO_BACKEND"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-gh-oauth-secret-go-backend-$ENV" --description "Github oauth secret for go backend" --value "$GH_OAUTH_SECRET_GO_BACKEND" --type "String" --overwrite
+fi
+
 # SFDC Credentials
 if [ -n "$INSTANCE_URL" ]; then
     echo "updating instance url: $INSTANCE_URL"
@@ -231,4 +247,14 @@ fi
 if [ -n "$CONSUMER_SECRET" ]; then
     echo "updating consumer secret: $CONSUMER_SECRET"
     aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-sf-consumer-secret-$ENV" --description "SalesForce Connected App Consumer Secret" --value "$CONSUMER_SECRET" --type "String" --overwrite
+fi
+
+if [ -n "$SESSION_STORE_TABLE_NAME" ]; then
+    echo "updating session store table name: $SESSION_STORE_TABLE_NAME"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-session-store-table-$ENV" --description "Dynamo DB Table to store sessions" --value "$SESSION_STORE_TABLE_NAME" --type "String" --overwrite
+fi
+
+if [ -n "$ALLOWED_ORIGINS_COMMA_SEPARATED" ]; then
+    echo "updating session store table name: $ALLOWED_ORIGINS_COMMA_SEPARATED"
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-allowed-origins-$ENV" --description "Allowed origins for CORS" --value "$ALLOWED_ORIGINS_COMMA_SEPARATED" --type "String" --overwrite
 fi

@@ -52,10 +52,22 @@ export class HttpClient {
         .switchMap((headers) => this.http.get(url, { headers: headers }));
   }
 
+  getWithCreds(url) {
+    return Observable
+        .fromPromise(this.buildAuthHeaders())
+        .switchMap((headers) => this.http.get(url, { headers: headers, withCredentials: true }));
+  }
+
   post(url, data) {
     return Observable
         .fromPromise(this.buildAuthHeaders())
         .switchMap((headers) => this.http.post(url, data, { headers: headers }));
+  }
+
+  postWithCreds(url, data) {
+    return Observable
+        .fromPromise(this.buildAuthHeaders())
+        .switchMap((headers) => this.http.post(url, data, { headers: headers, withCredentials: true }));
   }
 
   put(url, data, contentType: string = 'application/json') {
@@ -74,6 +86,12 @@ export class HttpClient {
     return Observable
         .fromPromise(this.buildAuthHeaders())
         .switchMap((headers) => this.http.delete(url, { headers: headers }));
+  }
+
+  deleteWithBody(url, body) {
+    return Observable
+        .fromPromise(this.buildAuthHeaders())
+        .switchMap((headers) => this.http.delete(url, { body: body, headers: headers }));
   }
 
   putS3(url, data, contentType) {

@@ -19,7 +19,7 @@ import { WhitelistModal } from "../../modals/whitelist-modal/whitelist-modal";
   roles: ["isAuthenticated"]
 })
 @IonicPage({
-  segment: "company/:companyId/project/:projectId"
+  segment: "company/:companyId/project/:projectId/:modal"
 })
 @Component({
   selector: "project-page",
@@ -34,6 +34,7 @@ export class ProjectPage {
   managers: ClaManager[];
   company: ClaCompanyModel;
   manager: ClaUserModel;
+  showModal: any;
 
   project: any;
   users: any;
@@ -51,6 +52,12 @@ export class ProjectPage {
   ) {
     this.companyId = navParams.get("companyId");
     this.projectId = navParams.get("projectId");
+    this.showModal = navParams.get("modal");
+
+    if (this.showModal === 'orgwhitelist') {
+      this.openGithubOrgWhitelistModal();
+    }
+
     this.getDefaults();
   }
 
@@ -203,7 +210,7 @@ export class ProjectPage {
       .subscribe(() => this.getCLAManagers())
   }
 
-  openManagerModal() {
+  openManagerModal () {
     let modal = this.modalCtrl.create("AddManagerModal", {
       signatureId: this.cclaSignature.signature_id
     });
@@ -212,6 +219,15 @@ export class ProjectPage {
         this.getCLAManagers();
       }
     });
+    modal.present();
+  }
+
+  openGithubOrgWhitelistModal () {
+    let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+      companyId: this.companyId,
+      corporateClaId: this.projectId
+    });
+    modal.onDidDismiss(data => {});
     modal.present();
   }
 }
