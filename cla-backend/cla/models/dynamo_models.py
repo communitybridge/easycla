@@ -8,6 +8,7 @@ import re
 import base64
 import datetime
 import dateutil.parser
+import requests
 
 from pynamodb.models import Model
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
@@ -1168,7 +1169,25 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                  if github_username in github_whitelist:
                      return True        
 
+            # Check github org whitelist
+            github_orgs = self.get_user_github_organizations(github_username)
+            if 'error' not in github_orgs: 
+                github_org_whitelist = ccla_signature.get_github_org_whitelist()
+                if github_org_whitelist is not None:
+                    for dynamo_github_org in github_org_whitelist:
+                        if dynamo_github_org in github_orgs:
+                            return True
         return False
+
+
+    def get_user_github_organizations(self, github_username):
+        # Use the Github API to retrieve github orgs that the user is a member of. 
+        try:
+            r = requests.get('https://api.github.com/users/{}/orgs'.format(github_username))
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            return {'error': 'Could not get user github org: {}'.format(e)}
+        return [github_org['login'] for github_org in r.json()]
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
@@ -1376,6 +1395,7 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     domain_whitelist = ListAttribute(null=True)
     email_whitelist = ListAttribute(null=True)
     github_whitelist = ListAttribute(null=True)
+    github_org_whiteList = ListAttribute(null=True)
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1401,7 +1421,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                  signature_envelope_id=None,
                  domain_whitelist=None,
                  email_whitelist=None,
-                 github_whitelist=None):
+                 github_whitelist=None,
+                 github_org_whitelist=None):
         super(Signature).__init__()
         self.model = SignatureModel()
         self.model.signature_id = signature_id
@@ -1424,6 +1445,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         self.model.domain_whitelist = domain_whitelist
         self.model.email_whitelist = email_whitelist
         self.model.github_whitelist = github_whitelist
+        self.model.github_org_whitelist = github_org_whitelist
 
     def to_dict(self):
         return dict(self.model)
@@ -1502,6 +1524,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_github_whitelist(self):
         return self.model.github_whitelist
 
+    def get_github_org_whitelist(self):
+        return self.model.github_org_whitelist
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -1563,6 +1588,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     
     def set_github_whitelist(self, github_whitelist):
         self.model.github_whitelist = [github_user.strip() for github_user in github_whitelist]
+
+    def set_github_org_whitelist(self, github_org_whitelist):
+        self.model.github_org_whitelist = [github_org.strip() for github_org in github_org_whitelist]
 
     def add_signature_acl(self, username):
         self.model.signature_acl.add(username)

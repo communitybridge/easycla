@@ -242,6 +242,62 @@
   revision = "d2eab7d93009e9215fc85b2faa2c2f2a98c2af48"
 
 [[projects]]
+  digest = "1:bed9d72d596f94e65fff37f4d6c01398074a6bb1c3f3ceff963516bd01db6ff5"
+  name = "github.com/gofrs/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6b08a5c5172ba18946672b49749cde22873dd7c2"
+  version = "v3.2.0"
+
+[[projects]]
+  digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  pruneopts = "UT"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  version = "v1.3.1"
+
+[[projects]]
+  digest = "1:ac72d92bdb69afbc21da5bb72a95bba140b3d74364cbc91a203d3986f23cef3f"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "UT"
+  revision = "8354c0739a78b30158359e98fe14ca3bb823159c"
+  version = "v25.1.1"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:e72d1ebb8d395cf9f346fd9cbc652e5ae222dd85e0ac842dc57f175abed6d195"
+  name = "github.com/gorilla/securecookie"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:e5bf52fd66a2e984b57b4c0f2c4ee024ed749a19886246240629998dc0cf31ce"
+  name = "github.com/gorilla/sessions"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f57b7e2d29c6211d16ffa52a0998272f75799030"
+  version = "v1.1.3"
+
+[[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -358,6 +414,14 @@
   version = "v1.6.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:abddc141d57793195f9e1138a2381606b5801545b06c08e89e747eeb64819c35"
+  name = "github.com/savaki/dynastore"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "28d8558bb4299123129ed35c2cb4ca02c0151679"
+
+[[projects]]
   digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
   name = "github.com/spf13/afero"
   packages = [
@@ -410,14 +474,28 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bbd232f46e33dfb01068e0f4193a3da2d662a350873804bc964f697de5f39ac7"
+  digest = "1:efa23d3079fc99e700eec6c925b4cb7879927068f525ed143cdbeaa39d99955d"
   name = "golang.org/x/net"
   packages = [
+    "context",
+    "context/ctxhttp",
     "idna",
     "netutil",
   ]
   pruneopts = "UT"
   revision = "65e2d4e15006aab9813ff8769e768bbf4bb667a0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e8418af328879d67e1ea265e592a24fd6716368a619ed04f845226a1b5c9499f"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "github",
+    "internal",
+  ]
+  pruneopts = "UT"
+  revision = "aaccbc9213b0974828f81aaac109d194880e3014"
 
 [[projects]]
   branch = "master"
@@ -452,6 +530,22 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:6eb6e3b6d9fffb62958cf7f7d88dbbe1dd6839436b0802e194c590667a40412a"
+  name = "google.golang.org/appengine"
+  packages = [
+    "internal",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = "UT"
+  revision = "4c25cacc810c02874000e4f7071286a8e96b2515"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -483,14 +577,19 @@
     "github.com/go-openapi/strfmt",
     "github.com/go-openapi/swag",
     "github.com/go-openapi/validate",
+    "github.com/gofrs/uuid",
+    "github.com/google/go-github/github",
     "github.com/jessevdk/go-flags",
     "github.com/jmoiron/sqlx",
     "github.com/lib/pq",
     "github.com/lytics/logrus",
     "github.com/rs/cors",
+    "github.com/savaki/dynastore",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "golang.org/x/net/netutil",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/github",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

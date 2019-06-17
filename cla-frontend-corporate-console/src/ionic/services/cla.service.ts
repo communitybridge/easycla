@@ -888,5 +888,43 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  /**
+   * /github/login
+   **/
+
+  githubLogin (companyID, corporateClaID) {
+    window.location.assign(this.claApiUrl + `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`);
+  }
+
+  /**
+   * /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg
+   **/
+
+  getGithubOrganizationWhitelist (companyID, corporateClaID) {
+    return this.http
+      .getWithCreds(this.claApiUrl + `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`)
+      .map(res => res.json());
+  }
+
+  /**
+   * /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg
+   **/
+
+  addGithubOrganizationWhitelist (companyID, corporateClaID, organizationId) {
+    return this.http
+      .postWithCreds(this.claApiUrl + `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`, {"id": organizationId})
+      .map(res => res.json());
+  }
+
+  /**
+   * /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg
+   **/
+
+  removeGithubOrganizationWhitelist (companyID, corporateClaID, organizationId) {
+    return this.http
+      .deleteWithBody(this.claApiUrl + `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`, {"id": organizationId})
+      .map(res => res.json());
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 }
