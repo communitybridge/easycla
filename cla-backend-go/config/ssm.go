@@ -56,6 +56,25 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	// SFDC
 
 	// GitHub
+	githubClientID, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+	githubSecret, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+
+	config.Github = Github{
+		ClientID:     *githubClientID.Parameter.Value,
+		ClientSecret: *githubSecret.Parameter.Value,
+	}
 
 	// Docusign
 
@@ -75,6 +94,26 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 
 	// AWS
 	config.AWS.Region = "us-east-1"
+
+	// Session Store Table Name
+	sessionStoreTableName, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-session-store-table-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+	config.SessionStoreTableName = *sessionStoreTableName.Parameter.Value
+
+	allowedOrigins, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-allowed-origins-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+
+	config.AllowedOriginsCommaSeparated = *allowedOrigins.Parameter.Value
 
 	return config, nil
 }

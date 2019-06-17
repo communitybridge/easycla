@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/config"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/github"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/template"
-
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/whitelist"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/go-openapi/loads"
 	_ "github.com/lib/pq"
 	"github.com/lytics/logrus"
 	"github.com/rs/cors"
+	"github.com/savaki/dynastore"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -115,7 +119,8 @@ func server() http.Handler {
 		// userRepo          = user.NewRepository(db)
 		// projectRepo       = project.NewRepository(db)
 		// contractGroupRepo = contractgroup.NewRepository(db)
-		templateRepo = template.NewRepository(awsSession, viper.GetString("STAGE"))
+		templateRepo  = template.NewRepository(awsSession, viper.GetString("STAGE"))
+		whitelistRepo = whitelist.NewRepository(awsSession, viper.GetString("STAGE"))
 	)
 
 	var (
@@ -123,18 +128,26 @@ func server() http.Handler {
 		// projectService       = project.NewService(projectRepo)
 		//contractGroupService = contractgroup.NewService(contractGroupRepo)
 		// userService          = user.NewService(userRepo)
-		templateService = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
+		templateService  = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
+		whitelistService = whitelist.NewService(whitelistRepo, http.DefaultClient)
 		//authorizer = auth.NewAuthorizer(auth0Validator)
 	)
+
+	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	//api.OauthSecurityAuth = authorizer.SecurityAuth
 	health.Configure(api, healthService)
 	template.Configure(api, templateService)
+	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
+	whitelist.Configure(api, whitelistService, sessionStore)
 	// project.Configure(api, projectService)
 	// contractgroup.Configure(api, contractGroupService)
 
 	// flag.Parse()
-	apiHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares))
+	apiHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares), configFile.AllowedOrigins)
 
 	return apiHandler
 }
@@ -147,13 +160,30 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
-func setupGlobalMiddleware(handler http.Handler) http.Handler {
+func setupGlobalMiddleware(handler http.Handler, allowedOrigins map[string]struct{}) http.Handler {
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			u, err := url.Parse(origin)
+			if err != nil {
+				fmt.Printf("cors parse origin issue: %s\n", err)
+				return false
+			}
+
+			if u.Scheme != "https" {
+				return false
+			}
+
+			_, ok := allowedOrigins[u.Hostname()]
+			if !ok {
+				return false
+			}
+
+			return true
+		},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: false,
 	})

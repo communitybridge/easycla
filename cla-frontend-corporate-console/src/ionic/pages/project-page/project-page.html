@@ -15,7 +15,7 @@
   <header>
     <ion-grid>
       <ion-row justify-content-center>
-        <ion-col col-12 col-md-4>
+        <ion-col col-12 col-md-3>
           <h3>
             Domain Whitelist
             <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
@@ -28,7 +28,7 @@
             </ion-list>
           </div>
         </ion-col>
-        <ion-col col-12 col-md-4>
+        <ion-col col-12 col-md-3>
           <h3>
             Email Whitelist
             <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
@@ -41,7 +41,7 @@
             </ion-list>
           </div>
         </ion-col>
-        <ion-col col-12 col-md-4>
+        <ion-col col-12 col-md-3>
           <h3>
             GitHub Whitelist
             <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
@@ -53,6 +53,12 @@
               </ion-item>
             </ion-list>
           </div>
+        </ion-col>
+        <ion-col col-12 col-md-3>
+          <h3>
+            Github Org Whitelist
+            <ion-icon class="clickable" name="md-create" item-right (click)="openGithubOrgWhitelistModal()"></ion-icon>
+          </h3>
         </ion-col>
       </ion-row>
     </ion-grid>
