@@ -14,7 +14,7 @@
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326', 'github', 'github_username');
 
 	INSERT INTO cla.user_auth_provider(user_id, provider, provider_user_id)
-	VALUES ('***REMOVED***', 'lfid', '***REMOVED***');
+	VALUES ('***REMOVED***', 'lfid', 'foobarski');
 
 	INSERT INTO cla.user_auth_provider(user_id, provider, provider_user_id)
 	VALUES ('***REMOVED***', 'github', 'user two');
