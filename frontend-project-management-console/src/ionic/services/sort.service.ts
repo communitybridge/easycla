@@ -95,7 +95,7 @@ export class SortService {
           v2parts = v2parts.map(Number);
         }
 
-        for (var i = 0; i < v1parts.length; ++i) {
+        for (i = 0; i < v1parts.length; ++i) {
           if (v2parts.length == i) {
             return 1 * sort;
           }
