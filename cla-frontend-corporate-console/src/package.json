@@ -1,5 +1,6 @@
 {
   "name": "cla-corporate-console",
+  "license": "AGPL-3.0-or-later",
   "author": "",
   "private": true,
   "os": [

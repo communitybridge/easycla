@@ -1,5 +1,8 @@
 # CLA Local Development
 
+Copyright The Linux Foundation and each contributor to CommunityBridge.
+SPDX-License-Identifier: GFDL-1.3-or-later
+
 ## Backend
 
 ### cla-backend

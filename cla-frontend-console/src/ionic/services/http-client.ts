@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
 import { KeycloakService } from './keycloak/keycloak.service';

@@ -1,3 +1,6 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """
 Convenience script to complete a signature (manually fire the DocuSign callback).
 This helper script is useful if you can't expose your CLA system to the internet for testing
