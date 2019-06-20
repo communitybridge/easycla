@@ -4,6 +4,7 @@ import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/github"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/savaki/dynastore"
 )

@@ -76,6 +76,20 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 		ClientSecret: *githubSecret.Parameter.Value,
 	}
 
+	//Corporate Console Link
+	corporateConsoleURL, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-corporate-base-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+	corporateConsoleURLValue := *corporateConsoleURL.Parameter.Value
+	if corporateConsoleURLValue == "corporate.prod.lfcla.com" {
+		corporateConsoleURLValue = "corporate.lfcla.com"
+	}
+	config.CorporateConsoleURL = corporateConsoleURLValue
+
 	// Docusign
 
 	// Docraptor
@@ -105,6 +119,14 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	}
 	config.SessionStoreTableName = *sessionStoreTableName.Parameter.Value
 
+	senderEmailAddress, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(fmt.Sprintf("cla-ses-sender-email-address-%s", stage)),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		return Config{}, err
+	}
+
 	allowedOrigins, err := ssmClient.GetParameter(&ssm.GetParameterInput{
 		Name:           aws.String(fmt.Sprintf("cla-allowed-origins-%s", stage)),
 		WithDecryption: aws.Bool(false),
@@ -112,6 +134,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+
+	config.SenderEmailAddress = *senderEmailAddress.Parameter.Value
 
 	config.AllowedOriginsCommaSeparated = *allowedOrigins.Parameter.Value
 

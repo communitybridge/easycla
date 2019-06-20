@@ -264,6 +264,16 @@ def request_company_ccla(user_id: hug.types.uuid,
     """
     return cla.controllers.user.request_company_ccla(str(user_id), str(user_email), str(company_id), str(project_id))
 
+@hug.post('/user/{user_id}/company/{company_id}/request-access', versions=2)
+def request_company_admin_access(user_id: hug.types.uuid,
+                                company_id: hug.types.uuid):
+    """
+    POST: /user/{user_id}/company/{company_id}/request-access
+
+    Sends an Email for a user requesting access to be on Company ACL. 
+    """
+    return cla.controllers.user.request_company_admin_access(str(user_id), str(company_id))
+
 @hug.get('/user/{user_id}/active-signature', versions=2)
 def get_user_active_signature(user_id: hug.types.uuid):
     """

@@ -926,5 +926,38 @@ export class ClaService {
       .map(res => res.json());
   }
 
+  /**
+   * /company/{companyId}/invite-request
+   **/
+
+  sendInviteRequestEmail(companyId) {
+    return this.http
+      .post(this.claApiUrl + `/v3/company/${companyId}/invite-request`)
+      .map(res => res.json());
+  }  
+  
+  /**
+  * /company/{companyID}/cla/invitelist:
+  **/
+
+ getPendingInvites(companyId) {
+   return this.http
+    .get(this.claApiUrl + `/v3/company/${companyId}/cla/invitelist`)
+    .map(res => res.json());
+ }
+
+ acceptCompanyInvite(companyId, data) {
+  return this.http
+   .post(this.claApiUrl + `/v3/company/${companyId}/cla/accesslist`, data)
+   .map(res => res.json());
+ }
+
+ declineCompanyInvite(companyId, data) {
+  return this.http
+   .deleteWithBody(this.claApiUrl + `/v3/company/${companyId}/cla/accesslist`, data)
+   .map(res => res.json());
+ }
+
+
   //////////////////////////////////////////////////////////////////////////////
 }

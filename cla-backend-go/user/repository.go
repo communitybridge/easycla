@@ -134,3 +134,7 @@ func (repo repository) GetClaManagerCorporateClaIDs(userID string) ([]string, er
 
 	return nil, nil
 }
+
+func (repo repository) GetUserCompanyIDs(userID string) ([]string, error) {
+	return []string{}, nil
+}

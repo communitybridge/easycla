@@ -1943,3 +1943,20 @@ class UserPermissions(object):
         raise NotImplementedError()
 
     
+class CompanyInvite(object):
+    """
+    Interface to the CompanyInvite model.
+    """
+    def to_dict(self):
+        raise NotImplementedError()
+
+    def save(self):
+        raise NotImplementedError()
+
+    def load(self, company_invite_id):
+        raise NotImplementedError()
+
+    def delete(self):
+        raise NotImplementedError()
+    
+    

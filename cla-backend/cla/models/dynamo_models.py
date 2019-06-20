@@ -217,6 +217,19 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_reference_id = UnicodeAttribute(hash_key=True)
 
+class RequestedCompanyIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying company invites with a company ID.
+    """
+    class Meta:
+        """Meta class for external ID company index."""
+        index_name = 'requested-company-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        projection = AllProjection()
+
+    requested_company_id = UnicodeAttribute(hash_key=True)
+
 class BaseModel(Model):
     """
     Base pynamodb model used for all CLA models.
@@ -2195,6 +2208,66 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
         except UserPermissionsModel.DoesNotExist:
             raise cla.models.DoesNotExist('User Permissions not found')
         self.model = user_permissions
+
+    def delete(self):
+        self.model.delete()
+
+class CompanyInviteModel(BaseModel):
+    """
+    Represents company invites in the database.
+    
+    Note that this model is utilized in the Go backend from the 'accesslist' package. 
+    """
+    class Meta:
+        table_name = 'cla-{}-company-invites'.format(stage)
+        if stage == 'local':
+            host = 'http://localhost:8000'
+    company_invite_id = UnicodeAttribute(hash_key=True)
+    user_id = UnicodeAttribute()
+    requested_company_id = UnicodeAttribute()
+    requested_company_id_index = RequestedCompanyIndex()
+
+class CompanyInvite(model_interfaces.CompanyInvite):
+    def __init__(self, user_id=None, requested_company_id=None):
+        super(CompanyInvite).__init__()
+        self.model = CompanyInviteModel()
+        self.model.user_id = user_id
+        self.model.requested_company_id = requested_company_id
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def load(self, company_invite_id):
+        try:
+            company_invite = self.model.get(str(company_invite_id))
+        except CompanyInviteModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Company Invite not found')
+        self.model = company_invite
+
+    def get_user_id(self):
+        return self.model.user_id
+
+    def get_requested_company_id(self):
+        return self.model.requested_company_id
+
+    def set_user_id(self, user_id):
+        self.model.user_id = user_id
+
+    def set_requested_company_id(self, requested_company_id):
+        self.model.requested_company_id = requested_company_id
+
+    def get_invites_by_company(self, requested_company_id):
+        invites_generator = self.model.requested_company_id_index.query(requested_company_id)
+        invites = []
+        for invite_model in invites_generator:
+            invite = CompanyInvite()
+            invite.model = invite_model
+            invites.append(invite)
+        return invites
+
+    def save(self):
+        self.model.save()
 
     def delete(self):
         self.model.delete()

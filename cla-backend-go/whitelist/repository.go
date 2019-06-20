@@ -5,10 +5,17 @@ import (
 	"fmt"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
+
+type Repository interface {
+	DeleteGithubOrganizationFromWhitelist(claGroupID, githubOrganizationID string) error
+	AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID string) error
+	GetGithubOrganizationsFromWhitelist(claGroupID string) ([]models.GithubOrg, error)
+}
 
 type repository struct {
 	stage          string

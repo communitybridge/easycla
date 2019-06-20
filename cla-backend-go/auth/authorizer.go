@@ -18,6 +18,7 @@ type UserPermissioner interface {
 	GetUserAndProfilesByLFID(lfidUsername string) (user.CLAUser, error)
 	GetUserProjectIDs(userID string) ([]string, error)
 	GetClaManagerCorporateClaIDs(userID string) ([]string, error)
+	GetUserCompanyIDs(userID string) ([]string, error)
 }
 
 type Authorizer struct {
@@ -25,10 +26,10 @@ type Authorizer struct {
 	userPermissioner UserPermissioner
 }
 
-func NewAuthorizer(auth0Validator Auth0Validator) Authorizer {
+func NewAuthorizer(auth0Validator Auth0Validator, userPermissioner UserPermissioner) Authorizer {
 	return Authorizer{
-		auth0Validator: auth0Validator,
-		//	userPermissioner: userPermissioner,
+		auth0Validator:   auth0Validator,
+		userPermissioner: userPermissioner,
 	}
 }
 
@@ -71,6 +72,13 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 
 			user.ProjectIDs = projectIDs
 		case companyScope:
+			//TODO:  Get all companies for this user
+			companies, err := a.userPermissioner.GetUserCompanyIDs(user.UserID)
+			if err != nil {
+				return nil, err
+			}
+
+			user.CompanyIDs = companies
 		case adminScope:
 		}
 	}

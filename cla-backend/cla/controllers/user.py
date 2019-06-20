@@ -314,3 +314,45 @@ def get_or_create_user(auth_user):
         return user
 
     return existing_user
+
+
+
+def request_company_admin_access(user_id, company_id):
+    """
+    Send Email to company admins to inform that that a user is requesting to be a CLA Manager for their company.  
+    """
+
+    user = User()
+    try:
+        user.load(user_id)
+    except DoesNotExist as err:
+        return {'errors': {'user_id': str(err)}}
+    user_name = user.get_user_name()
+    
+    company = Company()
+    try:
+        company.load(company_id)
+    except DoesNotExist as err:
+        return {'errors': {'company_id': str(err)}}
+
+
+    subject = 'CLA: Request of Access to Corporate Console'
+
+    # Send emails to every CLA manager 
+    for admin in company.get_managers():
+        body = '''Hello {admin_name}, 
+
+The following user is requesting CLA Manager access for your organization: {company_name}
+
+    {user_name} <{user_email}>
+
+Navigate to the Corporate Console using the link below and add this user to your Organization's Company ACL. Please notify the user once they are added so that they may log in to the Corporate Console with their LFID. 
+
+{corporate_console_url}
+
+- Linux Foundation CLA System
+'''.format(admin_name=admin.get_user_name(), user_name=user_name, company_name = company.get_company_name(),
+    user_email=user_email, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+        recipient = admin.get_lf_email()
+        email_service = get_email_service()
+        email_service.send(subject, body, recipient)
