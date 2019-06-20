@@ -1,5 +1,6 @@
 company-page {
   .scroll-content {
+    padding-bottom: 160px !important;
     margin-top: 96px !important;
   }
 
@@ -32,4 +33,14 @@ company-page {
       top: 7px;
     }
   }
+  
+  th .clickable {
+    text-align: center;
+  }
+  
+  table.invites .invites th, .invites td{
+    vertical-align: center;
+    text-align: center;
+  }
+
 }

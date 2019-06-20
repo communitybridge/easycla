@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/auth"
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/company"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/config"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/docraptor"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi"
@@ -14,7 +16,9 @@ import (
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/github"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/health"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/template"
+	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/user"
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/whitelist"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -106,21 +110,22 @@ func server() http.Handler {
 		logrus.Panic(err)
 	}
 
-	// auth0Validator, err := auth.NewAuth0Validator(
-	// 	configFile.Auth0.Domain,
-	// 	configFile.Auth0.ClientID,
-	// 	configFile.Auth0.UsernameClaim,
-	// 	configFile.Auth0.Algorithm)
-	// if err != nil {
-	// 	logrus.Panic(err)
-	// }
+	auth0Validator, err := auth.NewAuth0Validator(
+		configFile.Auth0.Domain,
+		configFile.Auth0.ClientID,
+		configFile.Auth0.UsernameClaim,
+		configFile.Auth0.Algorithm)
+	if err != nil {
+		logrus.Panic(err)
+	}
 
 	var (
-		// userRepo          = user.NewRepository(db)
 		// projectRepo       = project.NewRepository(db)
 		// contractGroupRepo = contractgroup.NewRepository(db)
+		userRepo      = user.NewDynamoRepository(awsSession, viper.GetString("STAGE"), configFile.SenderEmailAddress)
 		templateRepo  = template.NewRepository(awsSession, viper.GetString("STAGE"))
 		whitelistRepo = whitelist.NewRepository(awsSession, viper.GetString("STAGE"))
+		companyRepo   = company.NewRepository(awsSession, viper.GetString("STAGE"))
 	)
 
 	var (
@@ -128,21 +133,25 @@ func server() http.Handler {
 		// projectService       = project.NewService(projectRepo)
 		//contractGroupService = contractgroup.NewService(contractGroupRepo)
 		// userService          = user.NewService(userRepo)
+
 		templateService  = template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
 		whitelistService = whitelist.NewService(whitelistRepo, http.DefaultClient)
-		//authorizer = auth.NewAuthorizer(auth0Validator)
+		companyService   = company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
+		authorizer       = auth.NewAuthorizer(auth0Validator, userRepo)
 	)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	//api.OauthSecurityAuth = authorizer.SecurityAuth
+	api.OauthSecurityAuth = authorizer.SecurityAuth
 	health.Configure(api, healthService)
 	template.Configure(api, templateService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
 	whitelist.Configure(api, whitelistService, sessionStore)
+
+	company.Configure(api, companyService)
+
 	// project.Configure(api, projectService)
 	// contractgroup.Configure(api, contractGroupService)
 

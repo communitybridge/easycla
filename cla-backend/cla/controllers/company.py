@@ -83,7 +83,8 @@ def create_company(auth_user,
         if company.get("company_name") == company_name:
             cla.log.error({"error": "Company already exists"})
             return {"status_code": HTTP_409,
-                    "data": {"error":"Company already exists."}
+                    "data": {"error":"Company already exists.",
+                            "company_id": company.get("company_id")}
                     }
 
     company = Company()

@@ -47,6 +47,66 @@
       </ion-col>
     </ion-row>
   </ion-grid>
+
+
+  <ion-grid [loading-display]="loading.invites">
+    <ion-row justify-content-center>
+      <ion-col col-8>
+        <ion-card *ngIf="invites">
+          <ion-card-content>
+          <ion-card-title>
+            <h1>Pending Invites</h1>
+          </ion-card-title>
+            <ion-list>
+              <ion-row>
+                <table class="table table-hover invites">
+                  <thead>
+                  <tr>
+                    <th class="clickable">
+                      Name
+                    </th>
+                    <th class="clickable">
+                      Email
+                    </th>
+                    <th class="clickable">
+                      LFID
+                    </th>
+                    <th class="clickable">
+                      Actions
+                    </th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let invite of invites">
+                    <td data-title="Name">
+                      <span>{{ invite.userName }}</span>
+                    </td>
+                    <td data-title="Email">
+                      <span>{{invite.userEmail}}</span>
+                    </td>
+                    <td data-title="LFID">
+                      <span>{{invite.userLFID}}</span>
+                    </td>
+                    <td data-title="Actions">
+                      <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                        Accept
+                      </button>
+                      <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
+                        Decline
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </ion-row>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
 </ion-content>
 
 <cla-footer></cla-footer>

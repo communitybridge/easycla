@@ -30,6 +30,7 @@ export class CompanyPage {
   companySignatures: ClaSignatureModel[];
   projects: any;
   loading: any;
+  invites: any;
 
   constructor(
     public navCtrl: NavController,
@@ -44,7 +45,8 @@ export class CompanyPage {
 
   getDefaults() {
     this.loading = {
-      companySignatures: true
+      companySignatures: true,
+      invites: true
     };
     this.company = new ClaCompanyModel();
     this.projects = {};
@@ -53,6 +55,7 @@ export class CompanyPage {
   ngOnInit() {
     this.getCompany();
     this.getCompanySignatures();
+    this.getInvites();
   }
 
   getCompany() {
@@ -137,4 +140,34 @@ export class CompanyPage {
     });
     modal.present();
   }
+  
+  getInvites() {
+    this.claService.getPendingInvites(this.companyId).subscribe(response => {
+      console.log(response);
+      this.invites = response ;
+      this.loading.invites = false;
+    });
+  }
+  
+  acceptCompanyInvite(invite) {
+    let data = {
+      inviteId: invite.inviteId,
+      userLFID: invite.userLFID 
+    }
+    this.claService.acceptCompanyInvite(this.companyId, data).subscribe(response => {
+      this.getInvites();
+
+    })
+  }
+
+  declineCompanyInvite(invite) {
+    let data = {
+      inviteId: invite.inviteId,
+      userLFID: invite.userLFID
+    }
+    this.claService.declineCompanyInvite(this.companyId, data).subscribe(response => {
+      this.getInvites();
+    })
+  }
+
 }

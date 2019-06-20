@@ -27,7 +27,7 @@ export class ClaContractViewSignaturesModal {
 
   loading: any;
   sort: any;
-  signatures: any;
+  signatures: any[];
 
   constructor(
     public navCtrl: NavController,
@@ -96,37 +96,41 @@ export class ClaContractViewSignaturesModal {
     this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
       for (let signature of signatures) {
         signature.documentVersion = `${signature.signature_document_major_version}.${signature.signature_document_minor_version}`;
-        if (signature.signature_reference_type === "user") {
-          // ICLA, Employee CCLA
-          this.claService.getUser(signature.signature_reference_id).subscribe(user => {
-            if (user)  {
-              signature.user = user;
-              //Employee CCLA if signature includes a ccla_company_id
-              if (signature.signature_user_ccla_company_id) {
-                this.claService.getCompany(signature.signature_user_ccla_company_id).subscribe(company => {
-                  if (company) {
-                    signature.company = company;
+        // Include only signed signatures into SignedSignatures
+        if (signature.signature_signed === true) {
+          if (signature.signature_reference_type === "user") {
+            // ICLA, Employee CCLA
+            this.claService.getUser(signature.signature_reference_id).subscribe(user => {
+              if (user)  {
+                signature.user = user;
+                //Employee CCLA if signature includes a ccla_company_id
+                if (signature.signature_user_ccla_company_id) {
+                  this.claService.getCompany(signature.signature_user_ccla_company_id).subscribe(company => {
+                    if (company) {
+                      signature.company = company;
+                    }
+                  })
+                }
+              }
+            });
+          }
+          else if (signature.signature_reference_type === "company") {
+            // CCLA signed by company authority
+            this.claService.getCompany(signature.signature_reference_id).subscribe(company => {
+              if(company) {
+                signature.company = company;
+                this.claService.getUser(company.company_manager_id).subscribe(user => {
+                  if (user) {
+                    signature.user = user; 
                   }
                 })
               }
-            }
-          });
-        }
-        else if (signature.signature_reference_type === "company") {
-          // CCLA signed by company authority
-          this.claService.getCompany(signature.signature_reference_id).subscribe(company => {
-            if(company) {
-              signature.company = company;
-              this.claService.getUser(company.company_manager_id).subscribe(user => {
-                if (user) {
-                  signature.user = user; 
-                }
-              })
-            }
-          });
+            });
+          }
+          //add to signatures
+          this.signatures.push(signature);
         }
       }
-      this.signatures = signatures;
       this.loading.signatures = false;
     });
   }

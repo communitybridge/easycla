@@ -91,7 +91,7 @@ export class MyApp {
       },
       {
         title: "Sign Out",
-        access: this.userRoles.isAuthenticated,
+        access: true,
         component: "LoginPage"
       },
     ];
