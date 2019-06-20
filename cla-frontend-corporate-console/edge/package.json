@@ -2,7 +2,7 @@
   "name": "edge",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "prebuild": "yarn install",
     "build": "webpack",

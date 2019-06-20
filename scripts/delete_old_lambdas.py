@@ -1,5 +1,8 @@
 import boto3
 
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # python3 delete_old_lambdas.py
 def clean_old_lambda_versions():
     session = boto3.Session(profile_name='lf-cla')

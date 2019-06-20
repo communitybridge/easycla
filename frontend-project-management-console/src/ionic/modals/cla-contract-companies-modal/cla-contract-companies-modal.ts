@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { Component } from '@angular/core';
 import {Events, IonicPage, ModalController, NavController, NavParams, ViewController,} from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';

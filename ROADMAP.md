@@ -1,3 +1,6 @@
+Copyright The Linux Foundation and each contributor to CommunityBridge.
+SPDX-License-Identifier: GFDL-1.3-or-later
+
 Ideas Roadmap
 
 As an End User, I want to be able to see a unified view of all of the projects to which I have access when I log in

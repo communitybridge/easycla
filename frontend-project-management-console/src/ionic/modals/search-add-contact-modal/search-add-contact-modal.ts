@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';

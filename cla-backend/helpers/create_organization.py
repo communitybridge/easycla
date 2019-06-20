@@ -1,3 +1,6 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Project external ID.
 PROJECT_EXTERNAL_ID = 'a090t0000008DEiAAM'
 # The GitHub user/org used for testing purposes.
