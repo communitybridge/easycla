@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /**
  * Check out https://googlechrome.github.io/sw-toolbox/docs/master/index.html for
  * more info on how to use sw-toolbox to custom configure your service worker.

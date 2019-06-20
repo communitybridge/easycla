@@ -1,5 +1,8 @@
 # CLA Deployment
 
+Copyright The Linux Foundation and each contributor to CommunityBridge.
+SPDX-License-Identifier: GFDL-1.3-or-later
+
 The usual deployment flow begins with dev, which we deploy to when the feature or bug is ready for testing in an AWS environment. Once the changes are tested and appear complete, we deploy to staging for QA and acceptance. After the changes have been accepted, we deploy to prod.
 
 ## Staging & Prod

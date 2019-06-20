@@ -1,3 +1,6 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 PROJECT_EXTERNAL_ID1 = 'a090t0000008DEiAAM'
 PROJECT_EXTERNAL_ID2 = 'a090t0000008E7iAAE'
 GITHUB_INSTALLATION_ID = 72228 # NOT THE APP ID - find it in the webhook request JSON or URL when viewing installed apps.

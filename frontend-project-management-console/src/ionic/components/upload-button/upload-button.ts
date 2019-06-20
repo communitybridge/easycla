@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter } from '@angular/core';
 import { PopoverController, ToastController } from 'ionic-angular';
 

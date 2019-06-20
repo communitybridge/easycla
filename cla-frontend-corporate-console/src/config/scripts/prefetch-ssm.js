@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 const fs = require('fs');
 const RetrieveSSMValues = require('./read-ssm');
 const configVarArray = ['auth0-clientId', 'auth0-domain', /*'cinco-api-url',*/ 'cla-api-url', 'cla-logo-s3-url'];
