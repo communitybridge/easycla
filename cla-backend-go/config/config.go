@@ -32,8 +32,13 @@ type Config struct {
 	// Dynamo Session Store
 	SessionStoreTableName string `json:"sessionStoreTableName"`
 
+	// Sender Email Address
+	SenderEmailAddress string `json:"senderEmailAddress"`
+
 	AllowedOriginsCommaSeparated string              `json:"allowedOriginsCommaSeparated"`
 	AllowedOrigins               map[string]struct{} `json:"-"`
+
+	CorporateConsoleURL string `json:"corporateConsoleURL"`
 }
 
 type Auth0 struct {

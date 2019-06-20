@@ -6,15 +6,10 @@ import (
 	"net/http"
 
 	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+
 	githubpkg "github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
-
-type Repository interface {
-	DeleteGithubOrganizationFromWhitelist(claGroupID, githubOrganizationID string) error
-	AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID string) error
-	GetGithubOrganizationsFromWhitelist(claGroupID string) ([]models.GithubOrg, error)
-}
 
 type service struct {
 	repo       Repository

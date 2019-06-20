@@ -339,6 +339,158 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+  /company/{companyID}/cla/invitelist:
+    parameters:
+      - name: companyID
+        in: path
+        type: string
+        required: true
+    get:
+      summary: API to retrieve pending invite requests
+      security:
+        - OauthSecurity: 
+          - company
+      operationId: getPendingInviteRequests
+      responses:
+        '200':
+          description: 'Success'
+          schema: 
+            type: array
+            items:
+              $ref: '#/definitions/company-invite-user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+  /company/{companyID}/cla/accesslist:
+    parameters:
+      - name: companyID
+        in: path
+        type: string
+        required: true
+      - name: user
+        in: body
+        schema:
+          $ref: '#/definitions/access-list-user'
+    post:
+      summary: Add user to CLA accesslist
+      security:
+        - OauthSecurity: 
+          - company
+      operationId: addUsertoCompanyAccessList
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+    delete:
+      summary: Delete user from pending invites
+      security:
+        - OauthSecurity: 
+          - company
+      operationId: deletePendingInvite
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /company/{companyID}/invite-request:
+    parameters:
+      - name: companyID
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Send Email to Company Admins for Request of Access to be a CLA Manager
+      security:
+        - OauthSecurity: 
+          - company
+      operationId: sendInviteRequest
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+  /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg:
+    parameters:
+      - name: companyID
+        in: path
+        type: string
+        required: true
+      - name: corporateClaID
+        in: path
+        type: string
+        required: true
+      - name: githubOrganizationId
+        in: body
+        schema:
+          $ref: '#/definitions/github-org'
+    get:
+      summary: Get All Github Organization Under the CCLA whitelist
+      security: []
+      operationId: getGithubOrganizationfromCla
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/github-org'  
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'    
+    post:
+      summary: Add Github Organization to the CCLA whitelist
+      security: []
+      operationId: addGithubOrganizationFromCla
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+    delete:
+      summary: Delete Github Organization from CCLA whitelist
+      security: []
+      operationId: deleteGithubOrganizationFromCla
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
   /template:
     get:
       summary: Get Available Templates
@@ -438,6 +590,30 @@ definitions:
         default: false
     required:
     - id
+  company-invite-user:
+    type: object
+    x-nullable: false
+    title: User
+    description: User used for response from invitelist
+    properties:
+      userName:
+        type: string
+      inviteId:
+        type: string
+      userEmail:
+        type: string  
+      userLFID:
+        type: string
+  access-list-user:
+    type: object
+    x-nullable: false
+    title: User
+    description: User used for request in company access list
+    properties:
+      inviteId:
+        type: string
+      userLFID:
+        type: string
   project:
     type: object
     x-nullable: false

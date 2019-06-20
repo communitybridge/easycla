@@ -40,7 +40,7 @@
   version = "v1.10.0"
 
 [[projects]]
-  digest = "1:b96210868389a0dd3c64de917574eefdd3cc983e4f5601d076fc1da720751c48"
+  digest = "1:08988a5f77535dba2541c7bed7ec54c7a466afe26a9e72b02fe2028fa3a0933a"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -83,6 +83,7 @@
     "service/s3",
     "service/s3/s3iface",
     "service/s3/s3manager",
+    "service/ses",
     "service/ssm",
     "service/sts",
   ]
@@ -563,6 +564,7 @@
     "github.com/aws/aws-sdk-go/service/dynamodb",
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
+    "github.com/aws/aws-sdk-go/service/ses",
     "github.com/aws/aws-sdk-go/service/ssm",
     "github.com/awslabs/aws-lambda-go-api-proxy/httpadapter",
     "github.com/aymerick/raymond",

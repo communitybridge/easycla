@@ -6,11 +6,15 @@ type CLAUser struct {
 
 	Emails []string
 
+	LFEmail    string
+	LFUsername string
+
 	LfidProvider   UserProvider
 	GithubProvider UserProvider
 
 	ProjectIDs []string
 	ClaIDs     []string
+	CompanyIDs []string
 }
 
 type UserProvider struct {

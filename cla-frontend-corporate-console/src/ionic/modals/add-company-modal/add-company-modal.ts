@@ -11,6 +11,8 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
 import { AuthService } from "../../services/auth.service";
+import { HttpErrorResponse } from "@angular/common/http"
+import { ErrorObservable } from "rxjs/observable/ErrorObservable";
 
 @IonicPage({
   segment: "add-company-modal"
@@ -35,7 +37,8 @@ export class AddCompanyModal {
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
     private claService: ClaService,
-    private authService: AuthService
+    private authService: AuthService,
+    public alertCtrl: AlertController
   ) {
     this.getDefaults();
   }
@@ -79,7 +82,11 @@ export class AddCompanyModal {
         this.currentlySubmitting = false;
         this.dismiss();
       },
-      error => {
+      (err: any) => {
+        if (err.status === 409){
+          let errJSON = err.json();
+          this.companyExistAlert(errJSON.company_id)
+        }
         this.currentlySubmitting = false;
       }
     );
@@ -95,7 +102,11 @@ export class AddCompanyModal {
         this.currentlySubmitting = false;
         this.dismiss();
       },
-      error => {
+      (err: any) => {
+        if (err.status === 409){
+          let errJSON = err.json();
+          this.companyExistAlert(errJSON.company_id)
+        }
         this.currentlySubmitting = false;
       }
     );
@@ -103,6 +114,30 @@ export class AddCompanyModal {
 
   dismiss() {
     this.viewCtrl.dismiss();
+  }
+
+  companyExistAlert(company_id) {
+    let alert = this.alertCtrl.create({
+      title: 'Company ' + this.companyName + ' already exists',
+      message: 'The company you tried to create already exists in the CLA system. Would you like to request access?',
+      buttons: [
+        {
+          text: 'Request',
+          handler: () => {
+            this.claService.sendInviteRequestEmail(company_id)
+             .subscribe(() => this.dismiss());
+          }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          handler: () => {
+            console.log('No clicked');
+          }
+        }
+      ]
+    });
+    alert.present();
   }
 
   private updateUserInfoBasedLFID() {
