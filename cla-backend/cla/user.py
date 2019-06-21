@@ -38,10 +38,6 @@ def cla_user(default=None, request=None, **kwargs):
 
 
 class CLAUser(object):
-    """
-    Data received from Keycloak:
-    {'jti': '***REMOVED***', 'exp': 1513195124, 'nbf': 0, 'iat': 1513193324, 'iss': 'http://localhost:53235/auth/realms/LinuxFoundation', 'aud': 'cla', 'sub': '***REMOVED***', 'typ': 'Bearer', 'azp': 'cla', 'auth_time': 0, 'session_state': '***REMOVED***', 'acr': '1', 'allowed-origins': ['*'], 'realm_access': {'roles': ['engineering-team']}, 'resource_access': {}, 'name': '***REMOVED*** ***REMOVED***', 'preferred_username': '***REMOVED***', 'given_name': '***REMOVED***', 'family_name': '***REMOVED***', 'email': '***REMOVED***@linuxfoundation.org'}
-    """
     def __init__(self, data):
         self.data = data
         self.user_id = data.get('sub', None)

@@ -230,3 +230,5 @@ dist/*
 
 # Playground tmp files
 .playground
+
+api-postman/*

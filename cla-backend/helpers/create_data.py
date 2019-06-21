@@ -60,7 +60,7 @@ manager = get_user_instance()
 manager.set_user_id(str(uuid.uuid4()))
 manager.set_user_name('First User')
 manager.set_user_email('firstuser@domain.org')
-manager.set_user_email('***REMOVED***@linuxfoundation.org')
+manager.set_user_email('foobarski@linuxfoundation.org')
 manager.set_user_github_id(123)
 manager.save()
 
