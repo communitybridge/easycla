@@ -1,5 +1,6 @@
 Copyright The Linux Foundation and each contributor to CommunityBridge.
-SPDX-License-Identifier: GFDL-1.3-or-later
+
+SPDX-License-Identifier: CC-BY-4.0
 
 Ideas Roadmap
 
