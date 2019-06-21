@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	userID = "***REMOVED***"
+	userID = "<redacted>"
 )
 
 type Service interface {
