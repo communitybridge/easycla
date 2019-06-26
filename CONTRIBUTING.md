@@ -1,6 +1,8 @@
-SPDX-License-Identifier: GFDL-1.3-or-later
-
 # Contributing
+
+Copyright The Linux Foundation and each contributor to CommunityBridge.
+
+SPDX-License-Identifier: CC-BY-4.0
 
 All contributions must include a "Signed-off-by" line in the commit message, with the contributors' name and email address.
 
@@ -14,10 +16,10 @@ New **code files** should include a [short-form SPDX ID](https://spdx.org/ids) a
 // SPDX-License-Identifier: AGPL-3.0-or-later
 ```
 
-New **documentation files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is GFDL-1.3-or-later. This should look like the following:
+New **documentation files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is CC-BY-4.0. This should look like the following:
 
 ```
-SPDX-License-Identifier: GFDL-1.3-or-later
+SPDX-License-Identifier: CC-BY-4.0
 ```
 
 ## Developer Certificate of Origin (DCO)
