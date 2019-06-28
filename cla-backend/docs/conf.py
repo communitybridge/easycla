@@ -53,7 +53,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'CLA System'
 copyright = '2017, The Linux Foundation'
-author = '***REMOVED*** ***REMOVED***'
+author = 'Edouard Poitras'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -145,7 +145,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'CLA.tex', 'CLA Documentation',
-     '***REMOVED*** ***REMOVED***', 'manual'),
+     'Edouard Poitras', 'manual'),
 ]
 
 

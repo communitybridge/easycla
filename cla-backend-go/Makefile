@@ -32,8 +32,8 @@ build:
 	dep ensure
 	go build -o $(SERVICE) \
 		-ldflags " \
-			-X github.com/LF-Engineering/cla-monorepo/cla-backend-go/cmd.BuildStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'` \
-			-X github.com/LF-Engineering/cla-monorepo/cla-backend-go/cmd.GitHash=`git rev-parse HEAD`" \
+			-X github.com/communitybridge/easy-cla/cla-backend-go/cmd.BuildStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'` \
+			-X github.com/communitybridge/easy-cla/cla-backend-go/cmd.GitHash=`git rev-parse HEAD`" \
 		.
 
 buildlinux:

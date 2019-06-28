@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/user"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easy-cla/cla-backend-go/user"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

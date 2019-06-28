@@ -6,7 +6,7 @@ package project
 import (
 	"context"
 
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
 )
 
 var (

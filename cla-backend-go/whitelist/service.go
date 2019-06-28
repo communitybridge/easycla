@@ -8,7 +8,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
 
 	githubpkg "github.com/google/go-github/github"
 	"golang.org/x/oauth2"

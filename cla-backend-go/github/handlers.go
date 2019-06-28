@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gofrs/uuid"
