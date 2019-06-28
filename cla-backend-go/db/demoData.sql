@@ -5,7 +5,7 @@
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326','Test user');
 	
 	INSERT INTO cla."user" (user_id, "name")
-	VALUES ('***REMOVED***','Test user 2');
+	VALUES ('d76bf2b0-0593-407b-a9fe-d6532f5ace38','Test user 2');
 	
 	INSERT INTO cla.user_auth_provider(user_id, provider, provider_user_id)
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326', 'lfid', 'lfid_username');
@@ -14,10 +14,10 @@
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326', 'github', 'github_username');
 
 	INSERT INTO cla.user_auth_provider(user_id, provider, provider_user_id)
-	VALUES ('***REMOVED***', 'lfid', 'foobarski');
+	VALUES ('d76bf2b0-0593-407b-a9fe-d6532f5ace38', 'lfid', 'foobarski');
 
 	INSERT INTO cla.user_auth_provider(user_id, provider, provider_user_id)
-	VALUES ('***REMOVED***', 'github', 'user two');
+	VALUES ('d76bf2b0-0593-407b-a9fe-d6532f5ace38', 'github', 'user two');
 
 	INSERT INTO cla.project_manager(user_id, project_sfdc_id)
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326', 'sfdc_id_one');
@@ -26,13 +26,13 @@
 	VALUES ('11ebaa98-3471-4fcf-99e8-729549e4f326', 'sfdc_id_two');
 
 	INSERT INTO cla.project_manager(user_id, project_sfdc_id)
-	VALUES ('***REMOVED***', 'sfdc_id_one');
+	VALUES ('d76bf2b0-0593-407b-a9fe-d6532f5ace38', 'sfdc_id_one');
 
 	INSERT INTO cla.project_manager(user_id, project_sfdc_id)
-	VALUES ('***REMOVED***', 'sfdc_id_two');
+	VALUES ('d76bf2b0-0593-407b-a9fe-d6532f5ace38', 'sfdc_id_two');
 
 	INSERT INTO cla."user" (user_id, "name")
-	VALUES ('***REMOVED***','Test user 3');
+	VALUES ('fd1abddd-a370-4de8-a95d-0bec5b21e485','Test user 3');
 	
 	-- COMPANY
 	INSERT INTO cla.company (company_id, "name")
@@ -165,7 +165,7 @@
 	INSERT INTO cla.cla_manager
 	(user_id, corporate_cla_group_id) 
 	VALUES 
-	('***REMOVED***', 
+	('d76bf2b0-0593-407b-a9fe-d6532f5ace38', 
 	'e630255b-7974-47f1-969f-2b9fb3d271b4'); 
 	
 	--Docusign document 
@@ -219,7 +219,7 @@
 	signed)
 	VALUES ('741fb220-7b79-41ed-aec4-76e49dc48fa3',
 	'35ef4864-5174-4394-b07e-408fa1247cb6',
-	'***REMOVED***',
+	'd76bf2b0-0593-407b-a9fe-d6532f5ace38',
 	'33473f71-b696-4547-bb13-abb0e6aec910',
 	false);
 	
@@ -258,8 +258,8 @@
 	'1234',
 	'LDAP group name',
 	'ldap url',
-	'***REMOVED***',
-	'***REMOVED***');
+	'd76bf2b0-0593-407b-a9fe-d6532f5ace38',
+	'd76bf2b0-0593-407b-a9fe-d6532f5ace38');
 	
 	
 	

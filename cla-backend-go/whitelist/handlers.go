@@ -4,9 +4,9 @@
 package whitelist
 
 import (
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/models"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/gen/restapi/operations"
-	"github.com/LF-Engineering/cla-monorepo/cla-backend-go/github"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easy-cla/cla-backend-go/github"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/savaki/dynastore"
