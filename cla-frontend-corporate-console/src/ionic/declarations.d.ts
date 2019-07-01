@@ -1,5 +1,5 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 /*
   Declaration files are how the Typescript compiler knows about the type information(or shape) of an object.
