@@ -10,10 +10,10 @@ This indicates that the contribution is made pursuant to the [Developer Certific
 
 ## License information
 
-New **code files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is AGPL-3.0-or-later. This should look like the following:
+New **code files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is MIT. This should look like the following:
 
 ```
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 ```
 
 New **documentation files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is CC-BY-4.0. This should look like the following:
