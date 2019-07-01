@@ -2,7 +2,7 @@
   "name": "edge",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "scripts": {
     "prebuild": "yarn install",
     "build": "webpack",
