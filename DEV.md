@@ -19,7 +19,7 @@ nodejs (npm)
 
 Create a virtual environment and install dependencies
 
-```bash
+```sh
 # project root
 yarn install
 cd cla-backend
