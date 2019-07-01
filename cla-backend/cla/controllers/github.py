@@ -1,5 +1,5 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 """
 Controller related to the github application (CLA GitHub App).
