@@ -1,7 +1,7 @@
 {
   "name": "project",
   "version": "0.0.0",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "scripts": {
     "install-frontend": "./scripts/install-frontend.sh",
     "install-backend": "./scripts/install-backend.sh",
