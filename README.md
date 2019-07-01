@@ -44,10 +44,8 @@ CLA frontend consists of three independent SPA build with
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
 
-This project’s source code is licensed under the GNU Affero General
-Public License, either version 3 or (at your option) any later version
-(AGPL-3.0-or-later). A copy of the license is available in LICENSE-
-code.txt.
+This project’s source code is licensed under the MIT License. A copy of the
+license is available in LICENSE-code.txt.
 
 This project’s documentation is licensed under the Creative Commons Attribution
 4.0 International License (CC-BY-4.0). A copy of the license is available in

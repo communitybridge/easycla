@@ -1,5 +1,5 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 const { dev, prod} = require('@ionic/app-scripts/config/webpack.config');
 const webpack = require('webpack');
