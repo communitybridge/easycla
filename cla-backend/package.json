@@ -1,7 +1,7 @@
 {
   "name": "project",
   "version": "0.0.0",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "devDependencies": {
     "request": "^2.88.0",
     "serverless-dynamodb-local": "^0.2.35",
