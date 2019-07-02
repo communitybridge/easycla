@@ -66,7 +66,7 @@ jobs:
   buildProjectManagementConsole:
     <<: *buildUIAnchor
     environment:
-      PROJECT_DIR: frontend-project-management-console
+      PROJECT_DIR: cla-frontend-project-console
 
   buildCorporateManagementConsole:
     <<: *buildUIAnchor
@@ -76,7 +76,7 @@ jobs:
   buildContributorConsole:
     <<: *buildUIAnchor
     environment:
-      PROJECT_DIR: cla-frontend-console
+      PROJECT_DIR: cla-frontend-contributor-console
 
 workflows:
   version: 2.1
