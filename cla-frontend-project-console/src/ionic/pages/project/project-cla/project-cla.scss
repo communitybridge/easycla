@@ -39,11 +39,16 @@ ion-icon.icon-sm {
 }
 
 project-cla {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  
   .navbar-logo {
-    width: 40px;
+    width: 100px;
     position: absolute;
     left: calc(50% - 20px);
-    top: 7px;
+    top: 30%;
   }
 
   ion-header {
