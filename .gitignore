@@ -22,9 +22,9 @@ out/
 lib-cov
 
 # Directory for uploads
-cla-frontend-console/src/public/uploads/
+cla-frontend-contributor-console/src/public/uploads/
 cla-frontend-corporate-console/src/public/uploads/
-frontend-project-management-console/src/public/uploads/
+cla-frontend-project-console/src/public/uploads/
 
 
 # Coverage directory used by tools like istanbul
@@ -37,19 +37,19 @@ coverage
 .lock-wscript
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
-cla-frontend-console/src/build/Release
+cla-frontend-contributor-console/src/build/Release
 cla-frontend-corporate-console/src/build/Release
-frontend-project-management-console/src/build/Release
+cla-frontend-project-console/src/build/Release
 
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
-cla-frontend-console/src/node_modules/*
+cla-frontend-contributor-console/src/node_modules/*
 cla-frontend-corporate-console/src/node_modules/*
-frontend-project-management-console/src/node_modules/*
+cla-frontend-project-console/src/node_modules/*
 
-cla-frontend-console/src/!node_modules/passport-cas
+cla-frontend-contributor-console/src/!node_modules/passport-cas
 cla-frontend-corporate-console/src/!node_modules/passport-cas
-frontend-project-management-console/src/!node_modules/passport-cas
+cla-frontend-project-console/src/!node_modules/passport-cas
 
 # backend and serverless
 cla-backend/cla/node_modules/*
@@ -77,79 +77,79 @@ docker-compose.yml
 __pycache__
 
 # Ionic Build Files
-cla-frontend-console/src/config/cla-env-config.json
+cla-frontend-contributor-console/src/config/cla-env-config.json
 cla-frontend-corporate-console/src/config/cla-env-config.json
-frontend-project-management-console/src/config/cla-env-config.json
-frontend-project-management-console/.serverless/
-frontend-project-management-console/edge/node_modules/
-frontend-project-management-console/node_modules/
+cla-frontend-project-console/src/config/cla-env-config.json
+cla-frontend-project-console/.serverless/
+cla-frontend-project-console/edge/node_modules/
+cla-frontend-project-console/node_modules/
 cla-frontend-corporate-console/.serverless/
 cla-frontend-corporate-console/edge/node_modules/
 cla-frontend-corporate-console/node_modules/
-cla-frontend-console/.serverless/
-cla-frontend-console/edge/node_modules/
-cla-frontend-console/node_modules/
+cla-frontend-contributor-console/.serverless/
+cla-frontend-contributor-console/edge/node_modules/
+cla-frontend-contributor-console/node_modules/
 
-cla-frontend-console/src/www
+cla-frontend-contributor-console/src/www
 cla-frontend-corporate-console/src/www
-frontend-project-management-console/src/www
+cla-frontend-project-console/src/www
 
-cla-frontend-console/src/.sass-cache/
+cla-frontend-contributor-console/src/.sass-cache/
 cla-frontend-corporate-console/src/.sass-cache/
-frontend-project-management-console/src/.sass-cache/
+cla-frontend-project-console/src/.sass-cache/
 
-cla-frontend-console/src/.tmp/
+cla-frontend-contributor-console/src/.tmp/
 cla-frontend-corporate-console/src/.tmp/
-frontend-project-management-console/src/.tmp/
+cla-frontend-project-console/src/.tmp/
 
-cla-frontend-console/src/.versions/
+cla-frontend-contributor-console/src/.versions/
 cla-frontend-corporate-console/src/.versions/
-frontend-project-management-console/src/.versions/
+cla-frontend-project-console/src/.versions/
 
-cla-frontend-console/src/coverage/
+cla-frontend-contributor-console/src/coverage/
 cla-frontend-corporate-console/src/coverage/
-frontend-project-management-console/src/coverage/
+cla-frontend-project-console/src/coverage/
 
-cla-frontend-console/src/dist/
+cla-frontend-contributor-console/src/dist/
 cla-frontend-corporate-console/src/dist/
-frontend-project-management-console/src/dist/
+cla-frontend-project-console/src/dist/
 
-cla-frontend-console/src/node_modules/
+cla-frontend-contributor-console/src/node_modules/
 cla-frontend-corporate-console/src/node_modules/
-frontend-project-management-console/src/node_modules/
+cla-frontend-project-console/src/node_modules/
 
-cla-frontend-console/src/tmp/
+cla-frontend-contributor-console/src/tmp/
 cla-frontend-corporate-console/src/tmp/
-frontend-project-management-console/src/tmp/
+cla-frontend-project-console/src/tmp/
 
-cla-frontend-console/src/temp/
+cla-frontend-contributor-console/src/temp/
 cla-frontend-corporate-console/src/temp/
-frontend-project-management-console/src/temp/
+cla-frontend-project-console/src/temp/
 
-cla-frontend-console/src/hooks/
+cla-frontend-contributor-console/src/hooks/
 cla-frontend-corporate-console/src/hooks/
-frontend-project-management-console/src/hooks/
+cla-frontend-project-console/src/hooks/
 
-cla-frontend-console/src/platforms/
+cla-frontend-contributor-console/src/platforms/
 cla-frontend-corporate-console/src/platforms/
-frontend-project-management-console/src/platforms/
+cla-frontend-project-console/src/platforms/
 
-cla-frontend-console/src/plugins/
+cla-frontend-contributor-console/src/plugins/
 cla-frontend-corporate-console/src/plugins/
-frontend-project-management-console/src/plugins/
+cla-frontend-project-console/src/plugins/
 
-cla-frontend-console/src/.sourcemaps/
+cla-frontend-contributor-console/src/.sourcemaps/
 cla-frontend-corporate-console/src/.sourcemaps/
-frontend-project-management-console/src/.sourcemaps/
+cla-frontend-project-console/src/.sourcemaps/
 $RECYCLE.BIN/
-cla-frontend-console/src/.sourcemaps
+cla-frontend-contributor-console/src/.sourcemaps
 cla-frontend-corporate-console/src/.sourcemaps
-frontend-project-management-console/src/.sourcemaps
+cla-frontend-project-console/src/.sourcemaps
 
 # Config file
-cla-frontend-console/src/ionic/assets/keycloak.json
+cla-frontend-contributor-console/src/ionic/assets/keycloak.json
 cla-frontend-corporate-console/src/ionic/assets/keycloak.json
-frontend-project-management-console/src/ionic/assets/keycloak.json
+cla-frontend-project-console/src/ionic/assets/keycloak.json
 
 # Terraform
 .lf/
@@ -159,9 +159,9 @@ cla-backend/ci-drone/terraform.tfstate
 cla-backend/ci-drone/terraform.tfstate.backup
 cla-backend/ci-drone/backend.auto.tfvars
 
-cla-frontend-console/src/ionic/assets/keycloak.json
+cla-frontend-contributor-console/src/ionic/assets/keycloak.json
 cla-frontend-corporate-console/src/ionic/assets/keycloak.json
-frontend-project-management-console/src/ionic/assets/keycloak.json
+cla-frontend-project-console/src/ionic/assets/keycloak.json
 
 # Serverless
 cla-backend/.requirements/*
