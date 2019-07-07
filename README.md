@@ -51,12 +51,12 @@ CLA frontend consists of three independent SPA build with
 Copyright The Linux Foundation and each contributor to CommunityBridge.
 
 This project’s source code is licensed under the MIT License. A copy of the
-license is available in LICENSE-code.txt.
+license is available in LICENSE.
 
-It includes source code from keycloak, which is licensed under the Apache License,
-version 2.0 (Apache-2.0), a copy of which is also available in LICENSE-code.txt.
+The project includes source code from keycloak, which is licensed under the
+Apache License, version 2.0 (Apache-2.0), a copy of which is available in
+LICENSE-keycloak.
 
 This project’s documentation is licensed under the Creative Commons Attribution
 4.0 International License (CC-BY-4.0). A copy of the license is available in
-LICENSE-docs.txt.
-
+LICENSE-docs.
