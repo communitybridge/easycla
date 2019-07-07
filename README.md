@@ -1,6 +1,6 @@
 # Easy Contributor License Agreement (CLA) Project
 
-[![CircleCI](https://circleci.com/gh/communitybridge/easy-cla.svg?style=svg&circle-token=936fbcd340fff1b26453a2f46ffeab48f4fd3be4)](https://circleci.com/gh/communitybridge/easy-cla)
+[![CircleCI](https://circleci.com/gh/communitybridge/easycla.svg?style=svg&circle-token=936fbcd340fff1b26453a2f46ffeab48f4fd3be4)](https://circleci.com/gh/communitybridge/easycla)
 
 The Contributor License Agreement (CLA) service of the Linux Foundation lets
 project contributors read, sign, and submit contributor license agreements easily.
