@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

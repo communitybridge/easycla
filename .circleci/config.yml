@@ -15,34 +15,41 @@ jobs:
           command: sudo apt-get install -y awscli
       - run:
           name: make setup
-          command: cd cla-backend && make setup_circle
-      - run:
-          name: List working dir
-          command: ls
-      - run:
-          name: Copy Workspace To Avoid Conflicts
-          command: mv ~/project ~/backend
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - backend/package.json
-            - backend/cla-backend
-            - backend/scripts
-            - backend/project-vars.yml
+          command: |
+            cd cla-backend
+            make setup_circle
 
   buildGoBackend:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/communitybridge/easy-cla/
+    working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - checkout
-      - run: go get -u github.com/go-swagger/go-swagger/cmd/swagger
-      - run: cd cla-backend-go; make swagger; make build_aws_lambda
-      - run: mv cla-backend-go ~/cla-backend-go
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - cla-backend-go/backend_aws_lambda
+      - run:
+          name: Setup
+          command: |
+            cd cla-backend-go
+            make setup_dev
+      - run:
+          name: Build Swagger
+          command: |
+            cd cla-backend-go
+            make swagger
+      - run:
+          name: Build
+          command: |
+            cd cla-backend-go
+            make build_aws_lambda
+      - run:
+          name: Test
+          command: |
+            cd cla-backend-go
+            make test
+      #- run:
+      #    name: Lint
+      #    command: |
+      #      cd cla-backend-go
+      #      make lint
 
   buildUIProject: &buildUIAnchor
     docker:
@@ -55,13 +62,6 @@ jobs:
       - run:
           name: Install Dependencies
           command: cd $PROJECT_DIR && make setup
-      - run:
-          name: Copy Workspace To Avoid Conflicts
-          command: mv /home/circleci/project "/home/circleci/$PROJECT_DIR-workspace"
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - ./*
 
   buildProjectManagementConsole:
     <<: *buildUIAnchor
@@ -87,27 +87,18 @@ workflows:
             tags:
               only: /.*/
       - buildGoBackend:
-          requires:
-            - buildBackend
           filters:
             tags:
               only: /.*/
       - buildProjectManagementConsole:
-          requires:
-            - buildBackend
-            - buildGoBackend
           filters:
             tags:
               only: /.*/
       - buildCorporateManagementConsole:
-          requires:
-            - buildProjectManagementConsole
           filters:
             tags:
               only: /.*/
       - buildContributorConsole:
-          requires:
-            - buildCorporateManagementConsole
           filters:
             tags:
               only: /.*/

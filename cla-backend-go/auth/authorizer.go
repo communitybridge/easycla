@@ -6,7 +6,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/communitybridge/easy-cla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 )
 
 const (

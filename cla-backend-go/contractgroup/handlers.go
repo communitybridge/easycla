@@ -4,9 +4,9 @@
 package contractgroup
 
 import (
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations/contract_group"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/contract_group"
 
 	"github.com/go-openapi/runtime/middleware"
 )

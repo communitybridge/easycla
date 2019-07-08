@@ -4,9 +4,9 @@
 package project
 
 import (
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations/project"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 
 	"github.com/go-openapi/runtime/middleware"
 )
