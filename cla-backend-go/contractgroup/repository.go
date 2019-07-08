@@ -7,8 +7,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
 	"github.com/jmoiron/sqlx"
 )
