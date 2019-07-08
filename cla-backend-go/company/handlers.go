@@ -1,9 +1,9 @@
 package company
 
 import (
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easy-cla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 )

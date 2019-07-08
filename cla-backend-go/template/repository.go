@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
 
 var (
