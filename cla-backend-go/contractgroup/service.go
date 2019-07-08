@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/communitybridge/easy-cla/cla-backend-go/gen/models"
 	"github.com/aymerick/raymond"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
 
 var (

@@ -4,7 +4,7 @@
 package main
 
 import (
-	"github.com/communitybridge/easy-cla/cla-backend-go/cmd"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd"
 )
 
 func main() {

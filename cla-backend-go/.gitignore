@@ -11,7 +11,9 @@ db/schema.sql
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Ignore Jetbrains IDE configuration files
 .idea/*
+*.iml
 
 # Serverless directories
 .serverless
@@ -27,4 +29,8 @@ vendor
 
 .env
 
-gen
+# Ignore the generated folder
+gen/
+
+# Ignore test reports
+cover.out
