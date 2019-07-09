@@ -46,6 +46,10 @@ CLA frontend consists of three independent SPA build with
 - `cla-frontend-corporate-console` for any concrete company CLA manager to sign CCLA and manage employee CLA whitelist
 - `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
 
+## Architecture
+
+See the [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) document.
+
 ## License
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
@@ -60,8 +64,3 @@ LICENSE-keycloak.
 This project’s documentation is licensed under the Creative Commons Attribution
 4.0 International License (CC-BY-4.0). A copy of the license is available in
 LICENSE-docs.
-
-## Architecture
-
-See the [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) document.
-
