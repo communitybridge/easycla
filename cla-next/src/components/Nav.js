@@ -4,16 +4,16 @@ import HamburgerIcon from './HamburgerIcon';
 
 const leftLinks = [
   {
-    href: 'https://github.com/segmentio/create-next-app', label: 'Funding'
+    href: 'https://funding.communitybridge.org/', label: 'Funding'
   },
   {
-    href: 'https://github.com/segmentio/create-next-app', label: 'Mentorship'
+    href: 'https://people.communitybridge.org/', label: 'Mentorship'
   },
   {
-    href: 'https://github.com/segmentio/create-next-app', label: 'Docs'
+    href: 'https://docs.linuxfoundation.org/', label: 'Docs'
   },
   {
-    href: 'https://github.com/segmentio/create-next-app', label: 'Support'
+    href: 'https://support.communitybridge.org/', label: 'Support'
   }
 ].map(link => {
   link.key = `nav-link-${link.href}-${link.label}`
@@ -22,16 +22,16 @@ const leftLinks = [
 
 const rightLinks = [
   {
-    href: 'https://funding.communitybridge.org/', label: 'twitter'
+    href: 'https://twitter.com/linuxfoundation', label: 'twitter'
   },
   {
-    href: 'https://people.communitybridge.org/', label: 'facebook'
+    href: 'https://www.facebook.com/TheLinuxFoundation', label: 'facebook'
   },
   {
-    href: 'https://docs.linuxfoundation.org/', label: 'linkedin'
+    href: 'https://www.linkedin.com/company/208777', label: 'linkedin'
   },
   {
-    href: 'https://support.communitybridge.org/', label: 'youtube-play'
+    href: 'https://www.youtube.com/user/TheLinuxFoundation', label: 'youtube-play'
   }
 ].map(link => {
   link.key = `nav-link-${link.href}-${link.label}`
@@ -74,14 +74,18 @@ const Nav = () => (
                 {rightLinks.map(({ key, href, label }) => (
                   <li key={key}>
                     <Link href={href}>
-                     <a>
-                      <i class={`fa fa-${label}`}></i>
-                     </a>
+                      <a>
+                        <i class={`fa fa-${label} faa-bounce animated-hover`}></i>
+                      </a>
                     </Link>
                   </li>
                 ))}
               </ul>
-              <button className="">THE LINUX FOUNDATION</button>
+              <button className="linux-button">
+                <Link href="https://www.linuxfoundation.org/">
+                  <a> THE LINUX FOUNDATION</a>
+                </Link>
+              </button>
             </nav>
             <div className="d-flex d-md-none">
               <HamburgerIcon />

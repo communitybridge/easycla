@@ -18,6 +18,18 @@ header {
   }
 }
 
+.linux-button  {
+  background-color: transparent;
+  cursor: pointer;
+  border: 0;
+  a {
+    font-family: 'Open Sans';
+    color: #fff;
+  }
+  
+
+}
+
 .header-wrapper {
   display: flex;
   justify-content: space-between;
@@ -39,8 +51,14 @@ header {
       font-family: 'Open Sans';
       font-size: 14px;
       line-height: 19.6px;
-      font-weight: 600;
       margin: 0 10px;
+      -webkit-transition: all 2s; /* Safari prior 6.1 */
+      transition: all 0.5s;
+
+      &:hover {
+        border-bottom: 2px solid #fff;
+        padding-bottom: 0.2rem;
+      }
     }
   }
 }
@@ -56,7 +74,6 @@ header {
       font-family: 'Open Sans';
       font-size: 14px;
       line-height: 19.6px;
-      font-weight: 600;
       margin: 0 10px;
     }
 
