@@ -1,0 +1,48 @@
+.hero-wrapper {
+  position: relative;
+}
+
+.shape-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 35vh;
+  width: 100%;
+  color: white;
+  background-image: url('/static/img/cb_bg8.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  &:before {
+    background: linear-gradient(90deg,#003366 0%,rgba(255,255,255,0.2) 100%);
+    opacity: 0.8;
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  .hero-content-wrapper {
+    z-index: 3;
+  }
+
+  .hero-content {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 30px;
+    line-height: 1.4;
+    padding: 0.5rem;
+    z-index: 3;
+  }
+}
