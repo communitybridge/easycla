@@ -17,13 +17,12 @@ const Head = props => (
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" sizes="192x192" href="/static/touch-icon.png" />
     <link rel="apple-touch-icon" href="/static/touch-icon.png" />
-    <link rel="mask-icon" href="/static/favicon-mask.svg" color="#49B882" />
-    <link rel="icon" href="/static/favicon.ico" />
+    <link rel="icon" href="/static/favicon.png" />
     <meta property="og:url" content={props.url || defaultOGURL} />
     <meta property="og:title" content={props.title || ''} />
 
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Work+Sans&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Work+Sans:300,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" id="iconsmind-css" href="https://communitybridge.org/wp-content/themes/salient/css/iconsmind.css?ver=7.6"
       type="text/css" media="all" />
     <link rel="stylesheet" id="font-awesome-css" href="https://communitybridge.org/wp-content/themes/salient/css/font-awesome.min.css?ver=4.6.4"
