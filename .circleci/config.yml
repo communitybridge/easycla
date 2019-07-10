@@ -60,8 +60,21 @@ jobs:
           name: Install Top Level Dependencies
           command: yarn install
       - run:
-          name: Install Dependencies
-          command: cd $PROJECT_DIR && make setup
+          name: Install UI Dependencies
+          command: |
+            pushd $PROJECT_DIR
+            yarn install
+            yarn install-frontend
+            popd
+      - run:
+          name: Build UI
+          command: |
+            pushd $PROJECT_DIR/src
+            # Dummy JSON config to allow build to run
+            echo "{}" > config/cla-env-config.json
+            yarn install
+            yarn build
+            popd
 
   buildProjectManagementConsole:
     <<: *buildUIAnchor
