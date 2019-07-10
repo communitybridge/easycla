@@ -110,6 +110,17 @@ for i in cla-frontend-project-console cla-frontend-corporate-console cla-fronten
 done
 ```
 
+# CLA Landing Page
+
+#### Requirements
+
+* Next
+
+cd cla-next
+yarn install
+yarn dev to run locally
+yarn build && yarn start to run in production
+
 ### Config variables provision
 
 Due to Ionic custom webpack limitations, in order to provision config variables,
