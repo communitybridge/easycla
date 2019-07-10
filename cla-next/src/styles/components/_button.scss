@@ -1,0 +1,33 @@
+.btn-wrapper {
+  margin-top: 25px;
+}
+
+.btn {
+  cursor: pointer;
+  text-transform: uppercase;
+  font-family: 'Open Sans';
+  font-weight: 700;
+  color: #ffff;
+  padding: 12px 18px;
+  border-radius: 5px;
+  font-size: 12px;
+  -webkit-border-radius: 200px!important;
+  box-shadow: none;
+  border: 0;
+  letter-spacing: 2px;
+
+  &:focus {
+    outline: none;
+  }
+
+  &.primary {
+    background-color: #0099ee!important
+  }
+
+  &.success {
+    background-color: #9ac667 !important;
+  }
+}
+
+.btn-wrapper + .btn-wrapper {
+}
