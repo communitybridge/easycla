@@ -1,21 +1,68 @@
 login-page {
 
-  .scroll-content {
-    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
+  .login-wrapper {
+    display: flex;
+    margin-bottom: 6rem;
+    align-items: center;
+    height: 60vh;
+    position: relative;
+    padding: 4px 25px;
+
+    background: url("../assets/img/cb_bg8.jpg") no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
+    
+
+    &:before {
+      background: linear-gradient(90deg,#003366 0%,rgba(255,255,255,0.2) 100%);
+      opacity: 0.8;
+      content: "";
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60vh;
+      z-index: 1;
+    }
+
+    span {
+      color: color($colors, white);
+    }
+  }
+
+  p {
+    font-size: 16px;
+    color: color($colors, white);
+    line-height: 23px;
+  }
+
+  .login-content {
+    width: 40%;
+    z-index: 2;
+
+    h3 {
+      font-size: 35px;
+      color: color($colors, white);
+    }
+  }
+
+  .login-page-steps {
+    padding: 4px 25px;
   }
 
   .login-container {
     text-align: center;
-    margin-top: 60px;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
     padding: 50px 20px;
     background-color: #ececec;
-    max-width: 400px;
+    width: 40%;
+    z-index: 2;
+    opacity: 0.8;
   }
 
   .logo {
@@ -29,6 +76,63 @@ login-page {
 
   .login-button {
     margin-top: 50px;
+  }
+
+  .login-page-steps {
+    margin-bottom: 2rem;
+    background-image: none;
+    h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 30px;
+      color: color($colors, dark);
+      text-align: center;
+    }
+  }
+
+  .section-title {
+    margin-top: 2rem;
+    margin-bottom: 4rem
+  }
+
+  .steps-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
+
+    h5 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 500;
+      color: color($colors, dark);
+    }
+
+    p {
+      color: color($colors, dark);
+    }
+  }
+  
+  .cla-list::before {
+    font-family: 'FontAwesome';
+    content: '\f058';
+    margin: 0px 5px 0px -15px;
+    color: #0099ee;
+    list-style-type: none;
+  }
+  
+  .cla-list {
+    margin-bottom: 15px;
+    list-style: none;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  .step-item {
+    flex: 0 0 33.33333%;
+    max-width: 33.33333%;
+    margin-left: 0.5px;
+    margin-right: 0.5px;
   }
 
 }

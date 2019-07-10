@@ -3,14 +3,68 @@
     <ion-title>CLA Corporate Console</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content padding headerspacing overflow-scroll="true">
-  <div class="login-container">
-    <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
-    <button ion-button class="login-button" (click)="login()">
-      <span class="icon icon-login"></span>
-      <span class="btn-label">Sign in</span>
-    </button>
+<ion-content  headerspacing headerspacing overflow-scroll="true" >
+  <div class="login-wrapper">
+    <div class="login-content">
+      <h3>Authorize Your Coperate Developers </h3>
+      <p>Ensure that your corporate developers are able to contribute code productively while streamling how CLAs get signed
+        by your company:</p>
+      <ul>
+        <li class="cla-list"><span>Whitelist your developers by domain, Gihub handle, and email address.</span></li>
+        <li class="cla-list"><span>Capture e-signature with DocuSign</span></li>
+      </ul>
+    </div>
+    <div class="login-container">
+      <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
+      <button ion-button class="login-button" (click)="login()">
+        <span class="icon icon-login"></span>
+        <span class="btn-label">Sign in</span>
+      </button>
+    </div>
   </div>
+  <div class="login-page-steps">
+    <div class="section-title">
+        <h3>How to Start Using EasyCLA as a Corporate Contributor</h3>
+    </div>
+
+    <div class="steps-container">
+      <div class="step-item">
+        <h5>Step 1</h5>
+        <h5>Set up your company on EasyCLA</h5>
+        <ul class="cla-list-wrapper">
+          <li class="cla-list">
+           <span> The Project Manager, often the project maintainer, will have added uploaded the appropraite CLA</span>
+          </li>
+          <li class="cla-list">
+            <span>When one of your developers attemps to contribute to the projec, they will send a request for the CLA to be signed and that they ( and other developers ) to be authorized to contribute.</span>
+          </li>
+          <li class="cla-list">
+            <span>Create your account to manage and sign the CLA, as well as whitelist developers from this page.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="step-item">
+          <h5>Step 2</h5>
+          <h5>Sign the CLA</h5>
+          <ul>
+            <li class="cla-list"><span>Either submit the address of your authorized signatory or sign the CLA directly yourself.</span></li>
+            <li class="cla-list"><span>Signatures are captured electronically using DocuSign.</span></li>
+          </ul>
+      </div>
+      <div>
+          <h5>Step 3</h5>
+          <h5>Whitelist Your Developers</h5>
+          <p>Once you have signed the CLA for the assocaited project, you can whitelist developers in several ways:</p>
+          <ul>
+            <li class="cla-list"><span>By Domain</span></li>
+            <li class="cla-list"><span>By Guthub handle</span></li>
+            <li class="cla-list"><span>By email address</span></li>
+          </ul>
+      </div>
+    </div>
+  </div>
+  
 </ion-content>
 
 <cla-footer></cla-footer>
+
