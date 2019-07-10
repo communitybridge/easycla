@@ -106,7 +106,7 @@ make setup
 
 # or simply...
 for i in cla-frontend-project-console cla-frontend-corporate-console cla-frontend-contributor-console; do
-    pushd ${i} && make setup; popd;
+    pushd ${i} && yarn install-frontend; popd;
 done
 ```
 
