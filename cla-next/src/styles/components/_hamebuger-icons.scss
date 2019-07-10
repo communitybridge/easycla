@@ -1,0 +1,40 @@
+.menu {
+  border: unset;
+  cursor: pointer;
+  background-color: transparent;
+  margin-right: 1rem;
+  margin-bottom: 3px;
+
+  &:focus {
+    outline: none;
+  }
+
+  .line {
+    width: 1.5rem;
+    height: 3px;
+    background-color: #fff;
+    display: block;
+    margin: 4px auto;
+    -webkit-transition: all 0.1s ease-in-out;
+    -o-transition: all 0.1s ease-in-out;
+    transition: all 0.1s ease-in-out;
+  }
+}
+
+.menu.is-active .line:nth-child(2){
+  opacity: 0;
+}
+
+.menu.is-active .line:nth-child(1){
+  -webkit-transform: translateY(7px) rotate(45deg);
+  -ms-transform: translateY(7px) rotate(45deg);
+  -o-transform: translateY(7px) rotate(45deg);
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu.is-active .line:nth-child(3){
+  -webkit-transform: translateY(-7px) rotate(-45deg);
+  -ms-transform: translateY(-7px) rotate(-45deg);
+  -o-transform: translateY(-7px) rotate(-45deg);
+  transform: translateY(-7px) rotate(-45deg);
+}
