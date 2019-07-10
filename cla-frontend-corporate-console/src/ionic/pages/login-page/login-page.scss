@@ -1,10 +1,9 @@
 login-page {
-
   .login-wrapper {
     display: flex;
     margin-bottom: 6rem;
     align-items: center;
-    height: 60vh;
+    min-height: 65vh;
     position: relative;
     padding: 4px 25px;
 
@@ -14,7 +13,6 @@ login-page {
     -o-background-size: cover;
     background-size: cover;
     
-
     &:before {
       background: linear-gradient(90deg,#003366 0%,rgba(255,255,255,0.2) 100%);
       opacity: 0.8;
@@ -24,7 +22,7 @@ login-page {
       top: 0;
       left: 0;
       width: 100%;
-      height: 60vh;
+      height: 100%;
       z-index: 1;
     }
 
@@ -40,7 +38,6 @@ login-page {
   }
 
   .login-content {
-    width: 40%;
     z-index: 2;
 
     h3 {
@@ -60,8 +57,9 @@ login-page {
     margin-right: auto;
     padding: 50px 20px;
     background-color: #ececec;
-    width: 40%;
-    z-index: 2;
+    font-family: 'Work Sans', sans-serif;
+    width: 60%;
+    z-index: 3;
     opacity: 0.8;
   }
 
@@ -76,6 +74,7 @@ login-page {
 
   .login-button {
     margin-top: 50px;
+    width: 250px;
   }
 
   .login-page-steps {
@@ -90,25 +89,22 @@ login-page {
     }
   }
 
-  .section-title {
-    margin-top: 2rem;
-    margin-bottom: 4rem
+  .card-title {
+    font-weight: bold;
+    text-align: center;
+    font-size: 22px;
   }
 
-  .steps-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 50px;
+  .card-subtitle {
+    font-size: 16x;
+    text-align: center;
+    color: #676767;
+  }
 
-    h5 {
-      text-align: center;
-      font-size: 22px;
-      font-weight: 500;
-      color: color($colors, dark);
-    }
-
+  ion-card {
     p {
       color: color($colors, dark);
+      font-size: 20px;
     }
   }
   
@@ -126,13 +122,10 @@ login-page {
     font-family: 'Work Sans', sans-serif;
     font-size: 16px;
     line-height: 1.5;
-  }
-  
-  .step-item {
-    flex: 0 0 33.33333%;
-    max-width: 33.33333%;
-    margin-left: 0.5px;
-    margin-right: 0.5px;
+    color: #676767;
   }
 
+  ion-footer {
+    position: relative;
+  }
 }
