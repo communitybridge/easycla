@@ -10,7 +10,7 @@
     "serverless-wsgi": "^1.5.2"
   },
   "scripts": {
-    "sls": "../node_modules/.bin/serverless",
+    "sls": "../node_modules/serverless/bin/serverless",
     "install:dev": "sh dev.sh install",
     "add:user": "sh dev.sh add:user",
     "start:lambda": "sh dev.sh start:lambda",
