@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "deploy": "../scripts/deploy-frontend.sh",
-    "sls": "../node_modules/.bin/serverless",
+    "sls": "../node_modules/serverless/bin/serverless",
     "install-frontend": "../scripts/install-frontend.sh"
   },
   "devDependencies": {

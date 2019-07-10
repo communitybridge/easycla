@@ -63,15 +63,23 @@ jobs:
           name: Install UI Dependencies
           command: |
             pushd $PROJECT_DIR
-            yarn install
             yarn install-frontend
             popd
       - run:
-          name: Build UI
+          name: Build UI Source
           command: |
+            echo "Building src..."
             pushd $PROJECT_DIR/src
             # Dummy JSON config to allow build to run
             echo "{}" > config/cla-env-config.json
+            yarn install
+            yarn build
+            popd
+      - run:
+          name: Build Edge Source
+          command: |
+            echo "Building edge..."
+            pushd $PROJECT_DIR/edge
             yarn install
             yarn build
             popd
