@@ -1,3 +1,5 @@
+-- Copyright The Linux Foundation and each contributor to CommunityBridge.
+-- SPDX-License-Identifier: MIT
 -- migrate:up
 CREATE SCHEMA cla;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
