@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 const express = require('express');
 const helmet = require('helmet')
 const dev = process.env.NODE_ENV !== 'production';
