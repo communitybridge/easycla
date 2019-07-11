@@ -61,6 +61,10 @@ login-page {
     width: 100%;
     z-index: 3;
     opacity: 0.8;
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      width: 60%;
+    }
   }
 
   .logo {
@@ -123,6 +127,11 @@ login-page {
     font-size: 16px;
     line-height: 1.5;
     color: #676767;
+  }
+
+  .cla-list-paragraph {
+    color: #676767;
+    font-family: 'Work Sans', sans-serif;
   }
 
   ion-footer {
