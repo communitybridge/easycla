@@ -6,7 +6,132 @@
     <ion-title>CLA Management Console</ion-title>
   </ion-navbar>
 </ion-header>
-<ion-content padding headerspacing overflow-scroll="true">
+<ion-content headerspacing headerspacing overflow-scroll="true">
+  <div class="login-wrapper">
+    <ion-grid class="login-content">
+      <ion-row>
+        <ion-col col-12 col-md-6>
+          <div class="login-content">
+            <h3>Making CLAs Easy for Maintainers </h3>
+            <p>Reduce administrative hassles of supporting the CLA for your project</p>
+            <ul>
+              <li class="cla-list">
+                <span>Support both individual and corporate CLAs</span>
+              </li>
+              <li class="cla-list">
+                <span>Look in one place for companies and individuals who have signed the CLA</span>
+              </li>
+              <li class="cla-list">
+                <span>Consolidate all your signed CLA in a single portal</span>
+              </li>
+              <li class="cla-list">
+                <span>Push whitelisting requirements to the corporate contributors</span>
+              </li>
+              <li class="cla-list">
+                <span>Reduce likelihood of errors during enforcement of CLA signing</span>
+              </li>
+            </ul>
+          </div>
+        </ion-col>
+        <ion-col col-12 col-md-6>
+          <div class="login-container">
+            <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
+            <button ion-button class="login-button" (click)="login()">
+              <span class="icon icon-login"></span>
+              <span class="btn-label">Sign in</span>
+            </button>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+
+
+  <div class="login-page-steps">
+    <div>
+      <h3>How to Start Using EasyCLA as a Project Manager</h3>
+    </div>
+    <ion-grid>
+      <ion-row>
+        <ion-col col-12 col-md-4>
+          <ion-card class="card card-md">
+            <ion-card-header>
+              <h4 class="card-title" class="card-title">Step 1</h4>
+              <div class="card-subtitle" class="card-subtitle">Set up project on EasyCLA</div>
+            </ion-card-header>
+
+            <ion-card-content>
+              <ul class="cla-list-wrapper">
+                <li class="cla-list">
+                  <span>All Linux Foundation projects on Github or Gerrit can use EasyCLA</span>
+                </li>
+                <li class="cla-list">
+                  <span>Email support@linuxfoundation.org to confirm whether your specific project has been set up on EasyCLA</span>
+                </li>
+                <li class="cla-list">
+                  <span>If your project is not on Linux Foundation project, request access by filling out this form 
+                    <a href="">[HERE]</a>
+                  </span>
+                </li>
+                <li class="cla-list">
+                  <span>We evaluate non-Linux Foundation projects on a case by case basis
+                  </span>
+                </li>
+              </ul>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col col-12 col-md-4>
+          <ion-card class="card card-md">
+            <ion-card-header>
+              <h4 class="card-title">Step 2</h4>
+              <div class="card-subtitle">Get your Linux Foundation ID</div>
+            </ion-card-header>
+
+            <ion-card-content>
+              <ul>
+                <li class="cla-list">
+                  <span>When your project was given access to EasyCLA, you should have be given a Linux Foundation (LF ID) to log in.</span>
+                </li>
+                <p>If you do not have your LF ID, email <a>support@linuxfoundation.org</a> to request it.</p>
+              </ul>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col>
+          <ion-card class="card card-md">
+            <ion-card-header>
+              <h4 class="card-title">Step 3</h4>
+              <div class="card-subtitle">Login to Manage CLAs</div>
+            </ion-card-header>
+            <ion-card-content>
+              <p>Once you are able to login you will be able to do the following to simplify the CLA process for your project.</p>
+              <ul>
+                <li class="cla-list">
+                  <span>Add Repos</span>
+                </li>
+                <li class="cla-list">
+                  <span>Request your specific CLA</span>
+                </li>
+                <li class="cla-list">
+                  <span>Review signatory Companies and Individuals</span>
+                </li>
+              </ul>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <cla-footer></cla-footer>
+
+</ion-content>
+
+<!-- <ion-content padding headerspacing overflow-scroll="true">
   <div class="login-container">
     <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
     <p class="error" *ngIf="userRoles.isAuthenticated && !canAccess">
@@ -23,4 +148,4 @@
   </div>
 </ion-content>
 
-<cla-footer></cla-footer>
+<cla-footer></cla-footer> -->
