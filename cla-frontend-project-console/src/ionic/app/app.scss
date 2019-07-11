@@ -121,6 +121,10 @@ ion-content .scroll-content > header {
   background-color: transparent;
 }
 
+.text-center {
+  text-align: center;
+}
+
 .vertical-rule-right::after {
     content: "";
     display: block;
@@ -174,8 +178,10 @@ ion-content .scroll-content > header {
 
 @import './styles/menu';
 @import './styles/grid';
+@import '../theme/breakpoints.scss';
 @import './styles/form';
 @import './styles/loading';
 @import './styles/table';
 @import './styles/modal';
 @import '../theme/footer';
+
