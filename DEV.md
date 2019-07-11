@@ -106,9 +106,20 @@ make setup
 
 # or simply...
 for i in cla-frontend-project-console cla-frontend-corporate-console cla-frontend-contributor-console; do
-    pushd ${i} && make setup; popd;
+    pushd ${i} && yarn install-frontend; popd;
 done
 ```
+
+# CLA Landing Page
+
+#### Requirements
+
+* Next
+
+cd cla-next
+yarn install
+yarn dev to run locally
+yarn build && yarn start to run in production
 
 ### Config variables provision
 
