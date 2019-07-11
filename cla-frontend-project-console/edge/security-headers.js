@@ -1,6 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 function getHeaders(env, isDevServer) {
   return {
     'X-Content-Type-Options': 'nosniff',
