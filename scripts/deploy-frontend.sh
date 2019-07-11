@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # Copyright The Linux Foundation and each contributor to CommunityBridge.

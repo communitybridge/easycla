@@ -1,7 +1,9 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
 *.pem
 .mypy_cache
 
-# Logs
+# iLogs
 logs
 *.log
 npm-debug.log*

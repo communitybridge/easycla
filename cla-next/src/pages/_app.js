@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 import App, { Container } from 'next/app';
 import React from 'react';
 import '../styles/styles.scss';

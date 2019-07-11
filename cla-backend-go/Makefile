@@ -1,3 +1,5 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
 SERVICE = cla
 LINT_TOOL=$(shell go env GOPATH)/bin/golangci-lint
 GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)

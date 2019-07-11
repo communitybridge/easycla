@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 'use strict';
 const randomString = require('./random-string');
 const matchDistributions = require('./match-distributions');

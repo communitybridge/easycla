@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
+
 if [ $1 = 'install' ]; then
   echo '======> installing npm dependencies..'
     npm install &&\
@@ -47,7 +51,7 @@ elif [ $1 = 'start:dynamodb' ]; then
 elif [ $1 = 'start:s3' ]; then
   echo '======> running local s3 server'
     sls s3 start -s 'local'
-  
+
 else
   echo "option not valid"
   exit 0

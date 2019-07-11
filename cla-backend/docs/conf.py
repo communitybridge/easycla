@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
 # -*- coding: utf-8 -*-
 #
 # This file is execfile()d with the current directory set to its

@@ -1,4 +1,7 @@
 ---
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 # Based on the AirBnb JavaScript styleguides with our own twist
 env:
   es6: true
