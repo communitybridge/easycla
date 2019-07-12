@@ -38,10 +38,11 @@ function generateCSP(env, isDevServer) {
     'https://api.staging.lfcla.com/',
     'https://api.dev.lfcla.com/',
     'https://api.test.lfcla.com/',
-    'https://api.lfcla.com/'
+    'https://api.lfcla.com/',
+    'https://communitybridge.org'
   ];
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
-  let styleSources = [SELF, UNSAFE_INLINE];
+  let styleSources = [SELF, UNSAFE_INLINE, 'https://fonts.googleapis.com', 'https://communitybridge.org'];
 
   if (isDevServer) {
     connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
@@ -59,7 +60,7 @@ function generateCSP(env, isDevServer) {
     'img-src': [SELF, 'data:', 'https://s3.amazonaws.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
-    'font-src': [SELF],
+    'font-src': [SELF, 'https://fonts.googleapis.com', 'https://communitybridge.org'],
     'connect-src': connectSources,
     'frame-ancestors': [NONE],
     'form-action': [NONE],
@@ -73,16 +74,16 @@ function generateCSP(env, isDevServer) {
   };
 
   return Object.entries(sources)
-    .map(keyValuePair => {
-      const additionalSources = getSources(environmentSources, keyValuePair[0]);
-      return [keyValuePair[0], [...keyValuePair[1], ...additionalSources]];
-    })
-    .filter(keyValuePair => keyValuePair[1].length !== 0)
-    .map(keyValuePair => {
-      const entry = keyValuePair[1].join(' ');
-      return `${keyValuePair[0]} ${entry};`;
-    })
-    .join(' ');
+      .map(keyValuePair => {
+        const additionalSources = getSources(environmentSources, keyValuePair[0]);
+        return [keyValuePair[0], [...keyValuePair[1], ...additionalSources]];
+      })
+      .filter(keyValuePair => keyValuePair[1].length !== 0)
+      .map(keyValuePair => {
+        const entry = keyValuePair[1].join(' ');
+        return `${keyValuePair[0]} ${entry};`;
+      })
+      .join(' ');
 }
 
 module.exports = getHeaders;
