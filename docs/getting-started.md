@@ -1,16 +1,16 @@
 #Getting Started with EasyCLA
 
-##What is EasyCLA?
+## What is EasyCLA?
 **EasyCLA** helps maintainers of open source projects to streamline their workflows and reduce the hassle of managing Contributor License Agreements (CLAs) and authorizing contributors. 
 
 By automating many of the manual processes, this open source solution hosted by the Linux Foundation reduces delays for developers to get authorized under a CLA. 
 
-###How does it work?
+### How does it work?
 Here’s a high level diagram that shows the different flows and roles that EasyCLA supports:
 
 ![](imgs/cla_diagram_v8.png)	
 
-##Which Role are you?
+## Which Role are you?
 EasyCLA supports the following roles in its workflow:
 
 * Project Manager
@@ -20,7 +20,7 @@ EasyCLA supports the following roles in its workflow:
 
 How you interact with EasyCLA depends on your role.
 
-####Project Manager
+#### Project Manager
 You are a Project Manager if you are the project maintainer responsible for selecting the appropriate Individual and Corporate CLA.  
 
 Traditionally, the Project Manager has had to enforce whether a contributor was authorized to commit code to their project at every commit.  This would become especially cumbersome when getting signatures for Corporate CLAs from companies and updating each company’s whitelist of authorized developers.
@@ -33,7 +33,7 @@ With EasyCLA, your most common tasks will be:
 You will login through: [https://project.lfcla.com/](https://project.lfcla.com/)
 
 
-####CLA Manager
+#### CLA Manager
 You are the CLA Manager if you’re the person authorized to manage who can contribute under your company’s Corporate CLA.  
 
 With this responsibility, you are likely to use EasyCLA to:
