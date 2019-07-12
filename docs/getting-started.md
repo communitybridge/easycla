@@ -45,7 +45,7 @@ With this responsibility, you are likely to use EasyCLA to:
 
 You will login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
 
-####CLA Signatory
+#### CLA Signatory
 You are the CLA Signatory if you are the authorized signatory of the project’s CLA for the company.  Typically this will be someone within the counsel’s office of the company.
 
 Within EasyCLA, you are most likely to:
@@ -55,7 +55,7 @@ Within EasyCLA, you are most likely to:
 
 You will likely login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
 
-##Dealing with Issues
+## Dealing with Issues
 If you are having issues with EasyCLA, go to [https://support.linuxfoundation.org](https://support.linuxfoundation.org) and file a ticket.
 
 If you have a GitHub login, you can also file an issue directly in this repo.
