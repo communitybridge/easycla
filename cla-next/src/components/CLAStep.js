@@ -3,6 +3,7 @@
 
 import React from 'react';
 import Button from './Button';
+import {Link} from '../routes';
 
 const CLAStep = () => {
   return (
@@ -51,8 +52,12 @@ const CLAStep = () => {
                 <li className="cla-list">Enable Companies to manage authorization of their own developers</li>
               </ul>
               <div className="center-item">
-                <Button variant="primary">sign in</Button>
-                <Button variant="success">add your project</Button>
+                <Link href='https://project.dev.lfcla.com'>
+                    <a><Button variant="primary">project manager sign in</Button></a>
+                </Link>
+                <Link href='https://project.dev.lfcla.com'>
+                    <a><Button variant="success">add your project</Button></a>
+                </Link>
               </div>
             </div>
           </div>
@@ -76,7 +81,9 @@ const CLAStep = () => {
                 </li>
               </ul>
               <div className="center-item">
-                <Button variant="primary">Corporations</Button>
+                <Link href='https://corporate.dev.lfcla.com'>
+                    <a><Button variant="primary">Corporation Sign In</Button></a>
+                </Link>
               </div>
             </div>
           </div>
