@@ -1,4 +1,4 @@
-#Getting Started with EasyCLA
+# Getting Started with EasyCLA
 
 ## What is EasyCLA?
 **EasyCLA** helps maintainers of open source projects to streamline their workflows and reduce the hassle of managing Contributor License Agreements (CLAs) and authorizing contributors. 
