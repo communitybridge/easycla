@@ -13,10 +13,10 @@ Here’s a high level diagram that shows the different flows and roles that Easy
 ## Which Role are you?
 EasyCLA supports the following roles in its workflow:
 
-* Project Manager
-* CLA Manager
+* [Project Manager](#project-manager)
+* [CLA Manager](#cla-manager)
 * [CLA Signatory](#cla-signatory)
-* Contributor
+* [Contributor](#contributor)
 
 How you interact with EasyCLA depends on your role.
 
