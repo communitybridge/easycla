@@ -4,13 +4,15 @@
 import React, { Component } from 'react';
 import Button from './Button';
 import { Link } from '../routes';
-import { EnvConfig } from '../services/cla.env.utils';
+import {EnvConfig} from '../services/cla.env.utils';
+
 
 class CLAStep extends Component {
 
-  setLinks = () => {
-
+  setLink = (link) => {
+    return EnvConfig.default[link];
   }
+
   render() {
     return (
       <div className="section">
@@ -58,10 +60,10 @@ class CLAStep extends Component {
                   <li className="cla-list">Enable Companies to manage authorization of their own developers</li>
                 </ul>
                 <div className="center-item">
-                  <Link href='https://project.dev.lfcla.com'>
+                  <Link href={this.setLink('proj-console-link')}>
                     <a><Button variant="primary">project manager sign in</Button></a>
                   </Link>
-                  <Link href='https://project.dev.lfcla.com'>
+                  <Link href={this.setLink('proj-console-link')}>
                     <a><Button variant="success">add your project</Button></a>
                   </Link>
                 </div>
@@ -87,7 +89,7 @@ class CLAStep extends Component {
                   </li>
                 </ul>
                 <div className="center-item">
-                  <Link href='https://corporate.dev.lfcla.com'>
+                  <Link href={this.setLink('corp-console-link')}>
                     <a><Button variant="primary">Corporation Sign In</Button></a>
                   </Link>
                 </div>

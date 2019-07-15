@@ -1,7 +1,4 @@
 {
-  "auth0-clientId": "hquZHO8JNsaIScoayPtCS5VELdn7TnVq",
-  "auth0-domain": "linuxfoundation-dev.auth0.com",
-  "cla-api-url": "https://api.dev.lfcla.com",
-  "cla-logo-s3-url": "https://s3.amazonaws.com/cla-project-logo-dev",
-  "corp-console-link": "https://corporate.dev.lfcla.com"
+  "corp-console-link": "https://corporate.dev.lfcla.com",
+  "proj-console-link": "https://project.dev.lfcla.com"
 }
