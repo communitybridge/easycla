@@ -8,6 +8,13 @@
     "export": "cd node_modules/next/dist && ./bin/next export ../../../src",
     "prebuild:qa": "STAGE_ENV=qa node ./src/config/scripts/prefetch-ssm.js",
     "prebuild:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
+    "prebuild:staging": "STAGE_ENV=staging node ./src/config/scripts/prefetch-ssm.js",
+    "prebuild:prod": "STAGE_ENV=prod node ./src/config/scripts/prefetch-ssm.js",
+    "preserve:staging": "STAGE_ENV=staging node ./src/config/scripts/prefetch-ssm.js",
+    "preserve:qa": "STAGE_ENV=qa node ./src/config/scripts/prefetch-ssm.js",
+    "preserve:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
+    "preserve:prod": "STAGE_ENV=prod node ./src/config/scripts/prefetch-ssm.js",
+
     "test": "jest"
   },
   "dependencies": {
