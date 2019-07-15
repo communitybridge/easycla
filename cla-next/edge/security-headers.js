@@ -74,16 +74,16 @@ function generateCSP(env, isDevServer) {
   };
 
   return Object.entries(sources)
-      .map(keyValuePair => {
-        const additionalSources = getSources(environmentSources, keyValuePair[0]);
-        return [keyValuePair[0], [...keyValuePair[1], ...additionalSources]];
-      })
-      .filter(keyValuePair => keyValuePair[1].length !== 0)
-      .map(keyValuePair => {
-        const entry = keyValuePair[1].join(' ');
-        return `${keyValuePair[0]} ${entry};`;
-      })
-      .join(' ');
+    .map(keyValuePair => {
+      const additionalSources = getSources(environmentSources, keyValuePair[0]);
+      return [keyValuePair[0], [...keyValuePair[1], ...additionalSources]];
+    })
+    .filter(keyValuePair => keyValuePair[1].length !== 0)
+    .map(keyValuePair => {
+      const entry = keyValuePair[1].join(' ');
+      return `${keyValuePair[0]} ${entry};`;
+    })
+    .join(' ');
 }
 
 module.exports = getHeaders;
