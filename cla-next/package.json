@@ -6,10 +6,13 @@
     "build": "cd node_modules/next/dist && ./bin/next build ../../../src",
     "start": "NODE_ENV=production yarn dev",
     "export": "cd node_modules/next/dist && ./bin/next export ../../../src",
+    "prebuild:qa": "STAGE_ENV=qa node ./src/config/scripts/prefetch-ssm.js",
+    "prebuild:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
     "test": "jest"
   },
   "dependencies": {
     "@zeit/next-sass": "^1.0.1",
+    "aws-sdk": "^2.493.0",
     "bootstrap": "^4.3.1",
     "dotenv": "^8.0.0",
     "dotenv-webpack": "^1.7.0",
