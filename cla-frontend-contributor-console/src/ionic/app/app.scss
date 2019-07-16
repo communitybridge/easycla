@@ -14,9 +14,12 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
-@import url('https://fonts.googleapis.com/css?family=Lato');
-@import url('https://fonts.googleapis.com/css?family=Open+Sans');
-@import url('https://fonts.googleapis.com/css?family=Work+Sans');
+//@import url('https://fonts.googleapis.com/css?family=Lato');
+//@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+//@import url('https://fonts.googleapis.com/css?family=Work+Sans');
+@import "../assets/fonts/lato-font.css";
+@import "../assets/fonts/open-sans-font.css";
+@import "../assets/fonts/work-sans-font.css";
 @import "../theme/styles.scss";
 
 body ion-app.ios {
