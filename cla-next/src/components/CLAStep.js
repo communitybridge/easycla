@@ -33,7 +33,7 @@ class CLAStep extends Component {
                 </div>
                 <p>Get started contributing code faster and with less friction.</p>
                 <ul>
-                  <li className="cla-list">Enable your signatories and contributors to sign CLAs using DocuSign® electronic signatures</li>
+                  <li className="cla-list">Receive an automatic notification in GitHub or Gerrit if you need to be authorized</li>
                   <li className="cla-list">Sign your Individual CLA with an e-signature</li>
                   <li className="cla-list">Start contributing faster with a streamlined authorization workflow for Corporate CLAs</li>
                 </ul>
@@ -68,7 +68,7 @@ class CLAStep extends Component {
                     <a><Button variant="primary"> Sign In as Project Manager</Button></a>
                   </Link>
                   <Link href="https://cloud.email.thelinuxfoundation.org/EasyCLA">
-                    <a><Button variant="success">add your project</Button></a>
+                    <a><Button variant="success"> request to add project</Button></a>
                   </Link>
                 </div>
               </div>
