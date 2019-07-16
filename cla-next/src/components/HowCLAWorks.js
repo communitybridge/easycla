@@ -13,7 +13,7 @@ const HowCLAWorks = () => {
       <div className="container">
         <div className="row how-cla-works">
           <p>
-          Below is a high-level flow of how EasyCLA works. The Project Manager (who can be a project maintainer or someone from the Linux Foundation, depending on how you’ve been set up) starts the process by setting up their preferred CLA.
+          Below is a high-level flow of how EasyCLA works. <span><b>The Project Manager</b></span> (who can be a project maintainer or someone from the Linux Foundation, depending on how you’ve been set up) starts the process by setting up their preferred CLA.
           </p>
 
           <p>

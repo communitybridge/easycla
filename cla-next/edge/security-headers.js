@@ -1,9 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+<<<<<<< HEAD
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+=======
+>>>>>>> cc1c7521eaa41cc30bed794caa14c3f283d54f09
 function getHeaders(env, isDevServer) {
   return {
     'X-Content-Type-Options': 'nosniff',
@@ -38,10 +41,18 @@ function generateCSP(env, isDevServer) {
     'https://api.staging.lfcla.com/',
     'https://api.dev.lfcla.com/',
     'https://api.test.lfcla.com/',
+<<<<<<< HEAD
     'https://api.lfcla.com/'
   ];
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
   let styleSources = [SELF, UNSAFE_INLINE];
+=======
+    'https://api.lfcla.com/',
+    'https://communitybridge.org'
+  ];
+  let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
+  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org'];
+>>>>>>> cc1c7521eaa41cc30bed794caa14c3f283d54f09
 
   if (isDevServer) {
     connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
@@ -59,7 +70,11 @@ function generateCSP(env, isDevServer) {
     'img-src': [SELF, 'data:', 'https://s3.amazonaws.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
+<<<<<<< HEAD
     'font-src': [SELF],
+=======
+    'font-src': [SELF, 'https://communitybridge.org'],
+>>>>>>> cc1c7521eaa41cc30bed794caa14c3f283d54f09
     'connect-src': connectSources,
     'frame-ancestors': [NONE],
     'form-action': [NONE],

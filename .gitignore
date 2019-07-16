@@ -82,6 +82,7 @@ __pycache__
 cla-frontend-contributor-console/src/config/cla-env-config.json
 cla-frontend-corporate-console/src/config/cla-env-config.json
 cla-frontend-project-console/src/config/cla-env-config.json
+cla-next/src/config/cla-env-config.json
 cla-frontend-project-console/.serverless/
 cla-frontend-project-console/edge/node_modules/
 cla-frontend-project-console/node_modules/
