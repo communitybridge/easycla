@@ -15,7 +15,7 @@ import os
 
 stage = os.environ.get('STAGE', '')
 
-LOG_LEVEL = logging.INFO #: Logging level.
+LOG_LEVEL = logging.DEBUG #: Logging level.
 #: Logging format.
 LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)s')
 
@@ -31,6 +31,9 @@ CONTRIBUTOR_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_BASE', '')
 CORPORATE_BASE_URL = os.environ.get('CLA_CORPORATE_BASE', '')
 if CORPORATE_BASE_URL == 'corporate.prod.lfcla.com':
     CORPORATE_BASE_URL = 'corporate.lfcla.com'
+
+# Landing Page
+CLA_LANDING_PAGE = os.environment.get('CLA_LANDING_PAGE', '')
 
 SIGNED_CALLBACK_URL = os.path.join(API_BASE_URL, 'v2/signed') #: Default callback once signature is completed.
 ALLOW_ORIGIN = '*' # Specify the CORS Access-Control-Allow-Origin response header value.

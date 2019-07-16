@@ -13,12 +13,11 @@ const CLASummary = () => {
               <h2 className="cla-title">CommunityBridge: CLA</h2>
               <h3 className="cla-subtitle">Ship More Code. Chase Fewer Signatures.</h3>
               <p className="cla-paragraph pb-4">
-                For contributors, maintainers, and the companies supporting their developers, Contributor License Agreements (CLAs) can seem
-                like they just get in the way of growing the community around a project.
+              For contributors, maintainers, and the companies supporting their own developers, Contributor License Agreements (CLAs) can seem like they just get in the way of growing the community around a project
               </p>
               <p className="cla-paragraph pb-3">
                 <span><b>EasyCLA</b></span>
-                streamlines the process for everyone.
+                streamlines the process of getting developers authorized under a project’s CLA for everyone
               </p>
               <ul className="cla-list-wrapper">
                 <li className="cla-list">
@@ -32,7 +31,11 @@ const CLASummary = () => {
                     <span>Corporations and projects can save time by reducing manual steps managing CLAs and their signatures</span>
                   </span>
                 </li>
-
+                <li className="cla-list">
+                  <span>
+                    <span>Both Individual and Corporate CLA signing can be enforced for developers contributing to a project using GitHub or Gerrit</span>
+                  </span>
+                </li>
                 <li className="cla-list">
                   <span>
                     <span>Currently available on all Linux Foundation hosted projects<strong>

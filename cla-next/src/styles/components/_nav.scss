@@ -6,6 +6,9 @@ header {
   display: flex;
   align-items: center;
   height: 80px;
+  position: fixed;
+  width: 100%;
+  z-index: 5;
 
   .header-row {
     width: 100%;
@@ -26,11 +29,9 @@ header {
   cursor: pointer;
   border: 0;
   a {
-    font-family: 'Open Sans';
+    font-family: 'Work Sans', sans-serif;
     color: #fff;
   }
-  
-
 }
 
 .header-wrapper {
@@ -51,7 +52,7 @@ header {
 
     a {
       color: white;
-      font-family: 'Open Sans';
+      font-family: 'Work Sans', sans-serif;
       font-size: 14px;
       line-height: 19.6px;
       margin: 0 10px;
@@ -74,7 +75,7 @@ header {
 
     a {
       color: white;
-      font-family: 'Open Sans';
+      font-family: 'Work Sans', sans-serif;
       font-size: 14px;
       line-height: 19.6px;
       margin: 0 10px;

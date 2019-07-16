@@ -24,8 +24,6 @@ const Head = props => (
     <meta property="og:url" content={props.url || defaultOGURL} />
     <meta property="og:title" content={props.title || ''} />
 
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,600,700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Work+Sans:300,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" id="iconsmind-css" href="https://communitybridge.org/wp-content/themes/salient/css/iconsmind.css?ver=7.6"
       type="text/css" media="all" />
     <link rel="stylesheet" id="font-awesome-css" href="https://communitybridge.org/wp-content/themes/salient/css/font-awesome.min.css?ver=4.6.4"

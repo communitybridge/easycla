@@ -14,6 +14,7 @@ Here’s a high level diagram that shows the different flows and roles that Easy
 ![](imgs/cla_diagram_v8.png)	
 
 ## Which Role are you?
+
 EasyCLA supports the following roles in its workflow:
 
 * [Project Manager](#project-manager)
@@ -23,8 +24,19 @@ EasyCLA supports the following roles in its workflow:
 
 How you interact with EasyCLA depends on your role.
 
+#### Project Manager
+
+EasyCLA supports the following roles in its workflow:
+
+* [Project Manager](#project-manager)
+* [CLA Manager](#cla-manager)
+* [CLA Signatory](#cla-signatory)
+* [Contributor](#contributor)
+
+How you interact with EasyCLA depends on your role.
 
 #### Project Manager
+
 
 You are a Project Manager if you are the project maintainer responsible for selecting the appropriate Individual and Corporate CLA.  
 
@@ -59,8 +71,6 @@ If you are using the LF-hosted service, you will login through: [https://corpora
 
 If you are hosting your own, find out from the deployment where to login.
 
-You will login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
-
 #### CLA Signatory
 
 You are the CLA Signatory if you are the authorized signatory of the project’s CLA for the company.  Typically this will be someone within the counsel’s office of the company.
@@ -75,6 +85,11 @@ If you are using the LF-hosted service, you will likely login through: [https://
 If you are hosting your own, find out where to login from your admin.
 
 ## Dealing with Issues
+
+If you are having issues with the LF-hosted EasyCLA, go to [https://support.linuxfoundation.org](https://support.linuxfoundation.org) and file a ticket.
+
+You will likely login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
+
 
 If you are having issues with the LF-hosted EasyCLA, go to [https://support.linuxfoundation.org](https://support.linuxfoundation.org) and file a ticket.
 

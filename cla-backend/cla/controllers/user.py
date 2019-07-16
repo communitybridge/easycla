@@ -225,7 +225,7 @@ Before the contribution can be accepted, your organization must sign a CLA. {acc
 - Linux Foundation CLA System
 '''.format(admin_name=admin_name, project_name=project_name,
             user_name=user_name,  user_email=user_email, 
-            account_exists=message, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+            account_exists=message, corporate_console_url=cla.conf['CLA_LANDING_PAGE'])
     recipient = admin_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
