@@ -5,7 +5,7 @@
   padding-top: 5rem;
 
   @include media-breakpoint-down(sm) {
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem;
   }
 }
 
@@ -14,5 +14,6 @@
   color: #444444;
   font-family: 'Work Sans', sans-serif;
   text-align: center;
+  line-height: 1;
   padding-bottom: 20px;
 }

@@ -3,6 +3,7 @@
 
 .hero-wrapper {
   position: relative;
+  padding-top: 2rem;
 }
 
 .shape-wrapper {
@@ -21,7 +22,7 @@
   color: white;
   background-image: url('/static/img/cb_bg8.jpg');
   background-size: cover;
-  background-position: center center;
+  background-position: top center;
   background-repeat: no-repeat;
 
   &:before {
@@ -49,7 +50,7 @@
     z-index: 3;
     
     @include media-breakpoint-down(sm) {
-      font-size: 20px;
+      font-size: 30px;
     }
   }
 }
