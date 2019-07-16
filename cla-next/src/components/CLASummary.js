@@ -18,7 +18,7 @@ const CLASummary = () => {
               </p>
               <p className="cla-paragraph pb-3">
                 <span><b>EasyCLA</b></span>
-                streamlines the process for everyone.
+                streamlines the process of getting developers authorized under a project’s CLA for everyone
               </p>
               <ul className="cla-list-wrapper">
                 <li className="cla-list">
@@ -37,6 +37,11 @@ const CLASummary = () => {
                   <span>
                     <span>Currently available on all Linux Foundation hosted projects<strong>
                       <br /></strong></span>
+                  </span>
+                </li>
+                <li className="cla-list">
+                  <span>
+                    <span>Both Individual and Corporate CLA signing can be enforced for developers contributing to a project using GitHub or Gerrit</span>
                   </span>
                 </li>
               </ul>

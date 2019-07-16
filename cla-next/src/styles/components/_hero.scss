@@ -16,7 +16,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  height: 35vh;
+  height: 40vh;
   width: 100%;
   color: white;
   background-image: url('/static/img/cb_bg8.jpg');
@@ -45,7 +45,7 @@
     font-family: 'Work Sans', sans-serif;
     font-size: 30px;
     line-height: 1.4;
-    padding: 0.5rem;
+    padding: 0.5rem 0;
     z-index: 3;
   }
 }
