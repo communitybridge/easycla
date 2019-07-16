@@ -14,6 +14,7 @@ Here’s a high level diagram that shows the different flows and roles that Easy
 ![](imgs/cla_diagram_v8.png)	
 
 ## Which Role are you?
+
 EasyCLA supports the following roles in its workflow:
 
 * [Project Manager](#project-manager)
@@ -22,7 +23,6 @@ EasyCLA supports the following roles in its workflow:
 * [Contributor](#contributor)
 
 How you interact with EasyCLA depends on your role.
-
 
 #### Project Manager
 
@@ -41,11 +41,6 @@ If you are hosting your own or using another deployment, find the login from the
 
 #### CLA Manager
 
-You will login through: [https://project.lfcla.com/](https://project.lfcla.com/)
-
-
-#### CLA Manager
-
 You are the CLA Manager if you’re the person authorized to manage who can contribute under your company’s Corporate CLA.  
 
 With this responsibility, you are likely to use EasyCLA to:
@@ -58,8 +53,6 @@ With this responsibility, you are likely to use EasyCLA to:
 If you are using the LF-hosted service, you will login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
 
 If you are hosting your own, find out from the deployment where to login.
-
-You will login through: [https://corporate.lfcla.com/](https://corporate.lfcla.com/)
 
 #### CLA Signatory
 
