@@ -64,7 +64,3 @@ If you are hosting your own, find out where to login from your admin.
 If you are having issues with the LF-hosted EasyCLA, go to [https://support.linuxfoundation.org](https://support.linuxfoundation.org) and file a ticket.
 
 If you have a GitHub login, you can also file an issue directly in this repo.
-
-
-
-
