@@ -47,6 +47,10 @@
     line-height: 1.4;
     padding: 0.5rem 0;
     z-index: 3;
+    
+    @include media-breakpoint-down(sm) {
+      font-size: 20px;
+    }
   }
 }
 

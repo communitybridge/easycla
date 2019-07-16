@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 .section {
-  padding-top: 5rem
+  padding-top: 5rem;
+
+  @include media-breakpoint-down(sm) {
+    padding: 2rem 1.5rem;
+  }
 }
 
 .section-title  h4 {
