@@ -21,7 +21,11 @@ def get_companies():
     :return: List of companies in dict format.
     :rtype: [dict]
     """
-    return [company.to_dict() for company in Company().all()]
+    all_companies = [company.to_dict() for company in Company().all()]
+
+    all_companies = sorted(all_companies, key=lambda i: i['company_name'])
+
+    return all_companies
 
 def get_companies_by_user(username):
     """
@@ -31,6 +35,8 @@ def get_companies_by_user(username):
     :rtype: [dict]
     """
     all_companies = [company.to_dict() for company in Company().all() if username in company.get_company_acl()]
+
+    all_companies = sorted(all_companies, key=lambda i: i['company_name'])
 
     return all_companies
 
