@@ -80,3 +80,4 @@ Some items found on the **Troubleshooting** page probably could be linked to fro
 Good idea for the users (and for the writers/contributors) to indicate in the document versions and dates.  Doesn't need to be that hard-core, but probably nice to do.
 
 * 7/16/19 - Initial content written
+* 7/17/19 -- Readding -- not in PR
