@@ -1,5 +1,5 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
 import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage, ActionSheetController  } from 'ionic-angular';

@@ -15,7 +15,7 @@ import os
 
 stage = os.environ.get('STAGE', '')
 
-LOG_LEVEL = logging.INFO #: Logging level.
+LOG_LEVEL = logging.DEBUG #: Logging level.
 #: Logging format.
 LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)s')
 
