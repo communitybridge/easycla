@@ -78,7 +78,7 @@ const Nav = () => (
                   <li key={key}>
                     <Link href={href}>
                       <a>
-                        <i class={`fa fa-${label} faa-bounce animated-hover`}></i>
+                        <i className={`fa fa-${label} faa-bounce animated-hover`}></i>
                       </a>
                     </Link>
                   </li>
