@@ -10,8 +10,9 @@ const Hero = () => {
       <div className="hero">
         <div className="container hero-content-wrapper">
           <div className="hero-content">
-            Contributor License
-        <br /> Agreement (CLA) Tool
+          Contributor License
+          <br/>
+          Agreement (CLA) Tool
         </div>
         </div>
       </div>
