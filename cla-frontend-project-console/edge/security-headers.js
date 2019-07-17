@@ -65,7 +65,7 @@ function generateCSP(env, isDevServer) {
     ],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
-    'font-src': [SELF, 'https://communitybridge.org/'],
+    'font-src': [SELF, 'data:', 'https://communitybridge.org/'],
     'connect-src': connectSources,
     'frame-ancestors': [NONE],
     'form-action': [NONE],
