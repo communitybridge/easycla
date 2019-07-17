@@ -277,14 +277,14 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Set signature ACL
         signature.set_signature_acl(user.get_lf_username())
-        cla.log.warning('Set the signature ACL for: {}'.format(request_info))
+        cla.log.info('Set the signature ACL for: {}'.format(request_info))
 
         # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
 
         # Save signature
         signature.save()
-        cla.log.warning('Saved the signature for: {}'.format(request_info))
+        cla.log.info('Saved the signature for: {}'.format(request_info))
 
         return {'user_id': str(user_id),
                 'project_id': project_id,
@@ -345,7 +345,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Assume this company is the user's employer.
         user.set_user_company_id(str(company_id))
         user.save()
-        cla.log.warning('Assigned company ID to user. Employee is ready to sign the CCLA: {}'.format(request_info))
+        cla.log.info('Assigned company ID to user. Employee is ready to sign the CCLA: {}'.format(request_info))
 
         return {'success': {'the employee is ready to sign the CCLA'} }
 

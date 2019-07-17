@@ -39,10 +39,10 @@ function generateCSP(env, isDevServer) {
     'https://api.dev.lfcla.com/',
     'https://api.test.lfcla.com/',
     'https://api.lfcla.com/',
-    'https://communitybridge.org'
+    'https://communitybridge.org/'
   ];
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
-  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org'];
+  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
 
   if (isDevServer) {
     connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
@@ -60,7 +60,7 @@ function generateCSP(env, isDevServer) {
     'img-src': [SELF, 'data:', 'https://s3.amazonaws.com/'],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
-    'font-src': [SELF, 'https://communitybridge.org'],
+    'font-src': [SELF, 'https://communitybridge.org/'],
     'connect-src': connectSources,
     'frame-ancestors': [NONE],
     'form-action': [NONE],
