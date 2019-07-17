@@ -1656,7 +1656,9 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                                   signature_reference_type=None, signature_reference_id=None,
                                   signature_user_ccla_company_id=None):
         # TODO: Need to optimize this on the DB end.
+        cla.log.info('Loading signature by project for project_id: %s', project_id)
         signature_generator = self.model.signature_project_index.query(project_id)
+        cla.log.info('Loaded signature by project for project_id: %s', project_id)
         signatures = []
         for signature_model in signature_generator:
             if signature_signed is not None and \
@@ -1680,6 +1682,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
+        cla.log.info('Returning %d signatures for project_id: %s', len(signatures), project_id)
         return signatures
 
     def get_signatures_by_company_project(self, company_id, project_id):
