@@ -113,7 +113,7 @@ class DocuSign(signing_service_interface.SigningService):
 
     def request_individual_signature(self, project_id, user_id, return_url=None):
         request_info = 'project: {project_id}, user: {user_id} with return_url: {return_url}'.format(project_id=project_id, user_id=user_id, return_url=return_url)
-        cla.log.info('Creating new signature for: {}', request_info)
+        cla.log.info('Creating new signature for: {}'.format(request_info))
 
         # Ensure this is a valid user
         user_id = str(user_id)

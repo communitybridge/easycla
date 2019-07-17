@@ -10,9 +10,10 @@ const Hero = () => {
       <div className="hero">
         <div className="container hero-content-wrapper">
           <div className="hero-content">
-          Contributor License
+          EasyCLA - Contributor License Agreement (CLA) management tool 
+          for Companies and Developers
           <br/>
-          Agreement (CLA) Tool
+          
         </div>
         </div>
       </div>
