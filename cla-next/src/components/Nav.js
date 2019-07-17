@@ -11,17 +11,21 @@ const leftLinks = [
   },
   {
     href: 'https://people.communitybridge.org/', label: 'Mentorship'
-  },
-  {
-    href: 'https://docs.linuxfoundation.org/', label: 'Docs'
-  },
-  {
-    href: 'https://support.communitybridge.org/', label: 'Support'
   }
 ].map(link => {
   link.key = `nav-link-${link.href}-${link.label}`
   return link
 })
+
+
+const middleLinks  = [
+  {
+    href: 'https://github.com/communitybridge/easycla', label: 'github'
+  },
+  {
+    href: 'https://twitter.com/linuxfoundation', label: 'user'
+  }
+]
 
 const rightLinks = [
   {
@@ -72,6 +76,25 @@ const Nav = () => (
             </nav>
           </div>
           <div className="header-right-column">
+          <nav className="d-none d-lg-flex">
+              <ul className="header-navs">
+                {middleLinks.map(({ key, href, label }) => (
+                  <li key={key}>
+                    <Link href={href}>
+                      <a>
+                        <i className={`fa fa-${label} faa-bounce animated-hover`}></i>
+                      </a>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <button className="get-help-button">
+                <Link href="https://docs.linuxfoundation.org/display/DOCS/CommunityBridge+EasyCLA">
+                  <a> <i className='fa fa-question-circle'></i>Get Help</a>
+                </Link>
+              </button>
+            </nav>
+            
             <nav className="d-none d-lg-flex">
               <ul className="header-navs">
                 {rightLinks.map(({ key, href, label }) => (

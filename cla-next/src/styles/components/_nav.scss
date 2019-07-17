@@ -68,6 +68,7 @@ header {
 }
 
 .header-right-column {
+  display: flex;
   .header-navs {
     display: flex;
     align-items: center;
@@ -83,8 +84,27 @@ header {
 
   }
 
+  .get-help-button {
+    background-color: #ffa400;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 200px;
+    font-size: 12px;
+    border: 0;
+    a {
+    font-family: 'Work Sans', sans-serif;
+    color: #fff;
+    }
+
+    i {
+      padding-right: 0.3rem;
+      font-size: 14px;
+    }
+  }
+
   i {
     color: #fff;
+    font-size: 14px;
   }
 }
 
