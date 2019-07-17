@@ -10,7 +10,7 @@ const CLASummary = () => {
         <div className="container">
           <div className="row">
             <div className="col-12 col-md-6">
-              <h2 className="cla-title">CommunityBridge: CLA</h2>
+              <h2 className="cla-title">CommunityBridge: EasyCLA</h2>
               <h3 className="cla-subtitle">Ship More Code. Chase Fewer Signatures.</h3>
               <p className="cla-paragraph pb-4">
               For contributors, maintainers, and the companies supporting their own developers, Contributor License Agreements (CLAs) can seem like they just get in the way of growing the community around a project
