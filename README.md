@@ -14,7 +14,7 @@ Additional information can be found in the [User's Guide](#users-guide).
 ## Users Guide
 
 A user's guide can be found
-[on the Contributor License Agreement public confluence pages](https://docs.linuxfoundation.org/display/DOCS/Contributor+License+Agreement+User+Guide).
+[on the Contributor License Agreement public confluence pages](https://docs.linuxfoundation.org/display/DOCS/CommunityBridge+EasyCLA).
 
 ## Third-party Services
 
