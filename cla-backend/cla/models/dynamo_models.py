@@ -1535,12 +1535,24 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return self.model.domain_whitelist
 
     def get_email_whitelist(self):
+        #if not hasattr(self.model, 'email_whitelist'):
+            # return None ??
+            # return ListAttribute(null=True) ??
+        #    return []
         return self.model.email_whitelist
 
     def get_github_whitelist(self):
+        #if not hasattr(self.model, 'github_whitelist'):
+            # return None ??
+            # return ListAttribute(null=True) ??
+        #    return []
         return self.model.github_whitelist
 
     def get_github_org_whitelist(self):
+        #if not hasattr(self.model, 'github_org_whitelist'):
+            # return None ??
+            # return ListAttribute(null=True) ??
+        #    return []
         return self.model.github_org_whitelist
 
     def set_signature_id(self, signature_id):
