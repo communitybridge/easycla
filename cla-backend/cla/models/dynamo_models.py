@@ -1185,14 +1185,14 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                  if github_username in github_whitelist:
                      return True        
 
-            # Check github org whitelist
-            github_orgs = self.get_user_github_organizations(github_username)
-            if 'error' not in github_orgs: 
-                github_org_whitelist = ccla_signature.get_github_org_whitelist()
-                if github_org_whitelist is not None:
-                    for dynamo_github_org in github_org_whitelist:
-                        if dynamo_github_org in github_orgs:
-                            return True
+            # Check github org whitelist - (disable for now - getting attribute error whne getting gh org whitelist)
+            # github_orgs = self.get_user_github_organizations(github_username)
+            # if 'error' not in github_orgs:
+            #     github_org_whitelist = ccla_signature.get_github_org_whitelist()
+            #     if github_org_whitelist is not None:
+            #         for dynamo_github_org in github_org_whitelist:
+            #             if dynamo_github_org in github_orgs:
+            #                 return True
         return False
 
 
