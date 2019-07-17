@@ -54,7 +54,12 @@ function generateCSP(env, isDevServer) {
 
   const sources = {
     'default-src': [NONE],
-    'img-src': [SELF, 'data:', 'https://s3.amazonaws.com/'],
+    'img-src': [SELF, 'data:',
+      'https://s3.amazonaws.com/cla-project-logo-dev/',
+      'https://s3.amazonaws.com/cla-project-logo-test/',
+      'https://s3.amazonaws.com/cla-project-logo-staging/',
+      'https://s3.amazonaws.com/cla-project-logo-prod/'
+    ],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
     'font-src': [SELF, 'https://communitybridge.org'],
