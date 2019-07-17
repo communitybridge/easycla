@@ -300,6 +300,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Returns an error if any of the above is false. 
 
         request_info = 'project: {project_id}, company: {company_id}, user: {user_id}'.format(project_id=project_id, company_id=company_id, user_id=user_id)
+        cla.log.info('Check and prepare employee signature for {}'.format(request_info))
 
         # Ensure the project exists
         project = Project()
@@ -308,6 +309,7 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist:
             cla.log.warning('Project does NOT exist for: {}'.format(request_info))
             return {'errors': {'project_id': 'Project ({}) does not exist.'.format(project_id)}}
+        cla.log.info('Project exists for: {}'.format(request_info))
 
         # Ensure the company exists
         company = Company()
@@ -316,6 +318,7 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist:
             cla.log.warning('Company does NOT exist for: {}'.format(request_info))
             return {'errors': {'company_id': 'Company ({}) does not exist.'.format(company_id)}}
+        cla.log.info('Company exists for: {}'.format(request_info))
 
         # Ensure the user exists
         user = User()
@@ -324,6 +327,7 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist:
             cla.log.warning('User does NOT exist for: {}'.format(request_info))
             return {'errors': {'user_id': 'User ({}) does not exist.'.format(user_id)}}
+        cla.log.info('User exists for: {}'.format(request_info))
 
         # Ensure the company actually has a CCLA with this project.
         ccla_signatures = Signature().get_signatures_by_project(
@@ -335,12 +339,16 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.warning('Company does not have CCLA for: {}'.format(request_info))
             return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
 
+        cla.log.info('Company does have a CCLA for: {}'.format(request_info))
+
         ccla_signature = ccla_signatures[0]
 
         # Ensure user is whitelisted for this company.
         if not user.is_whitelisted(ccla_signature):
             cla.log.warning('No user email whitelisted for this CCLA: {}'.format(request_info))
             return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
+
+        cla.log.info('User is whitelisted for this CCLA: {}'.format(request_info))
 
         # Assume this company is the user's employer.
         user.set_user_company_id(str(company_id))
