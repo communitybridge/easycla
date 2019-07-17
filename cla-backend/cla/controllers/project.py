@@ -268,7 +268,7 @@ def get_project_companies(project_id):
     company = Company()
     all_companies = [comp.to_dict() for comp in company.all()]
 
-    all_companies = sorted(all_companies, key=lambda i: i['company_name'])
+    all_companies = sorted(all_companies, key=lambda i: i['company_name'].casefold())
 
     return all_companies
 
