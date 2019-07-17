@@ -15,7 +15,10 @@ A Contributor License Agreement (CLA) defines the terms under which intellectual
 
 ## How Does it Work?
 This high-level diagram shows the different flows and roles that EasyCLA supports:
-[EasyCLA Workflow](https://docs.linuxfoundation.org/display/DOCS/CommunityBridge+EasyCLA?preview=/4822539/7413213/CLA%20EasyCLA%20workflow.png)
+
+![](imgs/cla_diagram_v8.png)	
+
+
 
 ## What Role are You?
 How you interact with EasyCLA depends on your role. EasyCLA supports the following roles in its workflow:
