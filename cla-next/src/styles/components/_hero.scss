@@ -17,7 +17,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  height: 40vh;
+  height: 45vh;
   width: 100%;
   color: white;
   background-image: url('/static/img/cb_bg8.jpg');
@@ -50,7 +50,7 @@
     z-index: 3;
     
     @include media-breakpoint-down(sm) {
-      font-size: 30px;
+      font-size: 20px;
     }
   }
 }
