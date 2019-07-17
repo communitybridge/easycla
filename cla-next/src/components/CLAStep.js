@@ -40,7 +40,7 @@ class CLAStep extends Component {
                 <div className="center-item">
                   <Link href="https://www.linuxfoundation.org/uncategorized/2019/07/easycla-beta/">
                     <a>
-                      <Button variant="primary">LEARN MORE HERE</Button>
+                      <Button variant="primary">LEARN MORE</Button>
                     </a>
                   </Link>
                 </div>
@@ -87,7 +87,7 @@ class CLAStep extends Component {
                 <p>Enable all your developers to contribute code easily and quickly while remaining compliant with contribution policies:</p>
                 <ul>
                   <li className="cla-list">Whitelist developers based on email, domain, GitHub handle, or GitHub organization</li>
-                  <li className="cla-list">Enable your signatories and contributors to authorize with e-signature via DocuSign</li>
+                  <li className="cla-list">Enable your signatories and contributors to sign CLAs using DocuSign® electronic signatures</li>
                   <li className="cla-list">
                     <span>Enforce signing of the Corporate CLA by your developers without slowing them down with manual bureaucracy</span>
                   </li>
