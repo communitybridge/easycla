@@ -23,7 +23,7 @@ def get_companies():
     """
     all_companies = [company.to_dict() for company in Company().all()]
 
-    all_companies = sorted(all_companies, key=lambda i: i['company_name'])
+    all_companies = sorted(all_companies, key=lambda i: i['company_name'].casefold())
 
     return all_companies
 
@@ -36,7 +36,7 @@ def get_companies_by_user(username):
     """
     all_companies = [company.to_dict() for company in Company().all() if username in company.get_company_acl()]
 
-    all_companies = sorted(all_companies, key=lambda i: i['company_name'])
+    all_companies = sorted(all_companies, key=lambda i: i['company_name'].casefold())
 
     return all_companies
 
