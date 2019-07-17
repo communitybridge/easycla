@@ -1186,13 +1186,13 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                      return True        
 
             # Check github org whitelist - (disable for now - getting attribute error whne getting gh org whitelist)
-            # github_orgs = self.get_user_github_organizations(github_username)
-            # if 'error' not in github_orgs:
-            #     github_org_whitelist = ccla_signature.get_github_org_whitelist()
-            #     if github_org_whitelist is not None:
-            #         for dynamo_github_org in github_org_whitelist:
-            #             if dynamo_github_org in github_orgs:
-            #                 return True
+            github_orgs = self.get_user_github_organizations(github_username)
+            if 'error' not in github_orgs:
+                github_org_whitelist = ccla_signature.get_github_org_whitelist()
+                if github_org_whitelist is not None:
+                    for dynamo_github_org in github_org_whitelist:
+                        if dynamo_github_org in github_orgs:
+                            return True
         return False
 
 
@@ -1408,10 +1408,10 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_return_url_type = UnicodeAttribute(null=True)
 
     # whitelists are only used by CCLAs
-    domain_whitelist = ListAttribute(null=True)
-    email_whitelist = ListAttribute(null=True)
-    github_whitelist = ListAttribute(null=True)
-    github_org_whiteList = ListAttribute(null=True)
+    domain_whitelist = ListAttribute(default=[])
+    email_whitelist = ListAttribute(default=[])
+    github_whitelist = ListAttribute(default=[])
+    github_org_whitelist = ListAttribute(default=[])
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
@@ -1535,24 +1535,12 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return self.model.domain_whitelist
 
     def get_email_whitelist(self):
-        #if not hasattr(self.model, 'email_whitelist'):
-            # return None ??
-            # return ListAttribute(null=True) ??
-        #    return []
         return self.model.email_whitelist
 
     def get_github_whitelist(self):
-        #if not hasattr(self.model, 'github_whitelist'):
-            # return None ??
-            # return ListAttribute(null=True) ??
-        #    return []
         return self.model.github_whitelist
 
     def get_github_org_whitelist(self):
-        #if not hasattr(self.model, 'github_org_whitelist'):
-            # return None ??
-            # return ListAttribute(null=True) ??
-        #    return []
         return self.model.github_org_whitelist
 
     def set_signature_id(self, signature_id):
