@@ -8,7 +8,7 @@ nose2==0.7.2
 pydocusign==2.2
 pygithub==1.43.2
 pylint==1.5.2
-pynamodb==3.2.1
+pynamodb==3.4.1
 python-jose==3.0.0
 python-dateutil==2.6.1
 requests_oauthlib==0.8.0
