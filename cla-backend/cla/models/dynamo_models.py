@@ -1408,10 +1408,10 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     signature_return_url_type = UnicodeAttribute(null=True)
 
     # whitelists are only used by CCLAs
-    domain_whitelist = ListAttribute(default=[])
-    email_whitelist = ListAttribute(default=[])
-    github_whitelist = ListAttribute(default=[])
-    github_org_whitelist = ListAttribute(default=[])
+    domain_whitelist = ListAttribute(null=True)
+    email_whitelist = ListAttribute(null=True)
+    github_whitelist = ListAttribute(null=True)
+    github_org_whitelist = ListAttribute(null=True)
 
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
