@@ -15,9 +15,9 @@
 // automatically applied to the <body> element in the app.
 
 //@import url('https://fonts.googleapis.com/css?family=Lato');
-@import "../assets/fonts/lato-font.css";
-@import "../assets/fonts/open-sans-font.css";
-@import "../assets/fonts/work-sans-font.css";
+@import "../assets/fonts/lato-font.scss";
+@import "../assets/fonts/open-sans-font.scss";
+@import "../assets/fonts/work-sans-font.scss";
 @import "../theme/styles.scss";
 
 body ion-app.ios {
