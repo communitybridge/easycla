@@ -282,7 +282,7 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
-            # cla.log.info("Author: " + commit_author)
+            cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
                 # Handle GitHub user.
                 cla.log.info("Handle GitHub user")
@@ -535,9 +535,10 @@ def handle_commit_from_github_user(project_id, commit, author, signed, missing):
     user = cla.utils.get_user_instance().get_user_by_github_id(author.id)
     if user is None:
         # GitHub user not in system yet, signature does not exist for this user.
-        cla.log.info('GitHub user (%s - %s - %s) not found',
+        cla.log.info('GitHub user (%s - %s - %s) not found, looking up user by email',
                      author.id, author.login, author.email)
-        missing.append((commit.sha, author_name))
+        # Try looking up user by email as a fallback
+        handle_commit_from_git_author(project_id, commit, author, signed, missing)
     else:
         cla.log.info('GitHub user found (%s - %s)',
                      user.get_user_emails(), user.get_user_github_id())
@@ -567,14 +568,14 @@ def handle_commit_from_git_author(project_id, commit, author, signed, missing):
     """
     user = cla.utils.get_user_instance().get_user_by_email(author.email)
     if user is not None:
-        cla.log.info('Git commit user found %s', user.get_user_emails())
+        cla.log.info('Git commit user found (lookup by email) %s', user.get_user_emails())
         # For now, accept non-github users as legitimate users.
         if cla.utils.user_signed_project_signature(user, project_id):
             signed.append((commit.sha, author.name))
         else:
             missing.append((commit.sha, author.name))
     else:
-        cla.log.info('Git commit user (%s <%s>) not found',
+        cla.log.info('Git commit user (lookup by email) (%s <%s>) not found',
                      author.name, author.email)
         missing.append((commit.sha, author.name))
 
