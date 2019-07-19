@@ -282,7 +282,7 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
-            cla.log.info("Author: " + commit_author)
+            # cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
                 # Handle GitHub user.
                 cla.log.info("Handle GitHub user")
