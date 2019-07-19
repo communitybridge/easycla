@@ -359,7 +359,7 @@ export class ClaService {
   }
 
   getAllCompanies() {
-    return this.http.get(this.claApiUrl + "/v1/company/all").map(res => res.json());
+    return this.http.get(this.claApiUrl + "/v2/company").map(res => res.json());
   }
 
   postCompany(company) {
