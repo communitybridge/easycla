@@ -651,8 +651,8 @@ def get_companies(auth_user: check_auth):
     return cla.controllers.company.get_companies_by_user(auth_user.username)
 
 
-@hug.get('/company/all', versions=1)
-def get_companies():
+@hug.get('/company', versions=2)
+def get_all_companies():
     """
     GET: /company
 
