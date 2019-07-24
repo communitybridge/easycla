@@ -57,7 +57,7 @@ export class ClaSelectCompanyModal {
   }
 
   getCompanies() {
-    this.claService.getProjectCompanies(this.projectId).subscribe(response => {
+    this.claService.getAllCompanies().subscribe(response => {
       if (response) {
         this.companies = response;
       }

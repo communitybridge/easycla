@@ -468,8 +468,8 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
     # Check ICLA.
     signature = user.get_latest_signature(project_id)
     if signature is not None:
-        cla.log.info('Signature found for this user on project %s: %s',
-                     project_id, signature.get_signature_id())
+        cla.log.info('Signature found for user %s on project %s: %s',
+                     user.get_user_id(), project_id, signature.get_signature_id())
         if latest_major_version: # Ensure it's latest signature.
             project = get_project_instance()
             project.load(str(project_id))
@@ -497,6 +497,9 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
                          user.get_user_emails(),
                          project_id)
             return False
+    else:
+        cla.log.info('Signature NOT found for user %s on project %s',
+             user.get_user_id(), project_id)
     # Check employee signature.
     company_id = user.get_user_company_id()
     if company_id is not None:

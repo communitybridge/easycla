@@ -384,8 +384,15 @@ export class ClaService {
    * /company
    **/
 
+
+  // Returns list of companies for current user
   getCompanies() {
     return this.http.get(this.claApiUrl + "/v1/company").map(res => res.json());
+  }
+
+
+  getAllCompanies() {
+    return this.http.get(this.claApiUrl + "/v2/company").map(res => res.json());
   }
 
   postCompany(company) {

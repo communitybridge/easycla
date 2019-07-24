@@ -73,8 +73,7 @@ export class ClaGerritCorporatePage {
 
   getCompanies() {
     this.claService.getGerrit(this.gerritId).subscribe(gerrit => {
-      this.projectId = gerrit.project_id;
-      this.claService.getProjectCompanies(gerrit.project_id).subscribe(response => {
+      this.claService.getAllCompanies().subscribe(response => {
         if (response) {
           this.companies = response;
         }
