@@ -33,7 +33,7 @@ class GitHubInstallation(object):
             integration = GithubCLAIntegration(self.app_id, self.private_key)
             auth = integration.get_access_token(self.installation_id)
 
-            print('github access token: {}'.format(auth))
+            # print('github access token: {}'.format(auth))
 
             self.token = auth.token
             self.api_object = Github(self.token)
@@ -42,6 +42,7 @@ class GitHubInstallation(object):
                             '{}, error: {}'.format(self.app_id, self.installation_id, e))
             raise e
 
+        cla.log.info("Initializing Github Application")
 
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
