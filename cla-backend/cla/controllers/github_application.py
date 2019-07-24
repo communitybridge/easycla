@@ -25,17 +25,22 @@ class GitHubInstallation(object):
     def __init__(self, installation_id):
         self.installation_id = installation_id
 
-        # print('github installation_id: {}'.format(self.installation_id))
-        # print('github app id: {}'.format(self.app_id))
-        # print('github private key: {}'.format(self.private_key))
+        print('github installation_id: {}'.format(self.installation_id))
+        print('github app id: {}'.format(self.app_id))
+        print('github private key: {}...'.format(self.private_key[:5]))
 
-        integration = GithubCLAIntegration(self.app_id, self.private_key)
-        auth = integration.get_access_token(self.installation_id)
+        try:
+            integration = GithubCLAIntegration(self.app_id, self.private_key)
+            auth = integration.get_access_token(self.installation_id)
 
-        # print('github access token: {}'.format(auth))
+            # print('github access token: {}'.format(auth))
 
-        self.token = auth.token
-        self.api_object = Github(self.token)
+            self.token = auth.token
+            self.api_object = Github(self.token)
+        except Exception as e:
+            cla.log.warning('Error connecting to Github to fetch the access token using app_id: {}, installation id: '
+                            '{}, error: {}'.format(self.app_id, self.installation_id, e))
+            raise e
 
         cla.log.info("Initializing Github Application")
 
