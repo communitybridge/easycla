@@ -19,6 +19,7 @@ from cla.models.dynamo_models import User, Signature, Project, Company, UserPerm
 from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
 
+
 def check_user_authorization(auth_user: AuthUser, sfid):
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
@@ -35,6 +36,7 @@ def check_user_authorization(auth_user: AuthUser, sfid):
 
     return {'valid': True}
 
+
 def get_projects():
     """
     Returns a list of projects in the CLA system.
@@ -44,12 +46,14 @@ def get_projects():
     """
     return [project.to_dict() for project in get_project_instance().all()]
 
+
 def project_acl_verify(username, project_obj):
     if username in project_obj.get_project_acl():
         return True
 
     raise HTTPForbidden('Unauthorized',
         'Provided Token credentials does not have sufficient permissions to access resource')
+
 
 def get_project(project_id, user_id=None):
     """
@@ -66,6 +70,7 @@ def get_project(project_id, user_id=None):
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
+
 
 def get_project_managers(username, project_id):
     """
@@ -650,32 +655,41 @@ def get_github_repositories_by_org(project):
 
     organization_dicts = []
     # Get all organizations connected to this project
+    cla.log.info("Retrieving GH organization details using ID: {}".format(project.get_project_external_id))
     github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
+    cla.log.info("Retrieved {} GH organizations using ID: {}".format(len(github_organizations), project.get_project_external_id))
+
     # Iterate over each organization
     for github_organization in github_organizations:
         installation_id = github_organization.get_organization_installation_id()
         # Verify installation_id exist
         if installation_id is not None:
-            installation = GitHubInstallation(installation_id)
-            # Prepare organization in dict 
-            organization_dict = github_organization.to_dict()
-            organization_dict['repositories'] = []
-            # Get repositories from Github API
-            github_repos = installation.repos
-            if github_repos is not None:
-                for repo in github_repos:
-                    # Convert repository entities from lib to a dict.
-                    repo_dict = {
-                        'repository_github_id': repo.id, 
-                        'repository_name': repo.full_name, 
-                        'repository_type': 'github', 
-                        'repository_url': repo.html_url
-                    }
-                    # Add repository to organization repositories list
-                    organization_dict['repositories'].append(repo_dict)
-            # Add organization dict to list
-            organization_dicts.append(organization_dict)
+            try:
+                installation = GitHubInstallation(installation_id)
+                # Prepare organization in dict
+                organization_dict = github_organization.to_dict()
+                organization_dict['repositories'] = []
+                # Get repositories from Github API
+                github_repos = installation.repos
+
+                cla.log.info("Retrieved {} repositories using GH installation id: {}".format(github_repos, installation_id))
+                if github_repos is not None:
+                    for repo in github_repos:
+                        # Convert repository entities from lib to a dict.
+                        repo_dict = {
+                            'repository_github_id': repo.id,
+                            'repository_name': repo.full_name,
+                            'repository_type': 'github',
+                            'repository_url': repo.html_url
+                        }
+                        # Add repository to organization repositories list
+                        organization_dict['repositories'].append(repo_dict)
+                # Add organization dict to list
+                organization_dicts.append(organization_dict)
+            except Exception as e:
+                cla.log.warning('Error connecting to Github to fetch repository details, error: {}'.format(e))
     return organization_dicts
+
 
 def get_sfdc_project_repositories(project):
     """
