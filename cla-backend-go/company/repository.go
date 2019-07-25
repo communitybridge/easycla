@@ -1,9 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
+
 package company
 
 import (
 	"fmt"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -12,8 +15,9 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+// Repository interface methods
 type Repository interface {
-	GetPendingCompanyInviteRequests(companyID string) ([]CompanyInvite, error)
+	GetPendingCompanyInviteRequests(companyID string) ([]Invite, error)
 	GetCompany(CompanyID string) (Company, error)
 	DeletePendingCompanyInviteRequest(InviteID string) error
 	AddPendingCompanyInviteRequest(companyID string, userID string) error
@@ -25,18 +29,21 @@ type repository struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
+// Company data model
 type Company struct {
 	CompanyID   string   `dynamodbav:"company_id"`
 	CompanyName string   `dynamodbav:"company_name"`
 	CompanyACL  []string `dynamodbav:"company_acl"`
 }
 
-type CompanyInvite struct {
+// Invite data model
+type Invite struct {
 	CompanyInviteID    string `dynamodbav:"company_invite_id"`
 	RequestedCompanyID string `dynamodbav:"requested_company_id"`
 	UserID             string `dynamodbav:"user_id"`
 }
 
+// NewRepository creates a new company respository instance
 func NewRepository(awsSession *session.Session, stage string) repository {
 	return repository{
 		stage:          stage,
@@ -44,6 +51,7 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 	}
 }
 
+// GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(CompanyID string) (Company, error) {
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -69,7 +77,8 @@ func (repo repository) GetCompany(CompanyID string) (Company, error) {
 	return company, nil
 }
 
-func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]CompanyInvite, error) {
+// GetPendingCompanyInviteRequests returns a list of company invites when provided the company ID
+func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Invite, error) {
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	input := &dynamodb.QueryInput{
 		KeyConditions: map[string]*dynamodb.Condition{
@@ -91,7 +100,7 @@ func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Comp
 		return nil, err
 	}
 
-	companyInvites := []CompanyInvite{}
+	companyInvites := []Invite{}
 	err = dynamodbattribute.UnmarshalListOfMaps(companyInviteAV.Items, &companyInvites)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -101,6 +110,7 @@ func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Comp
 	return companyInvites, nil
 }
 
+// DeletePendingCompanyInviteRequest deletes the spending invite
 func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error {
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	input := &dynamodb.DeleteItemInput{
@@ -121,6 +131,7 @@ func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error 
 	return nil
 }
 
+// AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
 func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID string) error {
 	companyInviteID, err := uuid.NewV4()
 	if err != nil {
@@ -151,6 +162,7 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 	return nil
 }
 
+// UpdateCompanyAccessList updates the company ACL when provided the company ID and ACL list
 func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []string) error {
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	input := &dynamodb.UpdateItemInput{
@@ -173,7 +185,7 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println("Error updating Company Access List:", err)
+		log.Warnf("Error updating Company Access List, error: %v", err)
 		return err
 	}
 

@@ -47,11 +47,11 @@ jobs:
           command: |
             cd cla-backend-go
             make test
-      #- run:
-      #    name: Lint
-      #    command: |
-      #      cd cla-backend-go
-      #      make lint
+      - run:
+          name: Lint
+          command: |
+            cd cla-backend-go
+            make lint
 
   buildUIProject: &buildUIAnchor
     docker:

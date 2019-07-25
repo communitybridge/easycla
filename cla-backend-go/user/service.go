@@ -7,12 +7,14 @@ type service struct {
 	repo Repository
 }
 
+// NewService creates a new user service
 func NewService(repo Repository) service {
 	return service{
 		repo: repo,
 	}
 }
 
+// GetUserAndProfilesByLFID returns the user profile when provided the LFID
 func (s service) GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error) {
 	user, err := s.repo.GetUserAndProfilesByLFID(lfidUsername)
 	if err != nil {
@@ -22,6 +24,7 @@ func (s service) GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error) 
 	return user, nil
 }
 
+// GetUserProjectIDs returns a list of project IDs associated with the user
 func (s service) GetUserProjectIDs(userID string) ([]string, error) {
 	projectIDs, err := s.repo.GetUserProjectIDs(userID)
 	if err != nil {
@@ -31,6 +34,7 @@ func (s service) GetUserProjectIDs(userID string) ([]string, error) {
 	return projectIDs, nil
 }
 
+// GetClaManagerCorporateClaIDs returns a list of corporate CLAs associated with the user
 func (s service) GetClaManagerCorporateClaIDs(userID string) ([]string, error) {
 	return nil, nil
 }
