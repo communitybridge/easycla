@@ -8,7 +8,7 @@ const Footer = () => {
     <div className="cla-footer">
       <div className="container">
         <p>
-          Copyright © 2019 The Linux Foundation®. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks.
+        Copyright &copy; 2019 The Linux Foundation®. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks.
           For a list of trademarks of The Linux Foundation, please see our Trademark Usage page. Linux is a registered trademark of Linus Torvalds.
           Acceptable Use Policy | Service-Specific Terms | Platform Use Agreement | CommunityBridge People Guide | Privacy Policy
           <br /><br />
