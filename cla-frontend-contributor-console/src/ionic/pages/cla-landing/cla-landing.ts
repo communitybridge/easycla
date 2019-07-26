@@ -23,6 +23,9 @@ export class ClaLandingPage {
   hasIndividualCla: boolean;
   hasCorporateCla: boolean;
 
+  individualClaAgreement: string;
+  corporateClaAgreement: string;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -45,6 +48,8 @@ export class ClaLandingPage {
 
     this.hasCorporateCla = false;
     this.hasIndividualCla = false;
+    this.individualClaAgreement = "";
+    this.corporateClaAgreement = ""
   }
 
   ngOnInit() {
@@ -83,8 +88,12 @@ export class ClaLandingPage {
 
   getProjectDocuments() {
     this.claService.getProjectDocument(this.projectId, 'individual').subscribe(response => {
+
       if (!response.hasOwnProperty('errors')) {
         this.hasIndividualCla = true;
+      }
+      if(response.document_s3_url) {
+        this.individualClaAgreement = response.document_s3_url;
       }
       this.loading.individualDoc = false;
     });
@@ -92,8 +101,27 @@ export class ClaLandingPage {
       if (!response.hasOwnProperty('errors')) {
         this.hasCorporateCla = true;
       }
+      if(response.document_s3_url) {
+        this.corporateClaAgreement = response.document_s3_url;
+      }
       this.loading.corporateDoc = false;
     });
+  }
+
+  getUserFriendlyID() {
+    if (this.user == null) {
+      return "user is undefined";
+    }
+
+    if (this.user.user_github_username != null) {
+      return this.user.user_github_username + " Github user id";
+    } else if (this.user.lf_username != null) {
+        return this.user.lf_username + " LF user id";
+    } else if (this.user.lf_email != null) {
+      return this.user.lf_email + " LF email";
+    } else {
+      return "no user information";
+    }
   }
 
 }
