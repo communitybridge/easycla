@@ -17,7 +17,6 @@
         </ion-col>
         <ion-col col-12 col-md-10>
           <h1>{{ project.project_name }}</h1>
-          <p>CLA</p>
         </ion-col>
       </ion-row>
     </ion-grid>
@@ -25,11 +24,11 @@
   <loading-spinner [loading]="(loading.individualDoc || loading.corporateDoc)"></loading-spinner>
   <ion-grid [loading-display]="(loading.individualDoc || loading.corporateDoc)">
     <ion-row justify-content-center>
-      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
+      <ion-col *ngIf="!hasCorporateCla" col-12 col-md-6>
         <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
           <ion-card-content>
-            <ion-card-title >
-              <ion-icon name="briefcase" item-left large ></ion-icon>
+            <ion-card-title>
+              <ion-icon name="briefcase" item-left large></ion-icon>
               <span>Company</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an employee.</p>
@@ -38,14 +37,41 @@
       </ion-col>
     </ion-row>
     <ion-row justify-content-center>
-      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
+      <ion-col *ngIf="!hasIndividualCla" col-12 col-md-6>
         <ion-card class="clickable" (click)="openClaIndividualPage()">
           <ion-card-content>
             <ion-card-title>
-              <ion-icon name="person" item-left large ></ion-icon>
+              <ion-icon name="person" item-left large></ion-icon>
               <span>Individual</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an individual.</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <ion-row justify-content-center>
+      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+              <span>Company CLA</span>
+            </ion-card-title>
+            <p>
+              <b>{{getUserFriendlyID()}}</b> is covered by a
+              <a href="{{ corporateClaAgreement }}">contributor license agreement</a></p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
+        <ion-card>
+          <ion-card-content>
+            <ion-card-title>
+              <span>Individual CLA</span>
+            </ion-card-title>
+            <p>
+              <b>{{getUserFriendlyID()}}</b> is covered by a
+              <a href="{{ individualClaAgreement }}">contributor license agreement</a></p>
           </ion-card-content>
         </ion-card>
       </ion-col>
