@@ -88,17 +88,22 @@ export class ClaLandingPage {
 
   getProjectDocuments() {
     this.claService.getProjectDocument(this.projectId, 'individual').subscribe(response => {
+
       if (!response.hasOwnProperty('errors')) {
         this.hasIndividualCla = true;
       }
-      this.individualClaAgreement = response.document_s3_url;
+      if (response.document_s3_url) {
+        this.individualClaAgreement = response.document_s3_url;
+      }
       this.loading.individualDoc = false;
     });
     this.claService.getProjectDocument(this.projectId, 'corporate').subscribe(response => {
       if (!response.hasOwnProperty('errors')) {
         this.hasCorporateCla = true;
       }
-      this.corporateClaAgreement = response.document_s3_url;
+      if(response.document_s3_url) {
+        this.corporateClaAgreement = response.document_s3_url;
+      }
       this.loading.corporateDoc = false;
     });
   }
