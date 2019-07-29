@@ -357,7 +357,7 @@ def get_project_signatures(project_id):
     :param project_id: The ID of the project in question.
     :type project_id: string
     """
-    signatures = Signature().get_signatures_by_project(str(project_id))
+    signatures = Signature().get_signatures_by_project(str(project_id), signature_signed=True)
     return [signature.to_dict() for signature in signatures]
 
 
