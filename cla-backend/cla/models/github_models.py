@@ -645,9 +645,9 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
         state = 'success'
         for commit, author_name in signed:
             context, body = cla.utils.assemble_cla_status(author_name, signed=True)
-            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            # sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
-            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
+            create_commit_status(pull_request, last_commit.sha, state, None, body, context)
 
 
 def create_commit_status(pull_request, commit_hash, state, sign_url, body, context):
