@@ -9,12 +9,11 @@ project contributors read, sign, and submit contributor license agreements easil
  managing the application.
 
 This platform supports both GitHub and Gerrit source code repositories.
-Additional information can be found in the [User's Guide](#users-guide).
+Additional information can be found in the [Getting Started Guide](#getting-started-guide).
 
-## Users Guide
+## Getting Started Guide
 
-A user's guide can be found
-[on the Contributor License Agreement public confluence pages](https://docs.linuxfoundation.org/display/DOCS/CommunityBridge+EasyCLA).
+See the [Getting Started Guide](docs/getting-started.md) to get started with EasyCLA.
 
 ## Third-party Services
 
