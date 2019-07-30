@@ -471,13 +471,13 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             gerrits = Gerrit().get_gerrit_by_project_id(project_id)
         except DoesNotExist as err:
-            cla.log.error('Cannot load Gerrit instance for: {}', request_info)
+            cla.log.error('Cannot load Gerrit instance for: %s', request_info)
             return {'errors': {'missing_gerrit': str(err)}}
 
         # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
         project = Project()
         project.load(project_id)
-        cla.log.info('Loaded project for: {}', request_info)
+        cla.log.info('Loaded project for: %s', request_info)
 
         # Get project's latest corporate document to get major/minor version numbers. 
         last_document = project.get_latest_corporate_document()
@@ -501,7 +501,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
-        cla.log.info('Loaded user, set signature ACL, and saved for: {}', request_info)
+        cla.log.info('Loaded user, set signature ACL, and saved for: %s', request_info)
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.
