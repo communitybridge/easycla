@@ -99,9 +99,6 @@ export class ClaGerritCorporatePage {
       company_id: company.company_id,
       user_id: this.userId
     };
-
-    console.log(data, 'this is data')
-
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
