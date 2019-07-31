@@ -43,7 +43,6 @@ export class ClaGerritCorporatePage {
     private keycloak: KeycloakService,
   ) {
     this.gerritId = navParams.get('gerritId');
-    this.projectId = navParams.get('projectId');
     this.getDefaults();
     localStorage.setItem("gerritId", this.gerritId);
     localStorage.setItem("gerritClaType", "CCLA");
@@ -59,6 +58,7 @@ export class ClaGerritCorporatePage {
   ngOnInit() {
     this.getCompanies();
     this.getUserInfo();
+    this.getProject(this.gerritId);
   }
 
   ionViewCanEnter(){
@@ -100,9 +100,9 @@ export class ClaGerritCorporatePage {
       user_id: this.userId
     };
 
+    console.log(data, 'this is data')
+
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
-      console.log("Debug Gerrit");
-      console.log(data);
       let errors = response.hasOwnProperty('errors');
       if (errors) {
         
@@ -165,5 +165,12 @@ export class ClaGerritCorporatePage {
       companyId: company.company_id,
       gitService: 'Gerrit'
     });
+  }
+
+  getProject(gerritId) {
+    //retrieve projectId from this Gerrit
+    this.claService.getGerrit(gerritId).subscribe(gerrit => {
+      this.projectId = gerrit.project_id;
+    })
   }
 }
