@@ -43,6 +43,7 @@ export class ClaGerritCorporatePage {
     private keycloak: KeycloakService,
   ) {
     this.gerritId = navParams.get('gerritId');
+    this.projectId = navParams.get('projectId');
     this.getDefaults();
     localStorage.setItem("gerritId", this.gerritId);
     localStorage.setItem("gerritClaType", "CCLA");
