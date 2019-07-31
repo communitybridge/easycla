@@ -101,6 +101,8 @@ export class ClaGerritCorporatePage {
     };
 
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
+      console.log("Debug Gerrit");
+      console.log(data);
       let errors = response.hasOwnProperty('errors');
       if (errors) {
         
