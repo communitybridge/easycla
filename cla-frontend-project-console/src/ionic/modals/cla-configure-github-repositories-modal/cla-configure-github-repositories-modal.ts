@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {NavParams, ViewController, IonicPage, Events} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla-configure-github-repositories-modal'
@@ -13,6 +13,7 @@ import {ClaService} from '../../services/cla.service';
   templateUrl: 'cla-configure-github-repositories-modal.html'
 })
 export class ClaConfigureGithubRepositoriesModal {
+  loading: any;
   responseErrors: string[] = [];
   claProjectId: any;
   orgAndRepositories: any[];
@@ -25,10 +26,18 @@ export class ClaConfigureGithubRepositoriesModal {
     public events: Events
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
+    this.getDefaults();
 
     events.subscribe('modal:close', () => {
       this.dismiss();
     });
+  }
+
+  getDefaults() {
+    this.loading = {
+      repositories: true,
+      activateSpinner: false
+    }
   }
 
   ngOnInit() {
@@ -44,6 +53,7 @@ export class ClaConfigureGithubRepositoriesModal {
     this.assignedRepositories = data['repositories'];
     this.orgAndRepositories = data['orgs_and_repos']
       .map(organization => {
+        this.loading.activateSpinner = false
         organization.repositories.map(repository => {
           repository.status = 'free';
           repository.repository_organization_name = organization.organization_name;
@@ -61,6 +71,7 @@ export class ClaConfigureGithubRepositoriesModal {
 
         return organization;
       });
+    this.loading.repositories = false
   }
 
   dismiss() {
@@ -85,8 +96,9 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   assignRepository(repository) {
-    const payload = {...repository};
+    const payload = { ...repository };
     delete payload.status;
+    this.loading.activateSpinner = true
 
     payload.repository_project_id = this.claProjectId;
     payload.repository_external_id = payload.repository_github_id;
@@ -97,6 +109,7 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   removeRepository(repository) {
+    this.loading.activateSpinner = true
     this.claService.removeProjectRepository(repository.repository_id)
       .subscribe(() => this.getOrgRepositories())
   }
