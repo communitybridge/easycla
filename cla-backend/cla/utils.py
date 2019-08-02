@@ -942,8 +942,8 @@ def change_icon(provider, signed=False): # pylint: disable=unused-argument
     :rtype: file path | file handler | Pillow Image
     """
     if signed:
-        return 'cla/resources/cla-signed.svg'
-    return 'cla/resources/cla-unsigned.svg'
+        return 'cla/resources/cla-signed.png'
+    return 'cla/resources/cla-notsigned.png'
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])
