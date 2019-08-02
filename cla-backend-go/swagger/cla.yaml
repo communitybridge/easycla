@@ -43,6 +43,19 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+  /api-docs:
+    get:
+      security: []
+      summary: Get swagger documentation
+      operationId: getDoc
+      produces:
+        - text/html
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
   /project:
     get:
       summary: Get Project IDs based on PM
