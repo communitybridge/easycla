@@ -17,6 +17,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
+	"github.com/communitybridge/easycla/cla-backend-go/docs"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
@@ -132,6 +133,7 @@ func server(localMode bool) http.Handler {
 	template.Configure(api, templateService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
 	whitelist.Configure(api, whitelistService, sessionStore)
+	docs.Configure(api)
 
 	company.Configure(api, companyService)
 
