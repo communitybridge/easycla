@@ -148,12 +148,12 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.info('Handling GitHub OAuth2 redirect')
         session = self._get_request_session(request)
 
-        cla.log.info('State: %s', state)
-        cla.log.info('Code: %s', code)
-        cla.log.info('Session: %s', session)
+        cla.log.debug('State: %s', state)
+        cla.log.debug('Code: %s', code)
+        cla.log.debug('Session: %s', session)
 
         if 'github_oauth2_state' in session:
-            session_state = session['']
+            session_state = session['github_oauth2_state']
         else:
             session_state = None
             cla.log.warning('github_oauth2_state not set in session')
