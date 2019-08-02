@@ -13,6 +13,7 @@ from cla.models import email_service_interface
 region = os.environ.get('REGION', '')
 sender_email_address = os.environ.get('SES_SENDER_EMAIL_ADDRESS', '')
 
+
 class SES(email_service_interface.EmailService):
     """
     AWS SES email client model.
@@ -48,6 +49,7 @@ class SES(email_service_interface.EmailService):
         connection.send_raw_email(RawMessage={'Data': msg.as_string()},
                                   Source=msg['From'],
                                   Destinations=[msg['To']])
+
 
 class MockSES(SES):
     """

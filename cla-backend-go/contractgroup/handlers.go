@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Configure sets up the middleware handlers for the contract group service
 func Configure(api *operations.ClaAPI, service Service) {
 	//Create a Contract Group
 	api.ContractGroupCreateContractGroupHandler = contract_group.CreateContractGroupHandlerFunc(func(contractGroup contract_group.CreateContractGroupParams) middleware.Responder {
@@ -90,10 +91,12 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 }
 
+// codedResponse interface
 type codedResponse interface {
 	Code() string
 }
 
+// errorResponse is a helper function to wrap the specified error in a error response model
 func errorResponse(err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {

@@ -4,9 +4,9 @@
 import time
 import cla
 from github import GithubIntegration, Github
-from github.GithubException import UnknownObjectException
 from jose import jwt
 import os
+
 
 class GitHubInstallation(object):
 
@@ -25,15 +25,15 @@ class GitHubInstallation(object):
     def __init__(self, installation_id):
         self.installation_id = installation_id
 
-        print('github installation_id: {}'.format(self.installation_id))
-        print('github app id: {}'.format(self.app_id))
-        print('github private key: {}...'.format(self.private_key[:5]))
+        cla.log.debug('github installation_id: {}'.format(self.installation_id))
+        cla.log.debug('github app id: {}'.format(self.app_id))
+        cla.log.debug('github private key: {}...'.format(self.private_key[:5]))
 
         try:
             integration = GithubCLAIntegration(self.app_id, self.private_key)
             auth = integration.get_access_token(self.installation_id)
 
-            # print('github access token: {}'.format(auth))
+            # cla.log.debug('github access token: {}'.format(auth))
 
             self.token = auth.token
             self.api_object = Github(self.token)
@@ -43,6 +43,7 @@ class GitHubInstallation(object):
             raise e
 
         cla.log.info("Initializing Github Application")
+
 
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""

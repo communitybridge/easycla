@@ -13,21 +13,25 @@ var (
 	userID = "<redacted>"
 )
 
+// Service interface defines the project service methods/functions
 type Service interface {
 	GetProjects(ctx context.Context) ([]models.Project, error)
 	GetProjectByID(ctx context.Context, projectID string) (models.Project, error)
 }
 
+// service
 type service struct {
 	projectRepo Repository
 }
 
+// NewService returns an instance of the project service
 func NewService(projectRepo Repository) service {
 	return service{
 		projectRepo: projectRepo,
 	}
 }
 
+// GetProjects returns a list of projects
 func (s service) GetProjects(ctx context.Context) ([]models.Project, error) {
 	//TODO: how to get the user ID
 	// projectIDs
@@ -50,6 +54,7 @@ func (s service) GetProjects(ctx context.Context) ([]models.Project, error) {
 	return projects, nil
 }
 
+// GetProjectByID returns the project based on the specified project id value
 func (s service) GetProjectByID(ctx context.Context, projectID string) (models.Project, error) {
 	m := make(map[string]models.Project)
 	m["456789"] = models.Project{Name: "CCLA & ICLA Project", Description: "This is a test project with both a CCLA and ICLA", LogoURL: "https://s3.amazonaws.com/cla-project-logo-staging/a092M00001F1Yv4QAF.png", SfdcID: "456789"}
