@@ -147,8 +147,19 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         cla.log.info('Handling GitHub OAuth2 redirect')
         session = self._get_request_session(request)
-        if state != session.get('github_oauth2_state', None):
-            cla.log.warning('Invalid GitHub OAuth2 state')
+
+        cla.log.debug('State: %s', state)
+        cla.log.debug('Code: %s', code)
+        cla.log.debug('Session: %s', session)
+
+        if 'github_oauth2_state' in session:
+            session_state = session['github_oauth2_state']
+        else:
+            session_state = None
+            cla.log.warning('github_oauth2_state not set in session')
+
+        if state != session_state:
+            cla.log.warning('Invalid GitHub OAuth2 state %s expecting %s', state, session_state)
             raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
         # Get session information for this request.
         cla.log.info('Attempting to fetch OAuth2 token for state %s', state)
