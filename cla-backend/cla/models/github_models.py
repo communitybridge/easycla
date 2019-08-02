@@ -645,8 +645,9 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
         state = 'success'
         for commit, author_name in signed:
             context, body = cla.utils.assemble_cla_status(author_name, signed=True)
-            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            # sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
+            sign_url = "https://lfcla.com" # Remove this once signature detail page ready.
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 

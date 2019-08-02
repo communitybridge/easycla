@@ -17,7 +17,6 @@
         </ion-col>
         <ion-col col-12 col-md-10>
           <h1>{{ project.project_name }}</h1>
-          <p>CLA</p>
         </ion-col>
       </ion-row>
     </ion-grid>
@@ -28,8 +27,8 @@
       <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
         <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
           <ion-card-content>
-            <ion-card-title >
-              <ion-icon name="briefcase" item-left large ></ion-icon>
+            <ion-card-title>
+              <ion-icon name="briefcase" item-left large></ion-icon>
               <span>Company</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an employee.</p>
@@ -42,7 +41,7 @@
         <ion-card class="clickable" (click)="openClaIndividualPage()">
           <ion-card-content>
             <ion-card-title>
-              <ion-icon name="person" item-left large ></ion-icon>
+              <ion-icon name="person" item-left large></ion-icon>
               <span>Individual</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an individual.</p>
@@ -51,6 +50,7 @@
       </ion-col>
     </ion-row>
   </ion-grid>
+
 </ion-content>
 
 <cla-footer></cla-footer>

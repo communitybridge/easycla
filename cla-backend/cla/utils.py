@@ -570,7 +570,7 @@ def get_comment_badge(repository_type, all_signed, sign_url):
         badge_url += '?signed=1'
     else:
         badge_url += '?signed=0'
-    return '[![CLA Check](' + badge_url + ')](' + sign_url + ')'
+    return '[![CLA Check](' + badge_url + ')]()'
 
 def assemble_cla_status(author_name, signed=False):
     """
@@ -653,8 +653,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you. Unfortunately, your account is not authorized under ' + \
-               'a signed CLA. [Please click here to proceed](' + sign_url + ').'
+        text = 'One or more committers are not authorized under a signed CLA as indicated below. ' + \
+               '[Please click here to be authorized](' + sign_url + ').'
         # Group commits by author.
         committers = {}
         for commit, author in missing:
@@ -670,7 +670,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment
-    text = 'All committers are now authorized under a signed CLA.'
+    text = 'The committers are authorized under a signed CLA.'
     return text + committers_comment
 
 def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_url):
