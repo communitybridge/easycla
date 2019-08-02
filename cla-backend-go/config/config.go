@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/lytics/logrus"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// Config data model
 type Config struct {
 	// Auth0
 	Auth0 Auth0 `json:"auth0"`
@@ -38,12 +39,13 @@ type Config struct {
 	// Sender Email Address
 	SenderEmailAddress string `json:"senderEmailAddress"`
 
-	AllowedOriginsCommaSeparated string              `json:"allowedOriginsCommaSeparated"`
-	AllowedOrigins               map[string]struct{} `json:"-"`
+	AllowedOriginsCommaSeparated string   `json:"allowedOriginsCommaSeparated"`
+	AllowedOrigins               []string `json:"-"`
 
 	CorporateConsoleURL string `json:"corporateConsoleURL"`
 }
 
+// Auth0 model
 type Auth0 struct {
 	Domain        string `json:"auth0-domain"`
 	ClientID      string `json:"auth0-clientId"`
@@ -51,32 +53,36 @@ type Auth0 struct {
 	Algorithm     string `json:"auth0-algorithm"`
 }
 
+// Docraptor model
 type Docraptor struct {
 	APIKey   string `json:"apiKey"`
 	TestMode bool   `json:"testMode"`
 }
 
+// AWS model
 type AWS struct {
 	Region string `json:"region"`
 }
 
+// Github model
 type Github struct {
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 }
 
+// LoadConfig loads the configuration
 func LoadConfig(configFilePath string, awsSession *session.Session, awsStage string) (Config, error) {
 	var config Config
 	var err error
 
 	if configFilePath != "" {
 		// Read from local env.jso
-		logrus.Info("Loading local config")
+		log.Info("Loading local config...")
 		config, err = loadLocalConfig(configFilePath)
 
 	} else if awsSession != nil {
 		// Read from SSM
-		logrus.Info("Loading SSM config")
+		log.Info("Loading SSM config...")
 		config, err = loadSSMConfig(awsSession, awsStage)
 
 	} else {
@@ -87,10 +93,8 @@ func LoadConfig(configFilePath string, awsSession *session.Session, awsStage str
 		return Config{}, err
 	}
 
-	config.AllowedOrigins = map[string]struct{}{}
-	for _, origin := range strings.Split(config.AllowedOriginsCommaSeparated, ",") {
-		config.AllowedOrigins[origin] = struct{}{}
-	}
+	// Convert the allowed origins into an array of values
+	config.AllowedOrigins = strings.Split(config.AllowedOriginsCommaSeparated, ",")
 
 	return config, nil
 }

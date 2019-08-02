@@ -5,6 +5,7 @@
 Holds the model interfaces that all key-value store models must implement.
 """
 
+
 class KeyValueStore(object):
     """Interface to a persistent thread-safe key-value store."""
 

@@ -29,6 +29,7 @@ from cla.models import model_interfaces, key_value_store_interface
 stage = os.environ.get('STAGE', '')
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
+
 def create_database():
     """
     Named "create_database" instead of "create_tables" because create_database
@@ -55,6 +56,7 @@ def delete_database():
     for table in tables:
         if table.exists():
             table.delete_table()
+
 
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
@@ -101,6 +103,7 @@ class LFUsernameIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     lf_username = UnicodeAttribute(hash_key=True)
 
+
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by project ID.
@@ -132,6 +135,7 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     repository_external_id = UnicodeAttribute(hash_key=True)
 
+
 class SFDCRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by external ID.
@@ -146,6 +150,7 @@ class SFDCRepositoryIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     repository_sfdc_id = UnicodeAttribute(hash_key=True)
+
 
 class ExternalProjectIndex(GlobalSecondaryIndex):
     """
@@ -162,6 +167,7 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     project_external_id = UnicodeAttribute(hash_key=True)
 
+
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by external ID.
@@ -177,6 +183,7 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     company_external_id = UnicodeAttribute(hash_key=True)
 
+
 class GithubOrgSFIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying github organizations by a Salesforce ID.
@@ -189,6 +196,7 @@ class GithubOrgSFIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     organization_sfid = UnicodeAttribute(hash_key=True)
+
 
 class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
@@ -205,6 +213,7 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_project_id = UnicodeAttribute(hash_key=True)
 
+
 class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by reference.
@@ -220,6 +229,7 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_reference_id = UnicodeAttribute(hash_key=True)
 
+
 class RequestedCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying company invites with a company ID.
@@ -232,6 +242,7 @@ class RequestedCompanyIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     requested_company_id = UnicodeAttribute(hash_key=True)
+
 
 class BaseModel(Model):
     """
@@ -276,6 +287,7 @@ class DocumentTabModel(MapAttribute):
     document_tab_anchor_ignore_if_not_present = BooleanAttribute(default=True)
     document_tab_anchor_x_offset = NumberAttribute()
     document_tab_anchor_y_offset = NumberAttribute()
+
 
 class DocumentTab(model_interfaces.DocumentTab):
     """
@@ -420,6 +432,7 @@ class DocumentTab(model_interfaces.DocumentTab):
     def set_document_tab_anchor_y_offset(self, document_tab_anchor_y_offset):
         self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
+
 class DocumentModel(MapAttribute):
     """
     Represents a document in the project model.
@@ -437,6 +450,7 @@ class DocumentModel(MapAttribute):
     document_legal_entity_name = UnicodeAttribute(null=True)
     document_s3_url = UnicodeAttribute(null=True)
     document_tabs = ListAttribute(of=DocumentTabModel, default=[])
+
 
 class Document(model_interfaces.Document):
     """
@@ -615,6 +629,7 @@ class Document(model_interfaces.Document):
             tab.set_document_tab_anchor_y_offset(tab_data['anchor_y_offset'])
         self.add_document_tab(tab)
 
+
 class ProjectModel(BaseModel):
     """
     Represents a project in the database.
@@ -634,6 +649,7 @@ class ProjectModel(BaseModel):
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
     project_acl = UnicodeSetAttribute(default=set())
+
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
@@ -897,6 +913,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             ret.append(proj)
         return ret
 
+
 def _remove_project_document(documents, major_version, minor_version):
     # TODO Need to optimize this on the DB side - delete directly from list of records.
     new_documents = []
@@ -940,6 +957,7 @@ class UserModel(BaseModel):
     lf_username = UnicodeAttribute(null=True)
     lf_username_index = LFUsernameIndex()
     lf_sub = UnicodeAttribute(null=True)
+
 
 class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     """
@@ -1920,6 +1938,7 @@ class StoreModel(Model):
     value = JSONAttribute()
     expire = NumberAttribute()
 
+
 class Store(key_value_store_interface.KeyValueStore):
     """
     ORM-agnostic wrapper for the DynamoDB key-value store model.
@@ -2170,6 +2189,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             ret.append(gerrit)
         return ret
 
+
 class UserPermissionsModel(BaseModel):
     """
     Represents user permissions in the database.
@@ -2181,6 +2201,7 @@ class UserPermissionsModel(BaseModel):
             host = 'http://localhost:8000'
     username = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
+
 
 class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
     """

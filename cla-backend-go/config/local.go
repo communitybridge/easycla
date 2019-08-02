@@ -6,10 +6,11 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 )
 
 func loadLocalConfig(configFilePath string) (Config, error) {
-	configData, err := ioutil.ReadFile(configFilePath)
+	configData, err := ioutil.ReadFile(filepath.Clean(configFilePath))
 	if err != nil {
 		return Config{}, err
 	}
