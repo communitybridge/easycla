@@ -5,7 +5,6 @@ package init
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -13,10 +12,7 @@ import (
 
 var (
 	// AWS
-	awsRegion          string
-	awsAccessKeyID     string
-	awsSecretAccessKey string
-
+	awsRegion            string
 	awsSession           *session.Session
 	awsCloudWatchService *cloudwatch.CloudWatch
 )
@@ -24,8 +20,6 @@ var (
 // AWSInit initialization logic for the AWS resources
 func AWSInit() {
 	awsRegion = getProperty("AWS_REGION")
-	awsAccessKeyID = getProperty("AWS_ACCESS_KEY_ID")
-	awsSecretAccessKey = getProperty("AWS_SECRET_ACCESS_KEY")
 
 	if err := startCloudWatchSession(); err != nil {
 		log.Fatalf("Error starting the AWS CloudWatch session - Error: %s", err.Error())
@@ -36,25 +30,22 @@ func AWSInit() {
 func GetAWSSession() (*session.Session, error) {
 	if awsSession == nil {
 		log.Debugf("Creating a new AWS session for region: %s...", awsRegion)
-		ses, err := session.NewSession(&aws.Config{
-			Region:      aws.String(awsRegion),
-			Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
-			MaxRetries:  aws.Int(5),
-		})
-		/* original
-		awsSession := session.Must(session.NewSession(
+		/*
+			ses, err := session.NewSession(&aws.Config{
+				Region:      aws.String(awsRegion),
+				Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
+				MaxRetries:  aws.Int(5),
+			})
+		*/
+		awsSession = session.Must(session.NewSession(
 			&aws.Config{
 				Region:                        aws.String(awsRegion),
 				CredentialsChainVerboseErrors: aws.Bool(true),
+				MaxRetries:                    aws.Int(5),
 			},
 		))
-		*/
 
-		if err != nil {
-			log.Fatalf("Error creating new AWS session: %v", err)
-		}
-
-		awsSession = ses
+		log.Debugf("Successfully created a new AWS session for region: %s...", awsRegion)
 	}
 
 	return awsSession, nil
