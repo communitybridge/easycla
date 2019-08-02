@@ -14,11 +14,12 @@ from cla import config
 # Current version.
 __version__ = '0.2.4'
 
+
 class Config(dict):
     """
     A simple configuration object with dictionary-like properties.
     """
-    def __init__(self, instance_config='cla_config'): # pylint: disable=super-init-not-called
+    def __init__(self, instance_config='cla_config'):  # pylint: disable=super-init-not-called
         """
         Initialize config object and load up default configuration file.
         """
@@ -28,7 +29,7 @@ class Config(dict):
             i = importlib.import_module(instance_config)
             self.from_module(i)
         except ImportError:
-            logging.warning('Could not load instance configuration: %s.py', instance_config)
+            logging.info('Could not load instance configuration from file: %s.py', instance_config)
 
     def from_module(self, mod):
         """
@@ -41,6 +42,7 @@ class Config(dict):
             if key.isupper():
                 self[key] = getattr(mod, key)
 
+
 def get_logger(configuration):
     """
     Returns a configured logger object for the CLA.
@@ -51,6 +53,7 @@ def get_logger(configuration):
     logger.addHandler(handler)
     logger.setLevel(configuration['LOG_LEVEL'])
     return logger
+
 
 # The global configuration singleton.
 conf = Config()

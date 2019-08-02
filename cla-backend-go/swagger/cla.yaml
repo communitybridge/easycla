@@ -23,67 +23,6 @@ securityDefinitions:
       company: CLA Manager scope
       contrib: Contributor scope
 paths:
-  /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg:
-    parameters:
-      - name: companyID
-        in: path
-        type: string
-        required: true
-      - name: corporateClaID
-        in: path
-        type: string
-        required: true
-      - name: githubOrganizationId
-        in: body
-        schema:
-          $ref: '#/definitions/github-org'
-    get:
-      summary: Get All Github Organization Under the CCLA whitelist
-      security: []
-      operationId: getGithubOrganizationfromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/github-org'  
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'    
-    post:
-      summary: Add Github Organization to the CCLA whitelist
-      security: []
-      operationId: addGithubOrganizationFromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-    delete:
-      summary: Delete Github Organization from CCLA whitelist
-      security: []
-      operationId: deleteGithubOrganizationFromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
   /ops/health:
     get:
       summary: API Health Check
@@ -966,7 +905,11 @@ definitions:
         type: string
       Status:
         type: string
+      Version:
+        type: string
       Githash:
+        type: string
+      Branch:
         type: string
       BuildTimeStamp:
         type: string

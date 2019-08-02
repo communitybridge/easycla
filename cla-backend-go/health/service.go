@@ -11,41 +11,39 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 )
 
-// service handles async log of audit event
-type service struct {
-	//	db         *sqlx.DB
-	gitHash    string
-	buildStamp string
+// Service provides an API to the health API
+type Service struct {
+	version   string
+	commit    string
+	branch    string
+	buildDate string
 }
 
-// New is a simple helper function to create a service instance
-func New(GitHash, BuildStamp string) service {
-	return service{
-		//	db:         db,
-		gitHash:    GitHash,
-		buildStamp: BuildStamp,
+// New is a simple helper function to create a health service instance
+func New(version, commit, branch, buildDate string) Service {
+	return Service{
+		version:   version,
+		commit:    commit,
+		branch:    branch,
+		buildDate: buildDate,
 	}
 }
 
-func (s service) HealthCheck(ctx context.Context, in operations.HealthCheckParams) (*models.Health, error) {
+// HealthCheck API call returns the current health of the service
+func (s Service) HealthCheck(ctx context.Context, in operations.HealthCheckParams) (*models.Health, error) {
 	t := time.Now()
-
-	//var pong string
-	//	dbErr := s.db.Get(&pong, "select 'pong'")
 
 	duration := time.Since(t)
 
 	hs := models.HealthStatus{TimeStamp: time.Now().String(), Healthy: true, Name: "CLA", Duration: duration.String()}
-	// if dbErr != nil {
-	// 	hs.Healthy = false
-	// 	hs.Error = dbErr.Error()
-	// }
 
 	response := models.Health{
 		Status:         "healthy",
 		TimeStamp:      time.Now().String(),
-		Githash:        s.gitHash,
-		BuildTimeStamp: s.buildStamp,
+		Version:        s.version,
+		Githash:        s.commit,
+		Branch:         s.branch,
+		BuildTimeStamp: s.buildDate,
 		Healths:        []*models.HealthStatus{&hs},
 	}
 
