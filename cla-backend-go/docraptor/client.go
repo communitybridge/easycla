@@ -20,27 +20,30 @@ const (
 	docraptorURL = "https://%s@docraptor.com/docs"
 )
 
-type DocraptorClient struct {
+// Client structure model
+type Client struct {
 	apiKey   string
 	url      string
 	testMode bool
 }
 
-func NewDocraptorClient(key string, testMode bool) (DocraptorClient, error) {
+// NewDocraptorClient creates a new docraptor client instance
+func NewDocraptorClient(key string, testMode bool) (Client, error) {
 	if key == "" {
-		return DocraptorClient{}, errInvalidKey
+		return Client{}, errInvalidKey
 	}
 
 	url := fmt.Sprintf(docraptorURL, key)
 
-	return DocraptorClient{
+	return Client{
 		apiKey:   key,
 		url:      url,
 		testMode: testMode,
 	}, nil
 }
 
-func (dc DocraptorClient) CreatePDF(html string) (io.ReadCloser, error) {
+// CreatePDF accepts an HTML document and returns a PDF
+func (dc Client) CreatePDF(html string) (io.ReadCloser, error) {
 	document := map[string]interface{}{
 		"document_type":    "pdf",
 		"document_content": html,

@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Repository defines the interfaces for the project service
 type Repository interface {
 	GetProjectIDsForUser(ctx context.Context, userID string) ([]string, error)
 }
@@ -17,12 +18,14 @@ type repository struct {
 	db *sqlx.DB
 }
 
+// NewRepository creates a new instance of the repository service
 func NewRepository(db *sqlx.DB) repository {
 	return repository{
 		db: db,
 	}
 }
 
+// GetProjectIDsForUser returns a list of project ID's for the specified user
 func (repo repository) GetProjectIDsForUser(ctx context.Context, userID string) ([]string, error) {
 	// Getting SFDC ids from the DB
 	sql := `

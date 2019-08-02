@@ -5,10 +5,10 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gofrs/uuid"
@@ -18,9 +18,11 @@ import (
 )
 
 const (
+	// SessionStoreKey is the key used to lookup the session
 	SessionStoreKey = "cla-github"
 )
 
+// Configure API call
 func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionStore *dynastore.Store) {
 	oauthConfig := &oauth2.Config{
 		ClientID:     clientID,
@@ -36,7 +38,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 			func(w http.ResponseWriter, pr runtime.Producer) {
 				session, err := sessionStore.Get(params.HTTPRequest, SessionStoreKey)
 				if err != nil {
-					fmt.Println(err)
+					log.Warnf("Error fetching session store value from key: %s, error: %v", SessionStoreKey, err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -47,7 +49,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 				// Generate a csrf token to send
 				state, err := uuid.NewV4()
 				if err != nil {
-					fmt.Println(err)
+					log.Warnf("Error creating new UUIDv4, error: %v", err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -56,7 +58,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 
 				err = session.Save(params.HTTPRequest, w)
 				if err != nil {
-					fmt.Println(err)
+					log.Warnf("Error saving session, error: %v", err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -71,20 +73,20 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 				// Verify csrf token
 				session, err := sessionStore.Get(params.HTTPRequest, SessionStoreKey)
 				if err != nil {
-					fmt.Println(err)
+					log.Warnf("error with session store lookup, error: %v", err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 
 				persistedState, ok := session.Values["state"].(string)
 				if !ok {
-					fmt.Println("no session state")
+					log.Warnf("Error getting session state, error: %v", err)
 					http.Error(w, "no session state", http.StatusInternalServerError)
 					return
 				}
 
 				if params.State != persistedState {
-					fmt.Println("mismatch state")
+					log.Warnf("mismatch state, error: %s != %s", params.State, persistedState)
 					http.Error(w, "mismatch state", http.StatusInternalServerError)
 					return
 				}
@@ -92,7 +94,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 				// trade temporary code for access token
 				token, err := oauthConfig.Exchange(context.TODO(), params.Code)
 				if err != nil {
-					fmt.Println("unable to exchange code")
+					log.Warnf("unable to exchange oath code, error: %v", err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -108,7 +110,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 
 				callback, ok := session.Values["callback"].(string)
 				if !ok {
-					fmt.Println("unable to find callback to redirect to")
+					log.Warn("unable to find callback to redirect to")
 					http.Error(w, "unable to find callback to redirect to", http.StatusInternalServerError)
 					return
 				}

@@ -12,28 +12,30 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type Auth0Validator struct {
+// Validator data model
+type Validator struct {
 	clientID      string
 	usernameClaim string
 	algorithm     string
 	wellKnownURL  string
 }
 
-func NewAuth0Validator(domain, clientID, usernameClaim, algorithm string) (Auth0Validator, error) {
+// NewAuthValidator creates a new auth0 validator based on the specified parameters
+func NewAuthValidator(domain, clientID, usernameClaim, algorithm string) (Validator, error) { // nolint
 	if domain == "" {
-		return Auth0Validator{}, errors.New("missing Domain")
+		return Validator{}, errors.New("missing Domain")
 	}
 	if clientID == "" {
-		return Auth0Validator{}, errors.New("missing ClientID")
+		return Validator{}, errors.New("missing ClientID")
 	}
 	if usernameClaim == "" {
-		return Auth0Validator{}, errors.New("missing UsernameClaim")
+		return Validator{}, errors.New("missing UsernameClaim")
 	}
 	if algorithm == "" {
-		return Auth0Validator{}, errors.New("missing Algorithm")
+		return Validator{}, errors.New("missing Algorithm")
 	}
 
-	validator := Auth0Validator{
+	validator := Validator{
 		clientID:      clientID,
 		usernameClaim: usernameClaim,
 		algorithm:     algorithm,
@@ -43,7 +45,8 @@ func NewAuth0Validator(domain, clientID, usernameClaim, algorithm string) (Auth0
 	return validator, nil
 }
 
-func (av Auth0Validator) VerifyToken(token string) (map[string]interface{}, error) {
+// VerifyToken verifies the specified token
+func (av Validator) VerifyToken(token string) (map[string]interface{}, error) {
 	// Using jwt.MapClaims because our username field is set dynamically
 	// based on environment
 	claims := jwt.MapClaims{}
@@ -80,7 +83,7 @@ type jsonWebKeys struct {
 	X5c []string `json:"x5c"`
 }
 
-func (av Auth0Validator) getPemCert(token *jwt.Token) (interface{}, error) {
+func (av Validator) getPemCert(token *jwt.Token) (interface{}, error) {
 	cert := ""
 	resp, err := http.Get(av.wellKnownURL)
 	if err != nil {

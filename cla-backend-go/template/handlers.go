@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Configure API call
 func Configure(api *operations.ClaAPI, service Service) {
 	// Retrieve a list of available templates
 	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams) middleware.Responder {
