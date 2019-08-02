@@ -7,12 +7,13 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/jmoiron/sqlx"
 )
 
+// Repository interface contains a list of service methods
 type Repository interface {
 	CreateContractGroup(ctx context.Context, projectSfdcID string, contractGroup models.ContractGroup) (string, error)
 	GetContractGroups(ctx context.Context, projectSfdcID string) ([]models.ContractGroup, error)
@@ -21,7 +22,7 @@ type Repository interface {
 	GetLatestContractTemplate(ctx context.Context, contractGroupID string, contractType string) (models.ContractTemplate, error)
 
 	CreateGitHubOrganization(ctx context.Context, contractID, userID string, githubOrg models.Github) (string, error)
-	GetGithubOrganizatons(ctx context.Context, contractGroupID string) ([]models.Github, error)
+	GetGithubOrganizations(ctx context.Context, contractGroupID string) ([]models.Github, error)
 
 	CreateGerritInstance(ctx context.Context, projectSFDCID, contractID, userID string, gerritInstance models.Gerrit) (string, error)
 	GetGerritInstances(ctx context.Context, contractGroupID string) ([]models.Gerrit, error)
@@ -32,16 +33,18 @@ type Repository interface {
 }
 
 type repository struct {
-	db      *sqlx.DB
-	session *session.Session
+	db *sqlx.DB
+	//session *session.Session
 }
 
+// NewRepository creates a new instance of the contract group service
 func NewRepository(db *sqlx.DB) repository {
 	return repository{
 		db: db,
 	}
 }
 
+// CreateContractGroup create contract group creates a new contract group
 func (repo repository) CreateContractGroup(ctx context.Context, projectSfdcID string, contractGroup models.ContractGroup) (string, error) {
 	sql := `
 		INSERT INTO cla.contract_group (
@@ -70,12 +73,14 @@ func (repo repository) CreateContractGroup(ctx context.Context, projectSfdcID st
 		contractGroup.CorporateClaRequiresIndividualCla,
 	).Scan(&contractGroupID)
 	if err != nil {
+		log.Warnf("Error scanning for contract group, error: %v", err)
 		return "", err
 	}
 
 	return contractGroupID, nil
 }
 
+// GetContractGroups returns a list of contract groups
 func (repo repository) GetContractGroups(ctx context.Context, projectSfdcID string) ([]models.ContractGroup, error) {
 	getContractGroupsSQL := `
 		SELECT
@@ -92,9 +97,11 @@ func (repo repository) GetContractGroups(ctx context.Context, projectSfdcID stri
 
 	rows, err := repo.db.Queryx(getContractGroupsSQL, projectSfdcID)
 	if err != nil && err != sql.ErrNoRows {
+		log.Warnf("Error querying for contract groups, error: %v", err)
 		return nil, err
 	}
 	if err == sql.ErrNoRows {
+		log.Info("No rows returned from contract group query")
 		return []models.ContractGroup{}, nil
 	}
 
@@ -113,6 +120,7 @@ func (repo repository) GetContractGroups(ctx context.Context, projectSfdcID stri
 	return contractGroups, nil
 }
 
+// CreateContractTemplate creates a new contract template
 func (repo repository) CreateContractTemplate(ctx context.Context, contractID string, contractTemplate models.ContractTemplate) (string, error) {
 	sql := `
 		INSERT INTO cla.contract_template (
@@ -140,12 +148,14 @@ func (repo repository) CreateContractTemplate(ctx context.Context, contractID st
 		contractTemplate.MinorVersion,
 	).Scan(&contractTemplateID)
 	if err != nil {
+		log.Warnf("Error querying for contract templates, error: %v", err)
 		return "", err
 	}
 
 	return contractTemplateID, nil
 }
 
+// GetLatestContractTemplate returns the latest contract template
 func (repo repository) GetLatestContractTemplate(ctx context.Context, contractGroupID string, contractType string) (models.ContractTemplate, error) {
 	getContractTempleteSQL :=
 		`SELECT
@@ -174,17 +184,20 @@ func (repo repository) GetLatestContractTemplate(ctx context.Context, contractGr
 		contractType,
 	).StructScan(&template)
 	if err != nil && err != sql.ErrNoRows {
+		log.Warnf("Error querying for contract template, error: %v", err)
 		return models.ContractTemplate{}, err
 	}
 	if err == sql.ErrNoRows {
+		log.Infof("No contract template found using group ID: %s, type: %s", contractGroupID, contractType)
 		return models.ContractTemplate{}, nil
 	}
 
 	return template, nil
 }
 
-func (repo repository) GetGithubOrganizatons(ctx context.Context, contractGroupID string) ([]models.Github, error) {
-	getGithubOrganizatonsSQL := `
+// GetGithubOrganizations returns a list of GH organizations
+func (repo repository) GetGithubOrganizations(ctx context.Context, contractGroupID string) ([]models.Github, error) {
+	getGithubOrganizationsSQL := `
 		SELECT
 			github_organization_id,
 			contract_group_id,
@@ -198,11 +211,13 @@ func (repo repository) GetGithubOrganizatons(ctx context.Context, contractGroupI
 		WHERE
 			contract_group_id = $1;`
 
-	rows, err := repo.db.Queryx(getGithubOrganizatonsSQL, contractGroupID)
+	rows, err := repo.db.Queryx(getGithubOrganizationsSQL, contractGroupID)
 	if err != nil && err != sql.ErrNoRows {
+		log.Warnf("Error querying for GH organizations, error: %v", err)
 		return nil, err
 	}
 	if err == sql.ErrNoRows {
+		log.Infof("No GH organizations found using group id: %s", contractGroupID)
 		return []models.Github{}, nil
 	}
 
@@ -221,6 +236,7 @@ func (repo repository) GetGithubOrganizatons(ctx context.Context, contractGroupI
 	return githubOrgs, nil
 }
 
+// CreateGitHubOrganization creates a new GH organization
 func (repo repository) CreateGitHubOrganization(ctx context.Context, contractID, userID string, githubOrg models.Github) (string, error) {
 	sql := `
 		INSERT INTO cla.github_organization (
@@ -251,6 +267,7 @@ func (repo repository) CreateGitHubOrganization(ctx context.Context, contractID,
 	return githubOrgID, nil
 }
 
+// CreateGerritInstance creates a new gerrit instance
 func (repo repository) CreateGerritInstance(ctx context.Context, projectSFDCID, contractID, userID string, gerritInstance models.Gerrit) (string, error) {
 	// We have to verify that the provided Contract Group belongs to the specified Salesforce.com Project, so
 	// a malicious user doesn't manipulate ownership through URL parameters. We verify using the WHERE clause
@@ -298,6 +315,7 @@ func (repo repository) CreateGerritInstance(ctx context.Context, projectSFDCID, 
 	return gerritInstanceID, nil
 }
 
+// GetGerritInstances returns a list of gerrit instances
 func (repo repository) GetGerritInstances(ctx context.Context, contractGroupID string) ([]models.Gerrit, error) {
 	getGerritInstanceSQL := `
 		SELECT
@@ -336,6 +354,7 @@ func (repo repository) GetGerritInstances(ctx context.Context, contractGroupID s
 	return gerritInstances, nil
 }
 
+// DeleteGerritInstance deletes a gerrit instance
 func (repo repository) DeleteGerritInstance(ctx context.Context, projectSfdcID string, contractID string, gerritInstanceID string) error {
 
 	deleteGerritInstanceSQL := `
@@ -352,12 +371,12 @@ func (repo repository) DeleteGerritInstance(ctx context.Context, projectSfdcID s
 	RETURNING 
 		gi.gerrit_instance_id`
 
-	var deletedGerritInstnaceId string
+	var deletedGerritInstnaceID string
 	err := repo.db.QueryRowx(deleteGerritInstanceSQL,
 		projectSfdcID,
 		contractID,
 		gerritInstanceID,
-	).Scan(&deletedGerritInstnaceId)
+	).Scan(&deletedGerritInstnaceID)
 
 	if err != nil {
 		return err
@@ -365,6 +384,8 @@ func (repo repository) DeleteGerritInstance(ctx context.Context, projectSfdcID s
 
 	return nil
 }
+
+// GetContractGroupCCLASignatures gets a list of CCLA signatures
 func (repo repository) GetContractGroupCCLASignatures(ctx context.Context, projectSFDCID string, contractID string) ([]models.CclaSignatureDetails, error) {
 	getCCLASignaturesSQL := `
 		SELECT
@@ -426,6 +447,7 @@ func (repo repository) GetContractGroupCCLASignatures(ctx context.Context, proje
 	return cclaSignatures, nil
 }
 
+// GetContractGroupICLASignatures returns list of ICLA signatures
 func (repo repository) GetContractGroupICLASignatures(ctx context.Context, projectSFDCID string, contractID string) ([]models.IclaSignatureDetails, error) {
 	getICLASignaturesSQL := `
 		SELECT

@@ -1,9 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
+
 package user
 
 import (
 	"fmt"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -11,12 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+// RepositoryDynamo data model
 type RepositoryDynamo struct {
 	Stage              string
 	DynamoDBClient     *dynamodb.DynamoDB
 	senderEmailAddress string
 }
 
+// User data model
 type User struct {
 	UserID             string   `json:"user_id"`
 	LFEmail            string   `json:"lf_email"`
@@ -31,6 +36,7 @@ type User struct {
 	UserGithubUsername string   `json:"user_github_username"`
 }
 
+// NewDynamoRepository creates a new dynamo repository model
 func NewDynamoRepository(awsSession *session.Session, stage, senderEmailAddress string) RepositoryDynamo {
 	return RepositoryDynamo{
 		Stage:              stage,
@@ -39,6 +45,7 @@ func NewDynamoRepository(awsSession *session.Session, stage, senderEmailAddress 
 	}
 }
 
+// GetUserAndProfilesByLFID returns the user profile by LFID
 func (repo RepositoryDynamo) GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error) {
 	tableName := fmt.Sprintf("cla-%s-users", repo.Stage)
 
@@ -85,6 +92,7 @@ func (repo RepositoryDynamo) GetUserAndProfilesByLFID(lfidUsername string) (CLAU
 	return claUser, nil
 }
 
+// GetUserProjectIDs returns a list of user's projects when provided the user id
 func (repo RepositoryDynamo) GetUserProjectIDs(userID string) ([]string, error) {
 	tableName := fmt.Sprintf("cla-%s-user-permissions", repo.Stage)
 	result, err := repo.DynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -97,6 +105,7 @@ func (repo RepositoryDynamo) GetUserProjectIDs(userID string) ([]string, error) 
 	})
 
 	if err != nil {
+		log.Warnf("error feteching user project IDs: error: %v", err)
 		fmt.Println(err.Error())
 		return []string{}, err
 	}
@@ -110,14 +119,17 @@ func (repo RepositoryDynamo) GetUserProjectIDs(userID string) ([]string, error) 
 	return aws.StringValueSlice(projects.SS), nil
 }
 
+// GetClaManagerCorporateClaIDs returns a list of corporate CLAs when provided the user ID
 func (repo RepositoryDynamo) GetClaManagerCorporateClaIDs(userID string) ([]string, error) {
 	return []string{}, nil
 }
 
+// GetUserCompanyIDs returns a list of company IDs associated with the specified user
 func (repo RepositoryDynamo) GetUserCompanyIDs(userID string) ([]string, error) {
 	return []string{}, nil
 }
 
+// GetUser returns the user model when provided the user ID
 func (repo RepositoryDynamo) GetUser(userID string) (User, error) {
 	tableName := fmt.Sprintf("cla-%s-users", repo.Stage)
 	userAV, err := repo.DynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -128,10 +140,15 @@ func (repo RepositoryDynamo) GetUser(userID string) (User, error) {
 			},
 		},
 	})
+	if err != nil {
+		log.Warnf("Error fetching user: %s, error: %v", userID, err)
+		return User{}, err
+	}
 
 	user := User{}
 	err = dynamodbattribute.UnmarshalMap(userAV.Item, &user)
 	if err != nil {
+		log.Warnf("Error processing user value for: %s, error: %v", userID, err)
 		return User{}, err
 	}
 

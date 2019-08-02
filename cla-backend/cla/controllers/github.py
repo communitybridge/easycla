@@ -134,9 +134,11 @@ def delete_organization(auth_user, organization_name):
     github_organization.delete()
     return {'success': True}
 
+
 def user_oauth2_callback(code, state, request):
     github = get_repository_service('github')
     return github.oauth2_redirect(state, code, request)
+
 
 def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
@@ -174,6 +176,7 @@ def activity(body):
             result = service.received_activity(body)
             return result
 
+
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
     try:
@@ -187,6 +190,7 @@ def get_organization_repositories(organization_name):
                     repos.append(repo.full_name)
                 return repos
             else:
+                cla.log.debug('No repositories found for Github installation id: {}'.format(github_organization.get_organization_installation_id()))
                 return []
     except DoesNotExist as err:
         return {'errors': {'organization_name': str(err)}}
@@ -257,6 +261,7 @@ def webhook_secret_validation(webhook_signature, data):
     
     return True if hmac.compare_digest(mac.hexdigest(), signature) else False
 
+
 def check_namespace(namespace):
     """
     Checks if the namespace provided is a valid GitHub organization.
@@ -269,6 +274,7 @@ def check_namespace(namespace):
     oauth = get_oauth_client()
     response = oauth.get('https://api.github.com/users/' + namespace)
     return response.ok
+
 
 def get_namespace(namespace):
     """

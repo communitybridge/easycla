@@ -11,7 +11,7 @@ import (
 )
 
 // Configure setups handlers on api with service
-func Configure(api *operations.ClaAPI, service service) {
+func Configure(api *operations.ClaAPI, service Service) {
 
 	api.HealthCheckHandler = operations.HealthCheckHandlerFunc(func(params operations.HealthCheckParams) middleware.Responder {
 		result, err := service.HealthCheck(params.HTTPRequest.Context(), params)
