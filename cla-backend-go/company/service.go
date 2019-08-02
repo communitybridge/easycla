@@ -1,5 +1,6 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
+
 package company
 
 import (
@@ -7,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,6 +24,7 @@ type service struct {
 	corporateConsoleURL string
 }
 
+// NewService creates a new company service object
 func NewService(repo Repository, awsSession *session.Session, senderEmailAddress, corporateConsoleURL string, userDynamoRepo user.RepositoryDynamo) service {
 	return service{
 		repo:                repo,
@@ -32,11 +35,12 @@ func NewService(repo Repository, awsSession *session.Session, senderEmailAddress
 	}
 }
 
-//
+// AddUserToCompanyAccessList adds a user to the specified company
 func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error {
 	// call getcompany function
 	company, err := s.repo.GetCompany(companyID)
 	if err != nil {
+		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
 		return err
 	}
 
@@ -47,7 +51,8 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 			fmt.Println(fmt.Sprintf("User %s has already been added to the company acl", lfid))
 			err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
 			if err != nil {
-				return fmt.Errorf("Failed to delete pending invite")
+				log.Warnf("Error deleting pending company invite request with inviteID: %s, error: %v", inviteID, err)
+				return fmt.Errorf("failed to delete pending invite")
 			}
 			return nil
 		}
@@ -57,30 +62,33 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 
 	err = s.repo.UpdateCompanyAccessList(companyID, company.CompanyACL)
 	if err != nil {
+		log.Warnf("Error updating company access list with company ID: %s, company ACL: %v, error: %v", companyID, company.CompanyACL, err)
 		return err
 	}
 
-	user, err := s.userDynamoRepo.GetUserAndProfilesByLFID(lfid)
+	userProfile, err := s.userDynamoRepo.GetUserAndProfilesByLFID(lfid)
 	if err != nil {
+		log.Warnf("Error getting user profile by LFID: %s, error: %v", lfid, err)
 		return nil
 	}
 
-	recipientEmailAddress := user.LFEmail
+	recipientEmailAddress := userProfile.LFEmail
 
-	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, s.senderEmailAddress, &user)
+	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, s.senderEmailAddress, &userProfile)
 	if err != nil {
-		return errors.New("Failed to send notification email")
+		return errors.New("failed to send notification email")
 	}
 
 	// Remove pending invite ID once approval emails are sent
 	err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
 	if err != nil {
-		return fmt.Errorf("Failed to delete pending invite")
+		return fmt.Errorf("failed to delete pending invite")
 	}
 
 	return nil
 }
 
+// SendApprovalEmail sends the approval email when provided the company name, address and user object
 func (s service) SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error {
 	var (
 		Sender    = senderAddress
@@ -122,18 +130,20 @@ You have now been granted access to the organization: %s
 
 	_, err := s.sesClient.SendEmail(input)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Warnf("Error sending mail, error: %v", err)
 		return err
 	}
 
 	return nil
 }
 
+// SendRequestAccessEmail sends the request access e-mail when provided the company ID and user object
 func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) error {
 
 	// Get Company
 	company, err := s.repo.GetCompany(companyID)
 	if err != nil {
+		log.Warnf("Error fetching company by company ID: %s, error: %v", companyID, err)
 		fmt.Println(err)
 		return err
 	}
@@ -141,7 +151,7 @@ func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) er
 	// Add a pending request to the company-invites table
 	err = s.repo.AddPendingCompanyInviteRequest(companyID, user.UserID)
 	if err != nil {
-		fmt.Println(err)
+		log.Warnf("Error adding pending company invite request using company ID: %s, user ID: %s, error: %v", companyID, user.UserID, err)
 		return err
 	}
 
@@ -152,6 +162,7 @@ func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) er
 		// Retrieve admin's user profile for email and name
 		adminUser, err := s.userDynamoRepo.GetUserAndProfilesByLFID(admin)
 		if err != nil {
+			log.Warnf("Error fetching user profile using admin: %s, error: %v", admin, err)
 			return err
 		}
 
@@ -193,7 +204,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 
 		_, err = s.sesClient.SendEmail(input)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Warnf("Error sending mail, error: %v", err)
 			return err
 		}
 	}
@@ -201,6 +212,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 	return nil
 }
 
+// GetPendingCompanyInviteRequests returns a list of company invites when provided the company ID
 func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error) {
 	companyInvites, err := s.repo.GetPendingCompanyInviteRequests(companyID)
 	if err != nil {
@@ -213,6 +225,7 @@ func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.Com
 		userID := invite.UserID
 		user, err := s.userDynamoRepo.GetUser(userID)
 		if err != nil {
+			log.Warnf("Error fetching user with userID: %s, error: %v", userID, err)
 			continue
 		}
 
@@ -227,13 +240,15 @@ func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.Com
 	return users, nil
 
 }
+
+// DeletePendingCompanyInviteRequest deletes the pending company invite request when provided the invite ID
 func (s service) DeletePendingCompanyInviteRequest(inviteID string) error {
 	// When a CLA Manager Declines a pending invite, remove the invite from the table
 	err := s.repo.DeletePendingCompanyInviteRequest(inviteID)
 	if err != nil {
+		log.Warnf("Error deleting the pending company invite with invite ID: %s, error: %v", inviteID, err)
 		return err
 	}
 
 	return nil
-
 }

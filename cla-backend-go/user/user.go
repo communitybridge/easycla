@@ -3,6 +3,7 @@
 
 package user
 
+// CLAUser data model
 type CLAUser struct {
 	UserID string
 	Name   string
@@ -12,14 +13,15 @@ type CLAUser struct {
 	LFEmail    string
 	LFUsername string
 
-	LfidProvider   UserProvider
-	GithubProvider UserProvider
+	LfidProvider   Provider
+	GithubProvider Provider
 
 	ProjectIDs []string
 	ClaIDs     []string
 	CompanyIDs []string
 }
 
-type UserProvider struct {
+// Provider data model
+type Provider struct {
 	ProviderUserID string
 }

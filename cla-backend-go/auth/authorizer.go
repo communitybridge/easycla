@@ -15,8 +15,10 @@ const (
 	adminScope   Scope = "admin"
 )
 
+// Scope string
 type Scope string
 
+// UserPermissioner interface methods
 type UserPermissioner interface {
 	GetUserAndProfilesByLFID(lfidUsername string) (user.CLAUser, error)
 	GetUserProjectIDs(userID string) ([]string, error)
@@ -24,18 +26,21 @@ type UserPermissioner interface {
 	GetUserCompanyIDs(userID string) ([]string, error)
 }
 
+// Authorizer data model
 type Authorizer struct {
-	auth0Validator   Auth0Validator
+	authValidator    Validator
 	userPermissioner UserPermissioner
 }
 
-func NewAuthorizer(auth0Validator Auth0Validator, userPermissioner UserPermissioner) Authorizer {
+// NewAuthorizer creates a new authorizer based on the specified parameters
+func NewAuthorizer(authValidator Validator, userPermissioner UserPermissioner) Authorizer {
 	return Authorizer{
-		auth0Validator:   auth0Validator,
+		authValidator:    authValidator,
 		userPermissioner: userPermissioner,
 	}
 }
 
+// SecurityAuth creates a new CLA user based on the token and scopes
 func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, error) {
 	// This handler is called by the runtime whenever a route needs authentication
 	// against the 'OAuthSecurity' scheme.
@@ -43,13 +48,13 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	// the list of scopes mentioned by the spec for this route.
 
 	// Verify the token is valid
-	claims, err := a.auth0Validator.VerifyToken(token)
+	claims, err := a.authValidator.VerifyToken(token)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the username from the token claims
-	usernameClaim, ok := claims[a.auth0Validator.usernameClaim]
+	usernameClaim, ok := claims[a.authValidator.usernameClaim]
 	if !ok {
 		return nil, errors.New("username not found")
 	}
