@@ -565,12 +565,14 @@ def get_comment_badge(repository_type, all_signed, sign_url):
     :param sign_url: The URL for the user to click in order to initiate signing.
     :type sign_url: string
     """
-    badge_url = '{}/v2/repository-provider/{}/icon.svg'.format(cla.conf['API_BASE_URL'], repository_type)
+    badge_url = '{}/v2/repository-provider/{}/icon.png'.format(cla.conf['API_BASE_URL'], repository_type)
     if all_signed:
         badge_url += '?signed=1'
+        badge_hyperlink = 'https://lfcla.com'
     else:
         badge_url += '?signed=0'
-    return '[![CLA Check](' + badge_url + ')]()'
+        badge_hyperlink = sign_url
+    return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
 
 def assemble_cla_status(author_name, signed=False):
     """
