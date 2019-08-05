@@ -570,7 +570,7 @@ def get_comment_badge(repository_type, all_signed, sign_url):
         badge_url += '?signed=1'
     else:
         badge_url += '?signed=0'
-    return '[![CLA Check](' + badge_url + ')]()'
+    return '[![CLA Check](' + badge_url + ')](https://lfcla.com)'
 
 def assemble_cla_status(author_name, signed=False):
     """
