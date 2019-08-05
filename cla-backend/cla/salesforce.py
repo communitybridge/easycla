@@ -68,7 +68,7 @@ def get_projects(event, context):
     Gets list of all projects from Salesforce
     """
 
-    cla.log.info('event: {}'.format(event))
+    cla.log.debug('event: {}'.format(event))
 
     try:
         auth_user = cla.auth.authenticate_user(event.get('headers'))
