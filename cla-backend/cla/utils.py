@@ -690,7 +690,9 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     """
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
+    cla.log.debug('utils.py - get_authorization_url_and_state - authorization_url: {}, state: {}'.format(authorization_url, state))
     return authorization_url, state
+
 
 def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=None): # pylint: disable=too-many-arguments
     """
@@ -711,7 +713,10 @@ def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=N
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'], redirect_uri=redirect_uri)
     else:
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'])
+    cla.log.debug('utils.py - oauth2.fetch_token - token_url: {}, client_id: {}, client_secret: {}, code: {}'.
+                  format(token_url, client_id, client_secret, code))
     return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
+
 
 def redirect_user_by_signature(user, signature):
     """
