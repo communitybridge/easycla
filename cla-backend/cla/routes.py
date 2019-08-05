@@ -1408,8 +1408,7 @@ def change_icon(provider: hug.types.one_of(get_supported_repository_providers().
 
 @hug.get('/repository-provider/{provider}/cla-notsigned.png', versions=2,
          output=hug.output_format.png_image)  # pylint: disable=no-member
-def cla_notsigned_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-                      signed: hug.types.smart_boolean):
+def cla_notsigned_icon(provider: hug.types.one_of(get_supported_repository_providers().keys())):
     """
     GET: /repository-provider/{provider}/cla-notsigned.png
 
@@ -1423,8 +1422,7 @@ def cla_notsigned_icon(provider: hug.types.one_of(get_supported_repository_provi
 
 @hug.get('/repository-provider/{provider}/cla-signed.png', versions=2,
          output=hug.output_format.png_image)  # pylint: disable=no-member
-def cla_signed_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-                    signed: hug.types.smart_boolean):
+def cla_signed_icon(provider: hug.types.one_of(get_supported_repository_providers().keys())):
     """
     GET: /repository-provider/{provider}/icon.png
 
