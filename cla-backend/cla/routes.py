@@ -7,6 +7,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 
 import hug
 from falcon import HTTP_401
+from hug.middleware import LogMiddleware
 
 import cla
 import cla.auth
@@ -1731,3 +1732,4 @@ def remove_company_permission(auth_user: check_auth,
 
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
+__hug__.http.add_middleware(LogMiddleware(logger=cla.log))
