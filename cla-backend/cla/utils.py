@@ -565,7 +565,7 @@ def get_comment_badge(repository_type, all_signed, sign_url):
     :param sign_url: The URL for the user to click in order to initiate signing.
     :type sign_url: string
     """
-    badge_url = '{}/v2/repository-provider/{}/icon.svg'.format(cla.conf['API_BASE_URL'], repository_type)
+    badge_url = '{}/v2/repository-provider/{}/icon.png'.format(cla.conf['API_BASE_URL'], repository_type)
     if all_signed:
         badge_url += '?signed=1'
     else:

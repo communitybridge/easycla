@@ -1390,18 +1390,18 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
                                                            request)
 
 
-@hug.get('/repository-provider/{provider}/icon.svg', versions=2,
+@hug.get('/repository-provider/{provider}/icon.png', versions=2,
          output=hug.output_format.svg_xml_image)  # pylint: disable=no-member
 def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
                 signed: hug.types.smart_boolean):
     """
-    GET: /repository-provider/{provider}/icon.svg
+    GET: /repository-provider/{provider}/icon.png
 
     TODO: This should probably be cached and web-accessible outside of the CLA.
 
     Returns the CLA status image for the provider requested.
     """
-    cla.log.debug('GET /v2/repository-provider/' + str(provider) + '/icon.svg')
+    cla.log.debug('GET /v2/repository-provider/' + str(provider) + '/icon.png')
     return cla.controllers.repository_service.change_icon(provider, signed)
 
 
