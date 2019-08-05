@@ -1391,7 +1391,7 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
 
 
 @hug.get('/repository-provider/{provider}/icon.png', versions=2,
-         output=hug.output_format.svg_xml_image)  # pylint: disable=no-member
+         output=hug.output_format.png_image)  # pylint: disable=no-member
 def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
                 signed: hug.types.smart_boolean):
     """
