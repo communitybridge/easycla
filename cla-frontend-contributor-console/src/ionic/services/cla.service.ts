@@ -10,9 +10,16 @@ import "rxjs/Rx";
 export class ClaService {
   http: any;
   claApiUrl: string = "";
+  localTesting = false;
+  v1ClaAPIURLLocal = 'http://localhost:5000';
+  v2ClaAPIURLLocal = 'http://localhost:5000';
 
   constructor(http: Http) {
     this.http = http;
+  }
+
+  public isLocalTesting(flag: boolean) {
+    this.localTesting = flag;
   }
 
   public setApiUrl(claApiUrl: string) {
@@ -33,10 +40,13 @@ export class ClaService {
 
   /**
    * /user
-   **/
-
+   */
   getUsers() {
-    return this.http.get(this.claApiUrl + "/v1/user").map(res => res.json());
+    if (this.localTesting) {
+      return this.http.get(this.v1ClaAPIURLLocal + "/v1/user").map(res => res.json());
+    } else {
+      return this.http.get(this.claApiUrl + "/v1/user").map(res => res.json());
+    }
   }
 
   postUser(user) {
@@ -48,9 +58,15 @@ export class ClaService {
         'user_github_id': 12345
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/user", user)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .post(this.v1ClaAPIURLLocal + "/v1/user", user)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .post(this.claApiUrl + "/v1/user", user)
+        .map(res => res.json());
+    }
   }
 
   putUser(user) {
@@ -63,142 +79,188 @@ export class ClaService {
         'user_github_id': 12345
       }
      */
-    return this.http.put(this.claApiUrl + "/v1/user", user).map(res => res.json());
+    if (this.localTesting) {
+      return this.http.put(this.v1ClaAPIURLLocal + "/v1/user", user).map(res => res.json());
+    } else {
+      return this.http.put(this.claApiUrl + "/v1/user", user).map(res => res.json());
+    }
   }
 
   /**
    * /user/{user_id}
-   **/
-
+   */
   getUser(userId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/user/" + userId)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v2ClaAPIURLLocal + "/v2/user/" + userId)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v2/user/" + userId)
+        .map(res => res.json());
+    }
   }
 
   getUserWithAuthToken(userId) {
-    return this.http
-      .securedGet(this.claApiUrl + "/v2/user/" + userId)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .securedGet(this.v2ClaAPIURLLocal + "/v2/user/" + userId)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .securedGet(this.claApiUrl + "/v2/user/" + userId)
+        .map(res => res.json());
+    }
   }
 
-
-
   deleteUser(userId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/user/" + userId)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .delete(this.v1ClaAPIURLLocal + "/v1/user/" + userId)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .delete(this.claApiUrl + "/v1/user/" + userId)
+        .map(res => res.json());
+    }
   }
 
   /**
    * /user/email/{user_email}
-   **/
-
+   */
   getUserByEmail(userEmail) {
-    return this.http
-      .get(this.claApiUrl + "/v1/user/email/" + userEmail)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v1ClaAPIURLLocal + "/v1/user/email/" + userEmail)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v1/user/email/" + userEmail)
+        .map(res => res.json());
+    }
   }
 
   // creates a new account for Gerrit users, with email. 
  postOrGetUserForGerrit() {
-    return this.http
-      .securedPost(this.claApiUrl + "/v1/user/gerrit")
-      .map(res => res.json());
+   if (this.localTesting) {
+     return this.http
+       .securedPost(this.v1ClaAPIURLLocal + "/v1/user/gerrit")
+       .map(res => res.json());
+   } else {
+     return this.http
+       .securedPost(this.claApiUrl + "/v1/user/gerrit")
+       .map(res => res.json());
+   }
   }
 
   /**
    * /user/github/{user_github_id}
-   **/
-
+   */
   getUserByGithubId(userGithubId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/user/github/" + userGithubId)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v1ClaAPIURLLocal + "/v1/user/github/" + userGithubId)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v1/user/github/" + userGithubId)
+        .map(res => res.json());
+    }
   }
 
   /**
    * /user/{user_id}/signatures
-   **/
-
+   */
   getUserSignatures(userId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/user/" + userId + "/signatures")
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v1ClaAPIURLLocal + "/v1/user/" + userId + "/signatures")
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v1/user/" + userId + "/signatures")
+        .map(res => res.json());
+    }
   }
 
   /**
    * /users/company/{user_company_id}
-   **/
-
+   */
   getUsersByCompanyId(userCompanyId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/users/company/" + userCompanyId)
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v1ClaAPIURLLocal + "/v1/users/company/" + userCompanyId)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v1/users/company/" + userCompanyId)
+        .map(res => res.json());
+    }
   }
 
   /**
    * /user/{user_id}/request-company-whitelist/{company_id}
-   **/
-
+   */
   postUserMessageToCompanyManager(userId, companyId, message) {
     /*
       message: {
         'message': 'custom message to manager'
       }
       */
-    return this.http
-      .post(
-        this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/request-company-whitelist/" +
-          companyId,
-        message
-      )
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
+        .map(res => res.json());
+    }
   }
 
   /**
    * /user/{user_id}/invite-company-admin
-   **/
+   */
   postEmailToCompanyAdmin(userId, data) {
-    return this.http
-      .post(
-        this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/invite-company-admin/"
-          ,
-          data
-      )
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/invite-company-admin/", data)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .post(this.claApiUrl + "/v2/user/" + userId + "/invite-company-admin/", data)
+        .map(res => res.json());
+    }
   }
   
-
   /**
    * /user/{user_id}/request-company-ccla
-   **/
+   */
   postUserCCLARequestToManager(userId, data) {
-    return this.http
-      .post(
-        this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/request-company-ccla/"
-          ,
-          data
-      )
-      .map(res => res.json());
-
+    if (this.localTesting) {
+      return this.http
+        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-ccla/", data)
+        .map(res => res.json());
+    } else {
+      return this.http
+        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-ccla/", data)
+        .map(res => res.json());
+    }
   }
+
   /**
    * /user/{user_id}/active-signature
-   **/
+   */
   getUserSignatureIntent(userId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
-      .map(res => res.json());
+    if (this.localTesting) {
+      return this.http
+        .get(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/active-signature")
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
+        .map(res => res.json());
+    }
   }
 
   /**
@@ -206,16 +268,29 @@ export class ClaService {
    **/
 
   getLastIndividualSignature(userId, projectId) {
-    return this.http
-      .get(
-        this.claApiUrl +
+    if (this.localTesting) {
+      return this.http
+        .get(
+          this.v2ClaAPIURLLocal +
           "/v2/user/" +
           userId +
           "/project/" +
           projectId +
           "/last-signature"
-      )
-      .map(res => res.json());
+        )
+        .map(res => res.json());
+    } else {
+      return this.http
+        .get(
+          this.claApiUrl +
+          "/v2/user/" +
+          userId +
+          "/project/" +
+          projectId +
+          "/last-signature"
+        )
+        .map(res => res.json());
+    }
   }
 
   /**
