@@ -23,6 +23,7 @@ import { ClaCompanyModel } from "../../models/cla-company";
 })
 export class ProjectsCclaSelectModal {
   projects: any;
+  loading: any;
   company: ClaCompanyModel;
 
   constructor(
@@ -36,6 +37,7 @@ export class ProjectsCclaSelectModal {
   }
 
   getDefaults() {
+    this.loading = true;
     this.company = this.navParams.get("company");
   }
 
@@ -45,6 +47,7 @@ export class ProjectsCclaSelectModal {
 
   getProjectsCcla() {
     this.claService.getCompanyUnsignedProjects(this.company.company_id).subscribe(response => {
+      this.loading = false;
       this.projects = response;
     });
 
