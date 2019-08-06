@@ -1332,7 +1332,7 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
                                                            request)
 
 
-
+@hug.get('/repository-provider/{provider}/oauth2_redirect', versions=2)
 def oauth2_redirect(auth_user: check_auth,  # pylint: disable=too-many-arguments
                     provider: hug.types.one_of(get_supported_repository_providers().keys()),
                     state: hug.types.text,
