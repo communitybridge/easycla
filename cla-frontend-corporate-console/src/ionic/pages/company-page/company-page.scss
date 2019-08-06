@@ -1,6 +1,14 @@
 company-page {
+  
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 10px 10px;
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
+    }
+  }
   .scroll-content {
-    padding-bottom: 160px !important;
     margin-top: 96px !important;
   }
 
@@ -40,6 +48,10 @@ company-page {
   table.invites .invites th, .invites td{
     vertical-align: center;
     text-align: center;
+  }
+
+  ion-footer {
+    position: relative;
   }
 
 }
