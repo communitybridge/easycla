@@ -3,7 +3,7 @@ docraptor==1.2.0
 boto3==1.4.7
 gossip==2.2.0
 gunicorn==19.7.1
-hug==2.3.0
+hug==2.5.6
 nose2==0.7.2
 pydocusign==2.2
 pygithub==1.43.2
