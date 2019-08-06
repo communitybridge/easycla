@@ -6,102 +6,101 @@
 </ion-header>
 
 <ion-content headerspacing>
-  <ion-grid class="project-grid">
-    <ion-row>
-      <h1>Select a template</h1>
-    </ion-row>
+  <div class="page-content">
+    <ion-grid class="project-grid">
+      <ion-row>
+        <h1>Select a template</h1>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          <ion-card class="contract-card">
+            <ion-card-content>
+              <ion-grid *ngIf="step === 'selection'">
+                <ion-row *ngFor="let template of templates">
+                  <ion-col col-2 class="template-selector">
+                    <button ion-button (click)="selectTemplate(template)" color="secondary">
+                      {{ template.Name }}
+                    </button>
+                  </ion-col>
+                  <ion-col class="template-description">
+                    {{ template.description }}
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
 
-    <ion-row>
-      <ion-col>
-        <ion-card class="contract-card">
-          <ion-card-content>
-            <ion-grid *ngIf="step === 'selection'">
-              <ion-row *ngFor="let template of templates">
-                <ion-col col-2 class="template-selector">
-                  <button ion-button (click)="selectTemplate(template)" color="secondary">
-                    {{ template.Name }}
-                  </button>
-                </ion-col>
-                <ion-col class="template-description">
-                  {{ template.description }}
-                </ion-col>
-              </ion-row>
-            </ion-grid>
+              <ion-grid *ngIf="step === 'values'">
+                <ion-row>
+                  <ion-col>
+                    <button ion-button (click)="goToStep('selection')" color="light">
+                      <ion-icon name="arrow-back"></ion-icon>
+                      Back to Template Selection
+                    </button>
+                  </ion-col>
+                </ion-row>
 
-            <ion-grid *ngIf="step === 'values'">
-              <ion-row>
-                <ion-col>
-                  <button ion-button (click)="goToStep('selection')" color="light">
-                    <ion-icon name="arrow-back"></ion-icon>
-                    Back to Template Selection
-                  </button>
-                </ion-col>
-              </ion-row>
+                <ion-row *ngFor="let field of selectedTemplate.metaFields">
+                  <ion-col col-8>
+                    <ion-item>
+                      <ion-label stacked>{{ field.name }}</ion-label>
+                      <ion-input class="template-field" type="text" [(ngModel)]="templateValues[field.templateVariable]">
+                      </ion-input>
+                      <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
 
-              <ion-row *ngFor="let field of selectedTemplate.metaFields">
-                <ion-col col-8>
-                  <ion-item>
-                    <ion-label stacked>{{ field.name }}</ion-label>
-                    <ion-input class="template-field" type="text"
-                               [(ngModel)]="templateValues[field.templateVariable]">
-                    </ion-input>
-                    <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
-                  </ion-item>
-                </ion-col>
-              </ion-row>
+                <ion-row>
+                  <ion-col>
+                    <button ion-button (click)="reviewSelectedTemplate()" color="secondary">
+                      Review
+                    </button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
 
-              <ion-row>
-                <ion-col>
-                  <button ion-button (click)="reviewSelectedTemplate()" color="secondary">
-                    Review
-                  </button>
-                </ion-col>
-              </ion-row>
-            </ion-grid>
+              <ion-grid *ngIf="step === 'review'">
+                <ion-row>
+                  <ion-col>
+                    <button ion-button (click)="goToStep('values')" color="light">
+                      <ion-icon name="arrow-back"></ion-icon>
+                      Back to Template Information
+                    </button>
+                  </ion-col>
+                </ion-row>
 
-            <ion-grid *ngIf="step === 'review'">
-              <ion-row>
-                <ion-col>
-                  <button ion-button (click)="goToStep('values')" color="light">
-                    <ion-icon name="arrow-back"></ion-icon>
-                    Back to Template Information
-                  </button>
-                </ion-col>
-              </ion-row>
+                <ion-row>
+                  <ion-col>
+                    <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary" [disabled]="currentPDF === 'corporatePDFURL'">
+                      View CCLA
+                    </button>
+                    <button ion-button (click)="showPDF('individualPDFURL')" color="secondary" [disabled]="currentPDF === 'individualPDFURL'">
+                      View ICLA
+                    </button>
+                  </ion-col>
+                </ion-row>
 
-              <ion-row>
-                <ion-col>
-                  <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
-                          [disabled]="currentPDF === 'corporatePDFURL'">
-                    View CCLA
-                  </button>
-                  <button ion-button (click)="showPDF('individualPDFURL')" color="secondary"
-                          [disabled]="currentPDF === 'individualPDFURL'">
-                    View ICLA
-                  </button>
-                </ion-col>
-              </ion-row>
+                <ion-row>
+                  <ion-col>
+                    <object [data]="getPdfPath()" type="application/pdf" class="pdf-viewer">
+                      <embed [src]="getPdfPath()" type="application/pdf" />
+                    </object>
+                  </ion-col>
+                </ion-row>
 
-              <ion-row>
-                <ion-col>
-                <object [data]="getPdfPath()" type="application/pdf" class="pdf-viewer">
-                  <embed [src]="getPdfPath()"  type="application/pdf" />
-                </object>
-                </ion-col>
-              </ion-row>
+                <ion-row>
+                  <ion-col>
+                    <button ion-button (click)="backToProject()" color="secondary">
+                      Done
+                    </button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 
-              <ion-row>
-                <ion-col>
-                  <button ion-button (click)="backToProject()" color="secondary">
-                    Done
-                  </button>
-                </ion-col>
-              </ion-row>
-            </ion-grid>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+  <cla-footer></cla-footer>
 </ion-content>
-<cla-footer></cla-footer>

@@ -14,9 +14,13 @@ all-projects {
     border-bottom: 40px solid #4C79B6;
   }
 
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 16px 50px 162px !important;
+  }
+
   .scroll-content {
     margin-top: 96px !important;
-    padding: 16px 50px 162px !important;
   }
 
   .content {
@@ -101,5 +105,9 @@ all-projects {
     text-align: center;
     font-size: 16px;
     color: #db4e4e;
+  }
+
+  ion-footer {
+    position: relative;
   }
 }

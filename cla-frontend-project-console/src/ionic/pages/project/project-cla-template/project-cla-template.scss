@@ -11,9 +11,13 @@ project-cla-template {
     border-bottom: 40px solid #4C79B6;
   }
 
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 16px 50px 162px !important;
+  }
+
   .scroll-content {
     margin-top: 96px !important;
-    padding-bottom: 162px;
   }
 
 
@@ -50,10 +54,9 @@ project-cla-template {
   }
 
   .navbar-logo {
-    width: 40px;
+    width: 100px;
     position: absolute;
     left: calc(50% - 20px);
-    top: 7px;
   }
 
   .toolbar .toolbar-title {
@@ -272,6 +275,10 @@ project-cla-template {
   .pdf-viewer {
     width: 100%;
     height: 400px;
+  }
+
+  ion-footer {
+    position: relative;
   }
 
 }
