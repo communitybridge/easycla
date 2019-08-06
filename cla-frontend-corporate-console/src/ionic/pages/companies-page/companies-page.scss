@@ -1,11 +1,20 @@
 companies-page {
+  
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 16px 50px 162px !important;
+  }
   .scroll-content {
-    padding: 60px 45px !important;
+    margin-top: 96px;
   }
 
   .add-company-btn {
     bottom: 155px;
     right: 15px;
+  }
+
+  ion-footer {
+    position: relative;
   }
 }
 

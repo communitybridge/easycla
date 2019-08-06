@@ -8,38 +8,40 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
-  <header>
+<ion-content headerspacing overflow-scroll="true">
+  <div class="page-content">
+    <header>
+      <ion-grid>
+        <ion-row>
+          <ion-col col-12>
+            <h1>{{ project.project_name }}</h1>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </header>
+
     <ion-grid>
       <ion-row>
-        <ion-col col-12>
-          <h1>{{ project.project_name }}</h1>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </header>
-
-  <ion-grid>
-    <ion-row>
-      <ion-col col-12 col-md-6>
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title>
-              <span>CLA Signing Requirement</span>
-            </ion-card-title>
+        <ion-col col-12 col-md-6>
+          <ion-card>
+            <ion-card-content>
+              <ion-card-title>
+                <span>CLA Signing Requirement</span>
+              </ion-card-title>
               <div>
                 <p>
-                  In order to contribute to this project, an authorized person with corporate authority needs to sign the CLA for your organization. Are you an authorized signatory with corporate authority?
+                  In order to contribute to this project, an authorized person with corporate authority needs to sign the CLA for your organization.
+                  Are you an authorized signatory with corporate authority?
                 </p>
                 <button ion-button color="secondary" (click)='openClaCorporatePage()'> YES </button>
                 <button ion-button color="secondary" (click)='openCollectAuthorityEmailModal()'> NO </button>
               </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 
+  <cla-footer></cla-footer>
 </ion-content>
-
-<cla-footer></cla-footer>

@@ -1,4 +1,9 @@
 authority-yesno-page {
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 16px 50px 162px !important;
+  }
+  
   .scroll-content {
     margin-top: 96px !important;
   }
@@ -26,5 +31,9 @@ authority-yesno-page {
       left: calc(50% - 20px);
       top: 30%;
     }
+  }
+
+  ion-footer {
+    position: relative;
   }
 }

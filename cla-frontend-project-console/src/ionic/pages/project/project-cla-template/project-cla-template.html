@@ -39,7 +39,7 @@
                 </ion-row>
 
                 <ion-row *ngFor="let field of selectedTemplate.metaFields">
-                  <ion-col col-8>
+                  <ion-col col-12 col-md-8>
                     <ion-item>
                       <ion-label stacked>{{ field.name }}</ion-label>
                       <ion-input class="template-field" type="text" [(ngModel)]="templateValues[field.templateVariable]">

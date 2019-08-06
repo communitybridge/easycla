@@ -1,8 +1,16 @@
 cla-corporate-page {
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 16px 50px 162px !important;
+  }
+  
   .error {
     color: red;
   }
   .card-md p {
     margin-bottom: 1rem;
+  }
+  ion-footer {
+    position: relative;
   }
 }
