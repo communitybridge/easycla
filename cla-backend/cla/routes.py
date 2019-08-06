@@ -7,7 +7,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 
 import hug
 from falcon import HTTP_401
-from hug.middleware import LogMiddleware
+#from hug.middleware import LogMiddleware
 
 import cla
 import cla.auth
@@ -1391,49 +1391,6 @@ def sign_request(provider: hug.types.one_of(get_supported_repository_providers()
                                                            request)
 
 
-@hug.get('/repository-provider/{provider}/icon.png', versions=2,
-         output=hug.output_format.png_image)  # pylint: disable=no-member
-def change_icon(provider: hug.types.one_of(get_supported_repository_providers().keys()),
-                signed: hug.types.smart_boolean):
-    """
-    GET: /repository-provider/{provider}/icon.png
-
-    TODO: This should probably be cached and web-accessible outside of the CLA.
-
-    Returns the CLA status image for the provider requested.
-    """
-    cla.log.debug('GET /v2/repository-provider/' + str(provider) + '/icon.png')
-    return cla.controllers.repository_service.change_icon(provider, signed)
-
-
-@hug.get('/repository-provider/{provider}/cla-notsigned.png', versions=2,
-         output=hug.output_format.png_image)  # pylint: disable=no-member
-def cla_notsigned_icon(provider: hug.types.one_of(get_supported_repository_providers().keys())):
-    """
-    GET: /repository-provider/{provider}/cla-notsigned.png
-
-    TODO: This should probably be cached and web-accessible outside of the CLA.
-
-    Returns the CLA status image for the provider requested.
-    """
-    cla.log.debug('GET /v2/repository-provider/' + str(provider) + '/cla-notsigned.png')
-    return 'cla/resources/cla-notsigned.png'
-
-
-@hug.get('/repository-provider/{provider}/cla-signed.png', versions=2,
-         output=hug.output_format.png_image)  # pylint: disable=no-member
-def cla_signed_icon(provider: hug.types.one_of(get_supported_repository_providers().keys())):
-    """
-    GET: /repository-provider/{provider}/icon.png
-
-    TODO: This should probably be cached and web-accessible outside of the CLA.
-
-    Returns the CLA status image for the provider requested.
-    """
-    cla.log.debug('GET /v2/repository-provider/' + str(provider) + '/cla-signed.png')
-    return 'cla/resources/cla-signed.png'
-
-
 @hug.get('/repository-provider/{provider}/oauth2_redirect', versions=2)
 def oauth2_redirect(auth_user: check_auth,  # pylint: disable=too-many-arguments
                     provider: hug.types.one_of(get_supported_repository_providers().keys()),
@@ -1732,4 +1689,4 @@ def remove_company_permission(auth_user: check_auth,
 
 # Session Middleware
 __hug__.http.add_middleware(get_session_middleware())
-__hug__.http.add_middleware(LogMiddleware(logger=cla.log))
+#__hug__.http.add_middleware(LogMiddleware(logger=cla.log))
