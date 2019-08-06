@@ -54,7 +54,7 @@ deps:
 	dep ensure -v
 
 build: deps
-	env GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(SERVICE) main.go
+	env GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(SERVICE) main.go
 	chmod +x cla
 
 build-mac: deps
