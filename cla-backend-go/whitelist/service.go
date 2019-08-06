@@ -41,7 +41,7 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, claG
 func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupID, githubOrganizationID, githubAccessToken string) error {
 	// Verify the authenticated github user has access to the github organization being added.
 	if githubAccessToken == "" {
-		return errors.New("unable to add github organizaiton, not logged in")
+		return errors.New("unable to add github organization, not logged in")
 	}
 
 	ts := oauth2.StaticTokenSource(
