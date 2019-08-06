@@ -18,3 +18,15 @@ func TestStringInSlice(t *testing.T) {
 	assert.False(t, stringInSlice("aaaa", nil))
 	assert.False(t, stringInSlice("aaaa", []string{}))
 }
+
+func TestStringInSliceHostname(t *testing.T) {
+	mySlice := []string{"project.dev.lfcla.com", "corporate.dev.lfcla.com", "contributor.dev.lfcla.com", "api.dev.lfcla.com", "dev.lfcla.com"}
+	assert.True(t, stringInSlice("project.dev.lfcla.com", mySlice))
+	assert.False(t, stringInSlice("*.dev.lfcla.com", mySlice))
+	assert.True(t, stringInSlice("corporate.dev.lfcla.com", mySlice))
+	assert.True(t, stringInSlice("contributor.dev.lfcla.com", mySlice))
+	assert.True(t, stringInSlice("api.dev.lfcla.com", mySlice))
+	assert.False(t, stringInSlice("https://api.dev.lfcla.com", mySlice))
+	assert.True(t, stringInSlice("dev.lfcla.com", mySlice))
+	assert.False(t, stringInSlice("https://dev.lfcla.com", mySlice))
+}
