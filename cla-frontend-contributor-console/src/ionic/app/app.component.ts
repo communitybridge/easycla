@@ -33,6 +33,10 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
+
+    // Set true for local debugging using localhost (local ports set in claService)
+    this.claService.isLocalTesting(false);
+
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
 
