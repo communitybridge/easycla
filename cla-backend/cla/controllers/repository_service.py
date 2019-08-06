@@ -19,13 +19,6 @@ def received_activity(provider, data):
     return result
 
 
-def change_icon(provider, signed=False):
-    """
-    Properly triages the change icon request to the appropriate provider.
-    """
-    return cla.utils.change_icon(provider, signed)
-
-
 def oauth2_redirect(provider, state, code, installation_id, github_repository_id, change_request_id, request): # pylint: disable=too-many-arguments
     """
     Properly triages the OAuth2 redirect to the appropriate provider.
