@@ -57,7 +57,11 @@ project-cla {
 
   .page-content {
     min-height: calc(100vh - 200px);
-    padding: 16px 50px 162px !important;
+    padding: 10px 10px;
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
+    }
   }
 
   .scroll-content {
