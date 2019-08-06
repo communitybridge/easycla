@@ -170,16 +170,16 @@ func setupGlobalMiddleware(handler http.Handler, allowedOrigins []string) http.H
 			}
 
 			if u.Scheme != "https" {
-				log.Warnf("non-https scheme - blocking origin: %s", origin)
+				log.Warnf("non-https scheme: %s - blocking origin: %s", u.Scheme, origin)
 				return false
 			}
 
 			// Ensure the origin is in our allowed list
-			allowedOrigin := stringInSlice(origin, allowedOrigins)
+			allowedOrigin := stringInSlice(u.Hostname(), allowedOrigins)
 			if allowedOrigin {
-				log.Debugf("origin %s is allowed", origin)
+				log.Debugf("origin %s is allowed", u.Hostname())
 			} else {
-				log.Warnf("origin %s is NOT allowed - not in allowed list: %v", origin, allowedOrigins)
+				log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
 			}
 			return allowedOrigin
 		},
