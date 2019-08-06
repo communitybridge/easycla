@@ -8,32 +8,33 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
-  <loading-spinner [loading]="loading.companies"></loading-spinner>
-
-  <ion-grid class="companies" [loading-display]="loading.companies">
-    <ion-row justify-content-center>
-      <ion-col col-12>
-        <ion-card>
-          <ion-card-title>
-            <h1>Companies</h1>
-            <button ion-button (click)="openCompanyModal()" color="secondary">
-              Add Company
-            </button>
-          </ion-card-title>
-          <ion-card-content>
-            <ion-list>
-              <button ion-item *ngFor="let company of companies" (click)="viewCompany(company.company_id)">
-                <ion-label class="company-name">{{ company.company_name }}</ion-label>
+<ion-content>
+  <div class="page-content">
+    <loading-spinner [loading]="loading.companies"></loading-spinner>
+    <ion-grid class="companies" [loading-display]="loading.companies">
+      <ion-row justify-content-center>
+        <ion-col col-12>
+          <ion-card>
+            <ion-card-title>
+              <h1>Companies</h1>
+              <button ion-button (click)="openCompanyModal()" color="secondary">
+                Add Company
               </button>
-            </ion-list>
-          </ion-card-content>
-        </ion-card>
+            </ion-card-title>
+            <ion-card-content>
+              <ion-list>
+                <button ion-item *ngFor="let company of companies" (click)="viewCompany(company.company_id)">
+                  <ion-label class="company-name">{{ company.company_name }}</ion-label>
+                </button>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
 
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <cla-footer></cla-footer>
 
 </ion-content>
-
-<cla-footer></cla-footer>
