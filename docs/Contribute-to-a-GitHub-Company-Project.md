@@ -17,7 +17,7 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
    ![GitHub Company Contributor Fail](imgs/CLA-GitHub-Company-Contributor-Fail.png)
 
-3. Click **Please click here to proceed**.
+3. Click **Please click here to be authorized**.
 
    The Authorize CommunityBridge: EasyCLA dialog appears.
 
@@ -53,9 +53,9 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
    You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
 
-   A tick appears next to your branch. A notification informs you: All checks have passed
+   A tick appears next to your branch. A notification informs you: The committers are authorized under a signed CLA.
 
-   ![All Checks Have Passed](imgs/CLA-GitHub-all-checks-have-passed.png)
+   ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
 
 3. Click **Merge pull request** and confirm the merge.
 
@@ -93,9 +93,9 @@ The CLA is added to the project.
 
 5. You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
 
-   A tick appears next to your contributor name. A notification informs you: All checks have passed
+   A tick appears next to your contributor name. A notification informs you: The committers are authorized under a signed CLA.
 
-   ![All Checks Have Passed](imgs/CLA-GitHub-all-checks-have-passed.png)
+   ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
 
 6. Click **Merge pull request** and confirm the merge.
 
