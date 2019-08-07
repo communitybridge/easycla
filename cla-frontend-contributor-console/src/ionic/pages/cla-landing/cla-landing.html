@@ -24,12 +24,12 @@
   <loading-spinner [loading]="(loading.individualDoc || loading.corporateDoc)"></loading-spinner>
   <ion-grid [loading-display]="(loading.individualDoc || loading.corporateDoc)">
     <ion-row justify-content-center>
-      <ion-col *ngIf="!hasCorporateCla" col-12 col-md-6>
+      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
         <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
           <ion-card-content>
             <ion-card-title>
               <ion-icon name="briefcase" item-left large></ion-icon>
-              <span>Company</span>
+              <span>Corporate</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an employee.</p>
           </ion-card-content>
@@ -37,7 +37,7 @@
       </ion-col>
     </ion-row>
     <ion-row justify-content-center>
-      <ion-col *ngIf="!hasIndividualCla" col-12 col-md-6>
+      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
         <ion-card class="clickable" (click)="openClaIndividualPage()">
           <ion-card-content>
             <ion-card-title>
@@ -45,35 +45,6 @@
               <span>Individual</span>
             </ion-card-title>
             <p>Select this if you are contributing code as an individual.</p>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-    <ion-row justify-content-center>
-      <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title>
-              <span>Company CLA</span>
-            </ion-card-title>
-            <p>
-              <b>{{getUserFriendlyID()}}</b> is covered by a
-              <a href="{{ corporateClaAgreement }}">contributor license agreement</a>
-            </p>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-
-      <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title>
-              <span>Individual CLA</span>
-            </ion-card-title>
-            <p>
-              <b>{{getUserFriendlyID()}}</b> is covered by a
-              <a href="{{ individualClaAgreement }}">contributor license agreement</a>
-            </p>
           </ion-card-content>
         </ion-card>
       </ion-col>

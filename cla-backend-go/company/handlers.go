@@ -1,5 +1,6 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
+
 package company
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Configure sets up the middleware handlers
 func Configure(api *operations.ClaAPI, service service) {
 
 	api.AddUsertoCompanyAccessListHandler = operations.AddUsertoCompanyAccessListHandlerFunc(func(params operations.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {

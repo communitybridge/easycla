@@ -58,6 +58,7 @@ export class ClaGerritCorporatePage {
   ngOnInit() {
     this.getCompanies();
     this.getUserInfo();
+    this.getProject(this.gerritId);
   }
 
   ionViewCanEnter(){
@@ -98,7 +99,6 @@ export class ClaGerritCorporatePage {
       company_id: company.company_id,
       user_id: this.userId
     };
-
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
@@ -162,5 +162,12 @@ export class ClaGerritCorporatePage {
       companyId: company.company_id,
       gitService: 'Gerrit'
     });
+  }
+
+  getProject(gerritId) {
+    //retrieve projectId from this Gerrit
+    this.claService.getGerrit(gerritId).subscribe(gerrit => {
+      this.projectId = gerrit.project_id;
+    })
   }
 }

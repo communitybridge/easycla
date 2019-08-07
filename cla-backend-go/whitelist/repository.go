@@ -8,12 +8,14 @@ import (
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
+// Repository interface defines the functions for the whitelist service
 type Repository interface {
 	DeleteGithubOrganizationFromWhitelist(claGroupID, githubOrganizationID string) error
 	AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID string) error
@@ -25,6 +27,7 @@ type repository struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
+// NewRepository creates a new instance of the whitelist service
 func NewRepository(awsSession *session.Session, stage string) repository {
 	return repository{
 		stage:          stage,
@@ -32,6 +35,7 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 	}
 }
 
+// AddGithubOrganizationToWhitelist adds the specified GH organization to the whitelist
 func (repo repository) AddGithubOrganizationToWhitelist(CLAGroupID, GithubOrganizationID string) error {
 	// get item from dynamodb table
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -44,6 +48,7 @@ func (repo repository) AddGithubOrganizationToWhitelist(CLAGroupID, GithubOrgani
 		},
 	})
 	if err != nil {
+		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s and GH Org: %s, error: %v", CLAGroupID, GithubOrganizationID, err)
 		fmt.Println(err.Error())
 		return err
 	}
@@ -96,6 +101,7 @@ func (repo repository) AddGithubOrganizationToWhitelist(CLAGroupID, GithubOrgani
 	return nil
 }
 
+// DeleteGithubOrganizationFromWhitelist removes the specified GH organization from the whitelist
 func (repo repository) DeleteGithubOrganizationFromWhitelist(CLAGroupID, GithubOrganizationID string) error {
 	// get item from dynamodb table
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -107,7 +113,9 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(CLAGroupID, GithubO
 			},
 		},
 	})
+
 	if err != nil {
+		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s and GH Org: %s, error: %v", CLAGroupID, GithubOrganizationID, err)
 		fmt.Println(err.Error())
 		return err
 	}
@@ -153,6 +161,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(CLAGroupID, GithubO
 	return nil
 }
 
+// GetGithubOrganizationsFromWhitelist returns a list of GH organizations stored in the whitelist
 func (repo repository) GetGithubOrganizationsFromWhitelist(CLAGroupID string) ([]models.GithubOrg, error) {
 	// get item from dynamodb table
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -164,7 +173,9 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(CLAGroupID string) ([
 			},
 		},
 	})
+
 	if err != nil {
+		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s, error: %v", CLAGroupID, err)
 		fmt.Println(err.Error())
 		return nil, err
 	}

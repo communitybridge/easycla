@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Configure establishes the middleware handlers for the project service
 func Configure(api *operations.ClaAPI, service service) {
 	//Get Project By ID
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams) middleware.Responder {
@@ -35,10 +36,12 @@ func Configure(api *operations.ClaAPI, service service) {
 	})
 }
 
+// codedResponse interface
 type codedResponse interface {
 	Code() string
 }
 
+// errorResponse is a helper to wrap the specified error into an error response model
 func errorResponse(err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {

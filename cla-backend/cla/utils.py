@@ -19,6 +19,7 @@ from hug.store import InMemoryStore as Store
 import cla
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
 def get_cla_path():
     """Returns the CLA code root directory on the current system."""
@@ -565,12 +566,14 @@ def get_comment_badge(repository_type, all_signed, sign_url):
     :param sign_url: The URL for the user to click in order to initiate signing.
     :type sign_url: string
     """
-    badge_url = '{}/v2/repository-provider/{}/icon.svg'.format(cla.conf['API_BASE_URL'], repository_type)
+
     if all_signed:
-        badge_url += '?signed=1'
+        badge_url = '{}/cla-signed.png'.format(cla_logo_url)
+        badge_hyperlink = 'https://lfcla.com'
     else:
-        badge_url += '?signed=0'
-    return '[![CLA Check](' + badge_url + ')](' + sign_url + ')'
+        badge_url = '{}/cla-notsigned.png'.format(cla_logo_url)
+        badge_hyperlink = sign_url
+    return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
 
 def assemble_cla_status(author_name, signed=False):
     """
@@ -653,8 +656,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
     if num_missing > 0:
-        text = 'Thank you. Unfortunately, your account is not authorized under ' + \
-               'a signed CLA. [Please click here to proceed](' + sign_url + ').'
+        text = 'One or more committers are not authorized under a signed CLA as indicated below. ' + \
+               '[Please click here to be authorized](' + sign_url + ').'
         # Group commits by author.
         committers = {}
         for commit, author in missing:
@@ -670,7 +673,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment
-    text = 'All committers are now authorized under a signed CLA.'
+    text = 'The committers are authorized under a signed CLA.'
     return text + committers_comment
 
 def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_url):
@@ -688,7 +691,9 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     """
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
+    cla.log.debug('utils.py - get_authorization_url_and_state - authorization_url: {}, state: {}'.format(authorization_url, state))
     return authorization_url, state
+
 
 def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=None): # pylint: disable=too-many-arguments
     """
@@ -709,7 +714,10 @@ def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=N
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'], redirect_uri=redirect_uri)
     else:
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'])
+    cla.log.debug('utils.py - oauth2.fetch_token - token_url: {}, client_id: {}, client_secret: {}, code: {}'.
+                  format(token_url, client_id, client_secret, code))
     return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
+
 
 def redirect_user_by_signature(user, signature):
     """
@@ -925,25 +933,6 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
                   'to return_url instead')
     raise falcon.HTTPFound(return_url)
 
-def change_icon(provider, signed=False): # pylint: disable=unused-argument
-    """
-    Function called when the code chagne image/icon is requested.
-
-    This will be a badge for GitHub and GitLab providers.
-
-    TODO: Fire a hook here with the provider and signed variables as parameters. This will allow
-    customizeable change icon images.
-
-    :param provider: The repository service provider asking for the change icon image.
-    :type provider: string
-    :param signed: Whether this image is for a signed or unsigned CLA.
-    :type signed: boolean
-    :return: Anything compatible with hug's output_format.svg_xml_image.
-    :rtype: file path | file handler | Pillow Image
-    """
-    if signed:
-        return 'cla/resources/cla-signed.svg'
-    return 'cla/resources/cla-unsigned.svg'
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])

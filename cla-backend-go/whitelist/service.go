@@ -19,12 +19,15 @@ type service struct {
 	httpClient *http.Client
 }
 
+// NewService creates a new whitelist service
 func NewService(repo Repository, httpClient *http.Client) service {
 	return service{
 		repo:       repo,
 		httpClient: httpClient,
 	}
 }
+
+// DeleteGithubOrganizationFromWhitelist deletes the specified GH organization from the whitelist
 func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, claGroupID, githubOrganizationID string) error {
 	err := s.repo.DeleteGithubOrganizationFromWhitelist(claGroupID, githubOrganizationID)
 	if err != nil {
@@ -34,10 +37,11 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, claG
 	return nil
 }
 
+// AddGithubOrganizationToWhitelist adds the GH organization to the whitelist
 func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupID, githubOrganizationID, githubAccessToken string) error {
 	// Verify the authenticated github user has access to the github organization being added.
 	if githubAccessToken == "" {
-		return errors.New("unable to add github organizaiton, not logged in")
+		return errors.New("unable to add github organization, not logged in")
 	}
 
 	ts := oauth2.StaticTokenSource(
@@ -75,6 +79,7 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupI
 	return nil
 }
 
+// GetGithubOrganizationsFromWhitelist retrieves the organization from the whitelist
 func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, claGroupID, githubAccessToken string) ([]models.GithubOrg, error) {
 	orgIds, err := s.repo.GetGithubOrganizationsFromWhitelist(claGroupID)
 	if err != nil {

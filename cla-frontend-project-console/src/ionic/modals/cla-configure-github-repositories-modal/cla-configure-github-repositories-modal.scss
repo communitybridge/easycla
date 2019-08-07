@@ -1,8 +1,12 @@
 cla-configure-github-repositories-modal {
 
-  .org-name {
-    font-size: 18px;
-    color: #7b7b7b;
+  .org-group {
+    display: flex;
+    align-items: center;
+  }
+
+  .active-spinner {
+    margin-left: 2rem;
   }
 
   .github-organization {
