@@ -127,14 +127,14 @@ The message that was attached to the request:
 
     %s
 
-You can whitelist %s in the CLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with %s to clarify.
+You can whitelist %s in the EasyCLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with %s to clarify.
 Please follow up with the user as necessary.
 
-Click on the following link to navigate to the CLA Corporate Console.
+Click on the following link to navigate to the EasyCLA Corporate Console.
 
  %s  
 
-- Linux Foundation CLA System
+- EasyCLA System
 ''' %(user_name, company_name, user_name, user_email, message,
     user_name, user_name, 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
 
@@ -143,7 +143,7 @@ Click on the following link to navigate to the CLA Corporate Console.
     try:
         manager.load(manager_id)
     except DoesNotExist as err:
-        return {'errors': {'company_id': 'No manager exists for this company - can not send email'}}
+        return {'errors': {'company_id': 'No CLA Manager exists for this company - can not send email'}}
     recipient = manager.get_user_email()
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
@@ -151,7 +151,7 @@ Click on the following link to navigate to the CLA Corporate Console.
 
 def invite_company_admin(user_id, user_email, admin_name, admin_email, project_name):
     """
-    Sends email to the specified company administrator to sign up through the Corporate console and add the requested user to the whitelist. 
+    Sends email to the specified CLA Manager to sign up through the Corporate console and add the requested user to the whitelist. 
     """
     user = User()
     try:
@@ -209,7 +209,7 @@ def send_email_to_admin(user_name, user_email, admin_name, admin_email, project_
 
     # account_exists=True send email to an admin of an existing company
     # account_exists=False send email to a proposed admin who needs to register the company through the Corporate Console. 
-    message =  'Please click the following link to sign in to the CLA Corporate Console.' if account_exists else 'Please click the following link to create an account in the CLA Corporate Console.'
+    message =  'Please click the following link to sign in to the EasyCLA Corporate Console.' if account_exists else 'Please click the following link to create an account in the CLA Corporate Console.'
 
     subject = 'CLA: Invitation to Sign the {} Corporate CLA'.format(project_name)
     body = '''Hello {admin_name}, 
@@ -222,7 +222,7 @@ Before the contribution can be accepted, your organization must sign a CLA. {acc
 
 {corporate_console_url}
 
-- Linux Foundation CLA System
+- EasyCLA System
 '''.format(admin_name=admin_name, project_name=project_name,
             user_name=user_name,  user_email=user_email, 
             account_exists=message, corporate_console_url=cla.conf['CLA_LANDING_PAGE'])
@@ -339,7 +339,7 @@ def request_company_admin_access(user_id, company_id):
         return {'errors': {'company_id': str(err)}}
 
 
-    subject = 'CLA: Request of Access to Corporate Console'
+    subject = 'CLA: Request for Access to Corporate Console'
 
     # Send emails to every CLA manager 
     for admin in company.get_managers():
@@ -349,11 +349,11 @@ The following user is requesting CLA Manager access for your organization: {comp
 
     {user_name} <{user_email}>
 
-Navigate to the Corporate Console using the link below and add this user to your Organization's Company ACL. Please notify the user once they are added so that they may log in to the Corporate Console with their LFID. 
+Navigate to the EasyCLA Corporate Console using the link below and add this user to your Organization's Company Access Control List. Please notify the user once they are added so that they may log in to the EasyCLA Corporate Console with their LFID. 
 
 {corporate_console_url}
 
-- Linux Foundation CLA System
+- EasyCLA System
 '''.format(admin_name=admin.get_user_name(), user_name=user_name, company_name = company.get_company_name(),
     user_email=user_email, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
         recipient = admin.get_lf_email()
