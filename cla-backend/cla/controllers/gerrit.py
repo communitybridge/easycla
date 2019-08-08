@@ -19,25 +19,31 @@ lf_group_client_secret = os.environ.get('LF_GROUP_CLIENT_SECRET', '')
 lf_group_refresh_token = os.environ.get('LF_GROUP_REFRESH_TOKEN', '')
 lf_group = LFGroup(lf_group_client_url, lf_group_client_id, lf_group_client_secret, lf_group_refresh_token)
 
+
 def get_gerrit_by_project_id(project_id):
     gerrit = Gerrit()
     try:
         gerrits = gerrit.get_gerrit_by_project_id(project_id)
     except DoesNotExist:
+        cla.log.warning('gerrit project id: {} does not exist'.format(project_id))
         return []
     except Exception as e:
+        cla.log.warning('gerrit project id: {} does not exist, error: {}'.format(project_id, e))
         return {'errors': {'a gerrit instance does not exist with the given project ID. ': str(e)}}
 
     if gerrits is None:
+        cla.log.warning('gerrit project id: {} does not exist'.format(project_id))
         return []
 
     return [gerrit.to_dict() for gerrit in gerrits]
+
 
 def get_gerrit(gerrit_id):
     gerrit = Gerrit()
     try:
         gerrit.load(str(gerrit_id))
     except DoesNotExist as err:
+        cla.log.warning('a gerrit instance does not exist with the given Gerrit ID: {}'.format(gerrit_id))
         return {'errors': {'a gerrit instance does not exist with the given Gerrit ID. ': str(err)}}
 
     return gerrit.to_dict()
@@ -67,13 +73,17 @@ def create_gerrit(project_id,
 
     # Check if at least ICLA or CCLA is specified 
     if group_id_icla is None and group_id_ccla is None:
+        cla.log.warning('Should specify at least a LDAP group for ICLA or CCLA.')
         return {'error': 'Should specify at least a LDAP group for ICLA or CCLA.'}
 
     # Check if ICLA exists
     if group_id_icla is not None:
         ldap_group_icla = lf_group.get_group(group_id_icla)
         if ldap_group_icla.get('error') is not None:
-            return {'error_icla': 'The specified LDAP group for ICLA does not exist. '}
+            cla.log.warning('The specified LDAP group for ICLA does not exist for project id: {}'
+                            ', gerrit name: {} and group_id_icla: {}'.
+                            format(project_id, gerrit_name, group_id_icla))
+            return {'error_icla': 'The specified LDAP group for ICLA does not exist.'}
 
         gerrit.set_group_name_icla(ldap_group_icla.get('title'))
         gerrit.set_group_id_icla(str(group_id_icla))
@@ -82,6 +92,9 @@ def create_gerrit(project_id,
     if group_id_ccla is not None:
         ldap_group_ccla = lf_group.get_group(group_id_ccla)
         if ldap_group_ccla.get('error') is not None:
+            cla.log.warning('The specified LDAP group for CCLA does not exist for project id: {}'
+                            ', gerrit name: {} and group_id_ccla: {}'.
+                            format(project_id, gerrit_name, group_id_ccla))
             return {'error_ccla': 'The specified LDAP group for CCLA does not exist. '}
 
         gerrit.set_group_name_ccla(ldap_group_ccla.get('title'))
@@ -93,8 +106,11 @@ def create_gerrit(project_id,
     gerrit.set_gerrit_url(gerrit_url)
     gerrit.set_gerrit_name(gerrit_name)
     gerrit.save()
+    cla.log.debug('saved gerrit instance with project id: {}, gerrit_name: {}'.
+                  format(project_id, gerrit_name))
 
     return gerrit.to_dict()
+
 
 def delete_gerrit(gerrit_id):
     """
@@ -106,8 +122,11 @@ def delete_gerrit(gerrit_id):
     try:
         gerrit.load(str(gerrit_id))
     except DoesNotExist as err:
+        cla.log.warning('a gerrit instance does not exist with the '
+                        'given Gerrit ID: {} - unable to delete'.format(gerrit_id))
         return {'errors': {'gerrit_id': str(err)}}
     gerrit.delete()
+    cla.log.debug('deleted gerrit instance with gerrit_id: {}'.format(gerrit_id))
     return {'success': True}
 
 
