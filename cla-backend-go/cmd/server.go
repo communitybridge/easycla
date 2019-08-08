@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -252,8 +251,7 @@ func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
 // responseLoggingMiddleware logs the responses from API endpoints
 func responseLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w2 := NewLoggingResponseWriter(w)
-		next.ServeHTTP(w2, r)
-		fmt.Printf("%s %s, response %d %s\n", r.Method, r.URL.String(), w2.StatusCode, http.StatusText(w2.StatusCode))
+		next.ServeHTTP(NewLoggingResponseWriter(w), r)
+		log.Debugf("%s %s, response %d %s\n", r.Method, r.URL.String(), NewLoggingResponseWriter(w).StatusCode, http.StatusText(NewLoggingResponseWriter(w).StatusCode))
 	})
 }
