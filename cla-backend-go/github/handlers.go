@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	gh "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
@@ -33,7 +34,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 		Endpoint: github.Endpoint,
 	}
 
-	api.GithubLoginHandler = operations.GithubLoginHandlerFunc(func(params operations.GithubLoginParams) middleware.Responder {
+	api.GithubLoginHandler = gh.LoginHandlerFunc(func(params gh.LoginParams) middleware.Responder {
 		return middleware.ResponderFunc(
 			func(w http.ResponseWriter, pr runtime.Producer) {
 				session, err := sessionStore.Get(params.HTTPRequest, SessionStoreKey)
@@ -70,7 +71,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 			})
 	})
 
-	api.GithubRedirectHandler = operations.GithubRedirectHandlerFunc(func(params operations.GithubRedirectParams) middleware.Responder {
+	api.GithubRedirectHandler = gh.RedirectHandlerFunc(func(params gh.RedirectParams) middleware.Responder {
 		return middleware.ResponderFunc(
 			func(w http.ResponseWriter, pr runtime.Producer) {
 				// Verify csrf token

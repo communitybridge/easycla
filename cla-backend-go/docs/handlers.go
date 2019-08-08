@@ -14,4 +14,8 @@ func Configure(api *operations.ClaAPI) {
 	api.DocsGetDocHandler = docs.GetDocHandlerFunc(func(params docs.GetDocParams) middleware.Responder {
 		return NewGetDocOK()
 	})
+
+	api.DocsGetSwaggerHandler = docs.GetSwaggerHandlerFunc(func(params docs.GetSwaggerParams) middleware.Responder {
+		return NewGetSwaggerOK()
+	})
 }
