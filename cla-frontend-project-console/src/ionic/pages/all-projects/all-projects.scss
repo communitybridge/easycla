@@ -4,6 +4,20 @@ all-projects {
   -ms-user-select: text;
   user-select: text;
 
+  .all-projects-title {
+    color: color($colors, dark) !important;
+  }
+
+  .get-access-button {
+    color: color($colors, secondary) !important;
+    font-size: 14px;
+    padding: 1rem;
+  }
+
+  .get-access-label {
+    color: color($colors, dark) !important;
+  }
+
   .navbar-logo {
     width: 100px;
     position: absolute;
