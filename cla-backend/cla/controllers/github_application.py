@@ -1,11 +1,13 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
+import os
 import time
-import cla
+
 from github import GithubIntegration, Github
 from jose import jwt
-import os
+
+import cla
 
 
 class GitHubInstallation(object):
@@ -25,9 +27,8 @@ class GitHubInstallation(object):
     def __init__(self, installation_id):
         self.installation_id = installation_id
 
-        cla.log.debug('github installation_id: {}'.format(self.installation_id))
-        cla.log.debug('github app id: {}'.format(self.app_id))
-        cla.log.debug('github private key: {}...'.format(self.private_key[:5]))
+        cla.log.debug('github installation_id: {}, app id: {}, private key: {}'.
+                      format(self.installation_id, self.app_id, self.private_key[:40]))
 
         try:
             integration = GithubCLAIntegration(self.app_id, self.private_key)
@@ -47,6 +48,7 @@ class GitHubInstallation(object):
 
 class GithubCLAIntegration(GithubIntegration):
     """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
+
     def create_jwt(self):
         """
         Overloaded to use python-jose instead of pyjwt.
@@ -59,6 +61,6 @@ class GithubCLAIntegration(GithubIntegration):
             "iss": self.integration_id
         }
         gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
-        print('github jwt: {}'.format(gh_jwt))
+        cla.log.debug('github jwt: {}'.format(gh_jwt))
 
         return gh_jwt
