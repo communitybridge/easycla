@@ -13,7 +13,7 @@ As an individual contributor to an open-source project who is not associated to 
 
    ![CLA Check Failed](imgs/CLA-GitHub-Individual-Contributor-Fail.png)
 
-3. Click **Please click here to proceed**.
+3. Click **Please click here to be authorized**.
 
    The Authorize CommunityBridge: EasyCLA dialog appears.
 
@@ -37,7 +37,7 @@ As an individual contributor to an open-source project who is not associated to 
 
    A tick appears next to your branch.
 
-   ![GitHub Individual Contributor Pass](imgs/CLA-GItHub-Individual-Contributor-pass.png)
+   ![GitHub Individual Contributor Pass](imgs/CLA-GItHub-Individual-Contributor-Pass.png)
 
 7. Click **Merge pull request** and confirm the merge.
 
