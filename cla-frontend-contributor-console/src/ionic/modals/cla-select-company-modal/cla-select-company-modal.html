@@ -1,8 +1,13 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>
-      Select Company
-    </ion-title>
+    <ion-row class="align-items-center">
+      <ion-title>
+        Select Company
+      </ion-title>
+      <loading-spinner [loading]="loading.activateSpinner"></loading-spinner>
+    </ion-row>
+
+
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
@@ -12,7 +17,7 @@
 </ion-header>
 
 <ion-content>
-<loading-spinner [loading]="loading.companies"></loading-spinner>
+  <loading-spinner [loading]="loading.companies"></loading-spinner>
   <div>
     <table id="table" class="table table-hover" [loading-display]="loading.companies">
       <tbody>

@@ -83,6 +83,7 @@ export class ClaLandingPage {
 
   getProjectDocuments() {
     this.claService.getProjectDocument(this.projectId, 'individual').subscribe(response => {
+
       if (!response.hasOwnProperty('errors')) {
         this.hasIndividualCla = true;
       }
@@ -95,5 +96,4 @@ export class ClaLandingPage {
       this.loading.corporateDoc = false;
     });
   }
-
 }

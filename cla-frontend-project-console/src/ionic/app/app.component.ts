@@ -60,6 +60,9 @@ export class MyApp {
     // manually create new httpClient with keycloakHttp
     let kcHttpClient = new HttpClient(keycloakHttp);
 
+    // Set true for local debugging using localhost (local ports set in claService)
+    this.claService.isLocalTesting(false);
+
     // set authd services to use kcHttpClient
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setS3LogoUrl(EnvConfig['cla-logo-s3-url']);

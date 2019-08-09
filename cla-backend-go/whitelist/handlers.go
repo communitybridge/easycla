@@ -6,6 +6,7 @@ package whitelist
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -15,19 +16,19 @@ import (
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.Store) {
 
-	api.DeleteGithubOrganizationFromClaHandler = operations.DeleteGithubOrganizationFromClaHandlerFunc(func(params operations.DeleteGithubOrganizationFromClaParams) middleware.Responder {
+	api.CompanyDeleteGithubOrganizationFromClaHandler = company.DeleteGithubOrganizationFromClaHandlerFunc(func(params company.DeleteGithubOrganizationFromClaParams) middleware.Responder {
 		err := service.DeleteGithubOrganizationFromWhitelist(params.HTTPRequest.Context(), params.CorporateClaID, *params.GithubOrganizationID.ID)
 		if err != nil {
-			return operations.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
+			return company.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return operations.NewDeleteGithubOrganizationFromClaOK()
+		return company.NewDeleteGithubOrganizationFromClaOK()
 	})
 
-	api.AddGithubOrganizationFromClaHandler = operations.AddGithubOrganizationFromClaHandlerFunc(func(params operations.AddGithubOrganizationFromClaParams) middleware.Responder {
+	api.CompanyAddGithubOrganizationFromClaHandler = company.AddGithubOrganizationFromClaHandlerFunc(func(params company.AddGithubOrganizationFromClaParams) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
-			return operations.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
+			return company.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)
@@ -37,16 +38,16 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 
 		err = service.AddGithubOrganizationToWhitelist(params.HTTPRequest.Context(), params.CorporateClaID, *params.GithubOrganizationID.ID, githubAccessToken)
 		if err != nil {
-			return operations.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
+			return company.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return operations.NewAddGithubOrganizationFromClaOK()
+		return company.NewAddGithubOrganizationFromClaOK()
 	})
 
-	api.GetGithubOrganizationfromClaHandler = operations.GetGithubOrganizationfromClaHandlerFunc(func(params operations.GetGithubOrganizationfromClaParams) middleware.Responder {
+	api.CompanyGetGithubOrganizationfromClaHandler = company.GetGithubOrganizationfromClaHandlerFunc(func(params company.GetGithubOrganizationfromClaParams) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
-			return operations.NewGetGithubOrganizationfromClaBadRequest().WithPayload(errorResponse(err))
+			return company.NewGetGithubOrganizationfromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)
@@ -56,10 +57,10 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 
 		result, err := service.GetGithubOrganizationsFromWhitelist(params.HTTPRequest.Context(), params.CorporateClaID, githubAccessToken)
 		if err != nil {
-			return operations.NewGetGithubOrganizationfromClaBadRequest().WithPayload(errorResponse(err))
+			return company.NewGetGithubOrganizationfromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return operations.NewGetGithubOrganizationfromClaOK().WithPayload(result)
+		return company.NewGetGithubOrganizationfromClaOK().WithPayload(result)
 	})
 
 }

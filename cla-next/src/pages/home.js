@@ -16,7 +16,7 @@ import Footer from '../components/Footer';
 
 const Home = () => (
   <div>
-    <Head title="Home" />
+    <Head title="LF-CLA" />
     <Nav />
     <Hero />
     <CLASummary />

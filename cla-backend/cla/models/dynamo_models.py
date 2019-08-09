@@ -5,36 +5,38 @@
 Easily access CLA models backed by DynamoDB using pynamodb.
 """
 
-import uuid
-import os
-import re
 import base64
 import datetime
+import os
+import re
+import uuid
+
 import dateutil.parser
 import requests
-
-from pynamodb.models import Model
-from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.attributes import UTCDateTimeAttribute, \
-                                UnicodeSetAttribute, \
-                                UnicodeAttribute, \
-                                BooleanAttribute, \
-                                NumberAttribute, \
-                                ListAttribute, \
-                                JSONAttribute, \
-                                MapAttribute
+    UnicodeSetAttribute, \
+    UnicodeAttribute, \
+    BooleanAttribute, \
+    NumberAttribute, \
+    ListAttribute, \
+    JSONAttribute, \
+    MapAttribute
+from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
+from pynamodb.models import Model
+
 import cla
 from cla.models import model_interfaces, key_value_store_interface
 
 stage = os.environ.get('STAGE', '')
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
+
 def create_database():
     """
     Named "create_database" instead of "create_tables" because create_database
     is expected to exist in all database storage wrappers.
     """
-    tables = [RepositoryModel, ProjectModel, SignatureModel, \
+    tables = [RepositoryModel, ProjectModel, SignatureModel,
               CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Create all required tables.
     for table in tables:
@@ -49,12 +51,13 @@ def delete_database():
 
     WARNING: This will delete all existing table data.
     """
-    tables = [RepositoryModel, ProjectModel, SignatureModel, \
+    tables = [RepositoryModel, ProjectModel, SignatureModel,
               CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
     # Delete all existing tables.
     for table in tables:
         if table.exists():
             table.delete_table()
+
 
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
@@ -101,6 +104,7 @@ class LFUsernameIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     lf_username = UnicodeAttribute(hash_key=True)
 
+
 class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by project ID.
@@ -132,6 +136,7 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     repository_external_id = UnicodeAttribute(hash_key=True)
 
+
 class SFDCRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by external ID.
@@ -146,6 +151,7 @@ class SFDCRepositoryIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     repository_sfdc_id = UnicodeAttribute(hash_key=True)
+
 
 class ExternalProjectIndex(GlobalSecondaryIndex):
     """
@@ -162,6 +168,7 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     project_external_id = UnicodeAttribute(hash_key=True)
 
+
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by external ID.
@@ -177,6 +184,7 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     company_external_id = UnicodeAttribute(hash_key=True)
 
+
 class GithubOrgSFIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying github organizations by a Salesforce ID.
@@ -189,6 +197,7 @@ class GithubOrgSFIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     organization_sfid = UnicodeAttribute(hash_key=True)
+
 
 class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
@@ -205,6 +214,7 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_project_id = UnicodeAttribute(hash_key=True)
 
+
 class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by reference.
@@ -220,6 +230,7 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     signature_reference_id = UnicodeAttribute(hash_key=True)
 
+
 class RequestedCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying company invites with a company ID.
@@ -233,17 +244,18 @@ class RequestedCompanyIndex(GlobalSecondaryIndex):
 
     requested_company_id = UnicodeAttribute(hash_key=True)
 
+
 class BaseModel(Model):
     """
     Base pynamodb model used for all CLA models.
     """
     date_created = UTCDateTimeAttribute(default=datetime.datetime.now())
     date_modified = UTCDateTimeAttribute(default=datetime.datetime.now())
-    version = UnicodeAttribute(default='v1') # Schema version.
+    version = UnicodeAttribute(default='v1')  # Schema version.
 
     def __iter__(self):
         """Used to convert model to dict for JSON-serialized string."""
-        for name, attr in self._get_attributes().items():
+        for name, attr in self.get_attributes().items():
             if isinstance(attr, ListAttribute):
                 if attr is None or getattr(self, name) is None:
                     yield name, None
@@ -277,11 +289,12 @@ class DocumentTabModel(MapAttribute):
     document_tab_anchor_x_offset = NumberAttribute()
     document_tab_anchor_y_offset = NumberAttribute()
 
+
 class DocumentTab(model_interfaces.DocumentTab):
     """
     ORM-agnostic wrapper for the DynamoDB DocumentTab model.
     """
-    def __init__(self, # pylint: disable=too-many-arguments
+    def __init__(self,  # pylint: disable=too-many-arguments
                  document_tab_type=None,
                  document_tab_id=None,
                  document_tab_name=None,
@@ -293,7 +306,7 @@ class DocumentTab(model_interfaces.DocumentTab):
                  document_tab_is_locked=False,
                  document_tab_is_required=True,
                  document_tab_anchor_string=None,
-                 document_tab_anchor_ignore_if_not_present=True, 
+                 document_tab_anchor_ignore_if_not_present=True,
                  document_tab_anchor_x_offset=None,
                  document_tab_anchor_y_offset=None
                  ):
@@ -302,7 +315,7 @@ class DocumentTab(model_interfaces.DocumentTab):
         self.model.document_tab_id = document_tab_id
         self.model.document_tab_name = document_tab_name
         # x,y coordinates are None when anchor x,y offsets are supplied.
-        if document_tab_position_x is not None: 
+        if document_tab_position_x is not None:
             self.model.document_tab_position_x = document_tab_position_x
         if document_tab_position_y is not None:
             self.model.document_tab_position_y = document_tab_position_y
@@ -340,7 +353,7 @@ class DocumentTab(model_interfaces.DocumentTab):
                 'document_tab_anchor_string': self.model.document_tab_anchor_string,
                 'document_tab_anchor_ignore_if_not_present': self.model.document_tab_anchor_ignore_if_not_present,
                 'document_tab_anchor_x_offset': self.model.document_tab_anchor_x_offset,
-                'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset }
+                'document_tab_anchor_y_offset': self.model.document_tab_anchor_y_offset}
 
     def get_document_tab_type(self):
         return self.model.document_tab_type
@@ -420,14 +433,15 @@ class DocumentTab(model_interfaces.DocumentTab):
     def set_document_tab_anchor_y_offset(self, document_tab_anchor_y_offset):
         self.model.document_tab_anchor_y_offset = document_tab_anchor_y_offset
 
+
 class DocumentModel(MapAttribute):
     """
     Represents a document in the project model.
     """
     document_name = UnicodeAttribute()
     document_file_id = UnicodeAttribute(null=True)
-    document_content_type = UnicodeAttribute() # pdf, url+pdf, storage+pdf, etc
-    document_content = UnicodeAttribute(null=True) # None if using storage service.
+    document_content_type = UnicodeAttribute()  # pdf, url+pdf, storage+pdf, etc
+    document_content = UnicodeAttribute(null=True)  # None if using storage service.
     document_major_version = NumberAttribute(default=1)
     document_minor_version = NumberAttribute(default=0)
     document_author_name = UnicodeAttribute()
@@ -438,11 +452,12 @@ class DocumentModel(MapAttribute):
     document_s3_url = UnicodeAttribute(null=True)
     document_tabs = ListAttribute(of=DocumentTabModel, default=[])
 
+
 class Document(model_interfaces.Document):
     """
     ORM-agnostic wrapper for the DynamoDB Document model.
     """
-    def __init__(self, # pylint: disable=too-many-arguments
+    def __init__(self,  # pylint: disable=too-many-arguments
                  document_name=None,
                  document_file_id=None,
                  document_content_type=None,
@@ -598,22 +613,23 @@ class Document(model_interfaces.Document):
         tab.set_document_tab_type(tab_data['type'])
         tab.set_document_tab_id(tab_data['id'])
         tab.set_document_tab_name(tab_data['name'])
-        if 'position_x' in tab_data: 
+        if 'position_x' in tab_data:
             tab.set_document_tab_position_x(tab_data['position_x'])
         if 'position_y' in tab_data:
             tab.set_document_tab_position_y(tab_data['position_y'])
         tab.set_document_tab_width(tab_data['width'])
         tab.set_document_tab_height(tab_data['height'])
         tab.set_document_tab_page(tab_data['page'])
-        if 'anchor_string' in tab_data: 
+        if 'anchor_string' in tab_data:
             tab.set_document_tab_anchor_string(tab_data['anchor_string'])
-        if 'anchor_ignore_if_not_present' in tab_data: 
+        if 'anchor_ignore_if_not_present' in tab_data:
             tab.set_document_tab_anchor_ignore_if_not_present(tab_data['anchor_ignore_if_not_present'])
-        if 'anchor_x_offset' in tab_data: 
+        if 'anchor_x_offset' in tab_data:
             tab.set_document_tab_anchor_x_offset(tab_data['anchor_x_offset'])
-        if 'anchor_y_offset' in tab_data: 
+        if 'anchor_y_offset' in tab_data:
             tab.set_document_tab_anchor_y_offset(tab_data['anchor_y_offset'])
         self.add_document_tab(tab)
+
 
 class ProjectModel(BaseModel):
     """
@@ -623,7 +639,7 @@ class ProjectModel(BaseModel):
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
         if stage == 'local':
-            host = 'http://localhost:8000'      
+            host = 'http://localhost:8000'
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
@@ -634,6 +650,7 @@ class ProjectModel(BaseModel):
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
     project_acl = UnicodeSetAttribute(default=set())
+
 
 class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
     """
@@ -897,6 +914,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
             ret.append(proj)
         return ret
 
+
 def _remove_project_document(documents, major_version, minor_version):
     # TODO Need to optimize this on the DB side - delete directly from list of records.
     new_documents = []
@@ -941,11 +959,13 @@ class UserModel(BaseModel):
     lf_username_index = LFUsernameIndex()
     lf_sub = UnicodeAttribute(null=True)
 
-class User(model_interfaces.User): # pylint: disable=too-many-public-methods
+
+class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
-    def __init__(self, user_email=None, user_external_id=None, user_github_id=None,user_github_username=None, user_ldap_id=None, lf_username=None, lf_sub=None):
+    def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_github_username=None,
+                 user_ldap_id=None, lf_username=None, lf_sub=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -957,6 +977,20 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         self.model.lf_username = lf_username
         self.model.lf_sub = lf_sub
 
+    def __str__(self):
+        return ('id:{}, username: {}, gh id:{}, gh username:{}, '
+                'lf email:{}, emails:{}, ldap id:{}, lf username:{}, lf sub:{}').format(
+                   self.model.user_external_id,
+                   self.model.user_github_username,
+                   self.model.user_github_id,
+                   self.model.user_github_username,
+                   self.model.lf_email,
+                   self.model.user_emails,
+                   self.model.user_ldap_id,
+                   self.model.lf_username,
+                   self.model.lf_sub,
+               )
+
     def to_dict(self):
         ret = dict(self.model)
         if ret['user_github_id'] == 'null':
@@ -964,6 +998,30 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         if ret['user_ldap_id'] == 'null':
             ret['user_ldap_id'] = None
         return ret
+
+    def log_info(self, msg):
+        """
+        Helper logger function to write the info message and the user details.
+        :param msg: the log message
+        :return: None
+        """
+        cla.log.info('{} for user: {}'.format(msg, self))
+
+    def log_debug(self, msg):
+        """
+        Helper logger function to write the debug message and the user details.
+        :param msg: the log message
+        :return: None
+        """
+        cla.log.debug('{} for user: {}'.format(msg, self))
+
+    def log_warning(self, msg):
+        """
+        Helper logger function to write the debug message and the user details.
+        :param msg: the log message
+        :return: None
+        """
+        cla.log.warning('{} for user: {}'.format(msg, self))
 
     def save(self):
         self.model.save()
@@ -1061,7 +1119,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
 
-    def set_user_github_username(self, user_github_username): 
+    def set_user_github_username(self, user_github_username):
         self.model.user_github_username = user_github_username
 
     # def set_user_ldap_id(self, user_ldap_id):
@@ -1125,8 +1183,13 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
                 latest = signature
             elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
-                signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                    signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
                 latest = signature
+
+        if latest is None:
+            self.log_debug('unable to find user signature')
+        else:
+            self.log_debug('found user user signature')
 
         return latest
 
@@ -1151,6 +1214,7 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
         if whitelist is not None:
             for email in emails:
                 if email in whitelist:
+                    self.log_debug('found user email in email whitelist')
                     return True
 
         # Check domain whitelist
@@ -1173,28 +1237,33 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
                 pat = re.compile(preprocessed_pattern)
                 for email in emails:
                     if pat.match(email) != None:
+                        self.log_debug('found user email in email whitelist pattern')
                         return True
 
         # Check github whitelist
         github_username = self.get_github_username()
-        if github_username is not None:   
+        if github_username is not None:
             # remove leading and trailing whitespace from github username
             github_username = github_username.strip()
-            github_whitelist = ccla_signature.get_github_whitelist() 
+            github_whitelist = ccla_signature.get_github_whitelist()
             if github_whitelist is not None:
-                 if github_username in github_whitelist:
-                     return True        
+                if github_username in github_whitelist:
+                    self.log_debug('found github username in github whitelist')
+                    return True
 
-            # Check github org whitelist - (disable for now - getting attribute error whne getting gh org whitelist)
+            # Check github org whitelist - (disable for now - getting attribute error when getting gh org whitelist)
+            # TODO: DAD - investigate this
             github_orgs = self.get_user_github_organizations(github_username)
             if 'error' not in github_orgs:
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
                 if github_org_whitelist is not None:
                     for dynamo_github_org in github_org_whitelist:
                         if dynamo_github_org in github_orgs:
+                            self.log_debug('found github org in github org whitelist')
                             return True
-        return False
 
+        self.log_debug('unable to find user in any whitelist')
+        return False
 
     def get_user_github_organizations(self, github_username):
         # Use the Github API to retrieve github orgs that the user is a member of. 
@@ -1202,7 +1271,8 @@ class User(model_interfaces.User): # pylint: disable=too-many-public-methods
             r = requests.get('https://api.github.com/users/{}/orgs'.format(github_username))
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            return {'error': 'Could not get user github org: {}'.format(e)}
+            self.log_warning('Could not get user github org: {}'.format(err))
+            return {'error': 'Could not get user github org: {}'.format(err)}
         return [github_org['login'] for github_org in r.json()]
 
     def get_users_by_company(self, company_id):
@@ -1239,7 +1309,7 @@ class RepositoryModel(BaseModel):
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
-    repository_type = UnicodeAttribute() # Gerrit, GitHub, etc.
+    repository_type = UnicodeAttribute()  # Gerrit, GitHub, etc.
     repository_url = UnicodeAttribute()
     repository_organization_name = UnicodeAttribute()
     repository_external_id = UnicodeAttribute(null=True)
@@ -1253,7 +1323,7 @@ class Repository(model_interfaces.Repository):
     """
     ORM-agnostic wrapper for the DynamoDB Repository model.
     """
-    def __init__(self, repository_id=None, repository_project_id=None, # pylint: disable=too-many-arguments
+    def __init__(self, repository_id=None, repository_project_id=None,  # pylint: disable=too-many-arguments
                  repository_name=None, repository_type=None, repository_url=None,
                  repository_organization_name=None,
                  repository_external_id=None, repository_sfdc_id=None):
@@ -1375,7 +1445,7 @@ class Repository(model_interfaces.Repository):
         return ret
 
 
-class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
+class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     """
     Represents an signature in the database.
     """
@@ -1413,11 +1483,12 @@ class SignatureModel(BaseModel): # pylint: disable=too-many-instance-attributes
     github_whitelist = ListAttribute(null=True)
     github_org_whitelist = ListAttribute(null=True)
 
+
 class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Signature model.
     """
-    def __init__(self, # pylint: disable=too-many-arguments
+    def __init__(self,  # pylint: disable=too-many-arguments
                  signature_id=None,
                  signature_external_id=None,
                  signature_project_id=None,
@@ -1587,7 +1658,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_signature_acl(self, signature_acl_username):
         self.model.signature_acl = set([signature_acl_username])
- 
+
     def set_signature_return_url_type(self, signature_return_url_type):
         self.model.signature_return_url_type = signature_return_url_type
 
@@ -1601,7 +1672,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
 
     def set_email_whitelist(self, email_whitelist):
         self.model.email_whitelist = [email.strip() for email in email_whitelist]
-    
+
     def set_github_whitelist(self, github_whitelist):
         self.model.github_whitelist = [github_user.strip() for github_user in github_whitelist]
 
@@ -1695,7 +1766,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
             signatures.append(signature)
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
-    
+
     def get_employee_signatures_by_company_project(self, company_id, project_id):
         signature_generator = self.model.signature_project_index.query(project_id, SignatureModel.signature_user_ccla_company_id == company_id)
         signatures = []
@@ -1705,7 +1776,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
             signatures.append(signature)
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
-    
+
     def get_projects_by_company_signed(self, company_id):
         # Query returns all the signatures that the company has signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures. 
@@ -1920,6 +1991,7 @@ class StoreModel(Model):
     value = JSONAttribute()
     expire = NumberAttribute()
 
+
 class Store(key_value_store_interface.KeyValueStore):
     """
     ORM-agnostic wrapper for the DynamoDB key-value store model.
@@ -2079,7 +2151,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Gerrit model.
     """
-    def __init__(self, gerrit_id=None, gerrit_name=None, 
+    def __init__(self, gerrit_id=None, gerrit_name=None,
     project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
         super(Gerrit).__init__()
         self.model = GerritModel()
@@ -2148,7 +2220,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
 
     def delete(self):
         self.model.delete()
-        
+
     def get_gerrit_by_project_id(self, project_id):
         gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
@@ -2156,7 +2228,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             gerrit = Gerrit()
             gerrit.model = gerrit_model
             gerrits.append(gerrit)
-        if len(gerrits) >= 1: 
+        if len(gerrits) >= 1:
             return gerrits
         else:
             raise cla.models.DoesNotExist('Gerrit instance does not exist')
@@ -2170,6 +2242,7 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
             ret.append(gerrit)
         return ret
 
+
 class UserPermissionsModel(BaseModel):
     """
     Represents user permissions in the database.
@@ -2181,6 +2254,7 @@ class UserPermissionsModel(BaseModel):
             host = 'http://localhost:8000'
     username = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
+
 
 class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
     """

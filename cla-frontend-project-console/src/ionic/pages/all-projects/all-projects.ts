@@ -94,4 +94,8 @@ export class AllProjectsPage {
       );
     }
   }
+
+  openAccessPage() {
+    window.open("https://docs.linuxfoundation.org/pages/viewpage.action?pageId=7411265", "_blank");
+  }
 }

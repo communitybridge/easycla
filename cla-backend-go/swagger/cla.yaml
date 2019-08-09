@@ -22,68 +22,8 @@ securityDefinitions:
       project: Project Manager scope
       company: CLA Manager scope
       contrib: Contributor scope
+
 paths:
-  /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg:
-    parameters:
-      - name: companyID
-        in: path
-        type: string
-        required: true
-      - name: corporateClaID
-        in: path
-        type: string
-        required: true
-      - name: githubOrganizationId
-        in: body
-        schema:
-          $ref: '#/definitions/github-org'
-    get:
-      summary: Get All Github Organization Under the CCLA whitelist
-      security: []
-      operationId: getGithubOrganizationfromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/github-org'  
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'    
-    post:
-      summary: Add Github Organization to the CCLA whitelist
-      security: []
-      operationId: addGithubOrganizationFromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-    delete:
-      summary: Delete Github Organization from CCLA whitelist
-      security: []
-      operationId: deleteGithubOrganizationFromCla
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
   /ops/health:
     get:
       summary: API Health Check
@@ -104,13 +44,40 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - health
+
+  /api-docs:
+    get:
+      security: []
+      summary: Get swagger documentation
+      operationId: getDoc
+      produces:
+        - text/html
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
+  /swagger.json:
+    get:
+      security: []
+      summary: Get swagger JSON
+      operationId: getSwagger
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
   /project:
     get:
       summary: Get Project IDs based on PM
       security: []
       operationId: getProjects
-      tags:
-        - project
       responses:
         '200':
           description: 'Success'
@@ -124,6 +91,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - project
+
   /project/{projectSfdcId}/:
     parameters:
       - name: projectSfdcId
@@ -134,8 +104,6 @@ paths:
       summary: Get Project by ID from SFDC
       security: []
       operationId: getProjectById
-      tags:
-        - project
       responses:
         '200':
           description: 'Success'
@@ -147,6 +115,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - project
+
   /project/{projectSfdcId}/contract-group:
     parameters:
       - name: projectSfdcId
@@ -176,8 +147,6 @@ paths:
       summary: Create new Contract Group
       security: []
       operationId: createContractGroup
-      tags:
-        - contractGroup
       parameters:
         - in: body
           name: body
@@ -194,6 +163,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /contract-group/{contractGroupId}/contract-template:
     parameters:
       - name: contractGroupId
@@ -204,8 +176,6 @@ paths:
       summary: Create new Contract Template
       security: []
       operationId: createContractTemplate
-      tags:
-        - contractGroup
       parameters:
         - in: body
           name: body
@@ -223,6 +193,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /contract-group/{contractGroupId}/github:
     parameters:
       - name: contractGroupId
@@ -233,8 +206,6 @@ paths:
       summary: Adds a GitHub instance to the contract group
       security: []
       operationId: addGitHubOrg
-      tags:
-        - contractGroup
       parameters:
         - in: body
           name: body
@@ -252,6 +223,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit:
     parameters:
       - name: projectSfdcId
@@ -266,8 +240,6 @@ paths:
       summary: Adds a Gerrit instance to the contract group
       security: []
       operationId: addGerritInstance
-      tags:
-        - contractGroup
       parameters:
         - in: body
           name: body
@@ -285,6 +257,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit/{gerritInstanceId}:
     parameters:
       - name: projectSfdcId
@@ -303,8 +278,6 @@ paths:
       summary: Delete a Gerrit Instance
       security: []
       operationId: deleteGerritInstance
-      tags:
-        - contractGroup
       responses:
         '204':
           description: 'Success'
@@ -314,6 +287,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /project/{projectSfdcID}/contract-group/{contractGroupId}/signature:
     parameters:
       - name: projectSfdcID
@@ -328,8 +304,6 @@ paths:
       summary: Get Contract Group Signatures
       security: []
       operationId: getContractGroupSignatures
-      tags:
-        - contractGroup
       responses:
         '200':
           description: 'Success'
@@ -341,6 +315,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - contractGroup
+
   /company/{companyID}/cla/invitelist:
     parameters:
       - name: companyID
@@ -365,6 +342,9 @@ paths:
         '401':
           $ref: '#/responses/unauthorized'
         '403':
+      tags:
+        - company
+
   /company/{companyID}/cla/accesslist:
     parameters:
       - name: companyID
@@ -392,6 +372,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - company
     delete:
       summary: Delete user from pending invites
       security:
@@ -409,6 +391,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - company
+
   /company/{companyID}/invite-request:
     parameters:
       - name: companyID
@@ -432,6 +417,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - company
+
   /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg:
     parameters:
       - name: companyID
@@ -463,6 +451,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'    
+      tags:
+        - company
     post:
       summary: Add Github Organization to the CCLA whitelist
       security: []
@@ -478,6 +468,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - company
     delete:
       summary: Delete Github Organization from CCLA whitelist
       security: []
@@ -493,13 +485,14 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - company
+
   /template:
     get:
       summary: Get Available Templates
       security: []
       operationId: getTemplates
-      tags:
-        - template
       responses:
         '200':
           description: 'Success'
@@ -513,6 +506,9 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - template
+
   /clagroup/{claGroupId}/template:
     parameters:
       - name: claGroupId
@@ -523,8 +519,6 @@ paths:
       summary: Create contract template for CLA Group
       security: []
       operationId: createCLAGroupTemplate
-      tags:
-        - template
       parameters:
         - in: body
           name: body
@@ -542,11 +536,14 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - template
+
   /github/login:
     get:
       summary: API to redirect to Github Auth flow
       security: []
-      operationId: githubLogin
+      operationId: login
       parameters:
         - name: callback
           in: query
@@ -558,11 +555,14 @@ paths:
           headers:
             Location:
               type: "string"
+      tags:
+        - github
+
   /github/redirect:
     get:
       summary: API that Github redirects to after successful auth
       security: []
-      operationId: githubRedirect
+      operationId: redirect
       parameters:
         - name: code
           in: query
@@ -578,6 +578,9 @@ paths:
           headers:
             Location:
               type: "string"
+      tags:
+        - github
+
 definitions:
   github-org:
     type: object
@@ -966,7 +969,11 @@ definitions:
         type: string
       Status:
         type: string
+      Version:
+        type: string
       Githash:
+        type: string
+      Branch:
         type: string
       BuildTimeStamp:
         type: string

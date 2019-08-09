@@ -8,330 +8,70 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
+<ion-content headerspacing overflow-scroll="true">
 
-  <section-header [projectId]="sfdcProjectId"></section-header>
+  <div class="page-content">
+    <section-header [projectId]="sfdcProjectId"></section-header>
 
-  <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+    <loading-spinner [loading]="loading.claProjects"></loading-spinner>
 
-  <ion-grid [loading-display]="loading.claProjects" class="project-grid">
-    <ion-row *ngIf="claProjects.length == 0">
-      <ion-col col-12 class="no-claProjects">
-        <ion-icon name="folder-open"></ion-icon>
-        <p>A CLA group defines one or more CLAs that may need to be signed as a prerequisite to someone contributing to a
-          project. Currently this project does not have a CLA group defined. Please click below to add a CLA
-          group.</p>
-        <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
-          Add CLA Group
-        </button>
-      </ion-col>
-    </ion-row>
+    <ion-grid [loading-display]="loading.claProjects" class="project-grid">
+      <ion-row *ngIf="claProjects.length == 0">
+        <ion-col col-12 class="no-claProjects">
+          <ion-icon name="folder-open"></ion-icon>
+          <p>A CLA group defines one or more CLAs that may need to be signed as a prerequisite to someone contributing to a
+            project. Currently this project does not have a CLA group defined. Please click below to add a CLA group.
+          </p>
+          <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
+            Add CLA Group
+          </button>
+        </ion-col>
+      </ion-row>
 
-    <ion-col col-12>
-      <div class="project-detail-card mt-30">
-        <ion-row class="project-detail-card-header">
-          <ion-col col-6 class="project-title">
-            <h2>
-              GitHub Organizations
-            </h2>
-          </ion-col>
-          <ion-col col-6>
-            <ion-buttons end>
-              <button ion-button (click)="openClaOrganizationProviderModal(sfdcProjectId)" color="secondary">
-                Connect Github Organization
-              </button>
-            </ion-buttons>
-          </ion-col>
-        </ion-row>
-
-        <ion-row>
-          <ion-col col-12>
-            <ion-card class="organization-card">
-              <ion-grid>
-                <ion-row>
-                  <ion-col class="vertical-rule-right" col-12 col-md-6 *ngFor="let organization of githubOrganizations">
-                    <ion-card-content *ngIf="organization.providerInfo">
-                      <ion-card-title>
-                        <ion-icon name="logo-github"></ion-icon>
-                        <span>{{ organization.organization_name }}</span>
-                      </ion-card-title>
-                      <h3 *ngIf="!organization.organization_installation_id"
-                          class="not-configured-warning">
-                        Not Configured. <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
-                      </h3>
-                      <p><a target="_blank"
-                            href="https://github.com/{{ organization.organization_name }}">
-                        https://github.com/{{organization.organization_name }}
-                      </a></p>
-                      <p>{{ organization.providerInfo.bio }}</p>
-
-                      <div class="organization-actions">
-                        <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
-                          Delete
-                        </button>
-                      </div>
-                    </ion-card-content>
-                  </ion-col>
-                </ion-row>
-              </ion-grid>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </div>
-    </ion-col>
-
-  <ion-col col-12 *ngIf="claProjects.length != 0">
-    <div class="section-title">
-      <h1>CLA Groups</h1>
-
-      <button ion-button (click)="openClaContractConfigModal()" color="secondary">
-        Add CLA Group
-      </button>
-    </div>
-
-
-
-    <ion-row *ngFor="let project of claProjects" class="project-row">
       <ion-col col-12>
-        <div class="project-detail-card">
+        <div class="project-detail-card mt-30">
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
-                {{ project.project_name }}
+                GitHub Organizations
               </h2>
-              <ion-buttons start>
-                <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
-                  <ion-icon name="settings" item-right></ion-icon>
-                </button>
-              </ion-buttons>
             </ion-col>
             <ion-col col-6>
               <ion-buttons end>
-                <button ion-button (click)="goToSelectTemplatePage(project.project_id)" color="light">
-                  Select Template
-                </button>
-                <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
-                  View Signatures
+                <button ion-button (click)="openClaOrganizationProviderModal(sfdcProjectId)" color="secondary">
+                  Connect Github Organization
                 </button>
               </ion-buttons>
             </ion-col>
           </ion-row>
 
           <ion-row>
-            <ng-container *ngFor="let documentType of ['corporate']">
-              <ion-col col-6
-                       *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
-                <ion-card class="contract-card">
-                  <ion-card-content>
-                    <ion-card-title>
-                      <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
-                      <span>{{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA</span>
-                      <div class="contract-title-buttons"
-                           *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                        <button ion-button icon-only clear round
-                                (click)="openClaContractVersionModal(project.project_id, documentType, project.project_corporate_documents)">
-                          <ion-icon name="time" class="icon-sm"></ion-icon>
-                        </button>
-                      </div>
-                    </ion-card-title>
-                    <ng-container
-                      *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
-                      <p>
-                        No Template selected.
-                      </p>
-                    </ng-container>
-                    <ion-grid class="contract-details"
-                              *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                      <ion-row>
-                        <ion-col>
-                      <span>
-                        {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_name }}
-                      </span><br>
-                          <span>
-                        {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_creation_date | date:'medium' }}
-                      </span><br>
-                          <span>
-                        Version
-                        {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_major_version }}.{{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_minor_version }}
-                      </span><br>
-                        </ion-col>
-                      </ion-row>
-                      <ion-row>
-                        <ion-col>
-                          <ion-buttons end="" class="bar-buttons bar-buttons-md">
-                            <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
-                                    color="secondary">
-                              View Companies
-                            </button>
-                          </ion-buttons>
-                        </ion-col>
-                      </ion-row>
-                    </ion-grid>
-                  </ion-card-content>
-                </ion-card>
-              </ion-col>
-            </ng-container>
-
-            <ng-container *ngFor="let documentType of ['individual'];">
-              <ion-col col-12 col-md-6
-                       *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
-                <ion-card class="contract-card">
-                  <ion-card-content>
-                    <ion-card-title>
-                      <ion-icon name="briefcase" item-left class="icon-md" *ngIf="documentType === 'corporate'"></ion-icon>
-                      <ion-icon name="person" item-left class="icon-md" *ngIf="documentType !== 'corporate'"></ion-icon>
-                      <span>{{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA</span>
-                      <div class="contract-title-buttons"
-                           *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                        <button ion-button icon-only clear round
-                                (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
-                          <ion-icon name="time" class="icon-sm"></ion-icon>
-                        </button>
-                      </div>
-                    </ion-card-title>
-                    <ng-container
-                      *ngIf="documentType === 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
-                      <p>
-                        No template selected.
-                      </p>
-                    </ng-container>
-                    <ion-grid class="contract-details"
-                              *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                      <ion-row>
-                        <ion-col>
-                      <span>
-                        {{ project.project_individual_documents[project.project_individual_documents.length -1].document_name }}
-                      </span><br>
-                          <span>
-                        {{ project.project_individual_documents[project.project_individual_documents.length -1].document_creation_date | date:'medium' }}
-                      </span><br>
-                          <span>
-                        Version
-                        {{ project.project_individual_documents[project.project_individual_documents.length -1].document_major_version }}.{{ project.project_individual_documents[project.project_individual_documents.length -1].document_minor_version }}
-                      </span><br>
-                        </ion-col>
-                      </ion-row>
-                    </ion-grid>
-                  </ion-card-content>
-                </ion-card>
-              </ion-col>
-            </ng-container>
-          </ion-row>
-        </div>
-      </ion-col>
-
-      <ion-col col-12>
-        <div class="project-detail-card">
-          <ion-row class="project-detail-card-header">
-            <ion-col col-6 class="project-title">
-              <h2>
-                GitHub Repositories
-              </h2>
-            </ion-col>
-            <ion-col col-6>
-              <ion-buttons end>
-                <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)" color="secondary">
-                  Configure Github Repositories
-                </button>
-              </ion-buttons>
-            </ion-col>
-          </ion-row>
-
-          <ion-row>
-            <ion-col col-12 *ngFor="let organization of project.githubOrganizations">
+            <ion-col col-12>
               <ion-card class="organization-card">
                 <ion-grid>
                   <ion-row>
-                    <ion-col class="vertical-rule-right" col-12 col-md-6>
-                      <ion-card-content>
+                    <ion-col class="vertical-rule-right" col-12 col-md-6 *ngFor="let organization of githubOrganizations">
+                      <ion-card-content *ngIf="organization.providerInfo">
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
-                          <span>{{ organization.name }}</span>
+                          <span>{{ organization.organization_name }}</span>
                         </ion-card-title>
-                        <p><a target="_blank"
-                              href="https://github.com/{{ organization.name }}">
-                          https://github.com/{{organization.name }}
-                        </a></p>
-                      </ion-card-content>
-                    </ion-col>
-                    <ion-col col-12 col-md-6>
-                      <ion-card-content>
-                        <h2>Repositories</h2>
-                        <div class="repositories">
-                          <ion-row *ngFor="let repository of organization.repositories">
-                            <ion-col col-12 icon-left>
-                              <ion-icon name="checkmark"></ion-icon>
-                              {{ repository.repository_name }}
-                            </ion-col>
-                          </ion-row>
-                        </div>
-                      </ion-card-content>
-                    </ion-col>
-                  </ion-row>
-                </ion-grid>
-              </ion-card>
-            </ion-col>
-          </ion-row>
-        </div>
-      </ion-col>
+                        <h3 *ngIf="!organization.organization_installation_id" class="not-configured-warning">
+                          Not Configured.
+                          <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
+                        </h3>
+                        <p>
+                          <a target="_blank" href="https://github.com/{{ organization.organization_name }}">
+                            https://github.com/{{organization.organization_name }}
+                          </a>
+                        </p>
+                        <p>{{ organization.providerInfo.bio }}</p>
 
-      <ion-col col-12>
-        <div class="project-detail-card">
-          <ion-row class="project-detail-card-header">
-            <ion-col col-6 class="project-title">
-              <h2>
-                Gerrit Instances
-              </h2>
-            </ion-col>
-            <ion-col col-6>
-              <ion-buttons end>
-                <button ion-button  (click)="openClaGerritModal(project.project_id)" color="secondary">
-                  Add Gerrit Instance
-                </button>
-              </ion-buttons>
-            </ion-col>
-          </ion-row>
-
-          <ion-row>
-            <ion-col col-12 *ngFor="let gerrit of project.gerrits">
-              <ion-card class="organization-card">
-                <ion-grid>
-                  <ion-row>
-                    <ion-col class="vertical-rule-right" col-12 col-md-6>
-                      <ion-card-content>
-                        <h1>{{ gerrit.gerrit_name }} </h1>
-                        <p><a target="_blank"
-                              href="{{ gerrit.gerrit_url }}">
-                          {{gerrit.gerrit_url }}
-                        </a></p>
-                      </ion-card-content>
-                    </ion-col>
-                    <ion-col class="vertical-rule-right" col-12 col-md-6>
-
-                      <ion-card-content>
-                        <div class="gerrit-actions">
-                          <button ion-button (click)="deleteConfirmation('Gerrit Instance', gerrit)" color="light">
+                        <div class="organization-actions">
+                          <button ion-button (click)="deleteConfirmation('Github Organization', organization)" color="light">
                             Delete
                           </button>
                         </div>
-
-                          <p class="code_snippet">
-                            [contributor-agreement "ICLA - {{ gerrit.gerrit_name }}"]<br>
-                            description = ICLA for Linux Foundation<br>
-                            agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/individual/agreementUrl.html" }}<br>
-                            accepted = group {{ gerrit.group_name_icla }}<br>
-                          </p>
-
-                          <p class="code_snippet">
-                            [contributor-agreement "CCLA - {{ gerrit.gerrit_name }}"]<br>
-                            description = CCLA for Linux Foundation<br>
-                            agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/corporate/agreementUrl.html" }}<br>
-                            accepted = group {{ gerrit.group_name_ccla }}<br>
-                          </p>
-
-                        <small class="mt-10">
-                          Contact the Gerrit Instance's Administrator to include in project.config settings
-                        </small>
                       </ion-card-content>
                     </ion-col>
                   </ion-row>
@@ -342,9 +82,276 @@
         </div>
       </ion-col>
 
-    </ion-row>
-  </ion-col>
-  </ion-grid>
-</ion-content>
+      <ion-col col-12 *ngIf="claProjects.length != 0">
+        <div class="section-title">
+          <h1>CLA Groups</h1>
 
-<cla-footer></cla-footer>
+          <button ion-button (click)="openClaContractConfigModal()" color="secondary">
+            Add CLA Group
+          </button>
+        </div>
+
+
+
+        <ion-row *ngFor="let project of claProjects" class="project-row">
+          <ion-col col-12>
+            <div class="project-detail-card">
+              <ion-row class="project-detail-card-header">
+                <ion-col col-6 class="project-title">
+                  <h2>
+                    {{ project.project_name }}
+                  </h2>
+                  <ion-buttons start>
+                    <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
+                      <ion-icon name="settings" item-right></ion-icon>
+                    </button>
+                  </ion-buttons>
+                </ion-col>
+                <ion-col col-6>
+                  <ion-buttons end>
+                    <button ion-button (click)="goToSelectTemplatePage(project.project_id)" color="light">
+                      Select Template
+                    </button>
+                    <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
+                      View Signatures
+                    </button>
+                  </ion-buttons>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ng-container *ngFor="let documentType of ['corporate']">
+                  <ion-col col-6 *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
+                    <ion-card class="contract-card">
+                      <ion-card-content>
+                        <ion-card-title>
+                          <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
+                          <span>{{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA</span>
+                          <div class="contract-title-buttons" *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                            <button ion-button icon-only clear round (click)="openClaContractVersionModal(project.project_id, documentType, project.project_corporate_documents)">
+                              <ion-icon name="time" class="icon-sm"></ion-icon>
+                            </button>
+                          </div>
+                        </ion-card-title>
+                        <ng-container *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
+                          <p>
+                            No Template selected.
+                          </p>
+                        </ng-container>
+                        <ion-grid class="contract-details" *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                          <ion-row>
+                            <ion-col>
+                              <span>
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_name }}
+                              </span>
+                              <br>
+                              <span>
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_creation_date | date:'medium'
+                                }}
+                              </span>
+                              <br>
+                              <span>
+                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length -1].document_major_version }}.{{
+                                project.project_corporate_documents[project.project_corporate_documents.length -1].document_minor_version
+                                }}
+                              </span>
+                              <br>
+                            </ion-col>
+                          </ion-row>
+                          <ion-row>
+                            <ion-col>
+                              <ion-buttons end="" class="bar-buttons bar-buttons-md">
+                                <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)" color="secondary">
+                                  View Companies
+                                </button>
+                              </ion-buttons>
+                            </ion-col>
+                          </ion-row>
+                        </ion-grid>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                </ng-container>
+
+                <ng-container *ngFor="let documentType of ['individual'];">
+                  <ion-col col-12 col-md-6 *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
+                    <ion-card class="contract-card">
+                      <ion-card-content>
+                        <ion-card-title>
+                          <ion-icon name="briefcase" item-left class="icon-md" *ngIf="documentType === 'corporate'"></ion-icon>
+                          <ion-icon name="person" item-left class="icon-md" *ngIf="documentType !== 'corporate'"></ion-icon>
+                          <span>{{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA</span>
+                          <div class="contract-title-buttons" *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                            <button ion-button icon-only clear round (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
+                              <ion-icon name="time" class="icon-sm"></ion-icon>
+                            </button>
+                          </div>
+                        </ion-card-title>
+                        <ng-container *ngIf="documentType === 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
+                          <p>
+                            No template selected.
+                          </p>
+                        </ng-container>
+                        <ion-grid class="contract-details" *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                          <ion-row>
+                            <ion-col>
+                              <span>
+                                {{ project.project_individual_documents[project.project_individual_documents.length -1].document_name }}
+                              </span>
+                              <br>
+                              <span>
+                                {{ project.project_individual_documents[project.project_individual_documents.length -1].document_creation_date | date:'medium'
+                                }}
+                              </span>
+                              <br>
+                              <span>
+                                Version {{ project.project_individual_documents[project.project_individual_documents.length -1].document_major_version }}.{{
+                                project.project_individual_documents[project.project_individual_documents.length -1].document_minor_version
+                                }}
+                              </span>
+                              <br>
+                            </ion-col>
+                          </ion-row>
+                        </ion-grid>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                </ng-container>
+              </ion-row>
+            </div>
+          </ion-col>
+
+          <ion-col col-12>
+            <div class="project-detail-card">
+              <ion-row class="project-detail-card-header">
+                <ion-col col-6 class="project-title">
+                  <h2>
+                    GitHub Repositories
+                  </h2>
+                </ion-col>
+                <ion-col col-6>
+                  <ion-buttons end>
+                    <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)" color="secondary">
+                      Configure Github Repositories
+                    </button>
+                  </ion-buttons>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col col-12 *ngFor="let organization of project.githubOrganizations">
+                  <ion-card class="organization-card">
+                    <ion-grid>
+                      <ion-row>
+                        <ion-col class="vertical-rule-right" col-12 col-md-6>
+                          <ion-card-content>
+                            <ion-card-title>
+                              <ion-icon name="logo-github"></ion-icon>
+                              <span>{{ organization.name }}</span>
+                            </ion-card-title>
+                            <p>
+                              <a target="_blank" href="https://github.com/{{ organization.name }}">
+                                https://github.com/{{organization.name }}
+                              </a>
+                            </p>
+                          </ion-card-content>
+                        </ion-col>
+                        <ion-col col-12 col-md-6>
+                          <ion-card-content>
+                            <h2>Repositories</h2>
+                            <div class="repositories">
+                              <ion-row *ngFor="let repository of organization.repositories">
+                                <ion-col col-12 icon-left>
+                                  <ion-icon name="checkmark"></ion-icon>
+                                  {{ repository.repository_name }}
+                                </ion-col>
+                              </ion-row>
+                            </div>
+                          </ion-card-content>
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
+                  </ion-card>
+                </ion-col>
+              </ion-row>
+            </div>
+          </ion-col>
+
+          <ion-col col-12>
+            <div class="project-detail-card">
+              <ion-row class="project-detail-card-header">
+                <ion-col col-6 class="project-title">
+                  <h2>
+                    Gerrit Instances
+                  </h2>
+                </ion-col>
+                <ion-col col-6>
+                  <ion-buttons end>
+                    <button ion-button (click)="openClaGerritModal(project.project_id)" color="secondary">
+                      Add Gerrit Instance
+                    </button>
+                  </ion-buttons>
+                </ion-col>
+              </ion-row>
+
+              <ion-row>
+                <ion-col col-12 *ngFor="let gerrit of project.gerrits">
+                  <ion-card class="organization-card">
+                    <ion-grid>
+                      <ion-row>
+                        <ion-col class="vertical-rule-right" col-12 col-md-6>
+                          <ion-card-content>
+                            <h1>{{ gerrit.gerrit_name }} </h1>
+                            <p>
+                              <a target="_blank" href="{{ gerrit.gerrit_url }}">
+                                {{gerrit.gerrit_url }}
+                              </a>
+                            </p>
+                          </ion-card-content>
+                        </ion-col>
+                        <ion-col class="vertical-rule-right" col-12 col-md-6>
+
+                          <ion-card-content>
+                            <div class="gerrit-actions">
+                              <button ion-button (click)="deleteConfirmation('Gerrit Instance', gerrit)" color="light">
+                                Delete
+                              </button>
+                            </div>
+
+                            <p class="code_snippet">
+                              [contributor-agreement "ICLA - {{ gerrit.gerrit_name }}"]
+                              <br> description = ICLA for Linux Foundation
+                              <br> agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/individual/agreementUrl.html"
+                              }}
+                              <br> accepted = group {{ gerrit.group_name_icla }}
+                              <br>
+                            </p>
+
+                            <p class="code_snippet">
+                              [contributor-agreement "CCLA - {{ gerrit.gerrit_name }}"]
+                              <br> description = CCLA for Linux Foundation
+                              <br> agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/corporate/agreementUrl.html"
+                              }}
+                              <br> accepted = group {{ gerrit.group_name_ccla }}
+                              <br>
+                            </p>
+
+                            <small class="mt-10">
+                              Contact the Gerrit Instance's Administrator to include in project.config settings
+                            </small>
+                          </ion-card-content>
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
+                  </ion-card>
+                </ion-col>
+              </ion-row>
+            </div>
+          </ion-col>
+
+        </ion-row>
+      </ion-col>
+    </ion-grid>
+  </div>
+  <cla-footer></cla-footer>
+</ion-content>

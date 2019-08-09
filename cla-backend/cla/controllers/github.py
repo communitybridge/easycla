@@ -40,6 +40,7 @@ def get_organization(organization_name):
     try:
         github_organization.load(str(organization_name))
     except DoesNotExist as err:
+        cla.log.warning('organization name {} does not exist'.format(organization_name))
         return {'errors': {'organization_name': str(err)}}
     return github_organization.to_dict()
 
@@ -68,10 +69,13 @@ def create_organization(auth_user,
     try:
         github_organization.load(str(organization_name))
     except DoesNotExist as err:
+        cla.log.debug('creating organization: {} with sfid: {}'.format(organization_name, organization_sfid))
         github_organization.set_organization_name(str(organization_name))
         github_organization.set_organization_sfid(str(organization_sfid))
         github_organization.save()
         return github_organization.to_dict()
+
+    cla.log.warning('organization already exists: {} - unable to create'.format(organization_name))
     return {'errors': {'organization_name': 'This organization already exists'}}
 
 
@@ -96,13 +100,17 @@ def update_organization(organization_name, # pylint: disable=too-many-arguments
     try:
         github_organization.load(str(organization_name))
     except DoesNotExist as err:
+        cla.log.warning('organization does not exist: {} - unable to update'.format(organization_name))
         return {'errors': {'repository_id': str(err)}}
+
     github_organization.set_organization_name(organization_name)
     if organization_installation_id:
         github_organization.set_organization_installation_id(organization_installation_id)
     if organization_sfid:
-        github_organization.set_organization_sfid(organization_sfid)    
+        github_organization.set_organization_sfid(organization_sfid)
+
     github_organization.save()
+    cla.log.debug('updated organization: {}'.format(organization_name))
     return github_organization.to_dict()
 
 
@@ -118,6 +126,7 @@ def delete_organization(auth_user, organization_name):
     try:
         github_organization.load(str(organization_name))
     except DoesNotExist as err:
+        cla.log.warning('organization does not exist: {} - unable to delete'.format(organization_name))
         return {'errors': {'organization_name': str(err)}}
     
     organization_sfid = github_organization.get_organization_sfid() 
@@ -134,17 +143,21 @@ def delete_organization(auth_user, organization_name):
     github_organization.delete()
     return {'success': True}
 
+
 def user_oauth2_callback(code, state, request):
     github = get_repository_service('github')
     return github.oauth2_redirect(state, code, request)
+
 
 def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
 
 
 def activity(body):
+    cla.log.debug('processing github activity callback...')
     # GitHub Application
     if 'installation' in body:
+        cla.log.debug('processing github installation activity callback...')
         # New Installations
         if 'action' in body and body['action'] == 'created':
             existing = get_organization(body['installation']['account']['login'])
@@ -162,10 +175,12 @@ def activity(body):
             else:
                 cla.log.info('Organization already enrolled: %s', existing['organization_name'])
                 return {'status': 'Organization already enrolled in the CLA system'}
-        else: # TODO: Handle action == 'deleted'
+        else:  # TODO: Handle action == 'deleted'
             pass
+
     # Pull Requests
     if 'pull_request' in body:
+        cla.log.debug('processing github pull_request activity callback...')
         # New PR opened
         if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
             # Copied from repository_service.py
@@ -174,12 +189,13 @@ def activity(body):
             result = service.received_activity(body)
             return result
 
+
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
     try:
         github_organization.load(str(organization_name))
         if github_organization.get_organization_installation_id() is not None:
-            print('GitHub Organization ID: {}'.format(github_organization.get_organization_installation_id()))
+            cla.log.debug('GitHub Organization ID: {}'.format(github_organization.get_organization_installation_id()))
             installation = GitHubInstallation(github_organization.get_organization_installation_id())
             if installation.repos:
                 repos = []
@@ -187,8 +203,11 @@ def get_organization_repositories(organization_name):
                     repos.append(repo.full_name)
                 return repos
             else:
+                cla.log.debug('No repositories found for Github installation id: {}'.
+                              format(github_organization.get_organization_installation_id()))
                 return []
     except DoesNotExist as err:
+        cla.log.warning('organization name {} does not exist, error: {}'.format(organization_name, err))
         return {'errors': {'organization_name': str(err)}}
 
 
@@ -198,18 +217,22 @@ def get_organization_by_sfid(auth_user: AuthUser, sfid):
     try: 
         user_permissions.load(auth_user.username)
     except DoesNotExist as err:
+        cla.log.warning('user {} does not exist, error: {}'.format(auth_user.username, err))
         return {'errors': {'user does not exist': str(err)}}
 
     user_permissions_json = user_permissions.to_dict()
 
     authorized_projects = user_permissions_json.get('projects')
-    if sfid not in authorized_projects: 
+    if sfid not in authorized_projects:
+        cla.log.warning('user {} is not authorized for this Salesforce ID: {}'.
+                        format(auth_user.username, sfid))
         return {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}
 
     # Get all organizations under an SFDC ID
     try:
         organizations = get_github_organization_instance().get_organization_by_sfid(sfid)
     except DoesNotExist as err:
+        cla.log.warning('sfid {} does not exist, error: {}'.format(sfid, err))
         return {'errors': {'sfid': str(err)}}
     return [organization.to_dict() for organization in organizations]    
 
@@ -221,7 +244,11 @@ def org_is_covered_by_cla(owner):
         if org['organization_name'] == owner and \
            org['organization_project_id'] and \
            org['organization_installation_id']:
+            cla.log.debug('org: {} with project id: {} is covered by cla'.
+                          format(org['organization_name'], org['organization_project_id']))
             return True
+
+    cla.log.debug('org: {} is not covered by cla'.format(owner))
     return False
 
 
@@ -257,6 +284,7 @@ def webhook_secret_validation(webhook_signature, data):
     
     return True if hmac.compare_digest(mac.hexdigest(), signature) else False
 
+
 def check_namespace(namespace):
     """
     Checks if the namespace provided is a valid GitHub organization.
@@ -269,6 +297,7 @@ def check_namespace(namespace):
     oauth = get_oauth_client()
     response = oauth.get('https://api.github.com/users/' + namespace)
     return response.ok
+
 
 def get_namespace(namespace):
     """

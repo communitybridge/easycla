@@ -44,6 +44,7 @@ export class ClaSelectCompanyModal {
   getDefaults() {
     this.loading = {
       companies: true,
+      activateSpinner: false
     };
     this.companies = [];
   }
@@ -66,6 +67,8 @@ export class ClaSelectCompanyModal {
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
+    // set loading spinner to true when a company is selected
+    this.loading.activateSpinner = true
     if(this.selectCompanyModalActive){
       return false;
     }
@@ -85,6 +88,7 @@ export class ClaSelectCompanyModal {
       3. The user is included as part of the whitelist of the CCLA that the company signed. 
       the CLA service will throw an error if any of the above is false. 
       */
+      this.loading.activateSpinner = false;
       let errors = response.hasOwnProperty('errors');
       this.selectCompanyModalActive = false;
       if (errors) {

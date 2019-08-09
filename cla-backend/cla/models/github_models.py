@@ -7,15 +7,16 @@ Holds the GitHub repository service.
 
 import os
 import uuid
+
 import falcon
-import urllib
 import github
 from github.GithubException import UnknownObjectException, BadCredentialsException
 from requests_oauthlib import OAuth2Session
+
 import cla
+from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
-from cla.controllers.github_application import GitHubInstallation
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -26,12 +27,12 @@ class GitHub(repository_service_interface.RepositoryService):
         self.client = None
 
     def initialize(self, config):
-        #username = config['GITHUB_USERNAME']
-        #token = config['GITHUB_TOKEN']
-        #self.client = self._get_github_client(username, token)
+        # username = config['GITHUB_USERNAME']
+        # token = config['GITHUB_TOKEN']
+        # self.client = self._get_github_client(username, token)
         pass
 
-    def _get_github_client(self, username, token): # pylint: disable=no-self-use
+    def _get_github_client(self, username, token):  # pylint: disable=no-self-use
         return github.Github(username, token)
 
     def get_repository_id(self, repo_name, installation_id=None):
@@ -40,6 +41,8 @@ class GitHub(repository_service_interface.RepositoryService):
 
         :param repo_name: The name of the repository, example: 'linuxfoundation/cla'.
         :type repo_name: string
+        :param installation_id: The github installation id
+        :type installation_id: string
         :return: The repository ID.
         :rtype: integer
         """
@@ -100,7 +103,7 @@ class GitHub(repository_service_interface.RepositoryService):
                          state, authorization_url)
             raise falcon.HTTPFound(authorization_url)
 
-    def _get_request_session(self, request): # pylint: disable=no-self-use
+    def _get_request_session(self, request):  # pylint: disable=no-self-use
         """
         Mockable method used to get the current user session.
         """
@@ -122,7 +125,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :type scope: [string]
         """
         # Get the PR's html_url property.
-        #origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
+        # origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
         api_base_url = os.environ.get('CLA_API_BASE', '')
         return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
@@ -130,14 +133,14 @@ class GitHub(repository_service_interface.RepositoryService):
                                                      scope,
                                                      cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
 
-    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope, authorize_url): # pylint: disable=no-self-use
+    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope, authorize_url):  # pylint: disable=no-self-use
         """
         Mockable helper method to do the fetching of the authorization URL and state from GitHub.
         """
         return cla.utils.get_authorization_url_and_state(client_id, redirect_uri,
                                                          scope, authorize_url)
 
-    def oauth2_redirect(self, state, code, request): # pylint: disable=too-many-arguments
+    def oauth2_redirect(self, state, code, request):  # pylint: disable=too-many-arguments
         """
         This is where the user will end up after having authorized the CLA system
         to get information such as email address.
@@ -147,9 +150,22 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         cla.log.info('Handling GitHub OAuth2 redirect')
         session = self._get_request_session(request)
-        if state != session.get('github_oauth2_state', None):
-            cla.log.warning('Invalid GitHub OAuth2 state')
+
+        cla.log.debug('State: %s', state)
+        cla.log.debug('Code: %s', code)
+        cla.log.debug('Session: %s', session)
+
+        if 'github_oauth2_state' in session:
+            session_state = session['github_oauth2_state']
+        else:
+            session_state = None
+            cla.log.warning('github_oauth2_state not set in session')
+
+        if state != session_state:
+            cla.log.warning('Invalid GitHub OAuth2 state %s expecting %s',
+                            session_state, state)
             raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
+
         # Get session information for this request.
         cla.log.info('Attempting to fetch OAuth2 token for state %s', state)
         installation_id = session.get('github_installation_id', None)
@@ -176,15 +192,14 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get project ID from this repository
         project_id = repository.get_repository_project_id()
 
-
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
         # TODO: Skipping this for now - we can do this for ICLAs but there's no easy way of doing
         # the check for CCLAs as we need to know in advance what the company_id is that we're checking
         # the CCLA signature for.
         # We'll have to create a function that fetches the latest CCLA regardless of company_id.
-        #icla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
-        #ccla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user, company_id=?)
+        # icla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
+        # ccla_signature = cla.utils.get_user_signature_by_github_repository(installation_id, user, company_id=?)
         #try:
             #document = cla.utils.get_project_latest_individual_document(project_id)
         #except DoesNotExist:
@@ -201,7 +216,7 @@ class GitHub(repository_service_interface.RepositoryService):
                       '?redirect=' + redirect
         raise falcon.HTTPFound(console_url)
 
-    def _fetch_token(self, client_id, state, token_url, client_secret, code): # pylint: disable=too-many-arguments,no-self-use
+    def _fetch_token(self, client_id, state, token_url, client_secret, code):  # pylint: disable=too-many-arguments,no-self-use
         """
         Mockable method to fetch a OAuth2Session token.
         """
@@ -282,7 +297,6 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
         for commit, commit_author in commit_authors:
-            # cla.log.info("Author: " + commit_author)
             if isinstance(commit_author, github.NamedUser.NamedUser):
                 # Handle GitHub user.
                 cla.log.info("Handle GitHub user")
@@ -301,12 +315,15 @@ class GitHub(repository_service_interface.RepositoryService):
                                               missing)
             else:
                 # Couldn't find any author information.
-                cla.log.info("Couldn't find any author information.")
+                cla.log.info("Couldn't find any author information for author: {}.".format(commit_author))
                 if commit_author is not None:
                     missing.append((commit.sha, commit_author))
                 else:
                     missing.append((commit.sha, None))
 
+        cla.log.debug('updating github pull request for repo: {}, '
+                      'pr: {} with signed authors: {} with missing authors: {}'.
+                      format(github_repository_id, pull_request, signed, missing))
         update_pull_request(installation_id,
                             github_repository_id,
                             pull_request,
@@ -317,10 +334,8 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         Helper method to get the pull request object from GitHub.
 
-        :TODO: Update comments.
-
-        :param repository_id: The ID of the GitHub repository.
-        :type repository_id: int
+        :param github_repository_id: The ID of the GitHub repository.
+        :type github_repository_id: int
         :param pull_request_number: The number (not ID) of the GitHub PR.
         :type pull_request_number: int
         :param installation_id: The ID of the GitHub application installed on this repository.
@@ -333,7 +348,7 @@ class GitHub(repository_service_interface.RepositoryService):
         try:
             return repo.get_pull(int(pull_request_number))
         except UnknownObjectException:
-            cla.log.error('Could not find pull request %s for repository %s - ensure it ' + \
+            cla.log.error('Could not find pull request %s for repository %s - ensure it '
                           'exists and that your personal access token has the "repo" scope enabled',
                           pull_request_number, github_repository_id)
         except BadCredentialsException as err:
@@ -356,6 +371,7 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.warning('Deleted OAuth2 session data - retrying token exchange next time')
             raise falcon.HTTPError('400 Bad Request', 'github_oauth2_token',
                                    'Token permissions have been rejected, please try again')
+
         emails = self.get_user_emails(session, os.environ['GH_OAUTH_CLIENT_ID'])
         if len(emails) < 1:
             cla.log.warning('GitHub user has no verified email address: %s (%s)',
@@ -363,6 +379,7 @@ class GitHub(repository_service_interface.RepositoryService):
             raise falcon.HTTPError(
                 '412 Precondition Failed', 'email',
                 'Please verify at least one email address with GitHub')
+
         cla.log.debug('Trying to load GitHub user by GitHub ID: %s', github_user['id'])
         user = cla.utils.get_user_instance().get_user_by_github_id(github_user['id'])
         if user is not None:
@@ -373,6 +390,7 @@ class GitHub(repository_service_interface.RepositoryService):
             user.set_user_emails(emails)
             user.save()
             return user
+
         # User not found by GitHub ID, trying by email.
         cla.log.debug('Could not find GitHub user by GitHub ID: %s', github_user['id'])
         # TODO: This is very slow and needs to be improved - may need a DB schema change.
@@ -380,7 +398,9 @@ class GitHub(repository_service_interface.RepositoryService):
         user = cla.utils.get_user_instance()
         for email in emails:
             found = user.get_user_by_email(email)
-            if found is not None: break
+            if found is not None:
+                break
+
         if found is not None:
             # Found user by email, set the GitHub ID
             found.set_user_github_id(github_user['id'])
@@ -391,6 +411,7 @@ class GitHub(repository_service_interface.RepositoryService):
                          found.get_user_emails(),
                          found.get_user_github_id())
             return found
+
         # User not found, create.
         cla.log.debug('Could not find GitHub user by email: %s', emails)
         cla.log.info('Creating new GitHub user %s - %s (%s)',
@@ -406,7 +427,7 @@ class GitHub(repository_service_interface.RepositoryService):
         user.save()
         return user
 
-    def get_user_data(self, session, client_id): # pylint: disable=no-self-use
+    def get_user_data(self, session, client_id):  # pylint: disable=no-self-use
         """
         Mockable method to get user data. Returns all GitHub user data we have
         on the user based on the current OAuth2 session.
@@ -423,10 +444,10 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.debug('GitHub user data: %s', github_user)
         if 'message' in github_user:
             cla.log.error('Could not get user data with OAuth2 token: %s', github_user['message'])
-            return {'error': 'Could not get user data: %s' %github_user['message']}
+            return {'error': 'Could not get user data: %s' % github_user['message']}
         return github_user
 
-    def get_user_emails(self, session, client_id): # pylint: disable=no-self-use
+    def get_user_emails(self, session, client_id):  # pylint: disable=no-self-use
         """
         Mockable method to get all user emails based on OAuth2 session.
 
@@ -442,7 +463,7 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.debug('GitHub user emails: %s', emails)
         if 'message' in emails:
             cla.log.error('Could not get user emails with OAuth2 token: %s', emails['message'])
-            return {'error': 'Could not get user emails: %s' %emails['message']}
+            return {'error': 'Could not get user emails: %s' % emails['message']}
         return [item['email'] for item in emails if item['verified']]
 
     def process_reopened_pull_request(self, data):
@@ -506,7 +527,7 @@ def create_repository(data):
         return None
 
 
-def handle_commit_from_github_user(project_id, commit, author, signed, missing): # pylint: disable=too-many-arguments
+def handle_commit_from_github_user(project_id, commit, author, signed, missing):  # pylint: disable=too-many-arguments
     """
     Helper method to triage commits between signed and not-signed user signatures.
 
@@ -611,7 +632,7 @@ def get_pull_request_commit_authors(pull_request):
     return commit_authors
 
 
-def update_pull_request(installation_id, github_repository_id, pull_request, signed, missing): # pylint: disable=too-many-locals
+def update_pull_request(installation_id, github_repository_id, pull_request, signed, missing):  # pylint: disable=too-many-locals
     """
     Helper function to update a PR's comment/status based on the list of signers.
 
@@ -631,10 +652,20 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     notification = cla.conf['GITHUB_PR_NOTIFICATION']
     both = notification == 'status+comment' or notification == 'comment+status'
     last_commit = pull_request.get_commits().reversed[0]
+
+    # Here we update the PR status by adding/updating the PR body - this is the way the EasyCLA app
+    # knows if it is pass/fail.
+
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
         update_cla_comment(pull_request, body)
+        if not missing:
+            cla.log.debug('EasyCLA App checks pass for PR: {} with authors: {}'.format(pull_request.number, signed))
+        else:
+            cla.log.debug('EasyCLA App checks fail for PR: {}. CLA signatures with signed authors: {} and '
+                          'with missing authors: {}'.format(pull_request.number, signed, missing))
+
     if both or notification == 'status':
         state = 'failure'
         for commit, author_name in missing:
@@ -645,8 +676,9 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
         state = 'success'
         for commit, author_name in signed:
             context, body = cla.utils.assemble_cla_status(author_name, signed=True)
-            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            # sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
+            sign_url = "https://lfcla.com" # Remove this once signature detail page ready.
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 
@@ -742,7 +774,7 @@ class MockGitHub(GitHub):
         state = 'random-state-here'
         return authorization_url, state
 
-    def _fetch_token(self, client_id, state, token_url, client_secret, code): # pylint: disable=too-many-arguments
+    def _fetch_token(self, client_id, state, token_url, client_secret, code):  # pylint: disable=too-many-arguments
         return 'random-token'
 
     def _get_request_session(self, request):
@@ -762,7 +794,7 @@ class MockGitHub(GitHub):
     def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
         return MockGitHubPullRequest(pull_request_number)
 
-class MockGitHubClient(object): # pylint: disable=too-few-public-methods
+class MockGitHubClient(object):  # pylint: disable=too-few-public-methods
     """
     The GitHub Client object mock class for testing.
     """
@@ -770,28 +802,28 @@ class MockGitHubClient(object): # pylint: disable=too-few-public-methods
         self.username = username
         self.token = token
 
-    def get_repo(self, repository_id): # pylint: disable=no-self-use
+    def get_repo(self, repository_id):  # pylint: disable=no-self-use
         """
         Mock version of the GitHub Client object's get_repo method.
         """
         return MockGitHubRepository(repository_id)
 
 
-class MockGitHubRepository(object): # pylint: disable=too-few-public-methods
+class MockGitHubRepository(object):  # pylint: disable=too-few-public-methods
     """
     The GitHub Repository object mock class for testing.
     """
     def __init__(self, repository_id):
         self.id = repository_id
 
-    def get_pull(self, pull_request_id): # pylint: disable=no-self-use
+    def get_pull(self, pull_request_id):  # pylint: disable=no-self-use
         """
         Mock version of the GitHub Repository object's get_pull method.
         """
         return MockGitHubPullRequest(pull_request_id)
 
 
-class MockGitHubPullRequest(object): # pylint: disable=too-few-public-methods
+class MockGitHubPullRequest(object):  # pylint: disable=too-few-public-methods
     """
     The GitHub PullRequest object mock class for testing.
     """
@@ -799,35 +831,35 @@ class MockGitHubPullRequest(object): # pylint: disable=too-few-public-methods
         self.number = pull_request_id
         self.html_url = 'http://test-github.com/user/repo/' + str(self.number)
 
-    def get_commits(self): # pylint: disable=no-self-use
+    def get_commits(self):  # pylint: disable=no-self-use
         """
         Mock version of the GitHub PullRequest object's get_commits method.
         """
         lst = MockPaginatedList()
-        lst._elements = [MockGitHubCommit()] # pylint: disable=protected-access
+        lst._elements = [MockGitHubCommit()]  # pylint: disable=protected-access
         return lst
 
-    def get_issue_comments(self): # pylint: disable=no-self-use
+    def get_issue_comments(self):  # pylint: disable=no-self-use
         """
         Mock version of the GitHub PullRequest object's get_issue_comments method.
         """
         return [MockGitHubComment()]
 
-    def create_issue_comment(self, body): # pylint: disable=no-self-use
+    def create_issue_comment(self, body):  # pylint: disable=no-self-use
         """
         Mock version of the GitHub PullRequest object's create_issue_comment method.
         """
         pass
 
 
-class MockGitHubComment(object): # pylint: disable=too-few-public-methods
+class MockGitHubComment(object):  # pylint: disable=too-few-public-methods
     """
     A GitHub mock issue comment object for testing.
     """
     body = 'Test'
 
 
-class MockPaginatedList(github.PaginatedList.PaginatedListBase): # pylint: disable=too-few-public-methods
+class MockPaginatedList(github.PaginatedList.PaginatedListBase):  # pylint: disable=too-few-public-methods
     """Mock GitHub paginated list for testing purposes."""
     def __init__(self):
         super().__init__()
@@ -837,7 +869,7 @@ class MockPaginatedList(github.PaginatedList.PaginatedListBase): # pylint: disab
 
     @property
     def reversed(self):
-        """Fake reversed propery."""
+        """Fake reversed property."""
         return [MockGitHubCommit()]
 
     def __iter__(self):
@@ -845,7 +877,7 @@ class MockPaginatedList(github.PaginatedList.PaginatedListBase): # pylint: disab
             yield element
 
 
-class MockGitHubCommit(object): # pylint: disable=too-few-public-methods
+class MockGitHubCommit(object):  # pylint: disable=too-few-public-methods
     """
     The GitHub Commit object mock class for testing.
     """
@@ -860,7 +892,7 @@ class MockGitHubCommit(object): # pylint: disable=too-few-public-methods
         pass
 
 
-class MockGitHubAuthor(object): # pylint: disable=too-few-public-methods
+class MockGitHubAuthor(object):  # pylint: disable=too-few-public-methods
     """
     The GitHub Author object mock class for testing.
     """

@@ -10,6 +10,16 @@
     text-align: center;
     color: #cccc;
     font-size: 12px;
+    font-weight: 400;
     font-family: 'Work Sans', sans-serif;
+  }
+
+  a {
+    color: #cccc;
+    padding: 0 0.2rem;
+
+    &:hover {
+      color: #0099ee;
+    }
   }
 }

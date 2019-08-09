@@ -8,58 +8,67 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
+<ion-content>
 
-  <loading-spinner [loading]="loading.projects"></loading-spinner>
+  <div class="page-content">
+    <loading-spinner [loading]="loading.projects"></loading-spinner>
 
-  <h3 class="error-message" *ngIf="errorMessage">
-    {{ errorMessage }} <br>
-    <a href="#/login">Go back to login</a>
-  </h3>
+    <h3 class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+      <br>
+      <a href="#/login">Go back to login</a>
+    </h3>
 
-  <ion-grid class="all-projects" [loading-display]="loading.projects" *ngIf="!errorMessage">
-    <ion-row>
-      <ion-col>
-        <ion-item no-lines class="transparent">
-          <h2>All Projects</h2>
-        </ion-item>
-      </ion-col>
-    </ion-row>
+    <ion-grid class="all-projects" [loading-display]="loading.projects" *ngIf="!errorMessage">
+      <ion-row>
+        <ion-col>
+          <ion-item no-lines class="transparent">
+            <h2 class="all-projects-title"><b>All Projects</b></h2>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item no-lines class="transparent text-right">
+            <p class="get-access-label">Don't see all your projects here?</p>
+            <button class="transparent get-access-button" (click)="openAccessPage()">Get Access</button>
+          </ion-item>
+        </ion-col>
+      </ion-row>
 
-    <ion-row>
-      <ion-col col-12 col-md-6 col-lg-6 col-xl-6 *ngFor="let project of allFilteredProjects">
-        <ion-card class="cla-project-card" (click)="viewProjectCLA(project.id)">
-          <div class="card-header clickable">
-            <div class="border-wrapper">
-              <img *ngIf="project.logoUrl" src="{{project.logoUrl}}" alt="{{project.name}} logo"/>
-              <ion-card-title>
-                {{ project.name }}
-              </ion-card-title>
+      <ion-row>
+        <ion-col col-12 col-md-6 col-lg-6 col-xl-6 *ngFor="let project of allFilteredProjects">
+          <ion-card class="cla-project-card" (click)="viewProjectCLA(project.id)">
+            <div class="card-header clickable">
+              <div class="border-wrapper">
+                <img *ngIf="project.logoUrl" src="{{project.logoUrl}}" alt="{{project.name}} logo" />
+                <ion-card-title>
+                  {{ project.name }}
+                </ion-card-title>
+              </div>
             </div>
-          </div>
-          <ion-card-content>
-            <div class="expand" *ngIf="expand && expand[project.id]">
-              <dl>
-                <dt>Industry:</dt>
-                <dd>{{ projectSectors[project.sector] }}</dd>
-              </dl>
-              <dl *ngIf="!userRoles.isStaffInc">
-                <dt>PM:</dt>
-                <dd>
-                  <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
-                  <span *ngIf="!project.managers.length">none</span>
-                </dd>
-              </dl>
-            </div>
-            <p>
-              {{ project.description }}
-            </p>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+            <ion-card-content>
+              <div class="expand" *ngIf="expand && expand[project.id]">
+                <dl>
+                  <dt>Industry:</dt>
+                  <dd>{{ projectSectors[project.sector] }}</dd>
+                </dl>
+                <dl *ngIf="!userRoles.isStaffInc">
+                  <dt>PM:</dt>
+                  <dd>
+                    <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
+                    <span *ngIf="!project.managers.length">none</span>
+                  </dd>
+                </dl>
+              </div>
+              <p>
+                {{ project.description }}
+              </p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <cla-footer></cla-footer>
 
 </ion-content>
-
-<cla-footer></cla-footer>

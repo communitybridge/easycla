@@ -7,45 +7,44 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
-  <header>
+<ion-content headerspacing overflow-scroll="true">
+  <div class="page-content">
+    <header>
+      <ion-grid>
+        <ion-row>
+          <ion-col col-12>
+            <h1>{{ project.project_name }}</h1>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </header>
+
     <ion-grid>
       <ion-row>
-        <ion-col col-12>
-          <h1>{{ project.project_name }}</h1>
+        <ion-col col-12 col-md-6>
+          <ion-card>
+            <ion-card-content>
+              <ion-card-title>
+                <span>Corporate CLA</span>
+              </ion-card-title>
+              <div *ngIf="!error">
+                <p>
+                  We are generating a document to sign for the purposes of your CLA. Please fill out accurately and complete the signing process.
+                </p>
+                <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
+                  Open CLA
+                </button>
+              </div>
+              <div *ngIf="error">
+                <p *ngIf="error.errors.signature_id">
+                  Your company has already signed a CLA with this project.
+                </p>
+              </div>
+            </ion-card-content>
+          </ion-card>
         </ion-col>
       </ion-row>
     </ion-grid>
-  </header>
-
-  <ion-grid>
-    <ion-row>
-      <ion-col col-12 col-md-6>
-        <ion-card>
-          <ion-card-content>
-            <ion-card-title>
-              <span>Corporate CLA</span>
-            </ion-card-title>
-            <div *ngIf="!error">
-              <p>
-                We are generating a document to sign for the purposes of your CLA. Please fill out
-                accurately and complete the signing process.
-              </p>
-              <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
-                Open CLA
-              </button>
-            </div>
-            <div *ngIf="error">
-              <p *ngIf="error.errors.signature_id">
-                Your company has already signed a CLA with this project.
-              </p>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
+  </div>
+  <cla-footer></cla-footer>
 </ion-content>
-
-<cla-footer></cla-footer>

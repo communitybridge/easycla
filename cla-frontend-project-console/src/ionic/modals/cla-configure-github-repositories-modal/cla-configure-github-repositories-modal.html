@@ -1,10 +1,16 @@
 <ion-header>
   <modal-header>
-    Configure Github Repositories
+    <ion-row class="align-items-center">
+      <div>Configure Github Repositories</div>
+      <div class="active-spinner">
+        <loading-spinner [loading]="loading.activateSpinner"></loading-spinner>
+      </div>
+    </ion-row>
   </modal-header>
 </ion-header>
 
 <ion-content>
+  <loading-spinner [loading]="loading.repositories"></loading-spinner>
   <ion-grid>
     <ion-row *ngFor="let organization of orgAndRepositories">
       <ion-col col-12 class="github-organization">
@@ -14,21 +20,15 @@
               {{ organization.organization_name }}
             </div>
             <div class="repositories">
-              <h4 class="repository"
-                  [ngClass]="{
+              <h4 class="repository" [ngClass]="{
                     'disabled': repository.status === 'taken',
                     'assigned': repository.status === 'assigned'
-                  }"
-                  *ngFor="let repository of organization.repositories">
+                  }" *ngFor="let repository of organization.repositories">
                 {{ repository.repository_name }}
-                <button type="button" ion-button color="light" size="small"
-                        *ngIf="repository.status === 'free'"
-                        (click)="assignRepository(repository)">
+                <button type="button" ion-button color="light" size="small" *ngIf="repository.status === 'free'" (click)="assignRepository(repository)">
                   Add
                 </button>
-                <button type="button" ion-button color="light" size="small" class="remove"
-                        *ngIf="repository.status === 'assigned'"
-                        (click)="removeRepository(repository)">
+                <button type="button" ion-button color="light" size="small" class="remove" *ngIf="repository.status === 'assigned'" (click)="removeRepository(repository)">
                   Remove
                 </button>
                 <button type="button" ion-button color="light" size="small" *ngIf="repository.status === 'taken'">Disabled</button>

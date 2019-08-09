@@ -18,6 +18,7 @@ import (
 	"github.com/aymerick/raymond"
 )
 
+// Service interface
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
 	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error)
@@ -26,11 +27,12 @@ type Service interface {
 type service struct {
 	stage           string // The AWS stage (dev, staging, prod)
 	templateRepo    Repository
-	docraptorClient docraptor.DocraptorClient
+	docraptorClient docraptor.Client
 	s3Client        *s3manager.Uploader
 }
 
-func NewService(stage string, templateRepo Repository, docraptorClient docraptor.DocraptorClient, awsSession *session.Session) service {
+// NewService API call
+func NewService(stage string, templateRepo Repository, docraptorClient docraptor.Client, awsSession *session.Session) service {
 	return service{
 		stage:           stage,
 		templateRepo:    templateRepo,
@@ -39,6 +41,7 @@ func NewService(stage string, templateRepo Repository, docraptorClient docraptor
 	}
 }
 
+// GetTemplates API call
 func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	templates, err := s.templateRepo.GetTemplates()
 	if err != nil {
@@ -55,6 +58,7 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	return templates, nil
 }
 
+// CreateCLAGroupTemplate
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error) {
 	// Verify claGroupID matches an existing CLA Group
 	_, err := s.templateRepo.GetCLAGroup(claGroupID)
@@ -121,6 +125,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	return pdfUrls, nil
 }
 
+// InjectProjectInformationIntoTemplate
 func (s service) InjectProjectInformationIntoTemplate(template models.Template, metaFields []*models.MetaField) (string, string, error) {
 	lookupMap := map[string]models.MetaField{}
 	for _, field := range template.MetaFields {
@@ -140,7 +145,7 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 		}
 	}
 	if len(template.MetaFields) != len(metaFieldsMap) {
-		return "", "", errors.New("Required fields for template were not found")
+		return "", "", errors.New("required fields for template were not found")
 	}
 
 	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, metaFieldsMap)
@@ -156,6 +161,7 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 	return iclaTemplateHTML, cclaTemplateHTML, nil
 }
 
+// SaveTemplateToS3
 func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadCloser) (string, error) {
 	defer template.Close()
 

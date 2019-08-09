@@ -4,6 +4,20 @@ all-projects {
   -ms-user-select: text;
   user-select: text;
 
+  .all-projects-title {
+    color: color($colors, dark) !important;
+  }
+
+  .get-access-button {
+    color: color($colors, secondary) !important;
+    font-size: 14px;
+    padding: 1rem;
+  }
+
+  .get-access-label {
+    color: color($colors, dark) !important;
+  }
+
   .navbar-logo {
     width: 100px;
     position: absolute;
@@ -14,9 +28,17 @@ all-projects {
     border-bottom: 40px solid #4C79B6;
   }
 
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 10px 10px;
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
+    }
+  }
+
   .scroll-content {
     margin-top: 96px !important;
-    padding: 16px 50px 162px !important;
   }
 
   .content {
@@ -101,5 +123,9 @@ all-projects {
     text-align: center;
     font-size: 16px;
     color: #db4e4e;
+  }
+
+  ion-footer {
+    position: relative;
   }
 }
