@@ -663,8 +663,8 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
         if not missing:
             cla.log.debug('EasyCLA App checks pass for PR: {} with authors: {}'.format(pull_request.number, signed))
         else:
-            cla.log.debug('EasyCLA App checks fail for PR: {}. CLA Signatures with siSigned authors: {} Miss'
-                          'with missing CLA signatures, missing authors: {}'.format(pull_request.number, missing))
+            cla.log.debug('EasyCLA App checks fail for PR: {}. CLA signatures with signed authors: {} and '
+                          'with missing authors: {}'.format(pull_request.number, signed, missing))
 
     if both or notification == 'status':
         state = 'failure'
