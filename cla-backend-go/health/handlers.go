@@ -6,6 +6,7 @@ package health
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/health"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -13,13 +14,13 @@ import (
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service Service) {
 
-	api.HealthCheckHandler = operations.HealthCheckHandlerFunc(func(params operations.HealthCheckParams) middleware.Responder {
+	api.HealthHealthCheckHandler = health.HealthCheckHandlerFunc(func(params health.HealthCheckParams) middleware.Responder {
 		result, err := service.HealthCheck(params.HTTPRequest.Context(), params)
 		if err != nil {
-			return operations.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
+			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return operations.NewHealthCheckOK().WithPayload(result)
+		return health.NewHealthCheckOK().WithPayload(result)
 	})
 }
 

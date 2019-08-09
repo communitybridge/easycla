@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/gommon/log"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/health"
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
 )
 
@@ -34,7 +34,7 @@ func New(version, commit, branch, buildDate string) Service {
 }
 
 // HealthCheck API call returns the current health of the service
-func (s Service) HealthCheck(ctx context.Context, in operations.HealthCheckParams) (*models.Health, error) {
+func (s Service) HealthCheck(ctx context.Context, in health.HealthCheckParams) (*models.Health, error) {
 
 	t := time.Now()
 	duration := time.Since(t)
