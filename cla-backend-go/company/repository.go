@@ -18,7 +18,7 @@ import (
 // Repository interface methods
 type Repository interface {
 	GetPendingCompanyInviteRequests(companyID string) ([]Invite, error)
-	GetCompany(CompanyID string) (Company, error)
+	GetCompany(companyID string) (Company, error)
 	DeletePendingCompanyInviteRequest(InviteID string) error
 	AddPendingCompanyInviteRequest(companyID string, userID string) error
 	UpdateCompanyAccessList(companyID string, companyACL []string) error
@@ -52,25 +52,26 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 }
 
 // GetCompany returns a company based on the company ID
-func (repo repository) GetCompany(CompanyID string) (Company, error) {
+func (repo repository) GetCompany(companyID string) (Company, error) {
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_id": {
-				S: aws.String(CompanyID),
+				S: aws.String(companyID),
 			},
 		},
 	})
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Warnf(err.Error())
+		log.Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
 		return Company{}, err
 	}
 
 	company := Company{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &company)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Warnf("error unmarshalling company table data, error: %v", err)
 		return Company{}, err
 	}
 
@@ -96,14 +97,14 @@ func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Invi
 	}
 	companyInviteAV, err := repo.dynamoDBClient.Query(input)
 	if err != nil {
-		fmt.Println("Unable to retrieve data from Company-Invites table", err)
+		log.Warnf("Unable to retrieve data from Company-Invites table, error: %v", err)
 		return nil, err
 	}
 
 	companyInvites := []Invite{}
 	err = dynamodbattribute.UnmarshalListOfMaps(companyInviteAV.Items, &companyInvites)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Warnf("error unmarshalling company invite data, error: %v", err)
 		return nil, err
 	}
 
@@ -124,7 +125,7 @@ func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error 
 
 	_, err := repo.dynamoDBClient.DeleteItem(input)
 	if err != nil {
-		fmt.Println("Unable to delete Company Invite Request", err)
+		log.Warnf("Unable to delete Company Invite Request, error: %v", err)
 		return err
 	}
 
@@ -135,7 +136,7 @@ func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error 
 func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID string) error {
 	companyInviteID, err := uuid.NewV4()
 	if err != nil {
-		fmt.Println("Unable to generate a UUID for a pending invite", err)
+		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
 		return err
 	}
 
@@ -156,7 +157,8 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		fmt.Println("Unable to create a new pending invite", err)
+		log.Warnf("Unable to create a new pending invite, error: %v", err)
+		return err
 	}
 
 	return nil

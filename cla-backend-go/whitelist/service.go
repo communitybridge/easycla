@@ -6,7 +6,10 @@ package whitelist
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+
+	"github.com/labstack/gommon/log"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
@@ -41,6 +44,8 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, claG
 func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupID, githubOrganizationID, githubAccessToken string) error {
 	// Verify the authenticated github user has access to the github organization being added.
 	if githubAccessToken == "" {
+		log.Warnf("unable to add github organization, not logged in using claGroupID: %s, github organization id: %s",
+			claGroupID, githubOrganizationID)
 		return errors.New("unable to add github organization, not logged in")
 	}
 
@@ -68,7 +73,9 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupI
 	}
 
 	if !found {
-		return errors.New("user is not authorized")
+		msg := fmt.Sprintf("user is not authorized for github organization id: %s", githubOrganizationID)
+		log.Warnf(msg)
+		return errors.New(msg)
 	}
 
 	err = s.repo.AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID)

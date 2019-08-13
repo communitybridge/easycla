@@ -139,9 +139,13 @@ func server(localMode bool) http.Handler {
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
 	if localMode {
-		apiHandler = setupGlobalMiddlewareLocal(api.Serve(setupMiddlewares))
+		apiHandler = setupSessionHandler(
+			setupCORSHandlerLocal(
+				api.Serve(setupMiddlewares)), sessionStore)
 	} else {
-		apiHandler = setupGlobalMiddleware(api.Serve(setupMiddlewares), configFile.AllowedOrigins)
+		apiHandler = setupSessionHandler(
+			setupCORSHandler(
+				api.Serve(setupMiddlewares), configFile.AllowedOrigins), sessionStore)
 	}
 
 	return apiHandler
@@ -153,8 +157,8 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 	return responseLoggingMiddleware(handler)
 }
 
-// setupGlobalMiddleware sets up the CORS logic and creates the middleware HTTP handler
-func setupGlobalMiddleware(handler http.Handler, allowedOrigins []string) http.Handler {
+// setupCORSHandler sets up the CORS logic and creates the middleware HTTP handler
+func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handler {
 
 	log.Debugf("Allowed origins: %v", allowedOrigins)
 	c := cors.New(cors.Options{
@@ -189,8 +193,8 @@ func setupGlobalMiddleware(handler http.Handler, allowedOrigins []string) http.H
 	return c.Handler(handler)
 }
 
-// setupGlobalMiddlewareLocal allows all origins and sets up the handler
-func setupGlobalMiddlewareLocal(handler http.Handler) http.Handler {
+// setupCORSHandlerLocal allows all origins and sets up the handler
+func setupCORSHandlerLocal(handler http.Handler) http.Handler {
 
 	log.Debug("Allowing all origins")
 	c := cors.New(cors.Options{
@@ -253,5 +257,39 @@ func responseLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(NewLoggingResponseWriter(w), r)
 		log.Debugf("%s %s, response %d %s\n", r.Method, r.URL.String(), NewLoggingResponseWriter(w).StatusCode, http.StatusText(NewLoggingResponseWriter(w).StatusCode))
+	})
+}
+
+func setupSessionHandler(next http.Handler, sessionStore *dynastore.Store) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		session, err := sessionStore.Get(req, github.SessionStoreKey)
+		if err != nil {
+			log.Warnf("Error fetching session, error: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			next.ServeHTTP(w, req)
+			return
+		}
+
+		if session.IsNew {
+			err := session.Save(req, w)
+			if err != nil {
+				log.Warnf("Error saving session, error: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				next.ServeHTTP(w, req)
+				return
+			}
+		}
+
+		defer func() {
+			err := session.Save(req, w)
+			if err != nil {
+				log.Warnf("Error saving session, error: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				next.ServeHTTP(w, req)
+				return
+			}
+		}()
+
+		next.ServeHTTP(w, req)
 	})
 }

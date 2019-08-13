@@ -49,7 +49,6 @@ func (repo repository) AddGithubOrganizationToWhitelist(CLAGroupID, GithubOrgani
 	})
 	if err != nil {
 		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s and GH Org: %s, error: %v", CLAGroupID, GithubOrganizationID, err)
-		fmt.Println(err.Error())
 		return err
 	}
 
@@ -94,7 +93,7 @@ func (repo repository) AddGithubOrganizationToWhitelist(CLAGroupID, GithubOrgani
 
 	_, err = repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println("Error updating white list : ", err)
+		log.Warnf("Error updating white list, error: %v", err)
 		return err
 	}
 
@@ -116,7 +115,6 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(CLAGroupID, GithubO
 
 	if err != nil {
 		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s and GH Org: %s, error: %v", CLAGroupID, GithubOrganizationID, err)
-		fmt.Println(err.Error())
 		return err
 	}
 
@@ -154,7 +152,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(CLAGroupID, GithubO
 
 	_, err = repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println("Error updating white list : ", err)
+		log.Warnf("Error updating white list, error: %v", err)
 		return err
 	}
 
@@ -176,7 +174,6 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(CLAGroupID string) ([
 
 	if err != nil {
 		log.Warnf("Error retrieving GH organization whitelist for CLAGroupID: %s, error: %v", CLAGroupID, err)
-		fmt.Println(err.Error())
 		return nil, err
 	}
 

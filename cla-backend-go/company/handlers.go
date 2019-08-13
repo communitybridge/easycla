@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/labstack/gommon/log"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -18,6 +19,8 @@ func Configure(api *operations.ClaAPI, service service) {
 	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
 		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.InviteID, params.User.UserLFID)
 		if err != nil {
+			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
+				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
 			return company.NewAddGithubOrganizationFromClaBadRequest()
 		}
 
@@ -27,6 +30,7 @@ func Configure(api *operations.ClaAPI, service service) {
 	api.CompanyGetPendingInviteRequestsHandler = company.GetPendingInviteRequestsHandlerFunc(func(params company.GetPendingInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
 		result, err := service.GetPendingCompanyInviteRequests(params.CompanyID)
 		if err != nil {
+			log.Warnf("error getting pending company invite using company id: %s, error: %v", params.CompanyID, err)
 			return company.NewGetPendingInviteRequestsBadRequest().WithPayload(errorResponse(err))
 		}
 
@@ -37,20 +41,22 @@ func Configure(api *operations.ClaAPI, service service) {
 
 		err := service.SendRequestAccessEmail(params.CompanyID, claUser)
 		if err != nil {
+			log.Warnf("error sending request access email using company id: %s with user: %v, error: %v", params.CompanyID, claUser, err)
 			return company.NewSendInviteRequestBadRequest().WithPayload(errorResponse(err))
 		}
+
 		return company.NewSendInviteRequestOK()
 	})
 
 	api.CompanyDeletePendingInviteHandler = company.DeletePendingInviteHandlerFunc(func(params company.DeletePendingInviteParams, claUser *user.CLAUser) middleware.Responder {
 		err := service.DeletePendingCompanyInviteRequest(params.User.InviteID)
 		if err != nil {
+			log.Warnf("error deleting pending company invite using id: %s, error: %v", params.User.InviteID, err)
 			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
 		}
 
 		return company.NewDeletePendingInviteOK()
 	})
-
 }
 
 type codedResponse interface {

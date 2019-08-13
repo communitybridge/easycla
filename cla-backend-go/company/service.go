@@ -48,7 +48,7 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 	// check if user already exists in the company acl
 	for _, acl := range company.CompanyACL {
 		if acl == lfid {
-			fmt.Println(fmt.Sprintf("User %s has already been added to the company acl", lfid))
+			log.Warnf(fmt.Sprintf("User %s has already been added to the company acl", lfid))
 			err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
 			if err != nil {
 				log.Warnf("Error deleting pending company invite request with inviteID: %s, error: %v", inviteID, err)
@@ -144,7 +144,6 @@ func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) er
 	company, err := s.repo.GetCompany(companyID)
 	if err != nil {
 		log.Warnf("Error fetching company by company ID: %s, error: %v", companyID, err)
-		fmt.Println(err)
 		return err
 	}
 
