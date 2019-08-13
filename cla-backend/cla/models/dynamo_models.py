@@ -1266,7 +1266,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return False
 
     def get_user_github_organizations(self, github_username):
-        # Use the Github API to retrieve github orgs that the user is a member of. 
+        # Use the Github API to retrieve github orgs that the user is a member of (user must be a public member). 
         try:
             r = requests.get('https://api.github.com/users/{}/orgs'.format(github_username))
             r.raise_for_status()
