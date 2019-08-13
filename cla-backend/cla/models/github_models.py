@@ -148,8 +148,9 @@ class GitHub(repository_service_interface.RepositoryService):
         It will handle storing the OAuth2 session information for this user for
         further requests and initiate the signing workflow.
         """
-        cla.log.info('Handling GitHub OAuth2 redirect')
-        session = self._get_request_session(request)
+        cla.log.info('Handling GitHub OAuth2 redirect with request: {}'.format(request))
+        # TODO: should we load the session from the DynamoDB session table based on the 'state' value?
+        session = self._get_request_session(request)  # request.context['session']
 
         cla.log.debug('State: %s', state)
         cla.log.debug('Code: %s', code)

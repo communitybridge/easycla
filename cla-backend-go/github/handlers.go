@@ -37,6 +37,8 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 	api.GithubLoginHandler = gh.LoginHandlerFunc(func(params gh.LoginParams) middleware.Responder {
 		return middleware.ResponderFunc(
 			func(w http.ResponseWriter, pr runtime.Producer) {
+
+				// Get a session. Get() always returns a session, even if empty.
 				session, err := sessionStore.Get(params.HTTPRequest, SessionStoreKey)
 				if err != nil {
 					log.Warnf("Error fetching session store value from key: %s, error: %v", SessionStoreKey, err)
@@ -44,10 +46,11 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 					return
 				}
 
-				log.Debugf("GH Login Handler loaded the http session: %v", session)
+				log.Debugf("GH Login Handler loaded the http session (%s): %v", session.Name(), session)
 
 				// Store the callback url so we can redirect back to it once logged in.
 				session.Values["callback"] = params.Callback
+				//session.Values[""] = params.
 
 				// Generate a csrf token to send
 				state, err := uuid.NewV4()
@@ -67,6 +70,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 				}
 
 				log.Debugf("GH Login handler saved the http session: %v", session)
+				log.Debugf("redirecting flow to %s", oauthConfig.AuthCodeURL(state.String()))
 				http.Redirect(w, params.HTTPRequest, oauthConfig.AuthCodeURL(state.String()), http.StatusFound)
 			})
 	})
