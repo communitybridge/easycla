@@ -139,13 +139,13 @@ func server(localMode bool) http.Handler {
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
 	if localMode {
-		apiHandler = setupSessionHandler(
-			setupCORSHandlerLocal(
-				api.Serve(setupMiddlewares)), sessionStore)
+		apiHandler = setupCORSHandlerLocal(api.Serve(setupMiddlewares))
+		// For auto session save/load, use:
+		//apiHandler = setupSessionHandler(
+		//	setupCORSHandlerLocal(
+		//		api.Serve(setupMiddlewares)), sessionStore)
 	} else {
-		apiHandler = setupSessionHandler(
-			setupCORSHandler(
-				api.Serve(setupMiddlewares), configFile.AllowedOrigins), sessionStore)
+		apiHandler = setupCORSHandler(api.Serve(setupMiddlewares), configFile.AllowedOrigins)
 	}
 
 	return apiHandler
@@ -260,6 +260,7 @@ func responseLoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+/*
 func setupSessionHandler(next http.Handler, sessionStore *dynastore.Store) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		session, err := sessionStore.Get(req, github.SessionStoreKey)
@@ -293,3 +294,4 @@ func setupSessionHandler(next http.Handler, sessionStore *dynastore.Store) http.
 		next.ServeHTTP(w, req)
 	})
 }
+*/
