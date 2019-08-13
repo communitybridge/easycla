@@ -5,6 +5,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -94,8 +95,10 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret string, sessionSto
 				}
 
 				if params.State != persistedState {
-					log.Warnf("mismatch state, error: %s != %s", params.State, persistedState)
-					http.Error(w, "mismatch state", http.StatusInternalServerError)
+					msg := fmt.Sprintf("mismatch state, received: %s from callback, but loaded our state as: %s",
+						params.State, persistedState)
+					log.Warnf(msg)
+					http.Error(w, msg, http.StatusInternalServerError)
 					return
 				}
 
