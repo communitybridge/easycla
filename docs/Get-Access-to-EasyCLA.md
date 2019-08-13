@@ -1,21 +1,15 @@
-# General Linux Foundation Onboarding
+# Get Access to EasyCLA
 
-If you do not have a Linux Foundation identification (LF ID), go to https://identity.linuxfoundation.org and complete the form to sign up.
+**Important:** Before you get started, make sure your project meets the [EasyCLA Requirements](EasyCLA-Requirements.md).
 
-# Project Manager Onboarding
-In an email to the CLA Admin team, include:
-1. Your LF ID
-2. Your Project's Name
-3. A sample ICLA Document (if applicable)
-4. A sample CCLA Document
-5. After the EasyCLA administration team has confirmed your setup, log in to https://project.lfcla.com/ and manage your projects.
+**As the CLA manager, do these steps to get access to EasyCLA:**
 
-# CLA Manager and Maintainer Onboarding
-You can immediately start using the CLA Corporate Console because it does not require activation from the EasyCLA administration team.
+1. If you do not have a Linux Foundation identification and credentials, go to <https://identity.linuxfoundation.org> and complete the form to sign up.
 
-1. Log in to the CLA Corporate Console. 
-2. Sign a CCLA on behalf of your companies.
-3. Whitelist domains (for example, linuxfoundation.org)
- - Everyone who contributes to your codebase with emails that match the domains you add will automatically be covered by your signed CCLA.
-5. Whitelist individual employee contributors.
- - Everyone who contributes to your codebase with emails that **DO NOT** match the domains you add will automatically be covered by your signed CCLA when you add them to this list.
+1. Share your sign-up username with the CLA administration team at <docucla@linuxfoundation.org>.
+
+1. Provide sample ICLA and CCLA template documents to the CLA administration team at <docucla@linuxfoundation.org>.
+
+After the CLA administration team confirms your setup, you can [Sign In to the CLA Management Console](Sign-In-to-the-CLA-Management-Console.md) to do the EasyCLA activities for [Project Managers](Project-Managers.md).
+
+**Note:** CLA managers can immediately start using the CLA Corporate Console because it does not require activation from the EasyCLA administration team. Simply [Sign In to the CLA Corporate Console](Sign-In-to-the-CLA-Corporate-Console.md) to do the EasyCLA activities for [CLA Managers and CLA Signatories](CLA-Managers-and-CLA-Signatories.md).
