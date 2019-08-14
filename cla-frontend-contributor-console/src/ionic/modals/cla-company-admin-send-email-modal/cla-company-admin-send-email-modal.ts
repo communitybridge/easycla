@@ -47,6 +47,7 @@ export class ClaCompanyAdminSendEmailModal {
       useremail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       adminemail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
       adminname:[''],
+      username:[''],
     });
   }
 
@@ -113,7 +114,8 @@ export class ClaCompanyAdminSendEmailModal {
         user_email: this.form.value.useremail,
         admin_email: this.form.value.adminemail,
         admin_name: this.form.value.adminname,
-        project_name: project.project_name
+        project_name: project.project_name,
+        user_name: this.form.value.username,
       };
       this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(response => {
         this.emailSent();
