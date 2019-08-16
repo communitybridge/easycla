@@ -40,11 +40,7 @@ export class GithubOrgWhitelistModal {
   }
 
   getGitHubOrgWhiteList() {
-    // this.claService.getGithubOrganizationWhitelist(this.signatureId, this.companyId, this.corporateClaId)
-    //   .subscribe(organizations => {
-    //     this.organizations = organizations;
-    //   });
-    console.log('getOrgWhitelist - using signature id: ' + this.signatureId);
+    console.log('getGitHubOrgWhiteList - using signature id: ' + this.signatureId);
     this.claService.getGithubOrganizationWhitelistEntries(this.signatureId)
       .subscribe(organizations => {
         this.organizations = organizations;
@@ -52,14 +48,13 @@ export class GithubOrgWhitelistModal {
   }
 
   addGitHubOrgWhiteList(organizationId) {
-    console.log('addOrgWhitelist - using signature id: ' + this.signatureId);
+    console.log('addGitHubOrgWhiteList - using signature id: ' + this.signatureId);
     this.claService.addGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
       .subscribe(() => this.getGitHubOrgWhiteList());
-    //this.claService.addGithubOrganizationWhitelist(this.signatureId, this.companyId, this.corporateClaId, organizationId)
-    //  .subscribe(() => this.getOrgWhitelist());
   }
 
   removeGitHubOrgWhiteList(organizationId) {
+    console.log('removeGitHubOrgWhiteList - using signature id: ' + this.signatureId);
     this.claService.removeGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
       .subscribe(() => this.getGitHubOrgWhiteList());
   }

@@ -19,7 +19,7 @@ import (
 type SignatureRepository interface {
 	GetGithubOrganizationsFromWhitelist(signatureID string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
-	DeleteGithubOrganizationFromWhitelist(signatureID, githubOrganizationID string) error
+	DeleteGithubOrganizationFromWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
 }
 
 // repository data model
@@ -117,6 +117,9 @@ func (repo repository) AddGithubOrganizationToWhitelist(signatureID, GithubOrgan
 		S: aws.String(GithubOrganizationID),
 	})
 
+	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
+	addReturnValues := "ALL_NEW" // nolint
+
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(tableName),
@@ -134,20 +137,30 @@ func (repo repository) AddGithubOrganizationToWhitelist(signatureID, GithubOrgan
 			},
 		},
 		UpdateExpression: aws.String("SET #L = :l"),
+		ReturnValues:     &addReturnValues,
 	}
 
 	log.Warnf("updating database record using signatureID: %s with values: %v", signatureID, newList)
-	_, err = repo.dynamoDBClient.UpdateItem(input)
+	updatedValues, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
 		log.Warnf("Error updating white list, error: %v", err)
 		return nil, err
 	}
 
-	return buildResponse(itemFromMap.L), nil
+	updatedItemFromMap, ok := updatedValues.Attributes["github_org_whitelist"]
+	if !ok {
+		msg := fmt.Sprintf("unable to fetch updated whitelist organization values for "+
+			"organization id: %s for signature: %s - list is empty - returning empty list",
+			GithubOrganizationID, signatureID)
+		log.Debugf(msg)
+		return []models.GithubOrg{}, nil
+	}
+
+	return buildResponse(updatedItemFromMap.L), nil
 }
 
 // DeleteGithubOrganizationFromWhitelist removes the specified GH organization from the whitelist
-func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, GithubOrganizationID string) error {
+func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, GithubOrganizationID string) ([]models.GithubOrg, error) {
 	// get item from dynamoDB table
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -162,14 +175,14 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 	if err != nil {
 		log.Warnf("Error retrieving GH organization whitelist for signatureID: %s and GH Org: %s, error: %v",
 			signatureID, GithubOrganizationID, err)
-		return err
+		return nil, err
 	}
 
 	itemFromMap, ok := result.Item["github_org_whitelist"]
 	if !ok {
 		log.Warnf("unable to remove whitelist organization: %s for signature: %s - list is empty",
 			GithubOrganizationID, signatureID)
-		return errors.New("no github_org_whitelist column")
+		return nil, errors.New("no github_org_whitelist column")
 	}
 
 	// generate new List L without element to be deleted
@@ -179,6 +192,9 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 			newList = append(newList, element)
 		}
 	}
+
+	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
+	updatedReturnValues := "ALL_NEW" // nolint
 
 	// update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
@@ -197,15 +213,25 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 			},
 		},
 		UpdateExpression: aws.String("SET #L = :l"),
+		ReturnValues:     &updatedReturnValues,
 	}
 
-	_, err = repo.dynamoDBClient.UpdateItem(input)
+	updatedValues, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
 		log.Warnf("Error updating github org whitelist, error: %v", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	updatedItemFromMap, ok := updatedValues.Attributes["github_org_whitelist"]
+	if !ok {
+		msg := fmt.Sprintf("unable to fetch updated whitelist organization values for "+
+			"organization id: %s for signature: %s - list is empty - returning empty list",
+			GithubOrganizationID, signatureID)
+		log.Debugf(msg)
+		return []models.GithubOrg{}, nil
+	}
+
+	return buildResponse(updatedItemFromMap.L), nil
 }
 
 // buildResponse converts a database model to a GitHub organization response model
