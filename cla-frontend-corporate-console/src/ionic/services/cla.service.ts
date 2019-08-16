@@ -1331,7 +1331,7 @@ export class ClaService {
   /**
    * /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg
    **/
-  getGithubOrganizationWhitelist(companyID, corporateClaID) {
+  getGithubOrganizationWhitelist(signatureID, companyID, corporateClaID) {
     if (this.localTesting) {
       return this.http
         .getWithCreds(this.v3ClaAPIURLLocal + `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`)
@@ -1344,9 +1344,47 @@ export class ClaService {
   }
 
   /**
+   * GET /signatures/{signatureID}
+   **/
+  getGithubOrganizationWhitelistEntries(signatureID) {
+    const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
+    if (this.localTesting) {
+      return this.http.getWithCreds(this.v3ClaAPIURLLocal + path).map(res => res.json());
+    } else {
+      return this.http.getWithCreds(this.claApiUrl + path).map(res => res.json());
+    }
+  }
+
+  /**
+   * POST /signatures/{signatureID}
+   **/
+  addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
+    const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
+    const data = {"organization_id": organizationId};
+    if (this.localTesting) {
+      return this.http.postWithCreds(this.v3ClaAPIURLLocal + path, data).map(res => res.json());
+    } else {
+      return this.http.postWithCreds(this.claApiUrl + path, data).map(res => res.json());
+    }
+  }
+
+  /**
+   * DELETE /signatures/{signatureID}
+   **/
+  removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
+    const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
+    const data = {"organization_id": organizationId};
+    if (this.localTesting) {
+      return this.http.delete(this.v3ClaAPIURLLocal + path, data).map(res => res.json());
+    } else {
+      return this.http.delete(this.claApiUrl + path, data).map(res => res.json());
+    }
+  }
+
+  /**
    * /company/{companyID}/cla/{corporateClaID}/whitelist/githuborg
    **/
-  addGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
+  addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     if (this.localTesting) {
       return this.http
         .postWithCreds(this.v3ClaAPIURLLocal + `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`, {"id": organizationId})

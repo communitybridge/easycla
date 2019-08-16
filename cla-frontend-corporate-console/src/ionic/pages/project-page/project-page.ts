@@ -228,7 +228,8 @@ export class ProjectPage {
   openGithubOrgWhitelistModal () {
     let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
       companyId: this.companyId,
-      corporateClaId: this.projectId
+      corporateClaId: this.projectId,
+      signatureId: this.cclaSignature.signature_id
     });
     modal.onDidDismiss(data => {});
     modal.present();

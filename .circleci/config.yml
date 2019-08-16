@@ -41,7 +41,7 @@ jobs:
           name: Build
           command: |
             cd cla-backend-go
-            make build_aws_lambda
+            make build-aws-lambda
       - run:
           name: Test
           command: |

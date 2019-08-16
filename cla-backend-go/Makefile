@@ -61,7 +61,7 @@ build-mac: deps
 	env GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(SERVICE) main.go
 	chmod +x cla
 
-build_aws_lambda: deps
+build-aws-lambda: deps
 	env GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o backend_aws_lambda main.go
 	chmod +x backend_aws_lambda
 

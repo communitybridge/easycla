@@ -26,7 +26,5 @@ export class ClaSignatureModel {
   github_whitelist: Array<string>;
 
   constructor() {
-
   }
-
 }
