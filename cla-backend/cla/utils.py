@@ -590,7 +590,7 @@ def assemble_cla_status(author_name, signed=False):
     if author_name is None:
         author_name = 'Unknown'
     if signed:
-        return (author_name, 'Thank you for signing the CLA.')
+        return (author_name, 'EasyCLA check passed. You are authorized to contribute.')
     return (author_name, 'Missing CLA Authorization.')
 
 def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
