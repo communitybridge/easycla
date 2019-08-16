@@ -69,14 +69,26 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	// Delete GitHub Whitelist Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams) middleware.Responder {
 
-		err := service.DeleteGithubOrganizationFromWhitelist(params.HTTPRequest.Context(), params.SignatureID, params.Body)
+		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
+		if err != nil {
+			log.Warnf("error retrieving session from the session store, error: %v", err)
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+		}
+
+		githubAccessToken, ok := session.Values["github_access_token"].(string)
+		if !ok {
+			log.Debugf("no github access token in the session - initializing to empty string")
+			githubAccessToken = ""
+		}
+
+		ghWhiteList, err := service.DeleteGithubOrganizationFromWhitelist(params.HTTPRequest.Context(), params.SignatureID, params.Body, githubAccessToken)
 		if err != nil {
 			log.Warnf("error deleting github organization %v using signature_id: %s from the whitelist, error: %v",
 				params.Body.OrganizationID, params.SignatureID, err)
 			return company.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return company.NewDeleteGithubOrganizationFromClaOK()
+		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
 	})
 }
 
