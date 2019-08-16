@@ -22,12 +22,12 @@
 
             <button type="button" ion-button color="light" size="small"
                     *ngIf="!organization.selected"
-                    (click)="addOrganization(organization.id)">
+                    (click)="addGitHubOrgWhiteList(organization.id)">
               Add
             </button>
             <button type="button" ion-button color="light" size="small" class="remove"
                     *ngIf="organization.selected"
-                    (click)="removeOrganization(organization.id)">
+                    (click)="removeGitHubOrgWhiteList(organization.id)">
               Remove
             </button>
           </div>

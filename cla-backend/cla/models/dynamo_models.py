@@ -1211,11 +1211,17 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         # Check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
+        cla.log.debug('is_whitelisted - testing request emails: {} with '
+                      'whitelist emails values in database: {}'.
+                      format(emails, whitelist))
         if whitelist is not None:
             for email in emails:
                 if email in whitelist:
                     self.log_debug('found user email in email whitelist')
                     return True
+        else:
+            cla.log.debug('is_whitelisted - no email whitelist defined in the database'
+                          '- skipping email whitelist check')
 
         # Check domain whitelist
         # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
@@ -1223,6 +1229,9 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
         patterns = ccla_signature.get_domain_whitelist()
+        cla.log.debug('is_whitelisted - testing email domains: {} with '
+                      'whitelist domain values in database: {}'.
+                      format(emails, patterns))
         if patterns is not None:
             for pattern in patterns:
 
@@ -1239,6 +1248,9 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                     if pat.match(email) != None:
                         self.log_debug('found user email in email whitelist pattern')
                         return True
+        else:
+            cla.log.debug('is_whitelisted - no domain whitelist patterns defined in the database'
+                          '- skipping domain whitelist check')
 
         # Check github whitelist
         github_username = self.get_github_username()
@@ -1246,6 +1258,9 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             # remove leading and trailing whitespace from github username
             github_username = github_username.strip()
             github_whitelist = ccla_signature.get_github_whitelist()
+            cla.log.debug('is_whitelisted - testing github username: {} with '
+                          'github whitelist values in database: {}'.
+                          format(github_username, github_whitelist))
             if github_whitelist is not None:
                 if github_username in github_whitelist:
                     self.log_debug('found github username in github whitelist')
@@ -1256,11 +1271,17 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             github_orgs = self.get_user_github_organizations(github_username)
             if 'error' not in github_orgs:
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
+                cla.log.debug('is_whitelisted - testing user github orgs: {} with '
+                              'github org whitelist values in database: {}'.
+                              format(github_orgs, github_org_whitelist))
                 if github_org_whitelist is not None:
                     for dynamo_github_org in github_org_whitelist:
                         if dynamo_github_org in github_orgs:
                             self.log_debug('found github org in github org whitelist')
                             return True
+        else:
+            cla.log.debug('is_whitelisted - users github_username is not defined '
+                          '- skipping github username whitelist check and github org check')
 
         self.log_debug('unable to find user in any whitelist')
         return False

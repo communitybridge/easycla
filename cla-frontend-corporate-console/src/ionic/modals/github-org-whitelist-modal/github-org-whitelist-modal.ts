@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import {Component} from '@angular/core';
-import {NavParams, ViewController, IonicPage, Events} from 'ionic-angular';
+import {Events, IonicPage, NavParams, ViewController} from 'ionic-angular';
 import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
@@ -17,6 +17,7 @@ export class GithubOrgWhitelistModal {
   organizations: any[] = [];
   corporateClaId: any;
   companyId: any;
+  signatureId: string;
 
   constructor(
     public navParams: NavParams,
@@ -26,6 +27,8 @@ export class GithubOrgWhitelistModal {
   ) {
     this.corporateClaId = this.navParams.get('corporateClaId');
     this.companyId = this.navParams.get('companyId');
+    this.signatureId = this.navParams.get('signatureId');
+    console.log('constructor - loaded signature id: ' + this.signatureId);
 
     events.subscribe('modal:close', () => {
       this.dismiss();
@@ -33,31 +36,39 @@ export class GithubOrgWhitelistModal {
   }
 
   ngOnInit() {
-    this.getOrgWhitelist();
+    this.getGitHubOrgWhiteList();
   }
 
-  getOrgWhitelist () {
-    this.claService.getGithubOrganizationWhitelist(this.companyId, this.corporateClaId)
+  getGitHubOrgWhiteList() {
+    // this.claService.getGithubOrganizationWhitelist(this.signatureId, this.companyId, this.corporateClaId)
+    //   .subscribe(organizations => {
+    //     this.organizations = organizations;
+    //   });
+    console.log('getOrgWhitelist - using signature id: ' + this.signatureId);
+    this.claService.getGithubOrganizationWhitelistEntries(this.signatureId)
       .subscribe(organizations => {
         this.organizations = organizations;
-      })
+      });
   }
 
-  addOrganization(organizationId) {
-    this.claService.addGithubOrganizationWhitelist(this.companyId, this.corporateClaId, organizationId)
-      .subscribe(() => this.getOrgWhitelist());
+  addGitHubOrgWhiteList(organizationId) {
+    console.log('addOrgWhitelist - using signature id: ' + this.signatureId);
+    this.claService.addGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
+      .subscribe(() => this.getGitHubOrgWhiteList());
+    //this.claService.addGithubOrganizationWhitelist(this.signatureId, this.companyId, this.corporateClaId, organizationId)
+    //  .subscribe(() => this.getOrgWhitelist());
   }
 
-  removeOrganization(organizationId) {
-    this.claService.removeGithubOrganizationWhitelist(this.companyId, this.corporateClaId, organizationId)
-      .subscribe(() => this.getOrgWhitelist());
+  removeGitHubOrgWhiteList(organizationId) {
+    this.claService.removeGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
+      .subscribe(() => this.getGitHubOrgWhiteList());
   }
 
   dismiss() {
     this.viewCtrl.dismiss();
   }
 
-  connectGithub (){
+  connectGithub() {
     this.claService.githubLogin(this.companyId, this.corporateClaId);
   }
 }
