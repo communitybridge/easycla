@@ -26,7 +26,7 @@ import {WhitelistModal} from "../../modals/whitelist-modal/whitelist-modal";
 export class ProjectPage {
   cclaSignature: ClaSignatureModel;
   employeeSignatures: ClaSignatureModel[];
-  githubOrgWhitelist: string[];
+  githubOrgWhitelist: any[] = [];
   loading: any;
   companyId: string;
   projectId: string;
@@ -98,7 +98,7 @@ export class ProjectPage {
     this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
       // console.log('received GH Org Whitelist response: ');
       // console.log(organizations);
-      this.githubOrgWhitelist = organizations.map((org) => org.id);
+      this.githubOrgWhitelist = organizations;
     });
   }
 
@@ -232,15 +232,40 @@ export class ProjectPage {
   }
 
   openGithubOrgWhitelistModal() {
-    let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
-      companyId: this.companyId,
-      corporateClaId: this.projectId,
-      signatureId: this.cclaSignature.signature_id
-    });
-    modal.onDidDismiss(data => {
-      // Refresh the list
-      this.getGitHubOrgWhitelist();
-    });
-    modal.present();
+    // Maybe this happens if we authorize GH and come back after the flow and we haven't fully loaded...
+    if (this.cclaSignature == null) {
+      this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
+        .subscribe(response => {
+          let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
+          if (cclaSignatures.length) {
+            this.cclaSignature = cclaSignatures[0];
+            this.getCLAManagers();
+            this.getGitHubOrgWhitelist();
+
+            // Ok to open the modal now that we have signatures loaded
+            let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+              companyId: this.companyId,
+              corporateClaId: this.projectId,
+              signatureId: this.cclaSignature.signature_id
+            });
+            modal.onDidDismiss(data => {
+              // Refresh the list
+              this.getGitHubOrgWhitelist();
+            });
+            modal.present();
+          }
+        });
+    } else {
+      let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+        companyId: this.companyId,
+        corporateClaId: this.projectId,
+        signatureId: this.cclaSignature.signature_id
+      });
+      modal.onDidDismiss(data => {
+        // Refresh the list
+        this.getGitHubOrgWhitelist();
+      });
+      modal.present();
+    }
   }
 }
