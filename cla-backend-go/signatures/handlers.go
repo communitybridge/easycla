@@ -72,7 +72,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %v", err)
-			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)

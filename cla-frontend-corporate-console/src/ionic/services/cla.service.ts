@@ -1387,7 +1387,7 @@ export class ClaService {
       url = new URL(this.claApiUrl + path);
     }
     //console.log('deleting github org whitelist using url: ' + url);
-    return this.http.deleteWithBody(url, data).map(res => res.json());
+    return this.http.deleteWithCredsAndBody(url, data).map(res => res.json());
   }
 
   /**
