@@ -30,6 +30,9 @@ func init() {
 		"USE_MOCK":           "False",
 		"DB_MAX_CONNECTIONS": 1,
 		"STAGE":              "dev",
+
+		// should we validate the user's GitHub organizations?
+		"GH_ORG_VALIDATION": "true",
 	}
 
 	for key, value := range defaults {

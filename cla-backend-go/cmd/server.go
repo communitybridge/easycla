@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strconv"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 
@@ -70,6 +71,13 @@ func server(localMode bool) http.Handler {
 		log.Fatalf("unable to get hostname. Error: %v", err)
 	}
 
+	// Grab a couple of configuration settings
+	githubOrgValidation, err := strconv.ParseBool(viper.GetString("GH_ORG_VALIDATION"))
+	if err != nil {
+		log.Fatalf("GH_ORG_VALIDATION value must be a boolean string. Error: %v", err)
+	}
+	stage := viper.GetString("STAGE")
+
 	log.Infof("Service %s starting...", ini.ServiceName)
 
 	// Show the version and build info
@@ -80,6 +88,8 @@ func server(localMode bool) http.Handler {
 	log.Infof("Build date            : %s", BuildDate)
 	log.Infof("Golang OS             : %s", runtime.GOOS)
 	log.Infof("Golang Arch           : %s", runtime.GOARCH)
+	log.Infof("GH_ORG_VALIDATION     : %t", githubOrgValidation)
+	log.Infof("STAGE                 : %s", stage)
 	log.Infof("Service Host          : %s", host)
 	log.Infof("Service Port          : %d", *portFlag)
 
@@ -88,7 +98,7 @@ func server(localMode bool) http.Handler {
 		log.Panicf("Unable to load AWS session - Error: %v", err)
 	}
 
-	configFile, err := config.LoadConfig(configFile, awsSession, viper.GetString("STAGE"))
+	configFile, err := config.LoadConfig(configFile, awsSession, stage)
 	if err != nil {
 		log.Panicf("Unable to load config - Error: %v", err)
 	}
@@ -113,16 +123,16 @@ func server(localMode bool) http.Handler {
 		logrus.Panic(err)
 	}
 
-	userRepo := user.NewDynamoRepository(awsSession, viper.GetString("STAGE"), configFile.SenderEmailAddress)
-	templateRepo := template.NewRepository(awsSession, viper.GetString("STAGE"))
-	whitelistRepo := whitelist.NewRepository(awsSession, viper.GetString("STAGE"))
-	signaturesRepo := signatures.NewRepository(awsSession, viper.GetString("STAGE"))
-	companyRepo := company.NewRepository(awsSession, viper.GetString("STAGE"))
+	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
+	templateRepo := template.NewRepository(awsSession, stage)
+	whitelistRepo := whitelist.NewRepository(awsSession, stage)
+	signaturesRepo := signatures.NewRepository(awsSession, stage)
+	companyRepo := company.NewRepository(awsSession, stage)
 
 	healthService := health.New(Version, Commit, Branch, BuildDate)
-	templateService := template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
+	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
-	signaturesService := signatures.NewService(signaturesRepo)
+	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
