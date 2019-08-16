@@ -1348,11 +1348,14 @@ export class ClaService {
    **/
   getGithubOrganizationWhitelistEntries(signatureID) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
+    let url: URL;
     if (this.localTesting) {
-      return this.http.getWithCreds(this.v3ClaAPIURLLocal + path).map(res => res.json());
+      url = new URL(this.v3ClaAPIURLLocal + path);
     } else {
-      return this.http.getWithCreds(this.claApiUrl + path).map(res => res.json());
+      url = new URL(this.claApiUrl + path);
     }
+    // console.log('retrieving github org whitelist using url: ' + url);
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -1361,11 +1364,14 @@ export class ClaService {
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
     const data = {"organization_id": organizationId};
+    let url: URL;
     if (this.localTesting) {
-      return this.http.postWithCreds(this.v3ClaAPIURLLocal + path, data).map(res => res.json());
+      url = new URL(this.v3ClaAPIURLLocal + path);
     } else {
-      return this.http.postWithCreds(this.claApiUrl + path, data).map(res => res.json());
+      url = new URL(this.claApiUrl + path);
     }
+    // console.log('adding github org whitelist using url: ' + url);
+    return this.http.postWithCreds(url, data).map(res => res.json());
   }
 
   /**
@@ -1374,11 +1380,14 @@ export class ClaService {
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
     const data = {"organization_id": organizationId};
+    let url: URL;
     if (this.localTesting) {
-      return this.http.delete(this.v3ClaAPIURLLocal + path, data).map(res => res.json());
+      url = new URL(this.v3ClaAPIURLLocal + path);
     } else {
-      return this.http.delete(this.claApiUrl + path, data).map(res => res.json());
+      url = new URL(this.claApiUrl + path);
     }
+    //console.log('deleting github org whitelist using url: ' + url);
+    return this.http.deleteWithBody(url, data).map(res => res.json());
   }
 
   /**
