@@ -27,14 +27,15 @@
         <ion-card>
           <ion-card-content>
             <ion-card-title>
-                Confirmation of Association with {{ company.company_name }}
+              Confirmation of Association with {{ company.company_name }}
             </ion-card-title>
             <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
-              <p>
-                I hereby confirm that I am still affiliated with the company: {{ company.company_name }}.
-              </p>
               <ion-item>
-                <ion-label stacked>I agree &amp; verify that I have the legal authority to sign this form</ion-label>
+                <ion-label stacked>
+                  <p>
+                    I hereby confirm that I am still affiliated with the company: {{ company.company_name }}.
+                  </p>
+                </ion-label>
                 <ion-checkbox formControlName="agree" required></ion-checkbox>
               </ion-item>
               <ion-item *ngIf="!form.controls.agree.valid && (form.controls.agree.touched || submitAttempt)" no-lines>

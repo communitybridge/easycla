@@ -4,6 +4,7 @@ cla-landing {
   }
 }
 
+
 .cla-header {
   border-bottom: 40px solid #4C79B6;
 
@@ -31,5 +32,14 @@ cla-landing {
 
   .scroll-content {
     padding-bottom: 162px;
+  }
+}
+
+.page-content {
+  min-height: calc(100vh - 500px);
+  padding: 10px 10px;
+
+  @media (min-width: 768px) and (max-width: 1200px) {
+    padding: 16px 50px 100px;
   }
 }
