@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/gommon/log"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
@@ -59,6 +59,7 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupI
 		PerPage: 100,
 	}
 
+	log.Debugf("querying for user's github organizations...")
 	orgs, _, err := client.Organizations.List(ctx, "", opt)
 	if err != nil {
 		return err
@@ -80,6 +81,8 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupI
 
 	err = s.repo.AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID)
 	if err != nil {
+		log.Warnf("issue adding github organization to white list using claGroupID: %s, gh org id: %s, error: %v",
+			claGroupID, githubOrganizationID, err)
 		return err
 	}
 
@@ -90,16 +93,20 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, claGroupI
 func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, claGroupID, githubAccessToken string) ([]models.GithubOrg, error) {
 	orgIds, err := s.repo.GetGithubOrganizationsFromWhitelist(claGroupID)
 	if err != nil {
+		log.Warnf("error loading github organization from whitelist using id: %s, error: %v",
+			claGroupID, err)
 		return nil, err
 	}
 
 	if githubAccessToken != "" {
+		log.Debugf("already authenticated with github - scanning for user's orgs...")
+
 		selectedOrgs := make(map[string]struct{}, len(orgIds))
 		for _, selectedOrg := range orgIds {
 			selectedOrgs[*selectedOrg.ID] = struct{}{}
 		}
 
-		// Since we're logged into github, lets get the list of organizaiton we can add.
+		// Since we're logged into github, lets get the list of organization we can add.
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)

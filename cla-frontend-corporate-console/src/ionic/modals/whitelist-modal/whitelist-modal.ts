@@ -1,18 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  ModalController,
-  ViewController,
-  AlertController,
-  IonicPage
-} from "ionic-angular";
-import { FormBuilder, FormGroup, Validators, FormArray } from "@angular/forms";
-import { ClaService } from "../../services/cla.service";
-import { ClaSignatureModel } from "../../models/cla-signature";
+import {Component} from "@angular/core";
+import {IonicPage, NavParams, ViewController} from "ionic-angular";
+import {FormArray, FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {ClaService} from "../../services/cla.service";
+import {ClaSignatureModel} from "../../models/cla-signature";
 
 @IonicPage({
   segment: "whitelist-modal"
@@ -73,7 +66,7 @@ export class WhitelistModal {
     } else if (this.type === "email") {
       // emails
       regexForItem = /^.+@.+\..+$/i;
-    } else { 
+    } else {
       // github usernames
       regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i
     }
@@ -97,7 +90,7 @@ export class WhitelistModal {
     } else if (this.type === "email") {
       // emails
       regexForItem = /^.+@.+\..+$/i;
-    } else { 
+    } else {
       // github usernames
       regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,}$/i
     }
@@ -136,7 +129,7 @@ export class WhitelistModal {
       return;
     }
 
-    let signature = new ClaSignatureModel()
+    let signature = new ClaSignatureModel();
     signature.signature_id = this.signatureId;
 
     if (this.type === "domain") {

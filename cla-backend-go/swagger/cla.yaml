@@ -73,6 +73,80 @@ paths:
       tags:
         - docs
 
+  /signatures/{signatureID}/gh-org-whitelist:
+    get:
+      summary: Signature Update
+      security: []
+      operationId: getGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+    delete:
+      summary: Signature Update
+      security: []
+      operationId: deleteGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/gh-org-whitelist'
+      responses:
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+    post:
+      summary: Signature Update
+      security: []
+      operationId: addGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/gh-org-whitelist'
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
   /project:
     get:
       summary: Get Project IDs based on PM
@@ -327,13 +401,13 @@ paths:
     get:
       summary: API to retrieve pending invite requests
       security:
-        - OauthSecurity: 
-          - company
+        - OauthSecurity:
+            - company
       operationId: getPendingInviteRequests
       responses:
         '200':
           description: 'Success'
-          schema: 
+          schema:
             type: array
             items:
               $ref: '#/definitions/company-invite-user'
@@ -358,8 +432,8 @@ paths:
     post:
       summary: Add user to CLA accesslist
       security:
-        - OauthSecurity: 
-          - company
+        - OauthSecurity:
+            - company
       operationId: addUsertoCompanyAccessList
       responses:
         '200':
@@ -377,8 +451,8 @@ paths:
     delete:
       summary: Delete user from pending invites
       security:
-        - OauthSecurity: 
-          - company
+        - OauthSecurity:
+            - company
       operationId: deletePendingInvite
       responses:
         '200':
@@ -403,8 +477,8 @@ paths:
     post:
       summary: Send Email to Company Admins for Request of Access to be a CLA Manager
       security:
-        - OauthSecurity: 
-          - company
+        - OauthSecurity:
+            - company
       operationId: sendInviteRequest
       responses:
         '200':
@@ -444,13 +518,13 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/github-org'  
+              $ref: '#/definitions/github-org'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
-          $ref: '#/responses/forbidden'    
+          $ref: '#/responses/forbidden'
       tags:
         - company
     post:
@@ -582,6 +656,17 @@ paths:
         - github
 
 definitions:
+  gh-org-whitelist:
+    type: object
+    x-nullable: false
+    title: Github Organization Whitelist
+    description: Github Organiation Whitelist
+    properties:
+      organization_id:
+        type: string
+    required:
+      - organization_id
+
   github-org:
     type: object
     x-nullable: false
@@ -594,7 +679,7 @@ definitions:
         type: boolean
         default: false
     required:
-    - id
+      - id
   company-invite-user:
     type: object
     x-nullable: false
@@ -606,7 +691,7 @@ definitions:
       inviteId:
         type: string
       userEmail:
-        type: string  
+        type: string
       userLFID:
         type: string
   access-list-user:
@@ -627,8 +712,8 @@ definitions:
     properties:
       sfdcId:
         type: string
-      name: 
-        type: string 
+      name:
+        type: string
       description:
         type: string
       logoUrl:
@@ -671,7 +756,7 @@ definitions:
           $ref: '#/definitions/gerrit'
         readOnly: true
     required:
-    - name
+      - name
   contract-template:
     type: object
     x-nullable: false
@@ -686,8 +771,8 @@ definitions:
       type:
         type: string
         enum:
-        - CCLA
-        - ICLA
+          - CCLA
+          - ICLA
       document:
         type: string
       majorVersion:
@@ -761,7 +846,7 @@ definitions:
         type: string
       ldapGroupName:
         type: string
-      url: 
+      url:
         type: string
       createdBy:
         readOnly: true
@@ -770,9 +855,9 @@ definitions:
         readOnly: true
         type: string
     required:
-    - ldapGroupId
-    - ldapGroupName
-    - url
+      - ldapGroupId
+      - ldapGroupName
+      - url
   contract-group-signatures:
     type: object
     x-nullable: false
@@ -786,7 +871,7 @@ definitions:
         type: string
       cclaSignatures:
         type: array
-        items: 
+        items:
           $ref: '#/definitions/ccla-signature-details'
       iclaSignatures:
         type: array
@@ -794,7 +879,7 @@ definitions:
           $ref: '#/definitions/icla-signature-details'
   ccla-signatures:
     type: object
-    x-nullable: false 
+    x-nullable: false
     title: CCLA Signatures
     description: CCLA Signatures model
     properties:
@@ -829,71 +914,71 @@ definitions:
       signed:
         type: boolean
   ccla-signature-details:
-      type: object
-      x-nullable: false
-      title: ICLA Signature details
-      description: ICLA Signatures Details
-      properties:
-        userName:
-          type: string
-        companyName:
-          type: string
-        githubUserId:
-          type: string
-        minorVersion: 
-          type: integer
-        majorVersion:
-          type: integer
-        signedOn:
-          type: string
-        signed:
-          type: boolean
+    type: object
+    x-nullable: false
+    title: ICLA Signature details
+    description: ICLA Signatures Details
+    properties:
+      userName:
+        type: string
+      companyName:
+        type: string
+      githubUserId:
+        type: string
+      minorVersion:
+        type: integer
+      majorVersion:
+        type: integer
+      signedOn:
+        type: string
+      signed:
+        type: boolean
   icla-signature-details:
-      type: object
-      x-nullable: false
-      title: ICLA Signature details
-      description: ICLA Signatures Details
-      properties:
-        userName:
-          type: string
-        githubUserId:
-          type: string
-        minorVersion: 
-          type: integer
-        majorVersion:
-          type: integer
-        signedOn:
-          type: string
-        signed: 
-          type: boolean
-  template: 
-      type: object
-      x-nullable: false
-      title: CLA Template
-      description: CLA Template
-      properties:
-        Name:
-          type: string
-        ID:
-          type: string
-        description:
-          type: string
-        iclaHtmlBody:
-          type: string
-        cclaHtmlBody: 
-          type: string
-        metaFields:
-          type: array
-          items: 
-            $ref: '#/definitions/meta-field'
-        iclaFields:
-          type: array
-          items: 
-            $ref: '#/definitions/field'
-        cclaFields:
-          type: array
-          items: 
-            $ref: '#/definitions/field'
+    type: object
+    x-nullable: false
+    title: ICLA Signature details
+    description: ICLA Signatures Details
+    properties:
+      userName:
+        type: string
+      githubUserId:
+        type: string
+      minorVersion:
+        type: integer
+      majorVersion:
+        type: integer
+      signedOn:
+        type: string
+      signed:
+        type: boolean
+  template:
+    type: object
+    x-nullable: false
+    title: CLA Template
+    description: CLA Template
+    properties:
+      Name:
+        type: string
+      ID:
+        type: string
+      description:
+        type: string
+      iclaHtmlBody:
+        type: string
+      cclaHtmlBody:
+        type: string
+      metaFields:
+        type: array
+        items:
+          $ref: '#/definitions/meta-field'
+      iclaFields:
+        type: array
+        items:
+          $ref: '#/definitions/field'
+      cclaFields:
+        type: array
+        items:
+          $ref: '#/definitions/field'
   meta-field:
     title: MetaField
     type: object
@@ -901,7 +986,7 @@ definitions:
       name:
         type: string
       value:
-        type: string  
+        type: string
       description:
         type: string
       templateVariable:

@@ -9,6 +9,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -114,11 +116,13 @@ func server(localMode bool) http.Handler {
 	userRepo := user.NewDynamoRepository(awsSession, viper.GetString("STAGE"), configFile.SenderEmailAddress)
 	templateRepo := template.NewRepository(awsSession, viper.GetString("STAGE"))
 	whitelistRepo := whitelist.NewRepository(awsSession, viper.GetString("STAGE"))
+	signaturesRepo := signatures.NewRepository(awsSession, viper.GetString("STAGE"))
 	companyRepo := company.NewRepository(awsSession, viper.GetString("STAGE"))
 
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(viper.GetString("STAGE"), templateRepo, docraptorClient, awsSession)
 	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
+	signaturesService := signatures.NewService(signaturesRepo)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
@@ -132,6 +136,7 @@ func server(localMode bool) http.Handler {
 	template.Configure(api, templateService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
 	whitelist.Configure(api, whitelistService, sessionStore)
+	signatures.Configure(api, signaturesService, sessionStore)
 	docs.Configure(api)
 
 	company.Configure(api, companyService)

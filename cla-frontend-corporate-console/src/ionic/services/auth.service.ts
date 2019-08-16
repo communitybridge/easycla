@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
+import {Injectable} from "@angular/core";
 import * as auth0 from "auth0-js";
 import * as jwt_decode from "jwt-decode";
-import { getAuthURLFromWindow } from "./auth.utils";
-import { EnvConfig } from "./cla.env.utils";
+import {getAuthURLFromWindow} from "./auth.utils";
+import {EnvConfig} from "./cla.env.utils";
+
 (window as any).global = window;
 
 @Injectable()
@@ -35,7 +36,7 @@ export class AuthService {
         alert(
           `Authentication Error: ${
             err.error
-          }. Check the console for further details.`
+            }. Check the console for further details.`
         );
       }
     });
@@ -49,6 +50,8 @@ export class AuthService {
     localStorage.setItem("access_token", authResult.accessToken);
     localStorage.setItem("id_token", authResult.idToken);
     localStorage.setItem("expires_at", expiresAt);
+    localStorage.setItem("userid", authResult.idTokenPayload.nickname);
+
   }
 
   public logout(): void {
@@ -56,13 +59,15 @@ export class AuthService {
     localStorage.removeItem("access_token");
     localStorage.removeItem("id_token");
     localStorage.removeItem("expires_at");
+    localStorage.removeItem("userid");
   }
 
   public isAuthenticated(): boolean {
     // Check whether the current time is past the
     // access token's expiry time
     const expiresAt = JSON.parse(localStorage.getItem("expires_at") || "{}");
-    return new Date().getTime() < expiresAt;
+    //return new Date().getTime() < expiresAt;
+    return new Date().getTime() < expiresAt && localStorage.getItem("userid") != null;
   }
 
   public getIdToken(): Promise<string> {
