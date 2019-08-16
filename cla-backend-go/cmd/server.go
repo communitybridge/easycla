@@ -216,6 +216,7 @@ func setupCORSHandlerLocal(handler http.Handler) http.Handler {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
+		AllowOriginFunc:  func(origin string) bool { return true },
 		//AllowOriginFunc:  func(origin string) bool { return true },
 		// Enable Debugging for testing, consider disabling in production
 		Debug: false,
