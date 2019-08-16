@@ -1,22 +1,17 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  ModalController,
-  NavParams,
-  IonicPage, AlertController
-} from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
-import { ClaUserModel } from "../../models/cla-user";
-import { ClaSignatureModel } from "../../models/cla-signature";
-import { ClaManager } from "../../models/cla-manager";
-import { SortService } from "../../services/sort.service";
-import { RolesService } from "../../services/roles.service";
-import { Restricted } from "../../decorators/restricted";
-import { WhitelistModal } from "../../modals/whitelist-modal/whitelist-modal";
+import {Component} from "@angular/core";
+import {AlertController, IonicPage, ModalController, NavController, NavParams} from "ionic-angular";
+import {ClaService} from "../../services/cla.service";
+import {ClaCompanyModel} from "../../models/cla-company";
+import {ClaUserModel} from "../../models/cla-user";
+import {ClaSignatureModel} from "../../models/cla-signature";
+import {ClaManager} from "../../models/cla-manager";
+import {SortService} from "../../services/sort.service";
+import {RolesService} from "../../services/roles.service";
+import {Restricted} from "../../decorators/restricted";
+import {WhitelistModal} from "../../modals/whitelist-modal/whitelist-modal";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -31,6 +26,7 @@ import { WhitelistModal } from "../../modals/whitelist-modal/whitelist-modal";
 export class ProjectPage {
   cclaSignature: ClaSignatureModel;
   employeeSignatures: ClaSignatureModel[];
+  githubOrgWhitelist: string[];
   loading: any;
   companyId: string;
   projectId: string;
@@ -97,6 +93,15 @@ export class ProjectPage {
     });
   }
 
+  getGitHubOrgWhitelist() {
+    // console.log('loading GH Org Whitelist...');
+    this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
+      // console.log('received GH Org Whitelist response: ');
+      // console.log(organizations);
+      this.githubOrgWhitelist = organizations.map((org) => org.id);
+    });
+  }
+
   getCLAManagers() {
     this.claService.getCLAManagers(this.cclaSignature.signature_id).subscribe(response => {
       this.managers = response;
@@ -112,6 +117,7 @@ export class ProjectPage {
         if (cclaSignatures.length) {
           this.cclaSignature = cclaSignatures[0];
           this.getCLAManagers();
+          this.getGitHubOrgWhitelist();
         }
       });
 
@@ -123,14 +129,14 @@ export class ProjectPage {
         for (let signature of this.employeeSignatures) {
           this.getUser(signature.signature_reference_id);
         }
-    });
+      });
 
   }
 
   getManager(userId) {
-      this.claService.getUser(userId).subscribe(response => {
-        this.manager = response;
-      });
+    this.claService.getUser(userId).subscribe(response => {
+      this.manager = response;
+    });
   }
 
   getUser(userId) {
@@ -178,7 +184,7 @@ export class ProjectPage {
       this.getProjectSignatures();
     });
     modal.present();
-    
+
   }
 
   sortMembers(prop) {
@@ -208,12 +214,12 @@ export class ProjectPage {
     alert.present();
   }
 
-  deleteManager (payload: ClaManager) {
+  deleteManager(payload: ClaManager) {
     this.claService.deleteCLAManager(this.cclaSignature.signature_id, payload)
       .subscribe(() => this.getCLAManagers())
   }
 
-  openManagerModal () {
+  openManagerModal() {
     let modal = this.modalCtrl.create("AddManagerModal", {
       signatureId: this.cclaSignature.signature_id
     });
@@ -225,13 +231,16 @@ export class ProjectPage {
     modal.present();
   }
 
-  openGithubOrgWhitelistModal () {
+  openGithubOrgWhitelistModal() {
     let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
       companyId: this.companyId,
       corporateClaId: this.projectId,
       signatureId: this.cclaSignature.signature_id
     });
-    modal.onDidDismiss(data => {});
+    modal.onDidDismiss(data => {
+      // Refresh the list
+      this.getGitHubOrgWhitelist();
+    });
     modal.present();
   }
 }
