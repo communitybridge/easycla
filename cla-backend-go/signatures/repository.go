@@ -173,7 +173,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 	})
 
 	if err != nil {
-		log.Warnf("Error retrieving GH organization whitelist for signatureID: %s and GH Org: %s, error: %v",
+		log.Warnf("error retrieving GH organization whitelist for signatureID: %s and GH Org: %s, error: %v",
 			signatureID, GithubOrganizationID, err)
 		return nil, err
 	}
@@ -191,6 +191,46 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 		if *element.S != GithubOrganizationID {
 			newList = append(newList, element)
 		}
+	}
+
+	if len(newList) == 0 {
+		// Since we don't have any items in our list, we can't simply update dynamoDB with an empty list,
+		// nooooo, that would be too easy. Instead:
+		// We need to set the value to NULL to clear it out (otherwise we'll get a validation error like:)
+		// ValidationException: ExpressionAttributeValues contains invalid value: Supplied AttributeValue
+		// is empty, must contain exactly one of the supported datatypes for key)
+
+		log.Debugf("clearing out github org whitelist for organization: %s for signature: %s - list is empty",
+			GithubOrganizationID, signatureID)
+		nullFlag := true
+
+		// update dynamoDB table
+		input := &dynamodb.UpdateItemInput{
+			ExpressionAttributeNames: map[string]*string{
+				"#L": aws.String("github_org_whitelist"),
+			},
+			ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+				":l": {
+					NULL: &nullFlag,
+				},
+			},
+			TableName: aws.String(tableName),
+			Key: map[string]*dynamodb.AttributeValue{
+				"signature_id": {
+					S: aws.String(signatureID),
+				},
+			},
+			UpdateExpression: aws.String("SET #L = :l"),
+		}
+
+		_, err = repo.dynamoDBClient.UpdateItem(input)
+		if err != nil {
+			log.Warnf("error updating github org whitelist to NULL value, error: %v", err)
+			return nil, err
+		}
+
+		// Return an empty list
+		return []models.GithubOrg{}, nil
 	}
 
 	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
@@ -232,6 +272,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 	}
 
 	return buildResponse(updatedItemFromMap.L), nil
+
 }
 
 // buildResponse converts a database model to a GitHub organization response model
