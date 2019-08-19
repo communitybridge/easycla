@@ -154,10 +154,12 @@ def user_authorization_callback(body):
 
 
 def activity(body):
-    cla.log.debug('processing github activity callback...')
+    cla.log.debug('github.activity - processing github activity callback...')
+
     # GitHub Application
     if 'installation' in body:
-        cla.log.debug('processing github installation activity callback...')
+        cla.log.debug('github.activity - processing github installation activity callback...')
+        
         # New Installations
         if 'action' in body and body['action'] == 'created':
             existing = get_organization(body['installation']['account']['login'])
@@ -170,17 +172,18 @@ def activity(body):
                     existing['organization_sfid'], 
                     body['installation']['id'],
                 )
-                cla.log.info('Organization enrollment completed: %s', existing['organization_name'])
+                cla.log.info('github.activity - Organization enrollment completed: %s', existing['organization_name'])
                 return {'status': 'Organization Enrollment Completed. CLA System is operational'}
             else:
-                cla.log.info('Organization already enrolled: %s', existing['organization_name'])
+                cla.log.info('github.activity - Organization already enrolled: %s', existing['organization_name'])
                 return {'status': 'Organization already enrolled in the CLA system'}
         else:  # TODO: Handle action == 'deleted'
             pass
 
     # Pull Requests
     if 'pull_request' in body:
-        cla.log.debug('processing github pull_request activity callback...')
+        cla.log.debug('github.activity - processing github pull_request activity callback...')
+        
         # New PR opened
         if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
             # Copied from repository_service.py
