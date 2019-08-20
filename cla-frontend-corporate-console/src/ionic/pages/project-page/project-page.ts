@@ -102,8 +102,8 @@ export class ProjectPage {
     });
   }
 
-  githubOrgWhitelistEnabled(organizations) {
-    return organizations.map((org) => org.enabled);
+  githubOrgWhitelistEnabled() {
+    return this.githubOrgWhitelist.filter((org) => org.selected);
   }
 
   getCLAManagers() {
