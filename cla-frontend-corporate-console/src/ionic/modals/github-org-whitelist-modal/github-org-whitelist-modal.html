@@ -1,10 +1,10 @@
 <ion-header>
   <modal-header>
-    Github Organization Whitelist
+    GitHub Organization Whitelist
 
     <button type="button" ion-button class="clickable connect" (click)="connectGithub()"
             *ngIf="organizations.length > 0">
-      Connect Github
+      Connect GitHub
     </button>
   </modal-header>
 </ion-header>
@@ -34,7 +34,7 @@
         </div>
         <div class="organizations" *ngIf="organizations.length === 0">
           <h5>No organizations.</h5>
-          <button type="button" ion-button class="clickable connect" (click)="connectGithub()">Connect Github</button  >
+          <button type="button" ion-button class="clickable connect" (click)="connectGithub()">Connect GitHub</button  >
         </div>
         <p class="form-message" *ngFor="let error of responseErrors">{{error}}</p>
 

@@ -621,6 +621,7 @@ def handle_commit_from_git_author(project_id, commit, author, signed, missing):
     user = cla.utils.get_user_instance().get_user_by_email(author.email)
     if user is not None:
         cla.log.info('Git commit user found (lookup by email) %s', user.get_user_emails())
+        
         # For now, accept non-github users as legitimate users.
         if cla.utils.user_signed_project_signature(user, project_id):
             signed.append((commit.sha, author.name))
