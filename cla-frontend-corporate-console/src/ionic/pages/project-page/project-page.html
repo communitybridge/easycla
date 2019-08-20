@@ -56,12 +56,12 @@
         </ion-col>
         <ion-col col-12 col-md-3>
           <h3>
-            Github Org Whitelist
+            GitHub Org Whitelist
             <ion-icon class="clickable" name="md-create" item-right (click)="openGithubOrgWhitelistModal()"></ion-icon>
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let organization of githubOrgWhitelist">
+              <ion-item *ngFor="let organization of githubOrgWhitelistEnabled(githubOrgWhitelist)">
                 <span *ngIf="organization.selected">{{ organization.id }}</span>
               </ion-item>
             </ion-list>
