@@ -61,8 +61,8 @@
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let organization of githubOrgWhitelistEnabled(githubOrgWhitelist)">
-                <span *ngIf="organization.selected">{{ organization.id }}</span>
+              <ion-item *ngFor="let organization of githubOrgWhitelistEnabled">
+                <span>{{ organization.id }}</span>
               </ion-item>
             </ion-list>
           </div>
