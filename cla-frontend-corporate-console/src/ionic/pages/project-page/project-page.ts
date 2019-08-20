@@ -102,6 +102,10 @@ export class ProjectPage {
     });
   }
 
+  githubOrgWhitelistEnabled(organizations) {
+    return organizations.map((org) => org.enabled);
+  }
+
   getCLAManagers() {
     this.claService.getCLAManagers(this.cclaSignature.signature_id).subscribe(response => {
       this.managers = response;

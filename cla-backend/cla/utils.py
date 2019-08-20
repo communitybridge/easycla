@@ -5,21 +5,22 @@
 Utility functions for the CLA project.
 """
 
-import urllib.parse
 import inspect
 import json
 import os
-import re
+import urllib.parse
+
 import falcon
+from hug.middleware import SessionMiddleware
+from requests_oauthlib import OAuth2Session
+
+import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
-from requests_oauthlib import OAuth2Session
-from hug.middleware import SessionMiddleware
-from hug.store import InMemoryStore as Store
-import cla
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
+
 
 def get_cla_path():
     """Returns the CLA code root directory on the current system."""
@@ -27,12 +28,14 @@ def get_cla_path():
     cla_root_dir = os.path.dirname(cla_folder_dir)
     return cla_root_dir
 
+
 def get_session_middleware():
     """Prepares the hug middleware to manage key-value session data."""
     store = get_key_value_store_service()
     return SessionMiddleware(store, context_name='session', cookie_name='cla-sid',
                              cookie_max_age=300, cookie_domain=None, cookie_path='/',
                              cookie_secure=False)
+
 
 def create_database(conf=None):
     """
@@ -48,8 +51,9 @@ def create_database(conf=None):
     if conf['DATABASE'] == 'DynamoDB':
         from cla.models.dynamo_models import create_database as cd
     else:
-        raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
+        raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
     cd()
+
 
 def delete_database(conf=None):
     """
@@ -67,8 +71,9 @@ def delete_database(conf=None):
     if conf['DATABASE'] == 'DynamoDB':
         from cla.models.dynamo_models import delete_database as dd
     else:
-        raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
+        raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
     dd()
+
 
 def get_database_models(conf=None):
     """
@@ -88,13 +93,14 @@ def get_database_models(conf=None):
         conf = cla.conf
     if conf['DATABASE'] == 'DynamoDB':
         from cla.models.dynamo_models import User, Signature, Repository, \
-                                             Company, Project, Document, \
-                                             GitHubOrg, Gerrit, UserPermissions
+            Company, Project, Document, \
+            GitHubOrg, Gerrit, UserPermissions
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions}
     else:
-        raise Exception('Invalid database selection in configuration: %s' %conf['DATABASE'])
+        raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
+
 
 def get_user_instance(conf=None):
     """
@@ -107,6 +113,7 @@ def get_user_instance(conf=None):
     """
     return get_database_models(conf)['User']()
 
+
 def get_signature_instance(conf=None):
     """
     Helper function to get a database Signature model instance based on CLA configuration.
@@ -117,6 +124,7 @@ def get_signature_instance(conf=None):
     :rtype: cla.models.model_interfaces.Signature
     """
     return get_database_models(conf)['Signature']()
+
 
 def get_repository_instance(conf=None):
     """
@@ -129,6 +137,7 @@ def get_repository_instance(conf=None):
     """
     return get_database_models(conf)['Repository']()
 
+
 def get_github_organization_instance(conf=None):
     """
     Helper function to get a database GitHubOrg model instance based on CLA configuration.
@@ -139,6 +148,7 @@ def get_github_organization_instance(conf=None):
     :rtype: cla.models.model_interfaces.GitHubOrg
     """
     return get_database_models(conf)['GitHubOrg']()
+
 
 def get_gerrit_instance(conf=None):
     """
@@ -151,6 +161,7 @@ def get_gerrit_instance(conf=None):
     """
     return get_database_models(conf)['Gerrit']()
 
+
 def get_company_instance(conf=None):
     """
     Helper function to get a database company model instance based on CLA configuration.
@@ -161,6 +172,7 @@ def get_company_instance(conf=None):
     :rtype: cla.models.model_interfaces.Company
     """
     return get_database_models(conf)['Company']()
+
 
 def get_project_instance(conf=None):
     """
@@ -173,6 +185,7 @@ def get_project_instance(conf=None):
     """
     return get_database_models(conf)['Project']()
 
+
 def get_document_instance(conf=None):
     """
     Helper function to get a database Document model instance based on CLA configuration.
@@ -183,6 +196,7 @@ def get_document_instance(conf=None):
     :rtype: cla.models.model_interfaces.Document
     """
     return get_database_models(conf)['Document']()
+
 
 def get_email_service(conf=None, initialize=True):
     """
@@ -207,11 +221,12 @@ def get_email_service(conf=None, initialize=True):
     elif email_service == 'MockSES':
         from cla.models.ses_models import MockSES as email
     else:
-        raise Exception('Invalid email service selected in configuration: %s' %email_service)
+        raise Exception('Invalid email service selected in configuration: %s' % email_service)
     email_instance = email()
     if initialize:
         email_instance.initialize(conf)
     return email_instance
+
 
 def get_signing_service(conf=None, initialize=True):
     """
@@ -232,11 +247,12 @@ def get_signing_service(conf=None, initialize=True):
     elif signing_service == 'MockDocuSign':
         from cla.models.docusign_models import MockDocuSign as signing
     else:
-        raise Exception('Invalid signing service selected in configuration: %s' %signing_service)
+        raise Exception('Invalid signing service selected in configuration: %s' % signing_service)
     signing_service_instance = signing()
     if initialize:
         signing_service_instance.initialize(conf)
     return signing_service_instance
+
 
 def get_storage_service(conf=None, initialize=True):
     """
@@ -259,11 +275,12 @@ def get_storage_service(conf=None, initialize=True):
     elif storage_service == 'MockS3Storage':
         from cla.models.s3_storage import MockS3Storage as storage
     else:
-        raise Exception('Invalid storage service selected in configuration: %s' %storage_service)
+        raise Exception('Invalid storage service selected in configuration: %s' % storage_service)
     storage_instance = storage()
     if initialize:
         storage_instance.initialize(conf)
     return storage_instance
+
 
 def get_pdf_service(conf=None, initialize=True):
     """
@@ -284,11 +301,12 @@ def get_pdf_service(conf=None, initialize=True):
     elif pdf_service == 'MockDocRaptor':
         from cla.models.docraptor_models import MockDocRaptor as pdf
     else:
-        raise Exception('Invalid PDF service selected in configuration: %s' %pdf_service)
+        raise Exception('Invalid PDF service selected in configuration: %s' % pdf_service)
     pdf_instance = pdf()
     if initialize:
         pdf_instance.initialize(conf)
     return pdf_instance
+
 
 def get_key_value_store_service(conf=None):
     """
@@ -307,8 +325,9 @@ def get_key_value_store_service(conf=None):
     elif keyvalue == 'DynamoDB':
         from cla.models.dynamo_models import Store
     else:
-        raise Exception('Invalid key-value store selected in configuration: %s' %keyvalue)
+        raise Exception('Invalid key-value store selected in configuration: %s' % keyvalue)
     return Store()
+
 
 def get_supported_repository_providers():
     """
@@ -319,10 +338,11 @@ def get_supported_repository_providers():
     :rtype: dict
     """
     from cla.models.github_models import GitHub, MockGitHub
-    #from cla.models.gitlab_models import GitLab, MockGitLab
-    #return {'github': GitHub, 'mock_github': MockGitHub,
-            #'gitlab': GitLab, 'mock_gitlab': MockGitLab}
+    # from cla.models.gitlab_models import GitLab, MockGitLab
+    # return {'github': GitHub, 'mock_github': MockGitHub,
+    # 'gitlab': GitLab, 'mock_gitlab': MockGitLab}
     return {'github': GitHub, 'mock_github': MockGitHub}
+
 
 def get_repository_service(provider, initialize=True):
     """
@@ -342,6 +362,7 @@ def get_repository_service(provider, initialize=True):
     if initialize:
         instance.initialize(cla.conf)
     return instance
+
 
 def get_repository_service_by_repository(repository, initialize=True):
     """
@@ -364,7 +385,8 @@ def get_repository_service_by_repository(repository, initialize=True):
     provider = repo.get_repository_type()
     return get_repository_service(provider, initialize)
 
-def get_supported_document_content_types(): # pylint: disable=invalid-name
+
+def get_supported_document_content_types():  # pylint: disable=invalid-name
     """
     Returns a list of supported document content types.
 
@@ -372,6 +394,7 @@ def get_supported_document_content_types(): # pylint: disable=invalid-name
     :rtype: dict
     """
     return ['pdf', 'url+pdf', 'storage+pdf']
+
 
 def get_project_document(project, document_type, major_version, minor_version):
     """
@@ -394,9 +417,10 @@ def get_project_document(project, document_type, major_version, minor_version):
         documents = project.get_project_corporate_documents()
     for document in documents:
         if document.get_document_major_version() == major_version and \
-           document.get_document_minor_version() == minor_version:
+                document.get_document_minor_version() == minor_version:
             return document
     return None
+
 
 def get_project_latest_individual_document(project_id):
     """
@@ -412,6 +436,7 @@ def get_project_latest_individual_document(project_id):
     document_models = project.get_project_individual_documents()
     major, minor = get_last_version(document_models)
     return project.get_project_individual_document(major, minor)
+
 
 # TODO Heller remove
 def get_project_latest_corporate_document(project_id):
@@ -429,6 +454,7 @@ def get_project_latest_corporate_document(project_id):
     major, minor = get_last_version(document_models)
     return project.get_project_corporate_document(major, minor)
 
+
 def get_last_version(documents):
     """
     Helper function to get the last version of the list of documents provided.
@@ -438,8 +464,8 @@ def get_last_version(documents):
     :return: 2-item tuple containing (major, minor) version number.
     :rtype: tuple
     """
-    last_major = 0 # 0 will be returned if no document was found.
-    last_minor = -1 # -1 will be returned if no document was found.
+    last_major = 0  # 0 will be returned if no document was found.
+    last_minor = -1  # -1 will be returned if no document was found.
     for document in documents:
         current_major = document.get_document_major_version()
         current_minor = document.get_document_minor_version()
@@ -450,6 +476,7 @@ def get_last_version(documents):
         if current_major == last_major and current_minor > last_minor:
             last_minor = current_minor
     return (last_major, last_minor)
+
 
 def user_signed_project_signature(user, project_id, latest_major_version=True):
     """
@@ -466,50 +493,81 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
         for this project.
     :rtype: boolean
     """
-    # Check ICLA.
+
+    # Check if we have an ICLA for this user
+    cla.log.debug('checking to see if user has signed an ICLA, user: {}, project: {}'.
+                  format(user, project_id))
+
     signature = user.get_latest_signature(project_id)
     if signature is not None:
-        cla.log.info('Signature found for user %s on project %s: %s',
-                     user.get_user_id(), project_id, signature.get_signature_id())
-        if latest_major_version: # Ensure it's latest signature.
+        cla.log.debug('ICLA signature found for user: {} on project: {}, signature_id: {}'.
+                      format(user.get_user_id(), project_id, signature.get_signature_id()))
+
+        if latest_major_version:  # Ensure it's latest signature.
             project = get_project_instance()
             project.load(str(project_id))
             document_models = project.get_project_individual_documents()
             major, _ = get_last_version(document_models)
             if signature.get_signature_document_major_version() != major:
-                cla.log.info('User (%s) only has old document version signed (v%s)',
-                             user.get_user_id(), signature.get_signature_document_major_version())
+                cla.log.debug('User: {} only has an old document version signed (v{}) - needs a new version'.
+                              format(user, signature.get_signature_document_major_version()))
                 return False
+
         if signature.get_signature_signed() and signature.get_signature_approved():
             # Signature found and signed/approved.
-            cla.log.info('User already has a signed and approved signature ' + \
-                         'for project: %s', project_id)
+            cla.log.debug('User: {} has ICLA signed and approved signature_id: {} '
+                          'for project: {}'.
+                          format(user, signature.get_signature_id(), project_id))
             return True
-        elif signature.get_signature_signed(): # Not approved yet.
-            cla.log.warning('Signature (%s) has not been approved yet for ' + \
-                            'user %s on project %s', \
-                            signature.get_signature_id(),
-                            user.get_user_emails(),
-                            project_id)
+        elif signature.get_signature_signed():  # Not approved yet.
+            cla.log.debug('User: {} has ICLA signed with signature_id: {}, project: {}, '
+                          'but has not been approved yet'.
+                          format(user, signature.get_signature_id(), project_id))
             return False
-        else: # Not signed or approved yet.
-            cla.log.info('Signature (%s) has not been signed by %s for project %s', \
-                         signature.get_signature_id(),
-                         user.get_user_emails(),
-                         project_id)
+        else:  # Not signed or approved yet.
+            cla.log.debug('User: {} has ICLA with signature_id: {}, project: {}, '
+                          'but has not been signed or approved yet'.
+                          format(user, signature.get_signature_id(), project_id))
             return False
     else:
-        cla.log.info('Signature NOT found for user %s on project %s',
-             user.get_user_id(), project_id)
-    # Check employee signature.
+        cla.log.debug('ICLA signature NOT found for User: {} on project: {}'.
+                      format(user, project_id))
+
+    # Check if we have an CCLA for this user
     company_id = user.get_user_company_id()
+    cla.log.debug('checking to see if user has signed an CCLA, user: {}, project_id: {}, company_id: {}'.
+                  format(user, project_id, company_id))
+
     if company_id is not None:
         signature = user.get_latest_signature(project_id, company_id=company_id)
+
         # Don't check the version for employee signatures.
-        if signature is not None and signature.get_signature_signed() and signature.get_signature_approved():
-            cla.log.info('User has employee CLA signed and approved for project: %s', project_id)
-            return True
+        if signature is not None:
+            cla.log.debug('CCLA signature found for user: {} on project: {}, signature_id: {}'.
+                          format(user, project_id, signature.get_signature_id()))
+
+            if signature.get_signature_signed and signature.get_signature_approved:
+                cla.log.debug('User: {} has a signed and approved CCLA for project: {}'.
+                              format(user, project_id))
+                return True
+
+            if signature.get_signature_signed():
+                cla.log.debug('User: {} has CCLA signed with signature_id: {}, project: {}, '
+                              'but has not been approved yet'.
+                              format(user, signature.get_signature_id(), project_id))
+                return False
+            else:  # Not signed or approved yet.
+                cla.log.debug('User: {} has CCLA with signature_id: {}, project: {}, '
+                              'but has not been signed or approved yet'.
+                              format(user, signature.get_signature_id(), project_id))
+                return False
+    else:
+        cla.log.debug('User: {} is NOT associated with a company - unable to check for a CCLA.'.format(user))
+        return False
+
+    cla.log.debug('User: {} has not signed an ICLA or CCLA'.format(user))
     return False
+
 
 def get_redirect_uri(repository_service, installation_id, github_repository_id, change_request_id):
     """
@@ -518,8 +576,10 @@ def get_redirect_uri(repository_service, installation_id, github_repository_id, 
     :param repository_service: The repository service provider we're currently initiating the
         OAuth2 process with. Currently only supports 'github' and 'gitlab'.
     :type repository_service: string
-    :param repository_id: The ID of the repository object that applies for this OAuth2 process.
-    :type repository_id: string
+    :param installation_id: The EasyCLA GitHub application ID
+    :type installation_id: string
+    :param github_repository_id: The ID of the repository object that applies for this OAuth2 process.
+    :type github_repository_id: string
     :param change_request_id: The ID of the change request in question. Is a PR number if
         repository_service is 'github'. Is a merge request if the repository_service is 'gitlab'.
     :type change_request_id: string
@@ -530,7 +590,9 @@ def get_redirect_uri(repository_service, installation_id, github_repository_id, 
               'github_repository_id': github_repository_id,
               'change_request_id': change_request_id}
     params = urllib.parse.urlencode(params)
-    return '{}/v2/repository-provider/{}/oauth2_redirect?{}'.format(cla.conf['API_BASE_URL'], repository_service, params)
+    return '{}/v2/repository-provider/{}/oauth2_redirect?{}'.format(cla.conf['API_BASE_URL'], repository_service,
+                                                                    params)
+
 
 def get_full_sign_url(repository_service, installation_id, github_repository_id, change_request_id):
     """
@@ -542,16 +604,21 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
     :param repository_service: The repository service provider we're getting the sign url for.
         Should be one of the supported repository providers ('github', 'gitlab', etc).
     :type repository_service: string
-    :param repository_id: The ID of the repository for this signature (used in order to figure out
+    :param installation_id: The EasyCLA GitHub application ID
+    :type installation_id: string
+    :param github_repository_id: The ID of the repository for this signature (used in order to figure out
         where to send the user once signing is complete.
-    :type repository_id: int
+    :type github_repository_id: int
     :param change_request_id: The change request ID for this signature (used in order to figure out
         where to send the user once signing is complete. Should be a pull request number when
         repository_service is 'github'. Should be a merge request ID when repository_service is
         'gitlab'.
     :type change_request_id: int
     """
-    return '{}/v2/repository-provider/{}/sign/{}/{}/{}'.format(cla.conf['API_BASE_URL'], repository_service, str(installation_id), str(github_repository_id), str(change_request_id))
+    return '{}/v2/repository-provider/{}/sign/{}/{}/{}'.format(cla.conf['API_BASE_URL'], repository_service,
+                                                               str(installation_id), str(github_repository_id),
+                                                               str(change_request_id))
+
 
 def get_comment_badge(repository_type, all_signed, sign_url):
     """
@@ -575,6 +642,7 @@ def get_comment_badge(repository_type, all_signed, sign_url):
         badge_hyperlink = sign_url
     return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
 
+
 def assemble_cla_status(author_name, signed=False):
     """
     Helper function to return the text that will display on a change request status.
@@ -593,6 +661,7 @@ def assemble_cla_status(author_name, signed=False):
         return (author_name, 'EasyCLA check passed. You are authorized to contribute.')
     return (author_name, 'Missing CLA Authorization.')
 
+
 def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
     """
     Helper function to generate a CLA comment based on a a change request.
@@ -602,8 +671,10 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     :param repository_type: The type of repository this comment will be posted on ('github',
         'gitlab', etc).
     :type repository_type: string
-    :param repository_id: The ID of the repository for this change request.
-    :type repository_id: int
+    :param installation_id: The EasyCLA GitHub application ID
+    :type installation_id: string
+    :param github_repository_id: The ID of the repository for this change request.
+    :type github_repository_id: int
     :param change_request_id: The repository service's ID of this change request.
     :type change_request_id: id
     :param signed: The list of commit hashes and authors that have signed an signature for this
@@ -619,6 +690,7 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     all_signed = num_missing == 0
     badge = get_comment_badge(repository_type, all_signed, sign_url)
     return badge + '<br />' + comment
+
 
 def get_comment_body(repository_type, sign_url, signed, missing):
     """
@@ -676,6 +748,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     text = 'The committers are authorized under a signed CLA.'
     return text + committers_comment
 
+
 def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_url):
     """
     Helper function to get an OAuth2 session authorization URL and state.
@@ -691,11 +764,14 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     """
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
-    cla.log.debug('utils.py - get_authorization_url_and_state - authorization_url: {}, state: {}'.format(authorization_url, state))
+    cla.log.debug(
+        'utils.py - get_authorization_url_and_state - authorization_url: {}, state: {}'.format(authorization_url,
+                                                                                               state))
     return authorization_url, state
 
 
-def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=None): # pylint: disable=too-many-arguments
+def fetch_token(client_id, state, token_url, client_secret, code,
+                redirect_uri=None):  # pylint: disable=too-many-arguments
     """
     Helper function to fetch a OAuth2 session token.
 
@@ -705,6 +781,8 @@ def fetch_token(client_id, state, token_url, client_secret, code, redirect_uri=N
     :type state: string
     :param token_url: The token URL for this OAuth2 session.
     :type token_url: string
+    :param client_secret: the client secret
+    :type client_secret: string
     :param code: The OAuth2 session code.
     :type code: string
     :param redirect_uri: The redirect URI for this OAuth2 session.
@@ -758,6 +836,7 @@ def redirect_user_by_signature(user, signature):
         cla.log.info('Signature exists, sending user to sign: %s (%s)', signature_id, sign_url)
         raise falcon.HTTPFound(sign_url)
 
+
 def get_active_signature_metadata(user_id):
     """
     When a user initiates the signing process, the CLA system must store information on this
@@ -776,6 +855,7 @@ def get_active_signature_metadata(user_id):
         return json.loads(store.get(key))
     return None
 
+
 def set_active_signature_metadata(user_id, project_id, repository_id, pull_request_id):
     """
     When a user initiates the signing process, the CLA system must store information on this
@@ -793,13 +873,14 @@ def set_active_signature_metadata(user_id, project_id, repository_id, pull_reque
     :type pull_request_id: string
     """
     store = get_key_value_store_service()
-    key = 'active_signature:' + str(user_id) # Should have been set when user initiated the signature.
+    key = 'active_signature:' + str(user_id)  # Should have been set when user initiated the signature.
     value = json.dumps({'user_id': user_id,
                         'project_id': project_id,
                         'repository_id': repository_id,
                         'pull_request_id': pull_request_id})
     store.set(key, value)
     cla.log.info('Stored active signature details for user %s: Key - %s  Value - %s', user_id, key, value)
+
 
 def delete_active_signature_metadata(user_id):
     """
@@ -813,6 +894,7 @@ def delete_active_signature_metadata(user_id):
     store.delete(key)
     cla.log.info('Deleted stored active signature details for user %s', user_id)
 
+
 def get_active_signature_return_url(user_id, metadata=None):
     """
     Helper function to get a user's active signature return URL.
@@ -825,7 +907,7 @@ def get_active_signature_return_url(user_id, metadata=None):
     if metadata is None:
         metadata = get_active_signature_metadata(user_id)
     if metadata is None:
-        cla.log.error('Could not find active signature for user %s, return URL request failed' %user_id)
+        cla.log.error('Could not find active signature for user %s, return URL request failed' % user_id)
         return None
 
     # Get Github ID from metadata
@@ -834,7 +916,8 @@ def get_active_signature_return_url(user_id, metadata=None):
     # Get installation id through a helper function
     installation_id = get_installation_id_from_github_repository(github_repository_id)
     if installation_id is None:
-        cla.log.error('Could not find installation ID that is configured for this repository ID: %s', github_repository_id)
+        cla.log.error('Could not find installation ID that is configured for this repository ID: %s',
+                      github_repository_id)
         return None
 
     github = cla.utils.get_repository_service('github')
@@ -842,13 +925,14 @@ def get_active_signature_return_url(user_id, metadata=None):
                                  metadata['pull_request_id'],
                                  installation_id)
 
+
 def get_installation_id_from_github_repository(github_repository_id):
     # Get repository ID that references the github ID. 
-    try: 
+    try:
         repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
-    except DoesNotExist: 
+    except DoesNotExist:
         return None
-    
+
     # Get Organization from this repository
     organization = GitHubOrg()
     try:
@@ -859,16 +943,17 @@ def get_installation_id_from_github_repository(github_repository_id):
     # Get this organization's installation ID 
     return organization.get_organization_installation_id()
 
+
 def get_project_id_from_github_repository(github_repository_id):
     # Get repository ID that references the github ID. 
-    try: 
+    try:
         repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
-    except DoesNotExist: 
+    except DoesNotExist:
         return None
 
     # Get project ID (contract group ID) of this repository
     return repository.get_repository_project_id()
-                                  
+
 
 def get_individual_signature_callback_url(user_id, metadata=None):
     """
@@ -882,19 +967,22 @@ def get_individual_signature_callback_url(user_id, metadata=None):
     if metadata is None:
         metadata = get_active_signature_metadata(user_id)
     if metadata is None:
-        cla.log.error('Could not find active signature for user %s, callback URL request failed' %user_id)
+        cla.log.error('Could not find active signature for user %s, callback URL request failed' % user_id)
         return None
-    
+
     # Get Github ID from metadata
     github_repository_id = metadata['repository_id']
 
     # Get installation id through a helper function
     installation_id = get_installation_id_from_github_repository(github_repository_id)
     if installation_id is None:
-        cla.log.error('Could not find installation ID that is configured for this repository ID: %s', github_repository_id)
+        cla.log.error('Could not find installation ID that is configured for this repository ID: %s',
+                      github_repository_id)
         return None
 
-    return os.path.join(api_base_url,'v2/signed/individual', str(installation_id), str(metadata['repository_id']), str(metadata['pull_request_id']))
+    return os.path.join(api_base_url, 'v2/signed/individual', str(installation_id), str(metadata['repository_id']),
+                        str(metadata['pull_request_id']))
+
 
 def request_individual_signature(installation_id, github_repository_id, user, change_request_id, callback_url=None):
     """
@@ -919,7 +1007,7 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
                                              installation_id)
     if callback_url is None:
         callback_url = os.path.join(api_base_url, 'v2/signed/individual', str(installation_id), str(change_request_id))
-                       
+
     signing_service = get_signing_service()
     return_url_type = 'Github'
     signature_data = signing_service.request_individual_signature(project_id,
