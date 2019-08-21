@@ -97,6 +97,7 @@ export class ProjectPage {
   getGitHubOrgWhitelist() {
     this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
       this.githubOrgWhitelist = organizations;
+      this.githubOrgWhitelistEnabled();
     });
   }
 
