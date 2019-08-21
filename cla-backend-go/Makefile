@@ -37,6 +37,9 @@ swagger: clean
 	mkdir gen
 	swagger -q generate server -t gen -f swagger/cla.yaml --exclude-main -A cla -P user.CLAUser
 
+swagger-validate:
+	swagger validate swagger/cla.yaml
+
 up:
 	dbmate up
 
