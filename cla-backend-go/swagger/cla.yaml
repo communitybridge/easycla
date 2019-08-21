@@ -22,6 +22,8 @@ securityDefinitions:
       project: Project Manager scope
       company: CLA Manager scope
       contrib: Contributor scope
+tags:
+  - name: services
 
 paths:
   /ops/health:
@@ -702,6 +704,7 @@ definitions:
         type: string
       userLFID:
         type: string
+
   access-list-user:
     type: object
     x-nullable: false
@@ -712,6 +715,7 @@ definitions:
         type: string
       userLFID:
         type: string
+
   project:
     type: object
     x-nullable: false
@@ -726,6 +730,7 @@ definitions:
         type: string
       logoUrl:
         type: string
+
   contract-group:
     type: object
     x-nullable: false
@@ -765,6 +770,7 @@ definitions:
         readOnly: true
     required:
       - name
+
   contract-template:
     type: object
     x-nullable: false
@@ -791,6 +797,7 @@ definitions:
         type: string
       name:
         type: string
+
   create-cla-group-template:
     title: CreateCLAGroupTemplate
     type: object
@@ -802,6 +809,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/meta-field'
+
   template-pdfs:
     title: TemplatePDFs
     type: object
@@ -811,6 +819,7 @@ definitions:
         type: string
       corporatePDFURL:
         type: string
+
   github:
     type: object
     x-nullable: false
@@ -838,6 +847,7 @@ definitions:
       updatedBy:
         readOnly: true
         type: string
+
   gerrit:
     type: object
     x-nullable: false
@@ -866,6 +876,7 @@ definitions:
       - ldapGroupId
       - ldapGroupName
       - url
+
   contract-group-signatures:
     type: object
     x-nullable: false
@@ -885,42 +896,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/icla-signature-details'
-  ccla-signatures:
-    type: object
-    x-nullable: false
-    title: CCLA Signatures
-    description: CCLA Signatures model
-    properties:
-      corporateClaID:
-        type: string
-      corporateClaGroupID:
-        type: string
-      contractTemplateID:
-        type: string
-      docusignID:
-        type: string
-      signatoryEmail:
-        type: string
-      signedBy:
-        type: string
-      signed:
-        type: boolean
-  icla-signatures:
-    type: object
-    x-nullable: false
-    title: ICLA Signatures
-    description: ICLA Signature model
-    properties:
-      individualClaID:
-        type: string
-      contractTemplateID:
-        type: string
-      userID:
-        type: string
-      docusignID:
-        type: string
-      signed:
-        type: boolean
+
   ccla-signature-details:
     type: object
     x-nullable: false
@@ -941,6 +917,7 @@ definitions:
         type: string
       signed:
         type: boolean
+
   icla-signature-details:
     type: object
     x-nullable: false
@@ -959,6 +936,7 @@ definitions:
         type: string
       signed:
         type: boolean
+
   template:
     type: object
     x-nullable: false
@@ -987,6 +965,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/field'
+
   meta-field:
     title: MetaField
     type: object
@@ -999,6 +978,7 @@ definitions:
         type: string
       templateVariable:
         type: string
+
   field:
     title: Field
     type: object
@@ -1023,27 +1003,7 @@ definitions:
         type: integer
       offsetY:
         type: integer
-  create-cla-group-template:
-    title: CreateCLAGroupTemplate
-    type: object
-    properties:
-      templateID:
-        type: string
-      metaFields:
-        type: array
-        items:
-          $ref: '#/definitions/meta-field'
-  service:
-    title: Service
-    description: The properties that are shared amongst all versions of the Service model.
-    type: object
-    properties:
-      ID:
-        type: string
-      Name:
-        type: string
-      Description:
-        type: string
+
   error-response:
     type: object
     x-nullable: false
@@ -1054,6 +1014,7 @@ definitions:
         type: string
       Message:
         type: string
+
   health:
     type: object
     title: Health
@@ -1074,6 +1035,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/health-status'
+
   health-status:
     type: object
     properties:
@@ -1088,29 +1050,7 @@ definitions:
       TimeStamp:
         type: string
     title: Health Status
-tags:
-  - name: services
-parameters:
-  pageSize:
-    name: pageSize
-    in: query
-    type: integer
-    format: int64
-    default: 100
-  offset:
-    name: offset
-    in: query
-    type: integer
-    format: int64
-    default: 0
-  filter:
-    name: filter
-    in: query
-    type: string
-  orderBy:
-    name: orderBy
-    in: query
-    type: string
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -1124,7 +1064,3 @@ responses:
     description: Insufficient privilege to execute action.
     schema:
       $ref: '#/definitions/error-response'
-  not-found:
-    description: Not found.
-    schema:
-      type: 'null'
