@@ -24,7 +24,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams) middleware.Responder {
-		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, params.Body)
+		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, &params.Body)
 		if err != nil {
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}

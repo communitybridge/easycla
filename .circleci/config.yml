@@ -38,6 +38,11 @@ jobs:
             cd cla-backend-go
             make swagger
       - run:
+          name: Validate Swagger
+          command: |
+            cd cla-backend-go
+            make swagger-validate
+      - run:
           name: Build
           command: |
             cd cla-backend-go
