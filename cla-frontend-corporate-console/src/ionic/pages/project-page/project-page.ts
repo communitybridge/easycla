@@ -27,6 +27,7 @@ export class ProjectPage {
   cclaSignature: ClaSignatureModel;
   employeeSignatures: ClaSignatureModel[];
   githubOrgWhitelist: any[] = [];
+  githubEnabledWhitelist: any[] = [];
   loading: any;
   companyId: string;
   projectId: string;
@@ -94,16 +95,13 @@ export class ProjectPage {
   }
 
   getGitHubOrgWhitelist() {
-    // console.log('loading GH Org Whitelist...');
     this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
-      // console.log('received GH Org Whitelist response: ');
-      // console.log(organizations);
       this.githubOrgWhitelist = organizations;
     });
   }
 
   githubOrgWhitelistEnabled() {
-    return this.githubOrgWhitelist.filter((org) => org.selected);
+    this.githubEnabledWhitelist = this.githubOrgWhitelist.filter((org) => org.selected);
   }
 
   getCLAManagers() {
