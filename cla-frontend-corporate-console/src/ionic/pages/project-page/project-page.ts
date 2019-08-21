@@ -27,6 +27,7 @@ export class ProjectPage {
   cclaSignature: ClaSignatureModel;
   employeeSignatures: ClaSignatureModel[];
   githubOrgWhitelist: any[] = [];
+  githubEnabledWhitelist: any[] = [];
   loading: any;
   companyId: string;
   projectId: string;
@@ -103,7 +104,7 @@ export class ProjectPage {
   }
 
   githubOrgWhitelistEnabled() {
-    return this.githubOrgWhitelist.filter((org) => org.selected);
+    this.githubEnabledWhitelist = this.githubOrgWhitelist.filter((org) => org.selected);
   }
 
   getCLAManagers() {
