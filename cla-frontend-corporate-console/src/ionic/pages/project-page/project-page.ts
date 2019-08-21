@@ -95,10 +95,7 @@ export class ProjectPage {
   }
 
   getGitHubOrgWhitelist() {
-    // console.log('loading GH Org Whitelist...');
     this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
-      // console.log('received GH Org Whitelist response: ');
-      // console.log(organizations);
       this.githubOrgWhitelist = organizations;
     });
   }
