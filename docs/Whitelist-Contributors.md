@@ -26,34 +26,34 @@ Consider the following conventions for email addresses:
 
    The CLA Corporate Console appears and shows Companies.
 
-2. Click a **company** of interest.
+1. Click a **company** of interest.
 
    The CLA Corporate Console appears and shows Signed CLAs.
 
    ![Signed CLAs](imgs/CLA-Signed-CLAs.png)
 
-3. Click a **CLA**.
+1. Click a **CLA**.
 
    The whitelists appear:
 
    ![Whitelists](imgs/CLA-Whitelists.png)
 
-4. Decide what whitelist you want to edit:
+1. Decide what whitelist you want to edit:
 
    * Domain Whitelist, Email Whitelist, or GitHub Whitelist - Go to the following section.
 
-   * GitHub Organization Whitelist - Go to the corresponding section below.
+   * GitHub Organization Whitelist - Go to the GitHub Organization Whitelist section below.
 
 ### Domain Whitelist, Email Whitelist, or GitHub Whitelist
 
 The corresponding Edit *domain/email/github* Whitelist dialog lets you add, edit, and delete values to a whitelist so that employees (developers) can be associated to the company. An example domain name value is joesbikes.com. A wildcard whitelists the domain and all subdomains, for example: \*.joesbikes.com or *joesbikes.com would whitelist joes.bikes.com, shop.joesbikes.com, and blog.joesbikes.com.
 
 
-**Note**: To remove an entry from the whitelist, click X next to the item, and click **SAVE**.
+**Note**: To remove an entry from the whitelist, click **X** next to the item, and click **SAVE**.
 
-1.   Click the **pencil icon** next to the whitelist that you want to edit:
+1. Click the **pencil** icon next to the whitelist that you want to edit:
 
-2.   Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and  click **SAVE**. For example:
+1. Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and  click **SAVE**. For example:
 
    ![Edit email Whitelist](imgs/CLA-Edit-email-Whitelist.png)
 
@@ -63,14 +63,24 @@ The corresponding Edit *domain/email/github* Whitelist dialog lets you add, edit
 
 The GitHub Organization Whitelist lets you add or remove organizations from a whitelist so that company employees can contribute to project—the CLA service checks the GitHub organizations that the user belongs to.
 
-1. Click the **pencil icon** next to Github Org Whitelist.
+**_Requirements:_**
+
+Each member of your organization must ensure that these items are Public in their GitHub Profile:
+
+* Their membership with the organization. Each Private member should follow this [procedure](https://help.github.com/en/articles/publicizing-or-hiding-organization-membership) to make their membership Public.
+
+* The associated email address for the organization member. Each Private member should make their associated email address Public (members can have multiple emails in their Profile, so they must select the appropriate one).
+
+**Do these steps:**
+
+1. Click the **pencil** icon next to Github Org Whitelist.
 
    The Github Organization Whitelist dialog appears.
 
    ![Github Organization Whitelist](imgs/CLA-GitHub-Organization-Whitelist-no-organizations.png)
 
-   **Note**: Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
+   **Note:** Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
-2. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
+1. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
 
-Your organizations appear in their organization whitelist.
+   Your organizations appear in their organization whitelist.
