@@ -46,10 +46,9 @@ func (s Service) HealthCheck(ctx context.Context, in health.HealthCheckParams) (
 	dynamoDuration := time.Since(dynamoNow)
 	dy := models.HealthStatus{TimeStamp: time.Now().UTC().Format(time.RFC3339), Healthy: dynamoAlive, Name: "CLA - Dynamodb", Duration: dynamoDuration.String()}
 
-	var status = "health"
+	var status = "healthy"
 	if !dynamoAlive {
-		status = "not health"
-
+		status = "not healthy"
 	}
 
 	response := models.Health{
