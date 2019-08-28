@@ -5,7 +5,7 @@
         <div>View Signatures</div>
       </ion-col>
       <ion-col col-8>
-        <ion-searchbar></ion-searchbar>
+        <ion-searchbar (ionChange)="onSearch($event)"></ion-searchbar>
       </ion-col>
     </ion-row>
   </modal-header>
@@ -23,5 +23,23 @@
   </ion-grid>
 </ion-content>
 
-<ion-footer>this is footer</ion-footer>
+<ion-footer class="transparent">
+  <ion-row justify-content-end>
+    <ion-buttons start>
+      <button ion-button>
+        1
+      </button>
+    </ion-buttons>
+    <ion-buttons start>
+      <button ion-button>
+        2
+      </button>
+    </ion-buttons>
+    <ion-buttons start>
+      <button ion-button>
+        3
+      </button>
+    </ion-buttons>
 
+  </ion-row>
+</ion-footer>

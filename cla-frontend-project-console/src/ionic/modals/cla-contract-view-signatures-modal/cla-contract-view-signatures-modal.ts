@@ -31,6 +31,7 @@ export class ClaContractViewSignaturesModal {
   loading: any;
   sort: any;
   signatures: any[];
+  searchTerm: string;
 
   constructor(
     public navCtrl: NavController,
@@ -60,6 +61,7 @@ export class ClaContractViewSignaturesModal {
     this.loading = {
       signatures: true,
     };
+    this.searchTerm = '',
     this.sort = {
       signatureType: {
         arrayProp: 'signatureType',
@@ -131,7 +133,9 @@ export class ClaContractViewSignaturesModal {
             });
           }
           //add to signatures
+          
           this.signatures.push(signature);
+          console.log(this.signatures)
         }
       }
       this.loading.signatures = false;
@@ -202,6 +206,24 @@ export class ClaContractViewSignaturesModal {
 
   dismiss() {
     this.viewCtrl.dismiss();
+  }
+
+  onSearch($event) {
+    this.searchTerm = $event.value;
+    if(this.searchTerm.length > 0) {
+      this.signatures = this.signatures.filter((signature) => {
+        if(
+          signature.user.user_name.toLowerCase().startsWith(this.searchTerm.toLocaleLowerCase())) {
+          return true;
+        }
+        else {
+          return false
+        }
+      })
+    }
+    else {
+      this.getSignatures()
+    }
   }
 
 }
