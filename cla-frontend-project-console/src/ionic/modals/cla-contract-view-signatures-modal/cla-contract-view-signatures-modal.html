@@ -1,10 +1,12 @@
 <ion-header>
   <modal-header>
     <ion-row class="align-items-center">
-      <div> View Signatures</div>
-      <div class="activate-spinner">
-        <loading-spinner [loading]="loading.signatures"></loading-spinner>
-      </div>
+      <ion-col col-2>
+        <div>View Signatures</div>
+      </ion-col>
+      <ion-col col-8>
+        <ion-searchbar></ion-searchbar>
+      </ion-col>
     </ion-row>
   </modal-header>
 </ion-header>
@@ -14,82 +16,12 @@
     <ion-row>
       <ion-col col-12>
         <div class="table-responsive-vertical">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th class="clickable" (click)="sortMembers('signatureType')">
-                  Entity Type
-                  <sorting-display [sorting]='sort.signatureType.sort'></sorting-display>
-                </th>
-                <th class="clickable" (click)="sortMembers('name')">
-                  Name
-                  <sorting-display [sorting]='sort.name.sort'></sorting-display>
-                </th>
-                <th class="clickable" (click)="sortMembers('company')">
-                  Company
-                  <sorting-display [sorting]='sort.company.sort'></sorting-display>
-                </th>
-                <th class="clickable" (click)="sortMembers('githubId')">
-                  GitHub ID
-                  <sorting-display [sorting]='sort.githubId.sort'></sorting-display>
-                </th>
-                <th class="clickable" (click)="sortMembers('version')">
-                  Version
-                  <sorting-display [sorting]='sort.version.sort'></sorting-display>
-                </th>
-                <th class="clickable" (click)="sortMembers('date')">
-                  Date
-                  <sorting-display [sorting]='sort.date.sort'></sorting-display>
-                </th>
-                <!-- <th>
-                Actions
-              </th> -->
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let signature of signatures">
-                <td data-title="Entity Type">
-                  <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
-                    <ion-icon name="person"></ion-icon> Individual
-                  </span>
-                  <span *ngIf="signature.signature_reference_type === 'company'">
-                    <ion-icon name="briefcase"></ion-icon> Company
-                  </span>
-                  <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
-                    <ion-icon name="person"></ion-icon> Employee
-                  </span>
-                </td>
-                <td data-title="Name">
-                  <span *ngIf="signature.user">
-                    {{ signature.user.user_name }}
-                  </span>
-                </td>
-                <td data-title="Company">
-                  <span *ngIf="signature.company">
-                    {{ signature.company.company_name }}
-                  </span>
-                </td>
-                <td data-title="GitHub ID">
-                  <span *ngIf="signature.user?.user_github_id">
-                    {{ signature.user?.user_github_id }}
-                  </span>
-                </td>
-                <td data-title="Version">
-                  v{{ signature.documentVersion }}
-                </td>
-                <td data-title="Date">
-                  {{ signature.date_modified }}
-                </td>
-                <!-- <td data-title="Actions" class="actions-cell">
-                <button ion-button icon-only clear round (click)="signaturePopover($event, signature)">
-                  <ion-icon name="more"></ion-icon>
-                </button>
-              </td> -->
-              </tr>
-            </tbody>
-          </table>
+          <data-table [signatures]="signatures"></data-table>
         </div>
       </ion-col>
     </ion-row>
   </ion-grid>
 </ion-content>
+
+<ion-footer>this is footer</ion-footer>
+

@@ -9,11 +9,11 @@ import { Input, Component } from '@angular/core';
 })
 export class DataTableComponent {
   
-  @Input('tableData')
-  private tableData: any[];
+  @Input('signatures')
+  private signatures: any[] = [];
 
   constructor() {
-    this.tableData;
+    this.signatures;
   }
 
 }
