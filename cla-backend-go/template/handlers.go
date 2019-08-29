@@ -7,6 +7,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/template"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -26,6 +27,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams) middleware.Responder {
 		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, &params.Body)
 		if err != nil {
+			log.Warnf("Error generating pdfs from templates, error: %v", err)
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
 
