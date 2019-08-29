@@ -38,7 +38,7 @@
 
 [[constraint]]
   name = "github.com/go-openapi/runtime"
-  version = "0.19.3"
+  version = "0.19.4"
 
 [[constraint]]
   name = "github.com/go-openapi/spec"
@@ -50,7 +50,7 @@
 
 [[constraint]]
   name = "github.com/go-openapi/swag"
-  version = "0.19.4"
+  version = "0.19.5"
 
 [[constraint]]
   name = "github.com/go-openapi/validate"

@@ -60,8 +60,11 @@ export class MyApp {
     // manually create new httpClient with keycloakHttp
     let kcHttpClient = new HttpClient(keycloakHttp);
 
+    // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
+    // will be set to 'true', otherwise we're using normal services deployed in each environment
+    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
     // Set true for local debugging using localhost (local ports set in claService)
-    this.claService.isLocalTesting(false);
+    this.claService.isLocalTesting(localServicesMode);
 
     // set authd services to use kcHttpClient
     this.claService.setApiUrl(EnvConfig['cla-api-url']);

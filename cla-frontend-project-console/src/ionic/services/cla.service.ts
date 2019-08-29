@@ -1,9 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Http, RequestOptions, URLSearchParams } from '@angular/http';
-import { Observable } from "rxjs/Observable";
+import {Injectable} from "@angular/core";
+import {Http} from '@angular/http';
 
 import "rxjs/Rx";
 
@@ -21,7 +20,64 @@ export class ClaService {
     this.http = http;
   }
 
+  private getV1APIEndpoint(path: string) {
+    return new URL(this.claApiUrl + path);
+  }
+
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V1 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV1Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v1ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V2 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV2Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v2ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V3 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV3Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v3ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
   public isLocalTesting(flag: boolean) {
+    if (flag) {
+      console.log('Running in local services mode');
+    } else {
+      console.log('Running in deployed services mode');
+    }
     this.localTesting = flag;
   }
 
@@ -41,21 +97,22 @@ export class ClaService {
 
   /**
    * This service should ONLY contain methods calling CLA API
-   **/
+   */
 
   //////////////////////////////////////////////////////////////////////////////
 
   /**
-   * /user
+   * GET /user
    */
   getUsers() {
-    if (this.localTesting) {
-      return this.http.get(this.v1ClaAPIURLLocal + "/v1/user").map(res => res.json());
-    } else {
-      return this.http.get(this.claApiUrl + "/v1/user").map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user');
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * POST /v1/user
+   * @param user the user payload
+   */
   postUser(user) {
     /*
       {
@@ -65,17 +122,14 @@ export class ClaService {
         'user_github_id': 12345
       }
      */
-    if (this.localTesting) {
-      return this.http
-        .post(this.v1ClaAPIURLLocal + "/v1/user", user)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .post(this.claApiUrl + "/v1/user", user)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user');
+    return this.http.post(url, user).map(res => res.json());
   }
 
+  /**
+   * PUT /v1/user
+   * @param user the user payload
+   */
   putUser(user) {
     /*
       {
@@ -86,102 +140,61 @@ export class ClaService {
         'user_github_id': 12345
       }
      */
-    if (this.localTesting) {
-      return this.http.put(this.v1ClaAPIURLLocal + "/v1/user", user).map(res => res.json());
-    } else {
-      return this.http.put(this.claApiUrl + "/v1/user", user).map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user');
+    return this.http.put(url, user).map(res => res.json());
   }
 
   /**
-   * /user/{user_id}
+   * GET /user/{user_id}
    */
   getUser(userId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v2ClaAPIURLLocal + "/v2/user/" + userId)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v2/user/" + userId)
-        .map(res => res.json());
-    }
-  }
-
-  deleteUser(userId) {
-    if (this.localTesting) {
-      return this.http
-        .delete(this.v1ClaAPIURLLocal + "/v1/user/" + userId)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .delete(this.claApiUrl + "/v1/user/" + userId)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV2Endpoint('/v2/user/' + userId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /user/email/{user_email}
+   * DELETE /v1/user/userId
+   * @param userId the user ID
+   */
+  deleteUser(userId) {
+    const url: URL = this.getV1Endpoint('/v1/user/' + userId);
+    return this.http.delete(url).map(res => res.json());
+  }
+
+  /**
+   * GET /v1/user/email/{user_email}
    */
   getUserByEmail(userEmail) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v1ClaAPIURLLocal + "/v1/user/email/" + userEmail)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v1/user/email/" + userEmail)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user/email/' + userEmail);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /user/github/{user_github_id}
+   * GET /user/github/{user_github_id}
    */
   getUserByGithubId(userGithubId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v1ClaAPIURLLocal + "/v1/user/github/" + userGithubId)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v1/user/github/" + userGithubId)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user/github/' + userGithubId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /user/{user_id}/signatures
+   * GET /user/{user_id}/signatures
    */
   getUserSignatures(userId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v1ClaAPIURLLocal + "/v1/user/" + userId + "/signatures")
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v1/user/" + userId + "/signatures")
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/user/' + userId + '/signature');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /users/company/{user_company_id}
+   * GET /users/company/{user_company_id}
    */
   getUsersByCompanyId(userCompanyId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v1ClaAPIURLLocal + "/v1/users/company/" + userCompanyId)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v1/users/company/" + userCompanyId)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/users/company/' + userCompanyId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /user/{user_id}/request-company-whitelist/{company_id}
+   * POST /user/{user_id}/request-company-whitelist/{company_id}
    */
   postUserMessageToCompanyManager(userId, companyId, message) {
     /*
@@ -189,58 +202,37 @@ export class ClaService {
         'message': 'custom message to manager'
       }
       */
-    if (this.localTesting) {
-      return this.http
-        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/request-company-whitelist/' + companyId);
+    return this.http.post(url, message).map(res => res.json());
   }
 
   /**
-   * /user/{user_id}/active-signature
+   * GET /user/{user_id}/active-signature
    */
   getUserSignatureIntent(userId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/active-signature")
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v2/user/" + userId + "/active-signature")
-        .map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v2/user/' + userId + '/active-signature');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /user/{user_id}/project/{project_id}/last-signature
+   * GET /user/{user_id}/project/{project_id}/last-signature
    */
   getLastIndividualSignature(userId, projectId) {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/project/" + projectId + "/last-signature")
-        .map(res => res.json());
-    } else {
-      return this.http
-        .get(this.claApiUrl + "/v2/user/" + userId + "/project/" + projectId + "/last-signature")
-        .map(res => res.json());
-    }
+    const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/project/' + projectId + '/last-signature');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /signature
+   * GET /signature
    */
   getSignatures() {
-    if (this.localTesting) {
-      return this.http.get(this.v1ClaAPIURLLocal + "/v1/signature").map(res => res.json());
-    } else {
-      return this.http.get(this.claApiUrl + "/v1/signature").map(res => res.json());
-    }
+    const url: URL = this.getV1Endpoint('/v1/signature');
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * POST /signature
+   */
   postSignature(signature) {
     /*
       signature: {
@@ -254,11 +246,14 @@ export class ClaService {
         'signature_reference_type': ('individual' | 'corporate'),
       }
       */
-    return this.http
-      .post(this.claApiUrl + "/v1/signature", signature)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signature');
+    return this.http.post(url, signature).map(res => res.json());
   }
 
+  /**
+   * PUT /v1/signature
+   * @param signature the signature payload
+   */
   putSignature(signature) {
     /*
       signature: {
@@ -273,81 +268,69 @@ export class ClaService {
         'signature_reference_type': ('individual' | 'corporate'),
       }
       */
-    return this.http
-      .put(this.claApiUrl + "/v1/signature", signature)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signature');
+    return this.http.put(url, signature).map(res => res.json());
   }
 
   /**
-   * /signature/{signature_id}
-   **/
-
+   * GET /signature/{signature_id}
+   */
   getSignature(signatureId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/signature/" + signatureId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * DELETE /signature/{signature_id}
+   */
   deleteSignature(signatureId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/signature/" + signatureId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
+    return this.http.delete(url).map(res => res.json());
   }
 
   /**
-   * /signatures/user/{user_id}
-   **/
-
+   * GET /signatures/user/{user_id}
+   */
   getSignaturesUser(userId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/signatures/user/" + userId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /signatures/company/{company_id}
-   **/
-
+   * GET /signatures/company/{company_id}
+   */
   getCompanySignatures(companyId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/signatures/company/" + companyId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /signatures/company/{company_id}/project/{project_id}
-   **/
-
+   * GET /signatures/company/{company_id}/project/{project_id}
+   */
   getCompanyProjectSignatures(companyId, projectId) {
-    return this.http
-      .get(
-        this.claApiUrl +
-        "/v1/signatures/company/" +
-        companyId +
-        "/project/" +
-        projectId
-      )
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /signatures/project/{project_id}
-   **/
-
+   * GET /signatures/project/{project_id}
+   */
   getProjectSignatures(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/signatures/project/" + projectId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /repository
-   **/
-
+   * GET /repository
+   */
   getRepositories() {
-    return this.http.get(this.claApiUrl + "/v1/repository").map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository');
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * POST /repository
+   */
   postRepository(repository) {
     /*
       repository: {
@@ -358,9 +341,8 @@ export class ClaService {
         'repository_url': 'http://url-to-repo.com'
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/repository", repository)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository');
+    return this.http.post(url, repository).map(res => res.json());
   }
 
   putRepository(repository) {
@@ -374,39 +356,42 @@ export class ClaService {
         'repository_url': 'http://url-to-repo.com'
       }
      */
-    return this.http
-      .put(this.claApiUrl + "/v1/repository", repository)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository');
+    return this.http.put(url, repository).map(res => res.json());
   }
 
   /**
-   * /repository/{repository_id}
+   * GET /repository/{repository_id}
    **/
-
   getRepository(repositoryId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/repository/" + repositoryId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * DELETE /repository/{repository_id}
+   */
   deleteRepository(repositoryId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/repository/" + repositoryId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
+    return this.http.delete(url).map(res => res.json());
   }
 
   /**
    * /company
    **/
 
-
-  // Returns list of companies for current user
+  /**
+   * Returns list of companies for current user
+   * GET /v1/company
+   */
   getCompanies() {
-    return this.http.get(this.claApiUrl + "/v1/company").map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/company');
+    return this.http.get(url).map(res => res.json());
   }
 
   getAllCompanies() {
-    return this.http.get(this.claApiUrl + "/v2/company").map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/company');
+    return this.http.get(url).map(res => res.json());
   }
 
   postCompany(company) {
@@ -417,9 +402,8 @@ export class ClaService {
         'company_whitelist': ['*@email.org']
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/company", company)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/company');
+    return this.http.post(url, company).map(res => res.json());
   }
 
   putCompany(company) {
@@ -429,39 +413,39 @@ export class ClaService {
         'company_name': 'New Company Name'
       }
      */
-    return this.http
-      .put(this.claApiUrl + "/v1/company", company)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/company');
+    return this.http.put(url, company).map(res => res.json());
   }
 
   /**
-   * /company/{company_id}
-   **/
-
+   * GET /company/{company_id}
+   * @param companyId
+   */
   getCompany(companyId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/company/" + companyId)
-      .map(res => res.json());
-  }
-
-  deleteCompany(companyId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/company/" + companyId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v2/company/' + companyId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /project
-   **/
+   * DELETE /company/{company_id}
+   * @param companyId
+   */
+  deleteCompany(companyId) {
+    const url: URL = this.getV1Endpoint('/v1/company/' + companyId);
+    return this.http.delete(url).map(res => res.json());
+  }
 
+  /**
+   * GET /project
+   */
   getProjects() {
-    return this.http.get(this.claApiUrl + "/v1/project").map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project');
+    return this.http.get(url).map(res => res.json());
   }
 
   getProjectsCcla() {
-    return this.http
-      .get(this.claApiUrl + "/v1/project/ccla")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/ccla');
+    return this.http.get(url).map(res => res.json());
   }
 
   postProject(project) {
@@ -474,11 +458,14 @@ export class ClaService {
         'project_icla_enabled': True
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/project", project)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project');
+    return this.http.post(url, project).map(res => res.json());
   }
 
+  /**
+   * PUT /project/{project_id}
+   * @param project the project payload
+   */
   putProject(project) {
     /*
       {
@@ -486,116 +473,102 @@ export class ClaService {
         'project_name': 'New Project Name'
       }
      */
-    return this.http
-      .put(this.claApiUrl + "/v1/project", project)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project');
+    return this.http.put(url, project).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}
-   **/
-
+   * GET /project/{project_id}
+   * @param projectId the project ID
+   */
   getProject(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/project/" + projectId)
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/project/' + projectId);
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * GET /v1/project/external/{externalId}
+   * @param externalId the external ID
+   */
   getProjectsByExternalId(externalId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/project/external/" + externalId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * DELETE /v1/project/{projectId}
+   * @param projectId the project ID
+   */
   deleteProject(projectId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/project/" + projectId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId);
+    return this.http.delete(url).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/repositories
+   * GET /project/{project_id}/repositories
    **/
-
   getProjectRepositories(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/project/" + projectId + "/repositories")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/repositories_by_org
+   * GET /project/{project_id}/repositories_by_org
    **/
-
   getProjectRepositoriesByrOrg(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/project/" + projectId + "/repositories_group_by_organization")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /repository
+   * POST /repository
    **/
-
   postProjectRepository(repository) {
-    return this.http
-      .post(this.claApiUrl + "/v1/repository/", repository)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository');
+    return this.http.post(url, repository).map(res => res.json());
   }
 
   /**
-   * /repository
-   **/
-
+   * DELETE /repository
+   */
   removeProjectRepository(repositoryId) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/repository/" + repositoryId)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
+    return this.http.delete(url).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/configuration_orgs_and_repos
-   **/
-
+   * GET /project/{project_id}/configuration_orgs_and_repos
+   */
   getProjectConfigurationAndRepos(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v1/project/" + projectId + "/configuration_orgs_and_repos")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/configuration_orgs_and_repos');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /sfdc/${sfid}/github/organizations
-   **/
-
+   * GET /sfdc/${sfid}/github/organizations
+   */
   getOrganizations(sfid) {
-    return this.http
-      .get(this.claApiUrl + `/v1/sfdc/${sfid}/github/organizations`)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/sfdc/' + sfid + '/github/organizations');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/companies
-   **/
-
+   * GET /project/{project_id}/companies
+   */
   getProjectCompanies(projectId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/project/" + projectId + "/companies")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/companies');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/document/{document_type}
-   **/
-
-  getProjectDocument(projectId, documentType) {
-    return this.http
-      .get(
-        this.claApiUrl + "/v2/project/" + projectId + "/document/" + documentType
-      )
-      .map(res => res.json());
+   * GET /project/{project_id}/document/{document_type}
+   */
+  getProjectDocument(projectId: String, documentType: String) {
+    const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/document/' + documentType);
+    return this.http.get(url).map(res => res.json());
   }
 
-  postProjectDocument(projectId, documentType, document) {
+  postProjectDocument(projectId: String, documentType: String, document) {
     /*
       {
         'document_name': 'doc_name.pdf',
@@ -603,12 +576,8 @@ export class ClaService {
         'document_content': 'http://url.com/doc.pdf'
       }
      */
-    return this.http
-      .post(
-        this.claApiUrl + "/v1/project/" + projectId + "/document/" + documentType,
-        document
-      )
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType);
+    return this.http.post(url, document).map(res => res.json());
   }
 
   postProjectDocumentTemplate(projectId, documentType, document) {
@@ -620,67 +589,28 @@ export class ClaService {
         'new_major_version': true|false,
       }
      */
-    return this.http
-      .post(
-        this.claApiUrl +
-        "/v1/project/" +
-        projectId +
-        "/document/template/" +
-        documentType,
-        document
-      )
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/template/' + documentType);
+    return this.http.post(url, document).map(res => res.json());
   }
 
   /**
-   * /project/{project_id}/document/{document_type}/{major_version}/{minor_version}
+   * DELETE /project/{project_id}/document/{document_type}/{major_version}/{minor_version}
    */
-  deleteProjectDocumentRevision(
-    projectId,
-    documentType,
-    majorVersion,
-    minorVersion
-  ) {
-    return this.http
-      .delete(
-        this.claApiUrl +
-        "/v1/project/" +
-        projectId +
-        "/document/" +
-        documentType +
-        "/" +
-        majorVersion +
-        "/" +
-        minorVersion
-      )
-      .map(res => res.json());
+  deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion);
+    return this.http.delete(url).map(res => res.json());
   }
 
   /*
-   * /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
+   * GET /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
    */
-  getProjectDocumentRevisionPdf(
-    projectId,
-    documentType,
-    majorVersion,
-    minorVersion
-  ) {
-    return this.http
-    .get(this.claApiUrl +
-      "/v1/project/" +
-      projectId +
-      "/document/" +
-      documentType +
-      "/pdf/" +
-      majorVersion +
-      "/" +
-      minorVersion
-    )
-    .map(res => res.text());
+  getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /request-individual-signature
+   * POST /request-individual-signature
    */
   postIndividualSignatureRequest(signatureRequest) {
     /*
@@ -691,13 +621,12 @@ export class ClaService {
         'callback_url': 'http://cla.system/signed-callback'
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v2/request-individual-signature", signatureRequest)
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/request-individual-signature');
+    return this.http.post(url, signatureRequest).map(res => res.json());
   }
 
   /**
-   * /request-employee-signature
+   * POST /request-employee-signature
    */
   postEmployeeSignatureRequest(signatureRequest) {
     /*
@@ -707,13 +636,12 @@ export class ClaService {
         'user_id': <user-id>
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v2/request-employee-signature", signatureRequest)
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/request-employee-signature');
+    return this.http.post(url, signatureRequest).map(res => res.json());
   }
 
   /**
-   * /request-corporate-signature
+   * POST /request-corporate-signature
    */
   postCorporateSignatureRequest(signatureRequest) {
     /*
@@ -723,89 +651,62 @@ export class ClaService {
         'return_url': <optional-return-url>,
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/request-corporate-signature", signatureRequest)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/request-corporate-signature');
+    return this.http.post(url, signatureRequest).map(res => res.json());
   }
 
   /**
-   * /signed/{installation_id}/{github_repository_id}/{change_request_id}
+   * POST /signed/{installation_id}/{github_repository_id}/{change_request_id}
    */
   postSigned(installationId, githubRepositoryId, changeRequestId) {
-    return this.http
-      .post(
-        this.claApiUrl +
-        "/v1/signed/" +
-        installationId +
-        "/" +
-        githubRepositoryId +
-        "/" +
-        changeRequestId
-      )
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
+    return this.http.post(url).map(res => res.json());
   }
 
   /**
-   * /return-url/{signature_id}
+   * GET /return-url/{signature_id}
    */
   getReturnUrl(signatureId) {
-    return this.http
-      .get(this.claApiUrl + "/v2/return-url/" + signatureId)
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/return-url/' + signatureId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}
+   * GET /repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}
    */
-  getSignRequest(
-    provider,
-    installationId,
-    githubRepositoryId,
-    changeRequestId
-  ) {
-    return this.http
-      .get(
-        this.claApiUrl +
-        "/v2/repository-provider/" +
-        provider +
-        "/sign/" +
-        installationId +
-        "/" +
-        githubRepositoryId +
-        "/" +
-        changeRequestId
-      )
-      .map(res => res.json());
+  getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
+    const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/sign/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /repository-provider/{provider}/icon.svg
+   * GET /repository-provider/{provider}/icon.svg
    */
   getChangeIcon(provider) {
     // This probably won't map to json, but instead to svg/xml
-    return this.http
-      .get(this.claApiUrl + "/v2/repository-provider/" + provider + "/icon.svg")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/icon.svg');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /repository-provider/{provider}/activity
+   * POST /repository-provider/{provider}/activity
    */
   postReceivedActivity(provider) {
-    return this.http
-      .post(this.claApiUrl + "/v2/repository-provider/" + provider + "/activity")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/activity');
+    return this.http.post(url).map(res => res.json());
   }
 
   /**
-   * /github/organizations
+   * GET /github/organizations
    */
   getGithubOrganizations() {
-    return this.http
-      .get(this.claApiUrl + "/v1/github/organizations")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/organizations');
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * POST /github/organizations
+   */
   postGithubOrganization(organization) {
     /*
       organization: {
@@ -813,161 +714,133 @@ export class ClaService {
         'organization_name': 'org-name'
       }
      */
-    return this.http
-      .post(this.claApiUrl + "/v1/github/organizations", organization)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/organizations');
+    return this.http.post(url, organization).map(res => res.json());
   }
 
   /**
-   * /github/get/namespace/{namespace}
+   * GET /github/get/namespace/{namespace}
    */
   getGithubGetNamespace(namespace) {
-    return this.http
-      .get(this.claApiUrl + "/v1/github/get/namespace/" + namespace)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /github/check/namespace/{namespace}
+   * GET /github/check/namespace/{namespace}
    */
   getGithubCheckNamespace(namespace) {
-    return this.http
-      .get(this.claApiUrl + "/v1/github/check/namespace/" + namespace)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/check/namespace/' + namespace);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /github/organizations/{organization_name}
+   * GET /github/organizations/{organization_name}
    */
   getGithubOrganization(organizationName) {
-    return this.http
-      .get(this.claApiUrl + "/v1/github/organizations/" + organizationName)
-      .map(res => res.json());
-  }
-
-  deleteGithubOrganization(organizationName) {
-    return this.http
-      .delete(this.claApiUrl + "/v1/github/organizations/" + organizationName)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /github/organizations/{organization_name}/repositories
+   * DELETE /github/organizations/{organization_name}
+   */
+  deleteGithubOrganization(organizationName) {
+    const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
+    return this.http.delete(url).map(res => res.json());
+  }
+
+  /**
+   * GET /github/organizations/{organization_name}/repositories
    */
   getGithubOrganizationRepositories(organizationName) {
-    return this.http
-      .get(
-        this.claApiUrl +
-        "/v1/github/organizations/" +
-        organizationName +
-        "/repositories"
-      )
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName + '/repositories');
+    return this.http.get(url).map(res => res.json());
   }
 
   /**
-   * /github/installation
-   **/
-
+   * GET /github/installation
+   */
   getGithubInstallation() {
-    return this.http
-      .get(this.claApiUrl + "/v2/github/installation")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/github/installation');
+    return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * POST /github/installation
+   */
   postGithubInstallation() {
-    return this.http
-      .post(this.claApiUrl + "/v2/github/installation")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/github/installation');
+    return this.http.post(url).map(res => res.json());
   }
 
   /**
-   * /github/activity
-   **/
-
+   * POST /github/activity
+   */
   postGithubActivity() {
-    return this.http
-      .post(this.claApiUrl + "/v2/github/activity")
-      .map(res => res.json());
+    const url: URL = this.getV2Endpoint('/v2/github/activity');
+    return this.http.post(url).map(res => res.json());
   }
 
   /**
-   * /github/validate
-   **/
-
+   * POST /github/validate
+   */
   postGithubValidate() {
-    return this.http
-      .post(this.claApiUrl + "/v1/github/validate")
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/github/validate');
+    return this.http.post(url).map(res => res.json());
   }
 
   /**
-   * /salesforce/projects
-   **/
-
+   * GET /salesforce/projects
+   */
   getAllProjectsFromSFDC() {
-    return this.http
-      .get(this.claApiUrl + "/v1/salesforce/projects")
-      .map(res => res.json()
-        .map(p => this.addProjectLogoFromS3(p))
-      );
+    // Use the deployed API endpoint regardless as the salesforce endpoints are on a different lambda and
+    // we don't/can't run this locally
+    const url: URL = this.getV1APIEndpoint('/v1/salesforce/projects');
+    return this.http.get(url).map(res => res.json().map(p => this.addProjectLogoFromS3(p)));
   }
 
+  /**
+   * GET /salesforce/projects?id={projectId}
+   */
   getProjectFromSFDC(projectId) {
-    return this.http
-      .get(this.claApiUrl + `/v1/salesforce/project?id=${projectId}`)
-      .map(res => res.json())
-      .map(p => this.addProjectLogoFromS3(p));
+    // Use the deployed API endpoint regardless as the salesforce endpoints are on a different lambda and
+    // we don't/can't run this locally
+    const url: URL = this.getV1APIEndpoint('/v1/salesforce/project?id=' + projectId);
+    return this.http.get(url).map(res => res.json()).map(p => this.addProjectLogoFromS3(p));
   }
 
   addProjectLogoFromS3(project) {
     let objLogoUrl = {
       "logoRef": `${this.s3LogoUrl}/${project.id}.png`
-    }
-    return { ...project, ...objLogoUrl }
+    };
+    return {...project, ...objLogoUrl};
   }
 
-
   getGerritInstance(projectId) {
-    return this.http
-      .get(this.claApiUrl + `/v1/project/${projectId}/gerrits`)
-      .map(res => res.json())
+    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
+    return this.http.get(url).map(res => res.json());
   }
 
   deleteGerritInstance(gerritId) {
-    return this.http
-      .delete(this.claApiUrl + `/v1/gerrit/${gerritId}`)
-      .map(res => res.json())
+    const url: URL = this.getV1Endpoint('/v1/gerrit/' + gerritId);
+    return this.http.delete(url).map(res => res.json());
   }
 
   postGerritInstance(gerrit) {
-    return this.http
-      .post(this.claApiUrl + "/v1/gerrit", gerrit)
-      .map(res => res.json());
+    const url: URL = this.getV1Endpoint('/v1/gerrit');
+    return this.http.post(url, gerrit).map(res => res.json());
   }
 
   getTemplates() {
-    if (this.localTesting) {
-      return this.http
-        .get(this.v3ClaAPIURLLocal + `/v3/template`)
-        .map(res => res.json())
-    } else {
-      return this.http
-        .get(this.claApiUrl + `/v3/template`)
-        .map(res => res.json())
-    }
+    const url: URL = this.getV3Endpoint('/v3/template');
+    return this.http.get(url).map(res => res.json());
   }
 
   postClaGroupTemplate(projectId, data) {
-    if (this.localTesting) {
-      return this.http
-        .post(this.v3ClaAPIURLLocal + `/v3/clagroup/${projectId}/template`, data)
-        .map(res => res.json());
-    } else {
-      return this.http
-        .post(this.claApiUrl + `/v3/clagroup/${projectId}/template`, data)
-        .map(res => res.json());
-    }
+    const url: URL = this.getV3Endpoint('/v3/clagroup/' + projectId + '/template');
+    return this.http.post(url, data).map(res => res.json());
   }
+
   //////////////////////////////////////////////////////////////////////////////
 }
