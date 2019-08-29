@@ -683,8 +683,10 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
 
     :TODO: Update comments.
 
-    :param repository_id: The ID of the repository this PR belongs to.
-    :type repository_id: int
+    :param installation_id: The ID of the GitHub installation
+    :type installation_id: int
+    :param github_repository_id: The ID of the GitHub repository this PR belongs to.
+    :type github_repository_id: int
     :param pull_request: The GitHub PullRequest object for this PR.
     :type pull_request: GitHub.PullRequest
     :param signed: The list of (commit hash, author name) tuples that have signed an
@@ -712,15 +714,24 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
                           'with missing authors: {}'.format(pull_request.number, signed, missing))
 
     if both or notification == 'status':
-        state = 'failure'
+        context_name = os.environ.get('GH_STATUS_CTX_NAME')
+        if context_name is None:
+            context_name = 'communitybridge/cla'
+
         for commit, author_name in missing:
-            context, body = cla.utils.assemble_cla_status(author_name, signed=False)
+            state = 'failure'
+            # For status, we change the context from author_name to 'communitybridge/cla' or the
+            # specified default value per issue #166
+            context, body = cla.utils.assemble_cla_status(context_name, signed=False)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
-        state = 'success'
+
         for commit, author_name in signed:
-            context, body = cla.utils.assemble_cla_status(author_name, signed=True)
+            state = 'success'
+            # For status, we change the context from author_name to 'communitybridge/cla' or the
+            # specified default value per issue #166
+            context, body = cla.utils.assemble_cla_status(context_name, signed=True)
             # sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
             cla.log.info('Creating new CLA status on commit %s: %s', commit, state)
             sign_url = "https://lfcla.com"  # Remove this once signature detail page ready.
