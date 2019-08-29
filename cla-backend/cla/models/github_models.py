@@ -706,10 +706,11 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
-        update_cla_comment(pull_request, body)
         if not missing:
             cla.log.debug('EasyCLA App checks pass for PR: {} with authors: {}'.format(pull_request.number, signed))
         else:
+            # Per Issue #167, only add a comment if check fails
+            update_cla_comment(pull_request, body)
             cla.log.debug('EasyCLA App checks fail for PR: {}. CLA signatures with signed authors: {} and '
                           'with missing authors: {}'.format(pull_request.number, signed, missing))
 
