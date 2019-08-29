@@ -42,7 +42,8 @@
                   <ion-col col-12 col-md-8>
                     <ion-item>
                       <ion-label stacked>{{ field.name }}</ion-label>
-                      <ion-input class="template-field" type="text" [(ngModel)]="templateValues[field.templateVariable]">
+                      <ion-input class="template-field" type="text"
+                                 [(ngModel)]="templateValues[field.templateVariable]">
                       </ion-input>
                       <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
                     </ion-item>
@@ -50,11 +51,14 @@
                 </ion-row>
 
                 <ion-row>
-                  <ion-col>
-                    <button ion-button (click)="reviewSelectedTemplate()" color="secondary">
-                      Review
+                  <div style="text-align: left;">
+                    <button ion-button (click)="reviewSelectedTemplate()" color="secondary"
+                            [disabled]="!buttonGenerateEnabled">
+                      Generate and Review PDFs
                     </button>
-                  </ion-col>
+                    <loading-spinner [loading]="loading.documents"></loading-spinner>
+                    <h3 class="error-message" *ngIf="message">{{ message }}</h3>
+                  </div>
                 </ion-row>
               </ion-grid>
 
@@ -70,10 +74,12 @@
 
                 <ion-row>
                   <ion-col>
-                    <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary" [disabled]="currentPDF === 'corporatePDFURL'">
+                    <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
+                            [disabled]="currentPDF === 'corporatePDFURL'">
                       View CCLA
                     </button>
-                    <button ion-button (click)="showPDF('individualPDFURL')" color="secondary" [disabled]="currentPDF === 'individualPDFURL'">
+                    <button ion-button (click)="showPDF('individualPDFURL')" color="secondary"
+                            [disabled]="currentPDF === 'individualPDFURL'">
                       View ICLA
                     </button>
                   </ion-col>
@@ -82,7 +88,7 @@
                 <ion-row>
                   <ion-col>
                     <object [data]="getPdfPath()" type="application/pdf" class="pdf-viewer">
-                      <embed [src]="getPdfPath()" type="application/pdf" />
+                      <embed [src]="getPdfPath()" type="application/pdf"/>
                     </object>
                   </ion-col>
                 </ion-row>

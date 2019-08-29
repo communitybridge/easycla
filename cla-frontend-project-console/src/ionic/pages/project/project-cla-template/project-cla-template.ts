@@ -2,14 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 import {Component, ViewChild} from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  IonicPage, Nav, Events, AlertController
-} from "ionic-angular";
+import {IonicPage, Nav, NavController, NavParams} from "ionic-angular";
 import {ClaService} from "../../../services/cla.service";
 import {Restricted} from "../../../decorators/restricted";
-import { DomSanitizer } from '@angular/platform-browser';
+import {DomSanitizer} from '@angular/platform-browser';
 
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
@@ -22,7 +18,6 @@ import { DomSanitizer } from '@angular/platform-browser';
   templateUrl: "project-cla-template.html"
 })
 export class ProjectClaTemplatePage {
-  loading: any;
   sfdcProjectId: string;
   projectId: string;
   templates: any[] = [];
@@ -34,6 +29,11 @@ export class ProjectClaTemplatePage {
   };
   currentPDF = 'corporatePDFURL';
   step = 'selection';
+  buttonGenerateEnabled = true;
+  message = null;
+  loading = {
+    documents: false
+  };
 
   @ViewChild(Nav) nav: Nav;
 
@@ -57,13 +57,14 @@ export class ProjectClaTemplatePage {
   }
 
   ngOnInit() {
+    this.setLoadingSpinner(false);
   }
 
   getPdfPath() {
     return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
   }
 
-  showPDF (type) {
+  showPDF(type) {
     this.currentPDF = type;
   }
 
@@ -73,10 +74,13 @@ export class ProjectClaTemplatePage {
   }
 
   reviewSelectedTemplate() {
+    this.setLoadingSpinner(true);
+    this.buttonGenerateEnabled = false;
+    this.message = 'Generating PDFs...';
 
-    var metaFields = this.selectedTemplate.metaFields; 
+    const metaFields = this.selectedTemplate.metaFields;
     metaFields.forEach(metaField => {
-      if ( this.templateValues.hasOwnProperty(metaField.templateVariable)) {
+      if (this.templateValues.hasOwnProperty(metaField.templateVariable)) {
         metaField.value = this.templateValues[metaField.templateVariable]
       }
 
@@ -84,14 +88,20 @@ export class ProjectClaTemplatePage {
     let data = {
       templateID: this.selectedTemplate.ID,
       metaFields: metaFields
-    }
+    };
 
-    this.claService.postClaGroupTemplate(this.projectId,  data)
+    this.claService.postClaGroupTemplate(this.projectId, data)
       .subscribe(response => {
+        this.setLoadingSpinner(false);
+        this.buttonGenerateEnabled = true;
+        this.message = null;
         this.pdfPath = response;
-        console.log(this.pdfPath)
         this.goToStep('review');
-      })
+      }, (error) => {
+        this.setLoadingSpinner(false);
+        this.buttonGenerateEnabled = true;
+        this.message = 'Error creating PDFs: ' + error;
+      });
   }
 
   goToStep(step) {
@@ -102,4 +112,9 @@ export class ProjectClaTemplatePage {
     this.navCtrl.pop();
   }
 
+  setLoadingSpinner(value: boolean) {
+    this.loading = {
+      documents: value
+    };
+  }
 }

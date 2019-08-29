@@ -8,6 +8,6 @@
     "install-aws-profile": "./scripts/install-aws-profile.sh"
   },
   "dependencies": {
-    "serverless": "^1.46.1"
+    "serverless": "^1.51.0"
   }
 }
