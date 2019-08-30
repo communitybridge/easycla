@@ -12,12 +12,22 @@
 </ion-header>
 
 <ion-content>
+  <form [formGroup]="form">
+    <ion-row>
+      <ion-col col-2>
+        <ion-label class="header">Search:</ion-label>
+      </ion-col>
+      <ion-col col-3>
+        <ion-input type="text" formControlName="search" placeholder="search term" (ionChange)='onSearch()'></ion-input>
+      </ion-col>
+    </ion-row>
+  </form>
   <loading-spinner [loading]="loading"></loading-spinner>
   <ion-grid class="project">
     <ion-row>
       <ion-col col-12>
         <ion-list>
-          <button ion-item *ngFor="let project of projects" (click)="selectProject(project)">
+          <button ion-item *ngFor="let project of projectsFiltered" (click)="selectProject(project)">
             <ion-label class="project-name">{{ project.project_name }}</ion-label>
           </button>
         </ion-list>
