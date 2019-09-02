@@ -1,18 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  ModalController,
-  ViewController,
-  AlertController,
-  IonicPage
-} from "ionic-angular";
-import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
+import {Component} from "@angular/core";
+import {IonicPage, NavController, NavParams, ViewController} from "ionic-angular";
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {ClaService} from "../../services/cla.service";
+import {ClaCompanyModel} from "../../models/cla-company";
 
 @IonicPage({
   segment: "projects-ccla-select-modal"
@@ -22,7 +15,9 @@ import { ClaCompanyModel } from "../../models/cla-company";
   templateUrl: "projects-ccla-select-modal.html"
 })
 export class ProjectsCclaSelectModal {
+  form: FormGroup;
   projects: any;
+  projectsFiltered: any;
   loading: any;
   company: ClaCompanyModel;
 
@@ -34,6 +29,10 @@ export class ProjectsCclaSelectModal {
     private claService: ClaService
   ) {
     this.getDefaults();
+    this.form = formBuilder.group({
+      // provider: ['', Validators.required],
+      search: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
+    });
   }
 
   getDefaults() {
@@ -48,9 +47,31 @@ export class ProjectsCclaSelectModal {
   getProjectsCcla() {
     this.claService.getCompanyUnsignedProjects(this.company.company_id).subscribe(response => {
       this.loading = false;
-      this.projects = response;
-    });
+      // Sort on the project name field after filtering empty project names
+      this.projects = response.filter((a) => a != null && a.project_name.trim().length > 0).sort((a, b) => {
+        // force project_name to be a string to avoid any exceptions - sort use users locale
+        return ('' + a.project_name).localeCompare(b.project_name);
+      });
 
+      // Reset our filtered search
+      this.form.value.search = '';
+      this.projectsFiltered = this.projects
+    });
+  }
+
+  /**
+   * onSearch simply filters the projects view
+   */
+  onSearch() {
+    const searchTerm = this.form.value.search;
+    // console.log('Search term:' + searchTerm);
+    if (searchTerm === '') {
+      this.projectsFiltered = this.projects
+    } else {
+      this.projectsFiltered = this.projects.filter((a) => {
+        return a.project_name.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    }
   }
 
   selectProject(project) {
