@@ -272,7 +272,12 @@ func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
 func responseLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(NewLoggingResponseWriter(w), r)
-		log.Debugf("%s %s, response %d %s\n", r.Method, r.URL.String(), NewLoggingResponseWriter(w).StatusCode, http.StatusText(NewLoggingResponseWriter(w).StatusCode))
+		if r.Response != nil {
+			log.Debugf("%s %s, response code: %d response status: %s",
+				r.Method, r.URL.String(), r.Response.StatusCode, r.Response.Status)
+		} else {
+			log.Debugf("%s %s", r.Method, r.URL.String())
+		}
 	})
 }
 

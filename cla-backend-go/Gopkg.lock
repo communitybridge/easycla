@@ -192,7 +192,7 @@
   version = "v0.19.2"
 
 [[projects]]
-  digest = "1:94179a6c9293851a32d8d1ba38dfac8091ee0702f0ae849d4ea74c605b5e8aec"
+  digest = "1:513a1759d912bc23f6ddb38580c6909e59557d289be5641a8c2ca03ba1abf1a5"
   name = "github.com/go-openapi/runtime"
   packages = [
     ".",
@@ -205,8 +205,8 @@
     "security",
   ]
   pruneopts = "UT"
-  revision = "58872d9a7ca5f28beff9effa19ac4c17d3e42cd3"
-  version = "v0.19.3"
+  revision = "882fa18ad52bee24eb77d2312d1929580e894013"
+  version = "v0.19.4"
 
 [[projects]]
   digest = "1:b1f97d0d316f90c2059f7bfee14855c314d65834a3b93f02856e01c1fb8fbebe"
@@ -225,12 +225,12 @@
   version = "v0.19.2"
 
 [[projects]]
-  digest = "1:2de91ae845491f7158c1644a1183d2bbcc5a7bd668768b60a91519f848603dad"
+  digest = "1:43d0f99f53acce97119181dcd592321084690c2d462c57680ccb4472ae084949"
   name = "github.com/go-openapi/swag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "de649ffb9e02183a414820c5b1b4582f7b009792"
-  version = "v0.19.4"
+  revision = "c3d0f7896d589f3babb99eea24bbc7de98108e72"
+  version = "v0.19.5"
 
 [[projects]]
   digest = "1:9d2bd059a75e4ac3983cc93fe013dbc7f789fccb996171094279458b15329842"

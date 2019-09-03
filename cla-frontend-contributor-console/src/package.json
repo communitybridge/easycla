@@ -1,7 +1,7 @@
 {
   "name": "cla-frontend-contributor-console",
   "license": "MIT",
-  "author": "",
+  "author": "The Linux Foundation",
   "private": true,
   "os": [
     "linux",
