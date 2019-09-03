@@ -8,6 +8,7 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { ModalHeaderComponentModule } from "../../components/modal-header/modal-header.module";
 import {SortingDisplayComponentModule} from "../../components/sorting-display/sorting-display.module";
+import {NgxPaginationModule} from 'ngx-pagination';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import {SortingDisplayComponentModule} from "../../components/sorting-display/so
     LoadingDisplayDirectiveModule,
     ModalHeaderComponentModule,
     SortingDisplayComponentModule,
+    NgxPaginationModule,
     IonicPageModule.forChild(ClaContractViewSignaturesModal)
   ],
   entryComponents: [
