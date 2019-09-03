@@ -31,9 +31,16 @@
                 <p>
                   We are generating a document to sign for the purposes of your CLA. Please fill out accurately and complete the signing process.
                 </p>
-                <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
-                  Open CLA
-                </button>
+                <ion-col col-1>
+                  <loading-spinner [loading]="loading"></loading-spinner>
+                </ion-col>
+                <ion-col col-2>
+                  <ion-label class="header">
+                    <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
+                      Open CLA
+                    </button>
+                  </ion-label>
+                </ion-col>
               </div>
               <div *ngIf="error">
                 <p *ngIf="error.errors.signature_id">

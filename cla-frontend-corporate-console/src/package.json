@@ -1,7 +1,7 @@
 {
   "name": "cla-frontend-corporate-console",
   "license": "MIT",
-  "author": "",
+  "author": "The Linux Foundation",
   "private": true,
   "os": [
     "linux",
@@ -23,7 +23,8 @@
     "preserve:qa": "STAGE_ENV=qa node ./config/scripts/prefetch-ssm.js",
     "serve:qa": "STAGE_ENV=qa ./node_modules/.bin/ionic-app-scripts serve",
     "preserve:dev": "STAGE_ENV=dev node ./config/scripts/prefetch-ssm.js",
-    "serve:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve -p 8101 -r 8102 --dev-logger-port 8103",
+    "serve:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve",
+    "serve:dev:local": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve -p 8101 -r 8102 --dev-logger-port 8103",
     "preserve:prod": "STAGE_ENV=prod node ./config/scripts/prefetch-ssm.js",
     "serve:prod": "STAGE_ENV=prod ./node_modules/.bin/ionic-app-scripts serve --prod"
   },
