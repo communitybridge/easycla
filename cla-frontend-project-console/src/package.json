@@ -50,6 +50,7 @@
     "ionicons": "3.0.0",
     "jwt-decode": "2.2.0",
     "ng2-google-charts": "^3.3.0",
+    "ngx-pagination": "^4.1.0",
     "rxjs": "5.5.2",
     "sw-toolbox": "3.6.0",
     "timsort": "^0.3.0",

@@ -17,6 +17,7 @@ import {SortService} from "../../services/sort.service";
 import {KeycloakService} from "../../services/keycloak/keycloak.service";
 import {RolesService} from "../../services/roles.service";
 
+
 @IonicPage({
   segment: 'cla-contract-view-signatures-modal'
 })
@@ -133,9 +134,7 @@ export class ClaContractViewSignaturesModal {
             });
           }
           //add to signatures
-          
           this.signatures.push(signature);
-          console.log(this.signatures)
         }
       }
       this.loading.signatures = false;
@@ -213,7 +212,7 @@ export class ClaContractViewSignaturesModal {
     if(this.searchTerm.length > 0) {
       this.signatures = this.signatures.filter((signature) => {
         if(
-          signature.user.user_name.toLowerCase().startsWith(this.searchTerm.toLocaleLowerCase())) {
+          signature.user.user_name && signature.user.user_name.toLowerCase().startsWith(this.searchTerm.toLocaleLowerCase())) {
           return true;
         }
         else {

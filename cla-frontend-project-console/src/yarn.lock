@@ -150,10 +150,9 @@
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@types/localforage/-/localforage-0.0.30.tgz#3d60a6bf6dda38e3f8a469611598379f1f649509"
 
-"@types/lodash@^4.14.112":
-  version "4.14.112"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.112.tgz#4a8d8e5716b97a1ac01fe1931ad1e4cba719de5a"
-  integrity sha512-jDD7sendv3V7iwyRXSlECOR8HCtMN2faVA9ngLdHHihSVIwY7nbfsKl2kA6fimUDU1i5l/zgpG3aevwWnN3zCQ==
+"@types/lodash@4.14.121":
+  version "4.14.121"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.121.tgz#9327e20d49b95fc2bf983fc2f045b2c6effc80b9"
 
 "@types/node@^8.0.17":
   version "8.10.50"
@@ -2640,6 +2639,10 @@ next-tick@^1.0.0:
 ng2-google-charts@^3.3.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/ng2-google-charts/-/ng2-google-charts-3.5.0.tgz#a968f6003787b492f087796fa44438195c5e4e1c"
+
+ngx-pagination@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/ngx-pagination/-/ngx-pagination-4.1.0.tgz#05ccd30f54351e04beeaa92cbe5c42be5fd809c2"
 
 node-fetch@^2.2.0:
   version "2.6.0"

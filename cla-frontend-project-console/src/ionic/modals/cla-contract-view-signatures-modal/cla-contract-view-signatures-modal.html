@@ -16,7 +16,86 @@
     <ion-row>
       <ion-col col-12>
         <div class="table-responsive-vertical">
-          <data-table [signatures]="signatures"></data-table>
+          <loading-spinner [loading]="loading.signatures"></loading-spinner>
+          <div *ngIf="!loading.signatures && signatures.length === 0" class="empty-signatures">
+            <h2>No Signatures</h2>
+          </div>
+          <div *ngIf="!loading.signatures && signatures.length > 0">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th class="clickable" (click)="sortMembers('signatureType')">
+                    Entity Type
+                    <sorting-display [sorting]='sort.signatureType.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('name')">
+                    Name
+                    <sorting-display [sorting]='sort.name.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('company')">
+                    Company
+                    <sorting-display [sorting]='sort.company.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('githubId')">
+                    GitHub ID
+                    <sorting-display [sorting]='sort.githubId.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('version')">
+                    Version
+                    <sorting-display [sorting]='sort.version.sort'></sorting-display>
+                  </th>
+                  <th class="clickable" (click)="sortMembers('date')">
+                    Date
+                    <sorting-display [sorting]='sort.date.sort'></sorting-display>
+                  </th>
+                  <!-- <th>
+                          Actions
+                        </th> -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let signature of signatures | paginate: { itemsPerPage: 10, currentPage: p }">
+                  <td data-title="Entity Type">
+                    <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
+                      <ion-icon name="person"></ion-icon> Individual
+                    </span>
+                    <span *ngIf="signature.signature_reference_type === 'company'">
+                      <ion-icon name="briefcase"></ion-icon> Company
+                    </span>
+                    <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
+                      <ion-icon name="person"></ion-icon> Employee
+                    </span>
+                  </td>
+                  <td data-title="Name">
+                    <span *ngIf="signature.user">
+                      {{ signature.user.user_name }}
+                    </span>
+                  </td>
+                  <td data-title="Company">
+                    <span *ngIf="signature.company">
+                      {{ signature.company.company_name }}
+                    </span>
+                  </td>
+                  <td data-title="GitHub ID">
+                    <span *ngIf="signature.user?.user_github_id">
+                      {{ signature.user?.user_github_id }}
+                    </span>
+                  </td>
+                  <td data-title="Version">
+                    v{{ signature.documentVersion }}
+                  </td>
+                  <td data-title="Date">
+                    {{ signature.date_modified }}
+                  </td>
+                  <!-- <td data-title="Actions" class="actions-cell">
+                          <button ion-button icon-only clear round (click)="signaturePopover($event, signature)">
+                            <ion-icon name="more"></ion-icon>
+                          </button>
+                        </td> -->
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </ion-col>
     </ion-row>
@@ -25,21 +104,6 @@
 
 <ion-footer class="transparent">
   <ion-row justify-content-end>
-    <ion-buttons start>
-      <button ion-button>
-        1
-      </button>
-    </ion-buttons>
-    <ion-buttons start>
-      <button ion-button>
-        2
-      </button>
-    </ion-buttons>
-    <ion-buttons start>
-      <button ion-button>
-        3
-      </button>
-    </ion-buttons>
-
+    <pagination-controls (pageChange)="p = $event"></pagination-controls>
   </ion-row>
 </ion-footer>
