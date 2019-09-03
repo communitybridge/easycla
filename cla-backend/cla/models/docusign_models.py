@@ -673,11 +673,11 @@ class DocuSign(signing_service_interface.SigningService):
             signature.set_signature_return_url(return_url)
 
         # Set signature ACL
-        signature.set_signature_acl(user.get_lf_username())
+        signature.set_signature_acl(signatory_user.get_lf_username())
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email,
-                               authority_name, authority_email, default_values=default_cla_values)
+        self.populate_sign_url(signature, callback_url, signatory_user.get_user_name(), signatory_user.get_user_email(),
+                               send_as_email, authority_name, authority_email, default_values=default_cla_values)
 
         # Save signature
         signature.save()
