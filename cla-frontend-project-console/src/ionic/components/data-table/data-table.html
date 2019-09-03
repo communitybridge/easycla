@@ -1,0 +1,60 @@
+<table datatable class="table table-hover">
+  <thead>
+    <tr>
+      <th class="clickable">
+        Entity Type
+      </th>
+      <th class="clickable">
+        Name
+      </th>
+      <th class="clickable">
+        Company
+      </th>
+      <th class="clickable">
+        GitHub ID
+      </th>
+      <th class="clickable">
+        Version
+      </th>
+      <th class="clickable">
+        Date
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let signature of signatures">
+      <td data-title="Entity Type">
+        <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
+          <ion-icon name="person"></ion-icon> Individual
+        </span>
+        <span *ngIf="signature.signature_reference_type === 'company'">
+          <ion-icon name="briefcase"></ion-icon> Company
+        </span>
+        <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
+          <ion-icon name="person"></ion-icon> Employee
+        </span>
+      </td>
+      <td data-title="Name">
+        <span *ngIf="signature.user">
+          {{ signature.user.user_name }}
+        </span>
+      </td>
+      <td data-title="Company">
+        <span *ngIf="signature.company">
+          {{ signature.company.company_name }}
+        </span>
+      </td>
+      <td data-title="GitHub ID">
+        <span *ngIf="signature.user?.user_github_id">
+          {{ signature.user?.user_github_id }}
+        </span>
+      </td>
+      <td data-title="Version">
+        v{{ signature.documentVersion }}
+      </td>
+      <td data-title="Date">
+        {{ signature.date_modified }}
+      </td>
+    </tr>
+  </tbody>
+</table>

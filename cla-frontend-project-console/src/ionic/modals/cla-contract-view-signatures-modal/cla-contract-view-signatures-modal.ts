@@ -17,6 +17,7 @@ import {SortService} from "../../services/sort.service";
 import {KeycloakService} from "../../services/keycloak/keycloak.service";
 import {RolesService} from "../../services/roles.service";
 
+
 @IonicPage({
   segment: 'cla-contract-view-signatures-modal'
 })
@@ -31,6 +32,7 @@ export class ClaContractViewSignaturesModal {
   loading: any;
   sort: any;
   signatures: any[];
+  searchTerm: string;
 
   constructor(
     public navCtrl: NavController,
@@ -60,6 +62,7 @@ export class ClaContractViewSignaturesModal {
     this.loading = {
       signatures: true,
     };
+    this.searchTerm = '',
     this.sort = {
       signatureType: {
         arrayProp: 'signatureType',
@@ -202,6 +205,24 @@ export class ClaContractViewSignaturesModal {
 
   dismiss() {
     this.viewCtrl.dismiss();
+  }
+
+  onSearch($event) {
+    this.searchTerm = $event.value;
+    if(this.searchTerm.length > 0) {
+      this.signatures = this.signatures.filter((signature) => {
+        if(
+          signature.user.user_name && signature.user.user_name.toLowerCase().startsWith(this.searchTerm.toLocaleLowerCase())) {
+          return true;
+        }
+        else {
+          return false
+        }
+      })
+    }
+    else {
+      this.getSignatures()
+    }
   }
 
 }
