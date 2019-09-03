@@ -1,14 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  IonicPage,
-  ModalController
-} from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
+import {Component} from "@angular/core";
+import {IonicPage, ModalController, NavController, NavParams} from "ionic-angular";
+import {ClaService} from "../../services/cla.service";
 
 @IonicPage({
   segment: "project/:projectId"
@@ -19,7 +14,7 @@ import { ClaService } from "../../services/cla.service";
 })
 export class ClaCorporatePage {
   projectId: string;
-
+  loading: any;
   company: any;
   project: any;
   signatureIntent: any;
@@ -48,6 +43,7 @@ export class ClaCorporatePage {
   }
 
   ngOnInit() {
+    this.loading = true;
     this.getProject(this.projectId);
     this.postSignatureRequest();
   }
@@ -79,6 +75,7 @@ export class ClaCorporatePage {
     this.claService
       .postCorporateSignatureRequest(signatureRequest)
       .subscribe(response => {
+        this.loading = false;
         // returns {
         //   user_id:
         //   signature_id:
@@ -90,7 +87,7 @@ export class ClaCorporatePage {
         }
         this.signature = response;
       });
-    
+
   }
 
   openClaAgreement() {

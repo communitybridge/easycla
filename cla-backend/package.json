@@ -2,6 +2,7 @@
   "name": "project",
   "version": "0.0.0",
   "license": "MIT",
+  "author": "The Linux Foundation",
   "devDependencies": {
     "request": "^2.88.0",
     "serverless-dynamodb-local": "^0.2.38",
