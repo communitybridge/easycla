@@ -18,15 +18,15 @@ from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
 import pydocusign  # type: ignore
-from pydocusign.exceptions import DocuSignException  # type: ignore
-
-import cla
 from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
     Document
 from cla.models.s3_storage import S3Storage
+from pydocusign.exceptions import DocuSignException  # type: ignore
+
+import cla
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -673,11 +673,11 @@ class DocuSign(signing_service_interface.SigningService):
             signature.set_signature_return_url(return_url)
 
         # Set signature ACL
-        signature.set_signature_acl(user.get_lf_username())
+        signature.set_signature_acl(signatory_user.get_lf_username())
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url, user.get_user_name(), user.get_user_email(), send_as_email,
-                               authority_name, authority_email, default_values=default_cla_values)
+        self.populate_sign_url(signature, callback_url, signatory_user.get_user_name(), signatory_user.get_user_email(),
+                               send_as_email, authority_name, authority_email, default_values=default_cla_values)
 
         # Save signature
         signature.save()
@@ -704,24 +704,36 @@ class DocuSign(signing_service_interface.SigningService):
                       format(signature.get_signature_id(), callback_url, cla_manager_name, cla_manager_email,
                              authority_name, authority_email, sig_type))
 
+        company = Company()
         user = User()
 
         # Assume the company manager is signing the CCLA
         if sig_type == 'company':
-            company = Company()
             company.load(signature.get_signature_reference_id())
             try:
                 user.load(company.get_company_manager_id())
                 name = user.get_user_name()
             except DoesNotExist:
-                cla.log.error('No CLA manager associated with this company - can not sign CCLA')
+                cla.log.warning('No CLA manager associated with this company - can not sign CCLA')
                 return
+            except Exception as e:
+                cla.log.warning('No CLA manager lookup error: '.format(e))
+                return 
         elif sig_type == 'user':
             if not send_as_email:
-                user.load(signature.get_signature_reference_id())
-                name = user.get_user_name()
-                if name is None:
-                    name = 'Unknown'
+                try:
+                    user.load(signature.get_signature_reference_id())
+                    name = user.get_user_name()
+                    if name is None:
+                        name = 'Unknown'
+                except DoesNotExist:
+                    cla.log.warning('No user associated with this signature id: {} - can not sign CCLA'.
+                                    format(signature.get_signature_reference_id()))
+                    return
+                except Exception as e:
+                    cla.log.warning('No user associated with this signature id: {}, error: {}'.
+                                    format(signature.get_signature_reference_id(), e))
+                    return
         else:
             cla.log.warning('Unsupported sig_type: {}'.format(sig_type))
             return
