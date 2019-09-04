@@ -69,7 +69,7 @@ export class ProjectAnalyticsPage {
     private domSanitizer : DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
-    private gaugeConfig: RoundProgressConfig,
+    //private gaugeConfig: RoundProgressConfig,
     private datePipe: DatePipe,
   ) {
     this.projectId = navParams.get('projectId');
@@ -221,6 +221,7 @@ export class ProjectAnalyticsPage {
         sortAscending: false,
       }
     };
+    /*
     this.gaugeConfig.setDefaults({
       color: '#2bb3e2',
       semicircle: true,
@@ -228,6 +229,7 @@ export class ProjectAnalyticsPage {
       rounded: true,
       responsive: true,
     });
+     */
     this.setTimeNow();
     this.span = 'month';
     this.index = 'hyperledger5';
