@@ -1,20 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  ModalController,
-  NavParams,
-  IonicPage
-} from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
-import { ClaUserModel } from "../../models/cla-user";
-import { ClaSignatureModel } from "../../models/cla-signature";
-import { SortService } from "../../services/sort.service";
-import { RolesService } from "../../services/roles.service";
-import { Restricted } from "../../decorators/restricted";
+import {Component} from "@angular/core";
+import {IonicPage, ModalController, NavController, NavParams} from "ionic-angular";
+import {ClaService} from "../../services/cla.service";
+import {ClaCompanyModel} from "../../models/cla-company";
+import {ClaUserModel} from "../../models/cla-user";
+import {ClaSignatureModel} from "../../models/cla-signature";
+import {RolesService} from "../../services/roles.service";
+import {Restricted} from "../../decorators/restricted";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -80,7 +74,7 @@ export class CompanyPage {
         signature.signature_signed === true
       );
       for (let signature of this.companySignatures) {
-          this.getProject(signature.signature_project_id);
+        this.getProject(signature.signature_project_id);
       }
     });
   }
@@ -143,23 +137,21 @@ export class CompanyPage {
     });
     modal.present();
   }
-  
+
   getInvites() {
     this.claService.getPendingInvites(this.companyId).subscribe(response => {
-      console.log(response);
-      this.invites = response ;
+      this.invites = response;
       this.loading.invites = false;
     });
   }
-  
+
   acceptCompanyInvite(invite) {
     let data = {
       inviteId: invite.inviteId,
-      userLFID: invite.userLFID 
-    }
+      userLFID: invite.userLFID
+    };
     this.claService.acceptCompanyInvite(this.companyId, data).subscribe(response => {
       this.getInvites();
-
     })
   }
 
@@ -167,10 +159,9 @@ export class CompanyPage {
     let data = {
       inviteId: invite.inviteId,
       userLFID: invite.userLFID
-    }
+    };
     this.claService.declineCompanyInvite(this.companyId, data).subscribe(response => {
       this.getInvites();
     })
   }
-
 }

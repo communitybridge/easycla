@@ -37,27 +37,27 @@ export class KeycloakService {
                     reject(errorData);
                 });
         });
-    }
+    };
 
     authenticated = ():boolean => {
         return KeycloakService.keycloakAuth.authenticated;
-    }
+    };
 
     login() {
         KeycloakService.keycloakAuth.login();
-    }
+    };
 
     logout = () => {
       return KeycloakService.keycloakAuth.logout();
-    }
+    };
 
     account() {
         KeycloakService.keycloakAuth.accountManagement();
-    }
+    };
 
     createLogoutUrl = () => {
       return KeycloakService.keycloakAuth.createLogoutUrl();
-    }
+    };
 
     profile(): Promise<any> {
       return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ export class KeycloakService {
             reject(errorData);
           });
       })
-    }
+    };
 
     getToken(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
@@ -88,7 +88,7 @@ export class KeycloakService {
               return reject('Not logged in');
             }
         });
-    }
+    };
 
     getTokenParsed(): Promise<any> {
         return new Promise((resolve, reject) => {
@@ -107,5 +107,5 @@ export class KeycloakService {
                 return reject('Not logged in');
             }
         });
-    }
+    };
 }
