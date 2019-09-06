@@ -83,6 +83,38 @@ export class ProjectsCclaSelectModal {
     this.dismiss();
   }
 
+  /**
+   * Returns the project name formatted based on the search filter - should highlight the matching text
+   * @param project
+   */
+  formatProject(project) {
+    const searchTerm = this.form.value.search;
+
+    // If no search term, just return the plain value
+    if (searchTerm == null || searchTerm === '') {
+      return project
+    }
+
+    // Grab the index of the matching characters
+    const index = project.toLowerCase().indexOf(searchTerm.toLowerCase());
+
+    // If we have a match...
+    if (index >= 0) {
+      //console.log(component);
+      // this.el.nativeElement.innerHTML
+      // console.log('Styling matching project...index = ' + index);
+      return project.substring(0, index) +
+        '<span class="highlight">' +
+        project.substring(index, index + searchTerm.length) +
+        '</span>' +
+        project.substring(index + searchTerm.length);
+    } else {
+      // No match, just return the plain text
+      return project;
+    }
+  }
+
+
   dismiss() {
     this.viewCtrl.dismiss();
   }
