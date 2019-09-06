@@ -18,15 +18,15 @@ from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
 import pydocusign  # type: ignore
+from pydocusign.exceptions import DocuSignException  # type: ignore
+
+import cla
 from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
     Document
 from cla.models.s3_storage import S3Storage
-from pydocusign.exceptions import DocuSignException  # type: ignore
-
-import cla
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -585,35 +585,40 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.warning('unable to load company by id: {}'.format(company_id))
             return {'errors': {'company_id': str(err)}}
 
-        # Ensure the managers list is not empty - returns a list of Users
-        # TODO: Should we flag the first one as the initial CLA manager?
+        # Ensure the managers list is not empty - returns a list of User objects
+        # TODO: Should we flag the first one as the Initial CLA manager?
         managers = company.get_managers()
         if len(managers) == 0:
-            cla.log.warning('No managers for company: {} - ACL is empty'.format(company_id))
+            cla.log.warning('No managers for company: {} - ACL is empty'.format(cla.utils.fmt_company(company)))
             return {'errors': {'company_acl': 'Company ACL is empty'}}
 
-        # Find the manager user object
-        #user = None
-        #for manager in managers:
-        #    if manager.get_lf_username() == auth_user.username:
-        #        user = manager
-        #        break
+        cla.log.debug('Loaded {} managers for company: {}. Will use {} as the initial CLA manager'.
+                      format(len(managers), cla.utils.fmt_company(company), cla.utils.fmt_user(managers[0])))
 
-        #if user is None:
-        #    # Return an error if the manager is not found in the managers list
-        #    return {'errors': {'manager': 'CLA Manager not found'}}
+        found_authority = False
+        for manager in managers:
+            if manager.get_user_name() == authority_name:
+                found_authority = True
+                cla.log.debug('Authority name provided is in the manager list.')
+                break
+
+        # We should see the provided authority in the manager list...
+        # What do we do if it is not...?
+        if not found_authority:
+            cla.log.warning('Authority name: {} / {} not found in manager list: {}'.
+                            format(authority_name, authority_email, cla.utils.fmt_users(managers)))
 
         # Get CLA Managers. In the future, we will support contributors
         scheduleA = generate_manager_and_contributor_list(
             [(manager.get_user_name(), manager.get_user_email()) for manager in managers]
         )
 
-        default_cla_values = create_default_company_values(company,
-                                                           signatory_user.get_user_name(),
-                                                           signatory_user.get_user_email(),
-                                                           managers[0].get_user_name(),
-                                                           managers[0].get_user_email(),
-                                                           scheduleA)
+        cla_template_values = create_default_company_values(company,
+                                                            signatory_user.get_user_name(),
+                                                            signatory_user.get_user_email(),
+                                                            managers[0].get_user_name(),
+                                                            managers[0].get_user_email(),
+                                                            scheduleA)
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
@@ -631,7 +636,8 @@ class DocuSign(signing_service_interface.SigningService):
                 last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.info('CCLA signature object ({}) already exists '
                          'for company {} on project {}'.
-                         format(latest_signature.get_signature_id(), company_id, project_id))
+                         format(latest_signature.get_signature_id(), cla.utils.fmt_company(company),
+                                cla.utils.fmt_project(project)))
 
             if latest_signature.get_signature_signed():
                 cla.log.info('CCLA signature object ({}) is already signed'.format(latest_signature.get_signature_id()))
@@ -642,10 +648,13 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.info('Signing callback URL is: {}'.format(callback_url))
 
                 # Populate sign url
-                self.populate_sign_url(latest_signature, callback_url, signatory_user.get_user_name(),
+                self.populate_sign_url(latest_signature, callback_url,
+                                       signatory_user.get_user_name(),
                                        signatory_user.get_user_email(),
-                                       send_as_email, authority_name, authority_email,
-                                       default_values=default_cla_values)
+                                       send_as_email,
+                                       managers[0].get_user_name(),  # authority_name
+                                       managers[0].get_user_email(),  # authority_email
+                                       cla_template_values)
 
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -668,7 +677,7 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Setting callback_url: %s', callback_url)
         signature.set_signature_callback_url(callback_url)
 
-        if (not send_as_email):  # get return url only for manual signing through console
+        if not send_as_email:  # get return url only for manual signing through console
             cla.log.info('Setting signature return_url to %s', return_url)
             signature.set_signature_return_url(return_url)
 
@@ -676,8 +685,13 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_acl(signatory_user.get_lf_username())
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url, signatory_user.get_user_name(), signatory_user.get_user_email(),
-                               send_as_email, authority_name, authority_email, default_values=default_cla_values)
+        self.populate_sign_url(signature, callback_url,
+                               signatory_user.get_user_name(),
+                               signatory_user.get_user_email(),
+                               send_as_email,
+                               managers[0].get_user_name(),  # authority_name
+                               managers[0].get_user_email(),  # authority_email
+                               cla_template_values)
 
         # Save signature
         signature.save()
@@ -687,7 +701,8 @@ class DocuSign(signing_service_interface.SigningService):
                 'signature_id': signature.get_signature_id(),
                 'sign_url': signature.get_signature_sign_url()}
 
-    def populate_sign_url(self, signature, callback_url=None, cla_manager_name=None, cla_manager_email=None,
+    def populate_sign_url(self, signature, callback_url=None,
+                          cla_manager_name=None, cla_manager_email=None,
                           send_as_email=False,
                           authority_name=None, authority_email=None,
                           default_values: Optional[Dict[str, Any]] = None):  # pylint: disable=too-many-locals
@@ -696,36 +711,41 @@ class DocuSign(signing_service_interface.SigningService):
 
         cla.log.debug('Populating sign_url for signature {} using '
                       ' callback: {} with'
-                      ' manager name: {} with'
-                      ' manager email: {} with'
+                      ' cla manager name: {} with'
+                      ' cla manager email: {} with'
                       ' authority name: {} with'
                       ' authority email: {} as'
                       ' reference type: {}'.
-                      format(signature.get_signature_id(), callback_url, cla_manager_name, cla_manager_email,
-                             authority_name, authority_email, sig_type))
+                      format(signature.get_signature_id(), callback_url,
+                             cla_manager_name, cla_manager_email,
+                             authority_name, authority_email,
+                             sig_type))
 
         company = Company()
         user = User()
+
+        company_manager_name = None
+        user_signature_name = None
 
         # Assume the company manager is signing the CCLA
         if sig_type == 'company':
             company.load(signature.get_signature_reference_id())
             try:
                 user.load(company.get_company_manager_id())
-                name = user.get_user_name()
+                company_manager_name = user.get_user_name()
             except DoesNotExist:
                 cla.log.warning('No CLA manager associated with this company - can not sign CCLA')
                 return
             except Exception as e:
                 cla.log.warning('No CLA manager lookup error: '.format(e))
-                return 
+                return
         elif sig_type == 'user':
             if not send_as_email:
                 try:
                     user.load(signature.get_signature_reference_id())
-                    name = user.get_user_name()
-                    if name is None:
-                        name = 'Unknown'
+                    user_signature_name = user.get_user_name()
+                    if user_signature_name is None:
+                        user_signature_name = 'Unknown'
                 except DoesNotExist:
                     cla.log.warning('No user associated with this signature id: {} - can not sign CCLA'.
                                     format(signature.get_signature_reference_id()))
@@ -742,6 +762,7 @@ class DocuSign(signing_service_interface.SigningService):
         project = Project()
         project.load(signature.get_signature_project_id())
 
+        # Load the appropriate document
         if sig_type == 'company':
             document = project.get_project_corporate_document()
             if document is None:
@@ -762,7 +783,7 @@ class DocuSign(signing_service_interface.SigningService):
                 message = 'You are getting this message because your DocuSign Session ' \
                           'for project {} expired. A new session will be in place for ' \
                           'your signing process.'.format(project.get_project_name())
-                cla.log.warning(message)
+                cla.log.debug(message)
                 self.client.void_envelope(envelope_id, message)
             except Exception as e:
                 cla.log.warning('DocuSign error while voiding the envelope - regardless, continuing on..., error: {}'.
@@ -774,13 +795,9 @@ class DocuSign(signing_service_interface.SigningService):
 
         if send_as_email:
             # Sending email to authority
-            email = authority_email
-            name = authority_name
-        else:
-            # User email
-            email = user.get_user_email()
+            signatory_email = authority_email
+            signatory_name = authority_name
 
-        if send_as_email:
             # Not assigning a clientUserId sends an email.
             project_name = project.get_project_name()
             company_name = company.get_company_name()
@@ -791,11 +808,13 @@ After you sign, {cla_manager_name} (as the initial CLA Manager for your company)
 
 If you have questions, or if you are not an authorized signatory of this company, please contact the requester at {cla_manager_email}.
 
-            '''.format(cla_manager_name=cla_manager_name, company_name=company_name, project_name=project_name,
+            '''.format(cla_manager_name=cla_manager_name,
+                       company_name=company_name,
+                       project_name=project_name,
                        cla_manager_email=cla_manager_email)
 
-            signer = pydocusign.Signer(email=email,
-                                       name=name,
+            signer = pydocusign.Signer(email=signatory_email,
+                                       name=signatory_name,
                                        recipientId=1,
                                        tabs=tabs,
                                        emailSubject=email_subject,
@@ -803,12 +822,16 @@ If you have questions, or if you are not an authorized signatory of this company
                                        supportedLanguage='en',
                                        )
         else:
+            # User email
+            signatory_name = user.get_user_name()
+            signatory_email = user.get_user_email()
+
             # Assigning a clientUserId does not send an email.
             # It assumes that the user handles the communication with the client. 
             # In this case, the user opened the docusign document to manually sign it. 
             # Thus the email does not need to be sent. 
-            signer = pydocusign.Signer(email=email,
-                                       name=name,
+            signer = pydocusign.Signer(email=signatory_email,
+                                       name=signatory_name,
                                        recipientId=1,
                                        clientUserId=signature.get_signature_id(),
                                        tabs=tabs,
@@ -819,7 +842,6 @@ If you have questions, or if you are not an authorized signatory of this company
                                        )
 
         content_type = document.get_document_content_type()
-        project_id = project.get_project_id()
         if document.get_document_s3_url() is not None:
             pdf = self.get_document_resource(document.get_document_s3_url())
         elif content_type.startswith('url+'):
@@ -828,10 +850,9 @@ If you have questions, or if you are not an authorized signatory of this company
         else:
             content = document.get_document_content()
             pdf = io.BytesIO(content)
+
         doc_name = document.get_document_name()
-        document = pydocusign.Document(name=doc_name,
-                                       documentId=document_id,
-                                       data=pdf)
+        document = pydocusign.Document(name=doc_name, documentId=document_id, data=pdf)
 
         if callback_url is not None:
             # Webhook properties for callbacks after the user signs the document.
@@ -853,11 +874,12 @@ If you have questions, or if you are not an authorized signatory of this company
                                            emailBlurb='CLA Sign Request',
                                            status=pydocusign.Envelope.STATUS_SENT,
                                            recipients=[signer])
+
         envelope = self.prepare_sign_request(envelope)
 
-        recipient = envelope.recipients[0]
-
         if not send_as_email:
+            recipient = envelope.recipients[0]
+
             # The URL the user will be redirected to after signing.
             # This route will be in charge of extracting the signature's return_url and redirecting.
             return_url = os.path.join(api_base_url, 'v2/return-url', str(recipient.clientUserId))
@@ -1316,8 +1338,7 @@ def create_default_company_values(company: Company,
                                   scheduleA: str) -> Dict[str, Any]:
     values = {}
 
-    if company is not None and \
-            company.get_company_name() is not None:
+    if company is not None and company.get_company_name() is not None:
         values['corporation_name'] = company.get_company_name()
         values['corporation'] = company.get_company_name()
 

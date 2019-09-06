@@ -17,6 +17,7 @@ yarn install
 for dir in src edge; do
   if [[ -d ${dir} ]]; then
     pushd ${dir} || die "Unable to change to pushd to the ${dir} folder - exiting..."
+    echo ""
     echo "Running yarn install in folder: $(pwd)"
     yarn install
     popd || die "Unable to change to popd from the ${dir} folder - exiting..."
