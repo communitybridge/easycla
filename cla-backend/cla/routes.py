@@ -1172,8 +1172,10 @@ def request_corporate_signature(auth_user: check_auth,
 
     Creates a new signature given project and company IDs. The manager will be redirected to the
     return_url once signature is complete.
-    TThe send_as_email flag determines whether to send the signing document because the signer
-    may not necessarily be a corporate authority with signing privileges. 
+
+    The send_as_email flag determines whether to send the signing document because the CLA signatory/signer
+    may not necessarily be a corporate/company manager/authority with signing privileges (e.g. may be the
+    company manager, but not responsible for signing the CLAs).
 
     Returns a dict of the format:
 

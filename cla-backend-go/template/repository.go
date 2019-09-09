@@ -543,9 +543,11 @@ var templateMap = map[string]models.Template{
 		},
 		IclaHTMLBody: `
 		<html><body>
-		<p>Project Name: {{ PROJECT_NAME }} </p>
-		<p>Project Entity:	{{ PROJECT_ENTITY_NAME }} </p>
-		<p>If emailing signed PDF, send to: {{ CONTACT_EMAIL }}</p> 
+		<p>
+			Project Name: {{ PROJECT_NAME }}</br>
+			Project Entity:	{{ PROJECT_ENTITY_NAME }}</br>
+		    If emailing signed PDF, send to: {{ CONTACT_EMAIL }}
+		</p>
 
 		<h3 style="text-align: center">Individual Contributor License Agreement (“Agreement”) v2.0</h3>
 		<p>Thank you for your interest in the project specified above (the “Project”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Project must have a Contributor License Agreement (CLA) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of the Project and its users; it does not change your rights to use your own Contributions for any other purpose. </p>

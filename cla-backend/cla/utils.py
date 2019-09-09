@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import urllib.parse
+from typing import List
 
 import falcon
 from hug.middleware import SessionMiddleware
@@ -16,7 +17,7 @@ from requests_oauthlib import OAuth2Session
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Repository, GitHubOrg
+from cla.models.dynamo_models import Repository, GitHubOrg, Project, Company, User
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -1024,3 +1025,29 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])
+
+
+def fmt_project(project: Project):
+    return "{} ({})".format(project.get_project_name(), project.get_project_id())
+
+
+def fmt_company(company: Company):
+    return "{} ({}) - acl: {}".format(
+        company.get_company_name(),
+        company.get_company_id(),
+        company.get_company_acl())
+
+
+def fmt_user(user: User):
+    return '{} ({}) {}'.format(
+        user.get_user_name(),
+        user.get_user_id(),
+        user.get_lf_email())
+
+
+def fmt_users(users: List[User]):
+    response = ''
+    for user in users:
+        response += fmt_user(user) + ' '
+
+    return response
