@@ -5,13 +5,12 @@
 Controller related to the signed callback.
 """
 
-import uuid
-import hug
 import falcon
+
 import cla
-from cla.utils import get_signing_service, get_signature_instance, get_project_instance, \
-                      get_company_instance, get_user_instance, get_email_service
 from cla.models import DoesNotExist
+from cla.utils import get_signing_service, get_signature_instance, get_email_service
+
 
 def request_individual_signature(project_id, user_id, return_url_type, return_url=None):
     """
@@ -32,19 +31,36 @@ def request_individual_signature(project_id, user_id, return_url_type, return_ur
     elif return_url_type == "Github":
         return signing_service.request_individual_signature(str(project_id), str(user_id), return_url)
 
+
 def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False, 
                                 authority_name=None, authority_email=None, return_url_type=None, return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
 
+    :param auth_user: the authenticated user
+    :type auth_user: an auth user object
     :param project_id: The ID of the project the company is signing a CCLA for.
     :type project_id: string
     :param company_id: The ID of the company that is signing the CCLA.
     :type company_id: string
+    :param send_as_email: the send as email flag
+    :type send_as_email: bool
+    :param authority_name: the company manager/authority who is responsible for whitelisting/managing the company, but
+    may not be a CLA signatory
+    :type authority_name: str
+    :param authority_email: the company manager/authority email
+    :type authority_email: str
+    :param return_url_type:
+    :type return_url_type: str
+    :param return_url:
+    :type return_url: str
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_corporate_signature(auth_user, str(project_id), str(company_id), send_as_email, authority_name, authority_email, return_url_type, return_url)
+    return get_signing_service().request_corporate_signature(auth_user, str(project_id), str(company_id), send_as_email,
+                                                             authority_name, authority_email,
+                                                             return_url_type, return_url)
+
 
 def request_employee_signature(project_id, company_id, user_id, return_url_type, return_url=None):
     """
