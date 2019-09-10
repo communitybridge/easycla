@@ -139,7 +139,7 @@ export class ClaContractViewSignaturesModal {
                       signature.company = { ...company };
                     }
                   }).catch((err) => {
-                    console.log(err, 'this is company service error')
+                    console.log(err)
                   })
                 }
               }
@@ -154,7 +154,7 @@ export class ClaContractViewSignaturesModal {
                     signature.user = { ...user }
                   }
                 }).catch((err) => {
-                  console.log(err, 'this is getUset service')
+                  console.log(err)
                 })
               }
             });
@@ -170,11 +170,12 @@ export class ClaContractViewSignaturesModal {
   }
 
   sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.signatures,
-    );
+    console.log(prop, 'this is props')
+    // this.sortService.toggleSort(
+    //   this.sort,
+    //   prop,
+    //   this.signatures,
+    // );
   }
 
   signaturePopover(ev, signature) {
