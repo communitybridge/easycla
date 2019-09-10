@@ -255,7 +255,6 @@ export class ClaContractViewSignaturesModal {
   onSearch($event) {
     this.filteredData = this.rows;
     let val = $event.value.trim().toLowerCase();
-    console.log(val, 'this is va;')
     if (val.length > 0) {
       let colsAmt = this.columns.length;
       let keys = Object.keys(this.rows[0]);
