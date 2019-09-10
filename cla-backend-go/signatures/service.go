@@ -68,7 +68,7 @@ func (s service) GetProjectSignatures(ctx context.Context, params signatures.Get
 
 	// log.Debugf("PageSize: %v", pageSize)
 
-	projectSignatures, err := s.repo.GetProjectSignatures(params.ProjectID, pageSize, params.NextKey)
+	projectSignatures, err := s.repo.GetProjectSignatures(params, pageSize)
 	if err != nil {
 		return nil, err
 	}
