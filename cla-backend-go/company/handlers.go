@@ -4,6 +4,8 @@
 package company
 
 import (
+	"fmt"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
@@ -14,7 +16,28 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service service) {
+func Configure(api *operations.ClaAPI, service Service) {
+
+	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams) middleware.Responder {
+		companyModel, err := service.GetCompany(params.CompanyID)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query company by ID: %s, error: %v", params.CompanyID, err)
+			log.Warnf(msg)
+			return company.NewGetCompanyBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		if companyModel.CompanyID == "" || companyModel.CompanyName == "" {
+			return company.NewGetCompanyNotFound().WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: fmt.Sprintf("Company Not Found with ID: %s", params.CompanyID),
+			})
+		}
+
+		return company.NewGetCompanyOK().WithPayload(companyModel)
+	})
 
 	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
 		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.InviteID, params.User.UserLFID)

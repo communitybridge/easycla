@@ -6,6 +6,9 @@ package company
 import (
 	"errors"
 	"fmt"
+	"time"
+
+	"github.com/go-openapi/strfmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -17,15 +20,25 @@ import (
 )
 
 type service struct {
-	repo                Repository
-	userDynamoRepo      user.RepositoryDynamo
+	repo                RepositoryService
+	userDynamoRepo      user.RepositoryService
 	sesClient           *ses.SES
 	senderEmailAddress  string
 	corporateConsoleURL string
 }
 
+// Service interface defining the public functions
+type Service interface { // nolint
+	GetCompany(companyID string) (*models.Company, error)
+	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
+	SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error
+	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
+	GetPendingCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
+	DeletePendingCompanyInviteRequest(inviteID string) error
+}
+
 // NewService creates a new company service object
-func NewService(repo Repository, awsSession *session.Session, senderEmailAddress, corporateConsoleURL string, userDynamoRepo user.RepositoryDynamo) service {
+func NewService(repo RepositoryService, awsSession *session.Session, senderEmailAddress, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
 	return service{
 		repo:                repo,
 		userDynamoRepo:      userDynamoRepo,
@@ -35,9 +48,39 @@ func NewService(repo Repository, awsSession *session.Session, senderEmailAddress
 	}
 }
 
+func (s service) GetCompany(companyID string) (*models.Company, error) {
+	dbCompanyModel, err := s.repo.GetCompany(companyID)
+	if err != nil {
+		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
+		return nil, err
+	}
+
+	const timeFormat = "2006-01-02T15:04:05.999999+0000"
+	// Convert the "string" date time
+	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
+	if err != nil {
+		log.Warnf("Error converting created date time for company: %s, error: %v", companyID, err)
+		return nil, err
+	}
+	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
+	if err != nil {
+		log.Warnf("Error converting updated date time for company: %s, error: %v", companyID, err)
+		return nil, err
+	}
+
+	// Convert the local DB model to a public swagger model
+	return &models.Company{
+		CompanyACL:  dbCompanyModel.CompanyACL,
+		CompanyID:   dbCompanyModel.CompanyID,
+		CompanyName: dbCompanyModel.CompanyName,
+		Created:     strfmt.DateTime(createdDateTime),
+		Updated:     strfmt.DateTime(updateDateTime),
+	}, nil
+}
+
 // AddUserToCompanyAccessList adds a user to the specified company
 func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error {
-	// call getcompany function
+	// call the get company function
 	company, err := s.repo.GetCompany(companyID)
 	if err != nil {
 		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
@@ -218,11 +261,11 @@ func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.Com
 		return nil, err
 	}
 
-	users := []models.CompanyInviteUser{}
+	var users []models.CompanyInviteUser
 	for _, invite := range companyInvites {
 		inviteID := invite.CompanyInviteID
 		userID := invite.UserID
-		user, err := s.userDynamoRepo.GetUser(userID)
+		dbUserModel, err := s.userDynamoRepo.GetUser(userID)
 		if err != nil {
 			log.Warnf("Error fetching user with userID: %s, error: %v", userID, err)
 			continue
@@ -230,9 +273,9 @@ func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.Com
 
 		users = append(users, models.CompanyInviteUser{
 			InviteID:  inviteID,
-			UserName:  user.UserName,
-			UserEmail: user.LFEmail,
-			UserLFID:  user.LFUsername,
+			UserName:  dbUserModel.UserName,
+			UserEmail: dbUserModel.LFEmail,
+			UserLFID:  dbUserModel.LFUsername,
 		})
 	}
 

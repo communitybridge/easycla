@@ -15,8 +15,8 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// Repository interface methods
-type Repository interface {
+// RepositoryService interface methods
+type RepositoryService interface {
 	GetPendingCompanyInviteRequests(companyID string) ([]Invite, error)
 	GetCompany(companyID string) (Company, error)
 	DeletePendingCompanyInviteRequest(InviteID string) error
@@ -34,6 +34,8 @@ type Company struct {
 	CompanyID   string   `dynamodbav:"company_id"`
 	CompanyName string   `dynamodbav:"company_name"`
 	CompanyACL  []string `dynamodbav:"company_acl"`
+	Created     string   `dynamodbav:"date_created"`
+	Updated     string   `dynamodbav:"date_modified"`
 }
 
 // Invite data model
@@ -43,8 +45,8 @@ type Invite struct {
 	UserID             string `dynamodbav:"user_id"`
 }
 
-// NewRepository creates a new company respository instance
-func NewRepository(awsSession *session.Session, stage string) repository {
+// NewRepository creates a new company repository instance
+func NewRepository(awsSession *session.Session, stage string) RepositoryService {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),

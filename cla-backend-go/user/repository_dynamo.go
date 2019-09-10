@@ -21,6 +21,15 @@ type RepositoryDynamo struct {
 	senderEmailAddress string
 }
 
+// RepositoryService interface methods
+type RepositoryService interface {
+	GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error)
+	GetUserProjectIDs(userID string) ([]string, error)
+	GetClaManagerCorporateClaIDs(userID string) ([]string, error)
+	GetUserCompanyIDs(userID string) ([]string, error)
+	GetUser(userID string) (User, error)
+}
+
 // User data model
 type User struct {
 	UserID             string   `json:"user_id"`
@@ -37,7 +46,7 @@ type User struct {
 }
 
 // NewDynamoRepository creates a new dynamo repository model
-func NewDynamoRepository(awsSession *session.Session, stage, senderEmailAddress string) RepositoryDynamo {
+func NewDynamoRepository(awsSession *session.Session, stage, senderEmailAddress string) RepositoryService {
 	return RepositoryDynamo{
 		Stage:              stage,
 		DynamoDBClient:     dynamodb.New(awsSession),
