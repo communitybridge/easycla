@@ -126,8 +126,8 @@ func server(localMode bool) http.Handler {
 	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
 	templateRepo := template.NewRepository(awsSession, stage)
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
-	signaturesRepo := signatures.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
+	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, userRepo)
 
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)

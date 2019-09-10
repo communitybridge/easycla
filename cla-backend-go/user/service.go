@@ -3,12 +3,19 @@
 
 package user
 
+// Service interface defining the public functions
+type Service interface { // nolint
+	GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error)
+	GetUserProjectIDs(userID string) ([]string, error)
+	GetClaManagerCorporateClaIDs(userID string) ([]string, error)
+}
+
 type service struct {
 	repo Repository
 }
 
 // NewService creates a new user service
-func NewService(repo Repository) service {
+func NewService(repo Repository) Service {
 	return service{
 		repo: repo,
 	}

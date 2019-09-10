@@ -75,6 +75,34 @@ paths:
       tags:
         - docs
 
+  /signatures/{projectID}:
+    get:
+      summary: Get project signatures
+      description: Returns a list of project signature models
+      security: []
+      operationId: getProjectSignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
   /signatures/{signatureID}/gh-org-whitelist:
     get:
       summary: Signature Update
@@ -402,6 +430,33 @@ paths:
       tags:
         - contractGroup
 
+  /company/{companyID}:
+    get:
+      summary: Get company
+      description: Returns the company by ID
+      security: []
+      operationId: getCompany
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/{companyID}/cla/invitelist:
     parameters:
       - name: companyID
@@ -665,6 +720,23 @@ paths:
       tags:
         - github
 
+# Common parameters
+parameters:
+  pageSize:
+    name: pageSize
+    description: The maximum number of results per page, value must be a positive integer value
+    in: query
+    type: string
+    pattern: '^[1-9][\d]*$'
+    default: '10'
+  nextKey:
+    name: nextKey
+    description: The next key to scan - used as a page offset for scanning batches of records
+    in: query
+    type: string
+    # UUID v4 regex
+    pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+
 definitions:
   gh-org-whitelist:
     type: object
@@ -877,6 +949,84 @@ definitions:
       - ldapGroupName
       - url
 
+  company:
+    type: object
+    x-nullable: false
+    title: Company
+    description: Company Model
+    properties:
+      companyID:
+        description: The company unique ID
+        example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
+        type: string
+      companyName:
+        description: The company name
+        example: Acme, Inc.
+        type: string
+      companyACL:
+        type: array
+        description: A list of user ID's authorized to make changes to the company
+        items:
+          type: string
+      created:
+        type: string
+        description: The company record created date/time
+        format: date-time
+      updated:
+        type: string
+        description: The company record update date/time
+        format: date-time
+
+  project-signatures:
+    type: object
+    x-nullable: false
+    title: Project Signatures
+    description: Project Signatures
+    properties:
+      projectID:
+        type: string
+      resultCount:
+        type: integer
+        format: int64
+      totalCount:
+        type: integer
+        format: int64
+      lastKeyScanned:
+        type: string
+      signatures:
+        type: array
+        items:
+          $ref: '#/definitions/signature'
+
+  signature:
+    type: object
+    x-nullable: false
+    title: A project signature
+    description: A project signatures - may be an ICLA or CCLA signature
+    properties:
+      signatureCreated:
+        type: string
+      signatureModified:
+        type: string
+      signatureSigned:
+        type: boolean
+      signatureApproved:
+        type: boolean
+      signatureReferenceType:
+        type: string
+      signatureType:
+        type: string
+      userName:
+        type: string
+      companyName:
+        type: string
+      userGHID:
+        type: string
+      userLFID:
+        type: string
+      version:
+        type: string
+
   contract-group-signatures:
     type: object
     x-nullable: false
@@ -1064,3 +1214,8 @@ responses:
     description: Insufficient privilege to execute action.
     schema:
       $ref: '#/definitions/error-response'
+  not-found:
+    description: Not found
+    schema:
+      $ref: '#/definitions/error-response'
+

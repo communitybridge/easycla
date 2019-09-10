@@ -7,6 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -18,6 +21,8 @@ import (
 
 // SignatureService interface
 type SignatureService interface {
+	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.ProjectSignatures, error)
+
 	GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
@@ -34,6 +39,41 @@ func NewService(repo SignatureRepository, githubOrgValidation bool) SignatureSer
 		repo,
 		githubOrgValidation,
 	}
+}
+
+// GetProjectSignatures returns the list of signatures associated with the specified project
+func (s service) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.ProjectSignatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	projectSignatures, err := s.repo.GetProjectSignatures(params.ProjectID, pageSize, params.NextKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectSignatures, nil
 }
 
 // GetGithubOrganizationsFromWhitelist retrieves the organization from the whitelist
