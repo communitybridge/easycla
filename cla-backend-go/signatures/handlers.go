@@ -90,6 +90,18 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
 	})
+
+	// Get Project Signatures
+	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams) middleware.Responder {
+		projectSignatures, err := service.GetProjectSignatures(params.HTTPRequest.Context(), params)
+		if err != nil {
+			log.Warnf("error retrieving project signatures for project: %v, error: %v",
+				params.ProjectID, err)
+			return signatures.NewGetProjectSignaturesBadRequest().WithPayload(errorResponse(err))
+		}
+
+		return signatures.NewGetProjectSignaturesOK().WithPayload(projectSignatures)
+	})
 }
 
 type codedResponse interface {
