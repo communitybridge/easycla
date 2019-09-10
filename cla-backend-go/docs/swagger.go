@@ -23,6 +23,7 @@ func NewGetSwaggerOK() *GetSwaggerOK {
 // WriteResponse streams the swagger.json to the client
 func (o *GetSwaggerOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	_, err := rw.Write([]byte(restapi.SwaggerJSON))
 	if err != nil {
 		panic(err)

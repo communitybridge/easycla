@@ -47,6 +47,7 @@ func (o *GetDocOK) WriteResponse(rw http.ResponseWriter, producer runtime.Produc
 	</html>`
 
 	rw.Header().Set("Content-Type", "text/html")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	_, err := rw.Write([]byte(html))
 	if err != nil {
 		panic(err)
