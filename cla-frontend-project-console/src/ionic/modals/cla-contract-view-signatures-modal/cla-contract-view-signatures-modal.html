@@ -17,26 +17,28 @@
       <ion-col col-12>
         <div class="table-responsive-vertical">
           <loading-spinner [loading]="loading.signatures"></loading-spinner>
-          <div *ngIf="!loading.signatures && signatures.length === 0" class="empty-signatures">
+          <div *ngIf="!loading.signatures && rows.length === 0" class="empty-signatures">
             <h2>No Signatures</h2>
           </div>
-          <div *ngIf="!loading.signatures && signatures.length > 0">
-            <ngx-datatable class="material" [ngClass]="tablestyle" [rows]="rows" [footerHeight]="50" [rowHeight]="50" [columnMode]="'force'"
-              [sortType]="'multi'" (sort)="sortMembers($event)">
-              <ngx-datatable-column name="Entity Type" prop="Entity Type"></ngx-datatable-column>
+          <div *ngIf="!loading.signatures && rows.length > 0">
+            <ngx-datatable class='bootstrap' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="'force'" [sortType]="'multi'" [footerHeight]="35"
+              (sort)="sortMembers($event)">
+              <ngx-datatable-column name="Entity Type" prop="Entity Type">
+                <ng-template let-row="row" ngx-datatable-cell-template let-sort="sortFn">
+                  <span *ngIf="row['Entity Type'] === 'user'">
+                    <ion-icon name="person"></ion-icon> Individual
+                  </span>
+                  <span *ngIf="row['Entity Type'] === 'company'">
+                    <ion-icon name="briefcase"></ion-icon> Company
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
               <ngx-datatable-column name="Name" prop="Name" [sortable]="true"></ngx-datatable-column>
               <ngx-datatable-column [sortable]="true" name="Company" prop="Company"></ngx-datatable-column>
               <ngx-datatable-column [sortable]="true" name="GithubID" prop="GithubID"></ngx-datatable-column>
               <ngx-datatable-column [sortable]="true" name="LFID" prop="LFID"></ngx-datatable-column>
               <ngx-datatable-column [sortable]="true" name="Version" prop="Version"></ngx-datatable-column>
-              <ngx-datatable-column [sortable]="true" name="Date" prop="Date">
-                <ng-template let-column="column" ngx-datatable-header-template let-sort="sortFn">
-                    <sorting-display [sorting]='true'></sorting-display>
-                  <span (click)="sort()">
-                    {{column.name}}
-                  </span>
-                </ng-template>
-              </ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="Date" prop="Date"></ngx-datatable-column>
             </ngx-datatable>
           </div>
         </div>
@@ -46,21 +48,5 @@
 </ion-content>
 
 <ion-footer class="transparent">
-  <ion-row justify-content-end>
-    <!-- <ngx-datatable-footer>
-      <ng-template ngx-datatable-footer-template let-rowCount="rowCount" let-pageSize="pageSize" let-selectedCount="selectedCount"
-        let-curPage="curPage" let-offset="offset" let-isVisible="isVisible">
-        <div class="page-count">
-          <span *ngIf="selectedMessage">
-            {{selectedCount.toLocaleString()}} {{selectedMessage}} /
-          </span>
-          {{rowCount.toLocaleString()}} {{totalMessage}}
-        </div>
-        <datatable-pager [pagerLeftArrowIcon]="'datatable-icon-left'" [pagerRightArrowIcon]="'datatable-icon-right'" [pagerPreviousIcon]="'datatable-icon-prev'"
-          [pagerNextIcon]="'datatable-icon-skip'" [page]="curPage" [size]="pageSize" [count]="rowCount" [hidden]="!((rowCount / pageSize) > 1)"
-          (change)="table.onFooterPage($event)">
-        </datatable-pager>
-      </ng-template>
-    </ngx-datatable-footer> -->
-  </ion-row>
+
 </ion-footer>

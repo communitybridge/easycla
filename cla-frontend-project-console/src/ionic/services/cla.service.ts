@@ -315,9 +315,14 @@ export class ClaService {
   /**
    * GET /signatures/project/{project_id}
    */
-  getProjectSignatures(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
-    return this.http.get(url).map(res => res.json());
+  getProjectSignatures(projectId, lastKeyScanned) {
+    if (lastKeyScanned) {
+      const url : URL = this.getV3Endpoint(`/v3/signatures/${projectId}?pageSize=10&nextKey=${lastKeyScanned}`);
+    }
+    else {
+      const url : URL = this.getV3Endpoint(`/v3/signatures/${projectId}?pageSize=10`);
+      return this.http.get(url).map(res => res.json());
+    }    
   }
 
   /**
