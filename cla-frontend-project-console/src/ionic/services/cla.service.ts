@@ -321,6 +321,22 @@ export class ClaService {
   }
 
   /**
+   * GET /v3/signatures/{project_id} - v3 backend query which supports pagination.
+   *
+   * @param projectId the project id
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
+   */
+  getProjectSignaturesV3(projectId, pageSize=50, nextKey='') {
+    let path: string = '/v3/signatures/' + projectId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
+    return this.http.get(url).map(res => res.json());
+  }
+
+  /**
    * GET /repository
    */
   getRepositories() {
