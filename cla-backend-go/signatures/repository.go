@@ -327,26 +327,26 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
-
-		// The maximum number of items to evaluate (not necessarily the number of matching items)
-		Limit: &pageSize,
-
-		// Name of a secondary index to scan
-		IndexName: aws.String("project-signature-index"),
+		Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
 	}
 
 	// If we have the next key, set the exclusive start key value
 	if params.NextKey != nil {
-		log.Debugf("received a nextKey - value: %s", *params.NextKey)
-		startKey := map[string]*dynamodb.AttributeValue{"signature_id": {
-			S: params.NextKey,
-		}}
-
+		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
 		// The primary key of the first item that this operation will evaluate.
-		queryInput.ExclusiveStartKey = startKey
+		// and the query key (if not the same)
+		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: params.NextKey,
+			},
+			"signature_project_id": {
+				S: &params.ProjectID,
+			},
+		}
 	}
 
-	//log.Debugf("Running scan using params: %+v", params)
+	//log.Debugf("Running scan using queryInput: %+v", queryInput)
 
 	// Make the DynamoDB Query API call
 	result, err := repo.dynamoDBClient.Query(queryInput)
@@ -374,9 +374,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		lastEvaluatedKey = *result.LastEvaluatedKey["signature_id"].S
 	}
 
-	//log.Debugf("Scan count: %d", resultCount)
-	//log.Debugf("Total count: %d", *describeTableResult.Table.ItemCount)
-	//log.Debugf("Last key  : %s", lastEvaluatedKey)
+	//log.Debugf("Result count : %d", *result.Count)
+	//log.Debugf("Scanned count: %d", *result.ScannedCount)
+	//log.Debugf("Total count  : %d", *describeTableResult.Table.ItemCount)
+	//log.Debugf("Last key     : %s", lastEvaluatedKey)
 
 	return repo.buildProjectSignatureModels(result, params.ProjectID, resultCount, totalCount, lastEvaluatedKey)
 }
