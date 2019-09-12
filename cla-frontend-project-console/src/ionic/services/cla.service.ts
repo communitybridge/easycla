@@ -363,13 +363,16 @@ export class ClaService {
    *
    * @param projectId the project ID
    */
-  getProjectSignatures(projectId) {
-    //const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
+  getProjectSignatures(projectId, lastKeyScanned) {
     // Leverage the new go backend v3 endpoint - note the slightly different path
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    if (lastKeyScanned) {
+      const url : URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50&nextKey=${lastKeyScanned}`);
+      return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
+    }
+    else {
+      const url : URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50`);
+      return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
+    }    
   }
 
   /**

@@ -4,8 +4,14 @@
       <ion-col col-2>
         <div>View Signatures</div>
       </ion-col>
-      <ion-col col-8>
-        <ion-searchbar (ionChange)="onSearch($event)"></ion-searchbar>
+      <ion-col col-1>
+        <div>Page Size:</div>
+      </ion-col>
+      <ion-col col-4 class="signature-select">
+        <ion-select [(ngModel)]="selectedSize" (ionChange)="sizeSelectedChanged()">
+          <ion-option *ngFor="let size of allSizes" [value]="size"
+          >{{ size }}</ion-option>
+        </ion-select>
       </ion-col>
     </ion-row>
   </modal-header>
@@ -17,84 +23,29 @@
       <ion-col col-12>
         <div class="table-responsive-vertical">
           <loading-spinner [loading]="loading.signatures"></loading-spinner>
-          <div *ngIf="!loading.signatures && signatures.length === 0" class="empty-signatures">
+          <div *ngIf="!loading.signatures && rows && rows.length === 0" class="empty-signatures">
             <h2>No Signatures</h2>
           </div>
-          <div *ngIf="!loading.signatures && signatures.length > 0">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th class="clickable" (click)="sortMembers('signatureType')">
-                    Entity Type
-                    <sorting-display [sorting]='sort.signatureType.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('name')">
-                    Name
-                    <sorting-display [sorting]='sort.name.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('company')">
-                    Company
-                    <sorting-display [sorting]='sort.company.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('githubId')">
-                    GitHub ID
-                    <sorting-display [sorting]='sort.githubId.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('version')">
-                    Version
-                    <sorting-display [sorting]='sort.version.sort'></sorting-display>
-                  </th>
-                  <th class="clickable" (click)="sortMembers('date')">
-                    Date
-                    <sorting-display [sorting]='sort.date.sort'></sorting-display>
-                  </th>
-                  <!-- <th>
-                          Actions
-                        </th> -->
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let signature of signatures | paginate: { itemsPerPage: 10, currentPage: p }">
-                  <td data-title="Entity Type">
-                    <span *ngIf="signature.signature_reference_type === 'user' && !signature.signature_user_ccla_company_id">
-                      <ion-icon name="person"></ion-icon> Individual
-                    </span>
-                    <span *ngIf="signature.signature_reference_type === 'company'">
-                      <ion-icon name="briefcase"></ion-icon> Company
-                    </span>
-                    <span *ngIf="signature.signature_user_ccla_company_id !== null  ">
-                      <ion-icon name="person"></ion-icon> Employee
-                    </span>
-                  </td>
-                  <td data-title="Name">
-                    <span *ngIf="signature.user">
-                      {{ signature.user.user_name }}
-                    </span>
-                  </td>
-                  <td data-title="Company">
-                    <span *ngIf="signature.company">
-                      {{ signature.company.company_name }}
-                    </span>
-                  </td>
-                  <td data-title="GitHub ID">
-                    <span *ngIf="signature.user?.user_github_id">
-                      {{ signature.user?.user_github_id }}
-                    </span>
-                  </td>
-                  <td data-title="Version">
-                    v{{ signature.documentVersion }}
-                  </td>
-                  <td data-title="Date">
-                    {{ signature.date_modified }}
-                  </td>
-                  <!-- <td data-title="Actions" class="actions-cell">
-                          <button ion-button icon-only clear round (click)="signaturePopover($event, signature)">
-                            <ion-icon name="more"></ion-icon>
-                          </button>
-                        </td> -->
-                </tr>
-              </tbody>
-            </table>
+          <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
+            <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="'force'" [sortType]="'multi'"
+              (sort)="sortMembers($event)">
+              <ngx-datatable-column name="Entity Type" prop="Entity Type">
+                <ng-template let-row="row" ngx-datatable-cell-template let-sort="sortFn">
+                  <span *ngIf="row['Entity Type'] === 'user'">
+                    <ion-icon name="person"></ion-icon> Individual
+                  </span>
+                  <span *ngIf="row['Entity Type'] === 'company'">
+                    <ion-icon name="briefcase"></ion-icon> Company
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Name" prop="Name" [sortable]="true"></ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="Company" prop="Company"></ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="GithubID" prop="GithubID"></ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="LFID" prop="LFID"></ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="Version" prop="Version"></ngx-datatable-column>
+              <ngx-datatable-column [sortable]="true" name="Date" prop="Date"></ngx-datatable-column>
+            </ngx-datatable>
           </div>
         </div>
       </ion-col>
@@ -103,7 +54,13 @@
 </ion-content>
 
 <ion-footer class="transparent">
-  <ion-row justify-content-end>
-    <pagination-controls (pageChange)="p = $event"></pagination-controls>
+  <ion-row class="align-items-center">
+    <ion-col col-6 class="pagination-buttons">
+      <ion-buttons>
+        <button [disabled]="previousLastScannedKeys && previousLastScannedKeys.length <= 0" ion-button color="gray" (click)="getPreviousPage()">Prev</button>
+        <button [disabled]="lastScannedKey && lastScannedKey.length <= 0" ion-button color="secondary" (click)="getNextPage()">Next</button>
+      </ion-buttons>
+    </ion-col>
+
   </ion-row>
 </ion-footer>

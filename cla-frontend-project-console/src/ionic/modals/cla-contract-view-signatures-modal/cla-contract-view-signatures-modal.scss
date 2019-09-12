@@ -30,6 +30,16 @@ cla-contract-config-modal {
   ion-icon.icon-md {
     font-size: 18px !important;
   }
+
+  
+}
+
+.signature-select .select-md {
+  padding: 0 10px !important;
+}
+
+.signature-select .select-icon {
+  display: none !important;
 }
 
 ion-modal.medium .modal-wrapper {
@@ -45,4 +55,14 @@ ion-modal .title-wrapper {
   text-align: center;
   text-transform: uppercase;
 }
+
+.align-items-center {
+  align-items: center;
+}
+.searchbar-md .searchbar-input {
+  padding: 3px 40px;
+  border-radius: 1px;
+}
+
+
 
