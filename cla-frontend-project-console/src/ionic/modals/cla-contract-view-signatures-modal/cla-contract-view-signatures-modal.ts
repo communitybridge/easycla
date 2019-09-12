@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import {
   NavController,
   NavParams,
@@ -54,6 +55,7 @@ export class ClaContractViewSignaturesModal {
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
     private keycloak: KeycloakService,
+    private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events
   ) {
@@ -228,6 +230,7 @@ export class ClaContractViewSignaturesModal {
 
   mapSignatures() {
     return this.signatures && this.signatures.map((signature) => {
+      let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
       const formattedSignature = {
         'Entity Type': signature.signatureReferenceType,
         'Name': signature.userName && signature.userName,
@@ -235,7 +238,7 @@ export class ClaContractViewSignaturesModal {
         'GithubID': signature.userGHID && signature.userGHID,
         "LFID": signature.LFID && signature.LFID,
         'Version': `v${signature.version}`,
-        'Date': signature.signatureCreated
+        'Date': date
       }
       return formattedSignature
     })

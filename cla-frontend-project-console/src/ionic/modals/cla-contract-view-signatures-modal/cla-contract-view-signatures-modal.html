@@ -18,7 +18,7 @@
             <h2>No Signatures</h2>
           </div>
           <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
-            <ngx-datatable class='bootstrap' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="'force'" [sortType]="'multi'"
+            <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="'force'" [sortType]="'multi'"
               (sort)="sortMembers($event)">
               <ngx-datatable-column name="Entity Type" prop="Entity Type">
                 <ng-template let-row="row" ngx-datatable-cell-template let-sort="sortFn">
