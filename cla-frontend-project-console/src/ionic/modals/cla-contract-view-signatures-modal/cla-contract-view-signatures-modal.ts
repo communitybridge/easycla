@@ -35,7 +35,9 @@ export class ClaContractViewSignaturesModal {
   signatures: any[];
   searchTerm: string;
   columns: any[];
-  rows: any[]
+  rows: any[];
+  selectedSize: any[];
+  allSizes: any[];
 
   companies: any[];
   users: any[];
@@ -84,6 +86,14 @@ export class ClaContractViewSignaturesModal {
     this.loading = {
       signatures: true
     };
+    this.allSizes = [
+      1,
+      10,
+      50,
+      100,
+      150,
+      200
+    ]
     this.searchTerm = '',
       this.sort = {
         signatureType: {
@@ -136,6 +146,12 @@ export class ClaContractViewSignaturesModal {
 
   async getCompany(referenceId) {
     return await this.claService.getCompany(referenceId).toPromise();
+  }
+
+  sizeSelectedChanged() {
+    this.pageSize = this.selectedSize;
+    this.getSignatures();
+
   }
 
   // get all signatures

@@ -4,6 +4,15 @@
       <ion-col col-2>
         <div>View Signatures</div>
       </ion-col>
+      <ion-col col-1>
+        <div>Page Size:</div>
+      </ion-col>
+      <ion-col col-4>
+        <ion-select [(ngModel)]="selectedSize" (ionChange)="sizeSelectedChanged()">
+          <ion-option *ngFor="let size of allSizes" [value]="size"
+          >{{ size }}</ion-option>
+        </ion-select>
+      </ion-col>
     </ion-row>
   </modal-header>
 </ion-header>
@@ -45,10 +54,13 @@
 </ion-content>
 
 <ion-footer class="transparent">
-  <ion-col col-12 class="pagination-buttons">
-    <ion-buttons>
-      <button [disabled]="previousLastScannedKeys && previousLastScannedKeys.length <= 0" ion-button color="gray" (click)="getPreviousPage()">Prev</button>
-      <button [disabled]="lastScannedKey && lastScannedKey.length <= 0" ion-button color="secondary" (click)="getNextPage()">Next</button>
-    </ion-buttons>
-  </ion-col>
+  <ion-row class="align-items-center">
+    <ion-col col-6 class="pagination-buttons">
+      <ion-buttons>
+        <button [disabled]="previousLastScannedKeys && previousLastScannedKeys.length <= 0" ion-button color="gray" (click)="getPreviousPage()">Prev</button>
+        <button [disabled]="lastScannedKey && lastScannedKey.length <= 0" ion-button color="secondary" (click)="getNextPage()">Next</button>
+      </ion-buttons>
+    </ion-col>
+
+  </ion-row>
 </ion-footer>
