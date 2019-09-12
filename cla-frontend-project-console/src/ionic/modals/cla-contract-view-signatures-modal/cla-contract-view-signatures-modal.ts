@@ -87,12 +87,9 @@ export class ClaContractViewSignaturesModal {
       signatures: true
     };
     this.allSizes = [
-      1,
-      10,
+      20,
       50,
-      100,
-      150,
-      200
+      100
     ]
     this.searchTerm = '',
       this.sort = {

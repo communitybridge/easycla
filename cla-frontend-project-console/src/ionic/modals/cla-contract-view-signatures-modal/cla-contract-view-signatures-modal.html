@@ -7,7 +7,7 @@
       <ion-col col-1>
         <div>Page Size:</div>
       </ion-col>
-      <ion-col col-4>
+      <ion-col col-4 class="signature-select">
         <ion-select [(ngModel)]="selectedSize" (ionChange)="sizeSelectedChanged()">
           <ion-option *ngFor="let size of allSizes" [value]="size"
           >{{ size }}</ion-option>
