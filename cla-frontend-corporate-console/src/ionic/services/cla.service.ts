@@ -287,10 +287,14 @@ export class ClaService {
   }
 
   /**
-   * GET /v1/signature/{signature_id}
-   **/
+   * GET /v3/signature/{signature_id}
+   *
+   * @param signatureId the signature ID
+   */
   getSignature(signatureId) {
-    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
+    //const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
+    // Leverage the new go backend v3 endpoint
+    const url: URL = this.getV3Endpoint('/v3/signature/' + signatureId);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
@@ -308,50 +312,72 @@ export class ClaService {
   }
 
   /**
-   * GET /v1/signatures/user/{user_id}
+   * GET /v3/signatures/user/{user_id}
+   *
+   * @param userId the user ID
    */
   getSignaturesUser(userId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
+    //const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
+    // Leverage the new go backend v3 endpoint
+    const url: URL = this.getV3Endpoint('/v3/signatures/user/' + userId);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
 
   /**
-   * GET /v1/signatures/company/{company_id}
+   * GET /v3/signatures/company/{company_id}
+   *
+   * @param companyId the company ID
    */
   getCompanySignatures(companyId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
+    //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
+    // Leverage the new go backend v3 endpoint
+    const url: URL = this.getV3Endpoint('/v3/signatures/company/' + companyId);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
 
   /**
-   * GET /v1/signatures/company/{company_id}/project/{project_id}
+   * GET /v3/signatures/project/{project_id}/company/{company_id}
+   *
+   * @param companyId the company ID
+   * @param projectId the project ID
    */
   getCompanyProjectSignatures(companyId, projectId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
+    //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
+    // Leverage the new go backend v3 endpoint - note the slightly different path layout
+    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
 
   /**
-   * GET /v1/signatures/company/{company_id}/project/{project_id}/employee
+   * GET /v3/signatures/project/{project_id}/company/{company_id}/employee
+   *
+   * @param companyId the company ID
+   * @param projectId the project ID
    */
   getEmployeeProjectSignatures(companyId, projectId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
+    //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
+    // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
+    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee');
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
 
   /**
-   * GET /v1/signatures/project/{project_id}
-   **/
+   * GET /v3/signatures/project/{project_id}
+   *
+   * @param projectId the project ID
+   */
   getProjectSignatures(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
+    //const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
+    // Leverage the new go backend v3 endpoint - note the slightly different path
+    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));

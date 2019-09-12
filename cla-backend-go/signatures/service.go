@@ -21,7 +21,12 @@ import (
 
 // SignatureService interface
 type SignatureService interface {
-	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.ProjectSignatures, error)
+	GetSignatures(ctx context.Context, params signatures.GetSignaturesParams) (*models.Signatures, error)
+	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
+	GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
+	GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
+	GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
+	GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error)
 
 	GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
@@ -41,8 +46,43 @@ func NewService(repo SignatureRepository, githubOrgValidation bool) SignatureSer
 	}
 }
 
+// GetSignatures returns the list of signatures associated with the specified signature ID
+func (s service) GetSignatures(ctx context.Context, params signatures.GetSignaturesParams) (*models.Signatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	signatureList, err := s.repo.GetSignatures(params, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return signatureList, nil
+}
+
 // GetProjectSignatures returns the list of signatures associated with the specified project
-func (s service) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.ProjectSignatures, error) {
+func (s service) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error) {
 
 	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
@@ -74,6 +114,146 @@ func (s service) GetProjectSignatures(ctx context.Context, params signatures.Get
 	}
 
 	return projectSignatures, nil
+}
+
+// GetProjectCompanySignatures returns the list of signatures associated with the specified project
+func (s service) GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	projectSignatures, err := s.repo.GetProjectCompanySignatures(params, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectSignatures, nil
+}
+
+// GetProjectCompanyEmployeeSignatures returns the list of employee signatures associated with the specified project
+func (s service) GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	projectSignatures, err := s.repo.GetProjectCompanyEmployeeSignatures(params, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectSignatures, nil
+}
+
+// GetCompanySignatures returns the list of signatures associated with the specified company
+func (s service) GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	companySignatures, err := s.repo.GetCompanySignatures(params, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return companySignatures, nil
+}
+
+// GetUserSignatures returns the list of user signatures associated with the specified user
+func (s service) GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error) {
+
+	// Grab and convert the page size, if defined
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+
+	// If we have a value...attempt to parse it
+	if params.PageSize != nil {
+		//log.Debugf("page size is not null: %s", *params.PageSize)
+		var err error
+		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
+		if err != nil {
+			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
+				defaultPageSize, err)
+		}
+
+		// Make sure it's positive
+		if pageSize < 1 {
+			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
+				pageSize, defaultPageSize)
+			pageSize = defaultPageSize
+		}
+	}
+
+	// log.Debugf("PageSize: %v", pageSize)
+
+	userSignatures, err := s.repo.GetUserSignatures(params, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return userSignatures, nil
 }
 
 // GetGithubOrganizationsFromWhitelist retrieves the organization from the whitelist

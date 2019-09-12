@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
@@ -124,11 +126,13 @@ func server(localMode bool) http.Handler {
 	}
 
 	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
+	usersRepo := users.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
-	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, userRepo)
+	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 
+	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
@@ -142,6 +146,7 @@ func server(localMode bool) http.Handler {
 	}
 
 	api.OauthSecurityAuth = authorizer.SecurityAuth
+	users.Configure(api, usersService)
 	health.Configure(api, healthService)
 	template.Configure(api, templateService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
