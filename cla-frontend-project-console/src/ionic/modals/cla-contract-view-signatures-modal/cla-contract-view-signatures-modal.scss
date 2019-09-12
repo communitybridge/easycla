@@ -45,5 +45,14 @@ ion-modal .title-wrapper {
   text-align: center;
   text-transform: uppercase;
 }
-// .sort-btn:not([class*="datatable-icon-"]):before { font-family: data-table; content: "c"; }
+
+.align-items-center {
+  align-items: center;
+}
+.searchbar-md .searchbar-input {
+  padding: 3px 40px;
+  border-radius: 1px;
+}
+
+
 

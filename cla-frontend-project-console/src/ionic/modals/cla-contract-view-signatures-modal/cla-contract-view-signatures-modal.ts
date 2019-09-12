@@ -40,6 +40,9 @@ export class ClaContractViewSignaturesModal {
   users: any[];
   filteredData: any[];
   data: any;
+  page: any;
+  lastScannedKey: any[];
+  previousLastScannedKeys: any[];
 
   constructor(
     public navCtrl: NavController,
@@ -66,6 +69,13 @@ export class ClaContractViewSignaturesModal {
   }
 
   getDefaults() {
+    this.page = {
+      size: 10,
+      pageNumber: 0
+
+    }
+    this.lastScannedKey = [];
+    this.previousLastScannedKeys = [];
     this.data = {};
     this.loading = {
       signatures: true
@@ -124,22 +134,36 @@ export class ClaContractViewSignaturesModal {
     return await this.claService.getCompany(referenceId).toPromise();
   }
 
-  getSignatures() {
-    this.claService.getProjectSignatures(this.claProjectId).subscribe((response) => {
+  // get all signatures
+  getSignatures(lastKeyScanned = "") {
+    this.claService.getProjectSignatures(this.claProjectId, lastKeyScanned).subscribe((response) => {
       this.data = response;
-      this.loading.signatures = false;
+      if (this.data.lastKeyScanned) {
+        // push next keys to a stack
+        this.lastScannedKey.push(this.data.lastKeyScanned)
+      }
+      this.page.totalCount = this.data.resultCount
       this.signatures = this.data.signatures;
       this.rows = this.mapSignatures();
+      this.loading.signatures = false;
     });
   }
 
+  getNextPage() {
+    this.loading.signatures = true;
+    let lastKeyScanned = this.lastScannedKey.pop();
+    this.previousLastScannedKeys.push(lastKeyScanned);
+    this.getSignatures(lastKeyScanned)
+  }
+
+  getPreviousPage() {
+    this.loading.signatures = true;
+    const previousLastScannedKeys = this.previousLastScannedKeys.shift()
+    this.getSignatures()
+  }
+
   sortMembers(prop) {
-    console.log(prop, 'this is props')
-    // this.sortService.toggleSort(
-    //   this.sort,
-    //   prop,
-    //   this.signatures,
-    // );
+   
   }
 
   signaturePopover(ev, signature) {
@@ -201,7 +225,6 @@ export class ClaContractViewSignaturesModal {
   }
 
   mapSignatures() {
-    this.loading.signatures = false;
     return this.signatures && this.signatures.map((signature) => {
       const formattedSignature = {
         'Entity Type': signature.signatureReferenceType,

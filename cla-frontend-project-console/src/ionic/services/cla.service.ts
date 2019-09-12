@@ -318,6 +318,7 @@ export class ClaService {
   getProjectSignatures(projectId, lastKeyScanned) {
     if (lastKeyScanned) {
       const url : URL = this.getV3Endpoint(`/v3/signatures/${projectId}?pageSize=10&nextKey=${lastKeyScanned}`);
+      return this.http.get(url).map(res => res.json());
     }
     else {
       const url : URL = this.getV3Endpoint(`/v3/signatures/${projectId}?pageSize=10`);
