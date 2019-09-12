@@ -43,6 +43,7 @@ export class ClaContractViewSignaturesModal {
   page: any;
   lastScannedKey: any[];
   previousLastScannedKeys: any[];
+  pageSize: any
 
   constructor(
     public navCtrl: NavController,
@@ -74,6 +75,7 @@ export class ClaContractViewSignaturesModal {
       pageNumber: 0
 
     }
+    this.pageSize = 50
     this.lastScannedKey = [];
     this.previousLastScannedKeys = [];
     this.data = {};
@@ -136,7 +138,7 @@ export class ClaContractViewSignaturesModal {
 
   // get all signatures
   getSignatures(lastKeyScanned = "") {
-    this.claService.getProjectSignatures(this.claProjectId, lastKeyScanned).subscribe((response) => {
+    this.claService.getProjectSignaturesV3(this.claProjectId, this.pageSize, lastKeyScanned).subscribe((response) => {
       this.data = response;
       if (this.data.lastKeyScanned) {
         // push next keys to a stack
