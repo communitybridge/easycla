@@ -12,6 +12,7 @@
     "serverless-finch": "^2.3.2"
   },
   "dependencies": {
-    "ionic": "^3.20.0"
+    "ionic": "^3.20.0",
+    "graceful-fs": "^4.2.2"
   }
 }

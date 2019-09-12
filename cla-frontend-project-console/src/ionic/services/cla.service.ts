@@ -372,7 +372,7 @@ export class ClaService {
     else {
       const url : URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50`);
       return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
-    }    
+    }
   }
 
   /**
@@ -383,7 +383,7 @@ export class ClaService {
    * @param nextKey the next key used when asking for the next page of results
    */
   getProjectSignaturesV3(projectId, pageSize=50, nextKey='') {
-    let path: string = '/v3/signatures/' + projectId + '?pageSize=' + pageSize;
+    let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
       path += '&nextKey=' + nextKey;
     }
