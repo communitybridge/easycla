@@ -9,3 +9,4 @@ cla_config.py
 env.json
 _env.json
 .mypy_cache
+.venv
