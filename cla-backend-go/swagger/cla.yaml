@@ -75,10 +75,68 @@ paths:
       tags:
         - docs
 
-  /signatures/{projectID}:
+  /users/{userID}:
+    get:
+      summary: Get user by ID
+      description: Returns a user for the provided user ID
+      security: []
+      operationId: getUser
+      parameters:
+        - name: userID
+          description: the user ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - users
+
+  /signatures/{signatureID}:
+    get:
+      summary: Get the signature by ID
+      description: Returns a list of signatures when provided the signature ID
+      security: []
+      operationId: getSignatures
+      parameters:
+        - name: signatureID
+          description: the signature ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}:
     get:
       summary: Get project signatures
-      description: Returns a list of project signature models
+      description: Returns a list of project signature models when provided the project ID
       security: []
       operationId: getProjectSignatures
       parameters:
@@ -97,7 +155,145 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/project-signatures'
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}/company/{companyID}:
+    get:
+      summary: Get project company signatures
+      description: Returns a list of project signature models when provided the project ID and company ID
+      security: []
+      operationId: getProjectCompanySignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/company/{companyID}:
+    get:
+      summary: Get company signatures
+      description: Returns a list of company signatures when provided the company ID
+      security: []
+      operationId: getCompanySignatures
+      parameters:
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/user/{userID}:
+    get:
+      summary: Get user signatures
+      description: Returns a list of user signatures when provided the user ID
+      security: []
+      operationId: getUserSignatures
+      parameters:
+        - name: userID
+          description: the user ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}/company/{companyID}/employee:
+    get:
+      summary: Get project company signatures for the employees
+      description: Returns a list of employee project signature models when provided the project ID and company ID
+      security: []
+      operationId: getProjectCompanyEmployeeSignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -772,6 +968,37 @@ parameters:
     pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
 
 definitions:
+  user:
+    type: object
+    x-nullable: false
+    title: User
+    description: User model
+    properties:
+      userID:
+        type: string
+      username:
+        type: string
+      dateCreated:
+        type: string
+      dateModified:
+        type: string
+      lfEmail:
+        type: string
+      lfUsername:
+        type: string
+      companyID:
+        type: string
+      githubID:
+        type: string
+      githubUsername:
+        type: string
+      version:
+        type: string
+      emails:
+        type: array
+        items:
+          type: string
+
   gh-org-whitelist:
     type: object
     x-nullable: false
@@ -1011,11 +1238,11 @@ definitions:
         description: The company record update date/time
         format: date-time
 
-  project-signatures:
+  signatures:
     type: object
     x-nullable: false
-    title: Project Signatures
-    description: Project Signatures
+    title: Signatures
+    description: Signatures
     properties:
       projectID:
         type: string
@@ -1035,8 +1262,8 @@ definitions:
   signature:
     type: object
     x-nullable: false
-    title: A project signature
-    description: A project signatures - may be an ICLA or CCLA signature
+    title: A signature model
+    description: A signature - may be an ICLA or CCLA signature
     properties:
       signatureID:
         type: string
