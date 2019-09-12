@@ -9,6 +9,9 @@
     "pretest": "yarn install",
     "test": "./node_modules/.bin/jasmine --config=jasmine.json"
   },
+  "dependencies": {
+    "graceful-fs": "^4.2.2"
+  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
