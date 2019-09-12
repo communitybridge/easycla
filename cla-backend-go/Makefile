@@ -69,9 +69,7 @@ build-aws-lambda: deps
 	chmod +x backend_aws_lambda
 
 $(LINT_TOOL):
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.17.1
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.18.0
 
-qc: $(LINT_TOOL)
+lint: $(LINT_TOOL)
 	$(LINT_TOOL) run --config=.golangci.yaml ./...
-
-lint: qc
