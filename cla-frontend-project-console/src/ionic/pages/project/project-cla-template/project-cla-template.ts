@@ -6,6 +6,7 @@ import {IonicPage, Nav, NavController, NavParams} from "ionic-angular";
 import {ClaService} from "../../../services/cla.service";
 import {Restricted} from "../../../decorators/restricted";
 import {DomSanitizer} from '@angular/platform-browser';
+import {RolesService} from "../../../services/roles.service";
 
 @Restricted({
   roles: ["isAuthenticated", "isPmcUser"]
@@ -41,7 +42,8 @@ export class ProjectClaTemplatePage {
     public navCtrl: NavController,
     public navParams: NavParams,
     public claService: ClaService,
-    public sanitizer: DomSanitizer
+    public sanitizer: DomSanitizer,
+    public rolesService: RolesService,
   ) {
     this.sfdcProjectId = navParams.get("sfdcProjectId");
     this.projectId = navParams.get("projectId");
@@ -61,7 +63,8 @@ export class ProjectClaTemplatePage {
   }
 
   getPdfPath() {
-    return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
+    // https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html#291823
+    return this.sanitizer.bypassSecurityTrustResourceUrl('https://drive.google.com/viewerng/viewer?embedded=true&url=' + this.pdfPath[this.currentPDF]);
   }
 
   showPDF(type) {
