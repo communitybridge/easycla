@@ -3,13 +3,13 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
 **Do these steps:**
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 
-2. Click a project of interest.
+1. Click a project of interest.
 
    The project page appears.
 
-3. Click **CONNECT GITHUB ORGANIZATION**.
+1. Click **CONNECT GITHUB ORGANIZATION**.
 
    The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
@@ -17,23 +17,23 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
    ![CLA Add GitHub Organization](imgs/CLA-Add-GitHub-Organization.png)
 
-4. Enter your organization name in the GitHub Organization URL field. The URL automatically appends the name. Click **CONNECT**.
+1. Enter your organization name in the GitHub Organization URL field. The URL automatically appends the name. Click **CONNECT**.
 
    The Connect LF CLA App to GitHub Organization dialog appears.
 
    The GitHub organization name value is case-sensitive—make sure that the name you enter matches the case of your GitHub organization name exactly.
 
-5. Read the instructions and click **INSTALL THE GITHUB CLA APP**.
+1. Read the instructions and click **INSTALL THE GITHUB CLA APP**.
 
    ![CLA Connect LF CLA App](imgs/CLA-Connect-LF-CLA-App.png)
 
    The EasyCLA Application opens in GitHub.
 
-6. Click **Install** on the EasyCLA Application.
+1. Click **Install** on the EasyCLA Application.
 
    ![CLA EasyCLA GitHub app](imgs/CLA-EasyCLA-GitHub-app.png)
 
-7. Select one or more repositories and assign permissions. Click **Install**.
+1. Select one or more repositories and assign permissions. Click **Install**.
 
    ![CLA Install LF CLA Application](imgs/CLA-Install-LF-CLA-Application.png)
 
@@ -47,7 +47,7 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
    If the EasyCLA Application is not connected to GitHub properly, an error message appears under the organization name:  Not Configured. Please connect the CLA App to the Github Org. Click the **message link** to return to Step 4.
 
-8. Repeat Steps 2 through 7 to connect as many organizations as you want.
+1. Repeat Steps 2 through 7 to connect as many organizations as you want.
 
 **Important**: *To enable a CLA check on a repository, you must configure a GitHub repository or add a Gerrit instance. Simply adding an organization to the project does not enable the CLA check for any CLA groups.*
 

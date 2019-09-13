@@ -1,15 +1,15 @@
 # Sign a Corporate CLA on Behalf of the Company
 As a CLA signatory, you have the executive privilege to sign a Corporate CLA on behalf of the company. If you are a CLA manager but not a CLA signatory, you can request that the CLA signatory sign the Corporate CLA.
 
-**Do these steps**:
+**Do these steps:**
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
-2. Click the company for which you want to sign a Corporate CLA.
+1. Click the company for which you want to sign a Corporate CLA.
 
-3. Click **NEW CLA**.
+1. Click **NEW CLA**.
 
    ![New CLA](imgs/CLA-New-CLA.png)
 
@@ -17,17 +17,17 @@ As a CLA signatory, you have the executive privilege to sign a Corporate CLA on 
 
    ![Select a Project to Sign a CCLA](imgs/CLA-Select-a-Project-to-Sign-a-CCLA.png)
 
-4. Select the CLA group of interest.
+1. Select the CLA group of interest.
 
    A CLA Signing Requirement dialog appears:
 
    ![CLA Signing Requirement](imgs/CLA-Signing-Requirement.png)
 
-5. Click **YES** or **NO** according to your permissions:
+1. Click **YES** or **NO** according to your permissions:
 
-   * **YES** Go to the YES section below.
+    + [YES](#yes)
 
-   * **NO** Go to the NO section below.
+    + [NO](#no)
 
 ### YES
 
@@ -37,7 +37,7 @@ The Corporate CLA dialog opens.
 
 1. Click **OPEN CLA**.
 
-2. Follow the instructions that DocuSign presents. Some fields are pre-populated such as the company name and email.
+1. Follow the instructions that DocuSign presents. Some fields are pre-populated such as the company name and email.
 
 ### NO
 

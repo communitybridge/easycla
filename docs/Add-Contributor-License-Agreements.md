@@ -11,34 +11,37 @@ In these cases, you simply add the updated CLA using the same procedure as for a
 
 *Verify that the pop-up blocker is disabled on your browser before you begin this procedure.*
 
-**Do these steps**:
+**Do these steps:**
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 
-2. Click a **project** of interest.
+1. Click a **project** of interest.
 
    The project page appears.
-3. Go to the CLA group to which you want to add a CLA and click **SELECT TEMPLATE**.
+
+1. Go to the CLA group to which you want to add a CLA and click **SELECT TEMPLATE**.
 
    The Select a template page appears and lists available templates.
 
    ![CLA Select a template](imgs/CLA-Select-a-template-page.png)
 
-4. Click the **button** on the template you want to use.
+1. Click the **button** on the template you want to use.
 
    A template information form appears. The information you enter in this form will populate the corresponding fields in the resulting Corporate CLA and Individual CLA PDFs. The following form is an example; each form is specific to the project.
 
    ![CLA Select a template form](imgs/CLA-Select-a-template-form.png)
 
-5. Complete the form fields and click **REVIEW**.
+1. Complete the form fields and click **GENERATE AND REVIEW PDFS**.
    
-   The CLA appears:
+   The CLA appears.
+
+1. Click **VIEW CCLA** (Corporate CLA) or **VIEW ICLA** (Individual CLA) to view the respective PDF and scroll through the content to review it.
 
    ![CLA PDF content](imgs/CLA-PDF-content.png)
 
-6. (Optional) Click **VIEW CCLA** (Corporate CLA) or **VIEW ICLA** (Individual CLA) to view the respective PDF and then click **DONE**. (BACK TO TEMPLATE INFORMATION returns you to the template form.)
+1. Click **DONE**. (BACK TO TEMPLATE INFORMATION returns you to the template form.)
 
-The Projects page shows that you have successfully uploaded the Corporate CLA and Individual CLA templates under your CLA Group. Refresh the page if the templates do not appear.
+   The Projects page shows that you have successfully uploaded the Corporate CLA and Individual CLA templates under your CLA Group. Refresh the page if the templates do not appear.
 
 ### Next Step:
 

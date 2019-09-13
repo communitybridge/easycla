@@ -3,13 +3,13 @@ As a corporate (employee) contributor to an open-source project, you create a pu
 
 When all CLA management set-up tasks are complete and your CLA signatory has signed a Corporate CLA, you simply confirm your association to the company during your first pull request. Then you can continue with your pull request. Your subsequent contributions will not require association confirmations.
 
-**Do these steps**:
+**Do these steps:**
 
 *If you are a CLA manager, make sure that you are logged out of the CLA Management Console before you begin.*
 
 1. In GitHub, go to the repository that is linked to the project for your organization.
 
-2. Make a change and send a pull request.
+1. Make a change and send a pull request.
 
    EasyCLA checks the CLA status of all committers involved in that pull request. Easy CLA marks a cross or a tick beside contributor names involved in that pull request based on their CLA status.
 
@@ -17,11 +17,11 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
    ![GitHub Company Contributor Fail](imgs/CLA-GitHub-Company-Contributor-Fail.png)
 
-3. Click **Please click here to be authorized**.
+1. Click **Please click here to be authorized**.
 
    The Authorize CommunityBridge: EasyCLA dialog appears.
 
-4. Click **Authorize LF-Engineering**. (Subsequent contributions will not require authorization.)
+1. Click **Authorize LF-Engineering**. (Subsequent contributions will not require authorization.)
 
    ![Authorize CommunityBridge: EasyCLA](imgs/CLA-Authorize-EasyCLA.png)
 
@@ -29,11 +29,11 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
    ![Select a CLA Type](imgs/CLA-GitHub-Select-company-or-individual.png)
 
-5. Select **Company**.
+1. Select **Company**.
 
    To contribute to this project, you must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your work for a company.
 
-6. Continue:
+1. Continue:
 
    **If a Confirmation of Association with statement appears**, go to that section below.
 
@@ -49,15 +49,15 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
    ![You are done](imgs/CLA-GitHub-you-are-done.png)
 
-2. Click **RETURN TO REPO**.
+1. Click **RETURN TO REPO**.
 
    You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
 
-   A tick appears next to your branch. A notification informs you: The committers are authorized under a signed CLA.
+   A tick appears next to your branch. A notification appears:
 
    ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
 
-3. Click **Merge pull request** and confirm the merge.
+1. Click **Merge pull request** and confirm the merge.
 
 The CLA is added to the project.
 
@@ -69,11 +69,11 @@ The CLA is added to the project.
 
    ![Select Company](imgs/CLA-Contributor-Select-Company.png)
 
-2. Click **COMPANY NOT IN LIST?**.
+1. Click **COMPANY NOT IN LIST?**.
 
    The Verify Your Permission of Access dialog appears.
 
-3. Click an answer to the question: Are You a CLA Manager?
+1. Click an answer to the question: Are You a CLA Manager?
 
    **YES**—go to **Step 5**.
 
@@ -83,7 +83,7 @@ The CLA is added to the project.
 
    A Confirmation of Association with statement appears.
 
-4. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
+1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
    ![Confirmation of Association](imgs/CLA-GitHub-confirmation-of-association.png)
 
@@ -91,12 +91,12 @@ The CLA is added to the project.
 
    ![You Are Done](imgs/CLA-GitHub-you-are-done.png)
 
-5. You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
+1. You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
 
-   A tick appears next to your contributor name. A notification informs you: The committers are authorized under a signed CLA.
+   A tick appears next to your branch. A notification appears:
 
    ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
 
-6. Click **Merge pull request** and confirm the merge.
+1. Click **Merge pull request** and confirm the merge.
 
 The CLA is added to the project.

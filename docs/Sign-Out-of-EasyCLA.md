@@ -3,10 +3,10 @@
 
 1. Go to a page that shows the hamburger icon ![Hamburger](imgs/CLA-Hamburger-Icon.png) on the top-left corner such as on the main CLA Management Console or CLA Corporate Console page.
 
-2. Click the ![Hamburger](imgs/CLA-Hamburger-Icon.png) **icon**.
+1. Click the ![Hamburger](imgs/CLA-Hamburger-Icon.png) **icon**.
 
    THE LINUX FOUNDATION pane appears.
 
-3. Click **Sign Out**.
+1. Click **Sign Out**.
 
    You are signed out and the sign-in page appears.
