@@ -20,9 +20,9 @@ Consider the following conventions for email addresses:
 
 * An Individual CLA that is tied to your employer requires an @company email address. (You do not whitelist a contributor who is not tied to any employer or company.)
 
-**Do these steps**:
+**Do these steps:**
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -38,11 +38,10 @@ Consider the following conventions for email addresses:
 
    ![Whitelists](imgs/CLA-Whitelists.png)
 
-1. Decide what whitelist you want to edit:
+1. Decide which whitelist you want to edit:
 
-   * Domain Whitelist, Email Whitelist, or GitHub Whitelist - Go to the following section.
-
-   * GitHub Organization Whitelist - Go to the GitHub Organization Whitelist section below.
+    + [Domain Whitelist, Email Whitelist, or GitHub Whitelist](#domain-whitelist--email-whitelist--or-github-whitelist)
+    + [GitHub Organization Whitelist](#github-organization-whitelist)
 
 ### Domain Whitelist, Email Whitelist, or GitHub Whitelist
 

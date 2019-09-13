@@ -12,17 +12,17 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
 **Do these steps**:
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 
-2. Click a **project** of interest.
+1. Click a **project** of interest.
 
    The project page appears.
 
    A message informs you that your project needs a CLA group. A CLA group defines one or more CLA types that contributors must sign before they can contribute to a project. 
 
-4. Click **ADD CLA GROUP**.
+1. Click **ADD CLA GROUP**.
 
-5. Complete the dialog options:
+1. Complete the dialog options:
 
    ![CLA CLA Group](imgs/CLA-CLA-Group.png)
 
@@ -40,7 +40,7 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
    c. Click **SAVE**.
 
-The CLA group that you added and the CLA types that you specified appear under CLA Groups.
+   The CLA group that you added and the CLA types that you specified appear under CLA Groups.
 
 ### Next Steps:
 

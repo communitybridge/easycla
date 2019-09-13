@@ -11,17 +11,17 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
 **Do these steps**:
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 
-2. Click a **project** of interest.
+1. Click a **project** of interest.
 
    The project page appears.
 
-3. Click **ADD GERRIT INSTANCE**.
+1. Click **ADD GERRIT INSTANCE**.
 
    The Add Gerritt Instance form appears.
 
-4. Complete the form fields, and click **SUBMIT**.
+1. Complete the form fields, and click **SUBMIT**.
 
    **Gerrit Instance Name** - Name of the Gerrit Instance
 
@@ -61,7 +61,7 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
    `accepted = group {Group-Name}`
 
-5. Copy the block. As the Gerrit instance administrator, you will modify CLA configurations for the following files under the Gerrit instance’s All-Projects repository. If you are not the administrator, contact the Gerrit instance administrator to include the following files under the Gerrit instance’s All-Projects repository. Projects are organized hierarchically as a tree with the All-Projects project as root from which all projects inherit. 
+1. Copy the block. As the Gerrit instance administrator, you will modify CLA configurations for the following files under the Gerrit instance’s All-Projects repository. If you are not the administrator, contact the Gerrit instance administrator to include the following files under the Gerrit instance’s All-Projects repository. Projects are organized hierarchically as a tree with the All-Projects project as root from which all projects inherit. 
 
    You can get and set the configuration variables by using the git config command with the -l option (this option provides the current configuration), or if you are using the Gerrit web interface, go to Projects and click List. Select your project and click **Edit Config**.
 
@@ -84,7 +84,7 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
    **groups** - If the Group-Name value that you specified in the project.config file does not exist in this file, add it to this file, and then save the file.
 
-6. Provide these files and Gerrit configuration to the Linux Foundation Release Engineering team to finish configuration.
+1. Provide these files and Gerrit configuration to the Linux Foundation Release Engineering team to finish configuration.
 The CLA Management Console shows the repositories that the CLA application will monitor.
 
-To delete an instance from monitoring, click  **DELETE** next to the instance that you want to delete. A confirmation dialog appears. Click  **DELETE**.
+To delete an instance from monitoring, click **DELETE** next to the instance that you want to delete. A confirmation dialog appears. Click **DELETE**.

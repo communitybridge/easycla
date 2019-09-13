@@ -3,24 +3,24 @@ As a project manager, you use the CLA Management Console to manage your CLA grou
 
 **Do these steps**:
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 
-2. Click a **project** of interest.
+1. Click a **project** of interest.
 
    The project page appears.
 
-3. Do any of the following actions:
+1. Do any of the following actions:
 
-   * Change Your Current CLA Type Selections
+     * [Change Your Current CLA Type Selections](#change-your-current-cla-type-selections)
 
-   * View CLA User Signatures
+     * [View CLA User Signatures](#view-cla-user-signatures)
 
-   * View the Corporate CLA Companies
+     * [View the Corporate CLA Companies](#view-the-corporate-cla-companies)
 
 ## Change Your Current CLA Type Selections
+You can change your CLA type selections if needed.
 
-
-****Do these steps****:
+**Do these steps:**
 
 1. Click the **gear icon** ![CLA Gear Settings icon](imgs/CLA-Gear-Settings-icon.png) next to the CLA group name.
 
@@ -28,13 +28,13 @@ As a project manager, you use the CLA Management Console to manage your CLA grou
 
    ![CLA CLA Group](imgs/CLA-CLA-Group-edit.png)
 
-2. Change the CLA Group Name, selections, or all, and click **SAVE**.
+1. Change the CLA Group Name, selections, or all, and click **SAVE**.
 
 ## View CLA User Signatures
 
 A signature list shows details about who signed a CLA for your project.
 
-**Do these steps**:
+**Do these steps:**
 
 1. Click **VIEW SIGNATURES**.
 
@@ -42,12 +42,14 @@ A signature list shows details about who signed a CLA for your project.
 
    ![CLA View Signatures](imgs/CLA-View-Signatures.png)
 
-2. Click **CLOSE**.
+1. (Optional) Enter a **name** in the Search field to find a specific signature. As you type, matching entries appear. Use the pagination options to go to the next or previous pages.
+
+1. Click **CLOSE**.
 
 ## View the Corporate CLA Companies
 The Corporate CLA list lets you see what companies in your project have a signed Corporate CLA.
 
-**Do these steps**:
+**Do these steps:**
 
 1. Click **VIEW COMPANIES** on a Corporate CLA.
 
@@ -55,4 +57,4 @@ The Corporate CLA list lets you see what companies in your project have a signed
 
    ![CLA Corporate CLA](imgs/CLA-Corporate-CLA.png)
 
-2. Click **CLOSE**.
+1. Click **CLOSE**.

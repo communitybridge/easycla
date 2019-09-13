@@ -9,23 +9,23 @@ CLA managers have the following responsibilities:
 
 You can add CLA managers to your project or remove them.
 
-**Do these steps**:
+**Do these steps:**
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
-2. Click a **company** of interest.
+1. Click a **company** of interest.
 
    The CLA Corporate Console shows Signed CLAs.
 
    ![Signed CLAs](imgs/CLA-Signed-CLAs.png)
 
-3. Click a **CLA**.
+1. Click a **CLA**.
 
    Project Signatures lists the signed the CLA Managers and Employee Acknowledgements for the project.
 
-4. Do an action:
+1. Do an action:
 
    * Add a CLA Manager - Go to the following section.
 
@@ -39,7 +39,7 @@ You can add CLA managers to your project or remove them.
 
    ![Add CLA Manager pane](imgs/CLA-Managers-pane.png)
 
-2. Enter the Linux Foundation identification of the CLA manager who you want to add, and click ****SAVE****.
+1. Enter the Linux Foundation identification of the CLA manager who you want to add, and click ****SAVE****.
 
    ![Add CLA Manager](imgs/CLA-Add-CLA-Manager.png)
 
@@ -49,6 +49,6 @@ The CLA manager is listed under CLA Managers.
 
 1. Click **Delete** next to a CLA manager to remove that person as a signatory.
 
-2. Click **DELETE** on the Delete Manager confirmation dialog.
+1. Click **DELETE** on the Delete Manager confirmation dialog.
 
 The CLA manager is removed from under CLA Managers.

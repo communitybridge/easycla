@@ -29,11 +29,11 @@ With EasyCLA, you do the following CLA set-up tasks:
 
 1. [Install the EasyCLA Application](Install-the-EasyCLA-Application.md).
 
-2. [Add a CLA Group](Add-a-CLA-Group.md).
+1. [Add a CLA Group](Add-a-CLA-Group.md).
 
-3. [Add Contributor License Agreements](Add-Contributor-License-Agreements.md).
+1. [Add Contributor License Agreements](Add-Contributor-License-Agreements.md).
 
-4. Add [GitHub repositories](Add-GitHub-Repositories-to-CLA-Monitoring-or-Remove-Them-From-CLA-Monitoring.md) or [Gerrit instances](Add-Gerrit-Instances-to-CLA-Monitoring-or-Delete-Them-From-CLA-Monitoring.md) to enforce CLA monitoring.
+1. Add [GitHub repositories](Add-GitHub-Repositories-to-CLA-Monitoring-or-Remove-Them-From-CLA-Monitoring.md) or [Gerrit instances](Add-Gerrit-Instances-to-CLA-Monitoring-or-Delete-Them-From-CLA-Monitoring.md) to enforce CLA monitoring.
 
 At any time, you can change the settings to manage your project CLA monitoring, and do other management tasks:
 
