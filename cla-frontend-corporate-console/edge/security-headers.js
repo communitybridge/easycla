@@ -70,6 +70,7 @@ function generateCSP(env, isDevServer) {
         'base-uri': [SELF],
         // frame-src restricts what iframe's you can put on your website
         'frame-src': [SELF, 'data:',
+            'https://drive.google.com/', // allow the google drive PDF viewer
             'https://cla-signature-files-dev.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
             'https://cla-signature-files-test.s3.amazonaws.com/',
