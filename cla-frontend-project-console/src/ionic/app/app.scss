@@ -19,6 +19,10 @@
 @import "../assets/fonts/lato-font.scss";
 @import "../assets/fonts/open-sans-font.scss";
 @import "../assets/fonts/work-sans-font.scss";
+@import "../assets/_bootstrap.scss";
+@import "../assets/_marterial.scss";
+
+@import "ionic.globals";
 
 body ion-app.ios {
   font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;

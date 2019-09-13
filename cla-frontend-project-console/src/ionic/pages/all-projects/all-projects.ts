@@ -95,7 +95,10 @@ export class AllProjectsPage {
     }
   }
 
+  /**
+   * Opens the access page in a new window
+   */
   openAccessPage() {
-    window.open("https://docs.linuxfoundation.org/pages/viewpage.action?pageId=7411265", "_blank");
+    window.open("https://github.com/communitybridge/easycla/blob/master/docs/Get-Access-to-EasyCLA.md", "_blank");
   }
 }

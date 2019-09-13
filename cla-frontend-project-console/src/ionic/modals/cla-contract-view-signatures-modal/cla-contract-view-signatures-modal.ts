@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import {
   NavController,
   NavParams,
@@ -13,9 +14,9 @@ import {
 } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service'
-import {SortService} from "../../services/sort.service";
-import {KeycloakService} from "../../services/keycloak/keycloak.service";
-import {RolesService} from "../../services/roles.service";
+import { SortService } from "../../services/sort.service";
+import { KeycloakService } from "../../services/keycloak/keycloak.service";
+import { RolesService } from "../../services/roles.service";
 
 
 @IonicPage({
@@ -33,6 +34,19 @@ export class ClaContractViewSignaturesModal {
   sort: any;
   signatures: any[];
   searchTerm: string;
+  columns: any[];
+  rows: any[];
+  selectedSize: any[];
+  allSizes: any[];
+
+  companies: any[];
+  users: any[];
+  filteredData: any[];
+  data: any;
+  page: any;
+  lastScannedKey: any[];
+  previousLastScannedKeys: any[];
+  pageSize: any
 
   constructor(
     public navCtrl: NavController,
@@ -43,6 +57,7 @@ export class ClaContractViewSignaturesModal {
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
     private keycloak: KeycloakService,
+    private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events
   ) {
@@ -59,94 +74,113 @@ export class ClaContractViewSignaturesModal {
   }
 
   getDefaults() {
+    this.page = {
+      size: 10,
+      pageNumber: 0
+
+    }
+    this.pageSize = 50
+    this.lastScannedKey = [];
+    this.previousLastScannedKeys = [];
+    this.data = {};
     this.loading = {
-      signatures: true,
+      signatures: true
     };
+    this.allSizes = [
+      20,
+      50,
+      100
+    ]
     this.searchTerm = '',
-    this.sort = {
-      signatureType: {
-        arrayProp: 'signatureType',
-        sortType: 'text',
-        sort: null,
-      },
-      name: {
-        arrayProp: 'referenceEntity.user_name',
-        sortType: 'text',
-        sort: null,
-      },
-      company: {
-        arrayProp: 'signature_user_ccla_company_id',
-        sortType: 'text',
-        sort: null,
-      },
-      githubId: {
-        arrayProp: 'referenceEntity.user_github_id',
-        sortType: 'number',
-        sort: null,
-      },
-      version: {
-        arrayProp: 'documentVersion',
-        sortType: 'semver',
-        sort: null,
-      },
-      date: {
-        arrayProp: 'date_modified',
-        sortType: 'date',
-        sort: null,
-      },
-    };
+      this.sort = {
+        signatureType: {
+          arrayProp: 'signatureType',
+          sortType: 'text',
+          sort: null,
+        },
+        name: {
+          arrayProp: 'referenceEntity.user_name',
+          sortType: 'text',
+          sort: null,
+        },
+        company: {
+          arrayProp: 'signature_user_ccla_company_id',
+          sortType: 'text',
+          sort: null,
+        },
+        githubId: {
+          arrayProp: 'referenceEntity.user_github_id',
+          sortType: 'number',
+          sort: null,
+        },
+        version: {
+          arrayProp: 'documentVersion',
+          sortType: 'semver',
+          sort: null,
+        },
+        date: {
+          arrayProp: 'date_modified',
+          sortType: 'date',
+          sort: null,
+        },
+      };
     this.signatures = [];
+    this.filteredData = this.rows
+    this.columns = [
+      { prop: 'Entity Type' },
+      { prop: 'Name' },
+      { prop: 'Company' },
+      { prop: 'GithubID' },
+      { prop: 'LFID' },
+      { prop: 'Version' },
+      { prop: 'Date' }
+    ];
   }
 
-  getSignatures() {
-    this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
-      for (let signature of signatures) {
-        signature.documentVersion = `${signature.signature_document_major_version}.${signature.signature_document_minor_version}`;
-        // Include only signed signatures into SignedSignatures
-        if (signature.signature_signed === true) {
-          if (signature.signature_reference_type === "user") {
-            // ICLA, Employee CCLA
-            this.claService.getUser(signature.signature_reference_id).subscribe(user => {
-              if (user)  {
-                signature.user = user;
-                //Employee CCLA if signature includes a ccla_company_id
-                if (signature.signature_user_ccla_company_id) {
-                  this.claService.getCompany(signature.signature_user_ccla_company_id).subscribe(company => {
-                    if (company) {
-                      signature.company = company;
-                    }
-                  })
-                }
-              }
-            });
-          }
-          else if (signature.signature_reference_type === "company") {
-            // CCLA signed by company authority
-            this.claService.getCompany(signature.signature_reference_id).subscribe(company => {
-              if(company) {
-                signature.company = company;
-                this.claService.getUser(company.company_manager_id).subscribe(user => {
-                  if (user) {
-                    signature.user = user; 
-                  }
-                })
-              }
-            });
-          }
-          //add to signatures
-          this.signatures.push(signature);
-        }
+  async getUser(signatureReferenceId) {
+    return await this.claService.getUser(signatureReferenceId).toPromise();
+  }
+
+  async getCompany(referenceId) {
+    return await this.claService.getCompany(referenceId).toPromise();
+  }
+
+  sizeSelectedChanged() {
+    this.pageSize = this.selectedSize;
+    this.getSignatures();
+
+  }
+
+  // get all signatures
+  getSignatures(lastKeyScanned = "") {
+    this.claService.getProjectSignaturesV3(this.claProjectId, this.pageSize, lastKeyScanned).subscribe((response) => {
+      this.data = response;
+      if (this.data.lastKeyScanned) {
+        // push next keys to a stack
+        this.lastScannedKey.push(this.data.lastKeyScanned)
       }
+      this.page.totalCount = this.data.resultCount
+      this.signatures = this.data.signatures;
+      this.rows = this.mapSignatures();
       this.loading.signatures = false;
     });
   }
 
+  getNextPage() {
+    this.loading.signatures = true;
+    let lastKeyScanned = this.lastScannedKey.pop();
+    this.previousLastScannedKeys.push(lastKeyScanned);
+    this.getSignatures(lastKeyScanned)
+  }
+
+  getPreviousPage() {
+    this.loading.signatures = true;
+    const previousLastScannedKeys = this.previousLastScannedKeys.shift()
+    this.getSignatures()
+  }
+
   sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.signatures,
-    );
+   
   }
 
   signaturePopover(ev, signature) {
@@ -178,7 +212,7 @@ export class ClaContractViewSignaturesModal {
     });
 
     popover.onDidDismiss((popoverData) => {
-      if(popoverData) {
+      if (popoverData) {
         this.popoverResponse(popoverData);
       }
     });
@@ -190,7 +224,7 @@ export class ClaContractViewSignaturesModal {
    */
   popoverResponse(popoverData) {
     let callback = popoverData.callback;
-    if(this[callback]) {
+    if (this[callback]) {
       this[callback](popoverData.callbackData);
     }
   }
@@ -207,22 +241,39 @@ export class ClaContractViewSignaturesModal {
     this.viewCtrl.dismiss();
   }
 
-  onSearch($event) {
-    this.searchTerm = $event.value;
-    if(this.searchTerm.length > 0) {
-      this.signatures = this.signatures.filter((signature) => {
-        if(
-          signature.user.user_name && signature.user.user_name.toLowerCase().startsWith(this.searchTerm.toLocaleLowerCase())) {
-          return true;
-        }
-        else {
-          return false
-        }
-      })
-    }
-    else {
-      this.getSignatures()
-    }
+  mapSignatures() {
+    return this.signatures && this.signatures.map((signature) => {
+      let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
+      const formattedSignature = {
+        'Entity Type': signature.signatureReferenceType,
+        'Name': signature.userName && signature.userName,
+        'Company': signature.companyName && signature.companyName,
+        'GithubID': signature.userGHID && signature.userGHID,
+        "LFID": signature.LFID && signature.LFID,
+        'Version': `v${signature.version}`,
+        'Date': date
+      }
+      return formattedSignature
+    })
   }
 
+  onSearch($event) {
+    this.filteredData = this.rows;
+    let val = $event.value.trim().toLowerCase();
+    if (val.length > 0) {
+      let colsAmt = this.columns.length;
+      let keys = Object.keys(this.rows[0]);
+      this.rows = this.filteredData.filter(function (item) {
+        for (let i = 0; i < colsAmt; i++) {
+          if (item[keys[i]] !== null && item[keys[i]] !== undefined && item[keys[i]].toString().toLowerCase().indexOf(val) !== -1 || !val) {
+            // found match, return true to add to result set
+            return true;
+          }
+        }
+      });
+    }
+    else {
+      this.rows = this.mapSignatures();
+    }
+  }
 }

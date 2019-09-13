@@ -85,10 +85,8 @@ export class ClaContractsContributorsPage {
     this.signatures = [];
   }
 
-  getSignatures() {
-    this.claService.getProjectSignatures(this.claProjectId).subscribe((signatures) => {
-      console.log("signatures");
-      console.log(signatures);
+  getSignatures(lastScannedKey="") {
+    this.claService.getProjectSignatures(this.claProjectId, lastScannedKey).subscribe((signatures) => {
       let userSignatures = signatures.filter(item => item.signature_reference_type == 'user')
       for (let signature of userSignatures) {
         // extend fields

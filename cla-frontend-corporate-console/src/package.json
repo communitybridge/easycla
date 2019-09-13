@@ -47,6 +47,7 @@
     "aws-sdk": "^2.304.0",
     "chart.js": "^2.5.0",
     "google-libphonenumber": "^2.0.18",
+    "graceful-fs": "^4.2.2",
     "ionic-angular": "3.9.2",
     "ionicons": "3.0.0",
     "jwt-decode": "2.2.0",
