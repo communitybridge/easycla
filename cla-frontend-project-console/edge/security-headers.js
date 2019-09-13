@@ -73,10 +73,14 @@ function generateCSP(env, isDevServer) {
         'base-uri': [SELF],
         // frame-src restricts what iframe's you can put on your website
         'frame-src': [SELF, 'data:',
-            'https://s3.amazonaws.com/cla-signature-files-dev/',
-            'https://s3.amazonaws.com/cla-signature-files-test/',
-            'https://s3.amazonaws.com/cla-signature-files-staging/',
-            'https://s3.amazonaws.com/cla-signature-files-prod/'
+            'https://cla-signature-files-dev.s3.amazonaws.com/',
+            'https://s3.amazonaws.com/cla-project-logo-dev/',
+            'https://cla-signature-files-test.s3.amazonaws.com/',
+            'https://s3.amazonaws.com/cla-project-logo-test/',
+            'https://cla-signature-files-staging.s3.amazonaws.com/',
+            'https://s3.amazonaws.com/cla-project-logo-staging/',
+            'https://cla-signature-files-prod.s3.amazonaws.com/',
+            'https://s3.amazonaws.com/cla-project-logo-prod/'
         ],
         'child-src': [],
         'media-src': [],
