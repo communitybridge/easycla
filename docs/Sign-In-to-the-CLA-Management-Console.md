@@ -5,17 +5,17 @@ Project managers sign in to the CLA Management Console to perform the CLA set-up
 
 1. Go to <https://project.lfcla.com>.
 
-2. Click **SIGN IN**.
+1. Click **SIGN IN**.
 
    The LF CLA sign-in dialog appears.
 
-3. Enter your credentials as the project manager and click **LOG IN**.
+1. Enter your credentials as the project manager and click **LOG IN**.
 
    The CLA Management Console appears and lists your assigned projects from the Linux Foundation, for example:
 
    ![CLA Management All Projects](imgs/CLA-Management-All-Projects.png)
 
-4. Click a **project name** of interest.
+1. Click a **project name** of interest.
 
    For each project, the CLA Management Console provides the following information:
 

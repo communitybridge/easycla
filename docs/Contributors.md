@@ -9,3 +9,7 @@ As a contributor, you can easily comply to your legal obligations for a company 
 * [Sign an Individual Contributor License Agreement](Sign-a-CLA-as-an-Individual-Contributor-to-GitHub.md). You are contributing code that you wrote on your own behalf (code that you wrote on your own time, and not for an employer or using your employer’s facilities or equipment). Remember—you should not submit a contribution under an Individual CLA if that contribution consists of content that belongs to your company. Instead, you should contribute it under a Corporate CLA signed by your company.
 
 Gerrit contributors, see [Contribute to a Gerrit Project](Contribute-to-a-Gerrit-Project.md).
+
+### Need a walk-through?
+
+View this [video](https://www.youtube.com/watch?v=WvKX10S7FOk&feature=youtu.be) to see how to use EasyCLA as a contributor. Click [here](Contributor-Console-Video-Script.md) to read the video transcript.

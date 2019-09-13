@@ -9,20 +9,20 @@ As a project manager, you can uninstall the EasyCLA Application. When you uninst
 
    Personal settings appear on the left side of the page.
 
-2. Select **Applications** or **Organizations** in Personal settings.
+1. Select **Applications** or **Organizations** in Personal settings.
 
    The Applications or Organizations pane appears.
 
-3. Click **Installed GitHub Apps** tab if it does not appear by default.
+1. Click **Installed GitHub Apps** tab if it does not appear by default.
 
-4. Click **Configure** for the CommunityBridge: EasyCLA app.
+1. Click **Configure** for the CommunityBridge: EasyCLA app.
 
    ![CLA Uninstall the EasyCLA App](imgs/CLA-Uninstall-the-EasyCLA-App.png)
 
-5. Go to the Uninstall CommunityBridge: EasyCLA section and click **Uninstall**.
+1. Go to the Uninstall CommunityBridge: EasyCLA section and click **Uninstall**.
 
    ![CLA Uninstall the EasyCLA app button](imgs/CLA-Uninstall-the-EasyCLA-app-button.png)
 
-6. Refresh the CLA Management Console.
+1. Refresh the CLA Management Console.
 
-The EasyCLA Application is uninstalled.
+   The EasyCLA Application is uninstalled.
