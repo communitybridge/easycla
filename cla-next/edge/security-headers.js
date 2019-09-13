@@ -55,9 +55,13 @@ function generateCSP(env, isDevServer) {
     const sources = {
         'default-src': [NONE],
         'img-src': [SELF, 'data:',
+            'https://cla-signature-files-dev.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
+            'https://cla-signature-files-test.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-test/',
+            'https://cla-signature-files-staging.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-staging/',
+            'https://cla-signature-files-prod.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-prod/'
         ],
         'script-src': scriptSources,
