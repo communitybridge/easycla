@@ -8,6 +8,10 @@ all-projects {
     color: color($colors, dark) !important;
   }
 
+  .text-align-center {
+    text-align: center;
+  }
+
   .get-access-button {
     color: color($colors, secondary) !important;
     font-size: 14px;
