@@ -26,6 +26,7 @@ export class AllProjectsPage {
   allFilteredProjects: any;
   userRoles: any;
   errorMessage = null;
+  errorStatus = null;
 
   constructor(
     public navCtrl: NavController,
@@ -52,6 +53,7 @@ export class AllProjectsPage {
 
   handleErrors (error) {
     this.setLoadingSpinner(false);
+    this.errorStatus = error.status
 
     switch (error.status) {
       case 401:

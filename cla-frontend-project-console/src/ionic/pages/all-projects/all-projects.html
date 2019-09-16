@@ -13,17 +13,25 @@
   <div class="page-content">
     <loading-spinner [loading]="loading.projects"></loading-spinner>
 
-    <h3 class="error-message" *ngIf="errorMessage">
+    <h3 class="error-message" *ngIf="errorMessage && errorStatus !== 403">
       {{ errorMessage }}
       <br>
       <a href="#/login">Go back to login</a>
+    </h3>
+
+    <h3 class="get-access-label text-align-center" *ngIf="errorMessage && errorStatus === 403">
+      Don't see your projects here?
+      <br>
+      <button class="transparent get-access-button" (click)="openAccessPage()">Get Access</button>
     </h3>
 
     <ion-grid class="all-projects" [loading-display]="loading.projects" *ngIf="!errorMessage">
       <ion-row>
         <ion-col>
           <ion-item no-lines class="transparent">
-            <h2 class="all-projects-title"><b>All Projects</b></h2>
+            <h2 class="all-projects-title">
+              <b>All Projects</b>
+            </h2>
           </ion-item>
         </ion-col>
         <ion-col>
