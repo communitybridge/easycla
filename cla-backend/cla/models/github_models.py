@@ -5,15 +5,14 @@
 Holds the GitHub repository service.
 """
 
+import falcon
 import os
 import uuid
-
-import falcon
-import github
 from github.GithubException import UnknownObjectException, BadCredentialsException
 from requests_oauthlib import OAuth2Session
 
 import cla
+import github
 from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
@@ -271,7 +270,8 @@ class GitHub(repository_service_interface.RepositoryService):
                                              installation_id)
         cla.log.debug('Retrieved pull request: {}'.format(pull_request))
 
-        # Get all unique users/authors involved in this PR.
+        # Get all unique users/authors involved in this PR - returns a list of
+        # (commit_sha_string, (author_id, author_username, author_email) tuples
         commit_authors = get_pull_request_commit_authors(pull_request)
 
         try:
@@ -279,35 +279,35 @@ class GitHub(repository_service_interface.RepositoryService):
             # which is the repository ID assigned by github.
             repository = Repository().get_repository_by_external_id(github_repository_id, "github")
         except DoesNotExist:
-            cla.log.warning('Could not find repository with the repository ID: %s',
-                            github_repository_id)
-            cla.log.warning('Failed to update change request %s of repository %s - returning',
-                            change_request_id, github_repository_id)
+            cla.log.warning('PR: {}, Could not find repository with the repository ID: %s',
+                            pull_request.number, github_repository_id)
+            cla.log.warning('PR: {}, Failed to update change request of repository %s - returning',
+                            pull_request.number, github_repository_id)
             return
 
         # Get Github Organization name that the repository is configured to. 
         organization_name = repository.get_repository_organization_name()
-        cla.log.debug('determined github organization is: {} based on the PR: {}'.
-                      format(organization_name, change_request_id))
+        cla.log.debug('PR: {}, determined github organization is: {}'.
+                      format(pull_request.number, organization_name))
 
         # Check that the Github Organization exists.
         github_org = GitHubOrg()
         try:
             github_org.load(organization_name)
         except DoesNotExist:
-            cla.log.warning('Could not find Github Organization with the following organization name: %s',
-                            organization_name)
-            cla.log.warning('Failed to update change request %s of repository %s - returning',
-                            change_request_id, github_repository_id)
+            cla.log.warning('PR: {}, Could not find Github Organization with the following organization name: %s',
+                            pull_request.number, organization_name)
+            cla.log.warning('PR: {}, Failed to update change request of repository %s - returning',
+                            pull_request.number, github_repository_id)
             return
 
             # Ensure that installation ID for this organization matches the given installation ID
         if github_org.get_organization_installation_id() != installation_id:
-            cla.log.warning('The installation ID: %s of this organization does not match '
+            cla.log.warning('PR: {}, the installation ID: %s of this organization does not match '
                             'installation ID: %s given by the pull request.',
-                            github_org.get_organization_installation_id(), installation_id)
-            cla.log.error('Failed to update change request %s of repository %s - returning',
-                          change_request_id, github_repository_id)
+                            pull_request.number, github_org.get_organization_installation_id(), installation_id)
+            cla.log.error('PR: {}, Failed to update change request of repository %s - returning',
+                          pull_request.number, github_repository_id)
             return
 
         # Retrieve project ID from the repository. 
@@ -317,48 +317,22 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
 
-        cla.log.debug('scanning users of PR {} - determining who has signed a CLA an who has not.'.
-                      format(change_request_id))
-        for commit, commit_author in commit_authors:
-            if isinstance(commit_author, github.NamedUser.NamedUser):
-                # Handle GitHub user.
-                cla.log.debug("Processing GitHub user: {}".format(commit_author))
-                handle_commit_from_github_user(project_id,
-                                               commit,
-                                               commit_author,
-                                               signed,
-                                               missing)
-                
-            elif isinstance(commit_author, github.GitAuthor.GitAuthor):
-                # Handle non-github user (just email and name in commit).
-                cla.log.info("Processing non-github user (just email and name in commit): {}".
-                             format(commit_author))
-                handle_commit_from_git_author(project_id,
-                                              commit,
-                                              commit_author,
-                                              signed,
-                                              missing)
-            else:
-                # Couldn't find any author information.
-                if commit_author is not None:
-                    cla.log.info("Couldn't find any author information for author: {} - "
-                                 'adding to missing list.'.
-                                 format(commit_author))
-                    missing.append((commit.sha, commit_author))
-                else:
-                    cla.log.info("Couldn't find any author information in the commit - "
-                                 'adding None to missing list.'.
-                                 format(commit_author))
-                    missing.append((commit.sha, None))
+        cla.log.debug('PR: {}, scanning users - determining who has signed a CLA an who has not.'.
+                      format(pull_request.number))
+        for commit_sha, author_info in commit_authors:
+            # Extract the author info tuple details
+            author_id = author_info[0]
+            author_username = author_info[1]
+            author_email = author_info[2]
+            cla.log.debug('PR: {}, processing sha: {} from author id: {}, username: {}, email: {}'.
+                          format(pull_request.number, commit_sha, author_id, author_username, author_email))
+            handle_commit_from_user(project_id, commit_sha, author_info, signed, missing)
 
-        cla.log.debug('updating github pull request for repo: {}, '
-                      'pr: {} with signed authors: {} with missing authors: {}'.
-                      format(github_repository_id, pull_request, signed, missing))
-        update_pull_request(installation_id,
-                            github_repository_id,
-                            pull_request,
-                            signed=signed,
-                            missing=missing)
+        cla.log.debug('PR: {}, updating github pull request for repo: {}, '
+                      'with signed authors: {} with missing authors: {}'.
+                      format(pull_request.number, github_repository_id, signed, missing))
+        update_pull_request(installation_id, github_repository_id, pull_request,
+                            signed=signed, missing=missing)
 
     def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
         """
@@ -557,80 +531,59 @@ def create_repository(data):
         return None
 
 
-def handle_commit_from_github_user(project_id, commit, author, signed, missing):  # pylint: disable=too-many-arguments
+def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing):  # pylint: disable=too-many-arguments
     """
     Helper method to triage commits between signed and not-signed user signatures.
 
-    This method deals with GitHub users found in the commit information.
-
     :param project_id: The project ID for this github PR organization.
     :type project_id: string
-    :param commit: Commit object that we're handling.
-    :type commit: github.Commit.Commit
-    :param author: Author object holding information on the GitHub commit author.
-    :type author: github.NamedUser.GitNamedUser
+    :param commit_sha: Commit has as a string
+    :type commit_sha: string
+    :param author_info: the commit author details, including id, name, email (if available)
+    :type author_info: tuple of (author_id, author_username, author_email)
     :param signed: Reference to a list of signed authors so far. Should be modified
       in-place to add a signer if found.
-    :type signed: [github.GitAuthor.GitAuthor | github.NamedUser.NamedUser]
+    :type signed: list of strings
     :param missing: Reference to a list of authors who have not signed yet.
         Should be modified in-place to add a missing signer if found.
-    :type missing: [github.GitAuthor.GitAuthor | github.NamedUser.NamedUser]
+    :type missing: list of strings
     """
 
-    # Validate author name to show
-    if author.name is not None:
-        author_name = author.name  # set name when available
-    else:
-        author_name = author.login  # set username (login) when name not available
+    # Extract the author_info tuple details
+    author_id = author_info[0]
+    author_username = author_info[1]
+    author_email = author_info[2]
 
-    user = cla.utils.get_user_instance().get_user_by_github_id(author.id)
+    # attempt to lookup the user by GH id
+    user = cla.utils.get_user_instance().get_user_by_github_id(author_id)
     if user is None:
         # GitHub user not in system yet, signature does not exist for this user.
-        cla.log.info('GitHub user (%s - %s - %s) not found, looking up user by email',
-                     author.id, author.login, author.email)
+        cla.log.info('GitHub user (id: {}, user: {}, email: {}) lookup by id not found, '
+                     'attempting to looking up user by email...',
+                     author_id, author_username, author_email)
+
         # Try looking up user by email as a fallback
-        handle_commit_from_git_author(project_id, commit, author, signed, missing)
+        user = cla.utils.get_user_instance().get_user_by_email(author_email)
+        if user is not None:
+            cla.log.info('GitHub user (id: {}, user: {}, email: {}) lookup by email found'.
+                         format(author_id, author_username, author_email))
+
+            # For now, accept non-github users as legitimate users.
+            if cla.utils.user_signed_project_signature(user, project_id):
+                signed.append((commit_sha, author_username))
+            else:
+                missing.append((commit_sha, author_username))
+        else:
+            cla.log.info('GitHub user (id: {}, user: {}, email: {}) lookup by email not found',
+                         author_id, author_username, author_email)
+            missing.append((commit_sha, author_username))
     else:
         cla.log.info('GitHub user found (%s - %s)',
                      user.get_user_emails(), user.get_user_github_id())
         if cla.utils.user_signed_project_signature(user, project_id):
-            signed.append((commit.sha, author_name))
+            signed.append((commit_sha, author_name))
         else:
-            missing.append((commit.sha, author_name))
-
-
-def handle_commit_from_git_author(project_id, commit, author, signed, missing):
-    """
-    Helper method to triage commits between signed and not-signed user signatures.
-
-    This method deals with non-GitHub users found in the commit information.
-
-    :param project_id: The project ID for this github PR organization.
-    :type project_id: string
-    :param commit: Commit object that we're handling.
-    :type commit: github.Commit.Commit
-    :param author: Author object holding information on the non-github commit author.
-    :type author: github.GitAuthor.GitAuthor
-    :param signed: Reference to a list of signed authors so far. Should be modified
-      in-place to add a signer if found.
-    :type signed: [(github.Commit.Commit, name)]
-    :param missing: Reference to a list of authors who have not signed yet.
-        Should be modified in-place to add a missing signer if found.
-    :type missing: [(github.Commit.Commit, name)]
-    """
-    user = cla.utils.get_user_instance().get_user_by_email(author.email)
-    if user is not None:
-        cla.log.info('Git commit user found (lookup by email) %s', user.get_user_emails())
-        
-        # For now, accept non-github users as legitimate users.
-        if cla.utils.user_signed_project_signature(user, project_id):
-            signed.append((commit.sha, author.name))
-        else:
-            missing.append((commit.sha, author.name))
-    else:
-        cla.log.info('Git commit user (lookup by email) (%s <%s>) not found',
-                     author.name, author.email)
-        missing.append((commit.sha, author.name))
+            missing.append((commit_sha, author_name))
 
 
 def get_pull_request_commit_authors(pull_request):
@@ -646,33 +599,52 @@ def get_pull_request_commit_authors(pull_request):
 
     :param pull_request: A GitHub pull request to examine.
     :type pull_request: GitHub.PullRequest
-    :return: A list of tuples containing (commit, author).
-    :rtype: [(github.Commit.Commit, string)]
+    :return: A list of tuples containing a tuple of (commit_sha_string, (author_id, author_username, author_email)) -
+    the second item is another tuple of author info.
+    :rtype: [(commit_sha_string, (author_id, author_username, author_email)]
     """
     cla.log.debug('Querying pull request commits for author information...')
     commit_authors = []
     for commit in pull_request.get_commits():
-        cla.log.debug('Processing commit while looking for authors, commit: {}'.format(commit))
+        cla.log.debug('Processing commit while looking for authors, commit: {}'.format(commit.sha))
 
+        # Note: we can get the author info in two different ways:
         if commit.author is not None:
-            cla.log.debug('GitHub author found for commit SHA %s: %s <%s>',
-                          commit.sha, commit.author.id, commit.author.email)
-            # commit_authors.append((commit, commit.author.login))
-            commit_authors.append((commit, commit.author))
+            # commit.author is a github.NamedUser.NamedUser type object
+            # https://pygithub.readthedocs.io/en/latest/github_objects/NamedUser.html
+            if commit.author.name is not None:
+                cla.log.debug('PR: {}, GitHub NamedUser author found for commit SHA {}, '
+                              'author id: {}, name: {}, email: {}'.
+                              format(pull_request.number, commit.sha, commit.author.id,
+                                     commit.author.name, commit.author.email))
+                commit_authors.append((commit.sha, (commit.author.id, commit.author.name, commit.author.email)))
+            elif commit.author.login is not None:
+                cla.log.debug('PR: {}, GitHub NamedUser author found for commit SHA {}, '
+                              'author id: {}, login: {}, email: {}'.
+                              format(pull_request.number, commit.sha, commit.author.id,
+                                     commit.author.login, commit.author.email))
+                commit_authors.append((commit.sha, (commit.author.id, commit.author.login, commit.author.email)))
+            else:
+                cla.log.debug('PR: {}, GitHub NamedUser author NOT found for commit SHA {}, '
+                              'author id: {}, name: {}, login: {}, email: {}'.
+                              format(pull_request.number, commit.sha, commit.author.id, commit.author.name,
+                                     commit.author.login, commit.author.email))
+                commit_authors.append((commit.sha, None))
         elif commit.commit.author is not None:
-            # For now, trust that git commit author information is enough for verification.
-            # TODO: This probably isn't enough - need to verify user somehow.
-            # TODO: DAD - why are we simply adding 'commit.commit' to our list here??
-            cla.log.warning('No GitHub author found for commit SHA %s, '
-                            'using git author info: %s <%s> - adding author: %s',
-                            commit.sha, commit.commit.author.name, commit.commit.author.email,
-                            commit.commit.author.name)
-            # commit_authors.append((commit, commit.commit.author))
-            commit_authors.append((commit, commit.commit))
+            cla.log.debug('github.GitAuthor.GitAuthor object: {}'.format(commit.commit.author))
+            # commit.commit.author is a github.GitAuthor.GitAuthor object type - object
+            # only has date, name and email attributes - no ID attribute/value
+            # https://pygithub.readthedocs.io/en/latest/github_objects/GitAuthor.html
+            cla.log.debug('PR: {}, GitHub NamedUser author NOT found for commit SHA {}, '
+                          'however, found GitAuthor author id: None, name: {}, email: {}'.
+                          format(pull_request.number, commit.sha,
+                                 commit.commit.author.name, commit.commit.author.email))
+            commit_authors.append((commit.sha, (None, commit.commit.author.name, commit.commit.author.email)))
         else:
-            cla.log.warning('Could not find commit author for SHA %s in PR %s',
-                            commit.sha, pull_request.number)
-            commit_authors.append((commit, None))
+            cla.log.warning('PR: {}, could not find any commit author for SHA {}'.
+                            format(pull_request.number, commit.sha))
+            commit_authors.append((commit.sha, None))
+
     return commit_authors
 
 
