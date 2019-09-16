@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: MIT
 version: 2.1
 
+environment:
+  BASH_ENV: ~/.bashrc
+
 jobs:
   # Builds
   buildBackend:
     docker:
-      - image: circleci/python:3.6-node
+      - image: circleci/python:3.7.4-node
     steps:
       - checkout
       - run:
@@ -20,6 +23,12 @@ jobs:
           command: |
             cd cla-backend
             make setup_circle
+      - run:
+          name: test
+          command: |
+            cd cla-backend
+            export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
+            python3 -m unittest -v cla/test_github_models.py
 
   buildGoBackend:
     docker:
