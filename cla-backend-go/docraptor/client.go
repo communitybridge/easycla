@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 var (
@@ -56,6 +58,7 @@ func (dc Client) CreatePDF(html string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
+	log.Debug("Generating PDF using docraptor...")
 	resp, err := http.Post(dc.url, "application/json", bytes.NewBuffer(documentBytes))
 	if err != nil {
 		return nil, err

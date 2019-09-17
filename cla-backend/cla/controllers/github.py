@@ -4,17 +4,19 @@
 """
 Controller related to the github application (CLA GitHub App).
 """
-import requests
 import hmac
-import cla
 import os
 from pprint import pprint
-from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
+
+import requests
+
+import cla
 from cla.auth import AuthUser
-from cla.models import DoesNotExist
-from cla.models.dynamo_models import UserPermissions, Repository
 from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
+from cla.models import DoesNotExist
+from cla.models.dynamo_models import UserPermissions, Repository
+from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
 
 
 def get_organizations():
@@ -79,7 +81,7 @@ def create_organization(auth_user,
     return {'errors': {'organization_name': 'This organization already exists'}}
 
 
-def update_organization(organization_name, # pylint: disable=too-many-arguments
+def update_organization(organization_name,  # pylint: disable=too-many-arguments
                         organization_sfid=None,
                         organization_installation_id=None):
     """
@@ -128,8 +130,8 @@ def delete_organization(auth_user, organization_name):
     except DoesNotExist as err:
         cla.log.warning('organization does not exist: {} - unable to delete'.format(organization_name))
         return {'errors': {'organization_name': str(err)}}
-    
-    organization_sfid = github_organization.get_organization_sfid() 
+
+    organization_sfid = github_organization.get_organization_sfid()
 
     # Validate user is authorized for this SFDC ID. 
     can_access = check_user_authorization(auth_user, organization_sfid)
@@ -159,7 +161,7 @@ def activity(body):
     # GitHub Application
     if 'installation' in body:
         cla.log.debug('github.activity - processing github installation activity callback...')
-        
+
         # New Installations
         if 'action' in body and body['action'] == 'created':
             existing = get_organization(body['installation']['account']['login'])
@@ -169,7 +171,7 @@ def activity(body):
             elif not existing['organization_installation_id']:
                 update_organization(
                     existing['organization_name'],
-                    existing['organization_sfid'], 
+                    existing['organization_sfid'],
                     body['installation']['id'],
                 )
                 cla.log.info('github.activity - Organization enrollment completed: %s', existing['organization_name'])
@@ -183,7 +185,7 @@ def activity(body):
     # Pull Requests
     if 'pull_request' in body:
         cla.log.debug('github.activity - processing github pull_request activity callback...')
-        
+
         # New PR opened
         if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
             # Copied from repository_service.py
@@ -199,7 +201,15 @@ def get_organization_repositories(organization_name):
         github_organization.load(str(organization_name))
         if github_organization.get_organization_installation_id() is not None:
             cla.log.debug('GitHub Organization ID: {}'.format(github_organization.get_organization_installation_id()))
-            installation = GitHubInstallation(github_organization.get_organization_installation_id())
+            try:
+                installation = GitHubInstallation(github_organization.get_organization_installation_id())
+            except Exception as e:
+                msg = ('Unable to load repositories from organization: {} ({}) due to GitHub '
+                       'installation permission problem or other issue, error: {} - returning error response'.
+                       format(organization_name, github_organization.get_organization_installation_id(), e))
+                cla.log.warn(msg)
+                return {'errors': {'organization_name': organization_name, 'error': msg}}
+
             if installation.repos:
                 repos = []
                 for repo in installation.repos:
@@ -211,13 +221,13 @@ def get_organization_repositories(organization_name):
                 return []
     except DoesNotExist as err:
         cla.log.warning('organization name {} does not exist, error: {}'.format(organization_name, err))
-        return {'errors': {'organization_name': str(err)}}
+        return {'errors': {'organization_name': organization_name, 'error': str(err)}}
 
 
 def get_organization_by_sfid(auth_user: AuthUser, sfid):
     # Check if user has permissions
     user_permissions = UserPermissions()
-    try: 
+    try:
         user_permissions.load(auth_user.username)
     except DoesNotExist as err:
         cla.log.warning('user {} does not exist, error: {}'.format(auth_user.username, err))
@@ -237,7 +247,7 @@ def get_organization_by_sfid(auth_user: AuthUser, sfid):
     except DoesNotExist as err:
         cla.log.warning('sfid {} does not exist, error: {}'.format(sfid, err))
         return {'errors': {'sfid': str(err)}}
-    return [organization.to_dict() for organization in organizations]    
+    return [organization.to_dict() for organization in organizations]
 
 
 def org_is_covered_by_cla(owner):
@@ -245,8 +255,8 @@ def org_is_covered_by_cla(owner):
     for org in orgs:
         # Org urls have to match and full enrollment has to be completed.
         if org['organization_name'] == owner and \
-           org['organization_project_id'] and \
-           org['organization_installation_id']:
+                org['organization_project_id'] and \
+                org['organization_installation_id']:
             cla.log.debug('org: {} with project id: {} is covered by cla'.
                           format(org['organization_name'], org['organization_project_id']))
             return True
@@ -284,7 +294,7 @@ def webhook_secret_validation(webhook_signature, data):
     pprint(str(mac.hexdigest()))
     pprint(str(signature))
     pprint(data)
-    
+
     return True if hmac.compare_digest(mac.hexdigest(), signature) else False
 
 

@@ -206,12 +206,14 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		},
 	}
 
+	log.Debugf("Updating table %s with %s template details.", tableName, ContractGroupID)
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: expr,
 		TableName:                 aws.String(tableName),
 		Key:                       key,
 		ReturnValues:              aws.String("UPDATED_NEW"),
-		UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
+		// UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
+		UpdateExpression: aws.String("set project_corporate_documents =  :project_corporate_documents"),
 	}
 
 	_, err = r.dynamoDBClient.UpdateItem(input)
