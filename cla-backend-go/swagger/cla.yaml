@@ -1249,13 +1249,16 @@ definitions:
       resultCount:
         type: integer
         format: int64
+        x-omitempty: false
       totalCount:
         type: integer
         format: int64
+        x-omitempty: false
       lastKeyScanned:
         type: string
       signatures:
         type: array
+        x-omitempty: false
         items:
           $ref: '#/definitions/signature'
 
