@@ -4,7 +4,7 @@
 import os
 import time
 
-from github import GithubIntegration, Github
+from github import BadCredentialsException, UnknownObjectException, GithubException, GithubIntegration, Github
 from jose import jwt
 
 import cla
@@ -27,28 +27,37 @@ class GitHubInstallation(object):
     def __init__(self, installation_id):
         self.installation_id = installation_id
 
-        cla.log.debug('github installation_id: {}, app id: {}, private key: {}'.
-                      format(self.installation_id, self.app_id, self.private_key[:40]))
+        cla.log.debug('Initializing github application - installation_id: {}, app id: {}, private key'
+                      ' (minus header): {}...'.
+                      format(self.installation_id, self.app_id, self.private_key[32:38]))
 
         try:
             integration = GithubCLAIntegration(self.app_id, self.private_key)
             auth = integration.get_access_token(self.installation_id)
-
-            # cla.log.debug('github access token: {}'.format(auth))
-
             self.token = auth.token
             self.api_object = Github(self.token)
+        except BadCredentialsException as e:
+            cla.log.warning('BadCredentialsException connecting to Github using app_id: {}, installation id: '
+                            '{}, error: {}'.format(self.app_id, self.installation_id, e))
+            raise e
+        except UnknownObjectException as e:
+            cla.log.warning('UnknownObjectException connecting to Github using app_id: {}, installation id: '
+                            '{}, error: {}'.format(self.app_id, self.installation_id, e))
+            raise e
+        except GithubException as e:
+            cla.log.warning('GithubException connecting to Github using app_id: {}, installation id: '
+                            '{}, error: {}'.format(self.app_id, self.installation_id, e))
+            raise e
         except Exception as e:
             cla.log.warning('Error connecting to Github to fetch the access token using app_id: {}, installation id: '
                             '{}, error: {}'.format(self.app_id, self.installation_id, e))
             raise e
 
-        cla.log.info("Initializing Github Application")
-
 
 class GithubCLAIntegration(GithubIntegration):
-    """Custom GithubIntegration using python-jose instead of pyjwt for token creation."""
-
+    """
+    Custom GithubIntegration using python-jose instead of pyjwt for token creation.
+    """
     def create_jwt(self):
         """
         Overloaded to use python-jose instead of pyjwt.
@@ -61,6 +70,5 @@ class GithubCLAIntegration(GithubIntegration):
             "iss": self.integration_id
         }
         gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
-        cla.log.debug('github jwt: {}'.format(gh_jwt))
-
+        # cla.log.debug('github jwt: {}'.format(gh_jwt))
         return gh_jwt
