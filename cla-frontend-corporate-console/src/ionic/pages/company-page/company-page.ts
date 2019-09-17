@@ -70,11 +70,14 @@ export class CompanyPage {
 
   getCompanySignatures() {
     this.claService.getCompanySignatures(this.companyId).subscribe(response => {
-      this.companySignatures = response.filter(signature =>
-        signature.signature_signed === true
-      );
-      for (let signature of this.companySignatures) {
-        this.getProject(signature.signature_project_id);
+      console.log(response);
+      if (response.resultCount > 0) {
+        this.companySignatures = response.signatures.filter(signature =>
+          signature.signature_signed === true
+        );
+        for (let signature of this.companySignatures) {
+          this.getProject(signature.signature_project_id);
+        }
       }
     });
   }
