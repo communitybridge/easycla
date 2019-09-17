@@ -62,9 +62,15 @@ export class ProjectClaTemplatePage {
     this.setLoadingSpinner(false);
   }
 
+  /**
+   * Get the PDF path based on which CLA the user has selected on the UI.
+   */
   getPdfPath() {
     // https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html#291823
-    return this.sanitizer.bypassSecurityTrustResourceUrl('https://drive.google.com/viewerng/viewer?embedded=true&url=' + this.pdfPath[this.currentPDF]);
+    //return this.sanitizer.bypassSecurityTrustResourceUrl('https://drive.google.com/viewerng/viewer?embedded=true&url=' + this.pdfPath[this.currentPDF]);
+    // Note: Google drive may not be accessible in certain countries - use default for now until we incorporate a
+    // PDF renderer library - or we can simply use the default browser behavior
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
   }
 
   showPDF(type) {
