@@ -48,9 +48,9 @@ export class ProjectsCclaSelectModal {
     this.claService.getCompanyUnsignedProjects(this.company.company_id).subscribe(response => {
       this.loading = false;
       // Sort on the project name field after filtering empty project names
-      this.projects = response.filter((a) => a != null && a.project_name.trim().length > 0).sort((a, b) => {
-        // force project_name to be a string to avoid any exceptions - sort use users locale
-        return ('' + a.project_name).localeCompare(b.project_name);
+      this.projects = response.filter((a) => a != null && a.project_name != null && a.project_name.trim().length > 0).sort((a, b) => {
+        // force project_name to be a string to avoid any exceptions - sort use users locale, trim any whitespace out
+        return ('' + a.project_name.trim()).localeCompare(b.project_name.trim());
       });
 
       // Reset our filtered search
