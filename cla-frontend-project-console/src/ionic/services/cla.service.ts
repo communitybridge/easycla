@@ -563,7 +563,9 @@ export class ClaService {
    */
   getProjectsByExternalId(externalId) {
     const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
-    return this.http.get(url).map(res => res.json());
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
   }
 
   /**

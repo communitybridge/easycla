@@ -73,6 +73,7 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 		expression.Name("user_name"),
 		expression.Name("user_company_id"),
 		expression.Name("user_github_username"),
+		expression.Name("user_github_id"),
 	)
 
 	// Use the nice builder to create the expression

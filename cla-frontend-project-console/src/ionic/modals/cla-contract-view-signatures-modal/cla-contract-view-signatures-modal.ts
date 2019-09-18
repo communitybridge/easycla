@@ -1,22 +1,22 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import {Component} from '@angular/core';
+import {DatePipe} from '@angular/common';
 import {
+  Events,
+  IonicPage,
+  ModalController,
   NavController,
   NavParams,
-  ViewController,
-  IonicPage,
-  Events,
-  ModalController,
   PopoverController,
+  ViewController,
 } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service'
-import { SortService } from "../../services/sort.service";
-import { KeycloakService } from "../../services/keycloak/keycloak.service";
-import { RolesService } from "../../services/roles.service";
+import {ClaService} from '../../services/cla.service'
+import {SortService} from "../../services/sort.service";
+import {KeycloakService} from "../../services/keycloak/keycloak.service";
+import {RolesService} from "../../services/roles.service";
+import {ColumnMode, SortType} from "@swimlane/ngx-datatable";
 
 
 @IonicPage({
@@ -29,24 +29,25 @@ import { RolesService } from "../../services/roles.service";
 export class ClaContractViewSignaturesModal {
   selectedProject: any;
   claProjectId: string;
+  claProjectName: string;
+
+  ColumnMode = ColumnMode;
+  SortType = SortType;
 
   loading: any;
-  sort: any;
-  signatures: any[];
-  searchTerm: string;
+  //sort: any;
   columns: any[];
   rows: any[];
-  selectedSize: any[];
-  allSizes: any[];
 
   companies: any[];
   users: any[];
   filteredData: any[];
   data: any;
   page: any;
-  lastScannedKey: any[];
-  previousLastScannedKeys: any[];
-  pageSize: any
+
+  // Pagination next/previous options
+  nextKey: string;
+  previousKeys: any[];
 
   constructor(
     public navCtrl: NavController,
@@ -62,6 +63,7 @@ export class ClaContractViewSignaturesModal {
     public events: Events
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
+    this.claProjectName = this.navParams.get('claProjectName');
     this.getDefaults();
 
     events.subscribe('modal:close', () => {
@@ -75,65 +77,67 @@ export class ClaContractViewSignaturesModal {
 
   getDefaults() {
     this.page = {
-      size: 10,
       pageNumber: 0
+    };
 
-    }
-    this.pageSize = 50
-    this.lastScannedKey = [];
-    this.previousLastScannedKeys = [];
+    // Pagination initialization
+    this.nextKey = null;
+    this.previousKeys = [];
+
     this.data = {};
     this.loading = {
       signatures: true
     };
-    this.allSizes = [
-      20,
-      50,
-      100
-    ]
-    this.searchTerm = '',
-      this.sort = {
-        signatureType: {
-          arrayProp: 'signatureType',
-          sortType: 'text',
-          sort: null,
-        },
-        name: {
-          arrayProp: 'referenceEntity.user_name',
-          sortType: 'text',
-          sort: null,
-        },
-        company: {
-          arrayProp: 'signature_user_ccla_company_id',
-          sortType: 'text',
-          sort: null,
-        },
-        githubId: {
-          arrayProp: 'referenceEntity.user_github_id',
-          sortType: 'number',
-          sort: null,
-        },
-        version: {
-          arrayProp: 'documentVersion',
-          sortType: 'semver',
-          sort: null,
-        },
-        date: {
-          arrayProp: 'date_modified',
-          sortType: 'date',
-          sort: null,
-        },
-      };
-    this.signatures = [];
-    this.filteredData = this.rows
+
+    /*
+    this.sort = {
+      Type: {
+        arrayProp: 'Type',
+        sortType: 'text',
+        sort: null,
+      },
+      Name: {
+        arrayProp: 'Name',
+        sortType: 'text',
+        sort: null,
+      },
+      Company: {
+        arrayProp: 'Company',
+        sortType: 'text',
+        sort: null,
+      },
+      GitHubID: {
+        arrayProp: 'GitHubID',
+        sortType: 'number',
+        sort: null,
+      },
+      LFID: {
+        arrayProp: 'LFID',
+        sortType: 'number',
+        sort: null,
+      },
+      Version: {
+        arrayProp: 'documentVersion',
+        sortType: 'semver',
+        sort: null,
+      },
+      Date: {
+        arrayProp: 'Date',
+        sortType: 'date',
+        sort: null,
+      },
+    };
+     */
+
+    this.filteredData = this.rows;
     this.columns = [
-      { prop: 'Entity Type' },
-      { prop: 'Name' },
-      { prop: 'Company' },
-      { prop: 'GithubID' },
-      { prop: 'LFID' },
-      { prop: 'Version' },
-      { prop: 'Date' }
+      {prop: 'Type'},
+      {prop: 'Name'},
+      {prop: 'Company'},
+      {prop: 'GitHubID'},
+      {prop: 'LFID'},
+      {prop: 'Version'},
+      {prop: 'Date'}
     ];
   }
 
@@ -145,42 +149,87 @@ export class ClaContractViewSignaturesModal {
     return await this.claService.getCompany(referenceId).toPromise();
   }
 
-  sizeSelectedChanged() {
-    this.pageSize = this.selectedSize;
-    this.getSignatures();
-
-  }
-
   // get all signatures
-  getSignatures(lastKeyScanned = "") {
-    this.claService.getProjectSignaturesV3(this.claProjectId, this.pageSize, lastKeyScanned).subscribe((response) => {
+  getSignatures(lastKeyScanned = '') {
+    this.loading.signatures = true;
+    this.claService.getProjectSignaturesV3(this.claProjectId, 100, lastKeyScanned).subscribe((response) => {
       this.data = response;
+
+      // Pagination Logic - add the key used to render this page to our previous keys
+      this.previousKeys.push(lastKeyScanned);
+      // If we have a next key (usually we would unless there are no more records)
       if (this.data.lastKeyScanned) {
-        // push next keys to a stack
-        this.lastScannedKey.push(this.data.lastKeyScanned)
+        this.nextKey = this.data.lastKeyScanned;
+      } else {
+        this.nextKey = null;
       }
-      this.page.totalCount = this.data.resultCount
-      this.signatures = this.data.signatures;
-      this.rows = this.mapSignatures();
+
+      this.page.totalCount = this.data.resultCount;
+      this.rows = this.mapSignatures(this.data.signatures);
       this.loading.signatures = false;
     });
   }
 
   getNextPage() {
-    this.loading.signatures = true;
-    let lastKeyScanned = this.lastScannedKey.pop();
-    this.previousLastScannedKeys.push(lastKeyScanned);
-    this.getSignatures(lastKeyScanned)
+    if (this.nextKey) {
+      this.getSignatures(this.nextKey);
+    } else {
+      this.getSignatures();
+    }
   }
 
   getPreviousPage() {
-    this.loading.signatures = true;
-    const previousLastScannedKeys = this.previousLastScannedKeys.shift()
-    this.getSignatures()
+    if (this.previousKeys.length > 0) {
+      // Since the most recent previous key is the current page - we want to go one more back to the one before
+      // so we pop two and use the second key as the key to use to render the page
+      this.previousKeys.pop();
+      const previousLastScannedKey = this.previousKeys.pop();
+      this.getSignatures(previousLastScannedKey);
+    } else {
+      this.getSignatures();
+    }
   }
 
+  previousButtonDisabled(): boolean {
+    return !(this.previousKeys.length > 1);
+  }
+
+  nextButtonDisabled(): boolean {
+    return (this.nextKey == null && this.previousKeys.length >= 0);
+  }
+
+  previousButtonColor(): string {
+    if (this.previousKeys.length <= 1) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
+  }
+
+  nextButtonColor(): string {
+    if (this.nextKey == null && this.previousKeys.length >= 0) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
+  }
+
+  /**
+   * Helper function to dump the pagination details.
+   */
+  debugShowPaginationReport() {
+    console.log('NextKey: ' + this.nextKey);
+    console.log('PreviousKeys:');
+    console.log(this.previousKeys);
+    console.log('------------------------------');
+  }
+
+  /**
+   * Default sorting.
+   *
+   * @param prop
+   */
   sortMembers(prop) {
-   
   }
 
   signaturePopover(ev, signature) {
@@ -241,39 +290,23 @@ export class ClaContractViewSignaturesModal {
     this.viewCtrl.dismiss();
   }
 
-  mapSignatures() {
-    return this.signatures && this.signatures.map((signature) => {
-      let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
-      const formattedSignature = {
-        'Entity Type': signature.signatureReferenceType,
-        'Name': signature.userName && signature.userName,
-        'Company': signature.companyName && signature.companyName,
-        'GithubID': signature.userGHID && signature.userGHID,
-        "LFID": signature.LFID && signature.LFID,
-        'Version': `v${signature.version}`,
-        'Date': date
-      }
-      return formattedSignature
-    })
-  }
-
-  onSearch($event) {
-    this.filteredData = this.rows;
-    let val = $event.value.trim().toLowerCase();
-    if (val.length > 0) {
-      let colsAmt = this.columns.length;
-      let keys = Object.keys(this.rows[0]);
-      this.rows = this.filteredData.filter(function (item) {
-        for (let i = 0; i < colsAmt; i++) {
-          if (item[keys[i]] !== null && item[keys[i]] !== undefined && item[keys[i]].toString().toLowerCase().indexOf(val) !== -1 || !val) {
-            // found match, return true to add to result set
-            return true;
-          }
+  mapSignatures(signatures: any[]) {
+    // If no records
+    if (signatures == null || signatures.length == 0) {
+      return [];
+    } else {
+      return signatures && signatures.map((signature) => {
+        let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
+        return {
+          'Type': signature.signatureReferenceType,
+          'Name': signature.userName && signature.userName,
+          'Company': signature.companyName && signature.companyName,
+          'GitHubID': signature.userGHID && signature.userGHID,
+          "LFID": signature.userLFID && signature.userLFID,
+          'Version': `v${signature.version}`,
+          'Date': date
         }
-      });
-    }
-    else {
-      this.rows = this.mapSignatures();
+      })
     }
   }
 }
