@@ -2,12 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import {Component, ViewChild} from "@angular/core";
-import {
-  NavController,
-  ModalController,
-  NavParams,
-  IonicPage, Nav, Events, AlertController
-} from "ionic-angular";
+import {AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams} from "ionic-angular";
 import {CincoService} from "../../../services/cinco.service";
 import {KeycloakService} from "../../../services/keycloak/keycloak.service";
 import {SortService} from "../../../services/sort.service";
@@ -55,7 +50,8 @@ export class ProjectClaPage {
 
   getDefaults() {
     this.loading = {
-      claProjects: true
+      claProjects: true,
+      orgs: true
     };
     this.claProjects = [];
   }
@@ -64,54 +60,52 @@ export class ProjectClaPage {
     this.getClaProjects();
   }
 
+  setLoadingOrganizationsSpinner(value) {
+    this.loading = {
+      orgs: value
+    };
+  }
+
   getClaProjects() {
     this.loading.claProjects = true;
-    this.claService
-      .getProjectsByExternalId(this.sfdcProjectId)
-      .subscribe(projects => {
-        this.claProjects = projects;
-        this.loading.claProjects = false;
+    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe(projects => {
+      this.claProjects = projects;
+      this.loading.claProjects = false;
 
-        this.claProjects.map(project => {
-          this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
-            project.githubOrganizations = githubOrganizations;
-          })
-        });
+      this.claProjects.map(project => {
+        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
+          project.githubOrganizations = githubOrganizations;
+        })
+      });
 
-        //Get Github Orgs.
-        this.claService
-          .getOrganizations(this.sfdcProjectId)
-          .subscribe(organizations => {
-            this.githubOrganizations = organizations;
+      // Get Github Organizations
+      this.loading.orgs = true;
+      this.claService.getOrganizations(this.sfdcProjectId).subscribe(organizations => {
+        this.githubOrganizations = organizations;
+        this.loading.orgs = false;
 
-            for (let organization of organizations) {
-              this.claService
-                .getGithubGetNamespace(organization.organization_name)
-                .subscribe(providerInfo => {
-                  organization.providerInfo = providerInfo;
-                });
-              if (organization.organization_installation_id) {
-                this.claService
-                  .getGithubOrganizationRepositories(
-                    organization.organization_name
-                  )
-                  .subscribe(repositories => {
-                    organization.repositories = repositories;
-                  });
-              }
-            }
-          });
-
-        for (let project of projects) {
-
-          //Get Gerrit Instances
-          this.claService
-            .getGerritInstance(project.project_id)
-            .subscribe(gerrits => {
-              project.gerrits = gerrits;
+        for (let organization of organizations) {
+          this.claService.getGithubGetNamespace(organization.organization_name)
+            .subscribe(providerInfo => {
+              organization.providerInfo = providerInfo;
             });
+
+          if (organization.organization_installation_id) {
+            this.claService.getGithubOrganizationRepositories(organization.organization_name)
+              .subscribe(repositories => {
+                organization.repositories = repositories;
+              });
+          }
         }
       });
+
+      for (let project of projects) {
+        //Get Gerrit Instances
+        this.claService.getGerritInstance(project.project_id).subscribe(gerrits => {
+          project.gerrits = gerrits;
+        });
+      }
+    });
   }
 
   backToProjects() {
@@ -135,7 +129,7 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  goToSelectTemplatePage (projectId) {
+  goToSelectTemplatePage(projectId) {
     this.navCtrl.push("ProjectClaTemplatePage", {
       sfdcProjectId: this.sfdcProjectId,
       projectId: projectId
@@ -153,16 +147,18 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  openClaViewSignaturesModal(project_id) {
+  openClaViewSignaturesModal(project_id: string, project_name: string) {
     let modal = this.modalCtrl.create("ClaContractViewSignaturesModal", {
       claProjectId: project_id,
+      claProjectName: project_name,
     }, {
       cssClass: 'medium'
     });
-    modal.onDidDismiss(data => {
-      this.getClaProjects();
-    });
-    modal.present();
+    // Signatures view modal doesn't change anything - let's not refresh the parent view
+    // modal.onDidDismiss(data => {
+    //   this.getClaProjects();
+    // });
+    modal.present().catch((error) => {console.log('Error opening signatures modal view, error: ' + error);});
   }
 
   openClaContractVersionModal(claProjectId, documentType, documents) {

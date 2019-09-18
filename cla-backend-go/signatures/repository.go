@@ -6,6 +6,7 @@ package signatures
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -854,53 +855,61 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 		return nil, err
 	}
 
-	for _, dbSignature := range dbSignature {
-		var companyName = ""
-		var userName = ""
-		var userLFID = ""
-		var userGHID = ""
+	var wg sync.WaitGroup
+	wg.Add(len(dbSignature))
 
-		if dbSignature.SignatureReferenceType == "user" {
-			userModel, userErr := repo.usersRepo.GetUser(dbSignature.SignatureReferenceID)
-			if userErr != nil {
-				log.Warnf("unable to lookup user using id: %s, error: %v", dbSignature.SignatureReferenceID, userErr)
-			} else {
-				userName = userModel.Username
-				userLFID = userModel.LfUsername
-				userGHID = userModel.GithubID
-			}
-			if dbSignature.SignatureUserCompanyID != "" {
-				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureUserCompanyID)
+	for _, dbSignature := range dbSignature {
+		go func(dbSignature ItemSignature) {
+			defer wg.Done()
+			var companyName = ""
+			var userName = ""
+			var userLFID = ""
+			var userGHID = ""
+
+			if dbSignature.SignatureReferenceType == "user" {
+				userModel, userErr := repo.usersRepo.GetUser(dbSignature.SignatureReferenceID)
+				if userErr != nil {
+					log.Warnf("unable to lookup user using id: %s, error: %v", dbSignature.SignatureReferenceID, userErr)
+				} else {
+					userName = userModel.Username
+					userLFID = userModel.LfUsername
+					userGHID = userModel.GithubID
+				}
+				if dbSignature.SignatureUserCompanyID != "" {
+					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureUserCompanyID)
+					if companyErr != nil {
+						log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureUserCompanyID, companyErr)
+					} else {
+						companyName = dbCompanyModel.CompanyName
+					}
+				}
+			} else if dbSignature.SignatureReferenceType == "company" {
+				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureReferenceID)
 				if companyErr != nil {
-					log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureUserCompanyID, companyErr)
+					log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureReferenceID, companyErr)
 				} else {
 					companyName = dbCompanyModel.CompanyName
 				}
 			}
-		} else if dbSignature.SignatureReferenceType == "company" {
-			dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureReferenceID)
-			if companyErr != nil {
-				log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureReferenceID, companyErr)
-			} else {
-				companyName = dbCompanyModel.CompanyName
-			}
-		}
 
-		signatures = append(signatures, models.Signature{
-			SignatureID:            dbSignature.SignatureID,
-			CompanyName:            companyName,
-			SignatureCreated:       dbSignature.DateCreated,
-			SignatureModified:      dbSignature.DateModified,
-			SignatureType:          dbSignature.SignatureType,
-			SignatureSigned:        dbSignature.SignatureSigned,
-			SignatureApproved:      dbSignature.SignatureApproved,
-			Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
-			SignatureReferenceType: dbSignature.SignatureReferenceType,
-			UserName:               userName,
-			UserLFID:               userLFID,
-			UserGHID:               userGHID,
-		})
+			signatures = append(signatures, models.Signature{
+				SignatureID:            dbSignature.SignatureID,
+				CompanyName:            companyName,
+				SignatureCreated:       dbSignature.DateCreated,
+				SignatureModified:      dbSignature.DateModified,
+				SignatureType:          dbSignature.SignatureType,
+				SignatureSigned:        dbSignature.SignatureSigned,
+				SignatureApproved:      dbSignature.SignatureApproved,
+				Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
+				SignatureReferenceType: dbSignature.SignatureReferenceType,
+				UserName:               userName,
+				UserLFID:               userLFID,
+				UserGHID:               userGHID,
+			})
+		}(dbSignature)
 	}
+
+	wg.Wait()
 
 	return &models.Signatures{
 		ProjectID:      projectID,
