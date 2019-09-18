@@ -47,6 +47,7 @@
 
           <ion-row>
             <ion-col col-12>
+              <loading-spinner [loading]="loading.orgs"></loading-spinner>
               <ion-card class="organization-card">
                 <ion-grid>
                   <ion-row>
@@ -112,7 +113,7 @@
                     <button ion-button (click)="goToSelectTemplatePage(project.project_id)" color="light">
                       Select Template
                     </button>
-                    <button ion-button (click)="openClaViewSignaturesModal(project.project_id)" color="light">
+                    <button ion-button (click)="openClaViewSignaturesModal(project.project_id, project.project_name)" color="light">
                       View Signatures
                     </button>
                   </ion-buttons>
