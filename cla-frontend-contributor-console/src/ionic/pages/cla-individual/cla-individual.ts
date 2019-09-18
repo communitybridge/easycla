@@ -21,6 +21,7 @@ export class ClaIndividualPage {
   signatureIntent: any;
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
+  loadingSignature: boolean = true;
 
   constructor(
     public navCtrl: NavController,
@@ -61,6 +62,7 @@ export class ClaIndividualPage {
   }
 
   getUserSignatureIntent(userId)  {
+    this.loadingSignature = true;
     this.claService.getUserSignatureIntent(userId).subscribe(response => {
       this.signatureIntent = response;
       if(this.signatureIntent !== null) {
@@ -68,6 +70,7 @@ export class ClaIndividualPage {
       } else {
         this.activeSignatures = false;
       }
+      this.loadingSignature = false;
     });
   }
 
