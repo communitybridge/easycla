@@ -5,6 +5,8 @@ import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { ClaIndividualPage } from './cla-individual';
 import { LayoutModule } from "../../layout/layout.module";
+import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
+
 
 @NgModule({
   declarations: [
@@ -12,7 +14,8 @@ import { LayoutModule } from "../../layout/layout.module";
   ],
   imports: [
     IonicPageModule.forChild(ClaIndividualPage),
-    LayoutModule
+    LayoutModule,
+    LoadingSpinnerComponentModule
   ],
   entryComponents: [
     ClaIndividualPage

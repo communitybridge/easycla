@@ -41,6 +41,8 @@
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open CLA
               </button>
+              <loading-spinner [loading]="loadingSignature"></loading-spinner>
+              <div *ngIf="loadingSignature"><span>Loading Individual CLA...</span></div>
             </div>
             <div *ngIf="!activeSignatures">
               <p class="error">
