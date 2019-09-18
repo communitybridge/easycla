@@ -581,9 +581,9 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
         cla.log.info('GitHub user found (%s - %s)',
                      user.get_user_emails(), user.get_user_github_id())
         if cla.utils.user_signed_project_signature(user, project_id):
-            signed.append((commit_sha, author_name))
+            signed.append((commit_sha, author_username))
         else:
-            missing.append((commit_sha, author_name))
+            missing.append((commit_sha, author_username))
 
 
 def get_pull_request_commit_authors(pull_request):
