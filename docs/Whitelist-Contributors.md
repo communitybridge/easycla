@@ -1,6 +1,6 @@
 # Whitelist Contributors
 
-Whitelists are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed CLA. As a CLA manager, you allow contributions to your company projects by using any whitelist:
+Whitelists are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed Corporate CLA. As a CLA manager, you allow contributions to projects on behalf of your company by using any whitelist:
 
 * Domain Whitelist allows entities to contribute under any email address under that domain name.
 
@@ -13,12 +13,6 @@ Whitelists are lists of domain names, email addresses of individuals, GitHub use
 Each whitelist applies to the project for which the company has signed a Corporate CLA. The CLA application checks all the whitelists for allowing contributions to a company project. A contributor only needs to be on one whitelist. Contributors can use EasyCLA to send email requests to be associated (whitelisted) with the company.
 
 *Multiple CLA managers cannot whitelist the same domain and sign a CCLA for the same company.*
-
-Consider the following conventions for email addresses:
-
-* A Corporate CLA requires a domain name, an @company email address, or both.
-
-* An Individual CLA that is tied to your employer requires an @company email address. (You do not whitelist a contributor who is not tied to any employer or company.)
 
 **Do these steps:**
 
