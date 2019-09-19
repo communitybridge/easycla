@@ -460,9 +460,23 @@ export class ClaService {
     return this.http.get(url).map(res => res.json());
   }
 
+  /**
+   * GET /v2/company/{company_id}
+   */
   getAllCompanies() {
     const url: URL = this.getV2Endpoint('/v2/company');
     return this.http.get(url).map(res => res.json());
+  }
+
+
+  /**
+   * GET /v3/company/search?companyName={company_name}
+   */
+  searchCompaniesByName(companyName) {
+    const url: URL = this.getV3Endpoint('/v3/company/search?companyName=' + companyName);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
   }
 
   postCompany(company) {
