@@ -24,7 +24,8 @@ export class CompanyPage {
   companyId: string;
   company: ClaCompanyModel;
   manager: ClaUserModel;
-  companySignatures: ClaSignatureModel[];
+  //companySignatures: ClaSignatureModel[];
+  companySignatures: any[];
   projects: any;
   loading: any;
   invites: any;
@@ -70,13 +71,12 @@ export class CompanyPage {
 
   getCompanySignatures() {
     this.claService.getCompanySignatures(this.companyId).subscribe(response => {
-      console.log(response);
       if (response.resultCount > 0) {
         this.companySignatures = response.signatures.filter(signature =>
-          signature.signature_signed === true
+          signature.signatureSigned === true
         );
         for (let signature of this.companySignatures) {
-          this.getProject(signature.signature_project_id);
+          this.getProject(signature.projectID);
         }
       }
     });

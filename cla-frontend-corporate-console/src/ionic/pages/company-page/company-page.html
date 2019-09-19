@@ -35,13 +35,43 @@
                 </button>
               </ion-card-title>
               <loading-spinner [loading]="loading.projects"></loading-spinner>
-              <ion-list>
-                <button ion-item *ngFor="let signature of companySignatures" (click)="openProjectPage(signature.signature_project_id)">
-                  <ion-label class="company-name">
-                    <span *ngIf="projects[signature.signature_project_id]">{{ projects[signature.signature_project_id].project_name }}</span>
-                  </ion-label>
-                </button>
-              </ion-list>
+
+              <ion-grid [loading-display]="loading.projects">
+                <ion-row>
+                  <ion-col col-12>
+                    <div class="table-responsive-vertical">
+                      <table class="table table-hover">
+                        <tr>
+                          <th class="datatable-header">Project Name</th>
+                          <th class="datatable-header">Managers</th>
+                          <th class="datatable-header">CCLA Enabled</th>
+                          <th class="datatable-header">ICLA Enabled</th>
+                          <th class="datatable-header">Requires ICLA</th>
+                        </tr>
+                        <tbody>
+                        <tr *ngFor="let signature of companySignatures" (click)="openProjectPage(signature.projectID)">
+                          <td data-title="Project Name" *ngIf="projects[signature.projectID]" (click)="openProjectPage(signature.projectID)">
+                            {{ projects[signature.projectID].project_name }}
+                          </td>
+                          <td data-title="Project Name" *ngIf="projects[signature.projectID]">
+                            {{ projects[signature.projectID].project_acl }}
+                          </td>
+                          <td data-title="CCLA Enabled" *ngIf="projects[signature.projectID]">
+                            {{ projects[signature.projectID].project_ccla_enabled }}
+                          </td>
+                          <td data-title="ICLA Enabled" *ngIf="projects[signature.projectID]">
+                            {{ projects[signature.projectID].project_icla_enabled }}
+                          </td>
+                          <td data-title="Requires ICLA" *ngIf="projects[signature.projectID]">
+                            {{ projects[signature.projectID].project_ccla_requires_icla_signature }}
+                          </td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
             </ion-card-content>
           </ion-card>
         </ion-col>
