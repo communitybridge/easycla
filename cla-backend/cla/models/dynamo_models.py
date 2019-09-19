@@ -687,6 +687,18 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
         self.model.project_acl = project_acl
 
+    def __str__(self):
+        return ('id:{}, name: {}, external id: {}, icla enabled: {}, '
+                'ccla enabled: {}, requires icla: {}, acl: {}').format(
+            self.model.project_id,
+            self.model.project_name,
+            self.model.project_external_id,
+            self.model.project_icla_enabled,
+            self.model.project_ccla_enabled,
+            self.model.project_ccla_requires_icla_signature,
+            self.model.project_acl,
+        )
+
     def to_dict(self):
         individual_documents = []
         corporate_documents = []

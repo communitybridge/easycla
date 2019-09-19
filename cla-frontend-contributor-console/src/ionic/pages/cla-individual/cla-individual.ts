@@ -90,6 +90,7 @@ export class ClaIndividualPage {
       //   project_id:
       //   sign_url: docusign.com/some-docusign-url
       // }
+      console.log(response);
       this.signature = response;
     });
   }
