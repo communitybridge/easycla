@@ -1286,12 +1286,30 @@ definitions:
         type: string
       companyName:
         type: string
+      projectID:
+        type: string
       userGHID:
         type: string
       userLFID:
         type: string
       version:
         type: string
+      emailWhitelist:
+        type: array
+        items:
+          type: string
+      domainWhitelist:
+        type: array
+        items:
+          type: string
+      githubWhitelist:
+        type: array
+        items:
+          type: string
+      githubOrgWhitelist:
+        type: array
+        items:
+          type: string
 
   contract-group-signatures:
     type: object
