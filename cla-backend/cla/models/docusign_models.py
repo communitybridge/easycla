@@ -127,7 +127,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             user = User()
             user.load(user_id)
-            cla.log.debug('Individual Signature - creating new signature for user name: {}, '
+            cla.log.debug('Individual Signature - loaded user name: {}, '
                           'user email: {}, gh user: {}, gh id: {}'.
                           format(user.get_user_name(), user.get_user_email(), user.get_github_username(),
                                  user.get_user_github_id()))
@@ -139,14 +139,26 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             project = Project()
             project.load(project_id)
+            cla.log.debug('Individual Signature - loaded project id: {}, name: {}, '.
+                          format(project.get_project_id(), project.get_project_name()))
         except DoesNotExist as err:
             cla.log.warning('Individual Signature - project ID NOT found for: {}'.format(request_info))
             return {'errors': {'project_id': str(err)}}
 
         # Check for active signature object with this project. If the user has
         # signed the most recent major version, they do not need to sign again.
+        cla.log.debug('Individual Signature - loading latest user signature for user: {}, project: {}'.
+                      format(user, project))
         latest_signature = user.get_latest_signature(str(project_id))
+        cla.log.debug('Individual Signature - loaded latest user signature for user: {}, project: {}'.
+                      format(user, project))
+
+        cla.log.debug('Individual Signature - loading latest individual document for project: {}'.
+                      format(project))
         last_document = project.get_latest_individual_document()
+        cla.log.debug('Individual Signature - loaded latest individual document for project: {}'.
+                      format(project))
+
         if latest_signature is not None and \
                 last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
             cla.log.debug('Individual Signature - user already has a signatures with this project: {}'.
@@ -157,12 +169,16 @@ class DocuSign(signing_service_interface.SigningService):
                     'sign_url': latest_signature.get_signature_sign_url()}
         else:
             cla.log.debug('Individual Signature - user does NOT have a signatures with this project: {}'.
-                          format(latest_signature.get_signature_id()))
+                          format(project))
 
         # Generate signature callback url
+        cla.log.debug('Individual Signature - get active signature metadata')
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
+        cla.log.debug('Individual Signature - get active signature metadata: {}'.format(signature_metadata))
+
+        cla.log.debug('Individual Signature - get individual signature callback url')
         callback_url = cla.utils.get_individual_signature_callback_url(user_id, signature_metadata)
-        cla.log.debug('Individual Signature - setting callback_url: {}'.format(callback_url))
+        cla.log.debug('Individual Signature - get individual signature callback url: {}'.format(callback_url))
 
         # Get signature return URL
         if return_url is None:
@@ -180,13 +196,17 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Get latest document
         try:
+            cla.log.warning('Individual Signature - loading project latest individual document...')
             document = project.get_latest_individual_document()
+            cla.log.warning('Individual Signature - loaded project latest individual document: {}'.format(document))
         except DoesNotExist as err:
-            cla.log.warning('Individual Signature - document does NOT exist for: {}'.format(request_info))
+            cla.log.warning('Individual Signature - project individual document does NOT exist for: {}'.
+                            format(request_info))
             return {'errors': {'project_id': str(err)}}
 
-        cla.log.debug('Individual Signature - creating default individual values: {}'.format(user))
+        cla.log.debug('Individual Signature - creating default individual values for user: {}'.format(user))
         default_cla_values = create_default_individual_values(user)
+        cla.log.debug('Individual Signature - created default individual values: {}'.format(default_cla_values))
 
         # Create new Signature object
         cla.log.debug('Individual Signature - creating new signature document '

@@ -63,6 +63,7 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by GitHub ID.
     """
+
     class Meta:
         """Meta class for GitHub User index."""
         index_name = 'github-user-index'
@@ -79,6 +80,7 @@ class GitHubUsernameIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by github username.
     """
+
     class Meta:
         index_name = 'github-username-index'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
@@ -93,6 +95,7 @@ class LFUsernameIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by LF Username.
     """
+
     class Meta:
         """Meta class for LF Username index."""
         index_name = 'lf-username-index'
@@ -109,6 +112,7 @@ class ProjectRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by project ID.
     """
+
     class Meta:
         """Meta class for project repository index."""
         index_name = 'project-repository-index'
@@ -125,6 +129,7 @@ class ExternalRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by external ID.
     """
+
     class Meta:
         """Meta class for external ID repository index."""
         index_name = 'external-repository-index'
@@ -141,6 +146,7 @@ class SFDCRepositoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying repositories by external ID.
     """
+
     class Meta:
         """Meta class for external ID repository index."""
         index_name = 'sfdc-repository-index'
@@ -157,6 +163,7 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying projects by external ID.
     """
+
     class Meta:
         """Meta class for external ID project index."""
         index_name = 'external-project-index'
@@ -173,6 +180,7 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by external ID.
     """
+
     class Meta:
         """Meta class for external ID company index."""
         index_name = 'external-company-index'
@@ -189,6 +197,7 @@ class GithubOrgSFIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying github organizations by a Salesforce ID.
     """
+
     class Meta:
         """Meta class for external ID github org index."""
         index_name = 'github-org-sfid-index'
@@ -203,6 +212,7 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by project ID.
     """
+
     class Meta:
         """Meta class for reference Signature index."""
         index_name = 'project-signature-index'
@@ -219,6 +229,7 @@ class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by reference.
     """
+
     class Meta:
         """Meta class for reference Signature index."""
         index_name = 'reference-signature-index'
@@ -235,6 +246,7 @@ class RequestedCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying company invites with a company ID.
     """
+
     class Meta:
         """Meta class for external ID company index."""
         index_name = 'requested-company-index'
@@ -294,6 +306,7 @@ class DocumentTab(model_interfaces.DocumentTab):
     """
     ORM-agnostic wrapper for the DynamoDB DocumentTab model.
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
                  document_tab_type=None,
                  document_tab_id=None,
@@ -457,6 +470,7 @@ class Document(model_interfaces.Document):
     """
     ORM-agnostic wrapper for the DynamoDB Document model.
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
                  document_name=None,
                  document_file_id=None,
@@ -635,11 +649,13 @@ class ProjectModel(BaseModel):
     """
     Represents a project in the database.
     """
+
     class Meta:
         """Meta class for Project."""
         table_name = 'cla-{}-projects'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
@@ -652,10 +668,11 @@ class ProjectModel(BaseModel):
     project_acl = UnicodeSetAttribute(default=set())
 
 
-class Project(model_interfaces.Project): # pylint: disable=too-many-public-methods
+class Project(model_interfaces.Project):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Project model.
     """
+
     def __init__(self, project_id=None, project_external_id=None, project_name=None,
                  project_icla_enabled=True, project_ccla_enabled=True,
                  project_ccla_requires_icla_signature=False,
@@ -784,8 +801,8 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         :return: 2-item tuple containing (major, minor) version number.
         :rtype: tuple
         """
-        last_major = 0 # 0 will be returned if no document was found.
-        last_minor = -1 # -1 will be returned if no document was found.
+        last_major = 0  # 0 will be returned if no document was found.
+        last_minor = -1  # -1 will be returned if no document was found.
         latest_date = None
         current_document = None
         for document in documents:
@@ -813,7 +830,7 @@ class Project(model_interfaces.Project): # pylint: disable=too-many-public-metho
         # @todo: Loop through documents for this project, return the highest version of them all.
 
     def get_project_acl(self):
-        return  self.model.project_acl
+        return self.model.project_acl
 
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
@@ -921,7 +938,7 @@ def _remove_project_document(documents, major_version, minor_version):
     found = False
     for document in documents:
         if document.document_major_version == major_version and \
-           document.document_minor_version == minor_version:
+                document.document_minor_version == minor_version:
             found = True
             if document.document_content_type.startswith('storage+'):
                 cla.utils.get_storage_service().delete(document.document_file_id)
@@ -936,6 +953,7 @@ class UserModel(BaseModel):
     """
     Represents a user in the database.
     """
+
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-users'.format(stage)
@@ -943,6 +961,7 @@ class UserModel(BaseModel):
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+
     user_id = UnicodeAttribute(hash_key=True)
     user_external_id = UnicodeAttribute(null=True)
     # User Emails are specifically GitHub Emails
@@ -964,6 +983,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB User model.
     """
+
     def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_github_username=None,
                  user_ldap_id=None, lf_username=None, lf_sub=None):
         super(User).__init__()
@@ -980,16 +1000,16 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def __str__(self):
         return ('id:{}, username: {}, gh id:{}, gh username:{}, '
                 'lf email:{}, emails:{}, ldap id:{}, lf username:{}, lf sub:{}').format(
-                   self.model.user_external_id,
-                   self.model.user_github_username,
-                   self.model.user_github_id,
-                   self.model.user_github_username,
-                   self.model.lf_email,
-                   self.model.user_emails,
-                   self.model.user_ldap_id,
-                   self.model.lf_username,
-                   self.model.lf_sub,
-               )
+            self.model.user_external_id,
+            self.model.user_github_username,
+            self.model.user_github_id,
+            self.model.user_github_username,
+            self.model.lf_email,
+            self.model.user_emails,
+            self.model.user_ldap_id,
+            self.model.lf_username,
+            self.model.lf_sub,
+        )
 
     def to_dict(self):
         ret = dict(self.model)
@@ -1187,9 +1207,13 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                 latest = signature
 
         if latest is None:
-            self.log_debug('unable to find user signature')
+            cla.log.debug('get_latest_signature - unable to find user signature using '
+                          'project id: {} and company id: {}'.
+                          format(project_id, company_id))
         else:
-            self.log_debug('found user user signature')
+            cla.log.debug('get_latest_signature - found user user signature using '
+                          'project id: {} and company id: {}'.
+                          format(project_id, company_id))
 
         return latest
 
@@ -1322,11 +1346,13 @@ class RepositoryModel(BaseModel):
     """
     Represents a repository in the database.
     """
+
     class Meta:
         """Meta class for Repository."""
         table_name = 'cla-{}-repositories'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     repository_id = UnicodeAttribute(hash_key=True)
     repository_project_id = UnicodeAttribute()
     repository_name = UnicodeAttribute()
@@ -1344,6 +1370,7 @@ class Repository(model_interfaces.Repository):
     """
     ORM-agnostic wrapper for the DynamoDB Repository model.
     """
+
     def __init__(self, repository_id=None, repository_project_id=None,  # pylint: disable=too-many-arguments
                  repository_name=None, repository_type=None, repository_url=None,
                  repository_organization_name=None,
@@ -1470,6 +1497,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     """
     Represents an signature in the database.
     """
+
     class Meta:
         """Meta class for Signature."""
         table_name = 'cla-{}-signatures'.format(stage)
@@ -1477,6 +1505,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+
     signature_id = UnicodeAttribute(hash_key=True)
     signature_external_id = UnicodeAttribute(null=True)
     signature_project_id = UnicodeAttribute()
@@ -1505,10 +1534,11 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     github_org_whitelist = ListAttribute(null=True)
 
 
-class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-methods
+class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Signature model.
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
                  signature_id=None,
                  signature_external_id=None,
@@ -1707,7 +1737,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         if username in self.model.signature_acl:
             self.model.signature_acl.remove(username)
 
-    def get_signatures_by_reference(self, # pylint: disable=too-many-arguments
+    def get_signatures_by_reference(self,  # pylint: disable=too-many-arguments
                                     reference_id,
                                     reference_type,
                                     project_id=None,
@@ -1728,15 +1758,15 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
                 continue
             # Skip signatures that are not of the same project
             if project_id is not None and \
-               signature_model.signature_project_id != project_id:
+                    signature_model.signature_project_id != project_id:
                 continue
             # SKip signatures that do not have the same signed flags 
             # e.g. retrieving only signed / approved signatures 
             if signature_signed is not None and \
-               signature_model.signature_signed != signature_signed:
+                    signature_model.signature_signed != signature_signed:
                 continue
             if signature_approved is not None and \
-               signature_model.signature_approved != signature_approved:
+                    signature_model.signature_approved != signature_approved:
                 continue
             signature = Signature()
             signature.model = signature_model
@@ -1754,22 +1784,22 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         signatures = []
         for signature_model in signature_generator:
             if signature_signed is not None and \
-               signature_model.signature_signed != signature_signed:
+                    signature_model.signature_signed != signature_signed:
                 continue
             if signature_approved is not None and \
-               signature_model.signature_approved != signature_approved:
+                    signature_model.signature_approved != signature_approved:
                 continue
             if signature_type is not None and \
-               signature_model.signature_type != signature_type:
+                    signature_model.signature_type != signature_type:
                 continue
             if signature_reference_type is not None and \
-               signature_model.signature_reference_type != signature_reference_type:
+                    signature_model.signature_reference_type != signature_reference_type:
                 continue
             if signature_reference_id is not None and \
-               signature_model.signature_reference_id != signature_reference_id:
+                    signature_model.signature_reference_id != signature_reference_id:
                 continue
             if signature_user_ccla_company_id is not None and \
-               signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id:
+                    signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id:
                 continue
             signature = Signature()
             signature.model = signature_model
@@ -1778,7 +1808,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return signatures
 
     def get_signatures_by_company_project(self, company_id, project_id):
-        signature_generator = self.model.signature_reference_index.\
+        signature_generator = self.model.signature_reference_index. \
             query(company_id, SignatureModel.signature_project_id == project_id)
         signatures = []
         for signature_model in signature_generator:
@@ -1789,7 +1819,8 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
         return signatures_dict
 
     def get_employee_signatures_by_company_project(self, company_id, project_id):
-        signature_generator = self.model.signature_project_index.query(project_id, SignatureModel.signature_user_ccla_company_id == company_id)
+        signature_generator = self.model.signature_project_index.query(project_id,
+                                                                       SignatureModel.signature_user_ccla_company_id == company_id)
         signatures = []
         for signature_model in signature_generator:
             signature = Signature()
@@ -1801,7 +1832,7 @@ class Signature(model_interfaces.Signature): # pylint: disable=too-many-public-m
     def get_projects_by_company_signed(self, company_id):
         # Query returns all the signatures that the company has signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures. 
-        signature_generator = self.model.signature_reference_index.\
+        signature_generator = self.model.signature_reference_index. \
             query(company_id, SignatureModel.signature_signed == True)
         project_ids = []
         for signature in signature_generator:
@@ -1837,11 +1868,13 @@ class CompanyModel(BaseModel):
     """
     Represents an company in the database.
     """
+
     class Meta:
         """Meta class for Company."""
         table_name = 'cla-{}-companies'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
@@ -1850,16 +1883,17 @@ class CompanyModel(BaseModel):
     company_acl = UnicodeSetAttribute(default=set())
 
 
-class Company(model_interfaces.Company): # pylint: disable=too-many-public-methods
+class Company(model_interfaces.Company):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Company model.
     """
-    def __init__(self, # pylint: disable=too-many-arguments
+
+    def __init__(self,  # pylint: disable=too-many-arguments
                  company_id=None,
                  company_external_id=None,
                  company_manager_id=None,
                  company_name=None,
-                 company_acl=None,):
+                 company_acl=None, ):
         super(Company).__init__()
         self.model = CompanyModel()
         self.model.company_id = company_id
@@ -1897,7 +1931,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
         return self.model.company_name
 
     def get_company_acl(self):
-        return  self.model.company_acl
+        return self.model.company_acl
 
     def set_company_id(self, company_id):
         self.model.company_id = company_id
@@ -1924,7 +1958,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
     def get_managers(self):
         return self.get_managers_by_company_acl(self.get_company_acl())
 
-    def get_company_signatures(self, # pylint: disable=arguments-differ
+    def get_company_signatures(self,  # pylint: disable=arguments-differ
                                project_id=None,
                                signature_signed=None,
                                signature_approved=None):
@@ -1952,7 +1986,7 @@ class Company(model_interfaces.Company): # pylint: disable=too-many-public-metho
             elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
                 latest = signature
             elif signature.get_signature_document_major_version() == latest.get_signature_document_major_version() and \
-            signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
+                    signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version():
                 latest = signature
 
         return latest
@@ -2001,6 +2035,7 @@ class StoreModel(Model):
     """
     Represents a key-value store in a DynamoDB.
     """
+
     class Meta:
         """Meta class for Store."""
         table_name = 'cla-{}-store'.format(stage)
@@ -2008,6 +2043,7 @@ class StoreModel(Model):
             host = 'http://localhost:8000'
         write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
         read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+
     key = UnicodeAttribute(hash_key=True)
     value = JSONAttribute()
     expire = NumberAttribute()
@@ -2017,6 +2053,7 @@ class Store(key_value_store_interface.KeyValueStore):
     """
     ORM-agnostic wrapper for the DynamoDB key-value store model.
     """
+
     def __init__(self):
         super(Store).__init__()
 
@@ -2052,16 +2089,19 @@ class Store(key_value_store_interface.KeyValueStore):
         exp_datetime = datetime.datetime.now() + datetime.timedelta(days=1)
         return exp_datetime.timestamp()
 
+
 class GitHubOrgModel(BaseModel):
     """
     Represents a Github Organization in the database. 
     Company_id, project_id are deprecated now that organizations are under an SFDC ID.
     """
+
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-github-orgs'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     organization_name = UnicodeAttribute(hash_key=True)
     organization_installation_id = NumberAttribute(null=True)
     organization_sfid = UnicodeAttribute()
@@ -2070,11 +2110,11 @@ class GitHubOrgModel(BaseModel):
     organization_company_id = UnicodeAttribute(null=True)
 
 
-
-class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-methods
+class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB GitHubOrg model.
     """
+
     def __init__(self, organization_name=None, organization_installation_id=None, organization_sfid=None):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
@@ -2150,16 +2190,19 @@ class GitHubOrg(model_interfaces.GitHubOrg): # pylint: disable=too-many-public-m
             ret.append(org)
         return ret
 
+
 class GerritModel(BaseModel):
     """
     Represents a Gerrit Instance in the database.
     """
+
     class Meta:
         """Meta class for User."""
         table_name = 'cla-{}-gerrit-instances'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
-    gerrit_id  = UnicodeAttribute(hash_key=True)
+
+    gerrit_id = UnicodeAttribute(hash_key=True)
     project_id = UnicodeAttribute()
     gerrit_name = UnicodeAttribute()
     gerrit_url = UnicodeAttribute()
@@ -2168,12 +2211,14 @@ class GerritModel(BaseModel):
     group_name_icla = UnicodeAttribute(null=True)
     group_name_ccla = UnicodeAttribute(null=True)
 
-class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
+
+class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB Gerrit model.
     """
+
     def __init__(self, gerrit_id=None, gerrit_name=None,
-    project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
+                 project_id=None, gerrit_url=None, group_id_icla=None, group_id_ccla=None):
         super(Gerrit).__init__()
         self.model = GerritModel()
         self.model.gerrit_id = gerrit_id
@@ -2227,13 +2272,13 @@ class Gerrit(model_interfaces.Gerrit): # pylint: disable=too-many-public-methods
     def set_group_id_icla(self, group_id_icla):
         self.model.group_id_icla = group_id_icla
 
-    def set_group_id_ccla(self, group_id_ccla) :
+    def set_group_id_ccla(self, group_id_ccla):
         self.model.group_id_ccla = group_id_ccla
 
     def set_group_name_icla(self, group_name_icla):
         self.model.group_name_icla = group_name_icla
 
-    def set_group_name_ccla(self, group_name_ccla) :
+    def set_group_name_ccla(self, group_name_ccla):
         self.model.group_name_ccla = group_name_ccla
 
     def save(self):
@@ -2268,19 +2313,22 @@ class UserPermissionsModel(BaseModel):
     """
     Represents user permissions in the database.
     """
+
     class Meta:
         """Meta class for User Permissions."""
         table_name = 'cla-{}-user-permissions'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     username = UnicodeAttribute(hash_key=True)
     projects = UnicodeSetAttribute(default=set())
 
 
-class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-many-public-methods
+class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-many-public-methods
     """
     ORM-agnostic wrapper for the DynamoDB UserPermissions model.
     """
+
     def __init__(self, username=None, projects=None):
         super(UserPermissions).__init__()
         self.model = UserPermissionsModel()
@@ -2313,20 +2361,24 @@ class UserPermissions(model_interfaces.UserPermissions): # pylint: disable=too-m
     def delete(self):
         self.model.delete()
 
+
 class CompanyInviteModel(BaseModel):
     """
     Represents company invites in the database.
     
     Note that this model is utilized in the Go backend from the 'accesslist' package. 
     """
+
     class Meta:
         table_name = 'cla-{}-company-invites'.format(stage)
         if stage == 'local':
             host = 'http://localhost:8000'
+
     company_invite_id = UnicodeAttribute(hash_key=True)
     user_id = UnicodeAttribute()
     requested_company_id = UnicodeAttribute()
     requested_company_id_index = RequestedCompanyIndex()
+
 
 class CompanyInvite(model_interfaces.CompanyInvite):
     def __init__(self, user_id=None, requested_company_id=None):
