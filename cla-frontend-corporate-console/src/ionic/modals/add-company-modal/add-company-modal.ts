@@ -169,11 +169,11 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.filteredComapnies = []
-    let companyName = event.value;
-    if (companyName.length > 0) {
+    let compnayName = event.value;
+    if (compnayName.length > 0) {
       this.companySet = false;
       let filteredComapnies = this.companies.filter((company) => {
-        return company.company_name.toLowerCase().includes(companyName.toLowerCase())
+        return company.company_name.toLowerCase().includes(compnayName.toLowerCase())
       });
       this.filteredComapnies = filteredComapnies;
     }
