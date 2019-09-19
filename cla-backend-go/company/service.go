@@ -30,6 +30,7 @@ type service struct {
 // Service interface defining the public functions
 type Service interface { // nolint
 	GetCompany(companyID string) (*models.Company, error)
+	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
 	SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
@@ -48,6 +49,7 @@ func NewService(repo RepositoryService, awsSession *session.Session, senderEmail
 	}
 }
 
+// GetCompany returns the company associated with the company ID
 func (s service) GetCompany(companyID string) (*models.Company, error) {
 	dbCompanyModel, err := s.repo.GetCompany(companyID)
 	if err != nil {
@@ -76,6 +78,17 @@ func (s service) GetCompany(companyID string) (*models.Company, error) {
 		Created:     strfmt.DateTime(createdDateTime),
 		Updated:     strfmt.DateTime(updateDateTime),
 	}, nil
+}
+
+// SearchCompanyByName locates companies by the matching name and return any potential matches
+func (s service) SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error) {
+	companies, err := s.repo.SearchCompanyByName(companyName, nextKey)
+	if err != nil {
+		log.Warnf("Error searching company by company name: %s, error: %v", companyName, err)
+		return nil, err
+	}
+
+	return companies, nil
 }
 
 // AddUserToCompanyAccessList adds a user to the specified company

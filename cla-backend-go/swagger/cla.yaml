@@ -657,6 +657,40 @@ paths:
       tags:
         - company
 
+  /company/search:
+    get:
+      summary: Search companies
+      description: Searches for matching companies by name
+      security: []
+      operationId: searchCompany
+      parameters:
+        - name: companyName
+          in: query
+          type: string
+          required: true
+        - name: nextKey
+          description: The next key to scan - used as a page offset for scanning batches of records
+          in: query
+          type: string
+          required: false
+          # UUID v4 regex
+          pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/{companyID}/cla/invitelist:
     parameters:
       - name: companyID
@@ -1209,6 +1243,30 @@ definitions:
       - ldapGroupId
       - ldapGroupName
       - url
+
+  companies:
+    type: object
+    x-nullable: false
+    title: Companies
+    description: A list of companies
+    properties:
+      searchTerms:
+        type: string
+      resultCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      lastKeyScanned:
+        type: string
+      companies:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/company'
 
   company:
     type: object

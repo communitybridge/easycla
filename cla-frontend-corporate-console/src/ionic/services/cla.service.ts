@@ -518,6 +518,16 @@ export class ClaService {
   }
 
   /**
+   * GET /v3/company/search?companyName={company_name}
+   */
+  searchCompaniesByName(companyName) {
+    const url: URL = this.getV3Endpoint('/v3/company/search?companyName=' + companyName);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
    * DELETE /v1/company/{company_id}
    */
   deleteCompany(companyId) {
