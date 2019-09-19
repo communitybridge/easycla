@@ -20,9 +20,13 @@ The Domain Whitelist option requires less overhead for signatories and CLA manag
 
 **I contribute to an open source project as an employee for a company. Do I need to complete, sign, and submit a DocuSign document?**
 
-No. Your company's CLA signatory has signed a Corporate CLA, you simply confirm your association to the company during your code submission process. However, If you are the first one from your company who has contributed to the project, then your company's CLA signatory will not have signed a Corporate CLA yet.
+Probably not. If your company's CLA signatory has signed a Corporate CLA, and if you have been whitelisted under that company's CLA, then you simply confirm your association to the company during your code submission process.
 
-**If my project community has elected to use CLAs as a required step for contributions to their code, do I need to sign an agreement for each project to which I contribute?**
+If you are the first one from your company who has contributed to the project, then your company's CLA signatory will need to sign a Corporate CLA as part of the EasyCLA process. Depending on the company, you might be an authorized signatory, but you will need to review with your company's leadership or legal counsel if you are not certain.
+
+And if your company has already signed a Corporate CLA, but you are not yet on your company's whitelist, then you will need to be whitelisted by your company's CLA Manager as part of the EasyCLA process.
+
+**If my project community has elected to use CLAs as a required step for contributions to their code, do I need to be authorized under a CLA for each project to which I contribute?**
 
 Yes, provided that the project has a CLA.
 
