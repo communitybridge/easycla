@@ -832,17 +832,22 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	var signatures []models.Signature
 
 	type ItemSignature struct {
-		SignatureID                   string `json:"signature_id"`
-		DateCreated                   string `json:"date_created"`
-		DateModified                  string `json:"date_modified"`
-		SignatureApproved             bool   `json:"signature_approved"`
-		SignatureSigned               bool   `json:"signature_signed"`
-		SignatureDocumentMajorVersion string `json:"signature_document_major_version"`
-		SignatureDocumentMinorVersion string `json:"signature_document_minor_version"`
-		SignatureReferenceID          string `json:"signature_reference_id"`
-		SignatureReferenceType        string `json:"signature_reference_type"`
-		SignatureType                 string `json:"signature_type"`
-		SignatureUserCompanyID        string `json:"signature_user_ccla_company_id"`
+		SignatureID                   string   `json:"signature_id"`
+		DateCreated                   string   `json:"date_created"`
+		DateModified                  string   `json:"date_modified"`
+		SignatureApproved             bool     `json:"signature_approved"`
+		SignatureSigned               bool     `json:"signature_signed"`
+		SignatureDocumentMajorVersion string   `json:"signature_document_major_version"`
+		SignatureDocumentMinorVersion string   `json:"signature_document_minor_version"`
+		SignatureReferenceID          string   `json:"signature_reference_id"`
+		SignatureProjectID            string   `json:"signature_project_id"`
+		SignatureReferenceType        string   `json:"signature_reference_type"`
+		SignatureType                 string   `json:"signature_type"`
+		SignatureUserCompanyID        string   `json:"signature_user_ccla_company_id"`
+		EmailWhitelist                []string `json:"email_whitelist"`
+		DomainWhitelist               []string `json:"domain_whitelist"`
+		GitHubWhitelist               []string `json:"github_whitelist"`
+		GitHubOrgWhitelist            []string `json:"github_org_whitelist"`
 	}
 
 	// The DB signature model
@@ -902,9 +907,14 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 				SignatureApproved:      dbSignature.SignatureApproved,
 				Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
 				SignatureReferenceType: dbSignature.SignatureReferenceType,
+				ProjectID:              dbSignature.SignatureProjectID,
 				UserName:               userName,
 				UserLFID:               userLFID,
 				UserGHID:               userGHID,
+				EmailWhitelist:         dbSignature.EmailWhitelist,
+				DomainWhitelist:        dbSignature.DomainWhitelist,
+				GithubWhitelist:        dbSignature.GitHubWhitelist,
+				GithubOrgWhitelist:     dbSignature.GitHubOrgWhitelist,
 			})
 		}(dbSignature)
 	}
@@ -946,9 +956,14 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("signature_document_major_version"),
 		expression.Name("signature_document_minor_version"),
 		expression.Name("signature_reference_id"),
+		expression.Name("signature_project_id"),
 		expression.Name("signature_reference_type"),       // user or company
 		expression.Name("signature_signed"),               // T/F
 		expression.Name("signature_type"),                 // ccla or cla
 		expression.Name("signature_user_ccla_company_id"), // reference to the company
+		expression.Name("email_whitelist"),
+		expression.Name("domain_whitelist"),
+		expression.Name("github_whitelist"),
+		expression.Name("github_org_whitelist"),
 	)
 }

@@ -24,8 +24,8 @@ import {WhitelistModal} from "../../modals/whitelist-modal/whitelist-modal";
   templateUrl: "project-page.html"
 })
 export class ProjectPage {
-  cclaSignature: ClaSignatureModel;
-  employeeSignatures: ClaSignatureModel[];
+  cclaSignature: any;
+  employeeSignatures: any[];
   githubOrgWhitelist: any[] = [];
   githubEnabledWhitelist: any[] = [];
   loading: any;
@@ -88,14 +88,17 @@ export class ProjectPage {
   }
 
   getProject() {
+    console.log('Loading project: ' + this.projectId);
     this.claService.getProject(this.projectId).subscribe(response => {
+      console.log('Project response:');
+      console.log(response);
       this.project = response;
       this.getProjectSignatures();
     });
   }
 
   getGitHubOrgWhitelist() {
-    this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signature_id).subscribe(organizations => {
+    this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signatureID).subscribe(organizations => {
       this.githubOrgWhitelist = organizations;
       this.githubOrgWhitelistEnabled();
     });
@@ -106,31 +109,37 @@ export class ProjectPage {
   }
 
   getCLAManagers() {
-    this.claService.getCLAManagers(this.cclaSignature.signature_id).subscribe(response => {
+    this.claService.getCLAManagers(this.cclaSignature.signatureID).subscribe(response => {
       this.managers = response;
     });
   }
 
   getProjectSignatures() {
     // get CCLA signatures
-    this.claService
-      .getCompanyProjectSignatures(this.companyId, this.projectId)
+    this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
-        if (cclaSignatures.length) {
-          this.cclaSignature = cclaSignatures[0];
-          this.getCLAManagers();
-          this.getGitHubOrgWhitelist();
+        console.log('Project signatures:');
+        console.log(response);
+        if (response.signatures) {
+          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+          if (cclaSignatures.length) {
+            this.cclaSignature = cclaSignatures[0];
+            this.getCLAManagers();
+            this.getGitHubOrgWhitelist();
+          }
         }
       });
 
     // get employee signatures
-    this.claService
-      .getEmployeeProjectSignatures(this.companyId, this.projectId)
+    this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        this.employeeSignatures = response;
-        for (let signature of this.employeeSignatures) {
-          this.getUser(signature.signature_reference_id);
+        console.log('Employee signatures:');
+        console.log(response);
+        if (response.signatures) {
+          this.employeeSignatures = response;
+          for (let signature of this.employeeSignatures) {
+            this.getUser(signature.signatureReferenceType);
+          }
         }
       });
 
@@ -153,8 +162,8 @@ export class ProjectPage {
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
-      signatureId: this.cclaSignature.signature_id,
-      whitelist: this.cclaSignature.email_whitelist
+      signatureId: this.cclaSignature.signatureID,
+      whitelist: this.cclaSignature.emailWhiteList
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
@@ -166,8 +175,8 @@ export class ProjectPage {
   openWhitelistDomainModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "domain",
-      signatureId: this.cclaSignature.signature_id,
-      whitelist: this.cclaSignature.domain_whitelist
+      signatureId: this.cclaSignature.signatureID,
+      whitelist: this.cclaSignature.domainWhitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
@@ -179,8 +188,8 @@ export class ProjectPage {
   openWhitelistGithubModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "github",
-      signatureId: this.cclaSignature.signature_id,
-      whitelist: this.cclaSignature.github_whitelist
+      signatureId: this.cclaSignature.signatureID,
+      whitelist: this.cclaSignature.githubWhitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
@@ -218,13 +227,13 @@ export class ProjectPage {
   }
 
   deleteManager(payload: ClaManager) {
-    this.claService.deleteCLAManager(this.cclaSignature.signature_id, payload)
+    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload)
       .subscribe(() => this.getCLAManagers())
   }
 
   openManagerModal() {
     let modal = this.modalCtrl.create("AddManagerModal", {
-      signatureId: this.cclaSignature.signature_id
+      signatureId: this.cclaSignature.signatureID
     });
     modal.onDidDismiss(data => {
       if (data) {
@@ -239,7 +248,7 @@ export class ProjectPage {
     if (this.cclaSignature == null) {
       this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
         .subscribe(response => {
-          let cclaSignatures = response.filter(sig => sig.signature_type === 'ccla');
+          let cclaSignatures = response.filter(sig => sig.signatureType === 'ccla');
           if (cclaSignatures.length) {
             this.cclaSignature = cclaSignatures[0];
             this.getCLAManagers();
@@ -249,7 +258,7 @@ export class ProjectPage {
             let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
               companyId: this.companyId,
               corporateClaId: this.projectId,
-              signatureId: this.cclaSignature.signature_id
+              signatureId: this.cclaSignature.signatureID
             });
             modal.onDidDismiss(data => {
               // Refresh the list
@@ -262,7 +271,7 @@ export class ProjectPage {
       let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
         companyId: this.companyId,
         corporateClaId: this.projectId,
-        signatureId: this.cclaSignature.signature_id
+        signatureId: this.cclaSignature.signatureID
       });
       modal.onDidDismiss(data => {
         // Refresh the list
