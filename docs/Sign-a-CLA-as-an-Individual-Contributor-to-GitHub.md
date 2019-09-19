@@ -1,5 +1,5 @@
 # Sign a CLA as an Individual Contributor to GitHub
-As an individual contributor to an open-source project who is not associated to a company, you create a pull request in GitHub to inform code maintainers about changes made to the code. During the pull request process, your CLA is verified. Also during the process, you click a link to open the CLA Contributor Console to sign the CLA Agreement. As an individual contributor, your work is owned by yourself (Individual CLA).
+As an individual contributor to an open-source project who is contributing code on your own behalf (and not on behalf of an employer), you create a pull request in GitHub to inform code maintainers about changes made to the code. During the pull request process, your CLA is verified. Also during the process, you click a link to open the CLA Contributor Console to sign the CLA.
 
 **Do these steps:**
 
@@ -7,7 +7,7 @@ As an individual contributor to an open-source project who is not associated to 
 
 1. Make a change and send a pull request.
 
-   EasyCLA checks the CLA status of all committers involved in that pull request. Easy CLA marks a cross or a tick beside contributor names who are involved in that pull request based on their CLA status.
+   EasyCLA checks the CLA status of all committers involved in that pull request. EasyCLA marks a cross or a tick beside contributor names who are involved in that pull request based on their CLA status.
 
    A cross next to your contributor name means the CLA check failed.
 

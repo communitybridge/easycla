@@ -11,7 +11,7 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
 1. Make a change and send a pull request.
 
-   EasyCLA checks the CLA status of all committers involved in that pull request. Easy CLA marks a cross or a tick beside contributor names involved in that pull request based on their CLA status.
+   EasyCLA checks the CLA status of all committers involved in that pull request. EasyCLA marks a cross or a tick beside contributor names involved in that pull request based on their CLA status.
 
    A cross next to your contributor name means the CLA check failed.
 

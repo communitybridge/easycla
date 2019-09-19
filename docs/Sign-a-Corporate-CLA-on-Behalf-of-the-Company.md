@@ -1,5 +1,5 @@
 # Sign a Corporate CLA on Behalf of the Company
-As a CLA signatory, you have the executive privilege to sign a Corporate CLA on behalf of the company. If you are a CLA manager but not a CLA signatory, you can request that the CLA signatory sign the Corporate CLA.
+As a CLA signatory, you need to have the authority within your company to sign a Corporate CLA on its behalf. If you are a CLA manager but not a CLA signatory, you can request that the CLA signatory sign the Corporate CLA.
 
 **Do these steps:**
 
