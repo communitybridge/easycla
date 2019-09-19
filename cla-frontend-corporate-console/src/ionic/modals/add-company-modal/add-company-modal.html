@@ -1,8 +1,9 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span *ngIf="mode === 'add'">Add Company</span>
+      <span *ngIf="mode === 'add'"> Company</span>
       <span *ngIf="mode === 'edit'">Edit Company</span>
+      <span *ngIf="mode === 'find'">Find Company</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -24,8 +25,16 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Company Name:</ion-label>
-            <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName"></ion-input>
+            <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName" (ionChange)="findCompany($event)"></ion-input>
           </ion-item>
+          <ion-row *ngIf="filteredComapnies.length > 0 && !companySet">
+            <ion-list class="company-dropdown-list" lines="none">
+              <ion-item *ngFor="let company of filteredComapnies">
+                <ion-label class="clickable" (click)="setCompanyName(company)">{{company.company_name}}</ion-label>
+              </ion-item>
+            </ion-list>
+          </ion-row>
+
           <ion-item *ngIf="!form.controls.companyName.valid && (form.controls.companyName.touched || submitAttempt)" no-lines>
             <p>* A company name is required.</p>
           </ion-item>
@@ -54,14 +63,17 @@
 </ion-content>
 
 <ion-footer class="footer-bordered">
-<ion-toolbar>
-  <ion-buttons end>
-    <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
-      Cancel
-    </button>
-    <button form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
-      Save
-    </button>
-  </ion-buttons>
-</ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
+        Cancel
+      </button>
+      <button *ngIf="addNewCompany" form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+        Add
+      </button>
+      <button *ngIf="joinExistingCompany" (click)="joinCompany()" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+        Join
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-footer>
