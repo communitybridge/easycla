@@ -39,6 +39,25 @@ func Configure(api *operations.ClaAPI, service Service) {
 		return company.NewGetCompanyOK().WithPayload(companyModel)
 	})
 
+	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams) middleware.Responder {
+		var nextKey = ""
+		if params.NextKey != nil {
+			nextKey = *params.NextKey
+		}
+
+		companiesModel, err := service.SearchCompanyByName(params.CompanyName, nextKey)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query company by name: %s, error: %v", params.CompanyName, err)
+			log.Warnf(msg)
+			return company.NewSearchCompanyBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		return company.NewSearchCompanyOK().WithPayload(companiesModel)
+	})
+
 	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
 		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.InviteID, params.User.UserLFID)
 		if err != nil {
