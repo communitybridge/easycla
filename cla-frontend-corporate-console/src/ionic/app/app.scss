@@ -19,6 +19,8 @@
 @import "../assets/fonts/open-sans-font.scss";
 @import "../assets/fonts/work-sans-font.scss";
 @import "../theme/styles.scss";
+@import "../assets/_bootstrap.scss";
+@import "../assets/_marterial.scss";
 
 body ion-app.ios {
   font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;

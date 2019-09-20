@@ -1074,9 +1074,50 @@ export class ClaService {
 
   /**
    * GET /v3/company/{companyID}/cla/invitelist:
+   * Example:
+   * [
+   * {
+   *      "inviteId": "1e5debac-57fd-4b1f-9669-cfa4c30d7b22",
+   *      "status": "pending",
+   *      "userEmail": "ahampras@proximabiz.com",
+   *      "userLFID": "ahampras",
+   *      "userName": "Abhijeet Hampras"
+   *  },
+   * {
+   *      "inviteId": "1e5debac-57fd-4b1f-9669-cfa4c30d7b33",
+   *      "status": "rejected",
+   *      "userEmail": "davifowl@microsoft.com",
+   *      "userLFID": "davidfowl"
+   *  }
+   * ]
+   *
+   * @param companyId the company ID
    **/
   getPendingInvites(companyId) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
+   * GET /v3/company/{companyID}/{userID}/invitelist:
+   * Example:
+   * {
+   *      "inviteId": "1e5debac-57fd-4b1f-9669-cfa4c30d7b22",
+   *      "status": "pending",
+   *      "userEmail": "ahampras@proximabiz.com",
+   *      "userLFID": "ahampras",
+   *      "userName": "Abhijeet Hampras"
+   * }
+   *
+   * Returns HTTP status 404 if company and user invite is not found
+   *
+   * @param companyId the company ID
+   * @param userID the user ID
+   */
+  getPendingUserInvite(companyId, userID) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/{userID}/invitelist`);
     return this.http.get(url)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));

@@ -69,14 +69,28 @@ func Configure(api *operations.ClaAPI, service Service) {
 		return company.NewAddUsertoCompanyAccessListOK()
 	})
 
-	api.CompanyGetPendingInviteRequestsHandler = company.GetPendingInviteRequestsHandlerFunc(func(params company.GetPendingInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
-		result, err := service.GetPendingCompanyInviteRequests(params.CompanyID)
+	api.CompanyGetCompanyInviteRequestsHandler = company.GetCompanyInviteRequestsHandlerFunc(func(params company.GetCompanyInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		result, err := service.GetCompanyInviteRequests(params.CompanyID)
 		if err != nil {
-			log.Warnf("error getting pending company invite using company id: %s, error: %v", params.CompanyID, err)
-			return company.NewGetPendingInviteRequestsBadRequest().WithPayload(errorResponse(err))
+			log.Warnf("error getting company invite using company id: %s, error: %v", params.CompanyID, err)
+			return company.NewGetCompanyInviteRequestsBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return company.NewGetPendingInviteRequestsOK().WithPayload(result)
+		return company.NewGetCompanyInviteRequestsOK().WithPayload(result)
+	})
+
+	api.CompanyGetCompanyUserInviteRequestsHandler = company.GetCompanyUserInviteRequestsHandlerFunc(func(params company.GetCompanyUserInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		result, err := service.GetCompanyUserInviteRequests(params.CompanyID, params.UserID)
+		if err != nil {
+			log.Warnf("error getting company user invite using company id: %s, user id: %s, error: %v", params.CompanyID, params.UserID, err)
+			return company.NewGetCompanyUserInviteRequestsBadRequest().WithPayload(errorResponse(err))
+		}
+
+		if result == nil {
+			return company.NewGetCompanyUserInviteRequestsNotFound()
+		}
+
+		return company.NewGetCompanyUserInviteRequestsOK().WithPayload(result)
 	})
 
 	api.CompanySendInviteRequestHandler = company.SendInviteRequestHandlerFunc(func(params company.SendInviteRequestParams, claUser *user.CLAUser) middleware.Responder {
