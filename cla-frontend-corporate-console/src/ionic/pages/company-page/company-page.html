@@ -34,41 +34,56 @@
                   New CLA
                 </button>
               </ion-card-title>
-              <loading-spinner [loading]="loading.projects"></loading-spinner>
 
               <ion-grid [loading-display]="loading.projects">
                 <ion-row>
                   <ion-col col-12>
                     <div class="table-responsive-vertical">
-                      <table class="table table-hover">
-                        <tr>
-                          <th class="datatable-header">Project Name</th>
-                          <th class="datatable-header">Managers</th>
-                          <th class="datatable-header">CCLA Enabled</th>
-                          <th class="datatable-header">ICLA Enabled</th>
-                          <th class="datatable-header">Requires ICLA</th>
-                        </tr>
-                        <tbody>
-                        <tr *ngFor="let signature of companySignatures" (click)="openProjectPage(signature.projectID)">
-                          <td data-title="Project Name" *ngIf="projects[signature.projectID]" (click)="openProjectPage(signature.projectID)">
-                            {{ projects[signature.projectID].project_name }}
-                          </td>
-                          <td data-title="Project Name" *ngIf="projects[signature.projectID]">
-                            {{ projects[signature.projectID].project_acl }}
-                          </td>
-                          <td data-title="CCLA Enabled" *ngIf="projects[signature.projectID]">
-                            {{ projects[signature.projectID].project_ccla_enabled }}
-                          </td>
-                          <td data-title="ICLA Enabled" *ngIf="projects[signature.projectID]">
-                            {{ projects[signature.projectID].project_icla_enabled }}
-                          </td>
-                          <td data-title="Requires ICLA" *ngIf="projects[signature.projectID]">
-                            {{ projects[signature.projectID].project_ccla_requires_icla_signature }}
-                          </td>
-                        </tr>
-                        </tbody>
-                      </table>
+                      <loading-spinner [loading]="loading.projects"></loading-spinner>
+                      <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
+                        <h2>No Projects</h2>
+                      </div>
+                      <div *ngIf="!loading.projects && rows && rows.length > 0">
+                        <ngx-datatable
+                          class='material clickable'
+                          [rows]="rows"
+                          [columns]="columns"
+                          [headerHeight]="50"
+                          [rowHeight]="'auto'"
+                          [selectionType]="SelectionType.single"
+                          [columnMode]="ColumnMode.force"
+                          [sortType]="SortType.multi"
+                          (select)="onSelect($event)"
+                        >
+                          <ngx-datatable-column name="Projects" prop="ProjectName"
+                                                [sortable]="true"
+                          ></ngx-datatable-column>
+                          <ngx-datatable-column name="Managers" prop="ProjectManagers"
+                                                [sortable]="true">
+                          </ngx-datatable-column>
+                        </ngx-datatable>
+                      </div>
                     </div>
+
+
+                    <!--                    <div class="table-responsive-vertical">-->
+                    <!--                      <table class="table table-hover">-->
+                    <!--                        <tr>-->
+                    <!--                          <th class="datatable-header">Project Name</th>-->
+                    <!--                          <th class="datatable-header">Managers</th>-->
+                    <!--                        </tr>-->
+                    <!--                        <tbody>-->
+                    <!--                        <tr *ngFor="let signature of companySignatures" (click)="openProjectPage(signature.projectID)">-->
+                    <!--                          <td data-title="Project Name" *ngIf="projects[signature.projectID]" (click)="openProjectPage(signature.projectID)">-->
+                    <!--                            {{ projects[signature.projectID].project_name }}-->
+                    <!--                          </td>-->
+                    <!--                          <td data-title="Project Name" *ngIf="projects[signature.projectID]">-->
+                    <!--                            {{ projects[signature.projectID].project_acl }}-->
+                    <!--                          </td>-->
+                    <!--                        </tr>-->
+                    <!--                        </tbody>-->
+                    <!--                      </table>-->
+                    <!--                    </div>-->
                   </ion-col>
                 </ion-row>
               </ion-grid>
@@ -91,41 +106,41 @@
                 <ion-row>
                   <table class="table table-hover invites">
                     <thead>
-                      <tr>
-                        <th class="clickable">
-                          Name
-                        </th>
-                        <th class="clickable">
-                          Email
-                        </th>
-                        <th class="clickable">
-                          LFID
-                        </th>
-                        <th class="clickable">
-                          Actions
-                        </th>
-                      </tr>
+                    <tr>
+                      <th class="clickable">
+                        Name
+                      </th>
+                      <th class="clickable">
+                        Email
+                      </th>
+                      <th class="clickable">
+                        LFID
+                      </th>
+                      <th class="clickable">
+                        Actions
+                      </th>
+                    </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let invite of invites">
-                        <td data-title="Name">
-                          <span>{{ invite.userName }}</span>
-                        </td>
-                        <td data-title="Email">
-                          <span>{{invite.userEmail}}</span>
-                        </td>
-                        <td data-title="LFID">
-                          <span>{{invite.userLFID}}</span>
-                        </td>
-                        <td data-title="Actions">
-                          <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
-                            Accept
-                          </button>
-                          <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
-                            Decline
-                          </button>
-                        </td>
-                      </tr>
+                    <tr *ngFor="let invite of invites">
+                      <td data-title="Name">
+                        <span>{{ invite.userName }}</span>
+                      </td>
+                      <td data-title="Email">
+                        <span>{{invite.userEmail}}</span>
+                      </td>
+                      <td data-title="LFID">
+                        <span>{{invite.userLFID}}</span>
+                      </td>
+                      <td data-title="Actions">
+                        <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                          Accept
+                        </button>
+                        <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
+                          Decline
+                        </button>
+                      </td>
+                    </tr>
                     </tbody>
                   </table>
                 </ion-row>
