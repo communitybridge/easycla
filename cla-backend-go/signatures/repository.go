@@ -477,7 +477,7 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
-	// This is the keys we want to match
+	// These are the keys we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
 	filter := expression.Name("signature_reference_id").Equal(expression.Value(params.CompanyID))
 

@@ -27,15 +27,25 @@ type service struct {
 	corporateConsoleURL string
 }
 
+const (
+	// StatusPending indicates the invitation status is pending
+	StatusPending = "pending"
+)
+
 // Service interface defining the public functions
 type Service interface { // nolint
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
+
+	AddPendingCompanyInviteRequest(companyID string, userID string) error
+	GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
+	GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error)
+	RejectCompanyInviteRequest(companyID string, userID string) error
+	DeletePendingCompanyInviteRequest(InviteID string) error
+
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
 	SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
-	GetPendingCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
-	DeletePendingCompanyInviteRequest(inviteID string) error
 }
 
 // NewService creates a new company service object
@@ -89,6 +99,96 @@ func (s service) SearchCompanyByName(companyName string, nextKey string) (*model
 	}
 
 	return companies, nil
+}
+
+// AddPendingCompanyInviteRequest adds a new company invite request
+func (s service) AddPendingCompanyInviteRequest(companyID string, userID string) error {
+	return s.repo.AddPendingCompanyInviteRequest(companyID, userID)
+}
+
+// GetCompanyInviteRequests returns a list of company invites when provided the company ID
+func (s service) GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error) {
+	companyInvites, err := s.repo.GetCompanyInviteRequests(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []models.CompanyInviteUser
+	for _, invite := range companyInvites {
+
+		dbUserModel, err := s.userDynamoRepo.GetUser(invite.UserID)
+		if err != nil {
+			log.Warnf("Error fetching user with userID: %s, error: %v", invite.UserID, err)
+			continue
+		}
+
+		// Default status is pending if there's a record but no status
+		if invite.Status == "" {
+			invite.Status = StatusPending
+		}
+
+		users = append(users, models.CompanyInviteUser{
+			InviteID:  invite.CompanyInviteID,
+			UserName:  dbUserModel.UserName,
+			UserEmail: dbUserModel.LFEmail,
+			UserLFID:  dbUserModel.LFUsername,
+			Status:    invite.Status,
+		})
+	}
+
+	return users, nil
+
+}
+
+// GetCompanyUserInviteRequests returns a list of company invites when provided the company ID
+func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error) {
+	invite, err := s.repo.GetCompanyUserInviteRequests(companyID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if invite == nil {
+		return nil, nil
+	}
+
+	//var users []models.CompanyInviteUser
+
+	dbUserModel, err := s.userDynamoRepo.GetUser(invite.UserID)
+	if err != nil {
+		log.Warnf("Error fetching company invite user with company id: %s and user id: %s, error: %v",
+			companyID, userID, err)
+		return nil, err
+	}
+
+	// Default status is pending if there's a record but no status
+	if invite.Status == "" {
+		invite.Status = StatusPending
+	}
+
+	return &models.CompanyInviteUser{
+		InviteID:  invite.CompanyInviteID,
+		UserName:  dbUserModel.UserName,
+		UserEmail: dbUserModel.LFEmail,
+		UserLFID:  dbUserModel.LFUsername,
+		Status:    invite.Status,
+	}, nil
+}
+
+// RejectCompanyInviteRequest updates the invite with the rejection status
+func (s service) RejectCompanyInviteRequest(companyID string, userID string) error {
+	return s.repo.RejectCompanyInviteRequest(companyID, userID)
+}
+
+// DeletePendingCompanyInviteRequest deletes the pending company invite request when provided the invite ID
+func (s service) DeletePendingCompanyInviteRequest(inviteID string) error {
+	// When a CLA Manager Declines a pending invite, remove the invite from the table
+	err := s.repo.DeletePendingCompanyInviteRequest(inviteID)
+	if err != nil {
+		log.Warnf("Error deleting the pending company invite with invite ID: %s, error: %v", inviteID, err)
+		return err
+	}
+
+	return nil
 }
 
 // AddUserToCompanyAccessList adds a user to the specified company
@@ -262,47 +362,6 @@ Please navigate to the Corporate Console using the link below, where you can app
 			log.Warnf("Error sending mail, error: %v", err)
 			return err
 		}
-	}
-
-	return nil
-}
-
-// GetPendingCompanyInviteRequests returns a list of company invites when provided the company ID
-func (s service) GetPendingCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error) {
-	companyInvites, err := s.repo.GetPendingCompanyInviteRequests(companyID)
-	if err != nil {
-		return nil, err
-	}
-
-	var users []models.CompanyInviteUser
-	for _, invite := range companyInvites {
-		inviteID := invite.CompanyInviteID
-		userID := invite.UserID
-		dbUserModel, err := s.userDynamoRepo.GetUser(userID)
-		if err != nil {
-			log.Warnf("Error fetching user with userID: %s, error: %v", userID, err)
-			continue
-		}
-
-		users = append(users, models.CompanyInviteUser{
-			InviteID:  inviteID,
-			UserName:  dbUserModel.UserName,
-			UserEmail: dbUserModel.LFEmail,
-			UserLFID:  dbUserModel.LFUsername,
-		})
-	}
-
-	return users, nil
-
-}
-
-// DeletePendingCompanyInviteRequest deletes the pending company invite request when provided the invite ID
-func (s service) DeletePendingCompanyInviteRequest(inviteID string) error {
-	// When a CLA Manager Declines a pending invite, remove the invite from the table
-	err := s.repo.DeletePendingCompanyInviteRequest(inviteID)
-	if err != nil {
-		log.Warnf("Error deleting the pending company invite with invite ID: %s, error: %v", inviteID, err)
-		return err
 	}
 
 	return nil
