@@ -692,17 +692,17 @@ paths:
         - company
 
   /company/{companyID}/cla/invitelist:
-    parameters:
-      - name: companyID
-        in: path
-        type: string
-        required: true
     get:
       summary: API to retrieve pending invite requests
       security:
         - OauthSecurity:
             - company
-      operationId: getPendingInviteRequests
+      operationId: getCompanyInviteRequests
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
       responses:
         '200':
           description: 'Success'
@@ -715,6 +715,41 @@ paths:
         '401':
           $ref: '#/responses/unauthorized'
         '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - company
+
+  /company/{companyID}/{userID}/invitelist:
+    get:
+      summary: API to retrieve pending invite requests
+      security:
+        - OauthSecurity:
+            - company
+      operationId: getCompanyUserInviteRequests
+      parameters:
+        - name: companyID
+          description: the company ID of the invitation
+          in: path
+          type: string
+          required: true
+        - name: userID
+          description: the user ID of the invitation
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-invite-user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -1057,6 +1092,7 @@ definitions:
         default: false
     required:
       - id
+
   company-invite-user:
     type: object
     x-nullable: false
@@ -1070,6 +1106,8 @@ definitions:
       userEmail:
         type: string
       userLFID:
+        type: string
+      status:
         type: string
 
   access-list-user:

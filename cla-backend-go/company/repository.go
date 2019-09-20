@@ -25,11 +25,15 @@ import (
 
 // RepositoryService interface methods
 type RepositoryService interface {
-	GetPendingCompanyInviteRequests(companyID string) ([]Invite, error)
 	GetCompany(companyID string) (Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
-	DeletePendingCompanyInviteRequest(InviteID string) error
+
 	AddPendingCompanyInviteRequest(companyID string, userID string) error
+	GetCompanyInviteRequests(companyID string) ([]Invite, error)
+	GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error)
+	RejectCompanyInviteRequest(companyID string, userID string) error
+	DeletePendingCompanyInviteRequest(InviteID string) error
+
 	UpdateCompanyAccessList(companyID string, companyACL []string) error
 }
 
@@ -52,6 +56,7 @@ type Invite struct {
 	CompanyInviteID    string `dynamodbav:"company_invite_id"`
 	RequestedCompanyID string `dynamodbav:"requested_company_id"`
 	UserID             string `dynamodbav:"user_id"`
+	Status             string `dynamodbav:"status"`
 }
 
 // NewRepository creates a new company repository instance
@@ -64,7 +69,11 @@ func NewRepository(awsSession *session.Session, stage string) RepositoryService 
 
 // GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(companyID string) (Company, error) {
+
+	queryStartTime := time.Now()
+
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -73,11 +82,14 @@ func (repo repository) GetCompany(companyID string) (Company, error) {
 			},
 		},
 	})
+
 	if err != nil {
 		log.Warnf(err.Error())
 		log.Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
 		return Company{}, err
 	}
+
+	log.Debugf("Get company query took: %v", utils.FmtDuration(time.Since(queryStartTime)))
 
 	company := Company{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &company)
@@ -100,7 +112,6 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 			SearchTerms:    companyName,
 			TotalCount:     0,
 		}, nil
-
 	}
 
 	queryStartTime := time.Now()
@@ -139,7 +150,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		}
 	}
 
-	log.Debugf("Running company search scan using queryInput: %+v", scanInput)
+	//log.Debugf("Running company search scan using queryInput: %+v", scanInput)
 
 	// Make the DynamoDB Query API call
 	results, err := repo.dynamoDBClient.Scan(scanInput)
@@ -148,13 +159,14 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		return nil, err
 	}
 
-	log.Debugf("User signatures query took: %v resulting in %d results",
+	log.Debugf("Company search scan took: %v resulting in %d results",
 		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
 		TableName: &tableName,
 	}
+
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
 		log.Warnf("error retrieving total company record count for companyName: %s, error: %v", companyName, err)
@@ -170,7 +182,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
 	}
 
-	response, err := repo.buildCompanyModels(results, resultCount, totalCount, lastEvaluatedKey)
+	response, err := buildCompanyModels(results, resultCount, totalCount, lastEvaluatedKey)
 	log.Debugf("Total company search took: %v resulting in %d results",
 		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
@@ -178,7 +190,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 }
 
 // buildCompanyModels converts the response model into a response data model
-func (repo repository) buildCompanyModels(results *dynamodb.ScanOutput, resultCount int64, totalCount int64, lastKey string) (*models.Companies, error) {
+func buildCompanyModels(results *dynamodb.ScanOutput, resultCount int64, totalCount int64, lastKey string) (*models.Companies, error) {
 	var companies []models.Company
 
 	type ItemSignature struct {
@@ -232,22 +244,13 @@ func (repo repository) buildCompanyModels(results *dynamodb.ScanOutput, resultCo
 	}, nil
 }
 
-// buildCompanyProjection creates a ProjectionBuilds with the columns we are interested in
-func buildCompanyProjection() expression.ProjectionBuilder {
+// GetCompanyInviteRequests returns a list of company invites when provided the company ID
+func (repo repository) GetCompanyInviteRequests(companyID string) ([]Invite, error) {
 
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("company_id"),
-		expression.Name("company_name"),
-		expression.Name("company_acl"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-	)
-}
+	queryStartTime := time.Now()
 
-// GetPendingCompanyInviteRequests returns a list of company invites when provided the company ID
-func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Invite, error) {
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
+
 	input := &dynamodb.QueryInput{
 		KeyConditions: map[string]*dynamodb.Condition{
 			"requested_company_id": {
@@ -268,6 +271,9 @@ func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Invi
 		return nil, err
 	}
 
+	log.Debugf("Company Invites query took: %v",
+		utils.FmtDuration(time.Since(queryStartTime)))
+
 	companyInvites := []Invite{}
 	err = dynamodbattribute.UnmarshalListOfMaps(companyInviteAV.Items, &companyInvites)
 	if err != nil {
@@ -278,25 +284,66 @@ func (repo repository) GetPendingCompanyInviteRequests(companyID string) ([]Invi
 	return companyInvites, nil
 }
 
-// DeletePendingCompanyInviteRequest deletes the spending invite
-func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error {
+// GetCompanyUserInviteRequests returns a list of company invites when provided the company ID and user ID
+func (repo repository) GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error) {
+	queryStartTime := time.Now()
+
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
-	input := &dynamodb.DeleteItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
-			"company_invite_id": {
-				S: aws.String(inviteID),
-			},
-		},
-		TableName: aws.String(tableName),
-	}
 
-	_, err := repo.dynamoDBClient.DeleteItem(input)
+	// These are the keys we want to match
+	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
+	filter := expression.Name("user_id").Equal(expression.Value(userID))
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().
+		WithKeyCondition(condition).
+		WithFilter(filter).
+		WithProjection(buildInvitesProjection()).Build()
 	if err != nil {
-		log.Warnf("Unable to delete Company Invite Request, error: %v", err)
-		return err
+		log.Warnf("error building expression for company scan, companyID: %s with userID: %s, error: %v",
+			companyID, userID, err)
+		return nil, err
 	}
 
-	return nil
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("requested-company-index"), // Name of a secondary index
+	}
+
+	queryResults, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("Unable to retrieve data from Company-Invites table using company id: %s and user id: %s, error: %v", companyID, userID, err)
+		return nil, err
+	}
+
+	log.Debugf("Company Invites query took: %v with %d results",
+		utils.FmtDuration(time.Since(queryStartTime)), len(queryResults.Items))
+
+	companyInvites := []Invite{}
+	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
+	if err != nil {
+		log.Warnf("error unmarshalling company invite data using company id: %s and user id: %s, error: %v",
+			companyID, userID, err)
+		return nil, err
+	}
+
+	if len(companyInvites) == 0 {
+		log.Debugf("Unable to find company invite for company id: %s and user id: %s", companyID, userID)
+		return nil, nil
+	}
+
+	if len(companyInvites) > 1 {
+		log.Warnf("Company invite should have one result, found: %d for company id: %s and user id: %s",
+			len(companyInvites), companyID, userID)
+	}
+
+	return &companyInvites[0], nil
 }
 
 // AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
@@ -325,6 +372,33 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new pending invite, error: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// RejectCompanyInviteRequest rejects a pending company invite when provided the company ID and user ID
+func (repo repository) RejectCompanyInviteRequest(companyID string, userID string) error {
+	log.Warnf("RejectCompanyInviteRequest not implemented")
+	return nil
+}
+
+// DeletePendingCompanyInviteRequest deletes the spending invite
+func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error {
+	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"company_invite_id": {
+				S: aws.String(inviteID),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err := repo.dynamoDBClient.DeleteItem(input)
+	if err != nil {
+		log.Warnf("Unable to delete Company Invite Request, error: %v", err)
 		return err
 	}
 
