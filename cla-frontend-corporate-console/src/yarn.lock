@@ -129,6 +129,11 @@
     localforage "~1.4.2"
     localforage-cordovasqlitedriver "~1.5.0"
 
+"@swimlane/ngx-datatable@^11.3.2":
+  version "11.3.2"
+  resolved "https://registry.yarnpkg.com/@swimlane/ngx-datatable/-/ngx-datatable-11.3.2.tgz#cefeda7f75a6f69394e4f8e05b197942584f054d"
+  integrity sha512-Fn1RMJ991elSvp+LV2SGzG28ypuLM2DFyXAb7o8p4kzuhqtELwB25doXrLLVrtE2QtKmzoD9fRfbEUNsBKgoWA==
+
 "@types/localforage@0.0.30":
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@types/localforage/-/localforage-0.0.30.tgz#3d60a6bf6dda38e3f8a469611598379f1f649509"
@@ -2609,6 +2614,11 @@ neo-async@^2.5.0:
 next-tick@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c"
+
+ngx-pagination@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/ngx-pagination/-/ngx-pagination-4.1.0.tgz#05ccd30f54351e04beeaa92cbe5c42be5fd809c2"
+  integrity sha512-qdDuOkMMNFsM4r1Jyc+uJZr1edwLoIr8Uzh+TUPE5kDT1f29ZIKt92H8+yCijDMUwHJ65mX6SAfZvbtZEwIN4w==
 
 node-fetch@^2.2.0:
   version "2.6.0"
