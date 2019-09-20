@@ -6,9 +6,8 @@ import {IonicPage, ModalController, NavController, NavParams} from "ionic-angula
 import {ClaService} from "../../services/cla.service";
 import {ClaCompanyModel} from "../../models/cla-company";
 import {ClaUserModel} from "../../models/cla-user";
-import {ClaSignatureModel} from "../../models/cla-signature";
-import {RolesService} from "../../services/roles.service";
 import {Restricted} from "../../decorators/restricted";
+import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -24,18 +23,25 @@ export class CompanyPage {
   companyId: string;
   company: ClaCompanyModel;
   manager: ClaUserModel;
-  //companySignatures: ClaSignatureModel[];
+
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
+
   companySignatures: any[];
-  projects: any;
+  projects: any[];
   loading: any;
   invites: any;
+
+  data: any;
+  columns: any[];
+  rows: any[];
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private rolesService: RolesService // for @Restricted
   ) {
     this.companyId = navParams.get("companyId");
     this.getDefaults();
@@ -44,10 +50,17 @@ export class CompanyPage {
   getDefaults() {
     this.loading = {
       companySignatures: true,
-      invites: true
+      invites: true,
+      projects: true,
     };
     this.company = new ClaCompanyModel();
-    this.projects = {};
+    this.projects = [];
+
+    this.data = {};
+    this.columns = [
+      {prop: 'ProjectName'},
+      {prop: 'ProjectManagers'},
+    ];
   }
 
   ngOnInit() {
@@ -70,22 +83,60 @@ export class CompanyPage {
   }
 
   getCompanySignatures() {
+    //console.log('Loading company signatures...');
+    this.loading.companySignatures = true;
+    this.loading.projects = true;
+
+    // Clear out our projects and table models
+    this.projects = [];
+    this.rows = [];
+
     this.claService.getCompanySignatures(this.companyId).subscribe(response => {
+      //console.log('Company signatures:');
+      //console.log(response);
       if (response.resultCount > 0) {
+        //console.log('Filtering Company signatures...');
         this.companySignatures = response.signatures.filter(signature =>
           signature.signatureSigned === true
         );
+        //console.log('Filtered Company signatures: ' + this.companySignatures.length);
+        //console.log('Loading projects...');
         for (let signature of this.companySignatures) {
           this.getProject(signature.projectID);
         }
       }
+      this.loading.companySignatures = false;
+      this.loading.projects = false;
     });
   }
 
   getProject(projectId) {
+    //console.log('Loading project: ' + projectId);
     this.claService.getProject(projectId).subscribe(response => {
-      this.projects[projectId] = response;
+      //console.log('Loaded project: ');
+      //console.log(response);
+      this.projects.push(response);
+
+      this.loading.projects = false;
+      this.rows = this.mapProjects(this.projects);
     });
+  }
+
+  mapProjects(projects) {
+    let rows = [];
+    for (let project of projects) {
+      rows.push({
+        ProjectID: project.project_id,
+        ProjectName: project.project_name,
+        ProjectManagers: project.project_acl,
+      });
+    }
+
+    return rows;
+  }
+
+  onSelect(event) {
+    this.openProjectPage(event.selected[0].ProjectID);
   }
 
   openProjectPage(projectId) {
