@@ -37,8 +37,11 @@ export class AddCompanyModal {
   companies: any[];
   filteredComapnies: any[];
   companySet: boolean = false;
-  joinExistingCompany: boolean = false;
-  addNewCompany: boolean = true;
+  joinExistingCompany: boolean = true;
+  addNewCompany: boolean = false;
+  enableJoinButton: boolean = false;
+  allCompanies: any[];
+  existingCompanyId: string;
 
 
   constructor(
@@ -66,18 +69,13 @@ export class AddCompanyModal {
   }
 
   ngOnInit() {
-    this.getCompanies();
+    this.getAllCompanies();
   }
 
   ionViewDidEnter() {
     this.updateUserInfoBasedLFID();
   }
 
-  getCompanies() {
-    this.claService.getCompanies().subscribe((companies) => {
-      this.companies = companies;
-    })
-  }
 
   submit() {
     this.submitAttempt = true;
@@ -101,7 +99,7 @@ export class AddCompanyModal {
         this.dismiss();
       },
       (err: any) => {
-        if (err.status === 409){
+        if (err.status === 409) {
           let errJSON = err.json();
           this.companyExistAlert(errJSON.company_id)
         }
@@ -111,12 +109,9 @@ export class AddCompanyModal {
   }
 
   joinCompany() {
-    let company = {
-      company_name: this.companyName,
-      company_manager_user_email: this.userEmail,
-      company_manager_user_name: this.userName
-    };
-    // TODO: add api call for joining organizations
+    console.log(this.existingCompanyId, "I got called")
+    this.claService.sendInviteRequestEmail(this.existingCompanyId)
+      .subscribe(() => this.dismiss());
   }
 
   updateCompany() {
@@ -130,7 +125,7 @@ export class AddCompanyModal {
         this.dismiss();
       },
       (err: any) => {
-        if (err.status === 409){
+        if (err.status === 409) {
           let errJSON = err.json();
           this.companyExistAlert(errJSON.company_id)
         }
@@ -152,7 +147,7 @@ export class AddCompanyModal {
           text: 'Request',
           handler: () => {
             this.claService.sendInviteRequestEmail(company_id)
-             .subscribe(() => this.dismiss());
+              .subscribe(() => this.dismiss());
           }
         },
         {
@@ -167,14 +162,25 @@ export class AddCompanyModal {
     alert.present();
   }
 
+  getAllCompanies() {
+    this.claService.getAllCompanies().subscribe((response) => {
+      this.companies = response
+    })
+  }
+
   findCompany(event) {
     this.filteredComapnies = []
     let companyName = event.value;
     if (companyName.length > 0) {
       this.companySet = false;
-      let filteredComapnies = this.companies.filter((company) => {
-        return company.company_name.toLowerCase().includes(companyName.toLowerCase())
-      });
+      let filteredComapnies = this.companies.map((company) => {
+        let formattedCompany;
+        if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
+          formattedCompany = company.company_name.replace(new RegExp(companyName, "gi"), match => '<span class="highlightText">' + match + '</span>')
+        }
+        company.filteredCompany = formattedCompany
+        return company;
+      }).filter(company => company.filteredCompany);
       this.filteredComapnies = filteredComapnies;
     }
   }
@@ -182,8 +188,34 @@ export class AddCompanyModal {
   setCompanyName(company) {
     this.companySet = true;
     this.companyName = company.company_name;
+    this.existingCompanyId = company.company_id
     this.addNewCompany = false;
     this.joinExistingCompany = true;
+    this.enableJoinButton = true;
+  }
+
+  addButtonDisabled(): boolean {
+    return false
+  }
+
+  joinButtonDisabled(): boolean {
+    return !this.enableJoinButton;
+  }
+
+  addButtonColorDisabled(): string {
+    if (this.addNewCompany) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
+  }
+
+  joinButtonColorDisabled(): string {
+    if (this.joinExistingCompany) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
   }
 
   private updateUserInfoBasedLFID() {
@@ -208,5 +240,5 @@ export class AddCompanyModal {
     return;
   }
 
-  
+
 }
