@@ -33,6 +33,8 @@ func init() {
 
 		// should we validate the user's GitHub organizations?
 		"GH_ORG_VALIDATION": "true",
+		// should we validate company API queries against the current authenticated user?
+		"COMPANY_USER_VALIDATION": "true",
 	}
 
 	for key, value := range defaults {

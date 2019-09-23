@@ -657,6 +657,64 @@ paths:
       tags:
         - company
 
+  /company/user/{userID}:
+    get:
+      summary: API to retrieve a list of companies where the user is the manager
+      security:
+        - OauthSecurity:
+            - company
+      operationId: getCompaniesByUserManager
+      parameters:
+        - name: userID
+          description: the user ID of the user manager
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/user/{userID}/invites:
+    get:
+      summary: API to retrieve a list of companies where the user is the manager (approved) and in the invite list
+      security:
+        - OauthSecurity:
+            - company
+      operationId: getCompaniesByUserManagerWithInvites
+      parameters:
+        - name: userID
+          description: the user ID of the user manager
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/companies-with-invites'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/search:
     get:
       summary: Search companies
@@ -1109,6 +1167,8 @@ definitions:
         type: string
       status:
         type: string
+      companyName:
+        type: string
 
   access-list-user:
     type: object
@@ -1306,6 +1366,28 @@ definitions:
         items:
           $ref: '#/definitions/company'
 
+  companies-with-invites:
+    type: object
+    x-nullable: false
+    title: Companies
+    description: A list of companies with invitation status
+    properties:
+      resultCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      lastKeyScanned:
+        type: string
+      companies-with-invites:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/company-with-invite'
+
   company:
     type: object
     x-nullable: false
@@ -1325,6 +1407,37 @@ definitions:
         description: A list of user ID's authorized to make changes to the company
         items:
           type: string
+      created:
+        type: string
+        description: The company record created date/time
+        format: date-time
+      updated:
+        type: string
+        description: The company record update date/time
+        format: date-time
+
+  company-with-invite:
+    type: object
+    x-nullable: false
+    title: Company
+    description: Company Model with Invitation status
+    properties:
+      companyID:
+        description: The company unique ID
+        example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
+        type: string
+      companyName:
+        description: The company name
+        example: Acme, Inc.
+        type: string
+      companyACL:
+        type: array
+        description: A list of user ID's authorized to make changes to the company
+        items:
+          type: string
+      status:
+        type: string
+        description: The user's invitation status
       created:
         type: string
         description: The company record created date/time

@@ -36,6 +36,8 @@ const (
 type Service interface { // nolint
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
+	GetCompaniesByUserManager(userID string) (*models.Companies, error)
+	GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error)
 
 	AddPendingCompanyInviteRequest(companyID string, userID string) error
 	GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
@@ -99,6 +101,28 @@ func (s service) SearchCompanyByName(companyName string, nextKey string) (*model
 	}
 
 	return companies, nil
+}
+
+// GetCompanyUserManager the get a list of companies when provided the company id and user manager
+func (s service) GetCompaniesByUserManager(userID string) (*models.Companies, error) {
+	userModel, err := s.userDynamoRepo.GetUser(userID)
+	if err != nil {
+		log.Warnf("Unable to lookup user by user id: %s, error: %v", userID, err)
+		return nil, err
+	}
+
+	return s.repo.GetCompaniesByUserManager(userID, userModel)
+}
+
+// GetCompanyUserManagerWithInvites the get a list of companies including status when provided the company id and user manager
+func (s service) GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error) {
+	userModel, err := s.userDynamoRepo.GetUser(userID)
+	if err != nil {
+		log.Warnf("Unable to lookup user by user id: %s, error: %v", userID, err)
+		return nil, err
+	}
+
+	return s.repo.GetCompaniesByUserManagerWithInvites(userID, userModel)
 }
 
 // AddPendingCompanyInviteRequest adds a new company invite request
@@ -165,12 +189,20 @@ func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (
 		invite.Status = StatusPending
 	}
 
+	// Let's do a company lookup so we can grab the company name
+	company, err := s.repo.GetCompany(companyID)
+	if err != nil {
+		log.Warnf("Error fetching company with company id: %s, error: %v", companyID, err)
+		return nil, err
+	}
+
 	return &models.CompanyInviteUser{
-		InviteID:  invite.CompanyInviteID,
-		UserName:  dbUserModel.UserName,
-		UserEmail: dbUserModel.LFEmail,
-		UserLFID:  dbUserModel.LFUsername,
-		Status:    invite.Status,
+		InviteID:    invite.CompanyInviteID,
+		UserName:    dbUserModel.UserName,
+		UserEmail:   dbUserModel.LFEmail,
+		UserLFID:    dbUserModel.LFUsername,
+		Status:      invite.Status,
+		CompanyName: company.CompanyName,
 	}, nil
 }
 

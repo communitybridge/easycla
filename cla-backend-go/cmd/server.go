@@ -78,22 +78,28 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		log.Fatalf("GH_ORG_VALIDATION value must be a boolean string. Error: %v", err)
 	}
+	// Grab a couple of configuration settings
+	companyUserValidation, err := strconv.ParseBool(viper.GetString("COMPANY_USER_VALIDATION"))
+	if err != nil {
+		log.Fatalf("COMPANY_USER_VALIDATION value must be a boolean string. Error: %v", err)
+	}
 	stage := viper.GetString("STAGE")
 
 	log.Infof("Service %s starting...", ini.ServiceName)
 
 	// Show the version and build info
-	log.Infof("Name                  : %s", ini.ServiceName)
-	log.Infof("Version               : %s", Version)
-	log.Infof("Git commit hash       : %s", Commit)
-	log.Infof("Branch                : %s", Branch)
-	log.Infof("Build date            : %s", BuildDate)
-	log.Infof("Golang OS             : %s", runtime.GOOS)
-	log.Infof("Golang Arch           : %s", runtime.GOARCH)
-	log.Infof("GH_ORG_VALIDATION     : %t", githubOrgValidation)
-	log.Infof("STAGE                 : %s", stage)
-	log.Infof("Service Host          : %s", host)
-	log.Infof("Service Port          : %d", *portFlag)
+	log.Infof("Name                    : %s", ini.ServiceName)
+	log.Infof("Version                 : %s", Version)
+	log.Infof("Git commit hash         : %s", Commit)
+	log.Infof("Branch                  : %s", Branch)
+	log.Infof("Build date              : %s", BuildDate)
+	log.Infof("Golang OS               : %s", runtime.GOOS)
+	log.Infof("Golang Arch             : %s", runtime.GOARCH)
+	log.Infof("GH_ORG_VALIDATION       : %t", githubOrgValidation)
+	log.Infof("COMPANY_USER_VALIDATION : %t", companyUserValidation)
+	log.Infof("STAGE                   : %s", stage)
+	log.Infof("Service Host            : %s", host)
+	log.Infof("Service Port            : %d", *portFlag)
 
 	awsSession, err := ini.GetAWSSession()
 	if err != nil {
@@ -154,7 +160,7 @@ func server(localMode bool) http.Handler {
 	signatures.Configure(api, signaturesService, sessionStore)
 	docs.Configure(api)
 
-	company.Configure(api, companyService)
+	company.Configure(api, companyService, companyUserValidation)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
