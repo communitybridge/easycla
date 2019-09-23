@@ -239,5 +239,4 @@ export class AddCompanyModal {
     return;
   }
 
-
 }
