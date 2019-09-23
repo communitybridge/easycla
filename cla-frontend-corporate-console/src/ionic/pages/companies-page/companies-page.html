@@ -22,11 +22,20 @@
               </button>
             </ion-card-title>
             <ion-card-content>
-              <ion-list>
-                <button ion-item *ngFor="let company of companies" (click)="viewCompany(company.company_id)">
-                  <ion-label class="company-name">{{ company.company_name }}</ion-label>
-                </button>
-              </ion-list>
+              <div *ngIf="!loading.companies && rows && rows.length === 0" class="empty-signatures">
+                <h2>No Companies</h2>
+              </div>
+
+              <ion-row>
+                <div *ngIf="!loading.companies && rows && rows.length > 0">
+                  <ngx-datatable class='material clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
+                    [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
+                    <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true"></ngx-datatable-column>
+                    <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
+                    </ngx-datatable-column>
+                  </ngx-datatable>
+                </div>
+              </ion-row>
             </ion-card-content>
           </ion-card>
 

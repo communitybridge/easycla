@@ -109,7 +109,6 @@ export class AddCompanyModal {
   }
 
   joinCompany() {
-    console.log(this.existingCompanyId, "I got called")
     this.claService.sendInviteRequestEmail(this.existingCompanyId)
       .subscribe(() => this.dismiss());
   }

@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from "@angular/core";
-import {Http} from "@angular/http";
-import {AuthService} from "./auth.service"
+import { Injectable } from "@angular/core";
+import { Http } from "@angular/http";
+import { AuthService } from "./auth.service"
 
 import "rxjs/Rx";
 
@@ -633,7 +633,7 @@ export class ClaService {
    */
   postProjectManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager');
-    return this.http.post(url, {lfid: payload.managerLFID})
+    return this.http.post(url, { lfid: payload.managerLFID })
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -663,7 +663,7 @@ export class ClaService {
    */
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
-    return this.http.post(url, {lfid: payload.managerLFID})
+    return this.http.post(url, { lfid: payload.managerLFID })
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -1100,7 +1100,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {"organization_id": organizationId};
+    const data = { "organization_id": organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data)
       .map(res => res.json())
@@ -1112,7 +1112,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {"organization_id": organizationId};
+    const data = { "organization_id": organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data)
       .map(res => res.json())
@@ -1124,7 +1124,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {"id": organizationId};
+    const data = { "id": organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data)
       .map(res => res.json())
@@ -1136,7 +1136,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {"id": organizationId};
+    const data = { "id": organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithBody(url, data)
       .map(res => res.json())
@@ -1209,20 +1209,11 @@ export class ClaService {
    * @param userID the user ID
    */
   getPendingUserInvite(companyId, userID) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/{userID}/invitelist`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/${userID}/invitelist`);
     return this.http.get(url)
       .map(res => res.json())
-      .catch((error) => {
-        const errString = String(error);
-        // If company user invite does not exist - 404 not found
-        if (errString.includes('404')) {
-          // ?? are they already joined?
-          // why do they not have an invite?
-          // do we simply say: "Accepted" on the UI?
-        } else {
-          this.handleServiceError(error)
-        }
-      });
+      .catch((error) => this.handleServiceError(error)
+      );
   }
 
   acceptCompanyInvite(companyId, data) {
