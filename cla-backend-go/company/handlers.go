@@ -16,7 +16,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service Service) {
+func Configure(api *operations.ClaAPI, service Service, companyUserValidation bool) {
 
 	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams) middleware.Responder {
 		companyModel, err := service.GetCompany(params.CompanyID)
@@ -56,6 +56,52 @@ func Configure(api *operations.ClaAPI, service Service) {
 		}
 
 		return company.NewSearchCompanyOK().WithPayload(companiesModel)
+	})
+
+	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
+		if companyUserValidation {
+			if params.UserID == "" || params.UserID != claUser.UserID {
+				return company.NewGetCompaniesByUserManagerBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: "unauthorized",
+				})
+			}
+		}
+
+		companies, err := service.GetCompaniesByUserManager(params.UserID)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
+			log.Warnf(msg)
+			return company.NewGetCompaniesByUserManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		return company.NewGetCompaniesByUserManagerOK().WithPayload(companies)
+	})
+
+	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
+		if companyUserValidation {
+			if params.UserID == "" || params.UserID != claUser.UserID {
+				return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: "unauthorized",
+				})
+			}
+		}
+
+		companies, err := service.GetCompaniesByUserManagerWithInvites(params.UserID)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
+			log.Warnf(msg)
+			return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		return company.NewGetCompaniesByUserManagerWithInvitesOK().WithPayload(companies)
 	})
 
 	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {

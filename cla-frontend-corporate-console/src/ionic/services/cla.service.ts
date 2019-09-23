@@ -465,6 +465,87 @@ export class ClaService {
   }
 
   /**
+   * GET /v3/company/user/{userID} Returns list of companies for current user where they are in the access control list
+   *
+   * Typical response might look like:
+   * {
+   * "companies": [
+   *     {
+   *         "companyACL": [
+   *             "ngozi"
+   *         ],
+   *         "companyID": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeeJ",
+   *         "companyName": "Delta Org",
+   *         "created": "2019-08-21T15:42:52.657Z",
+   *         "updated": "2019-08-21T15:42:52.657Z"
+   *     },
+   *     {
+   *         "companyACL": [
+   *             "ngozi"
+   *         ],
+   *         "companyID": "aaeaa8aa-bbbb-cccc-d3dd-eeeeeeeeeeeZ",
+   *         "companyName": "ngozi",
+   *         "created": "2019-08-19T20:16:17.656Z",
+   *         "updated": "2019-08-19T20:16:17.656Z"
+   *     },
+   *     {
+   *         "companyACL": [
+   *             "ngozi"
+   *         ],
+   *         "companyID": "aa8aaaaa-bbbb-cccc-d4dd-eeeeeeeeeeeF",
+   *         "companyName": "delta org",
+   *         "created": "2019-09-03T13:46:47.446Z",
+   *         "updated": "2019-09-03T13:46:47.446Z"
+   *     },
+   *     {
+   *         "companyACL": [
+   *             "ngozi"
+   *         ],
+   *         "companyID": "aa5aa5aa-bbbb-cccc-d8dd-eeeeeeeeeeet",
+   *         "companyName": "ghghghg",
+   *         "created": "2019-07-17T15:10:15.499Z",
+   *         "updated": "2019-07-17T15:10:15.499Z"
+   *     },
+   *     {
+   *         "companyACL": [
+   *             "ngozi"
+   *         ],
+   *         "companyID": "aacaadaa-bbbb-cccc-d3dd-eeeeeeeeeeew",
+   *         "companyName": "ahahaa",
+   *         "created": "2019-07-19T15:49:43.424Z",
+   *         "updated": "2019-07-19T15:49:43.424Z"
+   *     }
+   * ],
+   * "resultCount": 5,
+   * "totalCount": 560
+   *}
+   */
+  getCompaniesByUserManager(userID) {
+    const url: URL = this.getV3Endpoint('/v3/company/user/' + userID);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
+   * GET /v3/company/user/{userID}/invites Returns list of companies for current
+   * user where they are in the access control list or have a pending or rejected invitation
+   *
+   * Response looks the same as the above getCompaniesByUserManager(userID) except it
+   * also includes invitations.
+   *
+   * of note, when reviewing the output JSON:
+   * 1) when the user's name is in the ACL - you should see that the status is “approved”
+   * 2) when the user's is NOT in the ACL - you should see the status as “pending” or “rejected”
+   */
+  getCompaniesByUserManagerWithInvites(userID) {
+    const url: URL = this.getV3Endpoint('/v3/company/user/' + userID + '/invites');
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
    * GET /v2/company Returns all the companies
    */
   getAllCompanies() {
@@ -1102,13 +1183,24 @@ export class ClaService {
 
   /**
    * GET /v3/company/{companyID}/{userID}/invitelist:
-   * Example:
+   * Example (pending):
    * {
    *      "inviteId": "1e5debac-57fd-4b1f-9669-cfa4c30d7b22",
    *      "status": "pending",
    *      "userEmail": "ahampras@proximabiz.com",
    *      "userLFID": "ahampras",
-   *      "userName": "Abhijeet Hampras"
+   *      "userName": "Abhijeet Hampras",
+   *      "companyName: "my company name"
+   * }
+   *
+   * Example (rejected):
+   * {
+   *      "inviteId": "1e5debac-57fd-4b1f-9669-cfa4c30d7b22",
+   *      "status": "rejected",
+   *      "userEmail": "ahampras@proximabiz.com",
+   *      "userLFID": "ahampras",
+   *      "userName": "Abhijeet Hampras",
+   *      "companyName: "my company name"
    * }
    *
    * Returns HTTP status 404 if company and user invite is not found
@@ -1120,7 +1212,17 @@ export class ClaService {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/{userID}/invitelist`);
     return this.http.get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch((error) => {
+        const errString = String(error);
+        // If company user invite does not exist - 404 not found
+        if (errString.includes('404')) {
+          // ?? are they already joined?
+          // why do they not have an invite?
+          // do we simply say: "Accepted" on the UI?
+        } else {
+          this.handleServiceError(error)
+        }
+      });
   }
 
   acceptCompanyInvite(companyId, data) {
