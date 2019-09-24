@@ -34,6 +34,15 @@ export class AddCompanyModal {
   companyName: string;
   userEmail: string;
   userName: string;
+  companies: any[];
+  filteredComapnies: any[];
+  companySet: boolean = false;
+  joinExistingCompany: boolean = true;
+  addNewCompany: boolean = false;
+  enableJoinButton: boolean = false;
+  allCompanies: any[];
+  existingCompanyId: string;
+
 
   constructor(
     public navParams: NavParams,
@@ -48,7 +57,9 @@ export class AddCompanyModal {
 
   getDefaults() {
     this.company = this.navParams.get("company");
-    this.mode = this.company ? "edit" : "add";
+    this.mode = this.company ? "edit" : "find";
+    this.companies = [];
+    this.filteredComapnies = [];
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -58,11 +69,13 @@ export class AddCompanyModal {
   }
 
   ngOnInit() {
+    this.getAllCompanies();
   }
 
   ionViewDidEnter() {
     this.updateUserInfoBasedLFID();
   }
+
 
   submit() {
     this.submitAttempt = true;
@@ -86,13 +99,18 @@ export class AddCompanyModal {
         this.dismiss();
       },
       (err: any) => {
-        if (err.status === 409){
+        if (err.status === 409) {
           let errJSON = err.json();
           this.companyExistAlert(errJSON.company_id)
         }
         this.currentlySubmitting = false;
       }
     );
+  }
+
+  joinCompany() {
+    this.claService.sendInviteRequestEmail(this.existingCompanyId)
+      .subscribe(() => this.dismiss());
   }
 
   updateCompany() {
@@ -106,7 +124,7 @@ export class AddCompanyModal {
         this.dismiss();
       },
       (err: any) => {
-        if (err.status === 409){
+        if (err.status === 409) {
           let errJSON = err.json();
           this.companyExistAlert(errJSON.company_id)
         }
@@ -128,7 +146,7 @@ export class AddCompanyModal {
           text: 'Request',
           handler: () => {
             this.claService.sendInviteRequestEmail(company_id)
-             .subscribe(() => this.dismiss());
+              .subscribe(() => this.dismiss());
           }
         },
         {
@@ -141,6 +159,62 @@ export class AddCompanyModal {
       ]
     });
     alert.present();
+  }
+
+  getAllCompanies() {
+    this.claService.getAllCompanies().subscribe((response) => {
+      this.companies = response
+    })
+  }
+
+  findCompany(event) {
+    this.filteredComapnies = []
+    let companyName = event.value;
+    if (companyName.length > 0) {
+      this.companySet = false;
+      let filteredComapnies = this.companies.map((company) => {
+        let formattedCompany;
+        if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
+          formattedCompany = company.company_name.replace(new RegExp(companyName, "gi"), match => '<span class="highlightText">' + match + '</span>')
+        }
+        company.filteredCompany = formattedCompany
+        return company;
+      }).filter(company => company.filteredCompany);
+      this.filteredComapnies = filteredComapnies;
+    }
+  }
+
+  setCompanyName(company) {
+    this.companySet = true;
+    this.companyName = company.company_name;
+    this.existingCompanyId = company.company_id
+    this.addNewCompany = false;
+    this.joinExistingCompany = true;
+    this.enableJoinButton = true;
+  }
+
+  addButtonDisabled(): boolean {
+    return false
+  }
+
+  joinButtonDisabled(): boolean {
+    return !this.enableJoinButton;
+  }
+
+  addButtonColorDisabled(): string {
+    if (this.addNewCompany) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
+  }
+
+  joinButtonColorDisabled(): string {
+    if (this.joinExistingCompany) {
+      return 'gray';
+    } else {
+      return 'secondary';
+    }
   }
 
   private updateUserInfoBasedLFID() {
@@ -164,4 +238,5 @@ export class AddCompanyModal {
     }
     return;
   }
+
 }

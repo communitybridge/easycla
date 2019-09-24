@@ -7,6 +7,7 @@ import { ClaService } from "../../services/cla.service";
 import { ClaCompanyModel } from "../../models/cla-company";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
+import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -21,6 +22,14 @@ import { Restricted } from "../../decorators/restricted";
 export class CompaniesPage {
   loading: any;
   companies: any;
+  userId: string;
+  manager: string;
+  columns: any[];
+  rows: any[];
+
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
 
   constructor(
     public navCtrl: NavController,
@@ -35,8 +44,12 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
-
+    this.userId = localStorage.getItem("userid")
     this.companies = [];
+    this.columns = [
+      {prop: 'CompanyName'},
+      {prop: 'Status'},
+    ];
   }
 
   ngOnInit() {
@@ -54,14 +67,43 @@ export class CompaniesPage {
 
   getCompanies() {
     this.claService.getCompanies().subscribe(response => {
-      this.companies = response;
-      this.loading.companies = false;
+      let company = response[0];
+      company && this.getCompaniesByUserManagerWithInvites(company.company_manager_id);
     });
+  }
+
+  getCompaniesByUserManagerWithInvites(userId) {
+    this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
+      this.loading.companies = false;
+      this.rows = this.mapCompanies(companies['companies-with-invites']);
+      console.log(this.rows, 'rows')
+    })
+  }
+
+  getPendingUserInvite(companyId, userId) {
+    this.claService.getPendingUserInvite(companyId, userId).subscribe((response) => {
+    })
   }
 
   viewCompany(companyId) {
     this.navCtrl.setRoot("CompanyPage", {
       companyId: companyId
     });
+  }
+
+  onSelect(event) {
+    this.viewCompany(event.selected[0].companyID);
+  }
+
+  mapCompanies(companies) {
+    let rows = [];
+    for (let company of companies) {
+      rows.push({
+        companyID: company.companyID,
+        CompanyName: company.companyName,
+        Status: company.status,
+      });
+    }
+    return rows;
   }
 }
