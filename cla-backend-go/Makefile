@@ -73,3 +73,5 @@ $(LINT_TOOL):
 
 lint: $(LINT_TOOL)
 	$(LINT_TOOL) run --config=.golangci.yaml ./...
+
+all: clean swagger swagger-validate deps fmt build-mac test lint
