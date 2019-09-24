@@ -59,14 +59,16 @@ func Configure(api *operations.ClaAPI, service Service, companyUserValidation bo
 	})
 
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
-		if companyUserValidation {
-			if params.UserID == "" || params.UserID != claUser.UserID {
-				return company.NewGetCompaniesByUserManagerBadRequest().WithPayload(&models.ErrorResponse{
-					Code:    "401",
-					Message: "unauthorized",
-				})
+		/*
+			if companyUserValidation {
+				if params.UserID == "" || params.UserID != claUser.UserID {
+					return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+						Code:    "401",
+						Message: "unauthorized - userID mismatch",
+					})
+				}
 			}
-		}
+		*/
 
 		companies, err := service.GetCompaniesByUserManager(params.UserID)
 		if err != nil {
@@ -82,14 +84,16 @@ func Configure(api *operations.ClaAPI, service Service, companyUserValidation bo
 	})
 
 	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
-		if companyUserValidation {
-			if params.UserID == "" || params.UserID != claUser.UserID {
-				return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithPayload(&models.ErrorResponse{
-					Code:    "401",
-					Message: "unauthorized",
-				})
+		/*
+			if companyUserValidation {
+				if params.UserID == "" || params.UserID != claUser.UserID {
+					return company.NewGetCompaniesByUserManagerWithInvitesUnauthorized().WithPayload(&models.ErrorResponse{
+						Code:    "401",
+						Message: "unauthorized - userID mismatch",
+					})
+				}
 			}
-		}
+		*/
 
 		companies, err := service.GetCompaniesByUserManagerWithInvites(params.UserID)
 		if err != nil {
