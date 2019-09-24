@@ -50,7 +50,6 @@ export class CompaniesPage {
       {prop: 'CompanyName'},
       {prop: 'Status'},
     ];
-    this.rows = [];
   }
 
   ngOnInit() {
@@ -93,8 +92,7 @@ export class CompaniesPage {
   }
 
   onSelect(event) {
-    console.log(event)
-    // this.openProjectPage(event.selected[0].ProjectID);
+    this.viewCompany(event.selected[0].companyID);
   }
 
   mapCompanies(companies) {

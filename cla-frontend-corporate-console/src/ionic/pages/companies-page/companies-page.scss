@@ -56,3 +56,20 @@ ion-card-title {
   display: flex !important;
   justify-content: space-between;
 }
+
+span[title="approved"] {
+  text-transform: capitalize;
+  font-weight: bold;
+  color: green;
+}
+
+span[title="pending"] {
+  text-transform: capitalize;
+  color: goldenrod;
+  font-weight: bold;
+}
+
+span[title="rejeted"] {
+  text-transform: capitalize;
+  color: red;
+}

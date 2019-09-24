@@ -8,6 +8,7 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { LayoutModule } from "../../layout/layout.module";
 import {NgxDatatableModule} from '@swimlane/ngx-datatable';
+import {NgxPaginationModule} from 'ngx-pagination';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import {NgxDatatableModule} from '@swimlane/ngx-datatable';
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(CompaniesPage),
     LayoutModule,
-    NgxDatatableModule
+    NgxDatatableModule,
+    NgxPaginationModule
   ],
   entryComponents: [
     CompaniesPage
