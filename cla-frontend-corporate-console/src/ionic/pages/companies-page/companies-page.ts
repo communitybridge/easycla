@@ -48,7 +48,7 @@ export class CompaniesPage {
     this.companies = [];
     this.columns = [
       {prop: 'CompanyName'},
-      {prop: 'Status'},
+      {prop: 'Status'}
     ];
   }
 
@@ -76,7 +76,6 @@ export class CompaniesPage {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
       this.loading.companies = false;
       this.rows = this.mapCompanies(companies['companies-with-invites']);
-      console.log(this.rows, 'rows')
     })
   }
 
@@ -92,7 +91,10 @@ export class CompaniesPage {
   }
 
   onSelect(event) {
-    this.viewCompany(event.selected[0].companyID);
+    let company = event.selected[0]
+    if (company.Status === "Joined") {
+      this.viewCompany(company.companyID);
+    }
   }
 
   mapCompanies(companies) {
@@ -101,7 +103,7 @@ export class CompaniesPage {
       rows.push({
         companyID: company.companyID,
         CompanyName: company.companyName,
-        Status: company.status,
+        Status: company.status
       });
     }
     return rows;
