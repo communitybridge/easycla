@@ -161,15 +161,43 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 
 	//log.Debugf("Running company search scan using queryInput: %+v", scanInput)
 
-	// Make the DynamoDB Query API call
-	results, err := repo.dynamoDBClient.Scan(scanInput)
-	if err != nil {
-		log.Warnf("error retrieving companies for search term: %s, error: %v", companyName, err)
-		return nil, err
-	}
+	var lastEvaluatedKey string
+	var companies []models.Company
 
-	log.Debugf("Company search scan took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
+		if dbErr != nil {
+			log.Warnf("error retrieving companies for search term: %s, error: %v", companyName, dbErr)
+			return nil, dbErr
+		}
+
+		// Convert the list of DB models to a list of response models
+		companyList, modelErr := buildCompanyModels(results)
+		if modelErr != nil {
+			log.Warnf("error retrieving companies for companyName %s in ACL, error: %v", companyName, modelErr)
+			return nil, modelErr
+		}
+
+		// Add to our response model list
+		companies = append(companies, companyList...)
+
+		log.Debugf("Company search scan took: %v resulting in %d results",
+			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+
+		if results.LastEvaluatedKey["company_id"] != nil {
+			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
+			lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"company_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
@@ -182,20 +210,17 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		return nil, err
 	}
 
-	// Meta-data for the response
-	resultCount := *results.Count
 	totalCount := *describeTableResult.Table.ItemCount
-	var lastEvaluatedKey string
-	if results.LastEvaluatedKey["company_id"] != nil {
-		//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
-		lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
-	}
 
-	response, err := buildCompanyModels(results, resultCount, totalCount, lastEvaluatedKey)
 	log.Debugf("Total company search took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+		utils.FmtDuration(time.Since(queryStartTime)), len(companies))
 
-	return response, err
+	return &models.Companies{
+		ResultCount:    int64(len(companies)),
+		TotalCount:     totalCount,
+		LastKeyScanned: lastEvaluatedKey,
+		Companies:      companies,
+	}, nil
 }
 
 // GetCompanyUserManager the get a list of companies when provided the company id and user manager
@@ -247,16 +272,43 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 	}
 
 	//log.Debugf("Running company search scan using queryInput: %+v", scanInput)
+	var lastEvaluatedKey string
+	var companies []models.Company
 
-	// Make the DynamoDB Query API call
-	results, err := repo.dynamoDBClient.Scan(scanInput)
-	if err != nil {
-		log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, err)
-		return nil, err
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
+		if dbErr != nil {
+			log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, dbErr)
+			return nil, dbErr
+		}
+
+		// Convert the list of DB models to a list of response models
+		companyList, modelErr := buildCompanyModels(results)
+		if modelErr != nil {
+			log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, modelErr)
+			return nil, modelErr
+		}
+
+		// Add to our response model list
+		companies = append(companies, companyList...)
+
+		log.Debugf("Company search with user in ACL scan took: %v resulting in %d results",
+			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+
+		if results.LastEvaluatedKey["company_invite_id"] != nil {
+			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
+			lastEvaluatedKey = *results.LastEvaluatedKey["company_invite_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"company_invite_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
 	}
-
-	log.Debugf("Company search with user in ACL scan took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
@@ -269,20 +321,17 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 		return nil, err
 	}
 
-	// Meta-data for the response
-	resultCount := *results.Count
 	totalCount := *describeTableResult.Table.ItemCount
-	var lastEvaluatedKey string
-	if results.LastEvaluatedKey["company_id"] != nil {
-		//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
-		lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
-	}
 
-	response, err := buildCompanyModels(results, resultCount, totalCount, lastEvaluatedKey)
 	log.Debugf("Total company search took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+		utils.FmtDuration(time.Since(queryStartTime)), len(companies))
 
-	return response, err
+	return &models.Companies{
+		ResultCount:    int64(len(companies)),
+		TotalCount:     totalCount,
+		LastKeyScanned: lastEvaluatedKey,
+		Companies:      companies,
+	}, nil
 }
 
 // GetCompanyUserManagerWithInvites the get a list of companies including status when provided the company id and user manager
@@ -305,7 +354,8 @@ func (repo repository) GetCompaniesByUserManagerWithInvites(userID string, userM
 
 func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.Companies, invites []Invite) *models.CompaniesWithInvites {
 	companiesWithInvites := models.CompaniesWithInvites{
-		TotalCount: companies.TotalCount + int64(len(invites)),
+		ResultCount: int64(len(companies.Companies) + len(invites)),
+		TotalCount:  companies.TotalCount + int64(len(invites)),
 	}
 
 	var companyWithInvite []models.CompanyWithInvite
@@ -316,7 +366,7 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 			CompanyACL:  company.CompanyACL,
 			Created:     company.Created,
 			Updated:     company.Updated,
-			Status:      "approved",
+			Status:      "Joined",
 		})
 	}
 
@@ -362,7 +412,7 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 }
 
 // buildCompanyModels converts the response model into a response data model
-func buildCompanyModels(results *dynamodb.ScanOutput, resultCount int64, totalCount int64, lastKey string) (*models.Companies, error) {
+func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) {
 	var companies []models.Company
 
 	type ItemSignature struct {
@@ -406,12 +456,7 @@ func buildCompanyModels(results *dynamodb.ScanOutput, resultCount int64, totalCo
 		})
 	}
 
-	return &models.Companies{
-		ResultCount:    resultCount,
-		TotalCount:     totalCount,
-		LastKeyScanned: lastKey,
-		Companies:      companies,
-	}, nil
+	return companies, nil
 }
 
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
@@ -542,20 +587,43 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 		TableName:                 aws.String(tableName),
 	}
 
-	queryResults, err := repo.dynamoDBClient.Scan(scanInput)
-	if err != nil {
-		log.Warnf("Unable to retrieve data from Company-Invites table using user id: %s, error: %v", userID, err)
-		return nil, err
-	}
-
-	log.Debugf("Company Invites query with user ID %s took: %v with %d results", userID,
-		utils.FmtDuration(time.Since(queryStartTime)), len(queryResults.Items))
-
+	var lastEvaluatedKey string
 	var companyInvites []Invite
-	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
-	if err != nil {
-		log.Warnf("error unmarshalling company invite data using user id: %s, error: %v", userID, err)
-		return nil, err
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+
+		queryResults, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("Unable to retrieve data from Company-Invites table using user id: %s, error: %v", userID, err)
+			return nil, err
+		}
+
+		log.Debugf("Company Invites query with user ID %s took: %v with %d results", userID,
+			utils.FmtDuration(time.Since(queryStartTime)), len(queryResults.Items))
+
+		var companyInvitesList []Invite
+		err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvitesList)
+		if err != nil {
+			log.Warnf("error unmarshalling company invite data using user id: %s, error: %v", userID, err)
+			return nil, err
+		}
+
+		// Add to our response model
+		companyInvites = append(companyInvites, companyInvitesList...)
+
+		// Determine if we have more records - if so, update the start key and loop again
+		if queryResults.LastEvaluatedKey["company_invite_id"] != nil {
+			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
+			lastEvaluatedKey = *queryResults.LastEvaluatedKey["company_invite_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"company_invite_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
 	}
 
 	return companyInvites, nil

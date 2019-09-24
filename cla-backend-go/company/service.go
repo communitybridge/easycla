@@ -29,7 +29,7 @@ type service struct {
 
 const (
 	// StatusPending indicates the invitation status is pending
-	StatusPending = "pending"
+	StatusPending = "Pending Approval"
 )
 
 // Service interface defining the public functions
