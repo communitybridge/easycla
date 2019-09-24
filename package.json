@@ -8,7 +8,7 @@
     "install-aws-profile": "./scripts/install-aws-profile.sh"
   },
   "dependencies": {
-    "serverless": "^1.51.0",
+    "serverless": "^1.52.2",
     "graceful-fs": "^4.2.2"
   }
 }
