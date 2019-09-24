@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "node.extend": "^2.0.2",
-    "serverless": "^1.51.0"
+    "serverless": "^1.52.2"
   }
 }
