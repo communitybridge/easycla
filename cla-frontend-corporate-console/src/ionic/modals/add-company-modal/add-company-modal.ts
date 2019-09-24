@@ -42,6 +42,7 @@ export class AddCompanyModal {
   enableJoinButton: boolean = false;
   allCompanies: any[];
   existingCompanyId: string;
+  loading: any;
 
 
   constructor(
@@ -60,6 +61,9 @@ export class AddCompanyModal {
     this.mode = this.company ? "edit" : "find";
     this.companies = [];
     this.filteredComapnies = [];
+    this.loading = {
+      submit: false,
+    }
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -88,6 +92,7 @@ export class AddCompanyModal {
   }
 
   addCompany() {
+    this.loading.submit = true
     let company = {
       company_name: this.companyName,
       company_manager_user_email: this.userEmail,
@@ -109,6 +114,7 @@ export class AddCompanyModal {
   }
 
   joinCompany() {
+    this.loading.submit = true
     this.claService.sendInviteRequestEmail(this.existingCompanyId)
       .subscribe(() => this.dismiss());
   }

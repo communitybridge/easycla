@@ -8,7 +8,6 @@ import { ClaCompanyModel } from "../../models/cla-company";
 import { RolesService } from "../../services/roles.service";
 import { Restricted } from "../../decorators/restricted";
 import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
-import {DatePipe} from '@angular/common';
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -36,7 +35,6 @@ export class CompaniesPage {
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private datePipe: DatePipe,
     private rolesService: RolesService // for @Restricted
   ) {
     this.getDefaults();
@@ -50,9 +48,7 @@ export class CompaniesPage {
     this.companies = [];
     this.columns = [
       {prop: 'CompanyName'},
-      {prop: 'Status'},
-      {prop: 'CreatedAt'},
-      {prop: 'UpdatedAt'}
+      {prop: 'Status'}
     ];
   }
 
@@ -95,7 +91,10 @@ export class CompaniesPage {
   }
 
   onSelect(event) {
-    this.viewCompany(event.selected[0].companyID);
+    let company = event.selected[0]
+    if (company.Status === "Joined") {
+      this.viewCompany(company.companyID);
+    }
   }
 
   mapCompanies(companies) {
@@ -104,9 +103,7 @@ export class CompaniesPage {
       rows.push({
         companyID: company.companyID,
         CompanyName: company.companyName,
-        Status: company.status,
-        CreatedAt: this.datePipe.transform(company.created, 'dd-MM-yyyy'),
-        UpdatedAt: this.datePipe.transform(company.updated, 'dd-MM-yyyy')
+        Status: company.status
       });
     }
     return rows;

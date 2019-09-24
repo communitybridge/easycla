@@ -5,6 +5,9 @@
       <span *ngIf="mode === 'edit'">Edit Company</span>
       <span *ngIf="mode === 'find'">Find Company</span>
     </ion-title>
+
+    <loading-spinner [loading]="loading.submit"></loading-spinner>
+    
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
