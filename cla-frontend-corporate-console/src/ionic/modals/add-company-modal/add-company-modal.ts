@@ -168,6 +168,7 @@ export class AddCompanyModal {
   }
 
   findCompany(event) {
+    this.companies.length >= 0 && this.getAllCompanies();
     this.filteredComapnies = []
     let companyName = event.value;
     if (companyName.length > 0) {
@@ -181,6 +182,11 @@ export class AddCompanyModal {
         return company;
       }).filter(company => company.filteredCompany);
       this.filteredComapnies = filteredComapnies;
+    }
+
+    if (companyName.length >= 2 && this.filteredComapnies.length === 0) {
+      this.addNewCompany = true;
+      this.joinExistingCompany = false;
     }
   }
 
