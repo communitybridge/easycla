@@ -7,7 +7,7 @@ If you are having issues with EasyCLA, go to: <https://support.linuxfoundation.o
 
 The CLA Management Console data may not load due to a bug in the Auth0 implementation.
 
-**Solution**:
+**Solution:**
 
 1. Open a Chrome window, and then type `command + option + i`.
 
@@ -25,11 +25,11 @@ The CLA Management Console data may not load due to a bug in the Auth0 implement
 
 If the issue persists, try using an incognito browser window.
 
-## CLA Manager Does Not Receive Email Notifications
+## CCLA Manager Does Not Receive Email Notifications
 
-The CLA manager does not receive email notifications.
+The CCLA manager does not receive email notifications.
 
-**Solution**:
+**Solution:**
 
 Go to GitHub and make sure your company has an email address.
 

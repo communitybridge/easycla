@@ -1,4 +1,6 @@
 # Sign Out of EasyCLA
+Sign out of EasyCLA to end your session.
+
 **Do these steps:**
 
 1. Go to a page that shows the hamburger icon ![Hamburger](imgs/CLA-Hamburger-Icon.png) on the top-left corner such as on the main CLA Management Console or CLA Corporate Console page.

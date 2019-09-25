@@ -21,10 +21,10 @@ As a project manager, you can add GitHub repositories to CLA monitoring or remov
 
    **REMOVE** removes the repository from the CLA group and CLA monitoring. After you remove a repository, the ADD option appears next to the repository.
 
-   DISABLED indicates that the repository has been configured for another CLA group, and thus cannot be configured for the selected CLA group. 
+   DISABLED indicates that the repository has been configured for another CLA group and thus cannot be configured for the selected CLA group. 
 
 1. Click **CLOSE**.
 
-   The CLA Management Console appears. Repositories shows a checkmark next to each repository that the EasyCLA Application will monitor for the organization and the CLA group.
+   The CLA Management Console appears. Repositories shows a checkmark next to each repository that EasyCLA will monitor for the organization and the CLA group.
 
    ![CLA GitHub Repositories](imgs/CLA-GitHub-Repositories.png)

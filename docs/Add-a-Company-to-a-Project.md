@@ -1,11 +1,11 @@
 # Add a Company to a Project
-As a CLA manager, you use the CLA Corporate Console to add your company to a project.
+As a CCLA manager, you use the CLA Corporate Console to add your company to a project.
 
-If you are also the project manager, make sure that you are logged out of the CLA Management Console before you begin using the CLA Corporate Console.
+_If you are also the project manager, make sure that you are logged out of the CLA Management Console before you begin using the CLA Corporate Console._
 
 **Do these steps**:
 
-1. Sign in.
+1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -19,12 +19,12 @@ If you are also the project manager, make sure that you are logged out of the CL
 
    * Company Name
 
-      This name must be unique–multiple instances of the same company cannot exist.
+      This name must be unique⏤multiple instances of the same company cannot exist.
 
-   * Manager email
+   * Your email⏤your company email
 
-   * Manager name
+   * Your name
 
    The Companies page shows your company.
 
-1. Sign out or continue to [Sign a CCLA on Behalf of the Company](Sign-a-Corporate-CLA-on-Behalf-of-the-Company.md) (CLA signatory).
+1. Sign out or continue to [Sign a CCLA on Behalf of the Company](Sign-a-Corporate-CLA-on-Behalf-of-the-Company.md) (CCLA signatory).

@@ -1,7 +1,7 @@
 # Sign In to the CLA Management Console
 Project managers sign in to the CLA Management Console to perform the CLA set-up and management tasks.
 
-**Do these steps**:
+**Do these steps:**
 
 1. Go to <https://project.lfcla.com>.
 

@@ -10,10 +10,13 @@ SPDX-License-Identifier: CC-BY-4.0
 
 #### Dependencies
 
-Python 3.6.5
-virtualenv
-Serverless 1.32.0
-nodejs (npm)
+- Python 3.6.5
+
+- virtualenv
+
+- Serverless 1.32.0
+
+- nodejs (npm)
 
 #### Setup
 
