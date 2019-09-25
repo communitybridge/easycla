@@ -106,6 +106,26 @@ export class ClaService {
   }
 
   /**
+   * GET /v3/users/{userId}
+   **/
+  getUserByUserId(userId) {
+    const url: URL = this.getV3Endpoint('/v3/users/' + userId);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
+   * GET /v3/users/username/{userName}
+   **/
+  getUserByUserName(userName) {
+    const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
+    return this.http.get(url)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
    * POST /v1/user
    **/
   postUser(user) {
@@ -1232,8 +1252,12 @@ export class ClaService {
 
   private handleServiceError(error: any) {
     const errString = String(error);
+    console.log('Service error: ' + error + ', msg: ' + errString);
     if (errString.includes('401')) {
       console.log('authentication error invoking service: ' + error + '. Forcing user to log out...');
+      this.authService.logout();
+    } else if (errString.includes('Token is expired')) {
+      console.log(errString + ' - redirecting to login page');
       this.authService.logout();
     } else {
       console.log('problem invoking service: ' + error);

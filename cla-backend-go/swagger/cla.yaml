@@ -79,7 +79,9 @@ paths:
     get:
       summary: Get user by ID
       description: Returns a user for the provided user ID
-      security: []
+      security:
+        - OauthSecurity:
+            - user
       operationId: getUser
       parameters:
         - name: userID
@@ -98,6 +100,36 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - users
+
+  /users/username/{userName}:
+    get:
+      summary: Get user by User Name
+      description: Returns a user for the provided user name
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getUserByUserName
+      parameters:
+        - name: userName
+          description: the user name value
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - users
 
@@ -634,7 +666,9 @@ paths:
     get:
       summary: Get company
       description: Returns the company by ID
-      security: []
+      security:
+        - OauthSecurity:
+            - company
       operationId: getCompany
       parameters:
         - name: companyID
@@ -719,7 +753,9 @@ paths:
     get:
       summary: Search companies
       description: Searches for matching companies by name
-      security: []
+      security:
+        - OauthSecurity:
+            - company
       operationId: searchCompany
       parameters:
         - name: companyName
@@ -902,7 +938,9 @@ paths:
           $ref: '#/definitions/github-org'
     get:
       summary: Get All Github Organization Under the CCLA whitelist
-      security: []
+      security:
+        - OauthSecurity:
+            - company
       operationId: getGithubOrganizationfromCla
       responses:
         '200':
@@ -921,7 +959,9 @@ paths:
         - company
     post:
       summary: Add Github Organization to the CCLA whitelist
-      security: []
+      security:
+        - OauthSecurity:
+            - company
       operationId: addGithubOrganizationFromCla
       responses:
         '200':
@@ -938,7 +978,9 @@ paths:
         - company
     delete:
       summary: Delete Github Organization from CCLA whitelist
-      security: []
+      security:
+        - OauthSecurity:
+            - company
       operationId: deleteGithubOrganizationFromCla
       responses:
         '200':
