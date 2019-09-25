@@ -1,7 +1,7 @@
 # Project Managers
 Project managers have responsibilities such as managing a project’s GitHub organization or Gerrit instance, members, repositories, and legal aspects like the CLA. You use the CLA Management Console.
 
-Do the following CLA set-up steps after you Sign In to the CLA Management Console:
+Do the following CLA set-up steps after you [sign in to the CLA Management Console](Sign-In-to-the-CLA-Management-Console.md):
 
 1. [Install the EasyCLA Application](Install-the-EasyCLA-Application.md).
 

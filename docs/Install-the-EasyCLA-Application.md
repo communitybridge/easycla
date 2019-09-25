@@ -49,7 +49,7 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
 1. Repeat Steps 2 through 7 to connect as many organizations as you want.
 
-**Important**: *To enable a CLA check on a repository, you must configure a GitHub repository or add a Gerrit instance. Simply adding an organization to the project does not enable the CLA check for any CLA groups.*
+**Important:** *To enable a CLA check on a repository, you must configure a GitHub repository or add a Gerrit instance. Simply adding an organization to the project does not enable the CLA check for any CLA groups.*
 
 ### Next Steps:
 

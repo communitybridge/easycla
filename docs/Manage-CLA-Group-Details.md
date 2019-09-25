@@ -1,7 +1,7 @@
 # Manage CLA Group Details
 As a project manager, you use the CLA Management Console to manage your CLA group details, and view user signatures and companies.
 
-**Do these steps**:
+**Do these steps:**
 
 1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
 

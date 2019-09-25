@@ -1,5 +1,5 @@
 # Sign a Corporate CLA on Behalf of the Company
-As a CLA signatory, you need to have the authority within your company to sign a Corporate CLA on its behalf. If you are a CLA manager but not a CLA signatory, you can request that the CLA signatory sign the Corporate CLA.
+As a CCLA signatory, you need to have the authority within your company to sign a Corporate CLA on its behalf. If you are a CCLA manager but not a CCLA signatory, you can request that the CCLA signatory sign the Corporate CLA.
 
 **Do these steps:**
 
@@ -43,10 +43,10 @@ The Corporate CLA dialog opens.
 
 The Send E-Mail To CLA Signatory form opens. The Signatory Name and Signatory E-Mail fields may be pre-populated; if not complete the fields. Click **SEND**.
 
-![Send E-Mail To CLA Signatory](imgs/CLA-Send-E-Mail-To-CLA-Signatory.png)
+![Send E-Mail To CCLA Signatory](imgs/CLA-Send-E-Mail-To-CLA-Signatory.png)
 
-[The CLA Signatory receives a CLA Sign Request](Review-and-Sign-a-Corporate-CLA-by-Request.md) email and reviews and signs the document.
+[The CCLA signatory receives a CLA Sign Request](Review-and-Sign-a-Corporate-CLA-by-Request.md) email and reviews and signs the document.
 
 After the Corporate CLA is signed, the Company page shows the signed Corporate CLA under Signed Project CCLAs. You receive a CLA Signed Document email with an attached document PDF. Contributors to the company project simply need to confirm their association to the company, and then they can continue with their pull requests. Their subsequent contributions will not require association confirmations.
 
-*A Corporate CLA that is signed by the CLA signatory remains in effect even when that CLA signatory is no longer employed at a company.*
+*A Corporate CLA that is signed by the CCLA signatory remains in effect even when that CCLA signatory is no longer employed at a company.*

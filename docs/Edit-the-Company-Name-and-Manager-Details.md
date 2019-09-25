@@ -1,5 +1,5 @@
 # Edit the Company Name and Manager Details
-As a CLA manager, you use the CLA Corporate Console to edit the company name and manager details.
+As a CCLA manager, you use the CLA Corporate Console to edit the company name and manager details.
 
 **Do these steps:**
 
@@ -7,7 +7,7 @@ As a CLA manager, you use the CLA Corporate Console to edit the company name and
 
    The CLA Corporate Console appears and shows Companies.
 
-   *To see all companies in your organization that are associated to the Linux Foundation, click the **hamburger icon** next to CLA Corporate Console.*
+   *To see all companies in your organization which are associated to the Linux Foundation, click the **hamburger icon** next to CLA Corporate Console.*
 
 1. Click a **company** of interest.
 
@@ -19,12 +19,12 @@ As a CLA manager, you use the CLA Corporate Console to edit the company name and
 
    ![Edit Company dialog](imgs/CLA-Edit-Company.png)
 
-1. Edit any of the details that you want to change and then click **SAVE**:
+1. Edit any of the details you want to change and then click **SAVE**:
 
    * Company Name
 
-   * Manager email
+   * Your email
 
-   * Manager name
+   * Your name
 
    The Company page reflects your changes.

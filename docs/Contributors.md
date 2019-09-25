@@ -1,5 +1,4 @@
 # Contributors
-
 EasyCLA handles the process of ensuring that CLA signatures are in place before you can contribute to a repository. EasyCLA lets you sign CLAs from within a pull request. You cannot merge changes into a project until the CLA checks pass. After you sign a CLA or sign a confirmation of association with your company, the status of your pull request is updated and you can continue. 
 
 As a contributor, you can easily comply to your legal obligations for a company or contribute individually by doing one or both of the following tasks:
@@ -11,5 +10,4 @@ As a contributor, you can easily comply to your legal obligations for a company 
 Gerrit contributors, see [Contribute to a Gerrit Project](Contribute-to-a-Gerrit-Project.md).
 
 ### Need a walk-through?
-
 View this [video](https://www.youtube.com/watch?v=WvKX10S7FOk&feature=youtu.be) to see how to use EasyCLA as a contributor. Click [here](Contributor-Console-Video-Script.md) to read the video transcript.

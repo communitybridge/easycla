@@ -42,7 +42,7 @@ CLA frontend consists of three independent SPA build with
 [Ionic](https://ionicframework.com/) framework.
 
 - `cla-frontend-project-console` for LinuxFoundation director/admin/user to manage project CLA
-- `cla-frontend-corporate-console` for any concrete company CLA manager to sign CCLA and manage employee CLA whitelist
+- `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA whitelist
 - `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
 
 ## Architecture

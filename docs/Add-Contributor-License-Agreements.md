@@ -3,9 +3,9 @@ As a project manager, you use the CLA Management Console to add CLAs to CLA grou
 
 In some circumstances, you need to change the legal text of the CLA agreement in major and minor revisions:
 
-* A major revision (for example, a change to your charter), is one in which you are legally required to have all contributors re-sign the revised agreement.
+* A major revision (for example, a change to your charter) is one in which you are legally required to have all contributors re-sign the revised agreement.
 
-* A minor revision is one that does not change a legal perspective, and contributors do not need to re-sign the revised agreement.
+* A minor revision is one that does not change a legal perspective and contributors do not need to re-sign the revised agreement.
 
 In these cases, you simply add the updated CLA using the same procedure as for adding the initial CLA.
 
