@@ -17,7 +17,7 @@ As an individual contributor to an open-source project who is contributing code 
 
    The Authorize CommunityBridge: EasyCLA dialog appears.
 
-1. Click ****Authorize LF-Engineering****. (Subsequent contributions will not require authorization.)
+1. Click **Authorize LF-Engineering**. (Subsequent contributions will not require authorization.)
 
    ![Authorize CommunityBridge: EasyCLA](imgs/CLA-Authorize-EasyCLA.png)
 

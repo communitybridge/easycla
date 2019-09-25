@@ -10,11 +10,10 @@ The following diagrams illustrate the various user flows.
 
 ![CLA Contributor User Flow](imgs/cla-contributor-user-flow.png)
 
-## CLA Signatory User Flow
+## CCLA Signatory User Flow
 
-![CLA Signatory User Flow](imgs/cla-signatory-user-flow.png)
+![CCLA Signatory User Flow](imgs/cla-signatory-user-flow.png)
 
 ## CLA Flow Overview
 
 ![CLA Flow Overview](imgs/cla-overview.png)
-

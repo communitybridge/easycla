@@ -1,5 +1,5 @@
-# Add or Delete CLA Managers
-CLA managers have the following responsibilities:
+# Add or Delete CCLA Managers
+CCLA managers have the following responsibilities:
 
 * Add a company to a project.
 
@@ -7,7 +7,7 @@ CLA managers have the following responsibilities:
 
 * Change the settings to manage your company CLAs.
 
-You can add CLA managers to your project or remove them.
+You can add CCLA managers to your project or remove them.
 
 **Do these steps:**
 
@@ -23,15 +23,15 @@ You can add CLA managers to your project or remove them.
 
 1. Click a **CLA**.
 
-   Project Signatures lists the signed the CLA Managers and Employee Acknowledgements for the project.
+   Project Signatures lists the CCLA Managers and Employee Acknowledgements for the project.
 
 1. Do an action:
 
-   * Add a CLA Manager - Go to the following section.
+    + [Add a CCLA Manager](#add-a-ccla-manager)
 
-   * Delete a CLA Manager - Go to the corresponding section below.
+    + [Delete a CCLA Manager](#delete-a-ccla-manager)
 
-### Add a CLA Manager
+### Add a CCLA Manager
 
 1. Click the **plus sign** (+) in the CLA Managers pane.
 
@@ -39,16 +39,16 @@ You can add CLA managers to your project or remove them.
 
    ![Add CLA Manager pane](imgs/CLA-Managers-pane.png)
 
-1. Enter the Linux Foundation identification of the CLA manager who you want to add, and click ****SAVE****.
+1. Enter the Linux Foundation identification of the CCLA manager who you want to add and click **SAVE**.
 
    ![Add CLA Manager](imgs/CLA-Add-CLA-Manager.png)
 
-The CLA manager is listed under CLA Managers.
+The CCLA manager is listed under CLA Managers.
 
-### Delete a CLA Manager
+### Delete a CCLA Manager
 
-1. Click **Delete** next to a CLA manager to remove that person as a signatory.
+1. Click **Delete** next to a CCLA manager to remove that person as a CCLA signatory.
 
 1. Click **DELETE** on the Delete Manager confirmation dialog.
 
-The CLA manager is removed from under CLA Managers.
+The CCLA manager is removed from under CLA Managers.

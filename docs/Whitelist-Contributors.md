@@ -1,6 +1,6 @@
 # Whitelist Contributors
 
-Whitelists are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed Corporate CLA. As a CLA manager, you allow contributions to projects on behalf of your company by using any whitelist:
+Whitelists are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed Corporate CLA. As a CCLA manager, you allow contributions to projects on behalf of your company by using any whitelist:
 
 * Domain Whitelist allows entities to contribute under any email address under that domain name.
 
@@ -12,7 +12,7 @@ Whitelists are lists of domain names, email addresses of individuals, GitHub use
 
 Each whitelist applies to the project for which the company has signed a Corporate CLA. The CLA application checks all the whitelists for allowing contributions to a company project. A contributor only needs to be on one whitelist. Contributors can use EasyCLA to send email requests to be associated (whitelisted) with the company.
 
-*Multiple CLA managers cannot whitelist the same domain and sign a CCLA for the same company.*
+*Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the same company.*
 
 **Do these steps:**
 
@@ -35,6 +35,7 @@ Each whitelist applies to the project for which the company has signed a Corpora
 1. Decide which whitelist you want to edit:
 
     + [Domain Whitelist, Email Whitelist, or GitHub Whitelist](#domain-whitelist--email-whitelist--or-github-whitelist)
+
     + [GitHub Organization Whitelist](#github-organization-whitelist)
 
 ### Domain Whitelist, Email Whitelist, or GitHub Whitelist
@@ -42,7 +43,7 @@ Each whitelist applies to the project for which the company has signed a Corpora
 The corresponding Edit *domain/email/github* Whitelist dialog lets you add, edit, and delete values to a whitelist so that employees (developers) can be associated to the company. An example domain name value is joesbikes.com. A wildcard whitelists the domain and all subdomains, for example: \*.joesbikes.com or *joesbikes.com would whitelist joes.bikes.com, shop.joesbikes.com, and blog.joesbikes.com.
 
 
-**Note**: To remove an entry from the whitelist, click **X** next to the item, and click **SAVE**.
+**Note:** To remove an entry from the whitelist, click **X** next to the item, and click **SAVE**.
 
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 

@@ -1,5 +1,5 @@
 # View Employee Acknowledgements
-CLA managers can view a list of employee acknowledgements. 
+CCLA managers can view a list of employee acknowledgements. 
 
 **Do these steps:**
 
@@ -15,4 +15,4 @@ CLA managers can view a list of employee acknowledgements.
 
 1. Click a **CLA**.
 
-   Project Signatures lists the CLA Managers and the signed Employee Acknowledgements for the project. Each acknowledgement shows the employee name, the agreement name, and the date the employee acknowledged the agreement.
+   Project Signatures lists the CCLA Managers and the signed Employee Acknowledgements for the project. Each acknowledgement shows the employee name, the agreement name, and the date the employee acknowledged the agreement.

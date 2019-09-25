@@ -8,7 +8,7 @@ A _Contributor License Agreement_ (CLA) defines the terms under which intellectu
 
 * **Corporate Contributor License Agreement**
 
-   If the company (employer) owns the contribution, a CLA signatory signs a Corporate CLA. The Corporate CLA legally binds the corporation, so the agreement must be signed by a person with authority to enter into legal contracts on behalf of the corporation. A Corporate CLA may not remove the need for every employee (developer) to sign their own Individual CLA -- which separately covers contributions owned by the individual contributor -- if the project requires this.
+   If the company (employer) owns the contribution, a CCLA signatory signs a Corporate CLA. The Corporate CLA legally binds the corporation, so the agreement must be signed by a person with authority to enter into legal contracts on behalf of the corporation. A Corporate CLA may not remove the need for every employee (developer) to sign their own Individual CLA -- which separately covers contributions owned by the individual contributor -- if the project requires this.
 
 * **Individual Contributor License Agreement**
 
@@ -52,15 +52,15 @@ You are a _contributor_ (developer) if you contribute code to GitHub or Gerrit p
 
 * **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](Contribute-to-a-Gerrit-Project.md).
 
-#### CLA Manager
-You are a _CLA manager_ if you are the person authorized to manage the list of approved contributors under your company’s Corporate CLA. With this responsibility, you use EasyCLA to:
+#### Corporate CLA Manager
+You are a _Corporate CLA manager_ (CCLA manager) if you are the person authorized to manage the list of approved contributors under your company’s Corporate CLA. With this responsibility, you use EasyCLA to:
 
 * [Add companies to a project](Add-a-Company-to-a-Project.md).
 
 * [Whitelist contributors](Whitelist-Contributors.md).
 
-#### CLA Signatory
-You are a _CLA signatory_ if you are authorized to sign contracts, such as the project’s CLA, on behalf of the company. With EasyCLA, you can:
+#### Corporate CLA Signatory
+You are a _Corporate CLA signatory_ (CCLA signatory) if you are authorized to sign contracts, such as the project’s CLA, on behalf of the company. With EasyCLA, you can:
 
 * [Sign a Corporate CLA on behalf of the company](Sign-a-Corporate-CLA-on-Behalf-of-the-Company.md)—as a signatory you need to have legal authority to sign documents on behalf of the company.
 

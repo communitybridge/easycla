@@ -1,11 +1,11 @@
 # Contribute to a GitHub Company Project
-As a corporate (employee) contributor to an open-source project, you create a pull request in GitHub to inform code maintainers about changes made to the code. If any of your contributions to the project are created as part of your employment, the work may not belong to you—it may be owned by your employer. In that case, the CLA signatory represents the employer (company) for legal reasons, and signs the Corporate Contributor Licensing Agreement in order for your contribution to be accepted into the company. During the pull request process, your CLA status is verified.
+As a corporate (employee) contributor to an open-source project, you create a pull request in GitHub to inform code maintainers about changes made to the code. If any of your contributions to the project are created as part of your employment, the work may not belong to you—it may be owned by your employer. In that case, the CCLA signatory represents the employer (company) for legal reasons, and signs the Corporate Contributor Licensing Agreement in order for your contribution to be accepted into the company. During the pull request process, your CLA status is verified.
 
-When all CLA management set-up tasks are complete and your CLA signatory has signed a Corporate CLA, you simply confirm your association to the company during your first pull request. Then you can continue with your pull request. Your subsequent contributions will not require association confirmations.
+When all CLA management set-up tasks are complete and your CCLA signatory has signed a Corporate CLA, you simply confirm your association to the company during your first pull request. Then you can continue with your pull request. Your subsequent contributions will not require association confirmations.
 
 **Do these steps:**
 
-*If you are a CLA manager, make sure that you are logged out of the CLA Management Console before you begin.*
+*If you are a project manager, make sure that you are logged out of the CLA Management Console before you begin.*
 
 1. In GitHub, go to the repository that is linked to the project for your organization.
 
@@ -35,9 +35,9 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
 1. Continue:
 
-   **If a Confirmation of Association with statement appears**, go to that section below.
+    + [If a Confirmation of Association with statement appears](#if-a-confirmation-of-association-with-statement-appears)
 
-   **If the Select Company dialog appears**, go to that section below.
+    + [If the Select Company dialog appears](#if-the-select-company-dialog-appears)
 
 ### If a Confirmation of Association with statement appears
 
@@ -59,7 +59,7 @@ When all CLA management set-up tasks are complete and your CLA signatory has sig
 
 1. Click **Merge pull request** and confirm the merge.
 
-The CLA is added to the project.
+   The CLA is added to the project.
 
 ### If the Select Company dialog appears
 
@@ -77,7 +77,7 @@ The CLA is added to the project.
 
    **YES**—go to **Step 5**.
 
-   **NO**—A Request Access form appears. Complete the form and click **SEND**. The CLA manager signs a Corporate CLA and adds you to the whitelist.
+   **NO**—A Request Access form appears. Complete the form and click **SEND**. The CCLA manager signs a Corporate CLA and adds you to the whitelist.
 
    ![CLA Request Access](imgs/CLA-Request-Access.png)
 
@@ -99,4 +99,4 @@ The CLA is added to the project.
 
 1. Click **Merge pull request** and confirm the merge.
 
-The CLA is added to the project.
+   The CLA is added to the project.
