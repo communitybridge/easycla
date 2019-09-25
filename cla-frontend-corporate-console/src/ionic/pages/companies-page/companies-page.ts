@@ -1,12 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import { NavController, ModalController, IonicPage } from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
-import { RolesService } from "../../services/roles.service";
-import { Restricted } from "../../decorators/restricted";
+import {Component} from "@angular/core";
+import {IonicPage, ModalController, NavController} from "ionic-angular";
+import {ClaService} from "../../services/cla.service";
+import {RolesService} from "../../services/roles.service";
+import {Restricted} from "../../decorators/restricted";
 import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
 
 @Restricted({
@@ -44,11 +43,11 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
-    this.userId = localStorage.getItem("userid")
+    this.userId = localStorage.getItem("userid");
     this.companies = [];
     this.columns = [
       {prop: 'CompanyName'},
-      {prop: 'Status'},
+      {prop: 'Status'}
     ];
   }
 
@@ -66,9 +65,14 @@ export class CompaniesPage {
   }
 
   getCompanies() {
-    this.claService.getCompanies().subscribe(response => {
-      let company = response[0];
-      company && this.getCompaniesByUserManagerWithInvites(company.company_manager_id);
+    this.loading.companies = true;
+    this.claService.getUserByUserName(this.userId).subscribe(response => {
+      if (response != null) {
+        // We need the user's unique ID - grab it from the first record
+        this.getCompaniesByUserManagerWithInvites(response.userID);
+      } else {
+        this.loading.companies = false;
+      }
     });
   }
 
@@ -76,7 +80,6 @@ export class CompaniesPage {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
       this.loading.companies = false;
       this.rows = this.mapCompanies(companies['companies-with-invites']);
-      console.log(this.rows, 'rows')
     })
   }
 
@@ -92,7 +95,10 @@ export class CompaniesPage {
   }
 
   onSelect(event) {
-    this.viewCompany(event.selected[0].companyID);
+    let company = event.selected[0]
+    if (company.Status === "Joined") {
+      this.viewCompany(company.companyID);
+    }
   }
 
   mapCompanies(companies) {
@@ -101,7 +107,7 @@ export class CompaniesPage {
       rows.push({
         companyID: company.companyID,
         CompanyName: company.companyName,
-        Status: company.status,
+        Status: company.status
       });
     }
     return rows;
