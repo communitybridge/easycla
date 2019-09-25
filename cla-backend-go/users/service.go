@@ -7,9 +7,10 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
 
-// Service interface
+// Service interface for users
 type Service interface {
 	GetUser(userID string) (*models.User, error)
+	GetUserByUserName(userName string) (*models.User, error)
 }
 
 type service struct {
@@ -23,8 +24,19 @@ func NewService(repo Repository) Service {
 	}
 }
 
+// GetUserByUserName attempts to locate the user by the user id field
 func (s service) GetUser(userID string) (*models.User, error) {
 	userModel, err := s.repo.GetUser(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return userModel, nil
+}
+
+// GetUserByUserName attempts to locate the user by the user name field
+func (s service) GetUserByUserName(userName string) (*models.User, error) {
+	userModel, err := s.repo.GetUserByUserName(userName)
 	if err != nil {
 		return nil, err
 	}

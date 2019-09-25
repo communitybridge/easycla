@@ -23,6 +23,7 @@ import (
 // Repository interface defines the functions for the users service
 type Repository interface {
 	GetUser(userID string) (*models.User, error)
+	GetUserByUserName(userName string) (*models.User, error)
 }
 
 // repository data model
@@ -63,18 +64,7 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 	condition := expression.Key("user_id").Equal(expression.Value(userID))
 
 	// These are the columns we want returned
-	projection := expression.NamesList(
-		expression.Name("user_id"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-		expression.Name("lf_email"),
-		expression.Name("lf_username"),
-		expression.Name("user_emails"),
-		expression.Name("user_name"),
-		expression.Name("user_company_id"),
-		expression.Name("user_github_username"),
-		expression.Name("user_github_id"),
-	)
+	projection := buildUserProjection()
 
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
@@ -128,6 +118,80 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 	return convertDBUserModel(dbUserModels[0]), nil
 }
 
+func (repo repository) GetUserByUserName(userName string) (*models.User, error) {
+	queryStartTime := time.Now()
+
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	// This is the filter we want to match
+	filter := expression.Name("lf_username").Equal(expression.Value(userName))
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for user name: %s, error: %v", userName, err)
+		return nil, err
+	}
+
+	// Assemble the scan input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	//log.Debugf("Running user query using scanInput: %+v", scanInput)
+
+	var lastEvaluatedKey string
+	// The user model
+	var dbUserModels []DBUser
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		result, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("Error retrieving user by user name: %s, error: %+v", userName, err)
+			return nil, err
+		}
+
+		err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+		if err != nil {
+			log.Warnf("error unmarshalling user record from database for user name: %s, error: %+v", userName, err)
+			return nil, err
+		}
+
+		log.Debugf("GetUser by User Name query took: %v resulting in %d results",
+			utils.FmtDuration(time.Since(queryStartTime)), len(dbUserModels))
+
+		if len(dbUserModels) == 1 {
+			return convertDBUserModel(dbUserModels[0]), nil
+		} else if len(dbUserModels) > 1 {
+			log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
+			return convertDBUserModel(dbUserModels[0]), nil
+		}
+
+		// If we have another page of results...
+		if result.LastEvaluatedKey["user_id"] != nil {
+			lastEvaluatedKey = *result.LastEvaluatedKey["user_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"user_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	return nil, nil
+}
+
 // convertDBUserModel translates a dyanamoDB data model into a service response model
 func convertDBUserModel(user DBUser) *models.User {
 	return &models.User{
@@ -143,4 +207,20 @@ func convertDBUserModel(user DBUser) *models.User {
 		CompanyID:      user.UserCompanyID,
 		GithubUsername: user.UserGithubUsername,
 	}
+}
+
+func buildUserProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("user_id"),
+		expression.Name("date_created"),
+		expression.Name("date_modified"),
+		expression.Name("lf_email"),
+		expression.Name("lf_username"),
+		expression.Name("user_emails"),
+		expression.Name("user_name"),
+		expression.Name("user_company_id"),
+		expression.Name("user_github_username"),
+		expression.Name("user_github_id"),
+	)
 }
