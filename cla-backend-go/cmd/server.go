@@ -160,7 +160,7 @@ func server(localMode bool) http.Handler {
 	signatures.Configure(api, signaturesService, sessionStore)
 	docs.Configure(api)
 
-	company.Configure(api, companyService, companyUserValidation)
+	company.Configure(api, companyService, usersService, companyUserValidation)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

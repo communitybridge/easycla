@@ -6,6 +6,8 @@ package company
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
@@ -16,9 +18,9 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service Service, companyUserValidation bool) {
+func Configure(api *operations.ClaAPI, service Service, usersService users.Service, companyUserValidation bool) {
 
-	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams) middleware.Responder {
+	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams, claUser *user.CLAUser) middleware.Responder {
 		companyModel, err := service.GetCompany(params.CompanyID)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query company by ID: %s, error: %v", params.CompanyID, err)
@@ -39,7 +41,7 @@ func Configure(api *operations.ClaAPI, service Service, companyUserValidation bo
 		return company.NewGetCompanyOK().WithPayload(companyModel)
 	})
 
-	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams) middleware.Responder {
+	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
 		var nextKey = ""
 		if params.NextKey != nil {
 			nextKey = *params.NextKey
@@ -59,16 +61,22 @@ func Configure(api *operations.ClaAPI, service Service, companyUserValidation bo
 	})
 
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
-		/*
-			if companyUserValidation {
-				if params.UserID == "" || params.UserID != claUser.UserID {
-					return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
-						Code:    "401",
-						Message: "unauthorized - userID mismatch",
-					})
-				}
+		if companyUserValidation {
+			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
+			if userErr != nil {
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: fmt.Sprintf("unauthorized - unable to find current logged in user by lf_username: %s", claUser.LFUsername),
+				})
 			}
-		*/
+
+			if params.UserID == "" || params.UserID != userModel.UserID {
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: fmt.Sprintf("unauthorized - userID mismatch: param user id: %s, claUser id: %s", params.UserID, userModel.UserID),
+				})
+			}
+		}
 
 		companies, err := service.GetCompaniesByUserManager(params.UserID)
 		if err != nil {
@@ -84,16 +92,22 @@ func Configure(api *operations.ClaAPI, service Service, companyUserValidation bo
 	})
 
 	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
-		/*
-			if companyUserValidation {
-				if params.UserID == "" || params.UserID != claUser.UserID {
-					return company.NewGetCompaniesByUserManagerWithInvitesUnauthorized().WithPayload(&models.ErrorResponse{
-						Code:    "401",
-						Message: "unauthorized - userID mismatch",
-					})
-				}
+		if companyUserValidation {
+			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
+			if userErr != nil {
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: fmt.Sprintf("unauthorized - unable to find current logged in user by lf_username: %s", claUser.LFUsername),
+				})
 			}
-		*/
+
+			if params.UserID == "" || params.UserID != userModel.UserID {
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: fmt.Sprintf("unauthorized - userID mismatch: param user id: %s, claUser id: %s", params.UserID, userModel.UserID),
+				})
+			}
+		}
 
 		companies, err := service.GetCompaniesByUserManagerWithInvites(params.UserID)
 		if err != nil {
