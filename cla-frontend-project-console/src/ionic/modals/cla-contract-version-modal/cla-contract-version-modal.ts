@@ -1,17 +1,17 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
+import {Component} from "@angular/core";
 import {
   Events,
   IonicPage,
   ModalController,
   NavController,
   NavParams,
+  PopoverController,
   ViewController
 } from "ionic-angular";
-import { PopoverController } from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
+import {ClaService} from "../../services/cla.service";
 
 @IonicPage({
   segment: "cla-contract-version-modal"
@@ -55,36 +55,10 @@ export class ClaContractVersionModal {
     this.getDefaults();
   }
 
-  getDefaults() {}
+  getDefaults() {
+  }
 
-  ngOnInit() {}
-
-  contractPopover(ev, document) {
-    let currentContractActions = {
-      items: [
-        {
-          label: "View PDF",
-          callback: "contractView",
-          callbackData: {
-            document: document
-          }
-        }
-      ]
-    };
-    let popover = this.popoverCtrl.create(
-      "ActionPopoverComponent",
-      currentContractActions
-    );
-
-    popover.present({
-      ev: ev
-    });
-
-    popover.onDidDismiss(popoverData => {
-      if (popoverData) {
-        this.popoverResponse(popoverData);
-      }
-    });
+  ngOnInit() {
   }
 
   /**
@@ -98,27 +72,9 @@ export class ClaContractVersionModal {
     }
   }
 
-  contractView(data) {
-    let majorVersion = data.document.document_major_version;
-    let minorVersion = data.document.document_minor_version;
-    this.claService.getProjectDocumentRevisionPdf(
-      this.claProjectId,
-      this.documentType,
-      majorVersion,
-      minorVersion
-    ).subscribe(base64PDF => {
-      let objbuilder = '';
-        objbuilder += ('<object width="100%" height="100%" data="data:application/pdf;base64,');
-        objbuilder += (base64PDF);
-        objbuilder += ('" type="application/pdf" class="internal">');
-        objbuilder += ('</object>');
-
-      let win = window.open("","_blank","titlebar=yes");
-      win.document.title = data.document_name;
-      win.document.write('<html><body>');
-      win.document.write(objbuilder);
-      win.document.write('</body></html>');
-    });
+  openNewWindow(event, document) {
+    console.log('Opening new window...');
+    let win = window.open(document.document_s3_url, "_blank", "titlebar=yes");
   }
 
   openClaContractUploadModal() {

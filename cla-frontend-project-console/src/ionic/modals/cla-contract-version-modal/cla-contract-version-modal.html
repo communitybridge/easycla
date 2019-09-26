@@ -1,6 +1,6 @@
 <ion-header>
   <modal-header>
-    CLA PDF
+    {{ documentType | titlecase }} CLA PDF History
   </modal-header>
 </ion-header>
 
@@ -19,8 +19,8 @@
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
-              <button ion-button icon-only clear round (click)="contractPopover($event, document)">
-                <ion-icon name="more"></ion-icon>
+              <button ion-button icon-only clear round (click)="openNewWindow($event, document)">
+                <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
             </td>
           </tr>
@@ -38,8 +38,8 @@
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
-              <button ion-button icon-only clear round (click)="contractPopover($event, document)">
-                <ion-icon name="more"></ion-icon>
+              <button ion-button icon-only clear round (click)="openNewWindow($event, document)">
+                <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
             </td>
           </tr>

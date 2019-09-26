@@ -366,11 +366,10 @@ export class ClaService {
   getProjectSignatures(projectId, lastKeyScanned) {
     // Leverage the new go backend v3 endpoint - note the slightly different path
     if (lastKeyScanned) {
-      const url : URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50&nextKey=${lastKeyScanned}`);
+      const url: URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50&nextKey=${lastKeyScanned}`);
       return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
-    }
-    else {
-      const url : URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50`);
+    } else {
+      const url: URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50`);
       return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
     }
   }
@@ -382,7 +381,7 @@ export class ClaService {
    * @param pageSize the optional page size - default is 50
    * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignaturesV3(projectId, pageSize=50, nextKey='') {
+  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '') {
     let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
       path += '&nextKey=' + nextKey;
@@ -693,7 +692,9 @@ export class ClaService {
    */
   getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion);
-    return this.http.get(url).map(res => res.json());
+    return this.http.get(url).map(res => {
+      return res._body;
+    });
   }
 
   /**

@@ -5,7 +5,11 @@
 </ion-header>
 
 <ion-content>
+  <loading-spinner [loading]="loading.companies"></loading-spinner>
   <ion-item *ngFor="let company of companies" class="clickable" (click)="openClaCorporateManagementPage(company.company_id)">
     {{ company.company_name }}
+  </ion-item>
+  <ion-item *ngIf="!loading.initial && (companies == null || companies.length == 0)">
+    No Companies
   </ion-item>
 </ion-content>
