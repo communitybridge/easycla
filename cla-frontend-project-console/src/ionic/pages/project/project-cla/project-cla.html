@@ -129,7 +129,7 @@
                           <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
                           <span>{{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA</span>
                           <div class="contract-title-buttons" *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                            <button ion-button icon-only clear (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
+                            <button clear (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
                               <img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"/>
                             </button>
                           </div>
@@ -183,7 +183,7 @@
                           <ion-icon name="person" item-left class="icon-md" *ngIf="documentType !== 'corporate'"></ion-icon>
                           <span>{{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA</span>
                           <div class="contract-title-buttons" *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
-                            <button ion-button icon-only clear (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
+                            <button clear (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
                               <img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"/>
                             </button>
                           </div>
