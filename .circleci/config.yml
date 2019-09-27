@@ -24,6 +24,12 @@ jobs:
             cd cla-backend
             make setup_circle
       - run:
+          name: lint
+          command: |
+            cd cla-backend
+            # Lint will always pass for now - need to continue addressing lint issues
+            pylint cla/*.py || true
+      - run:
           name: test
           command: |
             cd cla-backend

@@ -19,7 +19,8 @@
     "start:s3": "sh dev.sh start:s3"
   },
   "dependencies": {
+    "install": "^0.13.0",
     "node.extend": "^2.0.2",
-    "serverless": "^1.52.2"
+    "serverless": "^1.53.0"
   }
 }

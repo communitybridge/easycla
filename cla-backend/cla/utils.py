@@ -17,10 +17,12 @@ from requests_oauthlib import OAuth2Session
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Repository, GitHubOrg, Project, Company, User
+from cla.models.dynamo_models import User, Signature, Repository, \
+    Company, Project, Document, \
+    GitHubOrg, Gerrit, UserPermissions
 
-api_base_url = os.environ.get('CLA_API_BASE', '')
-cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
+API_BASE_URL = os.environ.get('CLA_API_BASE', '')
+CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
 
 def get_cla_path():
@@ -93,9 +95,6 @@ def get_database_models(conf=None):
     if conf is None:
         conf = cla.conf
     if conf['DATABASE'] == 'DynamoDB':
-        from cla.models.dynamo_models import User, Signature, Repository, \
-            Company, Project, Document, \
-            GitHubOrg, Gerrit, UserPermissions
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions}
@@ -639,10 +638,10 @@ def get_comment_badge(repository_type, all_signed, sign_url):
     """
 
     if all_signed:
-        badge_url = '{}/cla-signed.png'.format(cla_logo_url)
+        badge_url = '{}/cla-signed.png'.format(CLA_LOGO_URL)
         badge_hyperlink = 'https://lfcla.com'
     else:
-        badge_url = '{}/cla-notsigned.png'.format(cla_logo_url)
+        badge_url = '{}/cla-notsigned.png'.format(CLA_LOGO_URL)
         badge_hyperlink = sign_url
     return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
 
@@ -911,7 +910,7 @@ def get_active_signature_return_url(user_id, metadata=None):
     if metadata is None:
         metadata = get_active_signature_metadata(user_id)
     if metadata is None:
-        cla.log.error('Could not find active signature for user %s, return URL request failed' % user_id)
+        cla.log.warning('Could not find active signature for user {}, return URL request failed'.format(user_id))
         return None
 
     # Get Github ID from metadata
@@ -931,7 +930,7 @@ def get_active_signature_return_url(user_id, metadata=None):
 
 
 def get_installation_id_from_github_repository(github_repository_id):
-    # Get repository ID that references the github ID. 
+    # Get repository ID that references the github ID.
     try:
         repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
     except DoesNotExist:
@@ -944,12 +943,12 @@ def get_installation_id_from_github_repository(github_repository_id):
     except DoesNotExist:
         return None
 
-    # Get this organization's installation ID 
+    # Get this organization's installation ID
     return organization.get_organization_installation_id()
 
 
 def get_project_id_from_github_repository(github_repository_id):
-    # Get repository ID that references the github ID. 
+    # Get repository ID that references the github ID.
     try:
         repository = Repository().get_repository_by_external_id(github_repository_id, 'github')
     except DoesNotExist:
@@ -971,7 +970,7 @@ def get_individual_signature_callback_url(user_id, metadata=None):
     if metadata is None:
         metadata = get_active_signature_metadata(user_id)
     if metadata is None:
-        cla.log.error('Could not find active signature for user %s, callback URL request failed' % user_id)
+        cla.log.warning('Could not find active signature for user {}, callback URL request failed'.format(user_id))
         return None
 
     # Get Github ID from metadata
@@ -984,7 +983,7 @@ def get_individual_signature_callback_url(user_id, metadata=None):
                       github_repository_id)
         return None
 
-    return os.path.join(api_base_url, 'v2/signed/individual', str(installation_id), str(metadata['repository_id']),
+    return os.path.join(API_BASE_URL, 'v2/signed/individual', str(installation_id), str(metadata['repository_id']),
                         str(metadata['pull_request_id']))
 
 
@@ -1010,7 +1009,7 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
                                              change_request_id,
                                              installation_id)
     if callback_url is None:
-        callback_url = os.path.join(api_base_url, 'v2/signed/individual', str(installation_id), str(change_request_id))
+        callback_url = os.path.join(API_BASE_URL, 'v2/signed/individual', str(installation_id), str(change_request_id))
 
     signing_service = get_signing_service()
     return_url_type = 'Github'
@@ -1021,7 +1020,7 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
                                                                   callback_url)
     if 'sign_url' in signature_data:
         raise falcon.HTTPFound(signature_data['sign_url'])
-    cla.log.error('Could not get sign_url from signing service provider - sending user ' + \
+    cla.log.error('Could not get sign_url from signing service provider - sending user '
                   'to return_url instead')
     raise falcon.HTTPFound(return_url)
 

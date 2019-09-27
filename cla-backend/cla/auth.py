@@ -5,8 +5,10 @@
 auth.py contains all necessary objects and functions to perform authentication and authorization.
 """
 import os
+
 import requests
 from jose import jwt
+
 import cla
 
 auth0_base_url = os.environ.get('AUTH0_DOMAIN', '')
@@ -15,21 +17,30 @@ algorithms = [os.environ.get('AUTH0_ALGORITHM', '')]
 
 # This list represents admin users who can perform logo
 # uploads and project and cla manager permission updates
-admin_list = ['vnaidu', 'ddeal', 'bryan.stone', 'jszkut']
+admin_list = ['vnaidu', 'ddeal', 'bryan.stone']
+
 
 class AuthError(Exception):
+    """
+    Authentication error class
+    """
     def __init__(self, response):
+        super().__init__()
         self.response = response
 
-class AuthUser(object):
+
+class AuthUser:
     """
     This user object is built from Auth0 JWT claims.
     """
+
     def __init__(self, auth_claims):
+        super().__init__()
         self.name = auth_claims.get('name')
         self.email = auth_claims.get('email')
         self.username = auth_claims.get(auth0_username_claim)
         self.sub = auth_claims.get('sub')
+
 
 def get_auth_token(headers):
     """
@@ -51,6 +62,7 @@ def get_auth_token(headers):
         raise AuthError('authorization header must be of the form \"Bearer token\"')
 
     return parts[1]
+
 
 def authenticate_user(headers):
     """
@@ -109,5 +121,4 @@ def authenticate_user(headers):
 
         return auth_user
 
-    raise AuthError({"code": "invalid_header",
-                    "description": "Unable to find appropriate key"})
+    raise AuthError({"code": "invalid_header", "description": "Unable to find appropriate key"})
