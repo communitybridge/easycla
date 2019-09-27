@@ -10,6 +10,7 @@ import datetime
 import os
 import re
 import uuid
+from typing import Optional
 
 import dateutil.parser
 import requests
@@ -26,6 +27,7 @@ from pynamodb.models import Model
 
 import cla
 from cla.models import model_interfaces, key_value_store_interface
+from cla.models.model_interfaces import User
 
 stage = os.environ.get('STAGE', '')
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -997,7 +999,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     """
 
     def __init__(self, user_email=None, user_external_id=None, user_github_id=None, user_github_username=None,
-                 user_ldap_id=None, lf_username=None, lf_sub=None):
+                 user_ldap_id=None, lf_username=None, lf_sub=None, user_company_id=None):
         super(User).__init__()
         self.model = UserModel()
         if user_email is not None:
@@ -1008,11 +1010,13 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.model.user_ldap_id = user_ldap_id
         self.model.lf_username = lf_username
         self.model.lf_sub = lf_sub
+        self.model.user_company_id = user_company_id
 
     def __str__(self):
-        return ('id:{}, username: {}, gh id:{}, gh username:{}, '
-                'lf email:{}, emails:{}, ldap id:{}, lf username:{}, lf sub:{}').format(
-            self.model.user_external_id,
+        return ('id: {}, username: {}, gh id: {}, gh username: {}, '
+                'lf email: {}, emails: {}, ldap id: {}, lf username: {}, '
+                'user company id: {}').format(
+            self.model.user_id,
             self.model.user_github_username,
             self.model.user_github_id,
             self.model.user_github_username,
@@ -1020,7 +1024,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             self.model.user_emails,
             self.model.user_ldap_id,
             self.model.lf_username,
-            self.model.lf_sub,
+            self.model.user_company_id,
         )
 
     def to_dict(self):
@@ -1157,7 +1161,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     # def set_user_ldap_id(self, user_ldap_id):
     #     self.model.user_ldap_id = user_ldap_id
 
-    def get_user_by_email(self, user_email):
+    def get_user_by_email(self, user_email) -> Optional[User]:
         user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
         for user_model in user_generator:
             user = User()
@@ -1165,7 +1169,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             return user
         return None
 
-    def get_user_by_github_id(self, user_github_id):
+    def get_user_by_github_id(self, user_github_id) -> Optional[User]:
         user_generator = self.model.user_github_id_index.query(user_github_id)
         for user_model in user_generator:
             user = User()
@@ -1173,7 +1177,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             return user
         return None
 
-    def get_user_by_username(self, username):
+    def get_user_by_username(self, username) -> Optional[User]:
         user_generator = self.model.lf_username_index.query(username)
         for user_model in user_generator:
             user = User()
@@ -1181,7 +1185,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             return user
         return None
 
-    def get_user_by_github_username(self, github_username):
+    def get_user_by_github_username(self, github_username) -> Optional[User]:
         user_generator = self.model.user_github_username_index.query(github_username)
         for user_model in user_generator:
             user = User()
@@ -1190,6 +1194,9 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return None
 
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
+        cla.log.debug('get_user_signatures with params - project_id: {}, company_id: {}, '
+                      'signature_signed: {}, signature_approved: {}'.
+                      format(project_id, company_id, signature_signed, signature_approved))
         return Signature().get_signatures_by_reference(self.get_user_id(), 'user',
                                                        project_id=project_id,
                                                        user_ccla_company_id=company_id,
@@ -1207,6 +1214,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
+        cla.log.debug('get_latest_signature -> self.get_user_signatures with project_id: {}, company_id: {}'.
+                      format(project_id, company_id))
         signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
         latest = None
         for signature in signatures:
@@ -1597,6 +1606,23 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.github_whitelist = github_whitelist
         self.model.github_org_whitelist = github_org_whitelist
 
+    def __str__(self):
+        return ('id: {}, project id: {}, reference id: {}, reference type: {}, '
+                'user cla company id: {}, signed: {}, approved: {}, domain whitelist: {}, '
+                'email whitelist: {}, github user whitelist: {}, github domain whitelist: {}').format(
+            self.model.signature_id,
+            self.model.signature_project_id,
+            self.model.signature_reference_id,
+            self.model.signature_reference_type,
+            self.model.signature_user_ccla_company_id,
+            self.model.signature_signed,
+            self.model.signature_approved,
+            self.model.domain_whitelist,
+            self.model.email_whitelist,
+            self.model.github_whitelist,
+            self.model.github_org_whitelist,
+        )
+
     def to_dict(self):
         return dict(self.model)
 
@@ -1757,32 +1783,62 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
+        cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
+                      ' project_id: {}, user_ccla_company_id: {}'
+                      ' signature_signed: {}, signature_approved: {}'.
+                      format(reference_id, reference_type, project_id, user_ccla_company_id, signature_signed,
+                             signature_approved))
+
+        cla.log.debug('Signatures.get_signatures_by_reference() - '
+                      'performing signature_reference_id query using: {}'.format(reference_id))
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
+        cla.log.debug('Signatures.get_signatures_by_reference() - generator.last_evaluated_key: {}'.
+                      format(signature_generator.last_evaluated_key))
+
         signatures = []
         for signature_model in signature_generator:
             # Skip signatures that are not the same reference type: user/company
             if signature_model.signature_reference_type != reference_type:
+                cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
+                              'reference types do not match: {} versus {}'.
+                              format(signature_model.signature_reference_type, reference_type))
                 continue
+
             # Skip signatures that are not an employee CCLA if user_ccla_company_id is present. 
             # if user_ccla_company_id and signature_user_ccla_company_id are both none
             # it loads the ICLA signatures for a user. 
             if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
+                cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
+                              'user_ccla_company_id values do not match: {} versus {}'.
+                              format(signature_model.signature_user_ccla_company_id, user_ccla_company_id))
                 continue
+
             # Skip signatures that are not of the same project
-            if project_id is not None and \
-                    signature_model.signature_project_id != project_id:
+            if project_id is not None and signature_model.signature_project_id != project_id:
+                cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
+                              'project_id values do not match: {} versus {}'.
+                              format(signature_model.signature_project_id, project_id))
                 continue
+
             # SKip signatures that do not have the same signed flags 
             # e.g. retrieving only signed / approved signatures 
-            if signature_signed is not None and \
-                    signature_model.signature_signed != signature_signed:
+            if signature_signed is not None and signature_model.signature_signed != signature_signed:
+                cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
+                              'signature_signed values do not match: {} versus {}'.
+                              format(signature_model.signature_signed, signature_signed))
                 continue
-            if signature_approved is not None and \
-                    signature_model.signature_approved != signature_approved:
+
+            if signature_approved is not None and signature_model.signature_approved != signature_approved:
+                cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
+                              'signature_approved values do not match: {} versus {}'.
+                              format(signature_model.signature_approved, signature_approved))
                 continue
+
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
+            cla.log.debug('Signatures.get_signatures_by_reference() - signature match - '
+                          'adding signature to signature list: {}'.format(signature))
         return signatures
 
     def get_signatures_by_project(self, project_id, signature_signed=None,

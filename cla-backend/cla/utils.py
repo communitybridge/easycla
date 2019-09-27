@@ -479,7 +479,7 @@ def get_last_version(documents):
     return (last_major, last_minor)
 
 
-def user_signed_project_signature(user, project_id, latest_major_version=True):
+def user_signed_project_signature(user: User, project_id: str, latest_major_version=True):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
     Will consider both ICLA and employee signatures.
@@ -540,6 +540,9 @@ def user_signed_project_signature(user, project_id, latest_major_version=True):
                   format(user, project_id, company_id))
 
     if company_id is not None:
+        cla.log.debug('user has company_id set - getting latest signature for '
+                      'user: {}, project_id: {}, company_id: {}'.
+                      format(user, project_id, company_id))
         signature = user.get_latest_signature(project_id, company_id=company_id)
 
         # Don't check the version for employee signatures.
