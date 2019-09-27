@@ -559,8 +559,8 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
     if user is None:
         # GitHub user not in system yet, signature does not exist for this user.
         cla.log.info('GitHub user (id: {}, user: {}, email: {}) lookup by id not found, '
-                     'attempting to looking up user by email...',
-                     author_id, author_username, author_email)
+                     'attempting to looking up user by email...'.
+                     format(author_id, author_username, author_email))
 
         # Try looking up user by email as a fallback
         user = cla.utils.get_user_instance().get_user_by_email(author_email)

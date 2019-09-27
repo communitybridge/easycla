@@ -1962,4 +1962,3 @@ class CompanyInvite(object):
     def delete(self):
         raise NotImplementedError()
     
-    
