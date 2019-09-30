@@ -64,18 +64,32 @@ export class CompaniesPage {
     modal.present();
   }
 
+  /**
+   * Get the list of companies for this user - if any
+   */
   getCompanies() {
     this.loading.companies = true;
-    this.claService.getUserByUserName(this.userId).subscribe(response => {
-      if (response != null) {
+    this.claService.getUserByUserName(this.userId).subscribe(
+      response => {
+        console.log(response);
         // We need the user's unique ID - grab it from the first record
         this.getCompaniesByUserManagerWithInvites(response.userID);
-      } else {
+      },
+      exception => {
+        // Typically get this if the user is not found in our database
         this.loading.companies = false;
-      }
-    });
+        this.rows = [];
+        //console.log('Received exception:');
+        //console.log(exception);
+        //console.log(exception.status);
+      });
   }
 
+  /**
+   * Fetch the list of companies and company managers - update the companies table view
+   *
+   * @param userId the username/id of the logged in user
+   */
   getCompaniesByUserManagerWithInvites(userId) {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
       this.loading.companies = false;

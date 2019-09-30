@@ -6,6 +6,7 @@ import { Http } from "@angular/http";
 import { AuthService } from "./auth.service"
 
 import "rxjs/Rx";
+import {EmptyObservable} from "rxjs/observable/EmptyObservable";
 
 @Injectable()
 export class ClaService {
@@ -121,8 +122,18 @@ export class ClaService {
   getUserByUserName(userName) {
     const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
     return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+     .map(res => res.json());
+     // // .catch((error) => {
+     // //   const errString = String(error);
+     // //   if (errString.includes('404')) {
+     // //     console.log(errString);
+     // //     console.log('User ' + userName + ' was not found.');
+     // //     return new EmptyObservable();
+     // //   } else {
+     // //     this.handleServiceError(error);
+     // //     return new EmptyObservable();
+     // //   }
+     // });
   }
 
   /**
