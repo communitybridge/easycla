@@ -6,6 +6,8 @@ package auth
 import (
 	"errors"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 )
 
@@ -50,23 +52,27 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	// Verify the token is valid
 	claims, err := a.authValidator.VerifyToken(token)
 	if err != nil {
+		log.Warnf("SecurityAuth - verify token error: %+v", err)
 		return nil, err
 	}
 
 	// Get the username from the token claims
 	usernameClaim, ok := claims[a.authValidator.usernameClaim]
 	if !ok {
+		log.Warnf("SecurityAuth - username not found, error: %+v", err)
 		return nil, errors.New("username not found")
 	}
 
 	username, ok := usernameClaim.(string)
 	if !ok {
+		log.Warnf("SecurityAuth - invalid username, error: %+v", err)
 		return nil, errors.New("invalid username")
 	}
 
 	// Get User by LFID
 	user, err := a.userPermissioner.GetUserAndProfilesByLFID(username)
 	if err != nil {
+		log.Warnf("SecurityAuth - GetUserAndProfilesByLFID error for username: %s, error: %+v", username, err)
 		return nil, err
 	}
 
@@ -75,6 +81,7 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 		case projectScope:
 			projectIDs, err := a.userPermissioner.GetUserProjectIDs(user.UserID)
 			if err != nil {
+				log.Warnf("SecurityAuth - GetUserProjectIDs error for user id: %s, error: %+v", user.UserID, err)
 				return nil, err
 			}
 
@@ -83,6 +90,7 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 			//TODO:  Get all companies for this user
 			companies, err := a.userPermissioner.GetUserCompanyIDs(user.UserID)
 			if err != nil {
+				log.Warnf("SecurityAuth - GetUserCompanyIDs error for user id: %s, error: %+v", user.UserID, err)
 				return nil, err
 			}
 

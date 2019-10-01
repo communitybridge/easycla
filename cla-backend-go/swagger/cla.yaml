@@ -103,6 +103,36 @@ paths:
       tags:
         - users
 
+  /users:
+    post:
+      summary: Add user
+      description: Creates a new user record
+      security:
+        - OauthSecurity:
+            - user
+      operationId: addUser
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/user'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - users
+
   /users/username/{userName}:
     get:
       summary: Get user by User Name
@@ -897,17 +927,22 @@ paths:
         - company
 
   /company/{companyID}/invite-request:
-    parameters:
-      - name: companyID
-        in: path
-        type: string
-        required: true
     post:
       summary: Send Email to Company Admins for Request of Access to be a CLA Manager
       security:
         - OauthSecurity:
             - company
       operationId: sendInviteRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/user'
+          required: true
       responses:
         '200':
           description: 'Success'
@@ -1753,4 +1788,7 @@ responses:
     description: Not found
     schema:
       $ref: '#/definitions/error-response'
-
+  conflict:
+    description: The request could not be completed due to a conflict with the current state of the target resource.
+    schema:
+      $ref: '#/definitions/error-response'

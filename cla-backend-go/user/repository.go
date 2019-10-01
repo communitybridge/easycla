@@ -5,7 +5,8 @@ package user
 
 import (
 	"database/sql"
-	"fmt"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -30,7 +31,7 @@ func NewRepository(db *sqlx.DB) repository {
 
 // GetUserAndProfilesByLFID get user profile by LFID
 func (repo repository) GetUserAndProfilesByLFID(lfidUsername string) (CLAUser, error) {
-	fmt.Println("lfidUsername:", lfidUsername)
+	log.Debugf("lfidUsername: %s", lfidUsername)
 	sql := `
 		SELECT
 			u.user_id,

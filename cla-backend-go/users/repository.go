@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/google/uuid"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
@@ -22,6 +25,7 @@ import (
 
 // Repository interface defines the functions for the users service
 type Repository interface {
+	CreateUser(user *models.User) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
 	GetUserByUserName(userName string) (*models.User, error)
 }
@@ -53,6 +57,87 @@ type DBUser struct {
 	UserGithubID       string   `json:"user_github_id"`
 	UserCompanyID      string   `json:"user_company_id"`
 	UserGithubUsername string   `json:"user_github_username"`
+}
+
+func (repo repository) CreateUser(user *models.User) (*models.User, error) {
+	putStartTime := time.Now()
+
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	theUUID, err := uuid.NewUUID()
+	if err != nil {
+		return &models.User{}, err
+	}
+	newUUID := theUUID.String()
+
+	// Set and add the attributes from the request
+	attributes := map[string]*dynamodb.AttributeValue{
+		"user_id": {
+			S: aws.String(newUUID),
+		},
+	}
+
+	if user.LfEmail != "" {
+		attributes["lf_email"] = &dynamodb.AttributeValue{
+			S: aws.String(user.LfEmail),
+		}
+	}
+	if user.LfUsername != "" {
+		attributes["lf_username"] = &dynamodb.AttributeValue{
+			S: aws.String(user.LfUsername),
+		}
+	}
+	if user.Username != "" {
+		attributes["username"] = &dynamodb.AttributeValue{
+			S: aws.String(user.Username),
+		}
+	}
+
+	// Build the put request
+	input := &dynamodb.PutItemInput{
+		Item: attributes,
+		//ConditionExpression: aws.String("attribute_not_exists"),
+		TableName: aws.String(tableName),
+	}
+
+	_, err = repo.dynamoDBClient.PutItem(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				log.Warnf("dynamodb.ErrCodeConditionalCheckFailedException: %v", aerr.Error())
+			case dynamodb.ErrCodeProvisionedThroughputExceededException:
+				log.Warnf("dynamodb.ErrCodeProvisionedThroughputExceededExceptio: %vn", aerr.Error())
+			case dynamodb.ErrCodeResourceNotFoundException:
+				log.Warnf("dynamodb.ErrCodeResourceNotFoundException: %v", aerr.Error())
+			case dynamodb.ErrCodeItemCollectionSizeLimitExceededException:
+				log.Warnf("dynamodb.ErrCodeItemCollectionSizeLimitExceededException: %v", aerr.Error())
+			case dynamodb.ErrCodeTransactionConflictException:
+				log.Warnf("dynamodb.ErrCodeTransactionConflictException: %v", aerr.Error())
+			case dynamodb.ErrCodeRequestLimitExceeded:
+				log.Warnf("dynamodb.ErrCodeRequestLimitExceeded: %v", aerr.Error())
+			case dynamodb.ErrCodeInternalServerError:
+				log.Warnf("dynamodb.ErrCodeInternalServerError: %v", aerr.Error())
+			default:
+				log.Warnf(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			log.Warnf(err.Error())
+		}
+		return &models.User{}, err
+	}
+
+	log.Debugf("AddUser put took: %v", utils.FmtDuration(time.Since(putStartTime)))
+	log.Debugf("Created new user: %+v", user)
+	userModel, err := repo.GetUserByUserName(user.Username)
+	if err != nil {
+		log.Warnf("Error locating new user after creation, user: %+v, error: %+v", user, err)
+	}
+	log.Debugf("Returning new user: %+v", userModel)
+
+	return userModel, err
 }
 
 func (repo repository) GetUser(userID string) (*models.User, error) {

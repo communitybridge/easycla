@@ -1,12 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
-import { AuthService } from "./auth.service"
+import {Injectable} from "@angular/core";
+import {Http} from "@angular/http";
+import {AuthService} from "./auth.service"
 
 import "rxjs/Rx";
-import {EmptyObservable} from "rxjs/observable/EmptyObservable";
+import 'rxjs/add/operator/catch';
+import {Observable} from "rxjs";
 
 @Injectable()
 export class ClaService {
@@ -111,9 +112,9 @@ export class ClaService {
    **/
   getUserByUserId(userId) {
     const url: URL = this.getV3Endpoint('/v3/users/' + userId);
-    return this.http.get(url)
+    return this.http.getWithCreds(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(this.handleServiceError);
   }
 
   /**
@@ -121,25 +122,15 @@ export class ClaService {
    **/
   getUserByUserName(userName) {
     const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
-    return this.http.get(url)
-     .map(res => res.json());
-     // // .catch((error) => {
-     // //   const errString = String(error);
-     // //   if (errString.includes('404')) {
-     // //     console.log(errString);
-     // //     console.log('User ' + userName + ' was not found.');
-     // //     return new EmptyObservable();
-     // //   } else {
-     // //     this.handleServiceError(error);
-     // //     return new EmptyObservable();
-     // //   }
-     // });
+    return this.http.getWithCreds(url)
+      .map(res => res.json())
+      .catch((err) => this.handleServiceError(err));
   }
 
   /**
    * POST /v1/user
    **/
-  postUser(user) {
+  createUser(user) {
     /*
       {
         'user_email': 'user@email.com',
@@ -149,6 +140,24 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/user');
+    return this.http.post(url, user)
+      .map(res => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
+   * POST /v3/user
+   **/
+  createUserV3(user) {
+    /*
+      {
+        'user_email': 'user@email.com',
+        'user_name': 'User Name',
+        'user_company_id': '<org-id>',
+        'user_github_id': 12345
+      }
+     */
+    const url: URL = this.getV3Endpoint('/v3/users');
     return this.http.post(url, user)
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
@@ -326,9 +335,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signature/' + signatureId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -351,9 +359,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signatures/user/' + userId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -365,9 +372,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signatures/company/' + companyId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -380,9 +386,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
     const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -395,9 +400,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
     // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
     const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee');
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -409,9 +413,8 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path
     const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -553,9 +556,8 @@ export class ClaService {
    */
   getCompaniesByUserManager(userID) {
     const url: URL = this.getV3Endpoint('/v3/company/user/' + userID);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -634,9 +636,8 @@ export class ClaService {
    */
   searchCompaniesByName(companyName) {
     const url: URL = this.getV3Endpoint('/v3/company/search?companyName=' + companyName);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -664,7 +665,7 @@ export class ClaService {
    */
   postProjectManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager');
-    return this.http.post(url, { lfid: payload.managerLFID })
+    return this.http.post(url, {lfid: payload.managerLFID})
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -694,7 +695,7 @@ export class ClaService {
    */
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
-    return this.http.post(url, { lfid: payload.managerLFID })
+    return this.http.post(url, {lfid: payload.managerLFID})
       .map(res => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -1112,8 +1113,7 @@ export class ClaService {
   getGithubOrganizationWhitelist(signatureID, companyID, corporateClaID) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`);
     return this.http.getWithCreds(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .map(res => res.json());
   }
 
   /**
@@ -1122,8 +1122,7 @@ export class ClaService {
   getGithubOrganizationWhitelistEntries(signatureID) {
     const url: URL = this.getV3Endpoint(`/v3/signatures/${signatureID}/gh-org-whitelist`);
     return this.http.getWithCreds(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .map(res => res.json());
   }
 
   /**
@@ -1131,11 +1130,10 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = { "organization_id": organizationId };
+    const data = {"organization_id": organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .map(res => res.json());
   }
 
   /**
@@ -1143,11 +1141,10 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = { "organization_id": organizationId };
+    const data = {"organization_id": organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .map(res => res.json());
   }
 
   /**
@@ -1155,11 +1152,10 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = { "id": organizationId };
+    const data = {"id": organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .map(res => res.json());
   }
 
   /**
@@ -1167,21 +1163,37 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = { "id": organizationId };
+    const data = {"id": organizationId};
     const url: URL = this.getV3Endpoint(path);
-    return this.http.deleteWithBody(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.deleteWithCredsAndBody(url, data)
+      .map(res => res.json());
   }
 
   /**
    * POST /v3/company/{companyId}/invite-request
    **/
-  sendInviteRequestEmail(companyId) {
+  sendInviteRequestEmail(companyId: string, userId: string, userEmail: string, userName: string): Observable<any> {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/invite-request`);
-    return this.http.post(url)
+    const data = {
+      userID: userId,
+      lfUsername: userId,
+      lfEmail: userEmail,
+      username: userName,
+    };
+    console.log('Invoking sendInviteRequestEmail() with url: ' + url);
+    return this.http.postWithCreds(url, data)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(this.handleServiceError);
+
+    // Observable
+    //.catchError((error: HttpErrorResponse) => {
+
+    //  console.log('Caught HttpErrorResponse object:');
+
+    //  console.log(error);
+    //if (error.status === 500 && error.)
+
+    //});
   }
 
   /**
@@ -1207,9 +1219,8 @@ export class ClaService {
    **/
   getPendingInvites(companyId) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   /**
@@ -1241,38 +1252,67 @@ export class ClaService {
    */
   getPendingUserInvite(companyId, userID) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/${userID}/invitelist`);
-    return this.http.get(url)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error)
-      );
+    return this.http.getWithCreds(url)
+      .map(res => res.json());
   }
 
   acceptCompanyInvite(companyId, data) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.post(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.postWithCreds(url, data)
+      .map(res => res.json());
   }
 
   declineCompanyInvite(companyId, data) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.deleteWithBody(url, data)
-      .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+    return this.http.deleteWithCredsAndBody(url, data)
+      .map(res => res.json());
   }
 
+  /**
+   * Handle service error is a common routine to handle HTTP response errors
+   * @param error the error
+   * @param caught the error that was caught
+   */
   private handleServiceError(error: any) {
-    const errString = String(error);
-    console.log('Service error: ' + error + ', msg: ' + errString);
-    if (errString.includes('401')) {
-      console.log('authentication error invoking service: ' + error + '. Forcing user to log out...');
-      this.authService.logout();
-    } else if (errString.includes('Token is expired')) {
-      console.log(errString + ' - redirecting to login page');
-      this.authService.logout();
+    /*
+    console.log('Service error:');
+    let errMsg: string;
+    if (error instanceof Response) {
+      console.log('HTTP Response service error:');
+      const body = error.json() || '';
+      const err = body.error || JSON.stringify(body);
+      errMsg = `${error.status} - ${error.statusText || ''} ${err}`;
     } else {
-      console.log('problem invoking service: ' + error);
+      console.log('any service error:');
+      const errString = String(error);
+      console.log("Error:");
+      console.log(errString);
+      if (errString.includes('401')) {
+        console.log('authentication error invoking service: ' + error + '. Forcing user to log out...');
+        this.authService.logout();
+      } else if (errString.includes('Token is expired')) {
+        console.log(errString + ' - redirecting to login page');
+        this.authService.logout();
+      }
+      errMsg = error.message ? error.message : error.toString();
     }
+    console.log(errMsg);
+    return Observable.throw(errMsg);
+     */
+
+    if (error.status && error._body && error.status === 500 && error._body.includes('Token is expired')) {
+      console.log(error._body + ' - redirecting to login page');
+      this.authService.logout();
+      return Observable.throw(error);
+    } else if (error.status && error.status === 401) {
+      console.log(error._body + ' - redirecting to login page');
+      this.authService.logout();
+      return Observable.throw(error);
+    }
+
+    console.log('problem invoking service: ');
+    console.log(error);
+    return Observable.throw(error);
   }
 
   //////////////////////////////////////////////////////////////////////////////

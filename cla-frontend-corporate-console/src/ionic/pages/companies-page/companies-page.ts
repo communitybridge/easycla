@@ -21,7 +21,11 @@ import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
 export class CompaniesPage {
   loading: any;
   companies: any;
+
   userId: string;
+  userEmail: string;
+  userName: string;
+
   manager: string;
   columns: any[];
   rows: any[];
@@ -44,6 +48,8 @@ export class CompaniesPage {
       companies: true
     };
     this.userId = localStorage.getItem("userid");
+    this.userEmail = localStorage.getItem("user_email");
+    this.userName = localStorage.getItem("user_name");
     this.companies = [];
     this.columns = [
       {prop: 'CompanyName'},
@@ -79,9 +85,28 @@ export class CompaniesPage {
         // Typically get this if the user is not found in our database
         this.loading.companies = false;
         this.rows = [];
-        //console.log('Received exception:');
-        //console.log(exception);
-        //console.log(exception.status);
+
+        console.log('Received exception:');
+        console.log(exception);
+        if (exception.status === 404) {
+          // Create the user if it does't exist
+          console.log('Creating user record...');
+          const user = {
+            'lfUsername': this.userId,
+            'username': this.userName,
+            'lfEmail': this.userEmail,
+          };
+          this.claService.createUserV3(user).subscribe(
+            response => {
+              console.log('Success creating user record: ');
+              console.log(response);
+            },
+            exception => {
+              console.log('Error creating user record: ');
+              console.log(exception);
+            });
+        }
+
       });
   }
 
@@ -92,14 +117,18 @@ export class CompaniesPage {
    */
   getCompaniesByUserManagerWithInvites(userId) {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
-      this.loading.companies = false;
-      this.rows = this.mapCompanies(companies['companies-with-invites']);
-    })
-  }
-
-  getPendingUserInvite(companyId, userId) {
-    this.claService.getPendingUserInvite(companyId, userId).subscribe((response) => {
-    })
+        this.loading.companies = false;
+        if (companies['companies-with-invites']) {
+          this.rows = this.mapCompanies(companies['companies-with-invites']);
+        } else{
+          this.rows = [];
+        }
+      },
+      exception => {
+        this.loading.companies = false;
+        console.log("Exception while calling: getCompaniesByUserManagerWithInvites() for userId: " + userId);
+        console.log(exception);
+      })
   }
 
   viewCompany(companyId) {

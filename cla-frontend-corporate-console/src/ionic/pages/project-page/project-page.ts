@@ -118,30 +118,40 @@ export class ProjectPage {
     // get CCLA signatures
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        console.log('Project signatures:');
-        console.log(response);
-        if (response.signatures) {
-          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
-          if (cclaSignatures.length) {
-            this.cclaSignature = cclaSignatures[0];
-            this.getCLAManagers();
-            this.getGitHubOrgWhitelist();
+          console.log('Project signatures:');
+          console.log(response);
+          if (response.signatures) {
+            let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+            if (cclaSignatures.length) {
+              this.cclaSignature = cclaSignatures[0];
+              this.getCLAManagers();
+              this.getGitHubOrgWhitelist();
+            }
           }
-        }
-      });
+        },
+        exception => {
+          console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
+            this.companyId + ' and project ID: ' + this.projectId);
+          console.log(exception);
+        });
 
     // get employee signatures
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-        console.log('Employee signatures:');
-        console.log(response);
-        if (response.signatures) {
-          this.employeeSignatures = response;
-          for (let signature of this.employeeSignatures) {
-            this.getUser(signature.signatureReferenceType);
+          console.log('Employee signatures:');
+          console.log(response);
+          if (response.signatures) {
+            this.employeeSignatures = response;
+            for (let signature of this.employeeSignatures) {
+              this.getUser(signature.signatureReferenceType);
+            }
           }
-        }
-      });
+        },
+        exception => {
+          console.log("Exception while calling: getEmployeeProjectSignatures() for company ID: " +
+            this.companyId + ' and project ID: ' + this.projectId);
+          console.log(exception);
+        });
 
   }
 
@@ -248,25 +258,30 @@ export class ProjectPage {
     if (this.cclaSignature == null) {
       this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
         .subscribe(response => {
-          let cclaSignatures = response.filter(sig => sig.signatureType === 'ccla');
-          if (cclaSignatures.length) {
-            this.cclaSignature = cclaSignatures[0];
-            this.getCLAManagers();
-            this.getGitHubOrgWhitelist();
-
-            // Ok to open the modal now that we have signatures loaded
-            let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
-              companyId: this.companyId,
-              corporateClaId: this.projectId,
-              signatureId: this.cclaSignature.signatureID
-            });
-            modal.onDidDismiss(data => {
-              // Refresh the list
+            let cclaSignatures = response.filter(sig => sig.signatureType === 'ccla');
+            if (cclaSignatures.length) {
+              this.cclaSignature = cclaSignatures[0];
+              this.getCLAManagers();
               this.getGitHubOrgWhitelist();
-            });
-            modal.present();
-          }
-        });
+
+              // Ok to open the modal now that we have signatures loaded
+              let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+                companyId: this.companyId,
+                corporateClaId: this.projectId,
+                signatureId: this.cclaSignature.signatureID
+              });
+              modal.onDidDismiss(data => {
+                // Refresh the list
+                this.getGitHubOrgWhitelist();
+              });
+              modal.present();
+            }
+          },
+          exception => {
+            console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
+              this.companyId + ' and project ID: ' + this.projectId);
+            console.log(exception);
+          });
     } else {
       let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
         companyId: this.companyId,
