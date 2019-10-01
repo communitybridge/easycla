@@ -49,6 +49,9 @@ export class AuthService {
     localStorage.setItem("access_token", authResult.accessToken);
     localStorage.setItem("id_token", authResult.idToken);
     localStorage.setItem("expires_at", expiresAt);
+    localStorage.setItem("userid", authResult.idTokenPayload.nickname);
+    localStorage.setItem("user_email", authResult.idTokenPayload.email);
+    localStorage.setItem("user_name", authResult.idTokenPayload.name);
   }
 
   public logout(): void {
@@ -56,6 +59,9 @@ export class AuthService {
     localStorage.removeItem("access_token");
     localStorage.removeItem("id_token");
     localStorage.removeItem("expires_at");
+    localStorage.removeItem("userid");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
   }
 
   public isAuthenticated(): boolean {

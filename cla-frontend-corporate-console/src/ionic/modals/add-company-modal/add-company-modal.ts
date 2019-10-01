@@ -1,21 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  ModalController,
-  ViewController,
-  AlertController,
-  IonicPage
-} from "ionic-angular";
-import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { ClaService } from "../../services/cla.service";
-import { ClaCompanyModel } from "../../models/cla-company";
-import { AuthService } from "../../services/auth.service";
-import { HttpErrorResponse } from "@angular/common/http"
-import { ErrorObservable } from "rxjs/observable/ErrorObservable";
+import {Component} from "@angular/core";
+import {AlertController, IonicPage, NavParams, ViewController} from "ionic-angular";
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {ClaService} from "../../services/cla.service";
+import {ClaCompanyModel} from "../../models/cla-company";
+import {AuthService} from "../../services/auth.service";
 
 @IonicPage({
   segment: "add-company-modal"
@@ -114,9 +105,22 @@ export class AddCompanyModal {
   }
 
   joinCompany() {
-    this.loading.submit = true
-    this.claService.sendInviteRequestEmail(this.existingCompanyId)
-      .subscribe(() => this.dismiss());
+    this.loading.submit = true;
+    const userId = localStorage.getItem("userid");
+    const userEmail = localStorage.getItem("user_email");
+    const userName = localStorage.getItem("user_name");
+    this.claService.sendInviteRequestEmail(this.existingCompanyId, userId, userEmail, userName)
+      .subscribe(
+        response => {
+          this.loading.submit = false;
+          this.dismiss();
+        },
+        exception => {
+          this.loading.submit = false;
+          console.log("Exception while calling: sendInviteRequestEmail() for company ID: " +
+            this.existingCompanyId);
+          console.log(exception);
+        });
   }
 
   updateCompany() {
@@ -151,7 +155,10 @@ export class AddCompanyModal {
         {
           text: 'Request',
           handler: () => {
-            this.claService.sendInviteRequestEmail(company_id)
+            const userId = localStorage.getItem("userid");
+            const userEmail = localStorage.getItem("user_email");
+            const userName = localStorage.getItem("user_name");
+            this.claService.sendInviteRequestEmail(company_id, userId, userEmail, userName)
               .subscribe(() => this.dismiss());
           }
         },

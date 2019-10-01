@@ -75,20 +75,26 @@ func (repo RepositoryDynamo) GetUserAndProfilesByLFID(lfidUsername string) (CLAU
 	result, err := repo.DynamoDBClient.Query(input)
 
 	if err != nil {
-		fmt.Println("Unable to retrieve data from users")
-		return CLAUser{}, err
+		log.Warnf("problem querying the database for user: %s , error: %+v", lfidUsername, err)
+		return CLAUser{
+			LFUsername: lfidUsername,
+		}, err
 	}
 
 	users := []User{}
 	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &users)
 	if err != nil {
-		fmt.Println(err.Error())
-		return CLAUser{}, err
+		log.Warnf("problem unmarshalling the database results, error: %+v", err)
+		return CLAUser{
+			LFUsername: lfidUsername,
+		}, err
 	}
 
 	if len(users) < 1 {
-		fmt.Println(fmt.Sprintf("No user has been found with the given LFID: %s", lfidUsername))
-		return CLAUser{}, err
+		log.Debugf(fmt.Sprintf("Get User And Profiles By LFID - user not found given LFID: %s", lfidUsername))
+		return CLAUser{
+			LFUsername: lfidUsername,
+		}, err
 	}
 
 	claUser := CLAUser{
@@ -114,8 +120,7 @@ func (repo RepositoryDynamo) GetUserProjectIDs(userID string) ([]string, error) 
 	})
 
 	if err != nil {
-		log.Warnf("error feteching user project IDs: error: %v", err)
-		fmt.Println(err.Error())
+		log.Warnf("error fetching user project IDs: error: %v", err)
 		return []string{}, err
 	}
 

@@ -92,22 +92,26 @@ export class CompanyPage {
     this.rows = [];
 
     this.claService.getCompanySignatures(this.companyId).subscribe(response => {
-      //console.log('Company signatures:');
-      //console.log(response);
-      if (response.resultCount > 0) {
-        //console.log('Filtering Company signatures...');
-        this.companySignatures = response.signatures.filter(signature =>
-          signature.signatureSigned === true
-        );
-        //console.log('Filtered Company signatures: ' + this.companySignatures.length);
-        //console.log('Loading projects...');
-        for (let signature of this.companySignatures) {
-          this.getProject(signature.projectID);
+        //console.log('Company signatures:');
+        //console.log(response);
+        if (response.resultCount > 0) {
+          //console.log('Filtering Company signatures...');
+          this.companySignatures = response.signatures.filter(signature =>
+            signature.signatureSigned === true
+          );
+          //console.log('Filtered Company signatures: ' + this.companySignatures.length);
+          //console.log('Loading projects...');
+          for (let signature of this.companySignatures) {
+            this.getProject(signature.projectID);
+          }
         }
-      }
-      this.loading.companySignatures = false;
-      this.loading.projects = false;
-    });
+        this.loading.companySignatures = false;
+        this.loading.projects = false;
+      },
+      exception => {
+        this.loading.companySignatures = false;
+        this.loading.projects = false;
+      });
   }
 
   getProject(projectId) {
