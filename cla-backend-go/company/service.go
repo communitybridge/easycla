@@ -321,12 +321,15 @@ You have now been granted access to the organization: %s
 		log.Warnf("Error sending mail, error: %v", err)
 		return err
 	}
+	log.Debugf("Sent '%s' email to: %s", Subject, Recipient)
 
 	return nil
 }
 
 // SendRequestAccessEmail sends the request access e-mail when provided the company ID and user object
 func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) error {
+
+	log.Debugf("Processing send invite access email for company ID: %s, user: %+v", companyID, user)
 
 	// Get Company
 	company, err := s.repo.GetCompany(companyID)
@@ -394,6 +397,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 			log.Warnf("Error sending mail, error: %v", err)
 			return err
 		}
+		log.Debugf("Sent '%s' email to: %s", Subject, adminUser.LFEmail)
 	}
 
 	return nil

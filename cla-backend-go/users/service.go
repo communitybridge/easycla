@@ -9,6 +9,7 @@ import (
 
 // Service interface for users
 type Service interface {
+	CreateUser(user *models.User) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
 	GetUserByUserName(userName string) (*models.User, error)
 }
@@ -24,7 +25,17 @@ func NewService(repo Repository) Service {
 	}
 }
 
-// GetUserByUserName attempts to locate the user by the user id field
+// CreateUser attempts to create a new user based on the specified model
+func (s service) CreateUser(user *models.User) (*models.User, error) {
+	userModel, err := s.repo.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return userModel, nil
+}
+
+// GetUser attempts to locate the user by the user id field
 func (s service) GetUser(userID string) (*models.User, error) {
 	userModel, err := s.repo.GetUser(userID)
 	if err != nil {

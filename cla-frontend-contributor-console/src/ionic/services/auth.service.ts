@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
+import {Injectable} from "@angular/core";
 import * as auth0 from "auth0-js";
 import * as jwt_decode from "jwt-decode";
-import { getAuthURLFromWindow } from "./auth.utils";
-import { EnvConfig } from "./cla.env.utils";
+import {getAuthURLFromWindow} from "./auth.utils";
+import {EnvConfig} from "./cla.env.utils";
+
 (window as any).global = window;
 
 @Injectable()
@@ -51,6 +52,9 @@ export class AuthService {
     localStorage.setItem("access_token", authResult.accessToken);
     localStorage.setItem("id_token", authResult.idToken);
     localStorage.setItem("expires_at", expiresAt);
+    localStorage.setItem("userid", authResult.idTokenPayload.nickname);
+    localStorage.setItem("user_email", authResult.idTokenPayload.email);
+    localStorage.setItem("user_name", authResult.idTokenPayload.name);
   }
 
   public logout(): void {
@@ -58,6 +62,9 @@ export class AuthService {
     localStorage.removeItem("access_token");
     localStorage.removeItem("id_token");
     localStorage.removeItem("expires_at");
+    localStorage.removeItem("userid");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
   }
 
   public isAuthenticated(): boolean {
@@ -93,14 +100,13 @@ export class AuthService {
       if (!accessToken) {
         reject('Access Token must exist to fetch profile');
       }
-      this.auth0.client.userInfo(accessToken, function(err, profile) {
-        if(profile) {
+      this.auth0.client.userInfo(accessToken, function (err, profile) {
+        if (profile) {
           return resolve(profile);
         }
       })
     });
-  } 
+  }
 
 
-  
 }

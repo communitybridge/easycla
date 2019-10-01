@@ -11,8 +11,8 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
-	"github.com/labstack/gommon/log"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -62,6 +62,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
 		if companyUserValidation {
+			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
 			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
 			if userErr != nil {
 				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
@@ -93,6 +94,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 
 	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
 		if companyUserValidation {
+			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
 			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
 			if userErr != nil {
 				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
@@ -134,6 +136,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	})
 
 	api.CompanyGetCompanyInviteRequestsHandler = company.GetCompanyInviteRequestsHandlerFunc(func(params company.GetCompanyInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("Processing get company invite request for company ID: %s", params.CompanyID)
 		result, err := service.GetCompanyInviteRequests(params.CompanyID)
 		if err != nil {
 			log.Warnf("error getting company invite using company id: %s, error: %v", params.CompanyID, err)
@@ -144,6 +147,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	})
 
 	api.CompanyGetCompanyUserInviteRequestsHandler = company.GetCompanyUserInviteRequestsHandlerFunc(func(params company.GetCompanyUserInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("Processing get company user invite request for company ID: %s and user ID: %s", params.CompanyID, params.UserID)
 		result, err := service.GetCompanyUserInviteRequests(params.CompanyID, params.UserID)
 		if err != nil {
 			log.Warnf("error getting company user invite using company id: %s, user id: %s, error: %v", params.CompanyID, params.UserID, err)
@@ -158,7 +162,14 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	})
 
 	api.CompanySendInviteRequestHandler = company.SendInviteRequestHandlerFunc(func(params company.SendInviteRequestParams, claUser *user.CLAUser) middleware.Responder {
-
+		log.Debugf("Processing send invite request for company ID: %s, user: %+v", params.CompanyID, claUser)
+		if claUser.UserID == "" {
+			claUser.UserID = params.Body.UserID
+			claUser.LFUsername = params.Body.UserID
+			claUser.LFEmail = params.Body.LfEmail
+			claUser.Name = params.Body.Username
+			log.Debugf("Processing send invite request - added userID for company ID: %s, user: %+v", params.CompanyID, claUser)
+		}
 		err := service.SendRequestAccessEmail(params.CompanyID, claUser)
 		if err != nil {
 			log.Warnf("error sending request access email using company id: %s with user: %v, error: %v", params.CompanyID, claUser, err)
