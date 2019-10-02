@@ -25,8 +25,6 @@ export class AuthPage {
   }
 
   ionViewDidEnter() {
-    console.log('ionViewDidEnter AuthPage');
-
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
         if (AuthPage.hasAccess(userRoles)) {
@@ -40,7 +38,7 @@ export class AuthPage {
       });
     }, 2000);
     // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
-    // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack. 
+    // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack.
     // Refactoring to Ionic 4.0+ with default Ng Route Module may resolve this problem but it's over work balance.
   }
 

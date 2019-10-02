@@ -24,8 +24,6 @@ export class AuthPage {
   }
 
   ionViewDidEnter() {
-    console.log('ionViewDidEnter AuthPage');
-
     setTimeout(() => {
       this.rolesService.getUserRolesPromise().then((userRoles) => {
         if (AuthPage.hasAccess(userRoles)) {
