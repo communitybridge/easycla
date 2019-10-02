@@ -2,21 +2,31 @@
 # SPDX-License-Identifier: MIT
 import unittest
 
-import cla
-import github
-from cla import config
-from cla.models.github_models import get_pull_request_commit_authors
 from github import Github
+
+import cla
+from cla.models.github_models import get_pull_request_commit_authors
 
 
 class TestGitHubModels(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls) -> None:
+        pass
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        pass
+
+    def setUp(self) -> None:
         self.assertTrue(cla.conf['GITHUB_OAUTH_TOKEN'] != '',
                         'Missing GITHUB_OAUTH_TOKEN environment variable - required to run unit tests')
-        cla.log.debug('Using GITHUB_OAUTH_TOKEN: {}...'.format(cla.conf['GITHUB_OAUTH_TOKEN'][:5]))
+        # cla.log.debug('Using GITHUB_OAUTH_TOKEN: {}...'.format(cla.conf['GITHUB_OAUTH_TOKEN'][:5]))
 
-    def test_commit_authors_with_named_user(self):
+    def tearDown(self) -> None:
+        pass
+
+    def test_commit_authors_with_named_user(self) -> None:
         """
         Test that we can load commit authors from a pull request that does have the traditional
         github.NamedUser.NamedUser object filled out
@@ -35,7 +45,7 @@ class TestGitHubModels(unittest.TestCase):
         # cla.log.info([author_info[1] for commit, author_info in commit_authors])
         self.assertTrue(4779759 in [author_info[0] for commit, author_info in commit_authors])
 
-    def test_commit_authors_no_named_user(self):
+    def test_commit_authors_no_named_user(self) -> None:
         """
         Test that we can load commit authors from a pull request that does NOT have the traditional
         github.NamedUser.NamedUser object filled out

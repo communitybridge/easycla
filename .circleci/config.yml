@@ -34,7 +34,7 @@ jobs:
           command: |
             cd cla-backend
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
-            python3 -m unittest -v cla/test_github_models.py
+            python3 -m unittest -v cla/test_*.py
 
   buildGoBackend:
     docker:
