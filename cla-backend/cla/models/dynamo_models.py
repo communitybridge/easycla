@@ -1162,6 +1162,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     #     self.model.user_ldap_id = user_ldap_id
 
     def get_user_by_email(self, user_email) -> Optional[User]:
+        if user_email is None:
+            cla.log.warning('Unable to lookup user by user_email - email is empty')
+            return None
+
         user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
         for user_model in user_generator:
             user = User()
@@ -1170,6 +1174,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return None
 
     def get_user_by_github_id(self, user_github_id) -> Optional[User]:
+        if user_github_id is None:
+            cla.log.warning('Unable to lookup user by github id - id is empty')
+            return None
+
         user_generator = self.model.user_github_id_index.query(user_github_id)
         for user_model in user_generator:
             user = User()
@@ -1178,6 +1186,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return None
 
     def get_user_by_username(self, username) -> Optional[User]:
+        if username is None:
+            cla.log.warning('Unable to lookup user by username - username is empty')
+            return None
+
         user_generator = self.model.lf_username_index.query(username)
         for user_model in user_generator:
             user = User()
@@ -1186,6 +1198,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return None
 
     def get_user_by_github_username(self, github_username) -> Optional[User]:
+        if github_username is None:
+            cla.log.warning('Unable to lookup user by github_username - github_username is empty')
+            return None
+
         user_generator = self.model.user_github_username_index.query(github_username)
         for user_model in user_generator:
             user = User()
