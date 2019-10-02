@@ -22,7 +22,6 @@ export class HttpClient {
     let headers = new Headers({
       'Accept': 'application/json',
       'Content-Type': contentType,
-      'Cache-Control': 'no-cache',
     });
     return Promise.resolve(headers);
   }
