@@ -16,10 +16,11 @@ export class HttpClient {
     private authService: AuthService) {
   }
 
-  buildAuthHeaders(contentType: string = 'application/json') {
+  private buildAuthHeaders(contentType: string = 'application/json') {
     let headers = new Headers({
       'Accept': 'application/json',
-      'Content-Type': contentType
+      'Content-Type': contentType,
+      'Cache-Control': 'no-cache',
     });
 
     if (this.authService.isAuthenticated()) {
@@ -34,7 +35,6 @@ export class HttpClient {
     } else {
       return Promise.resolve(headers);
     }
-
   }
 
   buildS3Headers(contentType) {
