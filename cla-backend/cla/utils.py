@@ -478,6 +478,54 @@ def get_last_version(documents):
     return (last_major, last_minor)
 
 
+def user_icla_check(user: User, project_id: str, signature: Signature, latest_major_version=True) -> bool:
+    cla.log.debug(f'ICLA signature found for user: {user} on project: {project_id}, '
+                  f'signature_id: {signature.get_signature_id()}')
+
+    # Here's our logic to determine if the signature is valid
+    if latest_major_version:  # Ensure it's latest signature.
+        project = get_project_instance()
+        project.load(str(project_id))
+        document_models = project.get_project_individual_documents()
+        major, _ = get_last_version(document_models)
+        if signature.get_signature_document_major_version() != major:
+            cla.log.debug(f'User: {user} only has an old document version signed '
+                          f'(v{signature.get_signature_document_major_version()}) - needs a new version')
+            return False
+
+    if signature.get_signature_signed() and signature.get_signature_approved():
+        # Signature found and signed/approved.
+        cla.log.debug(f'User: {user} has ICLA signed and approved signature_id: {signature.get_signature_id()} '
+                      f'for project: {project_id}')
+        return True
+    elif signature.get_signature_signed():  # Not approved yet.
+        cla.log.debug(f'User: {user} has ICLA signed with signature_id: {signature.get_signature_id()}, '
+                      f'project: {project_id}, but has not been approved yet')
+        return False
+    else:  # Not signed or approved yet.
+        cla.log.debug(f'User: {user} has ICLA with signature_id: {signature.get_signature_id()}, '
+                      f'project: {project_id}, but has not been signed or approved yet')
+        return False
+
+
+def user_ccla_check(user: User, project_id: str, signature: Signature) -> bool:
+    cla.log.debug(f'CCLA signature found for user: {user} on project: {project_id}, '
+                  f'signature_id: {signature.get_signature_id()}')
+
+    if signature.get_signature_signed() and signature.get_signature_approved():
+        cla.log.debug(f'User: {user} has a signed and approved CCLA for project: {project_id}')
+        return True
+
+    if signature.get_signature_signed():
+        cla.log.debug(f'User: {user} has CCLA signed with signature_id: {signature.get_signature_id()}, '
+                      f'project: {project_id}, but has not been approved yet')
+        return False
+    else:  # Not signed or approved yet.
+        cla.log.debug(f'User: {user} has CCLA with signature_id: {signature.get_signature_id()}, '
+                      f'project: {project_id}, but has not been signed or approved yet')
+        return False
+
+
 def user_signed_project_signature(user: User, project_id: str, latest_major_version=True):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
@@ -495,80 +543,46 @@ def user_signed_project_signature(user: User, project_id: str, latest_major_vers
     """
 
     # Check if we have an ICLA for this user
-    cla.log.debug('checking to see if user has signed an ICLA, user: {}, project: {}'.
-                  format(user, project_id))
+    cla.log.debug(f'checking to see if user has signed an ICLA, user: {user}, project: {project_id}')
 
     signature = user.get_latest_signature(project_id)
+    icla_pass = False
     if signature is not None:
-        cla.log.debug('ICLA signature found for user: {} on project: {}, signature_id: {}'.
-                      format(user.get_user_id(), project_id, signature.get_signature_id()))
-
-        if latest_major_version:  # Ensure it's latest signature.
-            project = get_project_instance()
-            project.load(str(project_id))
-            document_models = project.get_project_individual_documents()
-            major, _ = get_last_version(document_models)
-            if signature.get_signature_document_major_version() != major:
-                cla.log.debug('User: {} only has an old document version signed (v{}) - needs a new version'.
-                              format(user, signature.get_signature_document_major_version()))
-                return False
-
-        if signature.get_signature_signed() and signature.get_signature_approved():
-            # Signature found and signed/approved.
-            cla.log.debug('User: {} has ICLA signed and approved signature_id: {} '
-                          'for project: {}'.
-                          format(user, signature.get_signature_id(), project_id))
-            return True
-        elif signature.get_signature_signed():  # Not approved yet.
-            cla.log.debug('User: {} has ICLA signed with signature_id: {}, project: {}, '
-                          'but has not been approved yet'.
-                          format(user, signature.get_signature_id(), project_id))
-            return False
-        else:  # Not signed or approved yet.
-            cla.log.debug('User: {} has ICLA with signature_id: {}, project: {}, '
-                          'but has not been signed or approved yet'.
-                          format(user, signature.get_signature_id(), project_id))
-            return False
+        icla_pass = user_icla_check(user, project_id, signature, latest_major_version)
     else:
-        cla.log.debug('ICLA signature NOT found for User: {} on project: {}'.
-                      format(user, project_id))
+        cla.log.debug(f'ICLA signature NOT found for User: {user} on project: {project_id}')
+
+    # If we passed the ICLA check - good, return true, no need to check CCLA
+    if icla_pass:
+        cla.log.debug(f'ICLA signature check passed for User: {user} on project: {project_id} - skipping CCLA check')
+        return True
+    else:
+        cla.log.debug(f'ICLA signature check failed for User: {user} on project: {project_id} - will now check CCLA')
 
     # Check if we have an CCLA for this user
     company_id = user.get_user_company_id()
-    cla.log.debug('checking to see if user has signed an CCLA, user: {}, project_id: {}, company_id: {}'.
-                  format(user, project_id, company_id))
+    cla.log.debug('checking to see if user has signed an CCLA, '
+                  f'user: {user}, project_id: {project_id}, company_id: {company_id}')
 
+    ccla_pass = False
     if company_id is not None:
         cla.log.debug('user has company_id set - getting latest signature for '
-                      'user: {}, project_id: {}, company_id: {}'.
-                      format(user, project_id, company_id))
+                      f'user: {user}, project_id: {project_id}, company_id: {company_id}')
         signature = user.get_latest_signature(project_id, company_id=company_id)
 
         # Don't check the version for employee signatures.
         if signature is not None:
-            cla.log.debug('CCLA signature found for user: {} on project: {}, signature_id: {}'.
-                          format(user, project_id, signature.get_signature_id()))
-
-            if signature.get_signature_signed and signature.get_signature_approved:
-                cla.log.debug('User: {} has a signed and approved CCLA for project: {}'.
-                              format(user, project_id))
-                return True
-
-            if signature.get_signature_signed():
-                cla.log.debug('User: {} has CCLA signed with signature_id: {}, project: {}, '
-                              'but has not been approved yet'.
-                              format(user, signature.get_signature_id(), project_id))
-                return False
-            else:  # Not signed or approved yet.
-                cla.log.debug('User: {} has CCLA with signature_id: {}, project: {}, '
-                              'but has not been signed or approved yet'.
-                              format(user, signature.get_signature_id(), project_id))
-                return False
+            ccla_pass = user_ccla_check(user, project_id, signature)
     else:
-        cla.log.debug('User: {} is NOT associated with a company - unable to check for a CCLA.'.format(user))
-        return False
+        cla.log.debug(f'User: {user} is NOT associated with a company - unable to check for a CCLA.')
 
-    cla.log.debug('User: {} has not signed an ICLA or CCLA'.format(user))
+    if ccla_pass:
+        cla.log.debug(f'CCLA signature check passed for User: {user} on project: {project_id}')
+        return True
+    else:
+        cla.log.debug(f'CCLA signature check failed for User: {user} on project: {project_id}')
+
+    cla.log.debug(f'User: {user} failed both ICLA and CCLA checks')
     return False
 
 
