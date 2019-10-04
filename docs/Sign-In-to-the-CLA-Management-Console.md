@@ -13,7 +13,7 @@ Project managers sign in to the CLA Management Console to perform the CLA set-up
 
    The CLA Management Console appears and lists your assigned projects from the Linux Foundation, for example:
 
-   ![CLA Management All Projects](imgs/CLA-Management-All-Projects.png)
+   ![CLA Management All Projects](imgs/cla-management-all-projects.png)
 
 1. Click a **project name** of interest.
 

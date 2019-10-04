@@ -3,7 +3,7 @@ CCLA managers can view a list of employee acknowledgements.
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -11,7 +11,7 @@ CCLA managers can view a list of employee acknowledgements.
 
    The CLA Corporate Console shows Signed CLAs.
 
-   ![Signed CLAs](imgs/CLA-Signed-CLAs.png)
+   ![Signed CLAs](imgs/cla-signed-clas.png)
 
 1. Click a **CLA**.
 

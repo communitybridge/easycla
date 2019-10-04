@@ -3,7 +3,7 @@ As a CCLA manager, you use the CLA Corporate Console to edit the company name an
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -17,7 +17,7 @@ As a CCLA manager, you use the CLA Corporate Console to edit the company name an
 
    The Edit Company dialog appears.
 
-   ![Edit Company dialog](imgs/CLA-Edit-Company.png)
+   ![Edit Company dialog](imgs/cla-edit-company.png)
 
 1. Edit any of the details you want to change and then click **SAVE**:
 

@@ -46,19 +46,19 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
 
 1. Click **Settings** from the top menu.
 
-   ![Settings](imgs/CLA-GitHub-Repository-Settings.png)
+   ![Settings](imgs/cla-github-repository-settings.png)
 
    Settings appear with Options in the left pane.
 
 1. Click **Branches** under Options.
 
-   ![Branches](imgs/CLA-GitHub-Options.png)
+   ![Branches](imgs/cla-github-options.png)
 
    Branch settings appear.
 
 1. Select **master** for the Default branch. **Edit** or **Add rule** for Branch protection rules of your organization.
 
-   ![Branch Protection Rules](imgs/CLA-GitHub-Branch-Add-rule.png)
+   ![Branch Protection Rules](imgs/cla-github-branch-add-rule.png)
 
    Branch protection rule settings appear.
 
@@ -70,4 +70,4 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
 
    * Include administrators
 
-   ![Rule Settings](imgs/CLA-GitHub-Branch-protection-rule.png)
+   ![Rule Settings](imgs/cla-github-branch-protection-rule.png)

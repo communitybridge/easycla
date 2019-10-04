@@ -11,7 +11,7 @@ You can add CCLA managers to your project or remove them.
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -19,7 +19,7 @@ You can add CCLA managers to your project or remove them.
 
    The CLA Corporate Console shows Signed CLAs.
 
-   ![Signed CLAs](imgs/CLA-Signed-CLAs.png)
+   ![Signed CLAs](imgs/cla-signed-clas.png)
 
 1. Click a **CLA**.
 
@@ -37,11 +37,11 @@ You can add CCLA managers to your project or remove them.
 
    The Add CLA Manager dialog appears.
 
-   ![Add CLA Manager pane](imgs/CLA-Managers-pane.png)
+   ![Add CLA Manager pane](imgs/cla-managers-pane.png)
 
 1. Enter the Linux Foundation identification of the CCLA manager who you want to add and click **SAVE**.
 
-   ![Add CLA Manager](imgs/CLA-Add-CLA-Manager.png)
+   ![Add CLA Manager](imgs/cla-add-cla-manager.png)
 
 The CCLA manager is listed under CLA Managers.
 
