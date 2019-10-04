@@ -264,10 +264,8 @@ class GitHub(repository_service_interface.RepositoryService):
     def update_change_request(self, installation_id, github_repository_id, change_request_id):
         # Queries GH for the complete pull request details, see:
         # https://developer.github.com/v3/pulls/#response-1
-        pull_request = self.get_pull_request(github_repository_id,
-                                             change_request_id,
-                                             installation_id)
-        cla.log.debug('Retrieved pull request: {}'.format(pull_request))
+        pull_request = self.get_pull_request(github_repository_id, change_request_id, installation_id)
+        cla.log.debug(f'Retrieved pull request: {pull_request}')
 
         # Get all unique users/authors involved in this PR - returns a list of
         # (commit_sha_string, (author_id, author_username, author_email) tuples
@@ -276,12 +274,19 @@ class GitHub(repository_service_interface.RepositoryService):
         try:
             # Get existing repository info using the repository's external ID,
             # which is the repository ID assigned by github.
+            cla.log.debug(f'PR: {pull_request.number}, Loading GitHub repository by id: {github_repository_id}')
             repository = Repository().get_repository_by_external_id(github_repository_id, "github")
+            if repository is None:
+                cla.log.warning(f'PR: {pull_request.umber}, Failed to load GitHub repository by '
+                                f'id: {github_repository_id} in our DB - repository reference is None - '
+                                'Is this org/repo configured in the Project Console?'
+                                ' Unable to update status.')
+                return
         except DoesNotExist:
-            cla.log.warning('PR: {}, could not find repository with the repository ID: {}'.
-                            format(pull_request.number, github_repository_id))
-            cla.log.warning('PR: {}, failed to update change request of repository {} - returning'.
-                            format(pull_request.number, github_repository_id))
+            cla.log.warning(f'PR: {pull_request.number}, could not find repository with the '
+                            f'repository ID: {github_repository_id}')
+            cla.log.warning(f'PR: {pull_request.number}, failed to update change request of '
+                            f'repository {github_repository_id} - returning')
             return
 
         # Get Github Organization name that the repository is configured to. 
@@ -318,8 +323,7 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
 
-        cla.log.debug('PR: {}, scanning users - determining who has signed a CLA an who has not.'.
-                      format(pull_request.number))
+        cla.log.debug(f'PR: {pull_request.number}, scanning users - determining who has signed a CLA an who has not.')
         for commit_sha, author_info in commit_authors:
             # Extract the author info tuple details
             author_id = author_info[0]
