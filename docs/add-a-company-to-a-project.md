@@ -5,7 +5,7 @@ _If you are also the project manager, make sure that you are logged out of the C
 
 **Do these steps**:
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -15,7 +15,7 @@ _If you are also the project manager, make sure that you are logged out of the C
 
 1. Complete the dialog fields and click **SAVE**, for example:
 
-   ![Add a Company](imgs/CLA-Add-Company.png)
+   ![Add a Company](imgs/cla-add-company.png)
 
    * Company Name
 
@@ -27,4 +27,4 @@ _If you are also the project manager, make sure that you are logged out of the C
 
    The Companies page shows your company.
 
-1. Sign out or continue to [Sign a CCLA on Behalf of the Company](Sign-a-Corporate-CLA-on-Behalf-of-the-Company.md) (CCLA signatory).
+1. Sign out or continue to [Sign a CCLA on Behalf of the Company](sign-a-corporate-cla-on-behalf-of-the-company.md) (CCLA signatory).

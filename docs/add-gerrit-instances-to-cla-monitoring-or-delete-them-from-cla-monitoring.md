@@ -11,7 +11,7 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
+1. [Sign in](sign-in-to-the-cla-management-console.md).
 
 1. Click a **project** of interest.
 
@@ -31,7 +31,7 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
    **CCLA Group ID** - An existing LDAP Group ID for Corporate CLAs
 
-   ![CLA Add Gerrit Instance](imgs/CLA-Add-Gerrit-Instance.png)
+   ![CLA Add Gerrit Instance](imgs/cla-add-gerrit-instance.png)
 
    **Notes**
 
@@ -41,7 +41,7 @@ If you already added a Gerrit instance during the CLA onboarding process, skip t
 
    The CLA Management Console lists the instance under Gerrit Instances.
 
-   ![CLA Gerrit Instances](imgs/CLA-Gerrit-Instances.png)
+   ![CLA Gerrit Instances](imgs/cla-gerrit-instances.png)
 
    The CLA Management Console presents a CLA block of code:
 

@@ -12,7 +12,7 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
 **Do these steps**:
 
-1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
+1. [Sign in](sign-in-to-the-cla-management-console.md).
 
 1. Click a **project** of interest.
 
@@ -24,7 +24,7 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
 1. Complete the dialog options:
 
-   ![CLA CLA Group](imgs/CLA-CLA-Group.png)
+   ![CLA CLA Group](imgs/cla-cla-group.png)
 
    a. Enter a **CLA Group Name**.
 
@@ -44,12 +44,12 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
 ### Next Steps:
 
-* [Add Contributor License Agreements](Add-Contributor-License-Agreements.md)
+* [Add Contributor License Agreements](add-contributor-license-agreements.md)
 
-* [Add GitHub Repositories to CLA Monitoring or Remove Them From CLA Monitoring](Add-GitHub-Repositories-to-CLA-Monitoring-or-Remove-Them-From-CLA-Monitoring.md)
+* [Add GitHub Repositories to CLA Monitoring or Remove Them From CLA Monitoring](add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring.md)
 
    or
 
-* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](Add-Gerrit-Instances-to-CLA-Monitoring-or-Delete-Them-From-CLA-Monitoring.md)
+* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md)
 
-* (Optional) [Manage CLA Group Details](Manage-CLA-Group-Details.md)
+* (Optional) [Manage CLA Group Details](manage-cla-group-details.md)

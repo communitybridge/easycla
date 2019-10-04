@@ -12,11 +12,11 @@ Whitelists are lists of domain names, email addresses of individuals, GitHub use
 
 Each whitelist applies to the project for which the company has signed a Corporate CLA. The CLA application checks all the whitelists for allowing contributions to a company project. A contributor only needs to be on one whitelist. Contributors can use EasyCLA to send email requests to be associated (whitelisted) with the company.
 
-*Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the same company.*
+_Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the same company._
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -24,13 +24,13 @@ Each whitelist applies to the project for which the company has signed a Corpora
 
    The CLA Corporate Console appears and shows Signed CLAs.
 
-   ![Signed CLAs](imgs/CLA-Signed-CLAs.png)
+   ![Signed CLAs](imgs/cla-signed-clas.png)
 
 1. Click a **CLA**.
 
    The whitelists appear:
 
-   ![Whitelists](imgs/CLA-Whitelists.png)
+   ![Whitelists](imgs/cla-whitelists.png)
 
 1. Decide which whitelist you want to edit:
 
@@ -40,7 +40,7 @@ Each whitelist applies to the project for which the company has signed a Corpora
 
 ### Domain Whitelist, Email Whitelist, or GitHub Whitelist
 
-The corresponding Edit *domain/email/github* Whitelist dialog lets you add, edit, and delete values to a whitelist so that employees (developers) can be associated to the company. An example domain name value is joesbikes.com. A wildcard whitelists the domain and all subdomains, for example: \*.joesbikes.com or *joesbikes.com would whitelist joes.bikes.com, shop.joesbikes.com, and blog.joesbikes.com.
+The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit, and delete values to a whitelist so that employees (developers) can be associated to the company. An example domain name value is joesbikes.com. A wildcard whitelists the domain and all subdomains, for example: \*.joesbikes.com or *joesbikes.com would whitelist joes.bikes.com, shop.joesbikes.com, and blog.joesbikes.com.
 
 
 **Note:** To remove an entry from the whitelist, click **X** next to the item, and click **SAVE**.
@@ -49,7 +49,7 @@ The corresponding Edit *domain/email/github* Whitelist dialog lets you add, edit
 
 1. Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and  click **SAVE**. For example:
 
-   ![Edit email Whitelist](imgs/CLA-Edit-email-Whitelist.png)
+   ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
 
    Your entries appear in their corresponding whitelists.
 
@@ -71,7 +71,7 @@ Each member of your organization must ensure that these items are Public in thei
 
    The Github Organization Whitelist dialog appears.
 
-   ![Github Organization Whitelist](imgs/CLA-GitHub-Organization-Whitelist-no-organizations.png)
+   ![Github Organization Whitelist](imgs/cla-github-organization-whitelist-no-organizations.png)
 
    **Note:** Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 

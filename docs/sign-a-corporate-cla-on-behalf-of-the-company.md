@@ -3,7 +3,7 @@ As a CCLA signatory, you need to have the authority within your company to sign 
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Corporate-Console.md).
+1. [Sign in](sign-in-to-the-cla-corporate-console.md).
 
    The CLA Corporate Console appears and shows Companies.
 
@@ -11,17 +11,17 @@ As a CCLA signatory, you need to have the authority within your company to sign 
 
 1. Click **NEW CLA**.
 
-   ![New CLA](imgs/CLA-New-CLA.png)
+   ![New CLA](imgs/cla-new-cla.png)
 
    The Select a Project to Sign a CCLA dialog appears and lists CLA groups.
 
-   ![Select a Project to Sign a CCLA](imgs/CLA-Select-a-Project-to-Sign-a-CCLA.png)
+   ![Select a Project to Sign a CCLA](imgs/cla-select-a-project-to-sign-a-ccla.png)
 
 1. Select the CLA group of interest.
 
    A CLA Signing Requirement dialog appears:
 
-   ![CLA Signing Requirement](imgs/CLA-Signing-Requirement.png)
+   ![CLA Signing Requirement](imgs/cla-signing-requirement.png)
 
 1. Click **YES** or **NO** according to your permissions:
 
@@ -33,7 +33,7 @@ As a CCLA signatory, you need to have the authority within your company to sign 
 
 The Corporate CLA dialog opens.
 
-   ![Corporate CLA dialog](imgs/CLA-Corporate-CLA-OPEN-CLA.png)   
+   ![Corporate CLA dialog](imgs/cla-corporate-cla-open-cla.png)   
 
 1. Click **OPEN CLA**.
 
@@ -43,10 +43,10 @@ The Corporate CLA dialog opens.
 
 The Send E-Mail To CLA Signatory form opens. The Signatory Name and Signatory E-Mail fields may be pre-populated; if not complete the fields. Click **SEND**.
 
-![Send E-Mail To CCLA Signatory](imgs/CLA-Send-E-Mail-To-CLA-Signatory.png)
+![Send E-Mail To CCLA Signatory](imgs/cla-send-e-mail-to-cla-signatory.png)
 
-[The CCLA signatory receives a CLA Sign Request](Review-and-Sign-a-Corporate-CLA-by-Request.md) email and reviews and signs the document.
+[The CCLA signatory receives a CLA Sign Request](review-and-sign-a-corporate-cla-by-request.md) email and reviews and signs the document.
 
 After the Corporate CLA is signed, the Company page shows the signed Corporate CLA under Signed Project CCLAs. You receive a CLA Signed Document email with an attached document PDF. Contributors to the company project simply need to confirm their association to the company, and then they can continue with their pull requests. Their subsequent contributions will not require association confirmations.
 
-*A Corporate CLA that is signed by the CCLA signatory remains in effect even when that CCLA signatory is no longer employed at a company.*
+_A Corporate CLA that is signed by the CCLA signatory remains in effect even when that CCLA signatory is no longer employed at a company._
