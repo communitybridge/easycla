@@ -20,18 +20,16 @@ export class AddCompanyModal {
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
 
-  mode: string;
   company: ClaCompanyModel;
   companyName: string;
   userEmail: string;
   userName: string;
   companies: any[];
-  filteredComapnies: any[];
+  filteredCompanies: any[];
   companySet: boolean = false;
   joinExistingCompany: boolean = true;
   addNewCompany: boolean = false;
   enableJoinButton: boolean = false;
-  allCompanies: any[];
   existingCompanyId: string;
   loading: any;
 
@@ -49,12 +47,11 @@ export class AddCompanyModal {
 
   getDefaults() {
     this.company = this.navParams.get("company");
-    this.mode = this.company ? "edit" : "find";
     this.companies = [];
-    this.filteredComapnies = [];
+    this.filteredCompanies = [];
     this.loading = {
       submit: false,
-    }
+    };
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -71,11 +68,10 @@ export class AddCompanyModal {
     this.updateUserInfoBasedLFID();
   }
 
-
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (this.mode === "add") {
+    if (this.addNewCompany) {
       this.addCompany();
     } else {
       this.updateCompany();
@@ -83,7 +79,7 @@ export class AddCompanyModal {
   }
 
   addCompany() {
-    this.loading.submit = true
+    this.loading.submit = true;
     let company = {
       company_name: this.companyName,
       company_manager_user_email: this.userEmail,
@@ -182,22 +178,22 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.companies.length >= 0 && this.getAllCompanies();
-    this.filteredComapnies = []
-    let companyName = event.value;
+    this.filteredCompanies = [];
+    // Remove all non-alpha numeric, -, _ values
+    let companyName = event.value.replace(/[^\w-]+/g, '');
     if (companyName.length > 0) {
       this.companySet = false;
-      let filteredComapnies = this.companies.map((company) => {
+      this.filteredCompanies = this.companies.map((company) => {
         let formattedCompany;
         if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
           formattedCompany = company.company_name.replace(new RegExp(companyName, "gi"), match => '<span class="highlightText">' + match + '</span>')
         }
-        company.filteredCompany = formattedCompany
+        company.filteredCompany = formattedCompany;
         return company;
       }).filter(company => company.filteredCompany);
-      this.filteredComapnies = filteredComapnies;
     }
 
-    if (companyName.length >= 2 && this.filteredComapnies.length === 0) {
+    if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
       this.addNewCompany = true;
       this.joinExistingCompany = false;
     }
@@ -206,7 +202,7 @@ export class AddCompanyModal {
   setCompanyName(company) {
     this.companySet = true;
     this.companyName = company.company_name;
-    this.existingCompanyId = company.company_id
+    this.existingCompanyId = company.company_id;
     this.addNewCompany = false;
     this.joinExistingCompany = true;
     this.enableJoinButton = true;
@@ -257,5 +253,4 @@ export class AddCompanyModal {
     }
     return;
   }
-
 }

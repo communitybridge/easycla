@@ -1986,6 +1986,16 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         self.model.company_name = company_name
         self.model.company_acl = company_acl
 
+    def __str__(self):
+        return 'id:{}, name: {}, external id: {}, manager id: {}, acl: {}'. \
+            format(
+            self.model.company_id,
+            self.model.company_name,
+            self.model.company_external_id,
+            self.model.company_manager_id,
+            self.model.company_acl,
+        )
+
     def to_dict(self):
         return dict(self.model)
 

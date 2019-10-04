@@ -43,7 +43,7 @@ export class AllProjectsPage {
 
   getAllProjectFromSFDC() {
     this.claService.getAllProjectsFromSFDC().subscribe(response => {
-      this.allProjects = response;
+      this.allProjects = this.sortProjects(response);
       this.allFilteredProjects = this.filterService.resetFilter(
         this.allProjects
       );
@@ -51,9 +51,19 @@ export class AllProjectsPage {
     }, (error) => this.handleErrors(error));
   }
 
+  sortProjects(projects) {
+    if (projects == null || projects.length == 0) {
+      return projects;
+    }
+
+    return projects.sort((a, b) => {
+      return a.name.localeCompare(b.name);
+    });
+  }
+
   handleErrors (error) {
     this.setLoadingSpinner(false);
-    this.errorStatus = error.status
+    this.errorStatus = error.status;
 
     switch (error.status) {
       case 401:
