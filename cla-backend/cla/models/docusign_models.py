@@ -762,8 +762,8 @@ class DocuSign(signing_service_interface.SigningService):
 
         # We use the company manager name/email when emailing corporate CLA
         # TODO: DAD - confirm this?? - currently looks like we use the function parameter authority name/email instead
-        company_manager_name = 'Unknown'
-        company_manager_mail = 'Unknown'
+        company_manager_name = cla_manager_name
+        company_manager_email = cla_manager_email
 
         # We use user name/email non-email docusign user ICLA
         user_signature_name = 'Unknown'
@@ -774,13 +774,18 @@ class DocuSign(signing_service_interface.SigningService):
 
         if sig_type == 'company':
             try:
-                cla.log.debug('populate_sign_url - Loading company manager user by id: {}'.format(
-                    company.get_company_manager_id()))
+                # Grab the company id from the signature
+                cla.log.debug(f'populate_sign_url - Loading company id: {signature.get_signature_reference_id()}')
+                company.load(signature.get_signature_reference_id())
+                cla.log.debug(f'populate_sign_url - Loaded company: {company}')
+
+                # Grab the company manager id (id of the user)
+                cla.log.debug(f'populate_sign_url - Loading user manager id: {company.get_company_manager_id()}')
                 user.load(company.get_company_manager_id())
-                company_manager_name = user.get_user_name()
-                company_manager_email = user.get_user_email()
-                cla.log.debug('populate_sign_url - Loaded company manager user by id: {} - name: {}, email: {}'.
-                              format(company.get_company_manager_id(), company_manager_name, company_manager_email))
+                cla.log.debug(f'populate_sign_url - Loaded user: {user}')
+
+                user_signature_name = user.get_user_name()
+                user_signature_email = user.get_lf_email()
             except DoesNotExist:
                 cla.log.warning('populate_sign_url - No CLA manager associated with this company - can not sign CCLA')
                 return
@@ -813,10 +818,10 @@ class DocuSign(signing_service_interface.SigningService):
             return
 
         # Fetch the document to sign.
-        cla.log.debug('populate_sign_url - loading project by id: {}'.format(signature.get_signature_project_id()))
+        cla.log.debug('populate_sign_url - Loading project by id: {}'.format(signature.get_signature_project_id()))
         project = Project()
         project.load(signature.get_signature_project_id())
-        cla.log.debug('populate_sign_url - loaded project by id: {} - project: {}'.
+        cla.log.debug('populate_sign_url - Loaded project by id: {} - project: {}'.
                       format(signature.get_signature_project_id(), project))
 
         # Load the appropriate document

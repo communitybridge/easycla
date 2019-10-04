@@ -6,6 +6,7 @@ import {IonicPage, ModalController, NavController, NavParams} from "ionic-angula
 import {ClaService} from "../../services/cla.service";
 import {ClaCompanyModel} from "../../models/cla-company";
 import {ClaUserModel} from "../../models/cla-user";
+import {RolesService} from "../../services/roles.service";
 import {Restricted} from "../../decorators/restricted";
 import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
 
@@ -42,6 +43,7 @@ export class CompanyPage {
     public navParams: NavParams,
     private claService: ClaService,
     public modalCtrl: ModalController,
+    private rolesService: RolesService // for @Restricted
   ) {
     this.companyId = navParams.get("companyId");
     this.getDefaults();

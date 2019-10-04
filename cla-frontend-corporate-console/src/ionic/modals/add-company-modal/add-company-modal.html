@@ -7,7 +7,7 @@
     </ion-title>
 
     <loading-spinner [loading]="loading.submit"></loading-spinner>
-    
+
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
@@ -30,9 +30,9 @@
             <ion-label stacked>Company Name:</ion-label>
             <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName" (ionChange)="findCompany($event)"></ion-input>
           </ion-item>
-          <ion-row *ngIf="filteredComapnies.length > 0 && !companySet">
+          <ion-row *ngIf="filteredCompanies.length > 0 && !companySet">
             <ion-list class="company-dropdown-list" lines="none">
-              <ion-item *ngFor="let company of filteredComapnies">
+              <ion-item *ngFor="let company of filteredCompanies">
                 <ion-label class="clickable" (click)="setCompanyName(company)" [innerHTML]="company.filteredCompany"></ion-label>
               </ion-item>
             </ion-list>
