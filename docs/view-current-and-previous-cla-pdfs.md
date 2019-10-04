@@ -3,20 +3,21 @@ The CLA Management Console lets you select and view the current CLA PDF and prev
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
+1. [Sign in](sign-in-to-the-cla-management-console.md).
 
 1. Click a **project** of interest.
 
    The project page appears.
+
 1. Go to the CLA group that has the CLA PDF that you want to view.
 
-1. Click the **clock icon** ![clock](imgs/clock-icon.png).
+1. Click the **PDF icon** ![PDF icon](imgs/pdf-icon.png).
 
    The CLA PDF dialog appears and shows the current CLA PDF and previous CLA PDFs.
 
-   ![CLA View CLA PDF Versions](imgs/CLA-View-CLA-PDF-Versions.png) 
+   ![CLA View CLA PDF Versions](imgs/cla-view-cla-pdf-versions.png) 
 
-1. Click the **three-dot icon** ![view](imgs/three-dot-icon.png) next to the version that you want to view.
+1. Click the **PDF icon** next to the version that you want to view.
 
 1. Click **View PDF**.
 

@@ -13,7 +13,7 @@ In these cases, you simply add the updated CLA using the same procedure as for a
 
 **Do these steps:**
 
-1. [Sign in](Sign-In-to-the-CLA-Management-Console.md).
+1. [Sign in](sign-in-to-the-cla-management-console.md).
 
 1. Click a **project** of interest.
 
@@ -23,13 +23,13 @@ In these cases, you simply add the updated CLA using the same procedure as for a
 
    The Select a template page appears and lists available templates.
 
-   ![CLA Select a template](imgs/CLA-Select-a-template-page.png)
+   ![CLA Select a template](imgs/cla-select-a-template-page.png)
 
 1. Click the **button** on the template you want to use.
 
    A template information form appears. The information you enter in this form will populate the corresponding fields in the resulting Corporate CLA and Individual CLA PDFs. The following form is an example; each form is specific to the project.
 
-   ![CLA Select a template form](imgs/CLA-Select-a-template-form.png)
+   ![CLA Select a template form](imgs/cla-select-a-template-form.png)
 
 1. Complete the form fields and click **GENERATE AND REVIEW PDFS**.
    
@@ -37,7 +37,7 @@ In these cases, you simply add the updated CLA using the same procedure as for a
 
 1. Click **VIEW CCLA** (Corporate CLA) or **VIEW ICLA** (Individual CLA) to view the respective PDF and scroll through the content to review it.
 
-   ![CLA PDF content](imgs/CLA-PDF-content.png)
+   ![CLA PDF content](imgs/cla-pdf-content.png)
 
 1. Click **DONE**. (BACK TO TEMPLATE INFORMATION returns you to the template form.)
 
@@ -45,4 +45,4 @@ In these cases, you simply add the updated CLA using the same procedure as for a
 
 ### Next Step:
 
-* (Optional) [View Current and Previous CLA PDFs](View-Current-and-Previous-CLA-PDFs.md)
+* (Optional) [View Current and Previous CLA PDFs](view-current-and-previous-cla-pdfs.md)

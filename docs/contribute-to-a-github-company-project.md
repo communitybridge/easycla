@@ -15,7 +15,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
    A cross next to your contributor name means the CLA check failed.
 
-   ![GitHub Company Contributor Fail](imgs/CLA-GitHub-Company-Contributor-Fail.png)
+   ![GitHub Company Contributor Fail](imgs/cla-github-company-contributor-fail.png)
 
 1. Click **Please click here to be authorized**.
 
@@ -23,11 +23,11 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
 1. Click **Authorize LF-Engineering**. (Subsequent contributions will not require authorization.)
 
-   ![Authorize CommunityBridge: EasyCLA](imgs/CLA-Authorize-EasyCLA.png)
+   ![Authorize CommunityBridge: EasyCLA](imgs/cla-authorize-easycla.png)
 
    The CLA Contributor Console appears and shows the CLA group for your project. One or more CLA types that you must sign display: Company and Individual.
 
-   ![Select a CLA Type](imgs/CLA-GitHub-Select-company-or-individual.png)
+   ![Select a CLA Type](imgs/cla-github-select-company-or-individual.png)
 
 1. Select **Company**.
 
@@ -43,11 +43,11 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
-   ![Confirmation of Association](imgs/CLA-GitHub-confirmation-of-association.png)
+   ![Confirmation of Association](imgs/cla-github-confirmation-of-association.png)
 
    A dialog appears and informs you: You are done!
 
-   ![You are done](imgs/CLA-GitHub-you-are-done.png)
+   ![You are done](imgs/cla-github-you-are-done.png)
 
 1. Click **RETURN TO REPO**.
 
@@ -55,7 +55,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
    A tick appears next to your branch. A notification appears:
 
-   ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
+   ![All Checks Have Passed](imgs/cla-github-all-checks-passed.png)
 
 1. Click **Merge pull request** and confirm the merge.
 
@@ -67,7 +67,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
    If your company is not associated with a company in the list, continue with the **next step**.
 
-   ![Select Company](imgs/CLA-Contributor-Select-Company.png)
+   ![Select Company](imgs/cla-contributor-select-company.png)
 
 1. Click **COMPANY NOT IN LIST?**.
 
@@ -79,23 +79,23 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
    **NO**—A Request Access form appears. Complete the form and click **SEND**. The CCLA manager signs a Corporate CLA and adds you to the whitelist.
 
-   ![CLA Request Access](imgs/CLA-Request-Access.png)
+   ![CLA Request Access](imgs/cla-request-access.png)
 
    A Confirmation of Association with statement appears.
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
-   ![Confirmation of Association](imgs/CLA-GitHub-confirmation-of-association.png)
+   ![Confirmation of Association](imgs/cla-github-confirmation-of-association.png)
 
    A dialog appears and informs you: You are done!
 
-   ![You Are Done](imgs/CLA-GitHub-you-are-done.png)
+   ![You Are Done](imgs/cla-github-you-are-done.png)
 
 1. You are redirected to GitHub. Wait a few seconds for the CLA status to update or refresh the page.
 
    A tick appears next to your branch. A notification appears:
 
-   ![All Checks Have Passed](imgs/CLA-GitHub-All-Checks-Passed.png)
+   ![All Checks Have Passed](imgs/cla-github-all-checks-passed.png)
 
 1. Click **Merge pull request** and confirm the merge.
 

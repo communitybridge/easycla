@@ -17,19 +17,19 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
    A warning link that you need to sign a CLA appears:
 
-   ![Gerrit Warning Link](imgs/CLA-Gerrit-sign-a-CLA.png)
+   ![Gerrit Warning Link](imgs/cla-gerrit-sign-a-cla.png)
 
 1. Go to the URL in the message <https://,gerrit.linuxfoundation.org/infra/settings/#Agreements> or navigate to **Settings** and click **Agreements**:
 
-   ![Gerrit Agreements](imgs/CLA-Gerrit-Agreements-option.png)
+   ![Gerrit Agreements](imgs/cla-gerrit-agreements-option.png)
 
 1. Click the **agreement link** that appears:
 
-   ![Gerrit Agreements](imgs/CLA-Gerrit-Agreements.png)
+   ![Gerrit Agreements](imgs/cla-gerrit-agreements.png)
 
    New Contributor Agreement types appear:
 
-   ![Gerrit New Contributor Agreement](imgs/CLA-Gerrit-New-Contributor-Agreement.png)
+   ![Gerrit New Contributor Agreement](imgs/cla-gerrit-new-contributor-agreement.png)
 
 1. Continue to contribute as an individual or employee (corporate contributor):
 
@@ -42,17 +42,17 @@ EasyCLA presents a review agreement link to individual contributors to open a CL
 
 1. Select an individual CLA type.
 
-   ![New Contributor Agreement](imgs/CLA-Gerrit-ICLA-type.png)
+   ![New Contributor Agreement](imgs/cla-gerrit-icla-type.png)
 
 1. Click the **Please review the agreement link** and then click the message link that appears:
 
-   ![Gerrit Sign ICLA Link](imgs/CLA-Gerrit-ICLA-proceed-to-sign-CLA.png)
+   ![Gerrit Sign ICLA Link](imgs/cla-gerrit-icla-proceed-to-sign-cla.png)
 
 1. Log in to EasyCLA if you are prompted.
 
 1. Click **OPEN CLA** on the dialog that appears:
 
-   ![Gerrit Open CLA](imgs/CLA-Gerrit-Individual-CLA-OPEN-CLA.png)
+   ![Gerrit Open CLA](imgs/cla-gerrit-individual-cla-open-cla.png)
 
    DocuSign presents the agreement that you must sign. The Individual CLA is not tied to any employer you may have, so enter your @personal address in the E-Mail field.
 
@@ -67,13 +67,13 @@ EasyCLA presents a field where you confirm your association to the company.
 
    An agreement field appears:
 
-   ![Gerrit Corporate CLA Agreement](imgs/CLA-Gerrit-CCLA-I-agree.png)
+   ![Gerrit Corporate CLA Agreement](imgs/cla-gerrit-ccla-i-agree.png)
 
 1. Enter **I Agree** in the field and click **SUBMIT**.
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox.
 
-   ![Gerrit Confirmation of Association](imgs/CLA-Gerrit-Confirmation-of-Association.png)
+   ![Gerrit Confirmation of Association](imgs/cla-gerrit-confirmation-of-association.png)
 
 1. Click **CONTINUE**.
 
