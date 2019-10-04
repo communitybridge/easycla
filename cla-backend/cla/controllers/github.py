@@ -166,6 +166,8 @@ def get_org_name_from_event(body: dict) -> Optional[str]:
     :return: returns either the organization name or None
     """
     try:
+        # Webhook event payload
+        # see: https://developer.github.com/v3/activity/events/types/#webhook-payload-example-12
         return body['installation']['account']['login']
     except KeyError:
         return None
