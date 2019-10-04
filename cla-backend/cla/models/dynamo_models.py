@@ -2216,6 +2216,14 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
 
+    def __str__(self):
+        return (f'organization id:{self.model.organization_name}, '
+                f'organization installation id: {self.model.organization_installation_id}, '
+                f'organization SFID: {self.model.organization_sfid}, '
+                f'organization project id: {self.model.organization_project_id}, '
+                f'organization company id: {self.model.organization_company_id}'
+                )
+
     def to_dict(self):
         ret = dict(self.model)
         if ret['organization_installation_id'] == 'null':
