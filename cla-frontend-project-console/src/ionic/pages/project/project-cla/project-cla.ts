@@ -66,10 +66,21 @@ export class ProjectClaPage {
     };
   }
 
+  sortClaProjects(projects) {
+    if (projects == null || projects.length == 0) {
+      return projects;
+    }
+
+    return projects.sort((a, b) => {
+      return a.project_name.trim().localeCompare(b.project_name.trim());
+    });
+  }
+
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe(projects => {
-      this.claProjects = projects;
+      this.claProjects = this.sortClaProjects(projects);
+      //console.log(this.claProjects);
       this.loading.claProjects = false;
 
       this.claProjects.map(project => {
@@ -158,7 +169,9 @@ export class ProjectClaPage {
     // modal.onDidDismiss(data => {
     //   this.getClaProjects();
     // });
-    modal.present().catch((error) => {console.log('Error opening signatures modal view, error: ' + error);});
+    modal.present().catch((error) => {
+      console.log('Error opening signatures modal view, error: ' + error);
+    });
   }
 
   openClaContractVersionModal(claProjectId, documentType, documents) {
