@@ -7,6 +7,7 @@ Controller related to the github application (CLA GitHub App).
 import hmac
 import os
 from pprint import pprint
+from typing import Optional
 
 import requests
 
@@ -40,9 +41,11 @@ def get_organization(organization_name):
     """
     github_organization = get_github_organization_instance()
     try:
+        cla.log.debug(f'Loading GitHub by organization name: {organization_name}..')
         github_organization.load(str(organization_name))
+        cla.log.debug(f'Loaded GitHub by organization name: {github_organization}')
     except DoesNotExist as err:
-        cla.log.warning('organization name {} does not exist'.format(organization_name))
+        cla.log.warning(f'organization name {organization_name} does not exist')
         return {'errors': {'organization_name': str(err)}}
     return github_organization.to_dict()
 
@@ -155,6 +158,21 @@ def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
 
 
+def get_org_name_from_event(body: dict) -> Optional[str]:
+    """
+    Attempts to extract the organization name from the installation created event.
+
+    :param body: the github installation created event body
+    :return: returns either the organization name or None
+    """
+    try:
+        # Webhook event payload
+        # see: https://developer.github.com/v3/activity/events/types/#webhook-payload-example-12
+        return body['installation']['account']['login']
+    except KeyError:
+        return None
+
+
 def activity(body):
     cla.log.debug('github.activity - processing github activity callback...')
 
@@ -164,8 +182,16 @@ def activity(body):
 
         # New Installations
         if 'action' in body and body['action'] == 'created':
-            existing = get_organization(body['installation']['account']['login'])
+            org_name = get_org_name_from_event(body)
+            if org_name is None:
+                cla.log.warning(f'Unable to determine organization name from the github create event: {body}')
+                return {'status', 'GitHub installation created event malformed.'}
+
+            cla.log.debug(f'Locating organization using name: {org_name}')
+            existing = get_organization(org_name)
             if 'errors' in existing:
+                cla.log.warning(f'Received github installation created event for organization: {org_name}, but '
+                                'the organization is not configured in EasyCLA')
                 # TODO: Need a way of keeping track of new organizations that don't have projects yet.
                 return {'status': 'Github Organization must be created through the Project Management Console.'}
             elif not existing['organization_installation_id']:

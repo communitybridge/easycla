@@ -1,5 +1,6 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
+import logging
 import unittest
 
 from github import Github
@@ -19,6 +20,8 @@ class TestGitHubModels(unittest.TestCase):
         pass
 
     def setUp(self) -> None:
+        # Only show critical logging stuff
+        cla.log.level = logging.CRITICAL
         self.assertTrue(cla.conf['GITHUB_OAUTH_TOKEN'] != '',
                         'Missing GITHUB_OAUTH_TOKEN environment variable - required to run unit tests')
         # cla.log.debug('Using GITHUB_OAUTH_TOKEN: {}...'.format(cla.conf['GITHUB_OAUTH_TOKEN'][:5]))
