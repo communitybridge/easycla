@@ -5,6 +5,7 @@
 Controller related to the github application (CLA GitHub App).
 """
 import hmac
+import json
 import os
 from pprint import pprint
 from typing import Optional
@@ -158,7 +159,7 @@ def user_authorization_callback(body):
     return {'status': 'nothing to do here.'}
 
 
-def get_org_name_from_event(body: dict) -> Optional[str]:
+def get_org_name_from_installation_event(body: dict) -> Optional[str]:
     """
     Attempts to extract the organization name from the installation created event.
 
@@ -168,8 +169,27 @@ def get_org_name_from_event(body: dict) -> Optional[str]:
     try:
         # Webhook event payload
         # see: https://developer.github.com/v3/activity/events/types/#webhook-payload-example-12
+        cla.log.debug('Looking for github organization name at path: installation.account.login...')
         return body['installation']['account']['login']
     except KeyError:
+        cla.log.warning('Unable to grab organization name from github installation event path: '
+                        'installation.account.login - looking elsewhere...')
+
+    try:
+        # some installation created events include the organization in this path
+        cla.log.debug('Looking for github organization name at alternate path: organization.login...')
+        return body['organization']['login']
+    except KeyError:
+        cla.log.warning('Unable to grab organization name from github installation event path: '
+                        'organization.login - looking elsewhere...')
+
+    try:
+        # some installation created events include the organization in this path
+        cla.log.debug('Looking for github organization name at alternate path: repository.owner.login...')
+        return body['repository']['owner']['login']
+    except KeyError:
+        cla.log.warning('Unable to grab organization name from github installation event path: '
+                        'repository.owner.login - giving up...')
         return None
 
 
@@ -182,10 +202,12 @@ def activity(body):
 
         # New Installations
         if 'action' in body and body['action'] == 'created':
-            org_name = get_org_name_from_event(body)
+            org_name = get_org_name_from_installation_event(body)
             if org_name is None:
-                cla.log.warning(f'Unable to determine organization name from the github create event: {body}')
-                return {'status', 'GitHub installation created event malformed.'}
+                cla.log.warning('Unable to determine organization name from the github installation event '
+                                f'with action: {body["action"]}'
+                                f'event body: {json.dumps(body)}')
+                return {'status', f'GitHub installation {body["action"]} event malformed.'}
 
             cla.log.debug(f'Locating organization using name: {org_name}')
             existing = get_organization(org_name)
