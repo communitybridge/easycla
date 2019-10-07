@@ -1,10 +1,9 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
-
+import logging
 import unittest
 
-from cla import utils
-from cla.models.dynamo_models import User
+import cla
 
 
 class TestUserModels(unittest.TestCase):
@@ -18,7 +17,8 @@ class TestUserModels(unittest.TestCase):
         pass
 
     def setUp(self) -> None:
-        pass
+        # Only show critical logging stuff
+        cla.log.level = logging.CRITICAL
 
     def tearDown(self) -> None:
         pass

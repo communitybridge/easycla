@@ -161,7 +161,7 @@ def user_authorization_callback(body):
 
 def get_org_name_from_installation_event(body: dict) -> Optional[str]:
     """
-    Attempts to extract the organization name from the installation created event.
+    Attempts to extract the organization name from the GitHub installation event.
 
     :param body: the github installation created event body
     :return: returns either the organization name or None
@@ -193,10 +193,34 @@ def get_org_name_from_installation_event(body: dict) -> Optional[str]:
         return None
 
 
-def activity(body):
-    cla.log.debug('github.activity - processing github activity callback...')
+def get_github_activity_action(body: dict) -> Optional[str]:
+    """
+    Returns the action value from the github activity event.
 
-    # GitHub Application
+    :param body: the webhook body payload
+    :type body: dict
+    :return:  a string representing the action, or None if it couldn't find the action value
+    """
+    try:
+        return body['action']
+    except KeyError:
+        return None
+
+
+def activity(body):
+    """
+    Processes the GitHub activity event.
+    :param body: the webhook body payload
+    :type body: dict
+    """
+    cla.log.debug('github.activity - received github activity event, '
+                  f'action: {get_github_activity_action(body)}...')
+
+    # If we have the GitHub debug flag set/on...
+    if bool(os.environ.get('GH_APP_DEBUG', '')):
+        cla.log.debug(f'github.activity - body: {json.dumps(body)}')
+
+    # GitHub Application Installation Event
     if 'installation' in body:
         cla.log.debug('github.activity - processing github installation activity callback...')
 
@@ -230,7 +254,7 @@ def activity(body):
         else:  # TODO: Handle action == 'deleted'
             pass
 
-    # Pull Requests
+    # GitHub Pull Request Event
     if 'pull_request' in body:
         cla.log.debug('github.activity - processing github pull_request activity callback...')
 
@@ -241,6 +265,9 @@ def activity(body):
             service = cla.utils.get_repository_service(provider)
             result = service.received_activity(body)
             return result
+
+    cla.log.debug('github.activity - ignoring github activity event, '
+                  f'action: {get_github_activity_action(body)}...')
 
 
 def get_organization_repositories(organization_name):
