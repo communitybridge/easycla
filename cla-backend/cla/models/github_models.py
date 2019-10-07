@@ -277,7 +277,7 @@ class GitHub(repository_service_interface.RepositoryService):
             cla.log.debug(f'PR: {pull_request.number}, Loading GitHub repository by id: {github_repository_id}')
             repository = Repository().get_repository_by_external_id(github_repository_id, "github")
             if repository is None:
-                cla.log.warning(f'PR: {pull_request.umber}, Failed to load GitHub repository by '
+                cla.log.warning(f'PR: {pull_request.number}, Failed to load GitHub repository by '
                                 f'id: {github_repository_id} in our DB - repository reference is None - '
                                 'Is this org/repo configured in the Project Console?'
                                 ' Unable to update status.')
