@@ -40,7 +40,7 @@
   version = "v1.13.2"
 
 [[projects]]
-  digest = "1:eea3b6e6d65c847d2b8047ccb27aa44c89a2cc5fcbfed9a27418c9a10b0d3773"
+  digest = "1:856da0a78c909d42035c32d7dc3abd86a5df94b62919d131da78d026a3a8f489"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -92,8 +92,8 @@
     "service/sts/stsiface",
   ]
   pruneopts = "UT"
-  revision = "d95533abfcd8b01d7084748aef7060fa6c9d0c3a"
-  version = "v1.24.4"
+  revision = "472ba41213bd699ff50a642b60afd89181d7bb9b"
+  version = "v1.25.6"
 
 [[projects]]
   digest = "1:52e3e1eb1641ddc958199d3a8aecf0c7fa486d01852893ad107cf837f81895f5"
@@ -408,12 +408,12 @@
   version = "v0.7.0"
 
 [[projects]]
-  digest = "1:7c084e0e780596dd2a7e20d25803909a9a43689c153de953520dfbc0b0e51166"
+  digest = "1:4a29eeb25603debe8f2098a9902c4d3851034cf70d33be428826e86e8c30a1b0"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8029fb3788e5a4a9c00e415f586a6d033f5d38b3"
-  version = "v0.1.2"
+  revision = "98ec13f34aabf44cc914c65a1cfb7b9bc815aef1"
+  version = "v0.1.4"
 
 [[projects]]
   digest = "1:36325ebb862e0382f2f14feef409ba9351271b89ada286ae56836c603d43b59c"
@@ -563,7 +563,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:50804d40964a0c59170e827824e79bbf810cc10ae57603d8facce8a1f48f9a83"
+  digest = "1:8bae1b1174e1371ef711ed5501ab4732555e8885d26cbfda2a9f6217e96b734e"
   name = "golang.org/x/crypto"
   packages = [
     "cast5",
@@ -575,7 +575,7 @@
     "openpgp/s2k",
   ]
   pruneopts = "UT"
-  revision = "9ee001bba392397c76f100a2d5b13afc86f167f1"
+  revision = "34f69633bfdcf9db92f698f8487115767eebef81"
 
 [[projects]]
   branch = "master"
@@ -588,7 +588,7 @@
     "netutil",
   ]
   pruneopts = "UT"
-  revision = "aa69164e4478b84860dc6769c710c699c67058a3"
+  revision = "d98b1b4438230571bd7fbc5aaa89843e92937bd3"
 
 [[projects]]
   branch = "master"
@@ -604,11 +604,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:efaeaf7e03393d54963ece1e4c1866915d712a07adf4be8ea8105a67e3418e8f"
+  digest = "1:84ed4fd3f7c52941feec4832e385f61377a01b4c98a0f868f16f10c2469fc0fe"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "0a153f010e6963173baba2306531d173aa843137"
+  revision = "c178f38b412c7b426e4e97be2e75d11ff7b8d4d4"
 
 [[projects]]
   digest = "1:66a2f252a58b4fbbad0e4e180e1d85a83c222b6bce09c3dcdef3dc87c72eda7c"
@@ -649,16 +649,16 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "c71d63e301d75423acb410203c747cad31e9a5e7"
-  version = "v1.6.3"
+  revision = "bddb1f54ecfd64b1350fd2dd897fa11d426632bc"
+  version = "v1.6.4"
 
 [[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
 
 [solve-meta]
   analyzer-name = "dep"
