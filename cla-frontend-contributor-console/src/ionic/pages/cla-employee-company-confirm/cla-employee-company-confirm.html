@@ -45,6 +45,10 @@
                 Continue
               </button>
               <loading-spinner class="submit" [loading]="currentlySubmitting"></loading-spinner>
+              <ion-item *ngIf="errorMessage != null" no-lines>
+                <p>An error occurred while confirming your association with {{ company.company_name }}.
+                  Error is: {{ errorMessage }}. Please contact the EasyCLA Help Desk at: {{ helpDeskLink }}</p>
+              </ion-item>
             </form>
           </ion-card-content>
         </ion-card>
