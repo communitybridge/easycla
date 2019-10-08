@@ -88,7 +88,7 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 		}
 	}
 	if user.Username != "" {
-		attributes["username"] = &dynamodb.AttributeValue{
+		attributes["user_name"] = &dynamodb.AttributeValue{
 			S: aws.String(user.Username),
 		}
 	}
