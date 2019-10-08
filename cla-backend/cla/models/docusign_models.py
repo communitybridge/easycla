@@ -745,7 +745,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         sig_type = signature.get_signature_reference_type()
 
-        cla.log.debug('Populating sign_url for signature {} using '
+        cla.log.debug('populate_sign_url - Populating sign_url for signature {} using '
                       ' callback: {} with'
                       ' cla manager name: {} with'
                       ' cla manager email: {} with'
