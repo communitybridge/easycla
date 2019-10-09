@@ -29,7 +29,7 @@ def get_gerrit_by_project_id(project_id):
         return []
     except Exception as e:
         cla.log.warning('gerrit project id: {} does not exist, error: {}'.format(project_id, e))
-        return {'errors': {'a gerrit instance does not exist with the given project ID. ': str(e)}}
+        return {'errors': {f'a gerrit instance does not exist with the given project ID: {project_id}': str(e)}}
 
     if gerrits is None:
         cla.log.warning('gerrit project id: {} does not exist'.format(project_id))
