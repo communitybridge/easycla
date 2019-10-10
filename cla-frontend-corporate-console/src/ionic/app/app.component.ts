@@ -1,20 +1,20 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ViewChild } from "@angular/core";
-import { Nav, Platform, App } from "ionic-angular";
-import { StatusBar } from "@ionic-native/status-bar";
-import { SplashScreen } from "@ionic-native/splash-screen";
+import {Component, ViewChild} from "@angular/core";
+import {App, Nav, Platform} from "ionic-angular";
+import {StatusBar} from "@ionic-native/status-bar";
+import {SplashScreen} from "@ionic-native/splash-screen";
 
-import { CincoService } from "../services/cinco.service";
-import { KeycloakService } from "../services/keycloak/keycloak.service";
-import { RolesService } from "../services/roles.service";
-import { ClaService } from "../services/cla.service";
-import { HttpClient } from "../services/http-client";
+import {CincoService} from "../services/cinco.service";
+import {KeycloakService} from "../services/keycloak/keycloak.service";
+import {RolesService} from "../services/roles.service";
+import {ClaService} from "../services/cla.service";
+import {HttpClient} from "../services/http-client";
 
-import { AuthService } from "../services/auth.service";
-import { AuthPage } from "../pages/auth/auth";
-import { EnvConfig } from "../services/cla.env.utils";
+import {AuthService} from "../services/auth.service";
+import {AuthPage} from "../pages/auth/auth";
+import {EnvConfig} from "../services/cla.env.utils";
 
 @Component({
   templateUrl: "app.html"

@@ -88,10 +88,10 @@ export class ProjectPage {
   }
 
   getProject() {
-    console.log('Loading project: ' + this.projectId);
+    // console.log('Loading project: ' + this.projectId);
     this.claService.getProject(this.projectId).subscribe(response => {
-      console.log('Project response:');
-      console.log(response);
+      // console.log('Project response:');
+      // console.log(response);
       this.project = response;
       this.getProjectSignatures();
     });
@@ -118,8 +118,8 @@ export class ProjectPage {
     // get CCLA signatures
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-          console.log('Project signatures:');
-          console.log(response);
+          // console.log('Project signatures:');
+          // console.log(response);
           if (response.signatures) {
             let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
             if (cclaSignatures.length) {
@@ -138,8 +138,8 @@ export class ProjectPage {
     // get employee signatures
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-          console.log('Employee signatures:');
-          console.log(response);
+          // console.log('Employee signatures:');
+          // console.log(response);
           if (response.signatures) {
             this.employeeSignatures = response;
             for (let signature of this.employeeSignatures) {
