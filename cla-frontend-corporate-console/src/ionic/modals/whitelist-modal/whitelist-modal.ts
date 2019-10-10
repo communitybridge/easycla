@@ -57,51 +57,50 @@ export class WhitelistModal {
     }
   }
 
-  addWhitelistItem(item) {
-
-    let regexForItem;
-    if (this.type === "domain") {
+  /**
+   * Returns the regular expression for the form type.
+   * @param formType the form type, e.g.: domain, email, github username
+   */
+  getValidationRegExp(formType: string): RegExp {
+    let regex: RegExp;
+    if (formType === "domain") {
       // domains
-      regexForItem = /[a-z0-9]{1,}\.[a-z]{2,}$/i
-    } else if (this.type === "email") {
+      regex = new RegExp(/[a-z0-9]{1,}\.[a-z]{2,}$/i);
+    } else if (formType === "email") {
       // emails
-      regexForItem = /^.+@.+\..+$/i;
+      regex = new RegExp(/^.+@.+\..+$/i);
     } else {
-      // github usernames
-      regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i
+      // github usernames - allow the standard GitHub characters - plus
+      // allow square brackets - which are allowed for bots - ex: 'somename[bot]'
+      regex = new RegExp(/^[a-z\[\d](?:[a-z\[\]\d]|-(?=[a-z\[\]\d])){0,38}$/i);
     }
 
+    return regex;
+  }
+
+  addWhitelistItem(item) {
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
       this.formBuilder.group({
         whitelistItem: [item, Validators.compose([
           Validators.required,
-          Validators.pattern(regexForItem)
+          Validators.pattern(this.getValidationRegExp(this.type))
         ])]
       })
     );
   }
 
+  /**
+   * Called on new items added to the list
+   */
   addNewWhitelistItem() {
-    let regexForItem;
-    if (this.type === "domain") {
-      // domains
-      regexForItem = /[a-z0-9]{1,}\.[a-z]{2,}$/i
-    } else if (this.type === "email") {
-      // emails
-      regexForItem = /^.+@.+\..+$/i;
-    } else {
-      // github usernames
-      regexForItem = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,}$/i
-    }
-
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.insert(
       0,
       this.formBuilder.group({
         whitelistItem: ["", Validators.compose([
           Validators.required,
-          Validators.pattern(regexForItem)
+          Validators.pattern(this.getValidationRegExp(this.type))
         ])]
       })
     );
