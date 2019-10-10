@@ -111,6 +111,6 @@ export class AllProjectsPage {
    * Opens the access page in a new window
    */
   openAccessPage() {
-    window.open("https://github.com/communitybridge/easycla/blob/master/docs/Get-Access-to-EasyCLA.md", "_blank");
+    window.open('https://github.com/communitybridge/easycla/blob/master/docs/get-access-to-easycla.md', "_blank");
   }
 }
