@@ -18,6 +18,9 @@
           <ion-card-content>
             <div class="org-name">
               {{ organization.organization_name }}
+              <button type="button" ion-button color="light" size="small" *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRepos()" (click)="addAll()">
+                ADD ALL REPOS
+              </button>
             </div>
             <div class="repositories">
               <h4 class="repository" [ngClass]="{
