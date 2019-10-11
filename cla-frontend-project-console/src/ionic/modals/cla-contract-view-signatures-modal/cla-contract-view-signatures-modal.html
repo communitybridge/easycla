@@ -22,11 +22,17 @@
               (sort)="sortMembers($event)">
               <ngx-datatable-column name="Type" prop="Type" [sortable]="true" [draggable]="true" [resizeable]="true">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span *ngIf="row['Type'] === 'user'">
-                    <ion-icon name="person"></ion-icon> Individual
+                  <span *ngIf="row['Type'] === 'individual'">
+                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
+                  </span>
+                  <span *ngIf="row['Type'] === 'employee'">
+                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
                   </span>
                   <span *ngIf="row['Type'] === 'company'">
-                    <ion-icon name="briefcase"></ion-icon> Company
+                    <ion-icon name="briefcase"></ion-icon> {{ row['Type'] | titlecase }}
+                  </span>
+                  <span *ngIf="row['Type'] === 'unknown'">
+                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
                   </span>
                 </ng-template>
               </ngx-datatable-column>

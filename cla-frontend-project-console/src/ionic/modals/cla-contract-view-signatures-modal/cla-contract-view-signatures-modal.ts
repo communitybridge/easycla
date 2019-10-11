@@ -298,7 +298,14 @@ export class ClaContractViewSignaturesModal {
       return signatures && signatures.map((signature) => {
         let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
         return {
-          'Type': signature.signatureReferenceType,
+          /**
+           * | Type                   | Reference Type | Signature Type | Company Name |
+           * |------------------------|----------------|----------------|--------------|
+           * | ICLA (individual icon) | user           | cla            | empty        |
+           * | CCLA (employee icon)   | user           | cla            | not empty    |
+           * | CCLA (company icon)    | company        | ccla           | not empty    |
+           */
+          'Type': this.getSignatureType(signature),
           'Name': signature.userName && signature.userName,
           'Company': signature.companyName && signature.companyName,
           'GitHubID': signature.userGHID && signature.userGHID,
@@ -307,6 +314,24 @@ export class ClaContractViewSignaturesModal {
           'Date': date
         }
       })
+    }
+  }
+
+  getSignatureType(signature: any): string {
+    if (signature.signatureReferenceType === 'user' &&
+      signature.signatureType === 'cla' &&
+      signature.companyName == undefined) {
+      return 'individual';
+    } else if (signature.signatureReferenceType === 'user' &&
+      signature.signatureType === 'cla' &&
+      signature.companyName != undefined) {
+      return 'employee';
+    } else if (signature.signatureReferenceType === 'company' &&
+      signature.signatureType === 'ccla' &&
+      signature.companyName != undefined) {
+      return 'company';
+    } else {
+      return 'unknown';
     }
   }
 }
