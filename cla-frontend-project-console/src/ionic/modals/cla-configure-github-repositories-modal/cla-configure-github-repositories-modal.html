@@ -18,8 +18,11 @@
           <ion-card-content>
             <div class="org-name">
               {{ organization.organization_name }}
-              <button type="button" ion-button color="light" size="small" *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRepos()" (click)="addAll()">
+              <button type="button" ion-button color="light" size="small" *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRepos() && !loading.activateSpinner" (click)="addAll()">
                 ADD ALL REPOS
+              </button>
+              <button type="button" ion-button color="light" size="small" *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRemoveRepos() && !loading.activateSpinner" (click)="removeAll()">
+                REMOVE ALL REPOS
               </button>
             </div>
             <div class="repositories">
