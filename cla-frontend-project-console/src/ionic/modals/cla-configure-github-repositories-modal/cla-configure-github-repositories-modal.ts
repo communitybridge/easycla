@@ -112,6 +112,9 @@ export class ClaConfigureGithubRepositoriesModal {
       .subscribe(() => this.getOrgRepositories())
   }
 
+  /**
+   * Add all available repositories.
+   */
   addAll() {
     console.log(this.orgAndRepositories);
     for (const orgRepo in this.orgAndRepositories) {
@@ -138,6 +141,35 @@ export class ClaConfigureGithubRepositoriesModal {
     }
   }
 
+  /**
+   * Remove all available repositories.
+   */
+  removeAll() {
+    console.log(this.orgAndRepositories);
+    for (const orgRepo in this.orgAndRepositories) {
+      const theOrg = this.orgAndRepositories[orgRepo];
+      // No data?
+      if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        continue;
+      }
+
+      for (const repo in theOrg.repositories) {
+        const theRepo = theOrg.repositories[repo];
+        // No data? - move on
+        if (theRepo == null || theRepo.status == null) {
+          continue;
+        }
+
+        if (theRepo.status == 'assigned') {
+          console.log('Removing repo: ' + theRepo.repository_name);
+          this.removeRepository(theRepo);
+        } else {
+          console.log('Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);
+        }
+      }
+    }
+  }
+
   anyAvailableRepos(): boolean {
     let retVal: boolean = false;
     for (const orgRepo in this.orgAndRepositories) {
@@ -155,6 +187,31 @@ export class ClaConfigureGithubRepositoriesModal {
         }
 
         if (theRepo.status == 'free') {
+          retVal = true;
+        }
+      }
+    }
+
+    return retVal;
+  }
+
+  anyAvailableRemoveRepos(): boolean {
+    let retVal: boolean = false;
+    for (const orgRepo in this.orgAndRepositories) {
+      const theOrg = this.orgAndRepositories[orgRepo];
+      // No data?
+      if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        continue;
+      }
+
+      for (const repo in theOrg.repositories) {
+        const theRepo = theOrg.repositories[repo];
+        // No data? - move on
+        if (theRepo == null || theRepo.status == null) {
+          continue;
+        }
+
+        if (theRepo.status == 'assigned') {
           retVal = true;
         }
       }
