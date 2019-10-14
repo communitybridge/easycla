@@ -33,7 +33,7 @@ export class WhitelistModal {
   }
 
   getDefaults() {
-    this.type = this.navParams.get("type"); // ['email' | 'domain']
+    this.type = this.navParams.get("type"); // ['email' | 'domain' | 'github']
     this.signatureId = this.navParams.get('signatureId');
     this.whitelist = this.navParams.get('whitelist') || [];
 
