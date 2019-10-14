@@ -123,7 +123,7 @@ export class ProjectPage {
           if (response.signatures) {
             let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
             if (cclaSignatures.length) {
-              //console.log(cclaSignatures);
+              console.log(cclaSignatures);
               this.cclaSignature = cclaSignatures[0];
 
               // Sort the values
@@ -139,6 +139,11 @@ export class ProjectPage {
               }
               if (this.cclaSignature.githubWhitelist) {
                 this.cclaSignature.githubWhitelist = this.cclaSignature.githubWhitelist.sort((a, b) => {
+                  return a.trim().localeCompare(b.trim())
+                });
+              }
+              if (this.cclaSignature.githubOrgWhitelist) {
+                this.cclaSignature.githubOrgWhitelist = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
                   return a.trim().localeCompare(b.trim())
                 });
               }
