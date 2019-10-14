@@ -123,7 +123,30 @@ export class ProjectPage {
           if (response.signatures) {
             let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
             if (cclaSignatures.length) {
+              //console.log(cclaSignatures);
               this.cclaSignature = cclaSignatures[0];
+
+              // Sort the values
+              if (this.cclaSignature.domainWhitelist) {
+                this.cclaSignature.domainWhitelist = this.cclaSignature.domainWhitelist.sort((a, b) => {
+                  return a.trim().localeCompare(b.trim())
+                });
+              }
+              if (this.cclaSignature.emailWhitelist) {
+                this.cclaSignature.emailWhitelist = this.cclaSignature.emailWhitelist.sort((a, b) => {
+                  return a.trim().localeCompare(b.trim())
+                });
+              }
+              if (this.cclaSignature.githubWhitelist) {
+                this.cclaSignature.githubWhitelist = this.cclaSignature.githubWhitelist.sort((a, b) => {
+                  return a.trim().localeCompare(b.trim())
+                });
+              }
+              if (this.cclaSignature.githubOrgWhitelist) {
+                this.cclaSignature.githubOrgWhitelist = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
+                  return a.trim().localeCompare(b.trim())
+                });
+              }
               this.getCLAManagers();
               this.getGitHubOrgWhitelist();
             }
@@ -173,7 +196,7 @@ export class ProjectPage {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
       signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.emailWhiteList
+      whitelist: this.cclaSignature.emailWhitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed

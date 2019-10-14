@@ -50,6 +50,8 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   checkAssignedRepositories(data) {
+    //console.log('Received response: ');
+    //console.log(data);
     this.assignedRepositories = data['repositories'];
     this.orgAndRepositories = data['orgs_and_repos']
       .map(organization => {
@@ -70,7 +72,7 @@ export class ClaConfigureGithubRepositoriesModal {
         });
 
         return organization;
-      });
+      }).sort((a, b) => {return a.organization_name.trim().localeCompare(b.organization_name.trim())});
     this.loading.repositories = false
   }
 
@@ -115,12 +117,20 @@ export class ClaConfigureGithubRepositoriesModal {
   /**
    * Add all available repositories.
    */
-  addAll() {
-    console.log(this.orgAndRepositories);
+  addAll(organizationName: string) {
+    //console.log(this.orgAndRepositories);
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
       // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        //console.log('addAll() - skipping organization/repo at: ' + orgRepo);
+        continue;
+      }
+
+      //console.log('addAll() - processing organization: ' + theOrg.organizationName);
+
+      if (theOrg.organization_name != organizationName) {
+        //console.log('addAll() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
         continue;
       }
 
@@ -128,14 +138,16 @@ export class ClaConfigureGithubRepositoriesModal {
         const theRepo = theOrg.repositories[repo];
         // No data? - move on
         if (theRepo == null || theRepo.status == null) {
+          //console.log('addAll() - skipping organization: ' + organizationName + ', repository or repository status is empty.');
+          console.log(theOrg);
           continue;
         }
 
         if (theRepo.status == 'free') {
-          console.log('Adding repo: ' + theRepo.repository_name);
+          console.log('addAll() - Adding repo: ' + theRepo.repository_name);
           this.assignRepository(theRepo);
         } else {
-          console.log('Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);
+          console.log('addAll() - Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);
         }
       }
     }
@@ -144,12 +156,20 @@ export class ClaConfigureGithubRepositoriesModal {
   /**
    * Remove all available repositories.
    */
-  removeAll() {
-    console.log(this.orgAndRepositories);
+  removeAll(organizationName: string) {
+    //console.log(this.orgAndRepositories);
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
       // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        //console.log('removeAll() - skipping organization/repo at: ' + orgRepo);
+        continue;
+      }
+
+      //console.log('removeAll() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
+
+      if (theOrg.organization_name != organizationName) {
+        //console.log('removeAll() - skipping organization: ' + organizationName);
         continue;
       }
 
@@ -157,25 +177,32 @@ export class ClaConfigureGithubRepositoriesModal {
         const theRepo = theOrg.repositories[repo];
         // No data? - move on
         if (theRepo == null || theRepo.status == null) {
+          //console.log('removeAll() - skipping organization: ' + organizationName + ', repository or repository status is empty.');
+          console.log(theOrg);
           continue;
         }
 
         if (theRepo.status == 'assigned') {
-          console.log('Removing repo: ' + theRepo.repository_name);
+          console.log('removeAll() - Removing repo: ' + theRepo.repository_name);
           this.removeRepository(theRepo);
         } else {
-          console.log('Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);
+          console.log('removeAll() - Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);
         }
       }
     }
   }
 
-  anyAvailableRepos(): boolean {
+  anyAvailableRepos(organizationName: string): boolean {
     let retVal: boolean = false;
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
       // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        continue;
+      }
+
+      if (theOrg.organization_name != organizationName) {
+        //console.log('anyAvailableRepos() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
         continue;
       }
 
@@ -195,12 +222,17 @@ export class ClaConfigureGithubRepositoriesModal {
     return retVal;
   }
 
-  anyAvailableRemoveRepos(): boolean {
+  anyAvailableRemoveRepos(organizationName: string): boolean {
     let retVal: boolean = false;
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
       // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
+        continue;
+      }
+
+      if (theOrg.organization_name != organizationName) {
+        //console.log('anyAvailableRemoveRepos() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
         continue;
       }
 
