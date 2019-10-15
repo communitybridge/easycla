@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
+import {Component} from '@angular/core';
+import {IonicPage, ModalController, NavController, NavParams,} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId'
@@ -38,10 +38,10 @@ export class ClaLandingPage {
     this.loading = {
       individualDoc: true,
       corporateDoc: true,
-    }
+    };
     this.project = {
       project_name: "",
-    }
+    };
 
     this.hasCorporateCla = false;
     this.hasIndividualCla = false;
@@ -95,5 +95,17 @@ export class ClaLandingPage {
       }
       this.loading.corporateDoc = false;
     });
+  }
+
+  /**
+   * Returns true if this is a CFF project, returns false otherwise.
+   * We have special instructions on the view for this project.
+   */
+  isCFFProject(): boolean {
+    if (this.project && this.project.project_name) {
+      return this.project.project_name.toLowerCase().includes("Cloud Foundry Foundation".toLowerCase());
+    } else {
+      return false;
+    }
   }
 }
