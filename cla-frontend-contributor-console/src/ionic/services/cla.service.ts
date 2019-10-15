@@ -140,7 +140,7 @@ export class ClaService {
     }
   }
 
-  // creates a new account for Gerrit users, with email. 
+  // creates a new account for Gerrit users, with email.
  postOrGetUserForGerrit() {
    if (this.localTesting) {
      return this.http
@@ -232,7 +232,7 @@ export class ClaService {
         .map(res => res.json());
     }
   }
-  
+
   /**
    * /user/{user_id}/request-company-ccla
    */
@@ -555,7 +555,6 @@ export class ClaService {
   /**
    * /project/{project_id}
    **/
-
   getProject(projectId) {
     return this.http
       .get(this.claApiUrl + "/v2/project/" + projectId)
@@ -599,7 +598,7 @@ export class ClaService {
       .get(this.claApiUrl + "/v2/project/" + projectId + "/companies")
       .map(res => res.json());
   }
-  
+
   /**
    * /project/{project_id}/document/{document_type}
    **/
@@ -715,7 +714,7 @@ export class ClaService {
       .map(res => res.json());
   }
 
-  
+
   /**
    * /check-prepare-employee-signature
    **/
@@ -732,7 +731,7 @@ export class ClaService {
     .post(this.claApiUrl + "/v2/check-prepare-employee-signature", data)
     .map(res => res.json());
   }
-  
+
   /**
    * /request-employee-signature
    **/
