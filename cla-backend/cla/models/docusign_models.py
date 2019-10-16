@@ -600,10 +600,15 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info('Validating company %s on project %s', company_id, project_id)
 
         # Ensure the user exists in our database - load the record
-        signatory_user = User().get_user_by_username(auth_user.username)
-        if signatory_user is None:
+        signatory_users = User().get_user_by_username(auth_user.username)
+        if signatory_users is None:
             cla.log.warning('unable to lookup auth_user by username: {}'.format(auth_user.username))
             return {'errors': {'user_error': 'user does not exist'}}
+        if len(signatory_users) > 1:
+            cla.log.warning(f'More than one user record was returned ({len(signatory_users)}) from user '
+                            f'username: {auth_user.username} query')
+        # Just grab the first record
+        signatory_user = signatory_users[0]
 
         # Ensure the project exists
         project = Project()

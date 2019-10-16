@@ -41,13 +41,17 @@ def get_user(user_id=None, user_email=None, user_github_id=None):
         except DoesNotExist as err:
             return {'errors': {'user_id': str(err)}}
     elif user_email is not None:
-        user = get_user_instance().get_user_by_email(str(user_email).lower())
-        if user is None:
+        users = get_user_instance().get_user_by_email(str(user_email).lower())
+        if users is None:
             return {'errors': {'user_email': 'User not found'}}
+        # Use the first user for now - need to revisit - what if multiple are returned?
+        user = users[0]
     elif user_github_id is not None:
-        user = get_user_instance().get_user_by_github_id(user_github_id)
-        if user is None:
+        users = get_user_instance().get_user_by_github_id(user_github_id)
+        if users is None:
             return {'errors': {'user_github_id': 'User not found'}}
+        # Use the first user for now - need to revisit - what if multiple are returned?
+        user = users[0]
     return user.to_dict()
 
 def get_user_signatures(user_id):
@@ -303,9 +307,10 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
 def get_or_create_user(auth_user):
     user = User()
 
-    existing_user = user.get_user_by_username(str(auth_user.username))
+    # Returns None or List[User] objects - could be more than one
+    users = user.get_user_by_username(str(auth_user.username))
     
-    if existing_user is None:
+    if users is None:
         user.set_user_id(str(uuid.uuid4()))
         user.set_user_name(auth_user.name)
         user.set_lf_email(auth_user.email.lower())
@@ -316,7 +321,8 @@ def get_or_create_user(auth_user):
 
         return user
 
-    return existing_user
+    # Just return the first matching record
+    return users[0]
 
 
 

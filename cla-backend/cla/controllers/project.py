@@ -95,8 +95,12 @@ def get_project_managers(username, project_id):
     managers_dict = []
     for lfid in project.get_project_acl():
         user = User()
-        user = user.get_user_by_username(str(lfid))
-        if user is not None:
+        users = user.get_user_by_username(str(lfid))
+        if users is not None:
+            if len(users) > 1:
+                cla.log.warning(f'More than one user record was returned ({len(users)}) from user '
+                                f'username: {lfid} query')
+            user = users[0]
             # Manager found, fill with it's information
             managers_dict.append({
                 'name': user.get_user_name(),

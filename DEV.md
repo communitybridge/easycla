@@ -63,7 +63,7 @@ way as our deployment infrastructure.
 
 ### Dependencies
 
-* Golang 1.11
+* Golang 1.13
 * [dep](https://github.com/golang/dep)
 
 #### Build And Run

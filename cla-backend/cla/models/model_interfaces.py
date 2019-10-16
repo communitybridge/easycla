@@ -387,6 +387,15 @@ class User(object):
         """
         raise NotImplementedError()
 
+    def get_user_github_username(self):
+        """
+        Getter for the user's GitHub username.
+
+        :return: The user's GitHub username.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
     def get_user_ldap_id(self):
         """
         Getter for the user's LDAP ID.
