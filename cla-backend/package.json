@@ -21,6 +21,6 @@
   "dependencies": {
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
-    "serverless": "^1.53.0"
+    "serverless": "^1.54.0"
   }
 }

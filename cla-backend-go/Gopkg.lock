@@ -144,6 +144,14 @@
   version = "v0.4.0"
 
 [[projects]]
+  digest = "1:144921c08f29f07256e59988066fc43792710f716500832f867725e39373f90f"
+  name = "github.com/fnproject/fdk-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e0af12e7b04464874b1b44b7b765d0054ded019f"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -664,6 +672,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/aws/aws-lambda-go/events",
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
@@ -678,6 +687,7 @@
     "github.com/awslabs/aws-lambda-go-api-proxy/httpadapter",
     "github.com/aymerick/raymond",
     "github.com/dgrijalva/jwt-go",
+    "github.com/fnproject/fdk-go",
     "github.com/go-openapi/errors",
     "github.com/go-openapi/loads",
     "github.com/go-openapi/runtime",

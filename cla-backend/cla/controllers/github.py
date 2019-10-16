@@ -261,8 +261,7 @@ def activity(body):
         # New PR opened
         if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
             # Copied from repository_service.py
-            provider = 'github'
-            service = cla.utils.get_repository_service(provider)
+            service = cla.utils.get_repository_service('github')
             result = service.received_activity(body)
             return result
 

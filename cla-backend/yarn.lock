@@ -150,10 +150,10 @@
     ramda "^0.26.1"
     semver "^6.1.1"
 
-"@serverless/enterprise-plugin@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@serverless/enterprise-plugin/-/enterprise-plugin-3.0.0.tgz#295dfb353bb0cecf61ab0df3c5f1edf38e550343"
-  integrity sha512-+L+SeQV0MKQN9TBXC6Xmgcw7BVfW8Q3F/lMjB1MPsBd0RZPzYnVlWcVg4cA6tgvkpfdw8NVlh/QXFs+603zHrg==
+"@serverless/enterprise-plugin@^3.1.2":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@serverless/enterprise-plugin/-/enterprise-plugin-3.1.2.tgz#c4103a43202875f8ef3b8718e7012d24654ab5ac"
+  integrity sha512-3EzdYjEPus5rK8GfV0tSb/WMejx54b6UkMYzaIZiijfnTPLO073R/z1yncjUY9l73tg78JKTWFqt814aDnqTUA==
   dependencies:
     "@serverless/event-mocks" "^1.1.1"
     "@serverless/platform-sdk" "^2.0.3"
@@ -430,10 +430,10 @@ aws-sdk@^2.266.1, aws-sdk@^2.7.0:
     uuid "3.3.2"
     xml2js "0.4.19"
 
-aws-sdk@^2.535.0:
-  version "2.538.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.538.0.tgz#c2a6b482c191615457993d9cfb28a79d0847bb71"
-  integrity sha512-mQTo1eWoU8UB2Pp1PyBBSrFKfaFIVNKeLjJslrhHV5eW/orv2Lw07shnbY4cSt+n2oumw45WStWORyLekRvjyA==
+aws-sdk@^2.545.0:
+  version "2.550.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.550.0.tgz#00a0113f4efbe7c068ac73459c77c39a32390a87"
+  integrity sha512-eZQYY7O6VJeVQvBWnctOOTOO/+aTXhy23+T7QU1FcHfuvWV7K+7+7Uats9rgMS42SQ4R8q1cIZZ1InWnmmfrEw==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -510,6 +510,11 @@ block-stream@*:
 bluebird@^3.0.6, bluebird@^3.4.6, bluebird@^3.5.5:
   version "3.5.5"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.5.tgz#a8d0afd73251effbbd5fe384a77d73003c17a71f"
+
+bluebird@^3.7.0:
+  version "3.7.1"
+  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.1.tgz#df70e302b471d7473489acf26a93d63b53f874de"
+  integrity sha512-DdmyoGCleJnkbp3nkbxTLJ18rjDsE4yCggEwKNXkeV123sPNfOCYeDoeuOY+F2FrSjO1YXcTU+dsy96KMy+gcg==
 
 body-parser@1.19.0, body-parser@^1.19.0:
   version "1.19.0"
@@ -3656,17 +3661,17 @@ serverless-wsgi@^1.5.2:
     hasbin "^1.2.3"
     lodash "^4.17.15"
 
-serverless@^1.53.0:
-  version "1.53.0"
-  resolved "https://registry.yarnpkg.com/serverless/-/serverless-1.53.0.tgz#0accbc269d304f5cffa49392c761e0e7d598a6eb"
-  integrity sha512-cDyqZ6V0AY/M3suo6p2VBMNfFQ9Im3ZFXrY2cJQuCp2is+66j5OUSplR6H5Anz71ns4IWnMzjhHMcrLolMlVng==
+serverless@^1.54.0:
+  version "1.54.0"
+  resolved "https://registry.yarnpkg.com/serverless/-/serverless-1.54.0.tgz#f7518d49887bfc3d5b7fcd634b6de44ea8c305f7"
+  integrity sha512-qFPfGWJoGsw5BzRZZ1joGs1l4cAE9Rk3Xp1RfjnN8CvcNVBVyEsw4OyY+UllcBOtFRUhhYs2WGP95enhBXTyfA==
   dependencies:
     "@serverless/cli" "^1.2.3"
-    "@serverless/enterprise-plugin" "^3.0.0"
+    "@serverless/enterprise-plugin" "^3.1.2"
     archiver "^1.3.0"
     async "^1.5.2"
-    aws-sdk "^2.535.0"
-    bluebird "^3.5.5"
+    aws-sdk "^2.545.0"
+    bluebird "^3.7.0"
     cachedir "^2.2.0"
     chalk "^2.4.2"
     ci-info "^1.6.0"
