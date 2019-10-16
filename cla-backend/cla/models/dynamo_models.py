@@ -10,7 +10,7 @@ import datetime
 import os
 import re
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 import dateutil.parser
 import requests
@@ -928,9 +928,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         managers = []
         user_model = User()
         for username in project_acl:
-            user = user_model.get_user_by_username(str(username))
-            if user is not None:
-                managers.append(user)
+            users = user_model.get_user_by_username(str(username))
+            if users is not None:
+                if len(users) > 1:
+                    cla.log.warning(f'More than one user record was returned ({len(users)}) from user '
+                                    f'username: {username} query')
+                managers.append(users[0])
         return managers
 
     def all(self, project_ids=None):
@@ -1117,8 +1120,14 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def get_github_username(self):
         return self.model.user_github_username
 
-    # def get_user_ldap_id(self):
-    #     return self.model.user_ldap_id
+    def get_user_github_username(self):
+        """
+        Getter for the user's GitHub ID.
+
+        :return: The user's GitHub ID.
+        :rtype: integer
+        """
+        return self.model.user_github_username
 
     def set_user_id(self, user_id):
         self.model.user_id = user_id
@@ -1161,53 +1170,65 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     # def set_user_ldap_id(self, user_ldap_id):
     #     self.model.user_ldap_id = user_ldap_id
 
-    def get_user_by_email(self, user_email) -> Optional[User]:
+    def get_user_by_email(self, user_email) -> Optional[List[User]]:
         if user_email is None:
             cla.log.warning('Unable to lookup user by user_email - email is empty')
             return None
 
-        user_generator = UserModel.scan(UserModel.user_emails.contains(user_email))
-        for user_model in user_generator:
+        users = []
+        for user_model in UserModel.scan(UserModel.user_emails.contains(user_email)):
             user = User()
             user.model = user_model
-            return user
-        return None
+            users.append(user)
+        if len(users) > 0:
+            return users
+        else:
+            return None
 
-    def get_user_by_github_id(self, user_github_id) -> Optional[User]:
+    def get_user_by_github_id(self, user_github_id) -> Optional[List[User]]:
         if user_github_id is None:
             cla.log.warning('Unable to lookup user by github id - id is empty')
             return None
 
-        user_generator = self.model.user_github_id_index.query(user_github_id)
-        for user_model in user_generator:
+        users = []
+        for user_model in self.model.user_github_id_index.query(user_github_id):
             user = User()
             user.model = user_model
-            return user
-        return None
+            users.append(user)
+        if len(users) > 0:
+            return users
+        else:
+            return None
 
-    def get_user_by_username(self, username) -> Optional[User]:
+    def get_user_by_username(self, username) -> Optional[List[User]]:
         if username is None:
             cla.log.warning('Unable to lookup user by username - username is empty')
             return None
 
-        user_generator = self.model.lf_username_index.query(username)
-        for user_model in user_generator:
+        users = []
+        for user_model in self.model.lf_username_index.query(username):
             user = User()
             user.model = user_model
-            return user
-        return None
+            users.append(user)
+        if len(users) > 0:
+            return users
+        else:
+            return None
 
-    def get_user_by_github_username(self, github_username) -> Optional[User]:
+    def get_user_by_github_username(self, github_username) -> Optional[List[User]]:
         if github_username is None:
             cla.log.warning('Unable to lookup user by github_username - github_username is empty')
             return None
 
-        user_generator = self.model.user_github_username_index.query(github_username)
-        for user_model in user_generator:
+        users = []
+        for user_model in self.model.user_github_username_index.query(github_username):
             user = User()
             user.model = user_model
-            return user
-        return None
+            users.append(user)
+        if len(users) > 0:
+            return users
+        else:
+            return None
 
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
         cla.log.debug('get_user_signatures with params - project_id: {}, company_id: {}, '
@@ -1927,9 +1948,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         managers = []
         user_model = User()
         for username in signature_acl:
-            user = user_model.get_user_by_username(str(username))
-            if user is not None:
-                managers.append(user)
+            users = user_model.get_user_by_username(str(username))
+            if users is not None:
+                managers.append(users[0])
         return managers
 
     def get_managers(self):
@@ -2119,9 +2140,9 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         managers = []
         user_model = User()
         for username in company_acl:
-            user = user_model.get_user_by_username(str(username))
-            if user is not None:
-                managers.append(user)
+            users = user_model.get_user_by_username(str(username))
+            if users is not None:
+                managers.append(users[0])
         return managers
 
 

@@ -390,8 +390,10 @@ class GitHub(repository_service_interface.RepositoryService):
                 'Please verify at least one email address with GitHub')
 
         cla.log.debug('Trying to load GitHub user by GitHub ID: %s', github_user['id'])
-        user = cla.utils.get_user_instance().get_user_by_github_id(github_user['id'])
-        if user is not None:
+        users = cla.utils.get_user_instance().get_user_by_github_id(github_user['id'])
+        if users is not None:
+            # Users search can return more than one match - so it's an array - we set the first record value for now??
+            user = users[0]
             cla.log.debug('Loaded GitHub user by GitHub ID: %s - %s (%s)',
                           user.get_user_name(),
                           user.get_user_emails(),
@@ -403,23 +405,22 @@ class GitHub(repository_service_interface.RepositoryService):
         # User not found by GitHub ID, trying by email.
         cla.log.debug('Could not find GitHub user by GitHub ID: %s', github_user['id'])
         # TODO: This is very slow and needs to be improved - may need a DB schema change.
-        found = None
+        users = None
         user = cla.utils.get_user_instance()
         for email in emails:
-            found = user.get_user_by_email(email)
-            if found is not None:
+            users = user.get_user_by_email(email)
+            if users is not None:
                 break
 
-        if found is not None:
-            # Found user by email, set the GitHub ID
-            found.set_user_github_id(github_user['id'])
-            found.set_user_emails(emails)
-            found.save()
-            cla.log.debug('Loaded GitHub user by email: %s - %s (%s)',
-                          found.get_user_name(),
-                          found.get_user_emails(),
-                          found.get_user_github_id())
-            return found
+        if users is not None:
+            # Users search can return more than one match - so it's an array - we set the first record value for now??
+            user = users[0]
+            # Found user by email, setting the GitHub ID
+            user.set_user_github_id(github_user['id'])
+            user.set_user_emails(emails)
+            user.save()
+            cla.log.debug(f'Loaded GitHub user by email: {user}')
+            return user
 
         # User not found, create.
         cla.log.debug('Could not find GitHub user by email: %s', emails)
@@ -558,37 +559,52 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
     author_id = author_info[0]
     author_username = author_info[1]
     author_email = author_info[2]
+    cla.log.debug(f'Looking up GitHub user (author_id: {author_id}, '
+                  f'author_username: {author_username}, '
+                  f'auth_email: {author_email})')
 
-    # attempt to lookup the user by GH id
-    user = cla.utils.get_user_instance().get_user_by_github_id(author_id)
-    if user is None:
+    # attempt to lookup the user by GH id - may return multiple users that match this author_id
+    users = cla.utils.get_user_instance().get_user_by_github_id(author_id)
+    if users is None:
         # GitHub user not in system yet, signature does not exist for this user.
         cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by id not found, '
                       'attempting to looking up user by email...'.
                       format(author_id, author_username, author_email))
 
         # Try looking up user by email as a fallback
-        user = cla.utils.get_user_instance().get_user_by_email(author_email)
-        if user is not None:
-            cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email found'.
-                          format(author_id, author_username, author_email))
+        users = cla.utils.get_user_instance().get_user_by_email(author_email)
+        if users is not None:
+            cla.log.debug(f'Found {len(users)} GitHub user(s) matching github email: {author_email}')
+            for user in users:
+                cla.log.debug(f'GitHub user found - {user}')
 
-            # For now, accept non-github users as legitimate users.
-            if cla.utils.user_signed_project_signature(user, project_id):
-                signed.append((commit_sha, author_username))
-            else:
-                missing.append((commit_sha, author_username))
+                # For now, accept non-github users as legitimate users.
+                # Does this user have a signed signature for this project? If so, add to the signed list and return,
+                # no reason to continue looking
+                if cla.utils.user_signed_project_signature(user, project_id):
+                    signed.append((commit_sha, author_username))
+                    return
+
+            # Didn't find a signed signature for this project - add to our missing bucket list
+            missing.append((commit_sha, author_username))
+
         else:
             cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email not found'.
                           format(author_id, author_username, author_email))
             missing.append((commit_sha, author_username))
     else:
-        cla.log.debug('GitHub user found (%s - %s)'.format(
-            user.get_user_emails(), user.get_user_github_id()))
-        if cla.utils.user_signed_project_signature(user, project_id):
-            signed.append((commit_sha, author_username))
-        else:
-            missing.append((commit_sha, author_username))
+        cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id}')
+        for user in users:
+            cla.log.debug(f'GitHub user found - {user}')
+
+            # Does this user have a signed signature for this project? If so, add to the signed list and return,
+            # no reason to continue looking
+            if cla.utils.user_signed_project_signature(user, project_id):
+                signed.append((commit_sha, author_username))
+                return
+
+        # Didn't find a signed signature for this project - add to our missing bucket list
+        missing.append((commit_sha, author_username))
 
 
 def get_pull_request_commit_authors(pull_request):
