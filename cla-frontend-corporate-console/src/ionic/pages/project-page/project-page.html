@@ -129,7 +129,7 @@
             <tbody>
               <tr *ngFor="let signature of employeeSignatures">
                 <td data-title="Name">
-                  <span *ngIf="users[signature.signatureReferenceID]">{{ users[signature.signatureReferenceID].user_name }}</span>
+                  {{ signature.userName }}
                 </td>
                 <td data-title="Agreement">
                   v{{ signature.version}}
