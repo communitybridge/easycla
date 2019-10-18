@@ -1303,10 +1303,14 @@ export class ClaService {
     if (error.status && error._body && error.status === 500 && error._body.includes('Token is expired')) {
       console.log(error._body + ' - redirecting to login page');
       this.authService.logout();
+      window.location.hash = '#/login';
+      window.location.reload(true);
       return Observable.throw(error);
     } else if (error.status && error.status === 401) {
       console.log(error._body + ' - redirecting to login page');
       this.authService.logout();
+      window.location.hash = '#/login';
+      window.location.reload(true);
       return Observable.throw(error);
     }
 

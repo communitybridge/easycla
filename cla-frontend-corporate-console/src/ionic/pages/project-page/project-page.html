@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>Project Signatures</ion-title>
+    <ion-title>{{ cclaSignature.companyName || titlecase }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
 </ion-header>
@@ -110,7 +110,7 @@
       </ion-col>
       <ion-col col-12 col-md-8>
         <div class="table-responsive-vertical">
-          <h2>Employee Acknowledgements</h2>
+          <h2>{{ cclaSignature.companyName | titlecase }} Employee Acknowledgements</h2>
           <table class="table table-hover">
             <thead>
               <tr>
@@ -129,13 +129,13 @@
             <tbody>
               <tr *ngFor="let signature of employeeSignatures">
                 <td data-title="Name">
-                  <span *ngIf="users[signature.signature_reference_id]">{{ users[signature.signature_reference_id].user_name }}</span>
+                  <span *ngIf="users[signature.signatureReferenceID]">{{ users[signature.signatureReferenceID].user_name }}</span>
                 </td>
                 <td data-title="Agreement">
-                  v{{ signature.signature_document_major_version}}.{{signature.signature_document_minor_version }}
+                  v{{ signature.version}}
                 </td>
                 <td data-title="Date">
-                  {{ signature.date_modified | date:'medium' }}
+                  {{ signature.modified | date:'medium' }}
                 </td>
               </tr>
             </tbody>

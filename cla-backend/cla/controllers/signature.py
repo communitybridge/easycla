@@ -6,12 +6,18 @@ Controller related to signature operations.
 """
 
 import uuid
+from datetime import datetime
+from typing import List, Optional
+
 import hug.types
+import requests
+
 import cla.hug_types
-from cla.utils import get_email_service
+from cla.controllers import company
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Project, Signature, Company
-from cla.controllers import company
+from cla.utils import get_email_service
+
 
 def get_signatures():
     """
@@ -22,6 +28,7 @@ def get_signatures():
     """
     signatures = [signature.to_dict() for signature in Signature().all()]
     return signatures
+
 
 def get_signature(signature_id):
     """
@@ -39,7 +46,8 @@ def get_signature(signature_id):
         return {'errors': {'signature_id': str(err)}}
     return signature.to_dict()
 
-def create_signature(signature_project_id, # pylint: disable=too-many-arguments
+
+def create_signature(signature_project_id,  # pylint: disable=too-many-arguments
                      signature_reference_id,
                      signature_reference_type,
                      signature_type='cla',
@@ -73,16 +81,16 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     :return: A dict of a newly created signature.
     :rtype: dict
     """
-    signature = Signature()
+    signature: Signature = cla.utils.get_signature_instance()
     signature.set_signature_id(str(uuid.uuid4()))
-    project = Project()
+    project: Project = cla.utils.get_project_instance()
     try:
         project.load(project_id=str(signature_project_id))
     except DoesNotExist as err:
         return {'errors': {'signature_project_id': str(err)}}
     signature.set_signature_project_id(str(signature_project_id))
     if signature_reference_type == 'user':
-        user = User()
+        user: User = cla.utils.get_user_instance()
         try:
             user.load(signature_reference_id)
         except DoesNotExist as err:
@@ -92,7 +100,7 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     else:
-        company = Company()
+        company: Company = cla.utils.get_company_instance()
         try:
             company.load(signature_reference_id)
         except DoesNotExist as err:
@@ -120,7 +128,8 @@ def create_signature(signature_project_id, # pylint: disable=too-many-arguments
     signature.save()
     return signature.to_dict()
 
-def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many-return-statements,too-many-branches
+
+def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-many-return-statements,too-many-branches
                      signature_project_id=None,
                      signature_reference_id=None,
                      signature_reference_type=None,
@@ -158,17 +167,26 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
     :rtype: dict
     """
     signature = Signature()
-    try: # Try to load the signature to update.
+    try:  # Try to load the signature to update.
         signature.load(str(signature_id))
     except DoesNotExist as err:
         return {'errors': {'signature_id': str(err)}}
     if signature_project_id is not None:
+        # make a note if the project id is set and doesn't match
+        if signature.get_signature_project_id() != str(signature_project_id):
+            cla.log.warning('update_signature() - project IDs do not match => '
+                            f'record project id: {signature.get_signature_project_id()} != '
+                            f'parameter project id: {str(signature_project_id)}')
         try:
             signature.set_signature_project_id(str(signature_project_id))
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     # TODO: Ensure signature_reference_id exists.
     if signature_reference_id is not None:
+        if signature.get_signature_reference_id() != str(signature_reference_id):
+            cla.log.warning('update_signature() - signature reference IDs do not match => '
+                            f'record signature ref id: {signature.get_signature_reference_id()} != '
+                            f'parameter signature ref id: {str(signature_reference_id)}')
         signature.set_signature_reference_id(signature_reference_id)
     if signature_reference_type is not None:
         signature.set_signature_reference_type(signature_reference_type)
@@ -176,36 +194,31 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
         if signature_type in ['cla', 'dco']:
             signature.set_signature_type(signature_type)
         else:
-            return {'errors': {'signature_type': \
-                               'Invalid value passed. The accepted values are: (cla|dco)'}}
+            return {'errors': {'signature_type': 'Invalid value passed. The accepted values are: (cla|dco)'}}
     if signature_signed is not None:
         try:
             val = hug.types.smart_boolean(signature_signed)
             signature.set_signature_signed(val)
         except KeyError as err:
-            return {'errors': {'signature_signed':
-                               'Invalid value passed in for true/false field'}}
+            return {'errors': {'signature_signed': 'Invalid value passed in for true/false field'}}
     if signature_approved is not None:
         try:
             val = hug.types.smart_boolean(signature_approved)
             update_signature_approved(signature, val)
         except KeyError as err:
-            return {'errors': {'signature_approved':
-                               'Invalid value passed in for true/false field'}}
+            return {'errors': {'signature_approved': 'Invalid value passed in for true/false field'}}
     if signature_return_url is not None:
         try:
             val = cla.hug_types.url(signature_return_url)
             signature.set_signature_return_url(val)
         except KeyError as err:
-            return {'errors': {'signature_return_url':
-                               'Invalid value passed in for URL field'}}
+            return {'errors': {'signature_return_url': 'Invalid value passed in for URL field'}}
     if signature_sign_url is not None:
         try:
             val = cla.hug_types.url(signature_sign_url)
             signature.set_signature_sign_url(val)
         except KeyError as err:
-            return {'errors': {'signature_sign_url':
-                               'Invalid value passed in for URL field'}}
+            return {'errors': {'signature_sign_url': 'Invalid value passed in for URL field'}}
 
     if domain_whitelist is not None:
         try:
@@ -229,6 +242,11 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
         try:
             github_whitelist = hug.types.multiple(github_whitelist)
             signature.set_github_whitelist(github_whitelist)
+
+            # A little bit of special logic to for GitHub whitelists that have bots
+            bot_list = [github_user for github_user in github_whitelist if is_github_bot(github_user)]
+            if bot_list is not None:
+                handle_bots(bot_list, signature)
         except KeyError as err:
             return {'errors': {
                 'github_whitelist': 'Invalid value passed in for the github whitelist'
@@ -237,29 +255,207 @@ def update_signature(signature_id, # pylint: disable=too-many-arguments,too-many
     signature.save()
     return signature.to_dict()
 
+
+def handle_bots(bot_list: List[str], signature: Signature) -> None:
+    cla.log.debug(f'Bots: {bot_list}')
+    for bot_name in bot_list:
+        try:
+            user = cla.utils.get_user_instance()
+            users = user.get_user_by_github_username(bot_name)
+            if users is None:
+                cla.log.debug(f'handle_bots - Bot: {bot_name} does not have a user record (None)')
+                bot_user: User = create_bot(bot_name, signature)
+                if bot_user is not None:
+                    create_bot_signature(bot_user, signature)
+            else:
+                # Bot does have a user account in the EasyCLA system
+                found = False
+                # Search the list of user records to see if we have a matching company
+                for u in users:
+                    if u.get_user_company_id() == signature.get_signature_reference_id():
+                        found = True
+                        cla.log.debug('handle_bots - found bot user account - ensuring the signature exists...')
+                        create_bot_signature(u, signature)
+                        break
+
+                # We found matching users in our system, but didn't find one with a matching company
+                if not found:
+                    cla.log.debug(f'handle_bots - unable to find user {bot_name} '
+                                  f'for company: {signature.get_signature_reference_id()} - '
+                                  'creating user record that matches this company...')
+                    bot_user: User = create_bot(bot_name, signature)
+                    if bot_user is not None:
+                        create_bot_signature(bot_user, signature)
+                    else:
+                        cla.log.warning(f'handle_bots - failed to create user record for: {bot_name}')
+        except DoesNotExist as err:
+            cla.log.debug(f'handle_bots - bot: {bot_name} does not have a user record (DoesNotExist)')
+
+
+def create_bot_signature(bot_user: User, signature: Signature) -> Optional[Signature]:
+    cla.log.debug(f'create_bot_signature - locating Bot Signature for: {bot_user.get_user_name()}...')
+    project: Project = cla.utils.get_project_instance()
+    try:
+        project.load(signature.get_signature_project_id())
+    except DoesNotExist as err:
+        cla.log.warning(f'create_bot_signature - unable to load project by id: {signature.get_signature_project_id()}'
+                        f' Unable to create bot: {bot_user}')
+        return None
+
+    the_company: Company = cla.utils.get_company_instance()
+    try:
+        the_company.load(signature.get_signature_reference_id())
+    except DoesNotExist as err:
+        cla.log.warning(f'create_bot_signature - unable to load company by id: {signature.get_signature_reference_id()}'
+                        f' Unable to create bot: {bot_user}')
+        return None
+
+    bot_sig: Signature = cla.utils.get_signature_instance()
+
+    # First, before we create a new one, grab a list of employee signatures for this company/project
+    existing_sigs: List[Signature] = bot_sig.get_employee_signatures_by_company_project_model(
+        company_id=bot_user.get_user_company_id(), project_id=signature.get_signature_project_id())
+
+    # Check to see if we have an existing signature for this user/company/project combo
+    for sig in existing_sigs:
+        if sig.get_signature_reference_id() == bot_user.get_user_id():
+            cla.log.debug('create_bot_signature - found existing bot signature '
+                          f'for user: {bot_user} '
+                          f'with company: {the_company} '
+                          f'for project: {project}')
+            return sig
+
+    # Didn't find an existing signature, let's create a new one
+    cla.log.debug(f'create_bot_signature - creating Bot Signature: {bot_user.get_user_name()}...')
+    bot_sig.set_signature_id(str(uuid.uuid4()))
+    bot_sig.set_signature_project_id(signature.get_signature_project_id())
+    bot_sig.set_signature_reference_id(bot_user.get_user_id())
+    bot_sig.set_signature_document_major_version(signature.get_signature_document_major_version())
+    bot_sig.set_signature_document_minor_version(signature.get_signature_document_minor_version())
+    bot_sig.set_signature_approved(True)
+    bot_sig.set_signature_signed(True)
+    bot_sig.set_signature_type('cla')
+    bot_sig.set_signature_reference_type('user')
+    bot_sig.set_signature_user_ccla_company_id(bot_user.get_user_company_id())
+    bot_sig.set_note(f'{datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")} Added as part of '
+                     f'{project.get_project_name()}, whitelisted by '
+                     f'{the_company.get_company_name()}')
+    bot_sig.save()
+    cla.log.debug(f'create_bot_signature - created Bot Signature: {bot_sig}')
+    return bot_sig
+
+
+def create_bot(bot_name: str, signature: Signature) -> Optional[User]:
+    cla.log.debug(f'create_bot - creating Bot: {bot_name}...')
+    user_github_id = lookup_github_user(bot_name)
+    if user_github_id != 0:
+        project: Project = cla.utils.get_project_instance()
+        try:
+            project.load(signature.get_signature_project_id())
+        except DoesNotExist as err:
+            cla.log.warning(f'create_bot - Unable to load project by id: {signature.get_signature_project_id()}'
+                            f' Unable to create bot: {bot_name}')
+            return None
+
+        the_company: Company = cla.utils.get_company_instance()
+        try:
+            the_company.load(signature.get_signature_reference_id())
+        except DoesNotExist as err:
+            cla.log.warning(f'create_bot - Unable to load company by id: {signature.get_signature_reference_id()}'
+                            f' Unable to create bot: {bot_name}')
+            return None
+
+        user: User = cla.utils.get_user_instance()
+        user.set_user_id(str(uuid.uuid4()))
+        user.set_user_name(bot_name)
+        user.set_user_github_username(bot_name)
+        user.set_user_github_id(user_github_id)
+        user.set_user_company_id(signature.get_signature_reference_id())
+        user.set_note(f'{datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")} Added as part of '
+                      f'{project.get_project_name()}, whitelisted by '
+                      f'{the_company.get_company_name()}')
+        user.save()
+        cla.log.debug(f'create_bot - created Bot: {user}')
+        return user
+
+    cla.log.warning(f'create_bot - unable to create bot: {bot_name} - unable to lookup name in GitHub.')
+    return None
+
+
+def is_github_bot(username: str) -> bool:
+    """
+    Queries the GitHub public user endpoint for the specified username. Returns true if the user is a GitHub bot.
+
+    :param username: the user's github name
+    :return: True if the user is a GitHub bot, False otherwise
+    """
+    cla.log.debug('Looking up GH user: ' + username)
+    r = requests.get('https://api.github.com/users/' + username)
+    if r.status_code == requests.codes.ok:
+        # cla.log.info(f'Response content type: {r.headers["Content-Type"]}')
+        # cla.log.info(f'Response body: {r.json()}')
+        response = r.json()
+        cla.log.debug(f'Lookup succeeded for GH user: {username} with id: {response["id"]}')
+        if 'type' in response:
+            return response['type'].lower() == 'bot'
+        else:
+            return False
+    elif r.status_code == requests.codes.not_found:
+        cla.log.debug(f'Lookup failed for GH user: {username} - not found')
+        return False
+    else:
+        cla.log.warning(f'Error looking up GitHub user by username: {username}. Error: {r.status_code} - {r.text}')
+    return False
+
+
+def lookup_github_user(username: str) -> int:
+    """
+    Queries the GitHub public user endpoint for the specified username. Returns the user's GitHub ID.
+
+    :param username: the user's github name
+    :return: the user's GitHub ID
+    """
+    cla.log.debug('Looking up GH user: ' + username)
+    r = requests.get('https://api.github.com/users/' + username)
+    if r.status_code == requests.codes.ok:
+        # cla.log.info(f'Response content type: {r.headers["Content-Type"]}')
+        # cla.log.info(f'Response body: {r.json()}')
+        response = r.json()
+        cla.log.debug(f'Lookup succeeded for GH user: {username} with id: {response["id"]}')
+        return response['id']
+    elif r.status_code == requests.codes.not_found:
+        cla.log.debug(f'Lookup failed for GH user: {username} - not found')
+        return 0
+    else:
+        cla.log.warning(f'Error looking up GitHub user by username: {username}. Error: {r.status_code} - {r.text}')
+    return 0
+
+
 def update_signature_approved(signature, value):
     """Helper function to update the signature approval status and send emails if necessary."""
     previous = signature.get_signature_approved()
     signature.set_signature_approved(value)
     email_approval = cla.conf['EMAIL_ON_SIGNATURE_APPROVED']
-    if email_approval and not previous and value: # Just got approved.
+    if email_approval and not previous and value:  # Just got approved.
         subject, body, recipients = get_signature_approved_email_content(signature)
         get_email_service().send(subject, body, recipients)
 
-def get_signature_approved_email_content(signature): # pylint: disable=invalid-name
+
+def get_signature_approved_email_content(signature):  # pylint: disable=invalid-name
     """Helper function to get signature approval email subject, body, and recipients."""
     if signature.get_signature_reference_type() != 'user':
         cla.log.info('Not sending signature approved emails for CCLAs')
         return
     subject = 'CLA Signature Approved'
-    user = User()
+    user: User = cla.utils.get_user_instance()
     user.load(signature.get_signature_reference_id())
-    project = Project()
+    project: Project = cla.utils.get_project_instance()
     project.load(signature.get_signature_project_id())
     recipients = [user.get_user_id()]
     body = 'Hello %s. Your Contributor License Agreement for %s has been approved!' \
-           %(user.get_user_name(), project.get_project_name())
+           % (user.get_user_name(), project.get_project_name())
     return subject, body, recipients
+
 
 def delete_signature(signature_id):
     """
@@ -269,13 +465,14 @@ def delete_signature(signature_id):
     :type signature_id: UUID
     """
     signature = Signature()
-    try: # Try to load the signature to delete.
+    try:  # Try to load the signature to delete.
         signature.load(str(signature_id))
     except DoesNotExist as err:
         # Should we bother sending back an error?
         return {'errors': {'signature_id': str(err)}}
     signature.delete()
     return {'success': True}
+
 
 def get_user_signatures(user_id):
     """
@@ -286,6 +483,7 @@ def get_user_signatures(user_id):
     """
     signatures = Signature().get_signatures_by_reference(str(user_id), 'user')
     return [signature.to_dict() for signature in signatures]
+
 
 def get_user_project_signatures(user_id, project_id, signature_type=None):
     """
@@ -308,13 +506,14 @@ def get_user_project_signatures(user_id, project_id, signature_type=None):
     for signature in signatures:
         if signature_type is not None:
             if signature_type == 'individual' and \
-               signature.get_signature_user_ccla_employee_id() is not None:
+                    signature.get_signature_user_ccla_employee_id() is not None:
                 continue
             elif signature_type == 'employee' and \
-                 signature.get_signature_user_ccla_employee_id() is None:
+                    signature.get_signature_user_ccla_employee_id() is None:
                 continue
         ret.append(signature.to_dict())
     return ret
+
 
 def get_company_signatures(company_id):
     """
@@ -324,9 +523,10 @@ def get_company_signatures(company_id):
     :type company_id: string
     """
     signatures = Signature().get_signatures_by_reference(company_id,
-                                                                      'company')
+                                                         'company')
 
     return [signature.to_dict() for signature in signatures]
+
 
 def get_company_signatures_by_acl(username, company_id):
     """
@@ -350,6 +550,7 @@ def get_company_signatures_by_acl(username, company_id):
 
     return [signature.to_dict() for signature in signatures]
 
+
 def get_project_signatures(project_id):
     """
     Get all signatures for project.
@@ -371,8 +572,9 @@ def get_project_company_signatures(company_id, project_id):
     :type project_id: string
     """
     signatures = Signature().get_signatures_by_company_project(str(company_id),
-                                                                            str(project_id))
+                                                               str(project_id))
     return signatures
+
 
 def get_project_employee_signatures(company_id, project_id):
     """
@@ -384,8 +586,9 @@ def get_project_employee_signatures(company_id, project_id):
     :type project_id: string
     """
     signatures = Signature().get_employee_signatures_by_company_project(str(company_id),
-                                                                            str(project_id))
+                                                                        str(project_id))
     return signatures
+
 
 def get_cla_managers(username, signature_id):
     """
@@ -411,6 +614,7 @@ def get_cla_managers(username, signature_id):
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
 
     return get_managers_dict(signature_acl)
+
 
 def add_cla_manager(auth_user, signature_id, lfid):
     """
@@ -444,6 +648,7 @@ def add_cla_manager(auth_user, signature_id, lfid):
 
     return get_managers_dict(signature_acl)
 
+
 def remove_cla_manager(username, signature_id, lfid):
     """
     Removes the LFID from the project ACL
@@ -470,7 +675,7 @@ def remove_cla_manager(username, signature_id, lfid):
     # Avoid to have an empty acl
     if len(signature_acl) == 1 and username == lfid:
         return {'errors': {'user': "You cannot remove this manager because a CCLA must have at least one CLA manager."}}
-    
+
     # Remove LFID from the acl
     signature.remove_signature_acl(lfid)
     signature.save()
@@ -484,7 +689,7 @@ def get_managers_dict(signature_acl):
     # Generate managers dict
     managers_dict = []
     for lfid in signature_acl:
-        user = User()
+        user = cla.utils.get_user_instance()
         users = user.get_user_by_username(str(lfid))
         if users is not None:
             if len(users) > 1:
