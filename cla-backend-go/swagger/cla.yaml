@@ -1566,6 +1566,8 @@ definitions:
         type: boolean
       signatureReferenceType:
         type: string
+      signatureReferenceID:
+        type: string
       signatureType:
         type: string
       userName:
@@ -1579,6 +1581,10 @@ definitions:
       userLFID:
         type: string
       version:
+        type: string
+      created:
+        type: string
+      modified:
         type: string
       emailWhitelist:
         type: array

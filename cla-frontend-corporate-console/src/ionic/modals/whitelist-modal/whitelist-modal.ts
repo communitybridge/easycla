@@ -20,6 +20,10 @@ export class WhitelistModal {
   currentlySubmitting: boolean;
 
   type: string;
+  companyName: string;
+  projectName: string;
+  projectId: string;
+  companyId: string;
   signatureId: string;
   whitelist: string[];
 
@@ -34,6 +38,10 @@ export class WhitelistModal {
 
   getDefaults() {
     this.type = this.navParams.get("type"); // ['email' | 'domain' | 'github']
+    this.companyName = this.navParams.get('companyName');
+    this.projectName = this.navParams.get('projectName');
+    this.projectId = this.navParams.get('projectId');
+    this.companyId = this.navParams.get('companyId');
     this.signatureId = this.navParams.get('signatureId');
     this.whitelist = this.navParams.get('whitelist') || [];
 
@@ -129,15 +137,21 @@ export class WhitelistModal {
     }
 
     let signature = new ClaSignatureModel();
+    signature.signature_project_id = this.projectId;
+    signature.signature_reference_id = this.companyId; // CCLA, so signature_reference_id is the company id
     signature.signature_id = this.signatureId;
 
+    // ['email' | 'domain' | 'github']
     if (this.type === "domain") {
+      // TODO: apply filter to remove duplicates
       signature.domain_whitelist = this.extractWhitelist();
     } else if (this.type === "email") {
       //email
+      // TODO: apply filter to remove duplicates
       signature.email_whitelist = this.extractWhitelist();
     } else {
       //github username
+      // TODO: apply filter to remove duplicates
       signature.github_whitelist = this.extractWhitelist();
     }
 
