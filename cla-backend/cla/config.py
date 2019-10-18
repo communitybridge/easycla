@@ -18,7 +18,7 @@ stage = os.environ.get('STAGE', '')
 
 LOG_LEVEL = logging.DEBUG  #: Logging level.
 #: Logging format.
-LOG_FORMAT = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)s')
+LOG_FORMAT = logging.Formatter(fmt='%(asctime)s %(levelname)s %(name)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
 
 DEBUG = False  #: Debug off in production
 

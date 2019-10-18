@@ -90,8 +90,8 @@ export class ProjectPage {
   getProject() {
     // console.log('Loading project: ' + this.projectId);
     this.claService.getProject(this.projectId).subscribe(response => {
-      // console.log('Project response:');
-      // console.log(response);
+      console.log('Project response:');
+      console.log(response);
       this.project = response;
       this.getProjectSignatures();
     });
@@ -166,12 +166,12 @@ export class ProjectPage {
     // get employee signatures
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
-          // console.log('Employee signatures:');
-          // console.log(response);
+          console.log('Employee signatures:');
+          console.log(response);
           if (response.signatures) {
-            this.employeeSignatures = response;
+            this.employeeSignatures = response.signatures || [];
             for (let signature of this.employeeSignatures) {
-              this.getUser(signature.signatureReferenceType);
+              this.loadUser(signature.signatureReferenceID);
             }
           }
         },
@@ -184,14 +184,18 @@ export class ProjectPage {
   }
 
   getManager(userId) {
+    console.log('Looking up manager: ' + userId);
     this.claService.getUser(userId).subscribe(response => {
       this.manager = response;
     });
   }
 
-  getUser(userId) {
+  loadUser(userId) {
+    console.log('Looking up user: ' + userId);
     if (!this.users[userId]) {
       this.claService.getUser(userId).subscribe(response => {
+        console.log('Loaded user:');
+        console.log(response);
         this.users[userId] = response;
       });
     }
@@ -200,6 +204,10 @@ export class ProjectPage {
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
+      projectName: this.project.project_name,
+      companyName: this.cclaSignature.companyName,
+      projectId: this.cclaSignature.projectID,
+      companyId: this.companyId,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.emailWhitelist
     });
@@ -213,6 +221,9 @@ export class ProjectPage {
   openWhitelistDomainModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "domain",
+      projectName: this.project.project_name,
+      companyName: this.cclaSignature.companyName,
+      projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.domainWhitelist
     });
@@ -226,6 +237,9 @@ export class ProjectPage {
   openWhitelistGithubModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "github",
+      projectName: this.project.project_name,
+      companyName: this.cclaSignature.companyName,
+      projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.githubWhitelist
     });
@@ -289,11 +303,16 @@ export class ProjectPage {
             let cclaSignatures = response.filter(sig => sig.signatureType === 'ccla');
             if (cclaSignatures.length) {
               this.cclaSignature = cclaSignatures[0];
+              console.log('CCLA Signature:');
+              console.log(this.cclaSignature);
               this.getCLAManagers();
               this.getGitHubOrgWhitelist();
 
               // Ok to open the modal now that we have signatures loaded
               let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+                projectName: this.project.project_name,
+                companyName: this.cclaSignature.companyName,
+                projectId: this.cclaSignature.projectID,
                 companyId: this.companyId,
                 corporateClaId: this.projectId,
                 signatureId: this.cclaSignature.signatureID
@@ -312,6 +331,9 @@ export class ProjectPage {
           });
     } else {
       let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
+        projectName: this.project.project_name,
+        companyName: this.cclaSignature.companyName,
+        projectId: this.cclaSignature.projectID,
         companyId: this.companyId,
         corporateClaId: this.projectId,
         signatureId: this.cclaSignature.signatureID

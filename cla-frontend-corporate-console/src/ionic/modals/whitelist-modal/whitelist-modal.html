@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span>Edit {{type | titlecase}} Whitelist</span>
+      <span>Edit {{type | titlecase}} Whitelist for {{ companyName | titlecase }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -21,7 +21,8 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add {{type}}</button  >
+          <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add {{type}}</button>
+          <p *ngIf="type === 'github'">Note: Any GitHub bots you whitelist will be automatically affiliated to {{companyName}} on {{projectName}}.</p>
         </ion-col>
       </ion-row>
       <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">

@@ -873,7 +873,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 
 			if dbSignature.SignatureReferenceType == "user" {
 				userModel, userErr := repo.usersRepo.GetUser(dbSignature.SignatureReferenceID)
-				if userErr != nil {
+				if userErr != nil || userModel == nil {
 					log.Warnf("unable to lookup user using id: %s, error: %v", dbSignature.SignatureReferenceID, userErr)
 				} else {
 					userName = userModel.Username
@@ -903,11 +903,14 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 				SignatureCreated:       dbSignature.DateCreated,
 				SignatureModified:      dbSignature.DateModified,
 				SignatureType:          dbSignature.SignatureType,
+				SignatureReferenceID:   dbSignature.SignatureReferenceID,
 				SignatureSigned:        dbSignature.SignatureSigned,
 				SignatureApproved:      dbSignature.SignatureApproved,
 				Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
 				SignatureReferenceType: dbSignature.SignatureReferenceType,
 				ProjectID:              dbSignature.SignatureProjectID,
+				Created:                dbSignature.DateCreated,
+				Modified:               dbSignature.DateModified,
 				UserName:               userName,
 				UserLFID:               userLFID,
 				UserGHID:               userGHID,
