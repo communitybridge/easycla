@@ -128,29 +128,32 @@ export class ProjectPage {
 
               // Sort the values
               if (this.cclaSignature.domainWhitelist) {
-                this.cclaSignature.domainWhitelist = this.cclaSignature.domainWhitelist.sort((a, b) => {
+                const sortedList: string[] = this.cclaSignature.domainWhitelist.sort((a, b) => {
                   return a.trim().localeCompare(b.trim())
                 });
+                // Remove duplicates - set doesn't allow dups
+                this.cclaSignature.domainWhitelist = Array.from(new Set(sortedList));
               }
               if (this.cclaSignature.emailWhitelist) {
-                this.cclaSignature.emailWhitelist = this.cclaSignature.emailWhitelist.sort((a, b) => {
+                const sortedList: string[] = this.cclaSignature.emailWhitelist.sort((a, b) => {
                   return a.trim().localeCompare(b.trim())
                 });
+                // Remove duplicates - set doesn't allow dups
+                this.cclaSignature.emailWhitelist = Array.from(new Set(sortedList));
               }
               if (this.cclaSignature.githubWhitelist) {
-                this.cclaSignature.githubWhitelist = this.cclaSignature.githubWhitelist.sort((a, b) => {
+                const sortedList: string[] = this.cclaSignature.githubWhitelist.sort((a, b) => {
                   return a.trim().localeCompare(b.trim())
                 });
+                // Remove duplicates - set doesn't allow dups
+                this.cclaSignature.githubWhitelist = Array.from(new Set(sortedList));
               }
               if (this.cclaSignature.githubOrgWhitelist) {
-                this.cclaSignature.githubOrgWhitelist = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
+                const sortedList: string[] = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
                   return a.trim().localeCompare(b.trim())
                 });
-              }
-              if (this.cclaSignature.githubOrgWhitelist) {
-                this.cclaSignature.githubOrgWhitelist = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
-                  return a.trim().localeCompare(b.trim())
-                });
+                // Remove duplicates - set doesn't allow dups
+                this.cclaSignature.githubOrgWhitelist = Array.from(new Set(sortedList));
               }
               this.getCLAManagers();
               this.getGitHubOrgWhitelist();
@@ -169,10 +172,14 @@ export class ProjectPage {
           console.log('Employee signatures:');
           console.log(response);
           if (response.signatures) {
-            this.employeeSignatures = response.signatures || [];
-            for (let signature of this.employeeSignatures) {
-              this.loadUser(signature.signatureReferenceID);
-            }
+            const sigs = response.signatures || [];
+            this.employeeSignatures = sigs.sort((a, b) => {
+              if (a.userName != null && b.userName != null) {
+                return a.userName.trim().localeCompare(b.userName.trim())
+              } else {
+                return 0;
+              }
+            });
           }
         },
         exception => {
@@ -180,7 +187,6 @@ export class ProjectPage {
             this.companyId + ' and project ID: ' + this.projectId);
           console.log(exception);
         });
-
   }
 
   getManager(userId) {
@@ -188,17 +194,6 @@ export class ProjectPage {
     this.claService.getUser(userId).subscribe(response => {
       this.manager = response;
     });
-  }
-
-  loadUser(userId) {
-    console.log('Looking up user: ' + userId);
-    if (!this.users[userId]) {
-      this.claService.getUser(userId).subscribe(response => {
-        console.log('Loaded user:');
-        console.log(response);
-        this.users[userId] = response;
-      });
-    }
   }
 
   openWhitelistEmailModal() {

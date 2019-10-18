@@ -14,15 +14,16 @@
 <ion-content>
   <form id="form" (submit)="submit()" [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid formArrayName="whitelist">
-      <ion-row *ngIf="submitAttempt && !form.valid">
-        <ion-col col-12>
-          <p class="form-message">Please check the fields below for errors.</p>
-        </ion-col>
-      </ion-row>
       <ion-row>
         <ion-col col-12>
           <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add {{type}}</button>
-          <p *ngIf="type === 'github'">Note: Any GitHub bots you whitelist will be automatically affiliated to {{companyName}} on {{projectName}}.</p>
+          <p *ngIf="type === 'github'">Note: Any GitHub bots you whitelist will be automatically affiliated
+            to {{companyName}} on {{projectName}}.</p>
+        </ion-col>
+      </ion-row>
+      <ion-row *ngIf="submitAttempt && !form.valid">
+        <ion-col col-12>
+          <p class="form-message red">Please check the fields below for errors. {{errorMessage}}</p>
         </ion-col>
       </ion-row>
       <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">
@@ -44,14 +45,15 @@
 </ion-content>
 
 <ion-footer class="footer-bordered">
-<ion-toolbar>
-  <ion-buttons end>
-    <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
-      Cancel
-    </button>
-    <button form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
-      Save
-    </button>
-  </ion-buttons>
-</ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons end>
+      <loading-spinner [loading]="currentlySubmitting"></loading-spinner>
+      <button ion-button icon-right (click)="dismiss()" [color]="cancelButton()" [disabled]="currentlySubmitting">
+        Cancel
+      </button>
+      <button form="form" type="submit" ion-button icon-right [color]="saveButton()" [disabled]="currentlySubmitting">
+        Save
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-footer>
