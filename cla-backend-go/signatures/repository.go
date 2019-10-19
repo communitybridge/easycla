@@ -6,6 +6,7 @@ package signatures
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -91,6 +92,11 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(signatureID string) (
 			Selected: &selected,
 		})
 	}
+
+	// Sort the array based on the ID
+	sort.Slice(orgs, func(i, j int) bool {
+		return *orgs[i].ID < *orgs[j].ID
+	})
 
 	return orgs, nil
 }
