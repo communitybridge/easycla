@@ -1,18 +1,16 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
-import cla
-import requests
-import os
 import json
+import os
 from http import HTTPStatus
+from typing import Optional
 
+import requests
+
+import cla
 import cla.auth
 from cla.models.dynamo_models import UserPermissions
-
-from oauthlib.oauth2 import LegacyApplicationClient
-from requests_oauthlib import OAuth2Session
-from jose import jwt
 
 stage = os.environ.get('STAGE', '')
 
@@ -24,6 +22,7 @@ sf_password = os.environ.get('SF_PASSWORD', '')
 
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
 
+
 def format_response(status_code, headers, body):
     """
     Helper function: Generic response formatter
@@ -34,6 +33,7 @@ def format_response(status_code, headers, body):
         'body': body
     }
     return response
+
 
 def format_json_cors_response(status_code, body):
     """
@@ -48,7 +48,8 @@ def format_json_cors_response(status_code, body):
     response = format_response(status_code, cors_headers, body)
     return response
 
-def get_sf_oauth_access():
+
+def get_sf_oauth_access() -> Optional[dict]:
     data = {
         'grant_type': 'password',
         'client_id': sf_client_id,
@@ -57,11 +58,16 @@ def get_sf_oauth_access():
         'password': sf_password
     }
 
-    token_url = 'https://{}/services/oauth2/token'.format(sf_instance_url)
-    oauth_response = requests.post(token_url, data=data)
-    oauth_response = oauth_response.json()
+    token_url = f'https://{sf_instance_url}/services/oauth2/token'
+    r = requests.post(token_url, data=data)
+    if r.status_code == requests.codes.ok:
+        cla.log.debug(f'Lookup succeeded fetching oauth token by username: {sf_username}, client_id: {sf_client_id}.')
+        return r.json()
+    else:
+        cla.log.warning(f'Error fetching oauth token by username: {sf_username}, client_id: {sf_client_id}. '
+                        f'Error: {r.status_code} - {r.text}')
+        return None
 
-    return oauth_response
 
 def get_projects(event, context):
     """
@@ -97,6 +103,10 @@ def get_projects(event, context):
     project_list = ', '.join('\'' + project_id + '\'' for project_id in authorized_projects)
 
     oauth_response = get_sf_oauth_access()
+    if oauth_response is None:
+        cla.log.error('Unable to acquire oauth token.')
+        return format_json_cors_response(400, 'authentication error')
+
     token = oauth_response['access_token']
     instance_url = oauth_response['instance_url']
 
@@ -132,6 +142,7 @@ def get_projects(event, context):
 
     return format_json_cors_response(status_code, projects)
 
+
 def get_project(event, context):
     """
     Given project id, gets project details from Salesforce
@@ -166,7 +177,7 @@ def get_project(event, context):
     if authorized_projects is None:
         cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
-    
+
     if project_id not in authorized_projects:
         cla.log.error('Error user not authorized')
         return format_json_cors_response(403, 'Error user not authorized')
