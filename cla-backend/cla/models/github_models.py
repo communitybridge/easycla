@@ -10,6 +10,7 @@ import uuid
 
 import falcon
 import github
+from github import PullRequest
 from github.GithubException import UnknownObjectException, BadCredentialsException
 from requests_oauthlib import OAuth2Session
 
@@ -669,6 +670,25 @@ def get_pull_request_commit_authors(pull_request):
     return commit_authors
 
 
+def has_check_previously_failed(pull_request: PullRequest) -> bool:
+    """
+    Review the status updates in the PR. Identify 1 or more previous failed
+    updates from the EasyCLA bot. If we fine one, return True, otherwise
+    return False
+
+    :param pull_request: the GitHub pull request object
+    :return: True if the EasyCLA bot check previously failed, otherwise return False
+    """
+    comments = pull_request.get_issue_comments()
+    # Look through all the comments
+    for comment in comments:
+        # Our bot comments include the following text
+        # A previously failed check has 'not authorized' somewhere in the body
+        if '[![CLA Check](' in comment.body and 'not authorized' in comment.body:
+            return True
+    return False
+
+
 def update_pull_request(installation_id, github_repository_id, pull_request, signed,
                         missing):  # pylint: disable=too-many-locals
     """
@@ -700,6 +720,11 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
         if not missing:
+            # After Issue #167 wsa in place, they decided via Issue #289 that we
+            # DO want to update the comment, but only after we've previously failed
+            if has_check_previously_failed(pull_request):
+                cla.log.debug('Found previously failed checks - updating CLA comment in PR.')
+                update_cla_comment(pull_request, body)
             cla.log.debug('EasyCLA App checks pass for PR: {} with authors: {}'.format(pull_request.number, signed))
         else:
             # Per Issue #167, only add a comment if check fails
