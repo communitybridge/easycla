@@ -24,6 +24,7 @@ export class ClaSignatureModel {
   domain_whitelist: Array<string>;
   email_whitelist: Array<string>;
   github_whitelist: Array<string>;
+  github_org_whitelist: Array<string>;
 
   constructor() {
   }
