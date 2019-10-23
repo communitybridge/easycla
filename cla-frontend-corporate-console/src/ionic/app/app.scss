@@ -1,5 +1,4 @@
 // http://ionicframework.com/docs/v2/theming/
-
 // App Global Sass
 // --------------------------------------------------
 // Put style rules here that you want to apply globally. These
@@ -13,7 +12,6 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
-
 //@import url('https://fonts.googleapis.com/css?family=Lato');
 @import "../assets/fonts/lato-font.scss";
 @import "../assets/fonts/open-sans-font.scss";
@@ -42,14 +40,15 @@ body ion-app.wp {
   padding-right: 0;
 }
 
-.item.item-md{
+.item.item-md {
   padding-left: 0;
+
   .checkbox-md {
     margin: 6px 15px 9px 0px;
   }
 }
 
-.item-md.item-block .item-inner{
+.item-md.item-block .item-inner {
   padding-right: 0;
 }
 
@@ -57,17 +56,50 @@ body ion-app.wp {
   padding: 0;
 }
 
-.md ion-footer .toolbar:last-child{
+.md ion-footer .toolbar:last-child {
   padding-bottom: 1rem;
 }
 
 .bar-buttons-md[end] {
   margin-right: 0;
+
   .button:last-child {
     margin-right: 0;
   }
 }
 
 .row .col .card {
-  min-height: calc( 100% - 20px )
+  min-height: calc(100% - 20px)
+}
+
+.isa_info, .isa_success, .isa_warning, .isa_error {
+  margin: 10px 0px;
+  padding: 12px;
+}
+
+.isa_info {
+  color: #00529B;
+  background-color: #BDE5F8;
+}
+
+.isa_success {
+  color: #4F8A10;
+  background-color: #DFF2BF;
+}
+
+//color: #9F6000;
+.isa_warning {
+  color: #9f4c00;
+  background-color: #FEEFB3;
+}
+
+.isa_error {
+  color: #D8000C;
+  background-color: #FFD2D2;
+}
+
+.isa_info i, .isa_success i, .isa_warning i, .isa_error i {
+  margin: 10px 22px;
+  font-size: 2em;
+  vertical-align: middle;
 }

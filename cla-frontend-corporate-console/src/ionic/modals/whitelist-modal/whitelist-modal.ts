@@ -5,15 +5,16 @@ import {Component} from "@angular/core";
 import {IonicPage, NavParams, ViewController} from "ionic-angular";
 import {
   AbstractControl,
+  AsyncValidatorFn,
   FormArray,
   FormBuilder,
   FormGroup,
   ValidationErrors,
-  ValidatorFn,
-  Validators
+  ValidatorFn
 } from "@angular/forms";
 import {ClaService} from "../../services/cla.service";
 import {ClaSignatureModel} from "../../models/cla-signature";
+import {Observable} from "rxjs";
 
 @IonicPage({
   segment: "whitelist-modal"
@@ -34,7 +35,7 @@ export class WhitelistModal {
   companyId: string;
   signatureId: string;
   whitelist: string[];
-  errorMessage: string;
+  message: any;
 
   constructor(
     public navParams: NavParams,
@@ -59,7 +60,9 @@ export class WhitelistModal {
     });
     this.submitAttempt = false;
     this.currentlySubmitting = false;
-    this.errorMessage = null;
+    this.message = {
+      error: null
+    };
   }
 
   ngOnInit() {
@@ -81,29 +84,31 @@ export class WhitelistModal {
    */
   getValidationRegExp(formType: string): RegExp {
     let regex: RegExp;
-    if (formType === "domain") {
+    if (formType === 'domain') {
       // domains
       regex = new RegExp(/[a-z0-9]{1,}\.[a-z]{2,}$/i);
-    } else if (formType === "email") {
+    } else if (formType === 'email') {
       // emails
       regex = new RegExp(/^.+@.+\..+$/i);
-    } else {
+    } else if (formType === 'github') {
       // github usernames - allow the standard GitHub characters - plus
       // allow square brackets - which are allowed for bots - ex: 'somename[bot]'
       regex = new RegExp(/^[a-z\[\d](?:[a-z\[\]\d]|-(?=[a-z\[\]\d])){0,38}$/i);
+    } else if (formType === 'githubOrg') {
+      regex = new RegExp(/^[a-z\[\d](?:[a-z\-\d]|-(?=[a-z\-\d])){0,38}$/i);
     }
 
     return regex;
   }
 
-  /**
-   * A duplicate entry validator. Returns a validation error if a duplicate entry is detected, returns null otherwise.
-   *
-   */
-  duplicateEntryValidator(entries: string[]): ValidatorFn {
+  myFormValidator(entries: string[], re: RegExp): ValidatorFn {
     // Return a function with the implementation - we do this so can can pass in args, otherwise we don't have access
     // to 'this'
     return (control: AbstractControl): ValidationErrors | null => {
+      if (control.value == null || control.value === '') {
+        return null
+      }
+
       // Create a new array from the original - add the new value being entered on the form
       const newArray: string[] = Array.from(entries);
       newArray.push(control.value);
@@ -113,27 +118,59 @@ export class WhitelistModal {
 
       // If the array lengths do not match, then we have at least one duplicate entry
       if (newArray.length !== noDuplicates.length) {
-        this.errorMessage = 'Duplicate Entry: ' + control.value;
+        this.message.error = 'Duplicate Entry: ' + control.value;
         return {
           duplicate: control.value
         }
       }
 
-      this.errorMessage = '';
+      // Test the regex pattern
+      if (!re.test(control.value)) {
+        this.message.error = 'Invalid Pattern: ' + control.value;
+        return {
+          invalidPattern: control.value
+        };
+      }
+
+      // Default is to pas
+      this.message.error = null;
       return null;
     }
   }
 
+  /**
+   * A GitHub organization entry validator. Returns a validation error if the
+   * specified GitHub organization does not exist, otherwise returns null.
+  githubOrgValidator(claService: ClaService): AsyncValidatorFn {
+    return (control: AbstractControl): Promise<ValidationErrors | null> | Observable<ValidationErrors | null> => {
+      return claService.doesGitHubOrgExist(control.value).map(res => {
+        // Response will be either:
+        // - a full JSON document (valid) { "login": "deal-test-org-2", "id": 56558033, "node_id": "MDEyOk9yZ2FuaXphdGlvbjU2NTU4MDMz", ...}
+        // or
+        // - a small JSON document (invalid) {"message": "Not Found", "documentation_url": "https://..."}
+        console.log('Validating: ' + control.value);
+        console.log('Response: ');
+        console.log(res);
+        if (res.message) {
+          this.message.error = 'Invalid Organization: ' + control.value;
+          return {invalidOrg: true};
+        } else {
+          this.message.error = null;
+          return null;
+        }
+      });
+    }
+  }
+   */
+
   addWhitelistItem(item) {
-    this.errorMessage = null;
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
       this.formBuilder.group({
-        whitelistItem: [item, Validators.compose([
-          Validators.required,
-          Validators.pattern(this.getValidationRegExp(this.type)),
-          this.duplicateEntryValidator(this.extractWhitelist())
-        ])]
+        whitelistItem: [
+          item,
+          [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]
+        ]
       })
     );
   }
@@ -142,22 +179,19 @@ export class WhitelistModal {
    * Called on new items added to the list
    */
   addNewWhitelistItem() {
-    this.errorMessage = null;
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.insert(
       0,
       this.formBuilder.group({
-        whitelistItem: ["", Validators.compose([
-          Validators.required,
-          Validators.pattern(this.getValidationRegExp(this.type)),
-          this.duplicateEntryValidator(this.extractWhitelist())
-        ])]
+        whitelistItem: [
+          '',
+          [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]
+        ]
       })
     );
   }
 
   removeWhitelistItem(index) {
-    this.errorMessage = null;
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.removeAt(index);
   }
@@ -165,6 +199,10 @@ export class WhitelistModal {
   extractWhitelist(): string[] {
     let whitelist = [];
     for (let item of this.form.value.whitelist) {
+      // Don't add empty stuff
+      if (item.whitelistItem == null || item.whitelistItem === '') {
+        continue;
+      }
       whitelist.push(item.whitelistItem);
     }
     return whitelist;
@@ -179,24 +217,24 @@ export class WhitelistModal {
       return;
     }
 
-    this.errorMessage = null;
+    //this.message.error = null;
     let signature = new ClaSignatureModel();
     signature.signature_project_id = this.projectId;
     signature.signature_reference_id = this.companyId; // CCLA, so signature_reference_id is the company id
     signature.signature_id = this.signatureId;
 
-    // ['email' | 'domain' | 'github']
+    // ['email' | 'domain' | 'github' | 'githubOrg']
     if (this.type === "domain") {
-      // TODO: apply filter to remove duplicates
       signature.domain_whitelist = this.extractWhitelist();
     } else if (this.type === "email") {
       //email
-      // TODO: apply filter to remove duplicates
       signature.email_whitelist = this.extractWhitelist();
-    } else {
+    } else if (this.type === 'github') {
       //github username
-      // TODO: apply filter to remove duplicates
       signature.github_whitelist = this.extractWhitelist();
+    } else if (this.type === 'githubOrg') {
+      //github organization
+      signature.github_org_whitelist = this.extractWhitelist();
     }
 
     this.claService.putSignature(signature).subscribe(
@@ -211,7 +249,7 @@ export class WhitelistModal {
   }
 
   dismiss() {
-    this.errorMessage = null;
+    //this.message.error = null;
     this.viewCtrl.dismiss();
   }
 
@@ -219,14 +257,32 @@ export class WhitelistModal {
     if (this.currentlySubmitting) {
       return 'gray';
     } else {
-      return 'primary';
+      return 'secondary';
     }
   }
+
   cancelButton(): string {
     if (this.currentlySubmitting) {
       return 'gray';
     } else {
-      return 'primary';
+      return 'danger';
+    }
+  }
+
+  /**
+   * Returns the type as a pretty string with the proper case.
+   */
+  getTitleType(): string {
+    if (this.type === 'domain') {
+      return 'Domain';
+    } else if (this.type === 'email') {
+      return 'Email';
+    } else if (this.type === 'github') {
+      return 'GitHub Username';
+    } else if (this.type === 'githubOrg') {
+      return 'GitHub Org';
+    } else {
+      return "Unknown";
     }
   }
 }
