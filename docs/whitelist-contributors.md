@@ -20,19 +20,19 @@ _Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the
 
    The CLA Corporate Console appears and shows Companies.
 
-1. Click a **company** of interest.
+2. Click a **company** of interest.
 
    The CLA Corporate Console appears and shows Signed CLAs.
 
    ![Signed CLAs](imgs/cla-signed-clas.png)
 
-1. Click a **CLA**.
+3. Click a **CLA**.
 
    The whitelists appear:
 
    ![Whitelists](imgs/cla-whitelists.png)
 
-1. Decide which whitelist you want to edit:
+4. Decide which whitelist you want to edit:
 
     + [Domain Whitelist, Email Whitelist, or GitHub Whitelist](#domain-whitelist--email-whitelist--or-github-whitelist)
 
@@ -47,9 +47,17 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 
-1. Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and  click **SAVE**. For example:
+2. Click ADD DOMAIN, enter a domain name of the whitelisted employees and click SAVE. For example:
 
-   ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+ ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+
+3. Click ADD EMAIL, and enter the email address of the whitelisted employees and click SAVE. For example:
+
+ ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+
+4. Click ADD GITHUB, and enter the  GitHub username of  the whitelisted employees and click SAVE. For example:
+
+ ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
 
    Your entries appear in their corresponding whitelists.
 
@@ -75,6 +83,6 @@ Each member of your organization must ensure that these items are Public in thei
 
    **Note:** Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
-1. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
+2. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
 
    Your organizations appear in their organization whitelist.
