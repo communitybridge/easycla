@@ -57,12 +57,12 @@
         <ion-col col-12 col-md-3>
           <h3>
             GitHub Org Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openGithubOrgWhitelistModal()"></ion-icon>
+            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let organization of githubEnabledWhitelist">
-                <span>{{ organization.id }}</span>
+              <ion-item *ngFor="let org of cclaSignature.githubOrgWhitelist">
+                {{ org }}
               </ion-item>
             </ion-list>
           </div>
@@ -113,31 +113,31 @@
           <h2>{{ cclaSignature.companyName | titlecase }} Employee Acknowledgements</h2>
           <table class="table table-hover">
             <thead>
-              <tr>
-                <th class="clickable">
-                  Name
-                </th>
-                <th class="clickable">
-                  Agreement
-                </th>
-                <th class="clickable" (click)="sortMembers('date')">
-                  Date
-                  <sorting-display [sorting]='sort.date.sort'></sorting-display>
-                </th>
-              </tr>
+            <tr>
+              <th class="clickable">
+                Name
+              </th>
+              <th class="clickable">
+                Agreement
+              </th>
+              <th class="clickable" (click)="sortMembers('date')">
+                Date
+                <sorting-display [sorting]='sort.date.sort'></sorting-display>
+              </th>
+            </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let signature of employeeSignatures">
-                <td data-title="Name">
-                  {{ signature.userName }}
-                </td>
-                <td data-title="Agreement">
-                  v{{ signature.version}}
-                </td>
-                <td data-title="Date">
-                  {{ signature.modified | date:'medium' }}
-                </td>
-              </tr>
+            <tr *ngFor="let signature of employeeSignatures">
+              <td data-title="Name">
+                {{ signature.userName }}
+              </td>
+              <td data-title="Agreement">
+                v{{ signature.version}}
+              </td>
+              <td data-title="Date">
+                {{ signature.modified | date:'medium' }}
+              </td>
+            </tr>
             </tbody>
           </table>
         </div>

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import {Injectable} from "@angular/core";
-import {Http} from "@angular/http";
+import {Headers, Http} from "@angular/http";
 import {AuthService} from "./auth.service"
 
 import "rxjs/Rx";
@@ -1271,7 +1271,6 @@ export class ClaService {
   /**
    * Handle service error is a common routine to handle HTTP response errors
    * @param error the error
-   * @param caught the error that was caught
    */
   private handleServiceError(error: any) {
     /*

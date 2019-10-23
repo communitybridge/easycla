@@ -26,8 +26,8 @@ import {WhitelistModal} from "../../modals/whitelist-modal/whitelist-modal";
 export class ProjectPage {
   cclaSignature: any;
   employeeSignatures: any[];
-  githubOrgWhitelist: any[] = [];
-  githubEnabledWhitelist: any[] = [];
+  //githubOrgWhitelist: any[] = [];
+  //githubEnabledWhitelist: any[] = [];
   loading: any;
   companyId: string;
   projectId: string;
@@ -54,9 +54,9 @@ export class ProjectPage {
     this.projectId = navParams.get("projectId");
     this.showModal = navParams.get("modal");
 
-    if (this.showModal === 'orgwhitelist') {
-      this.openGithubOrgWhitelistModal();
-    }
+    // if (this.showModal === 'orgwhitelist') {
+    //   this.openGithubOrgWhitelistModal();
+    // }
 
     this.getDefaults();
   }
@@ -97,6 +97,7 @@ export class ProjectPage {
     });
   }
 
+  /*
   getGitHubOrgWhitelist() {
     this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signatureID).subscribe(organizations => {
       this.githubOrgWhitelist = organizations;
@@ -107,6 +108,7 @@ export class ProjectPage {
   githubOrgWhitelistEnabled() {
     this.githubEnabledWhitelist = this.githubOrgWhitelist.filter((org) => org.selected);
   }
+   */
 
   getCLAManagers() {
     this.claService.getCLAManagers(this.cclaSignature.signatureID).subscribe(response => {
@@ -156,7 +158,7 @@ export class ProjectPage {
                 this.cclaSignature.githubOrgWhitelist = Array.from(new Set(sortedList));
               }
               this.getCLAManagers();
-              this.getGitHubOrgWhitelist();
+              //this.getGitHubOrgWhitelist();
             }
           }
         },
@@ -196,6 +198,22 @@ export class ProjectPage {
     });
   }
 
+  openWhitelistDomainModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "domain",
+      projectName: this.project.project_name,
+      companyName: this.cclaSignature.companyName,
+      projectId: this.cclaSignature.projectID,
+      signatureId: this.cclaSignature.signatureID,
+      whitelist: this.cclaSignature.domainWhitelist
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getProjectSignatures();
+    });
+    modal.present();
+  }
+
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
@@ -205,22 +223,6 @@ export class ProjectPage {
       companyId: this.companyId,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.emailWhitelist
-    });
-    modal.onDidDismiss(data => {
-      // A refresh of data anytime the modal is dismissed
-      this.getProjectSignatures();
-    });
-    modal.present();
-  }
-
-  openWhitelistDomainModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "domain",
-      projectName: this.project.project_name,
-      companyName: this.cclaSignature.companyName,
-      projectId: this.cclaSignature.projectID,
-      signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.domainWhitelist
     });
     modal.onDidDismiss(data => {
       // A refresh of data anytime the modal is dismissed
@@ -243,7 +245,22 @@ export class ProjectPage {
       this.getProjectSignatures();
     });
     modal.present();
+  }
 
+  openWhitelistGithubOrgModal() {
+    let modal = this.modalCtrl.create("WhitelistModal", {
+      type: "githubOrg",
+      projectName: this.project.project_name,
+      companyName: this.cclaSignature.companyName,
+      projectId: this.cclaSignature.projectID,
+      signatureId: this.cclaSignature.signatureID,
+      whitelist: this.cclaSignature.githubOrgWhitelist
+    });
+    modal.onDidDismiss(data => {
+      // A refresh of data anytime the modal is dismissed
+      this.getProjectSignatures();
+    });
+    modal.present();
   }
 
   sortMembers(prop) {
@@ -290,6 +307,7 @@ export class ProjectPage {
     modal.present();
   }
 
+  /*
   openGithubOrgWhitelistModal() {
     // Maybe this happens if we authorize GH and come back after the flow and we haven't fully loaded...
     if (this.cclaSignature == null) {
@@ -340,4 +358,5 @@ export class ProjectPage {
       modal.present();
     }
   }
+   */
 }
