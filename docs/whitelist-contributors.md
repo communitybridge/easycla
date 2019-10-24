@@ -20,19 +20,19 @@ _Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the
 
    The CLA Corporate Console appears and shows Companies.
 
-2. Click a **company** of interest.
+1. Click a **company** of interest.
 
    The CLA Corporate Console appears and shows Signed CLAs.
 
    ![Signed CLAs](imgs/cla-signed-clas.png)
 
-3. Click a **CLA**.
+1. Click a **CLA**.
 
    The whitelists appear:
 
    ![Whitelists](imgs/cla-whitelists.png)
 
-4. Decide which whitelist you want to edit:
+1. Decide which whitelist you want to edit:
 
     + [Domain Whitelist, Email Whitelist, or GitHub Whitelist](#domain-whitelist--email-whitelist--or-github-whitelist)
 
@@ -47,19 +47,29 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 
-2. Click ADD DOMAIN, enter a domain name of the whitelisted employees and click SAVE. For example:
+#### Domain Whitelist
+1. Click ADD DOMAIN, enter a domain name of the whitelisted employees and click SAVE. For example:
 
- ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+ ![Edit Domain Whitelist](imgs/cla_edit_domain.png)
 
-3. Click ADD EMAIL, and enter the email address of the whitelisted employees and click SAVE. For example:
+#### Email Whitelist
+1. Click ADD EMAIL, and enter the email address of the whitelisted employees and click SAVE. For example:
 
- ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+ ![Edit Email Whitelist](imgs/cla_add_email.png)
 
-4. Click ADD GITHUB, and enter the  GitHub username of  the whitelisted employees and click SAVE. For example:
+#### GitHub Whitelist
+1. Click ADD GITHUB, and enter the  GitHub username of  the whitelisted employees and click SAVE. For example:
 
- ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+ ![Edit GitHub Whitelist](imgs/cla_add_github.png)
 
    Your entries appear in their corresponding whitelists.
+   
+### GitHub Bot Whitelist
+ 
+ Click ADD GITHUB, enter a GitHub username of the whitelisted bots and click SAVE. For example:
+ ![Edit GitHub Bot Whitelist](imgs/cla_add_github.png)
+ 
+In contrast to whitelisted employees, bots are automatically affiliated with your company. Employees will need to confirm their affiliation during their first contribution to an EasyCLA-enforced project repository.
 
 ### GitHub Organization Whitelist
 
