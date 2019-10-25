@@ -47,11 +47,29 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 
-1. Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and  click **SAVE**. For example:
+#### Domain Whitelist
+Click ADD NEW LINE, enter a domain name of the whitelisted employees and click SAVE WHITELIST. For example:
 
-   ![Edit email Whitelist](imgs/cla-edit-email-whitelist.png)
+ ![Edit Domain Whitelist](imgs/cla_edit_domain.png)
+
+#### Email Whitelist
+Click ADD NEW LINE, and enter the email address of the whitelisted employees and click SAVE WHITELIST. For example:
+
+ ![Edit Email Whitelist](imgs/cla_add_email.png)
+
+#### GitHub Whitelist
+Click ADD NEW LINE, and enter the  GitHub username of  the whitelisted employees and click SAVE WHITELIST. For example:
+
+ ![Edit GitHub Whitelist](imgs/cla_add_github.png)
 
    Your entries appear in their corresponding whitelists.
+   
+### GitHub Bot Whitelist
+ 
+ Click ADD NEW LINE, enter a GitHub username of the whitelisted bots and click SAVE WHITELIST. For example:
+ ![Edit GitHub Bot Whitelist](imgs/cla_add_github.png)
+ 
+In contrast to whitelisted employees, bots are automatically affiliated with your company. Employees will need to confirm their affiliation during their first contribution to an EasyCLA-enforced project repository.
 
 ### GitHub Organization Whitelist
 
@@ -71,10 +89,10 @@ Each member of your organization must ensure that these items are Public in thei
 
    The Github Organization Whitelist dialog appears.
 
-   ![Github Organization Whitelist](imgs/cla-github-organization-whitelist-no-organizations.png)
+   ![Github Organization Whitelist](imgs/cla_add_github_org.png)
 
    **Note:** Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
-1. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
+2. Click **ADD** or **REMOVE** next to the organization that you want to add or remove, respectively.
 
    Your organizations appear in their organization whitelist.
