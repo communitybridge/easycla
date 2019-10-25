@@ -48,7 +48,7 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 
 #### Domain Whitelist
-Click ADD ADD NEW LINE, enter a domain name of the whitelisted employees and click SAVE WHITELIST. For example:
+Click ADD NEW LINE, enter a domain name of the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit Domain Whitelist](imgs/cla_edit_domain.png)
 
