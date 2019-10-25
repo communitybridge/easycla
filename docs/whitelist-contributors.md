@@ -53,12 +53,12 @@ Click ADD ADD NEW LINE, enter a domain name of the whitelisted employees and cli
  ![Edit Domain Whitelist](imgs/cla_edit_domain.png)
 
 #### Email Whitelist
-Click ADD ADD NEW LINE, and enter the email address of the whitelisted employees and click SAVE WHITELIST. For example:
+Click ADD NEW LINE, and enter the email address of the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit Email Whitelist](imgs/cla_add_email.png)
 
 #### GitHub Whitelist
-Click ADD ADD NEW LINE, and enter the  GitHub username of  the whitelisted employees and click SAVE WHITELIST. For example:
+Click ADD NEW LINE, and enter the  GitHub username of  the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit GitHub Whitelist](imgs/cla_add_github.png)
 
@@ -66,7 +66,7 @@ Click ADD ADD NEW LINE, and enter the  GitHub username of  the whitelisted emplo
    
 ### GitHub Bot Whitelist
  
- Click ADD ADD NEW LINE, enter a GitHub username of the whitelisted bots and click SAVE WHITELIST. For example:
+ Click ADD NEW LINE, enter a GitHub username of the whitelisted bots and click SAVE WHITELIST. For example:
  ![Edit GitHub Bot Whitelist](imgs/cla_add_github.png)
  
 In contrast to whitelisted employees, bots are automatically affiliated with your company. Employees will need to confirm their affiliation during their first contribution to an EasyCLA-enforced project repository.
