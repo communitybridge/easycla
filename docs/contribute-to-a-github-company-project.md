@@ -15,7 +15,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
    A cross next to your contributor name means the CLA check failed.
 
-   ![GitHub Company Contributor Fail](imgs/cla-github-company-contributor-fail.png)
+   ![GitHub Company Contributor Fail](imgs/cla_github_company_contributor_fail.png)
 
 1. Click **Please click here to be authorized**.
 
@@ -23,7 +23,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
 1. Click **Authorize LF-Engineering**. (Subsequent contributions will not require authorization.)
 
-   ![Authorize CommunityBridge: EasyCLA](imgs/cla-authorize-easycla.png)
+   ![Authorize CommunityBridge: EasyCLA](imgs/cla_authorize_easycla.png)
 
    The CLA Contributor Console appears and shows the CLA group for your project. One or more CLA types that you must sign display: Company and Individual.
 
@@ -43,7 +43,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
-   ![Confirmation of Association](imgs/cla-github-confirmation-of-association.png)
+   ![Confirmation of Association](imgs/cla_github_confirmation_of_association.png)
 
    A dialog appears and informs you: You are done!
 
