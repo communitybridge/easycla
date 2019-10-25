@@ -25,7 +25,7 @@ As a project manager, you can add GitHub repositories to CLA monitoring or remov
 
    **REMOVE ALL REPOS** removes all repositories for the corresponding GitHub Organization from CLA enforcement. After you remove the repositories the ADD option appears next to each repository.
 
-   DISABLED indicates that the repository has been configured for another CLA group and thus cannot be configured for the selected CLA group. 
+   **DISABLED** indicates that the repository has been configured for another CLA group and thus cannot be configured for the selected CLA group. 
 
 1. Click **CLOSE**.
 
