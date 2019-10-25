@@ -48,17 +48,17 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 
 #### Domain Whitelist
-Click ADD DOMAIN, enter a domain name of the whitelisted employees and click SAVE. For example:
+Click ADD ADD NEW LINE, enter a domain name of the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit Domain Whitelist](imgs/cla_edit_domain.png)
 
 #### Email Whitelist
-Click ADD EMAIL, and enter the email address of the whitelisted employees and click SAVE. For example:
+Click ADD ADD NEW LINE, and enter the email address of the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit Email Whitelist](imgs/cla_add_email.png)
 
 #### GitHub Whitelist
-Click ADD GITHUB, and enter the  GitHub username of  the whitelisted employees and click SAVE. For example:
+Click ADD ADD NEW LINE, and enter the  GitHub username of  the whitelisted employees and click SAVE WHITELIST. For example:
 
  ![Edit GitHub Whitelist](imgs/cla_add_github.png)
 
@@ -66,7 +66,7 @@ Click ADD GITHUB, and enter the  GitHub username of  the whitelisted employees a
    
 ### GitHub Bot Whitelist
  
- Click ADD GITHUB, enter a GitHub username of the whitelisted bots and click SAVE. For example:
+ Click ADD ADD NEW LINE, enter a GitHub username of the whitelisted bots and click SAVE WHITELIST. For example:
  ![Edit GitHub Bot Whitelist](imgs/cla_add_github.png)
  
 In contrast to whitelisted employees, bots are automatically affiliated with your company. Employees will need to confirm their affiliation during their first contribution to an EasyCLA-enforced project repository.
@@ -89,7 +89,7 @@ Each member of your organization must ensure that these items are Public in thei
 
    The Github Organization Whitelist dialog appears.
 
-   ![Github Organization Whitelist](imgs/cla-github-organization-whitelist-no-organizations.png)
+   ![Github Organization Whitelist](imgs/cla_add_github_org.png)
 
    **Note:** Click **CONNECT GITHUB** if the organization you want to whitelist is not listed in the dialog. The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
