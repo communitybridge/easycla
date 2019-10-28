@@ -13,11 +13,12 @@
       <ion-grid>
         <ion-row>
           <ion-col col-12 col-md-2>
-            <img [src]='project.logoUrl' alt="{{ project.project_name }} Logo" />
+            <img [src]='project.logoUrl' alt="{{ project.project_name }} Logo"/>
           </ion-col>
           <ion-col col-12 col-md-10>
             <h1>{{ company.company_name }}</h1>
-            <p>Your email address is not associated with the company. Contact your CLA manager.</p>
+            <p>Unfortunately, you are not yet whitelisted by the Corporate CLA of {{ company.company_name }}
+              on {{ project.project_name }}.</p>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -28,18 +29,37 @@
         <ion-col col-12>
           <ion-card *ngIf="gitService === 'GitHub'">
             <ion-card-content>
-              <ion-card-title>
-                <ng-container>
-                  Make sure your employee email is verified in your {{ gitService }} account settings.
-                </ng-container>
+              <ion-card-title class="card-title card-title-md">
+                If you feel you are receiving this message in error, please try the following steps:
               </ion-card-title>
-              <ion-item>
-                <p>Go to GitHub and make sure your employee email address is associated with your GitHub account. Then restart
-                  this process from the PR status message. Feel free to close this page.</p>
 
-                <button ion-button (click)="openGitServiceEmailSettings()">
-                  Open {{ gitService }} Email Settings
-                </button>
+              <p class="p-lg-0" style="font-weight: bold">
+                Make sure your employee email is verified in your GitHub account settings.
+              </p>
+
+              <p>Go to GitHub and make sure your employee email address is associated with your GitHub account. Then
+                restart this process from the PR status message. Feel free to close this page.
+              </p>
+
+              <button ion-button (click)="openGitServiceEmailSettings()">
+                Open {{ gitService }} Email Settings
+              </button>
+
+              <ion-item>
+                <ion-label class="card-title card-title-sm">
+                  <p>
+                    Ask your CLA Manager to whitelist your GitHub Username, rather than Email when you contact them
+                    below.
+                  </p>
+                  <p>
+                    If you believe you're a member of a whitelisted GitHub Organization, please <a
+                    href="https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/publicizing-or-hiding-organization-membership">make
+                    sure you've made that membership public</a>.
+                  </p>
+                  <p>
+                    Try making your GitHub email address public.
+                  </p>
+                </ion-label>
               </ion-item>
             </ion-card-content>
           </ion-card>
@@ -48,11 +68,11 @@
           <ion-card>
             <ion-card-content>
               <ion-card-title>
-                Contact the CLA Manager to request access.
+                Contact the CLA Manager to be whitelisted under their signed Corporate CLA.
               </ion-card-title>
               <ion-item>
-                <p>You must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your
-                  work for a company. Contact your CLA manager to request authorization.</p>
+                <p>You must be authorized under a signed Contributor License Agreement. You are contributing on behalf
+                  of your work for a company. Contact your CLA manager to request authorization.</p>
                 <button ion-button (click)="openClaEmployeeRequestAccessModal()">
                   Contact
                 </button>
@@ -64,5 +84,5 @@
     </ion-grid>
   </div>
   <cla-footer></cla-footer>
-  
+
 </ion-content>
