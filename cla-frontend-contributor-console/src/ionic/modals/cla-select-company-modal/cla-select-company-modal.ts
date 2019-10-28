@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component,  } from '@angular/core';
-import { NavController, NavParams, ViewController, ModalController, IonicPage, AlertController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
+import {Component,} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company'
@@ -11,8 +11,7 @@ import { ClaService } from '../../services/cla.service';
 @Component({
   selector: 'cla-select-company-modal',
   templateUrl: 'cla-select-company-modal.html',
-  providers: [
-  ]
+  providers: []
 })
 export class ClaSelectCompanyModal {
   loading: any;
@@ -60,7 +59,10 @@ export class ClaSelectCompanyModal {
   getCompanies() {
     this.claService.getAllCompanies().subscribe(response => {
       if (response) {
-        this.companies = response;
+        // Cleanup - Remove any companies that don't have a name
+        this.companies = response.filter((company) => {
+          return company.company_name && company.company_name.trim().length > 0;
+        });
       }
       this.loading.companies = false;
     });
@@ -69,7 +71,7 @@ export class ClaSelectCompanyModal {
   openClaEmployeeCompanyConfirmPage(company) {
     // set loading spinner to true when a company is selected
     this.loading.activateSpinner = true
-    if(this.selectCompanyModalActive){
+    if (this.selectCompanyModalActive) {
       return false;
     }
     this.selectCompanyModalActive = true;
@@ -81,12 +83,12 @@ export class ClaSelectCompanyModal {
     };
 
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
-      /* 
+      /*
       Before an employee begins the signing process, ensure that
-      1. The given project, company, and user exists 
-      2. The company signatory has signed the CCLA for their company. 
-      3. The user is included as part of the whitelist of the CCLA that the company signed. 
-      the CLA service will throw an error if any of the above is false. 
+      1. The given project, company, and user exists
+      2. The company signatory has signed the CCLA for their company.
+      3. The user is included as part of the whitelist of the CCLA that the company signed.
+      the CLA service will throw an error if any of the above is false.
       */
       this.loading.activateSpinner = false;
       let errors = response.hasOwnProperty('errors');
