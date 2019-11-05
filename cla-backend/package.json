@@ -12,6 +12,7 @@
   },
   "scripts": {
     "sls": "../node_modules/serverless/bin/serverless",
+    "serve:dev": "./node_modules/serverless/bin/serverless wsgi serve -s 'dev'",
     "install:dev": "sh dev.sh install",
     "add:user": "sh dev.sh add:user",
     "start:lambda": "sh dev.sh start:lambda",
