@@ -41,11 +41,13 @@ export class ClaContractVersionModal {
     this.documents = this.navParams.get("documents").reverse();
     if (this.documents.length > 0) {
       this.currentDocument = this.documents.slice(0, 1);
-      console.log("currentDoc");
+      console.log(this.documentType + ' document:');
       console.log(this.currentDocument);
       if (this.documents.length > 1) {
         this.previousDocuments = this.documents.slice(1);
       }
+    } else {
+      console.log('No documents for project: ' + this.claProjectId);
     }
 
     events.subscribe('modal:close', () => {
@@ -73,8 +75,22 @@ export class ClaContractVersionModal {
   }
 
   openNewWindow(event, document) {
-    console.log('Opening new window...');
-    let win = window.open(document.document_s3_url, "_blank", "titlebar=yes");
+    if (document.document_s3_url == null || document.document_s3_url == '') {
+      const msg = 'Unable to open PDF document for ' + document.document_name + ' - document URL is empty.' +
+        ' For further assistance with EasyCLA, please ' +
+        '<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">submit a support request ticket</a>.';
+      console.log(msg);
+      const height = Math.floor(window.innerHeight * 0.8);
+      const width = Math.floor(window.innerWidth * 0.8);
+      const myWindow = window.open('', '_blank',
+        'titlebar=yes,width=' + width + ',height=' + height);
+      myWindow.document.write(
+        '<html><head><title>PDF Document Unavailable</title></head>' +
+        '<body>' + '<p>' + msg + '</p>' + '</body></html>');
+    } else {
+      console.log('Opening new window to' + document.document_s3_url);
+      let win = window.open(document.document_s3_url, "_blank", "titlebar=yes");
+    }
   }
 
   openClaContractUploadModal() {

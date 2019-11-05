@@ -5,15 +5,15 @@
 Utility functions for the CLA project.
 """
 
-import inspect
-import json
 import os
-import urllib.parse
-from typing import List
 
 import falcon
+import inspect
+import json
+import urllib.parse
 from hug.middleware import SessionMiddleware
 from requests_oauthlib import OAuth2Session
+from typing import List
 
 import cla
 from cla.models import DoesNotExist
@@ -729,6 +729,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     committers_comment = ''
     num_signed = len(signed)
     num_missing = len(missing)
+    
     if num_signed > 0:
         # Group commits by author.
         committers = {}
@@ -744,9 +745,12 @@ def get_comment_body(repository_type, sign_url, signed, missing):
             committers_comment += '<li>' + success + '  ' + author + \
                                   ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
+
     if num_missing > 0:
-        text = 'One or more committers are not authorized under a signed CLA as indicated below. ' + \
-               '[Please click here to be authorized](' + sign_url + ').'
+        support_url = 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4'
+        text = ('One or more committers are not authorized under a signed CLA as indicated below. '
+                f'[Please click here to be authorized]({sign_url}). For further assistance with '
+                f'EasyCLA, [please submit a support request ticket]({support_url}).')
         # Group commits by author.
         committers = {}
         for commit, author in missing:
@@ -762,6 +766,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                                   author + ' (' + ", ".join(commit_hashes) + ')</li>'
         committers_comment += '</ul>'
         return text + committers_comment
+
     text = 'The committers are authorized under a signed CLA.'
     return text + committers_comment
 
