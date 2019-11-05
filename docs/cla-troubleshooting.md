@@ -1,7 +1,8 @@
 # CLA Troubleshooting
 Troubleshooting helps you solve problematic symptoms in your CLA implementation.
 
-If you are having issues with EasyCLA, go to: <https://support.linuxfoundation.org> and file a ticket.
+Contributors, refer to /docs/contributors.md
+If you continue to have issues with EasyCLA, open a ticket in our queue.
 
 ## CLA Management Console Data Does Not Load
 
