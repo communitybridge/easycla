@@ -401,6 +401,25 @@ class DocuSign(signing_service_interface.SigningService):
         # Assume this company is the user's employer.
         # TODO: DAD - we should check to see if they already have a company id assigned
         user.set_user_company_id(str(company_id))
+        
+        # Take a moment to update the user record's github information
+        github_username = user.get_user_github_username()
+        github_id = user.get_user_github_id()
+
+        if github_username is None and github_id is not None:
+            github_username = cla.utils.lookup_user_github_username(github_id)
+            if github_username is not None:
+                cla.log.debug(f'Updating user record - adding github username: {github_username}')
+                user.set_user_github_username(github_username)
+
+        # Attempt to fetch the github id based on the github username
+        if github_id is None and github_username is not None:
+            github_username = github_username.strip()
+            github_id = cla.utils.lookup_user_github_id(github_username)
+            if github_id is not None:
+                cla.log.debug(f'Updating user record - adding github id: {github_id}')
+                user.set_user_github_id(github_id)
+
         user.save()
         cla.log.info(f'Assigned company ID to user. Employee is ready to sign the CCLA: {request_info}')
 
