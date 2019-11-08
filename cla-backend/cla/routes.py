@@ -1223,7 +1223,7 @@ def check_and_prepare_employee_signature(project_id: hug.types.uuid,
                                          company_id: hug.types.uuid,
                                          user_id: hug.types.uuid):
     """
-    POST: /check-employee-ccla-and-whitelist
+    POST: /check-prepare-employee-signature
 
     DATA: {'project_id': <project-id>,
            'company_id': <company-id>,

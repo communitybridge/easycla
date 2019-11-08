@@ -1245,9 +1245,12 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             return None
 
     def get_user_signatures(self, project_id=None, company_id=None, signature_signed=None, signature_approved=None):
-        cla.log.debug('get_user_signatures with params - project_id: {}, company_id: {}, '
-                      'signature_signed: {}, signature_approved: {}'.
-                      format(project_id, company_id, signature_signed, signature_approved))
+        cla.log.debug('get_user_signatures with params - '
+                      f'user_id: {self.get_user_id()}, '
+                      f'project_id: {project_id}, '
+                      f'company_id: {company_id}, '
+                      f'signature_signed: {signature_signed}, '
+                      f'signature_approved: {signature_approved}')
         return Signature().get_signatures_by_reference(self.get_user_id(), 'user',
                                                        project_id=project_id,
                                                        user_ccla_company_id=company_id,
@@ -1265,8 +1268,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
-        cla.log.debug('get_latest_signature -> self.get_user_signatures with project_id: {}, company_id: {}'.
-                      format(project_id, company_id))
+        cla.log.debug('get_latest_signature -> self.get_user_signatures with '
+                      f'user_id: {self.get_user_id()}, '
+                      f'project_id: {project_id}, '
+                      f'company_id: {company_id}')
         signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
         latest = None
         for signature in signatures:
@@ -1280,12 +1285,14 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         if latest is None:
             cla.log.debug('get_latest_signature - unable to find user signature using '
-                          'project id: {} and company id: {}'.
-                          format(project_id, company_id))
+                          f'user_id: {self.get_user_id()}, '
+                          f'project id: {project_id}, '
+                          f'company id: {company_id}')
         else:
             cla.log.debug('get_latest_signature - found user user signature using '
-                          'project id: {} and company id: {}'.
-                          format(project_id, company_id))
+                          f'user_id: {self.get_user_id()}, '
+                          f'project id: {project_id}, '
+                          f'company id: {company_id}')
 
         return latest
 
@@ -1300,37 +1307,37 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :return: True if at least one email is whitelisted, False otherwise.
         :rtype: bool
         """
+        # Returns the union of lf_emails and emails (separate columns)
         emails = self.get_all_user_emails()
         if len(emails) > 0:
             # remove leading and trailing whitespace before checking emails
             emails = [email.strip() for email in emails]
 
-        # Check email whitelist
+        # First, we check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
-        cla.log.debug('is_whitelisted - testing request emails: {} with '
-                      'whitelist emails values in database: {}'.
-                      format(emails, whitelist))
+        cla.log.debug(f'is_whitelisted - testing user emails: {emails} with '
+                      f'CCLA whitelist emails: {whitelist}')
+
         if whitelist is not None:
             for email in emails:
-                if email in whitelist:
+                # Case insensitive match
+                if email.lower() in (s.lower() for s in whitelist):
                     self.log_debug('found user email in email whitelist')
                     return True
         else:
-            cla.log.debug('is_whitelisted - no email whitelist defined in the database'
-                          '- skipping email whitelist check')
+            cla.log.debug(f'is_whitelisted - no email whitelist match for user: {self}')
 
-        # Check domain whitelist
+        # Secondly, let's check domain whitelist
         # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
         # so that sub-domains are not allowed.
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
         patterns = ccla_signature.get_domain_whitelist()
-        cla.log.debug('is_whitelisted - testing email domains: {} with '
-                      'whitelist domain values in database: {}'.
-                      format(emails, patterns))
+        cla.log.debug(f'is_whitelisted - testing user email domains: {emails} with '
+                      f'whitelist domain values in database: {patterns}')
+
         if patterns is not None:
             for pattern in patterns:
-
                 if pattern.startswith('*.'):
                     pattern = pattern.replace('*.', '.*\.')
                 elif pattern.startswith('*'):
@@ -1339,53 +1346,134 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                     pattern = pattern.replace('.', '.*\.')
 
                 preprocessed_pattern = '^.*@' + pattern + '$'
+                # TODO: DAD - let's make it case insensitive
                 pat = re.compile(preprocessed_pattern)
                 for email in emails:
                     if pat.match(email) != None:
                         self.log_debug('found user email in email whitelist pattern')
                         return True
+                    else:
+                        self.log_debug(f'Did not match email: {email} with domain: {preprocessed_pattern}')
         else:
             cla.log.debug('is_whitelisted - no domain whitelist patterns defined in the database'
                           '- skipping domain whitelist check')
 
-        # Check github whitelist
-        github_username = self.get_github_username()
+        # Third and Forth, check github whitelists
+        github_username = self.get_user_github_username()
+        github_id = self.get_user_github_id()
+
+        # Attempt to fetch the github username based on the github id
+        if github_username is None and github_id is not None:
+            github_username = self.lookup_user_github_username(github_id)
+            if github_username is not None:
+                self.set_user_github_username(github_username)
+                self.save()
+
+        # Attempt to fetch the github id based on the github username
+        if github_id is None and github_username is not None:
+            github_username = github_username.strip()
+            github_id = self.lookup_user_github_id(github_username)
+            if github_id is not None:
+                self.set_user_github_id(github_id)
+                self.save()
+
+        # GitHub username whitelist
         if github_username is not None:
             # remove leading and trailing whitespace from github username
             github_username = github_username.strip()
             github_whitelist = ccla_signature.get_github_whitelist()
-            cla.log.debug('is_whitelisted - testing github username: {} with '
-                          'github whitelist values in database: {}'.
-                          format(github_username, github_whitelist))
+            cla.log.debug(f'is_whitelisted - testing user github username: {github_username} with '
+                          f'CCLA github whitelist: {github_whitelist}')
+
             if github_whitelist is not None:
-                if github_username in github_whitelist:
+                # case insensitive search
+                if github_username.lower() in (s.lower() for s in github_whitelist):
                     self.log_debug('found github username in github whitelist')
                     return True
+        else:
+            cla.log.debug('is_whitelisted - users github_username is not defined '
+                          '- skipping github username whitelist check')
 
-            # Check github org whitelist - (disable for now - getting attribute error when getting gh org whitelist)
-            # TODO: DAD - investigate this
+        # Check github org whitelist
+        if github_username is not None:
             github_orgs = self.get_user_github_organizations(github_username)
             if 'error' not in github_orgs:
+                # Fetch the list of orgs this user is part of
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
-                cla.log.debug('is_whitelisted - testing user github orgs: {} with '
-                              'github org whitelist values in database: {}'.
-                              format(github_orgs, github_org_whitelist))
+                cla.log.debug(f'is_whitelisted - testing user github orgs: {github_orgs} with '
+                              f'CCLA github org whitelist values: {github_org_whitelist}')
+
                 if github_org_whitelist is not None:
                     for dynamo_github_org in github_org_whitelist:
-                        if dynamo_github_org in github_orgs:
-                            self.log_debug('found github org in github org whitelist')
+                        # case insensitive search
+                        if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
+                            self.log_debug('found matching github org for user')
                             return True
         else:
             cla.log.debug('is_whitelisted - users github_username is not defined '
-                          '- skipping github username whitelist check and github org check')
+                          '- skipping github org whitelist check')
 
         self.log_debug('unable to find user in any whitelist')
         return False
 
+    def lookup_user_github_username(self, user_github_id) -> Optional[str]:
+        """
+        Given a user github ID, looks up the user's github login/username.
+        :param user_github_id: the github id
+        :return: the user's github login/username
+        """
+        try:
+            r = requests.get(f'https://api.github.com/user/{user_github_id}')
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            msg = f'Could not get user github user from id: {user_github_id}: error: {err}'
+            self.log_warning(msg)
+            return None
+
+        github_user = r.json()
+        if 'message' in github_user:
+            self.log_warning(f'Unable to lookup user from id: {user_github_id} '
+                             f'- message: {github_user["message"]}')
+            return None
+        else:
+            if 'login' in github_user:
+                return github_user['login']
+            else:
+                self.log_warning('Malformed HTTP response from GitHub - expecting "login" attribute '
+                                 f'- response: {github_user}')
+                return None
+
+    def lookup_user_github_id(self, user_github_username) -> Optional[int]:
+        """
+        Given a user github username, looks up the user's github id.
+        :param user_github_username: the github username
+        :return: the user's github id
+        """
+        try:
+            r = requests.get(f'https://api.github.com/users/{user_github_username}')
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            msg = f'Could not get user github id from username: {user_github_username}: error: {err}'
+            self.log_warning(msg)
+            return None
+
+        github_user = r.json()
+        if 'message' in github_user:
+            self.log_warning(f'Unable to lookup user from id: {user_github_username} '
+                             f'- message: {github_user["message"]}')
+            return None
+        else:
+            if 'id' in github_user:
+                return github_user['id']
+            else:
+                self.log_warning('Malformed HTTP response from GitHub - expecting "id" attribute '
+                                 f'- response: {github_user}')
+                return None
+
     def get_user_github_organizations(self, github_username):
         # Use the Github API to retrieve github orgs that the user is a member of (user must be a public member). 
         try:
-            r = requests.get('https://api.github.com/users/{}/orgs'.format(github_username))
+            r = requests.get(f'https://api.github.com/users/{github_username}/orgs')
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             self.log_warning('Could not get user github org: {}'.format(err))
