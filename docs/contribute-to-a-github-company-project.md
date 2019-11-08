@@ -85,7 +85,7 @@ When all CLA management set-up tasks are complete and your CCLA signatory has si
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
-   ![Confirmation of Association](imgs/cla-github-confirmation-of-association.png)
+  ![Confirmation of Association](imgs/cla_github_confirmation_of_association.png)
 
    A dialog appears and informs you: You are done!
 
