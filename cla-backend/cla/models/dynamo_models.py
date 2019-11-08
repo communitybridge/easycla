@@ -1404,7 +1404,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         # Check github org whitelist
         if github_username is not None:
-            github_orgs = cla.utils.get_user_github_organizations(github_username)
+            github_orgs = cla.utils.lookup_github_organizations(github_username)
             if 'error' not in github_orgs:
                 # Fetch the list of orgs this user is part of
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
