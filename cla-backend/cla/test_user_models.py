@@ -83,6 +83,35 @@ class TestUserModels(unittest.TestCase):
             users = User().get_user_by_github_username('foooooo')
             self.assertIsNone(users, 'User lookup by github username is None')
 
+    def test_lookup_user_github_username(self) -> None:
+        """
+        Test that we can lookup a given gihub user by id
+        """
+        # TODO - should use mock data - disable tests for now :-(
+        if self.tests_enabled:
+            user_instance = utils.get_user_instance()
+            users = user_instance.get_user_by_username('ddeal')
+            self.assertEqual(len(users), 1, 'User lookup by username found 1')
+            self.assertEqual('dealako', users[0].lookup_user_github_username(519609), 'Found github username')
+
+            # some invalid username
+            self.assertIsNone(users[0].lookup_user_github_username(5196090000), 'None response from invalid github id')
+
+    def test_lookup_user_github_id(self) -> None:
+        """
+        Test that we can lookup a given gihub id by the username
+        """
+        # TODO - should use mock data - disable tests for now :-(
+        if self.tests_enabled:
+            user_instance = utils.get_user_instance()
+            users = user_instance.get_user_by_username('ddeal')
+            self.assertEqual(len(users), 1, 'User lookup by username found 1')
+            self.assertEqual(519609, users[0].lookup_user_github_id('dealako'), 'Found github id')
+
+            # some invalid username
+            self.assertIsNone(users[0].lookup_user_github_id('dealakooooooooo'),
+                              'None response from invalid github username')
+
 
 if __name__ == '__main__':
     unittest.main()

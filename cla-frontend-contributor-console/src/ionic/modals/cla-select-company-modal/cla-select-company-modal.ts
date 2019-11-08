@@ -70,7 +70,7 @@ export class ClaSelectCompanyModal {
 
   openClaEmployeeCompanyConfirmPage(company) {
     // set loading spinner to true when a company is selected
-    this.loading.activateSpinner = true
+    this.loading.activateSpinner = true;
     if (this.selectCompanyModalActive) {
       return false;
     }
