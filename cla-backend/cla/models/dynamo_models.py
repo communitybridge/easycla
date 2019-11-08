@@ -13,7 +13,6 @@ import uuid
 from typing import Optional, List
 
 import dateutil.parser
-import requests
 from pynamodb.attributes import UTCDateTimeAttribute, \
     UnicodeSetAttribute, \
     UnicodeAttribute, \
@@ -1362,18 +1361,27 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         github_username = self.get_user_github_username()
         github_id = self.get_user_github_id()
 
+        # TODO: DAD - 
+        # Since usernames can be changed, if we have the github_id already - let's
+        # lookup the username by id to see if they have changed their username
+        # if the username is different, then we should reset the field to the
+        # new value - this will potentially change the github username whitelist
+        # since the old username is already in the list
+
         # Attempt to fetch the github username based on the github id
         if github_username is None and github_id is not None:
-            github_username = self.lookup_user_github_username(github_id)
+            github_username = cla.utils.lookup_user_github_username(github_id)
             if github_username is not None:
+                cla.log.debug(f'Updating user record - adding github username: {github_username}')
                 self.set_user_github_username(github_username)
                 self.save()
 
         # Attempt to fetch the github id based on the github username
         if github_id is None and github_username is not None:
             github_username = github_username.strip()
-            github_id = self.lookup_user_github_id(github_username)
+            github_id = cla.utils.lookup_user_github_id(github_username)
             if github_id is not None:
+                cla.log.debug(f'Updating user record - adding github id: {github_id}')
                 self.set_user_github_id(github_id)
                 self.save()
 
@@ -1396,7 +1404,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         # Check github org whitelist
         if github_username is not None:
-            github_orgs = self.get_user_github_organizations(github_username)
+            github_orgs = cla.utils.get_user_github_organizations(github_username)
             if 'error' not in github_orgs:
                 # Fetch the list of orgs this user is part of
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
@@ -1415,70 +1423,6 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         self.log_debug('unable to find user in any whitelist')
         return False
-
-    def lookup_user_github_username(self, user_github_id) -> Optional[str]:
-        """
-        Given a user github ID, looks up the user's github login/username.
-        :param user_github_id: the github id
-        :return: the user's github login/username
-        """
-        try:
-            r = requests.get(f'https://api.github.com/user/{user_github_id}')
-            r.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            msg = f'Could not get user github user from id: {user_github_id}: error: {err}'
-            self.log_warning(msg)
-            return None
-
-        github_user = r.json()
-        if 'message' in github_user:
-            self.log_warning(f'Unable to lookup user from id: {user_github_id} '
-                             f'- message: {github_user["message"]}')
-            return None
-        else:
-            if 'login' in github_user:
-                return github_user['login']
-            else:
-                self.log_warning('Malformed HTTP response from GitHub - expecting "login" attribute '
-                                 f'- response: {github_user}')
-                return None
-
-    def lookup_user_github_id(self, user_github_username) -> Optional[int]:
-        """
-        Given a user github username, looks up the user's github id.
-        :param user_github_username: the github username
-        :return: the user's github id
-        """
-        try:
-            r = requests.get(f'https://api.github.com/users/{user_github_username}')
-            r.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            msg = f'Could not get user github id from username: {user_github_username}: error: {err}'
-            self.log_warning(msg)
-            return None
-
-        github_user = r.json()
-        if 'message' in github_user:
-            self.log_warning(f'Unable to lookup user from id: {user_github_username} '
-                             f'- message: {github_user["message"]}')
-            return None
-        else:
-            if 'id' in github_user:
-                return github_user['id']
-            else:
-                self.log_warning('Malformed HTTP response from GitHub - expecting "id" attribute '
-                                 f'- response: {github_user}')
-                return None
-
-    def get_user_github_organizations(self, github_username):
-        # Use the Github API to retrieve github orgs that the user is a member of (user must be a public member). 
-        try:
-            r = requests.get(f'https://api.github.com/users/{github_username}/orgs')
-            r.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            self.log_warning('Could not get user github org: {}'.format(err))
-            return {'error': 'Could not get user github org: {}'.format(err)}
-        return [github_org['login'] for github_org in r.json()]
 
     def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))

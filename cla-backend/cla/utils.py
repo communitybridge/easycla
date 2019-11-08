@@ -5,15 +5,16 @@
 Utility functions for the CLA project.
 """
 
-import os
-
-import falcon
 import inspect
 import json
+import os
 import urllib.parse
+from typing import List, Optional
+
+import falcon
+import requests
 from hug.middleware import SessionMiddleware
 from requests_oauthlib import OAuth2Session
-from typing import List
 
 import cla
 from cla.models import DoesNotExist
@@ -729,7 +730,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     committers_comment = ''
     num_signed = len(signed)
     num_missing = len(missing)
-    
+
     if num_signed > 0:
         # Group commits by author.
         committers = {}
@@ -1042,6 +1043,94 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
     cla.log.error('Could not get sign_url from signing service provider - sending user '
                   'to return_url instead')
     raise falcon.HTTPFound(return_url)
+
+
+def lookup_user_github_username(user_github_id: int) -> Optional[str]:
+    """
+    Given a user github ID, looks up the user's github login/username.
+    :param user_github_id: the github id
+    :return: the user's github login/username
+    """
+    try:
+        r = requests.get(f'https://api.github.com/user/{user_github_id}')
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        msg = f'Could not get user github user from id: {user_github_id}: error: {err}'
+        cla.log.warning(msg)
+        return None
+
+    github_user = r.json()
+    if 'message' in github_user:
+        cla.log.warning(f'Unable to lookup user from id: {user_github_id} '
+                        f'- message: {github_user["message"]}')
+        return None
+    else:
+        if 'login' in github_user:
+            return github_user['login']
+        else:
+            cla.log.warning('Malformed HTTP response from GitHub - expecting "login" attribute '
+                            f'- response: {github_user}')
+            return None
+
+
+def lookup_user_github_id(user_github_username: str) -> Optional[int]:
+    """
+    Given a user github username, looks up the user's github id.
+    :param user_github_username: the github username
+    :return: the user's github id
+    """
+    try:
+        r = requests.get(f'https://api.github.com/users/{user_github_username}')
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        msg = f'Could not get user github id from username: {user_github_username}: error: {err}'
+        cla.log.warning(msg)
+        return None
+
+    github_user = r.json()
+    if 'message' in github_user:
+        cla.log.warning(f'Unable to lookup user from id: {user_github_username} '
+                        f'- message: {github_user["message"]}')
+        return None
+    else:
+        if 'id' in github_user:
+            return github_user['id']
+        else:
+            cla.log.warning('Malformed HTTP response from GitHub - expecting "id" attribute '
+                            f'- response: {github_user}')
+            return None
+
+
+def lookup_github_organizations(github_username: str):
+    # Use the Github API to retrieve github orgs that the user is a member of (user must be a public member).
+    try:
+        r = requests.get(f'https://api.github.com/users/{github_username}/orgs')
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        cla.log.warning('Could not get user github org: {}'.format(err))
+        return {'error': 'Could not get user github org: {}'.format(err)}
+    return [github_org['login'] for github_org in r.json()]
+
+
+def update_github_username(github_user: dict, user: User):
+    """
+    When provided a GitHub user model from the GitHub service, updates the CLA
+    user record with the github username.
+    :param github_user:  the github user model as a dict from GitHub
+    :param user:  the user DB object
+    :return: None
+    """
+    # set the github username if available
+    if 'login' in github_user:
+        if user.get_user_github_username() is None:
+            cla.log.debug(f'Updating user record - adding github username: {github_user["login"]}')
+            user.set_user_github_username(github_user['login'])
+        if user.get_user_github_username() != github_user['login']:
+            cla.log.warning(f'Note: github user with id: {github_user["id"]}'
+                            f' has a mismatched username (gh: {github_user["id"]} '
+                            f'vs db user record: {user.get_user_github_username}) - '
+                            f'setting the value to: {github_user["login"]}')
+            user.set_user_github_username(github_user['login'])
 
 
 def get_oauth_client():

@@ -399,6 +399,10 @@ class GitHub(repository_service_interface.RepositoryService):
                           user.get_user_name(),
                           user.get_user_emails(),
                           user.get_user_github_id())
+
+            # update/set the github username if available
+            cla.utils.update_github_username(github_user, user)
+
             user.set_user_emails(emails)
             user.save()
             return user
@@ -418,17 +422,20 @@ class GitHub(repository_service_interface.RepositoryService):
             user = users[0]
             # Found user by email, setting the GitHub ID
             user.set_user_github_id(github_user['id'])
+
+            # update/set the github username if available
+            cla.utils.update_github_username(github_user, user)
+
             user.set_user_emails(emails)
             user.save()
             cla.log.debug(f'Loaded GitHub user by email: {user}')
             return user
 
         # User not found, create.
-        cla.log.debug('Could not find GitHub user by email: %s', emails)
-        cla.log.debug('Creating new GitHub user %s - %s (%s)',
-                      github_user['name'],
-                      emails,
-                      github_user['id'])
+        cla.log.debug(f'Could not find GitHub user by email: {emails}')
+        cla.log.debug(f'Creating new GitHub user {github_user["name"]} - '
+                      f'({github_user["id"]}/{github_user["login"]}), ',
+                      f'emails: {emails}')
         user = cla.utils.get_user_instance()
         user.set_user_id(str(uuid.uuid4()))
         user.set_user_emails(emails)
