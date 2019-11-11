@@ -624,6 +624,11 @@ class DocuSign(signing_service_interface.SigningService):
                       f'authority name: {authority_name}, '
                       f'authority email: {authority_email} '
                       f'send email: {send_as_email}')
+
+        # DAD: Auth user is the currently logged in user
+        # DAD: Authority Name and Authority Email are from the web form
+        # (this is the signatory_user in this function)
+
         # Ensure the user exists in our database - load the record
         signatory_users = User().get_user_by_username(auth_user.username)
         if signatory_users is None:
@@ -687,12 +692,22 @@ class DocuSign(signing_service_interface.SigningService):
         # values from web form? authority_name / authority_email
         # Maybe we should decide this based on if the web user was already in
         # the manager list? the found_authority flag or do we key off the email flag?
-        cla_template_values = create_default_company_values(company,
-                                                            signatory_user.get_user_name(),
-                                                            signatory_user.get_user_email(),
-                                                            managers[0].get_user_name(),
-                                                            managers[0].get_user_email(),
-                                                            scheduleA)
+        if authority_name:
+            cla.log.debug('Using authority name from web form to create the default company values')
+            cla_template_values = create_default_company_values(company,
+                                                                authority_name,
+                                                                authority_email,
+                                                                managers[0].get_user_name(),
+                                                                managers[0].get_user_email(),
+                                                                scheduleA)
+        else:
+            cla.log.debug('Using current_user/signatory_user to create the default company values.')
+            cla_template_values = create_default_company_values(company,
+                                                                signatory_user.get_user_name(),
+                                                                signatory_user.get_user_email(),
+                                                                managers[0].get_user_name(),
+                                                                managers[0].get_user_email(),
+                                                                scheduleA)
 
         # Ensure the contract group has a CCLA
         last_document = project.get_latest_corporate_document()
@@ -723,13 +738,24 @@ class DocuSign(signing_service_interface.SigningService):
 
                 # Populate sign url
                 # TOOD DAD: Need to provide: authority_name, authority_email ??
-                self.populate_sign_url(latest_signature, callback_url,
-                                       signatory_user.get_user_name(),
-                                       signatory_user.get_user_email(),
-                                       send_as_email,
-                                       managers[0].get_user_name(),  # authority_name
-                                       managers[0].get_user_email(),  # authority_email
-                                       cla_template_values)
+                if authority_name:
+                    cla.log.debug('Using authority name from web form to populate the signing request.')
+                    self.populate_sign_url(latest_signature, callback_url,
+                                           authority_name,
+                                           authority_email,
+                                           send_as_email,
+                                           managers[0].get_user_name(),  # authority_name
+                                           managers[0].get_user_email(),  # authority_email
+                                           cla_template_values)
+                else:
+                    cla.log.debug('Using current user/signatory user to populate the signing request.')
+                    self.populate_sign_url(latest_signature, callback_url,
+                                           signatory_user.get_user_name(),
+                                           signatory_user.get_user_email(),
+                                           send_as_email,
+                                           managers[0].get_user_name(),  # authority_name
+                                           managers[0].get_user_email(),  # authority_email
+                                           cla_template_values)
 
                 return {'company_id': str(company_id),
                         'project_id': str(project_id),
@@ -760,13 +786,24 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_acl(signatory_user.get_lf_username())
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url,
-                               signatory_user.get_user_name(),
-                               signatory_user.get_user_email(),
-                               send_as_email,
-                               managers[0].get_user_name(),  # authority_name
-                               managers[0].get_user_email(),  # authority_email
-                               cla_template_values)
+        if authority_name:
+            cla.log.debug('Using authority name from web form to populate the signing request.')
+            self.populate_sign_url(signature, callback_url,
+                                   authority_name,
+                                   authority_email,
+                                   send_as_email,
+                                   managers[0].get_user_name(),  # authority_name
+                                   managers[0].get_user_email(),  # authority_email
+                                   cla_template_values)
+        else:
+            cla.log.debug('Using current user/signatory user to populate the signing request.')
+            self.populate_sign_url(signature, callback_url,
+                                   signatory_user.get_user_name(),
+                                   signatory_user.get_user_email(),
+                                   send_as_email,
+                                   managers[0].get_user_name(),  # authority_name
+                                   managers[0].get_user_email(),  # authority_email
+                                   cla_template_values)
 
         # Save signature
         signature.save()
