@@ -744,8 +744,8 @@ class DocuSign(signing_service_interface.SigningService):
                                            authority_name,
                                            authority_email,
                                            send_as_email,
-                                           managers[0].get_user_name(),  # authority_name
-                                           managers[0].get_user_email(),  # authority_email
+                                           managers[0].get_user_name(),
+                                           managers[0].get_user_email(),
                                            cla_template_values)
                 else:
                     cla.log.debug('Using current user/signatory user to populate the signing request.')
@@ -753,8 +753,8 @@ class DocuSign(signing_service_interface.SigningService):
                                            signatory_user.get_user_name(),
                                            signatory_user.get_user_email(),
                                            send_as_email,
-                                           managers[0].get_user_name(),  # authority_name
-                                           managers[0].get_user_email(),  # authority_email
+                                           managers[0].get_user_name(),
+                                           managers[0].get_user_email(),
                                            cla_template_values)
 
                 return {'company_id': str(company_id),
@@ -814,32 +814,25 @@ class DocuSign(signing_service_interface.SigningService):
                 'sign_url': signature.get_signature_sign_url()}
 
     def populate_sign_url(self, signature, callback_url=None,
-                          cla_manager_name=None, cla_manager_email=None,
+                          authority_or_signatory_name=None,
+                          authority_or_signatory_email=None,
                           send_as_email=False,
-                          authority_name=None, authority_email=None,
+                          cla_manager_name=None, cla_manager_email=None,
                           default_values: Optional[Dict[str, Any]] = None):  # pylint: disable=too-many-locals
 
         sig_type = signature.get_signature_reference_type()
 
-        cla.log.debug('populate_sign_url - Populating sign_url for signature {} using '
-                      ' callback: {} with'
-                      ' cla manager name: {} with'
-                      ' cla manager email: {} with'
-                      ' authority name: {} with'
-                      ' authority email: {} as'
-                      ' reference type: {}'.
-                      format(signature.get_signature_id(), callback_url,
-                             cla_manager_name, cla_manager_email,
-                             authority_name, authority_email,
-                             sig_type))
+        cla.log.debug(f'populate_sign_url - Populating sign_url for signature {signature.get_signature_id()} '
+                      f'using callback: {callback_url} '
+                      f'with authority_or_signatory_name {authority_or_signatory_name} '
+                      f'with authority_or_signatory_email {authority_or_signatory_email} '
+                      f'with cla manager name: {cla_manager_name} '
+                      f'with cla manager email: {cla_manager_email} '
+                      f'send as email: {send_as_email} '
+                      f' reference type: {sig_type}')
 
         company = Company()
         user = User()
-
-        # We use the company manager name/email when emailing corporate CLA
-        # TODO: DAD - confirm this?? - currently looks like we use the function parameter authority name/email instead
-        company_manager_name = cla_manager_name
-        company_manager_email = cla_manager_email
 
         # We use user name/email non-email docusign user ICLA
         user_signature_name = 'Unknown'
@@ -933,8 +926,8 @@ class DocuSign(signing_service_interface.SigningService):
 
         if send_as_email:
             # Sending email to authority
-            signatory_email = authority_email
-            signatory_name = authority_name
+            signatory_email = authority_or_signatory_email
+            signatory_name = authority_or_signatory_name
 
             # Not assigning a clientUserId sends an email.
             project_name = project.get_project_name()
@@ -967,6 +960,7 @@ If you have questions, or if you are not an authorized signatory of this company
                                        supportedLanguage='en',
                                        )
         else:
+            # This will be the Initial CLA Manager
             signatory_name = user_signature_name
             signatory_email = user_signature_email
 
