@@ -5,11 +5,29 @@ package config
 
 import (
 	"fmt"
+	"strings"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
+
+// getSSMString is a generic routine to fetch the specified key value
+func getSSMString(ssmClient *ssm.SSM, key string) (string, error) {
+	log.Debugf("Loading SSM parameter: %s", key)
+	value, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(key),
+		WithDecryption: aws.Bool(false),
+	})
+	if err != nil {
+		log.Warnf("unable to read SSM parameter %s - error: %+v", key, err)
+		return "", err
+	}
+
+	return strings.TrimSpace(*value.Parameter.Value), nil
+}
 
 func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	config := Config{}
@@ -17,77 +35,56 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	ssmClient := ssm.New(awsSession)
 
 	// Auth0
-	auth0Domain, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-auth0-domain-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	auth0Domain, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-domain-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
-	auth0ClientID, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-auth0-clientId-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	auth0ClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-clientId-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
-	auth0Username, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-auth0-username-claim-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	auth0Username, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-username-claim-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
-	auth0Algorithm, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-auth0-algorithm-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	auth0Algorithm, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-algorithm-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
 	config.Auth0 = Auth0{
-		Domain:        *auth0Domain.Parameter.Value,
-		ClientID:      *auth0ClientID.Parameter.Value,
-		UsernameClaim: *auth0Username.Parameter.Value,
-		Algorithm:     *auth0Algorithm.Parameter.Value,
+		Domain:        auth0Domain,
+		ClientID:      auth0ClientID,
+		UsernameClaim: auth0Username,
+		Algorithm:     auth0Algorithm,
 	}
 
 	// SFDC
 
 	// GitHub
-	githubClientID, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	githubClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
-	githubSecret, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	githubSecret, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
 	config.Github = Github{
-		ClientID:     *githubClientID.Parameter.Value,
-		ClientSecret: *githubSecret.Parameter.Value,
+		ClientID:     githubClientID,
+		ClientSecret: githubSecret,
 	}
 
 	//Corporate Console Link
-	corporateConsoleURL, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-corporate-base-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	corporateConsoleURL, err := getSSMString(ssmClient, fmt.Sprintf("cla-corporate-base-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
-	corporateConsoleURLValue := *corporateConsoleURL.Parameter.Value
+	corporateConsoleURLValue := corporateConsoleURL
 	if corporateConsoleURLValue == "corporate.prod.lfcla.com" {
 		corporateConsoleURLValue = "corporate.lfcla.com"
 	}
@@ -96,15 +93,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	// Docusign
 
 	// Docraptor
-	docraptorAPIKey, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-doc-raptor-api-key-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	config.Docraptor.APIKey, err = getSSMString(ssmClient, fmt.Sprintf("cla-doc-raptor-api-key-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
-
-	config.Docraptor.APIKey = *docraptorAPIKey.Parameter.Value
 	config.Docraptor.TestMode = stage != "prod" && stage != "staging"
 
 	// LF Identity
@@ -113,34 +105,20 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	config.AWS.Region = "us-east-1"
 
 	// Session Store Table Name
-	sessionStoreTableName, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-session-store-table-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
-	if err != nil {
-		return Config{}, err
-	}
-	config.SessionStoreTableName = *sessionStoreTableName.Parameter.Value
-
-	senderEmailAddress, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-ses-sender-email-address-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	config.SessionStoreTableName, err = getSSMString(ssmClient, fmt.Sprintf("cla-session-store-table-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
-	allowedOrigins, err := ssmClient.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(fmt.Sprintf("cla-allowed-origins-%s", stage)),
-		WithDecryption: aws.Bool(false),
-	})
+	config.SenderEmailAddress, err = getSSMString(ssmClient, fmt.Sprintf("cla-ses-sender-email-address-%s", stage))
 	if err != nil {
 		return Config{}, err
 	}
 
-	config.SenderEmailAddress = *senderEmailAddress.Parameter.Value
-
-	config.AllowedOriginsCommaSeparated = *allowedOrigins.Parameter.Value
+	config.AllowedOriginsCommaSeparated, err = getSSMString(ssmClient, fmt.Sprintf("cla-allowed-origins-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
 
 	return config, nil
 }

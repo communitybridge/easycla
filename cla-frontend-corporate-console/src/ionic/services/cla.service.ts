@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import {Injectable} from "@angular/core";
-import {Headers, Http} from "@angular/http";
+import {Http} from "@angular/http";
 import {AuthService} from "./auth.service"
 
 import "rxjs/Rx";
@@ -330,11 +330,17 @@ export class ClaService {
    * GET /v3/signature/{signature_id}
    *
    * @param signatureId the signature ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getSignature(signatureId) {
+  getSignature(signatureId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signature/' + signatureId);
+    let path: string = '/v3/signature/' + signatureId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -354,11 +360,17 @@ export class ClaService {
    * GET /v3/signatures/user/{user_id}
    *
    * @param userId the user ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getSignaturesUser(userId) {
+  getSignaturesUser(userId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signatures/user/' + userId);
+    let path: string = '/v3/signatures/user/' + userId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -367,11 +379,17 @@ export class ClaService {
    * GET /v3/signatures/company/{company_id}
    *
    * @param companyId the company ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getCompanySignatures(companyId) {
+  getCompanySignatures(companyId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signatures/company/' + companyId);
+    let path: string = '/v3/signatures/company/' + companyId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -381,11 +399,17 @@ export class ClaService {
    *
    * @param companyId the company ID
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getCompanyProjectSignatures(companyId, projectId) {
+  getCompanyProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId);
+    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -395,11 +419,17 @@ export class ClaService {
    *
    * @param companyId the company ID
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getEmployeeProjectSignatures(companyId, projectId) {
+  getEmployeeProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
     // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee');
+    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee' + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -408,11 +438,17 @@ export class ClaService {
    * GET /v3/signatures/project/{project_id}
    *
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignatures(projectId) {
+  getProjectSignatures(projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId);
+    let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
