@@ -13,6 +13,7 @@ import (
 var (
 	// AWS
 	awsRegion            string
+	awsProfile           string
 	awsSession           *session.Session
 	awsCloudWatchService *cloudwatch.CloudWatch
 )
@@ -20,6 +21,7 @@ var (
 // AWSInit initialization logic for the AWS resources
 func AWSInit() {
 	awsRegion = getProperty("AWS_REGION")
+	awsProfile = getProperty("AWS_PROFILE")
 
 	if err := startCloudWatchSession(); err != nil {
 		log.Fatalf("Error starting the AWS CloudWatch session - Error: %s", err.Error())
@@ -29,7 +31,7 @@ func AWSInit() {
 // GetAWSSession returns an AWS session based on the region and credentials
 func GetAWSSession() (*session.Session, error) {
 	if awsSession == nil {
-		log.Debugf("Creating a new AWS session for region: %s...", awsRegion)
+		log.Debugf("Creating a new AWS session for region: %s using profile: %s...", awsRegion, awsProfile)
 		/*
 			ses, err := session.NewSession(&aws.Config{
 				Region:      aws.String(awsRegion),
