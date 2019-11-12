@@ -80,13 +80,6 @@ export class ProjectPage {
     this.getCompany();
   }
 
-  getCompany() {
-    this.claService.getCompany(this.companyId).subscribe(response => {
-      this.company = response;
-      this.getManager(this.company.company_manager_id);
-    });
-  }
-
   getProject() {
     // console.log('Loading project: ' + this.projectId);
     this.loading.projects = true;
@@ -96,6 +89,13 @@ export class ProjectPage {
       console.log(response);
       this.project = response;
       this.getProjectSignatures();
+    });
+  }
+
+  getCompany() {
+    this.claService.getCompany(this.companyId).subscribe(response => {
+      this.company = response;
+      this.getManager(this.company.company_manager_id);
     });
   }
 
@@ -124,15 +124,16 @@ export class ProjectPage {
   }
 
   getProjectSignatures() {
-    // get CCLA signatures
+    // Get CCLA Company Signatures - should just be one
     this.loading.signatures = true;
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
           this.loading.signatures = false;
-          // console.log('Project signatures:');
-          // console.log(response);
+          console.log('Signatures for project: ' + this.projectId + ' for company: ' + this.companyId);
+          console.log(response);
           if (response.signatures) {
             let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+            console.log('CCLA Signatures for project: ' + cclaSignatures.length);
             if (cclaSignatures.length) {
               console.log('CCLA Signatures for project id: ' + this.projectId + ' and company id: ' + this.companyId);
               console.log(cclaSignatures);
@@ -179,7 +180,7 @@ export class ProjectPage {
           console.log(exception);
         });
 
-    // get employee signatures
+    // Get CCLA Employee Signatures
     this.loading.acknowledgements = true;
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
