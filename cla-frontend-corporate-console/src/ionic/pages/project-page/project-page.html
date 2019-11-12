@@ -79,7 +79,7 @@
             <ion-card-title>
               CLA Managers
             </ion-card-title>
-            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <loading-spinner [loading]="loading.managers"></loading-spinner>
             <ion-list>
               <ion-item *ngFor="let manager of managers">
                 <div class="manager">
@@ -111,9 +111,13 @@
       <ion-col col-12 col-md-8>
         <div class="table-responsive-vertical">
           <h2>{{ cclaSignature.companyName | titlecase }} Employee Acknowledgements</h2>
+          <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
           <table class="table table-hover">
             <thead>
             <tr>
+              <th class="clickable">
+                LFID/GHID
+              </th>
               <th class="clickable">
                 Name
               </th>
@@ -128,6 +132,9 @@
             </thead>
             <tbody>
             <tr *ngFor="let signature of employeeSignatures">
+              <td data-title="ID">
+                {{ signature.userLFID }}/{{ signature.userGHID }}
+              </td>
               <td data-title="Name">
                 {{ signature.userName }}
               </td>
