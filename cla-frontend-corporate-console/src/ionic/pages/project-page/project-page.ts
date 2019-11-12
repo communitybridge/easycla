@@ -89,7 +89,9 @@ export class ProjectPage {
 
   getProject() {
     // console.log('Loading project: ' + this.projectId);
+    this.loading.projects = true;
     this.claService.getProject(this.projectId).subscribe(response => {
+      this.loading.projects = false;
       console.log('Project response:');
       console.log(response);
       this.project = response;
@@ -111,20 +113,28 @@ export class ProjectPage {
    */
 
   getCLAManagers() {
+    this.loading.managers = true;
+    console.log('Loading CCLA Manager list using signature id: ' + this.cclaSignature.signatureID);
     this.claService.getCLAManagers(this.cclaSignature.signatureID).subscribe(response => {
+      this.loading.managers = false;
+      console.log('Loaded CCLA Managers: ');
+      console.log(response);
       this.managers = response;
     });
   }
 
   getProjectSignatures() {
     // get CCLA signatures
+    this.loading.signatures = true;
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
+          this.loading.signatures = false;
           // console.log('Project signatures:');
           // console.log(response);
           if (response.signatures) {
             let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
             if (cclaSignatures.length) {
+              console.log('CCLA Signatures for project id: ' + this.projectId + ' and company id: ' + this.companyId);
               console.log(cclaSignatures);
               this.cclaSignature = cclaSignatures[0];
 
@@ -163,14 +173,17 @@ export class ProjectPage {
           }
         },
         exception => {
+          this.loading.signatures = false;
           console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
             this.companyId + ' and project ID: ' + this.projectId);
           console.log(exception);
         });
 
     // get employee signatures
+    this.loading.acknowledgements = true;
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
       .subscribe(response => {
+          this.loading.acknowledgements = false;
           console.log('Employee signatures:');
           console.log(response);
           if (response.signatures) {
@@ -185,6 +198,7 @@ export class ProjectPage {
           }
         },
         exception => {
+          this.loading.acknowledgements = false;
           console.log("Exception while calling: getEmployeeProjectSignatures() for company ID: " +
             this.companyId + ' and project ID: ' + this.projectId);
           console.log(exception);
