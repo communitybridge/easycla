@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>{{ cclaSignature.companyName || titlecase }} Project Signatures</ion-title>
+    <ion-title>{{ company.company_name || titlecase }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
 </ion-header>
@@ -110,7 +110,7 @@
       </ion-col>
       <ion-col col-12 col-md-8>
         <div class="table-responsive-vertical">
-          <h2>{{ cclaSignature.companyName | titlecase }} Employee Acknowledgements</h2>
+          <h2>{{ company.company_name | titlecase }} Employee Acknowledgements</h2>
           <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
           <table class="table table-hover">
             <thead>
