@@ -216,7 +216,7 @@ export class ProjectPage {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "domain",
       projectName: this.project.project_name,
-      companyName: this.cclaSignature.companyName,
+      companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.domainWhitelist
@@ -232,7 +232,7 @@ export class ProjectPage {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "email",
       projectName: this.project.project_name,
-      companyName: this.cclaSignature.companyName,
+      companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       companyId: this.companyId,
       signatureId: this.cclaSignature.signatureID,
@@ -249,7 +249,7 @@ export class ProjectPage {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "github",
       projectName: this.project.project_name,
-      companyName: this.cclaSignature.companyName,
+      companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.githubWhitelist
@@ -265,7 +265,7 @@ export class ProjectPage {
     let modal = this.modalCtrl.create("WhitelistModal", {
       type: "githubOrg",
       projectName: this.project.project_name,
-      companyName: this.cclaSignature.companyName,
+      companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
       whitelist: this.cclaSignature.githubOrgWhitelist
@@ -338,7 +338,7 @@ export class ProjectPage {
               // Ok to open the modal now that we have signatures loaded
               let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
                 projectName: this.project.project_name,
-                companyName: this.cclaSignature.companyName,
+                companyName: this.company.company_name,
                 projectId: this.cclaSignature.projectID,
                 companyId: this.companyId,
                 corporateClaId: this.projectId,
@@ -359,7 +359,7 @@ export class ProjectPage {
     } else {
       let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
         projectName: this.project.project_name,
-        companyName: this.cclaSignature.companyName,
+        companyName: this.company.company_name,
         projectId: this.cclaSignature.projectID,
         companyId: this.companyId,
         corporateClaId: this.projectId,
