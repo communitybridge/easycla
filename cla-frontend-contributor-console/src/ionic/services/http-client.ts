@@ -52,35 +52,57 @@ export class HttpClient {
 
   get(url) {
     return Observable
-      .fromPromise(this.buildHeaders())
+      .fromPromise(this.buildAuthHeaders())
       .switchMap((headers) => this.http.get(url, {headers: headers}));
+  }
+
+  getWithCreds(url) {
+    return Observable
+      .fromPromise(this.buildAuthHeaders())
+      .switchMap((headers) => this.http.get(url, {headers: headers, withCredentials: true}));
   }
 
   post(url, data) {
     return Observable
-      .fromPromise(this.buildHeaders())
+      .fromPromise(this.buildAuthHeaders())
       .switchMap((headers) => this.http.post(url, data, {headers: headers}));
+  }
+
+  postWithCreds(url, data) {
+    return Observable
+      .fromPromise(this.buildAuthHeaders())
+      .switchMap((headers) => this.http.post(url, data, {headers: headers, withCredentials: true}));
   }
 
   put(url, data, contentType: string = 'application/json') {
     return Observable
-      .fromPromise(this.buildHeaders(contentType))
+      .fromPromise(this.buildAuthHeaders(contentType))
       .switchMap((headers) => this.http.put(url, data, {headers: headers}));
   }
 
   patch(url, data, contentType: string = 'application/json') {
     return Observable
-      .fromPromise(this.buildHeaders(contentType))
+      .fromPromise(this.buildAuthHeaders(contentType))
       .switchMap((headers) => this.http.patch(url, data, {headers: headers}));
   }
 
   delete(url) {
     return Observable
-      .fromPromise(this.buildHeaders())
+      .fromPromise(this.buildAuthHeaders())
       .switchMap((headers) => this.http.delete(url, {headers: headers}));
   }
 
+  deleteWithBody(url, body) {
+    return Observable
+      .fromPromise(this.buildAuthHeaders())
+      .switchMap((headers) => this.http.delete(url, {body: body, headers: headers}));
+  }
 
+  deleteWithCredsAndBody(url, body) {
+    return Observable
+      .fromPromise(this.buildAuthHeaders())
+      .switchMap((headers) => this.http.delete(url, {body: body, headers: headers, withCredentials: true}));
+  }
   securedGet(url) {
     return Observable
       .fromPromise(this.buildAuthHeaders())

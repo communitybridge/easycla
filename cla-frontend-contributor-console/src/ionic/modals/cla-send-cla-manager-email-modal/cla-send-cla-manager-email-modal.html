@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Company has not signed a CCLA
+      {{ company.company_name }} has not signed a CCLA
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -47,7 +47,7 @@
     <ion-buttons end>
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
-      </button> 
+      </button>
       <button type="button" form="form" ion-button icon-right color="primary" (click)="submit()">
         Send
       </button>

@@ -3,6 +3,7 @@
 
 import {Component,} from '@angular/core';
 import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
@@ -14,17 +15,16 @@ import {ClaService} from '../../services/cla.service';
   providers: []
 })
 export class ClaSelectCompanyModal {
+  form: FormGroup;
   loading: any;
   projectId: string;
   repositoryId: string;
   userId: string;
   selectCompanyModalActive: boolean = false;
   authenticated: boolean;
-
   signature: string;
-
   companies: any;
-
+  companiesFiltered: any;
 
   constructor(
     public navCtrl: NavController,
@@ -32,12 +32,17 @@ export class ClaSelectCompanyModal {
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
     public alertCtrl: AlertController,
+    public formBuilder: FormBuilder,
     private claService: ClaService,
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
     this.getDefaults();
+    this.form = formBuilder.group({
+      // provider: ['', Validators.required],
+      search: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
+    });
   }
 
   getDefaults() {
@@ -57,14 +62,19 @@ export class ClaSelectCompanyModal {
   }
 
   getCompanies() {
+    this.loading.companies = true;
     this.claService.getAllCompanies().subscribe(response => {
+      this.loading.companies = false;
       if (response) {
         // Cleanup - Remove any companies that don't have a name
         this.companies = response.filter((company) => {
           return company.company_name && company.company_name.trim().length > 0;
         });
+
+        // Reset our filtered search
+        this.form.value.search = '';
+        this.companiesFiltered = this.companies
       }
-      this.loading.companies = false;
     });
   }
 
@@ -152,4 +162,18 @@ export class ClaSelectCompanyModal {
     });
   }
 
+  /**
+   * onSearch simply filters the list of companies
+   */
+  onSearch() {
+    const searchTerm = this.form.value.search;
+    // console.log('Search term:' + searchTerm);
+    if (searchTerm === '') {
+      this.companiesFiltered = this.companies
+    } else {
+      this.companiesFiltered = this.companies.filter((a) => {
+        return a.company_name.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    }
+  }
 }
