@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
+import {Injectable} from "@angular/core";
+import {Http} from "@angular/http";
 
 import "rxjs/Rx";
 
@@ -13,12 +13,66 @@ export class ClaService {
   localTesting = false;
   v1ClaAPIURLLocal = 'http://localhost:5000';
   v2ClaAPIURLLocal = 'http://localhost:5000';
+  v3ClaAPIURLLocal = 'http://localhost:8080';
 
   constructor(http: Http) {
     this.http = http;
   }
 
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V1 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV1Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v1ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V2 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV2Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v2ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
+  /**
+   * Constructs a URL based on the path and endpoint host:port.
+   * @param path the URL path
+   * @returns a URL to the V3 endpoint with the specified path. If running in local mode, the endpoint will point to a
+   * local host:port - otherwise the endpoint will point the appropriate environment endpoint running in the cloud.
+   */
+  private getV3Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v3ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.claApiUrl + path);
+    }
+    return url;
+  }
+
   public isLocalTesting(flag: boolean) {
+    if (flag) {
+      console.log('Running in local services mode');
+    } else {
+      console.log('Running in deployed services mode');
+    }
     this.localTesting = flag;
   }
 
@@ -141,16 +195,16 @@ export class ClaService {
   }
 
   // creates a new account for Gerrit users, with email.
- postOrGetUserForGerrit() {
-   if (this.localTesting) {
-     return this.http
-       .securedPost(this.v1ClaAPIURLLocal + "/v1/user/gerrit")
-       .map(res => res.json());
-   } else {
-     return this.http
-       .securedPost(this.claApiUrl + "/v1/user/gerrit")
-       .map(res => res.json());
-   }
+  postOrGetUserForGerrit() {
+    if (this.localTesting) {
+      return this.http
+        .securedPost(this.v1ClaAPIURLLocal + "/v1/user/gerrit")
+        .map(res => res.json());
+    } else {
+      return this.http
+        .securedPost(this.claApiUrl + "/v1/user/gerrit")
+        .map(res => res.json());
+    }
   }
 
   /**
@@ -376,9 +430,7 @@ export class ClaService {
 
   /**
    * /signatures/company/{company_id}/project/{project_id}
-   **/
-
-  getCompanyProjectSignatures(companyId, projectId) {
+   getCompanyProjectSignatures(companyId, projectId) {
     return this.http
       .get(
         this.claApiUrl +
@@ -387,6 +439,27 @@ export class ClaService {
           "/project/" +
           projectId
       )
+      .map(res => res.json());
+  }
+   **/
+
+  /**
+   * GET /v3/signatures/project/{project_id}/company/{company_id}
+   *
+   * @param companyId the company ID
+   * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
+   */
+  getCompanyProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
+    //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
+    // Leverage the new go backend v3 endpoint - note the slightly different path layout
+    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
+    return this.http.getWithCreds(url)
       .map(res => res.json());
   }
 
@@ -639,10 +712,10 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/v1/project/" +
-          projectId +
-          "/document/template/" +
-          documentType,
+        "/v1/project/" +
+        projectId +
+        "/document/template/" +
+        documentType,
         document
       )
       .map(res => res.json());
@@ -661,14 +734,14 @@ export class ClaService {
     return this.http
       .delete(
         this.claApiUrl +
-          "/v1/project/" +
-          projectId +
-          "/document/" +
-          documentType +
-          "/" +
-          majorVersion +
-          "/" +
-          minorVersion
+        "/v1/project/" +
+        projectId +
+        "/document/" +
+        documentType +
+        "/" +
+        majorVersion +
+        "/" +
+        minorVersion
       )
       .map(res => res.json());
   }
@@ -728,8 +801,8 @@ export class ClaService {
       }
      */
     return this.http
-    .post(this.claApiUrl + "/v2/check-prepare-employee-signature", data)
-    .map(res => res.json());
+      .post(this.claApiUrl + "/v2/check-prepare-employee-signature", data)
+      .map(res => res.json());
   }
 
   /**
@@ -776,12 +849,12 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-          "/v1/signed/" +
-          installationId +
-          "/" +
-          githubRepositoryId +
-          "/" +
-          changeRequestId
+        "/v1/signed/" +
+        installationId +
+        "/" +
+        githubRepositoryId +
+        "/" +
+        changeRequestId
       )
       .map(res => res.json());
   }
@@ -809,14 +882,14 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v2/repository-provider/" +
-          provider +
-          "/sign/" +
-          installationId +
-          "/" +
-          githubRepositoryId +
-          "/" +
-          changeRequestId
+        "/v2/repository-provider/" +
+        provider +
+        "/sign/" +
+        installationId +
+        "/" +
+        githubRepositoryId +
+        "/" +
+        changeRequestId
       )
       .map(res => res.json());
   }
@@ -908,9 +981,9 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          "/v1/github/organizations/" +
-          organizationName +
-          "/repositories"
+        "/v1/github/organizations/" +
+        organizationName +
+        "/repositories"
       )
       .map(res => res.json());
   }
@@ -953,14 +1026,14 @@ export class ClaService {
 
   getGerrit(gerritId) {
     return this.http
-    .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
-    .map(res => res.json());
+      .securedGet(this.claApiUrl + "/v2/gerrit/" + gerritId)
+      .map(res => res.json());
   }
 
   getProjectGerrits(projectId) {
     return this.http
-    .securedGet(this.claApiUrl + "/v1/project/" + projectId + "/gerrits")
-    .map(res => res.json());
+      .securedGet(this.claApiUrl + "/v1/project/" + projectId + "/gerrits")
+      .map(res => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////

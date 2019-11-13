@@ -27,7 +27,7 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>Email to Authorize</ion-label>
+            <ion-label stacked>Your Email to Authorize</ion-label>
             <ion-select formControlName="email" interface="popover">
               <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
             </ion-select>
@@ -54,7 +54,7 @@
     <ion-buttons end>
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
-      </button> 
+      </button>
       <button type="button" form="form" ion-button icon-right color="primary" (click)="submit()">
         Send
       </button>
