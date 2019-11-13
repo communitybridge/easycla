@@ -67,7 +67,7 @@ export class AllProjectsPage {
 
     switch (error.status) {
       case 401:
-        this.errorMessage = `You don't have permissions to see any projects.`;
+        this.errorMessage = `Your session may have expired or you don't have permissions to see any projects.`;
         break;
 
       default:

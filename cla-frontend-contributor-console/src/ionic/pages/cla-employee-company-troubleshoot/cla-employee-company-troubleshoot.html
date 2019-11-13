@@ -33,6 +33,28 @@
                 If you feel you are receiving this message in error, please try the following steps:
               </ion-card-title>
 
+              <p *ngIf="cclaSignature.githubOrgWhitelist">
+                {{ company.company_name }} has whitelisted the following GitHub Organization(s), and all public
+                members therein will be approved to contribute:
+              </p>
+              <ul *ngFor="let org of cclaSignature.githubOrgWhitelist">
+                <li>{{ org }}</li>
+              </ul>
+
+              <p>
+
+                If you are currently a member of an Org listed above, but haven't publicized it, please
+                <a
+                  href="https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/publicizing-or-hiding-organization-membership">
+                  change your GitHub settings to make this public</a>, and then come back to EasyCLA and select
+                "Corporate" > {{ company.company_name }} again. You should be all set!
+              </p>
+
+              <p>
+                If you are not a member of an Org listed above, please ask your GitHub administrator to add you (and
+                then set your membership to public).
+              </p>
+
               <p class="p-lg-0" style="font-weight: bold">
                 Make sure your employee email is verified in your GitHub account settings.
               </p>
@@ -50,11 +72,6 @@
                   <p>
                     Ask your CLA Manager to whitelist your GitHub Username, rather than Email when you contact them
                     below.
-                  </p>
-                  <p>
-                    If you believe you're a member of a whitelisted GitHub Organization, please <a
-                    href="https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/publicizing-or-hiding-organization-membership">make
-                    sure you've made that membership public</a>.
                   </p>
                   <p>
                     Try making your GitHub email address public.

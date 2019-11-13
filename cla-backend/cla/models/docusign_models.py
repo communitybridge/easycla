@@ -749,8 +749,12 @@ class DocuSign(signing_service_interface.SigningService):
                                            cla_template_values)
                 else:
                     cla.log.debug('Using current user/signatory user to populate the signing request.')
+                    if signatory_user.get_user_name() is not None:
+                        signatory_name = signatory_user.get_user_name()
+                    else:
+                        signatory_name = signatory_user.get_lf_username()
                     self.populate_sign_url(latest_signature, callback_url,
-                                           signatory_user.get_user_name(),
+                                           signatory_name,
                                            signatory_user.get_user_email(),
                                            send_as_email,
                                            managers[0].get_user_name(),

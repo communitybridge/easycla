@@ -28,8 +28,6 @@
       <ion-col col-12>
         <ion-list>
           <button ion-item *ngFor="let project of projectsFiltered" (click)="selectProject(project)">
-<!--            <ion-label class="project-name">{{ formatProject(project.project_name) }}</ion-label>-->
-<!--            <ion-label class="project-name" [innerHTML]="formatProject(project.project_name)"></ion-label>-->
             <ion-label class="project-name">{{project.project_name}}</ion-label>
           </button>
         </ion-list>
