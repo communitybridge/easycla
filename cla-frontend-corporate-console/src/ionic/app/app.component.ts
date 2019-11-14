@@ -102,7 +102,7 @@ export class MyApp {
       {
         title: "Sign Out",
         access: true,
-        component: "LoginPage"
+        component: "LogoutPage"
       }
     ];
   }
