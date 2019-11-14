@@ -32,6 +32,7 @@ export class ProjectPage {
   companyId: string;
   projectId: string;
   managers: ClaManager[];
+  managersRestricted: boolean;
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
@@ -53,12 +54,8 @@ export class ProjectPage {
     this.companyId = navParams.get("companyId");
     this.projectId = navParams.get("projectId");
     this.showModal = navParams.get("modal");
-
-    // if (this.showModal === 'orgwhitelist') {
-    //   this.openGithubOrgWhitelistModal();
-    // }
-
     this.getDefaults();
+    this.managersRestricted = false;
   }
 
   getDefaults() {
@@ -119,7 +116,13 @@ export class ProjectPage {
       this.loading.managers = false;
       console.log('Loaded CCLA Managers: ');
       console.log(response);
-      this.managers = response;
+      if (response.errors != null) {
+        this.managers = [];
+        this.managersRestricted = true;
+      } else {
+        this.managers = response;
+        this.managersRestricted = false;
+      }
     });
   }
 

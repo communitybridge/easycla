@@ -62,6 +62,17 @@ export class AuthService {
     localStorage.removeItem("userid");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_name");
+
+    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
+    // property is: cla-proj-console-link-{STAGE} -> https://project.dev.lfcla.com
+    // but ask for the key without the prefix or the suffix/stage
+    let redirectUri = EnvConfig['proj-console-link'];
+    if (localServicesMode) {
+      redirectUri = 'http://localhost:8100'
+    }
+    this.auth0.logout({
+      redirectUri: redirectUri + '/#/login'
+    });
   }
 
   public isAuthenticated(): boolean {
