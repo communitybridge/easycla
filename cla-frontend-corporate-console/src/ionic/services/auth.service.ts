@@ -108,8 +108,10 @@ export class AuthService {
       redirectUri = 'http://localhost:8101'
     }
     console.log('Redirecting to: ' + redirectUri + '/#/login');
+    // This library seems to want the options to be `redirectUri`, but the API docs say to use: `returnTo`
+    // `returnTo` works
     this.auth0.logout({
-      redirectUri: redirectUri + '/#/login'
+      returnTo: redirectUri + '/#/login'
     });
   }
 
