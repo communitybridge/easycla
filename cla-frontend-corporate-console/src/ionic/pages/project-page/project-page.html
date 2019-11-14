@@ -81,6 +81,9 @@
             </ion-card-title>
             <loading-spinner [loading]="loading.managers"></loading-spinner>
             <ion-list>
+              <ion-item *ngIf="managersRestricted">
+                <p>Only CLA Managers can view and update this list.</p>
+              </ion-item>
               <ion-item *ngFor="let manager of managers">
                 <div class="manager">
                   <ion-icon name="person" item-left class="icon-md"></ion-icon>
@@ -102,7 +105,7 @@
                 </div>
               </ion-item>
             </ion-list>
-            <button bottom right ion-fab mini class="add-manager-btn" (click)="openManagerModal()">
+            <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
               <ion-icon name="add"></ion-icon>
             </button>
           </ion-card-content>

@@ -24,7 +24,7 @@ export class LoginPage {
     public rolesService: RolesService,
     public authService: AuthService
   ) {
-    this.authService.logout();
+    //this.authService.logout();
     this.userRoles = this.rolesService.userRoles;
     this.rolesService.getUserRolesPromise().then(userRoles => {
       this.userRoles = userRoles;
