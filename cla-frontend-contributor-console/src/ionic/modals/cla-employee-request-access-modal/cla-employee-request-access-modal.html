@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Request Access
+      Request Company Access to {{ company.company_name }}
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -21,28 +21,90 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>After you click send you will have to wait for your company's CLA Manager to add you to their whitelist before you can complete your employee contributor CLA process.</p>
+          <p>After you click send you will have to wait for {{ company.company_name }} CLA Manager to add you to their
+            whitelist before you can complete your employee contributor CLA process.
+          </p>
+          <loading-spinner [loading]="loading.signatures"></loading-spinner>
         </ion-col>
       </ion-row>
+
       <ion-row>
         <ion-col col-12>
-          <ion-item>
-            <ion-label stacked>Your Email to Authorize</ion-label>
-            <ion-select formControlName="email" interface="popover">
-              <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
-            </ion-select>
-          </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your company's CLA Manager to whitelist.</p>
-          <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
-            <p>* A valid email address is required.</p>
-          </ion-item>
+          <ion-card>
+            <ion-card-content>
+              <ion-list-header>Select a CLA Manager for {{ company.company_name }}</ion-list-header>
+              <ion-item>
+                <ion-label stacked>Select one of the existing the CLA Managers associated
+                  with {{ company.company_name }}.
+                </ion-label>
+                <ion-select formControlName="manager">
+                  <ion-option *ngFor="let manager of managers" selected=false
+                              value="{{ manager.userID }}">{{ manager.username }}
+                    / {{ manager.lfEmail }}</ion-option>
+                </ion-select>
+              </ion-item>
+            </ion-card-content>
+          </ion-card>
         </ion-col>
+      </ion-row>
+
+      <ion-row>
         <ion-col col-12>
-          <ion-item>
-            <ion-label stacked>Message:</ion-label>
-            <ion-textarea formControlName="message"></ion-textarea>
-          </ion-item>
-          <p class="field-description">Explain to your CLA Manager who you are and why you would like to contribute.</p>
+          <ion-card>
+            <ion-card-content>
+              <ion-list-header>Or Enter a CLA Manager's Name and Email</ion-list-header>
+              <ion-item>
+                <ion-label stacked>CLA Manager Name:</ion-label>
+                <ion-textarea formControlName="adminname"></ion-textarea>
+              </ion-item>
+              <p class="field-description">Type your CLA manager's name.</p>
+
+              <ion-item>
+                <ion-label stacked>CLA Manager E-Mail:</ion-label>
+                <ion-textarea formControlName="adminemail"></ion-textarea>
+              </ion-item>
+              <p class="field-description">Type an E-Mail.</p>
+              <ion-item *ngIf="!form.controls.adminemail.valid && (form.controls.adminemail.touched || submitAttempt)"
+                        no-lines>
+                <p>* A valid email address is required.</p>
+              </ion-item>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col col-12>
+          <ion-card>
+            <ion-card-content>
+              <ion-item>
+                <ion-label stacked>Select Your Email to Authorize</ion-label>
+                <ion-select formControlName="email">
+                  <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
+                </ion-select>
+              </ion-item>
+              <p class="field-description">Select the email address attached to your account that you would like your
+                company's CLA Manager to whitelist.</p>
+              <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
+                <p>* A valid email address is required.</p>
+              </ion-item>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col col-12>
+          <ion-card>
+            <ion-card-content>
+              <ion-item>
+                <ion-label stacked>Message:</ion-label>
+                <ion-textarea formControlName="message"></ion-textarea>
+              </ion-item>
+              <p class="field-description">Explain to your CLA Manager who you are and why you would like to
+                contribute to {{project.project_name}} as an employee of {{ company.company_name}}.</p>
+            </ion-card-content>
+          </ion-card>
         </ion-col>
       </ion-row>
     </ion-grid>

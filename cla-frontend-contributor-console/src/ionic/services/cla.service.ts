@@ -155,6 +155,22 @@ export class ClaService {
     }
   }
 
+  /**
+   * GET /v3/users/{userId}
+   **/
+  getUserByUserId(userId) {
+    const url: URL = this.getV3Endpoint('/v3/users/' + userId);
+    return this.http.getWithCreds(url).map(res => res.json());
+  }
+
+  /**
+   * GET /v3/users/username/{userName}
+   **/
+  getUserByUserName(userName) {
+    const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
+    return this.http.getWithCreds(url).map(res => res.json());
+  }
+
   getUserWithAuthToken(userId) {
     if (this.localTesting) {
       return this.http
@@ -442,6 +458,14 @@ export class ClaService {
       .map(res => res.json());
   }
    **/
+
+  /**
+   * GET /v1/signature/{signature_id}/manager
+   */
+  getCLAManagers(signatureId) {
+    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
+    return this.http.get(url).map(res => res.json());
+  }
 
   /**
    * GET /v3/signatures/project/{project_id}/company/{company_id}

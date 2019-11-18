@@ -251,8 +251,8 @@ func (repo repository) GetUserByUserName(userName string) (*models.User, error) 
 			return nil, err
 		}
 
-		log.Debugf("GetUser by User Name query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(dbUserModels))
+		log.Debugf("GetUser by User Name '%s' query took: %v resulting in %d results",
+			userName, utils.FmtDuration(time.Since(queryStartTime)), len(dbUserModels))
 
 		if len(dbUserModels) == 1 {
 			return convertDBUserModel(dbUserModels[0]), nil
