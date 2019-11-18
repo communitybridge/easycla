@@ -6,11 +6,12 @@ Controller related to user operations.
 """
 
 import uuid
-import hug
-from cla.utils import get_user_instance, get_company_instance, get_email_service
+
+import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Company, Project
-import cla
+from cla.utils import get_user_instance, get_email_service
+
 
 def get_users():
     """
@@ -20,6 +21,7 @@ def get_users():
     :rtype: [dict]
     """
     return [user.to_dict() for user in get_user_instance().all()]
+
 
 def get_user(user_id=None, user_email=None, user_github_id=None):
     """
@@ -54,6 +56,7 @@ def get_user(user_id=None, user_email=None, user_github_id=None):
         user = users[0]
     return user.to_dict()
 
+
 def get_user_signatures(user_id):
     """
     Given a user ID, returns the user's signatures.
@@ -71,6 +74,7 @@ def get_user_signatures(user_id):
     signatures = user.get_user_signatures()
     return [agr.to_dict() for agr in signatures]
 
+
 def get_users_company(user_company_id):
     """
     Fetches all users that are associated with the company specified.
@@ -83,7 +87,9 @@ def get_users_company(user_company_id):
     users = get_user_instance().get_users_by_company(user_company_id)
     return [user.to_dict() for user in users]
 
-def request_company_whitelist(user_id, company_id, user_email, project_id, message=None):
+
+def request_company_whitelist(user_id: str, company_id: str, user_email: str, project_id: str,
+                              message: str = None, recipient_name: str = None, recipient_email: str = None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
     added to their whitelist.
@@ -95,62 +101,103 @@ def request_company_whitelist(user_id, company_id, user_email, project_id, messa
     :param user_email: The email address that this user wants to be whitelisted. Must exist in the
         user's list of emails.
     :type user_email: string
-    :param messsage: A custom message to add to the email sent out to the manager.
+    :param project_id: The ID of the project that the request is going to.
+    :type project_id: string
+    :param message: A custom message to add to the email sent out to the manager.
     :type message: string
+    :param recipient_name: An optional recipient name for requesting the company whitelist
+    :type recipient_name: string
+    :param recipient_email: An optional recipient email for requesting the company whitelist
+    :type recipient_email: string
     """
+    if project_id is None:
+        return {'errors': {'project_id': 'Project ID is missing from the request'}}
+    if company_id is None:
+        return {'errors': {'company_id': 'Company ID is missing from the request'}}
+    if user_id is None:
+        return {'errors': {'user_id': 'User ID is missing from the request'}}
+    if user_email is None:
+        return {'errors': {'user_email': 'User Email is missing from the request'}}
+    if message is None:
+        return {'errors': {'message': 'Message is missing from the request'}}
+
     user = User()
     try:
         user.load(user_id)
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
+
     emails = user.get_user_emails()
     if user_email not in emails:
         return {'errors': {'user_email': 'Must provide one of the user\'s existing emails'}}
+
     company = Company()
     try:
         company.load(company_id)
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+
     project = Project()
-    try: 
+    try:
         project.load(project_id)
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
 
-    user_name = user.get_user_name()    
+    user_name = user.get_user_name()
     company_name = company.get_company_name()
     project_name = project.get_project_name()
 
-    subject = '''CLA: %s is requesting to be whitelisted for %s project ''' %(user_name, project_name)
+    # If provided, we will use the parameter for the recipient name and email - if not provided, then we will use the
+    # default company manager's email
+    if not recipient_name and not recipient_email:
+        cla.log.debug('request_company_whitelist - recipient name and email missing from request - '
+                      'using the company manager as the recipient')
+        manager_id = company.get_company_manager_id()
+        manager = get_user_instance()
+        try:
+            manager.load(manager_id)
+        except DoesNotExist as err:
+            return {'errors': {'company_id': 'No CLA Manager exists for this company - can not send email'}}
 
-    body = '''%s is requesting to be whitelisted as a contributor for your organization (%s):
+        recipient_name = manager.get_user_name()
+        if manager.get_lf_email() is not None:
+            recipient_email = manager.get_lf_email()
+        else:
+            emails = manager.get_user_emails()
+            if len(emails) > 0:
+                recipient_email = emails[0]
+            else:
+                return {'errors': {'manager_email': 'Manager email is missing - unable to send to recipient'}}
 
-    %s <%s>
+    subject = (f'CLA: {user_name} is requesting to be whitelisted for {project_name} project '
+               f'as a {company_name} employee')
+
+    body = f'''Hello {recipient_name},
+
+{user_name} is requesting to be whitelisted as a contributor for your organization ({company_name}):
+
+    {user_name} <{user_email}>
 
 The message that was attached to the request:
 
-    %s
+    {message} 
 
-You can whitelist %s in the EasyCLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with %s to clarify.
+You can whitelist {user_name} in the EasyCLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with {user_name} to clarify.
 Please follow up with the user as necessary.
 
 Click on the following link to navigate to the EasyCLA Corporate Console.
 
- %s  
+ https://{cla.conf['CORPORATE_BASE_URL']} 
 
 - EasyCLA System
-''' %(user_name, company_name, user_name, user_email, message,
-    user_name, user_name, 'https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+'''
 
-    manager_id = company.get_company_manager_id()
-    manager = get_user_instance()
-    try:
-        manager.load(manager_id)
-    except DoesNotExist as err:
-        return {'errors': {'company_id': 'No CLA Manager exists for this company - can not send email'}}
-    recipient = manager.get_user_email()
+    cla.log.debug(f'request_company_whitelist - sending email '
+                  f'to recipient {recipient_name}/{recipient_email} '
+                  f'for project {project_name} '
+                  f'assigned to company {company_name}')
     email_service = get_email_service()
-    email_service.send(subject, body, recipient)
+    email_service.send(subject, body, recipient_email)
 
 
 def invite_company_admin(user_id, user_email, admin_name, admin_email, project_name):
@@ -167,7 +214,6 @@ def invite_company_admin(user_id, user_email, admin_name, admin_email, project_n
     send_email_to_admin(user.get_user_name(), user_email, admin_name, admin_email, project_name, False)
 
 
-
 def request_company_ccla(user_id, user_email, company_id, project_id):
     """
     Sends email to all company administrators in the company ACL to sign a CCLA for the given project. 
@@ -178,13 +224,13 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
     user_name = user.get_user_name()
-    
+
     company = Company()
     try:
         company.load(company_id)
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
-    
+
     project = Project()
     try:
         project.load(project_id)
@@ -213,7 +259,7 @@ def send_email_to_admin(user_name, user_email, admin_name, admin_email, project_
 
     # account_exists=True send email to an admin of an existing company
     # account_exists=False send email to a proposed admin who needs to register the company through the Corporate Console. 
-    message =  'Please click the following link to sign in to the EasyCLA Corporate Console.' if account_exists else 'Please click the following link to create an account in the CLA Corporate Console.'
+    message = 'Please click the following link to sign in to the EasyCLA Corporate Console.' if account_exists else 'Please click the following link to create an account in the CLA Corporate Console.'
 
     subject = 'CLA: Invitation to Sign the {} Corporate CLA'.format(project_name)
     body = '''Hello {admin_name}, 
@@ -228,12 +274,12 @@ Before the contribution can be accepted, your organization must sign a CLA. {acc
 
 - EasyCLA System
 '''.format(admin_name=admin_name, project_name=project_name,
-            user_name=user_name,  user_email=user_email, 
-            account_exists=message, corporate_console_url=cla.conf['CLA_LANDING_PAGE'])
+           user_name=user_name, user_email=user_email,
+           account_exists=message, corporate_console_url=cla.conf['CLA_LANDING_PAGE'])
     recipient = admin_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
-    
+
 
 def get_active_signature(user_id):
     """
@@ -250,6 +296,7 @@ def get_active_signature(user_id):
     return_url = cla.utils.get_active_signature_return_url(user_id, metadata)
     metadata['return_url'] = return_url
     return metadata
+
 
 def get_user_project_last_signature(user_id, project_id):
     """
@@ -273,8 +320,10 @@ def get_user_project_last_signature(user_id, project_id):
         latest_doc = cla.utils.get_project_latest_individual_document(str(project_id))
         last_signature['latest_document_major_version'] = str(latest_doc.get_document_major_version())
         last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
-        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
+        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature[
+            'signature_document_major_version']
     return last_signature
+
 
 def get_user_project_company_last_signature(user_id, project_id, company_id):
     """
@@ -300,8 +349,10 @@ def get_user_project_company_last_signature(user_id, project_id, company_id):
         latest_doc = cla.utils.get_project_latest_corporate_document(str(project_id))
         last_signature['latest_document_major_version'] = str(latest_doc.get_document_major_version())
         last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
-        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature['signature_document_major_version']
+        last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature[
+            'signature_document_major_version']
     return last_signature
+
 
 # For GitHub user creating, see models.github_models.get_or_create_user(self, request)
 def get_or_create_user(auth_user):
@@ -309,7 +360,7 @@ def get_or_create_user(auth_user):
 
     # Returns None or List[User] objects - could be more than one
     users = user.get_user_by_username(str(auth_user.username))
-    
+
     if users is None:
         user.set_user_id(str(uuid.uuid4()))
         user.set_user_name(auth_user.name)
@@ -325,7 +376,6 @@ def get_or_create_user(auth_user):
     return users[0]
 
 
-
 def request_company_admin_access(user_id, company_id):
     """
     Send Email to company admins to inform that that a user is requesting to be a CLA Manager for their company.  
@@ -337,13 +387,12 @@ def request_company_admin_access(user_id, company_id):
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
     user_name = user.get_user_name()
-    
+
     company = Company()
     try:
         company.load(company_id)
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
-
 
     subject = 'CLA: Request for Access to Corporate Console'
 
@@ -360,8 +409,8 @@ Navigate to the EasyCLA Corporate Console using the link below and add this user
 {corporate_console_url}
 
 - EasyCLA System
-'''.format(admin_name=admin.get_user_name(), user_name=user_name, company_name = company.get_company_name(),
-    user_email=user_email, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+'''.format(admin_name=admin.get_user_name(), user_name=user_name, company_name=company.get_company_name(),
+           user_email=user_email, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
         recipient = admin.get_lf_email()
         email_service = get_email_service()
         email_service.send(subject, body, recipient)
