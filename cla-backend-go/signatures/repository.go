@@ -1018,6 +1018,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 		DomainWhitelist               []string `json:"domain_whitelist"`
 		GitHubWhitelist               []string `json:"github_whitelist"`
 		GitHubOrgWhitelist            []string `json:"github_org_whitelist"`
+		SignatureACL                  []string `json:"signature_acl"`
 	}
 
 	// The DB signature model
@@ -1067,6 +1068,16 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 				}
 			}
 
+			var signatureACL []models.User
+			for _, userName := range dbSignature.SignatureACL {
+				userModel, userErr := repo.usersRepo.GetUserByUserName(userName)
+				if userErr != nil {
+					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
+				} else {
+					signatureACL = append(signatureACL, *userModel)
+				}
+			}
+
 			signatures = append(signatures, models.Signature{
 				SignatureID:            dbSignature.SignatureID,
 				CompanyName:            companyName,
@@ -1088,6 +1099,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 				DomainWhitelist:        dbSignature.DomainWhitelist,
 				GithubWhitelist:        dbSignature.GitHubWhitelist,
 				GithubOrgWhitelist:     dbSignature.GitHubOrgWhitelist,
+				SignatureACL:           signatureACL,
 			})
 		}(dbSignature)
 	}
@@ -1119,6 +1131,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("signature_id"),
 		expression.Name("date_created"),
 		expression.Name("date_modified"),
+		expression.Name("signature_acl"),
 		expression.Name("signature_approved"),
 		expression.Name("signature_document_major_version"),
 		expression.Name("signature_document_minor_version"),
