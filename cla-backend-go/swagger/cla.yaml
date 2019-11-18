@@ -1570,6 +1570,10 @@ definitions:
         type: string
       signatureType:
         type: string
+      signatureACL:
+        type: array
+        items:
+          $ref: '#/definitions/user'
       userName:
         type: string
       companyName:
