@@ -2,7 +2,7 @@
 
 **Who do I contact to enable my Linux Foundation-hosted project to use EasyCLA?**
 
-Go to <https://cloud.email.thelinuxfoundation.org/EasyCLA> and submit a form to describe your particular needs, and import your existing CLAs.
+Go to [https://cloud.email.thelinuxfoundation.org/EasyCLA](https://cloud.email.thelinuxfoundation.org/EasyCLA) and submit a form to describe your particular needs, and import your existing CLAs.
 
 **Why does the Linux Foundation ask contributors to some project to sign CLAs?**
 
@@ -31,9 +31,9 @@ And if your company has already signed a Corporate CLA, but you are not yet on y
 Yes, provided that the project has a CLA.
 
 * If you are contributing as an individual—you must sign an Individual CLA for each project to which you contribute.
-
 * If you are contributing as an employee of a company, your company's CCLA signatory must sign a Corporate CLA.
 
 **Do I have to sign a CLA every time I contribute code?**
 
 Signing a CLA for a project covers all code contributions to that project. You may, however, need to sign additional CLAs if you choose to contribute to other projects that require CLAs.
+

@@ -2,23 +2,24 @@
 name: Documentation Update
 about: Suggest an update for the project documentation
 title: ''
-labels: 'documentation'
-assignees: 'swatimayur'
-
+labels: documentation
+assignees: swatimayur
 ---
+
+# docs\_update
 
 **Impacted Docs**
 
 Describe what has changed and which documents need updating
 
-- [/docs/doc-to-update.md](https://github.com/communitybridge/easycla/blob/master/docs/)
+* [/docs/doc-to-update.md](https://github.com/communitybridge/easycla/blob/master/docs/)
 
 **Tasks**
 
-- [ ] Review help documents for impacts beyond what this issue explicitly calls out
-- [ ] Task 2
-- [ ] Task 3
-- [ ] Comment on any additional changes made relating to this issue, provide help doc link(s)
+* [ ] Review help documents for impacts beyond what this issue explicitly calls out
+* [ ] Task 2
+* [ ] Task 3
+* [ ] Comment on any additional changes made relating to this issue, provide help doc link\(s\)
 
 **Verbiage**
 
@@ -38,3 +39,4 @@ The "done" criteria when this feature or problem is resolved. Such as:
 **Images**
 
 Attach any images or screenshots related to this documentation update.
+
