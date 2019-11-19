@@ -12,6 +12,7 @@ This is a new sentence.
    The LF CLA sign-in dialog appears.
 
 3. This is another sentence for test.
+This can be done for testing a document.
 4. Enter your credentials as the project manager and click **LOG IN**.
 
    The CLA Management Console appears and lists your assigned projects from the Linux Foundation, for example:
