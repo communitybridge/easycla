@@ -1,38 +1,36 @@
 # Manage CLA Group Details
+
 As a project manager, you use the CLA Management Console to manage your CLA group details, and view user signatures and companies.
 
 **Do these steps:**
 
 1. [Sign in](sign-in-to-the-cla-management-console.md).
-
-1. Click a **project** of interest.
+2. Click a **project** of interest.
 
    The project page appears.
 
-1. Do any of the following actions:
-
-     * [Change Your Current CLA Type Selections](#change-your-current-cla-type-selections)
-
-     * [View CLA User Signatures](#view-cla-user-signatures)
-
-     * [View the Corporate CLA Companies](#view-the-corporate-cla-companies)
+3. Do any of the following actions:
+   * [Change Your Current CLA Type Selections](manage-cla-group-details.md#change-your-current-cla-type-selections)
+   * [View CLA User Signatures](manage-cla-group-details.md#view-cla-user-signatures)
+   * [View the Corporate CLA Companies](manage-cla-group-details.md#view-the-corporate-cla-companies)
 
 ## Change Your Current CLA Type Selections
+
 You can change your CLA type selections if needed.
 
 **Do these steps:**
 
-1. Click the **gear icon** ![CLA Gear Settings icon](imgs/cla-gear-settings-icon.png) next to the CLA group name.
+1. Click the **gear icon** ![CLA Gear Settings icon](../.gitbook/assets/cla-gear-settings-icon.png) next to the CLA group name.
 
    The CLA Group dialog appears and shows your current CLA type selections.
 
-   ![CLA CLA Group](imgs/cla-cla-group-edit.png)
+   ![CLA CLA Group](../.gitbook/assets/cla-cla-group-edit.png)
 
-1. Change the CLA Group Name, selections, or all, and click **SAVE**.
+2. Change the CLA Group Name, selections, or all, and click **SAVE**.
 
 ## View CLA User Signatures
 
-You can view the full set of signatures and whitelisted contributors who are interacting with a project. A signature list shows details about who signed a CLA for your project. 
+You can view the full set of signatures and whitelisted contributors who are interacting with a project. A signature list shows details about who signed a CLA for your project.
 
 **Do these steps:**
 
@@ -41,24 +39,17 @@ You can view the full set of signatures and whitelisted contributors who are int
    Details for all user signatures appear:
 
    * **Type** shows Company, Individual, or Employee depending on the CLA type that the user signed.
-
    * **Name** identifies the individual or employee who signed the CLA.
-
    * **Company** identifies the company that is associated with a Corporate CLA.
-
    * **GitHub ID** shows the GitHub identity of the individual or employee.
-
    * **LFID** shows the Linux Foundation identity of the individual or employee.
-
    * **Version** identifies the version of the CLA.
-
    * **Date Signed** shows the date that the individual, employee, or CLA signatory signed the CLA.
 
-   ![CLA View Signatures](imgs/cla-view-signatures.png)
+   ![CLA View Signatures](../.gitbook/assets/cla-view-signatures.png)
 
-1. (Optional) Click a column header to sort the column values in ascending or descending order. Use the pagination options to go to subsequent or previous pages.
-
-1. Click **CLOSE**.
+2. \(Optional\) Click a column header to sort the column values in ascending or descending order. Use the pagination options to go to subsequent or previous pages.
+3. Click **CLOSE**.
 
 ## View the Corporate CLA Companies
 
@@ -70,6 +61,7 @@ The Corporate CLA list lets you see what companies in your project have a signed
 
    All companies that have signed the Corporate CLA are listed.
 
-   ![CLA Corporate CLA](imgs/cla-corporate-cla.png)
+   ![CLA Corporate CLA](../.gitbook/assets/cla-corporate-cla.png)
 
-1. Click **CLOSE**.
+2. Click **CLOSE**.
+

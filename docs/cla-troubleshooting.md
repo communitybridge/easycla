@@ -1,8 +1,8 @@
 # CLA Troubleshooting
+
 Troubleshooting helps you solve problematic symptoms in your CLA implementation.
 
-Contributors, refer [/docs/contributors.md](https://github.com/communitybridge/easycla/blob/master/docs/contributors.md)
-If you continue to have issues with EasyCLA, [open a ticket in our queue](https://jira.linuxfoundation.org/servicedesk/customer/portal/4).
+Contributors, refer [/docs/contributors.md](https://github.com/communitybridge/easycla/blob/master/docs/contributors.md) If you continue to have issues with EasyCLA, [open a ticket in our queue](https://jira.linuxfoundation.org/servicedesk/customer/portal/4).
 
 ## CLA Management Console Data Does Not Load
 
@@ -14,15 +14,11 @@ The CLA Management Console data may not load due to a bug in the Auth0 implement
 
    The Chrome developer panel appears.
 
-1. Select the **Application** tab.
-
-1. Select **Clear storage** under Application in the left pane.
-
-1. Select **Clear site data** from the bottom of the developer console.
-
-1. Sign out of the CLA Management Console.
-
-1. Sign back in.
+2. Select the **Application** tab.
+3. Select **Clear storage** under Application in the left pane.
+4. Select **Clear site data** from the bottom of the developer console.
+5. Sign out of the CLA Management Console.
+6. Sign back in.
 
 If the issue persists, try using an incognito browser window.
 
@@ -35,6 +31,7 @@ The CCLA manager does not receive email notifications.
 Go to GitHub and make sure your company has an email address.
 
 ## EasyCLA is Disabled
+
 EasyCLA is disabled so the organizations that I want EasyCLA to monitor are not monitored.
 
 **Solution:**
@@ -44,31 +41,29 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
 **Do these steps:**
 
 1. As the GitHub organization owner or administrator, go to the GitHub repository that you want EasyCLA to monitor.
+2. Click **Settings** from the top menu.
 
-1. Click **Settings** from the top menu.
-
-   ![Settings](imgs/cla-github-repository-settings.png)
+   ![Settings](../.gitbook/assets/cla-github-repository-settings.png)
 
    Settings appear with Options in the left pane.
 
-1. Click **Branches** under Options.
+3. Click **Branches** under Options.
 
-   ![Branches](imgs/cla-github-options.png)
+   ![Branches](../.gitbook/assets/cla-github-options.png)
 
    Branch settings appear.
 
-1. Select **master** for the Default branch. **Edit** or **Add rule** for Branch protection rules of your organization.
+4. Select **master** for the Default branch. **Edit** or **Add rule** for Branch protection rules of your organization.
 
-   ![Branch Protection Rules](imgs/cla-github-branch-add-rule.png)
+   ![Branch Protection Rules](../.gitbook/assets/cla-github-branch-add-rule.png)
 
    Branch protection rule settings appear.
 
-1. Select the following checkboxes in Rule settings and click **Create**.
+5. Select the following checkboxes in Rule settings and click **Create**.
 
    * Require status checks to pass before merging
-
    * Require branches to be up to date before merging
-
    * Include administrators
 
-   ![Rule Settings](imgs/cla-github-branch-protection-rule.png)
+   ![Rule Settings](../.gitbook/assets/cla-github-branch-protection-rule.png)
+

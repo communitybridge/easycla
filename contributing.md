@@ -6,25 +6,25 @@ SPDX-License-Identifier: CC-BY-4.0
 
 All contributions must include a "Signed-off-by" line in the commit message, with the contributors' name and email address.
 
-This indicates that the contribution is made pursuant to the [Developer Certificate of Origin (DCO)](https://developercertificate.org/), a copy of which is included below.
+This indicates that the contribution is made pursuant to the [Developer Certificate of Origin \(DCO\)](https://developercertificate.org/), a copy of which is included below.
 
 ## License information
 
 New **code files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is MIT. This should look like the following:
 
-```
+```text
 // SPDX-License-Identifier: MIT
 ```
 
 New **documentation files** should include a [short-form SPDX ID](https://spdx.org/ids) at the top, indicating the project license for code, which is CC-BY-4.0. This should look like the following:
 
-```
+```text
 SPDX-License-Identifier: CC-BY-4.0
 ```
 
-## Developer Certificate of Origin (DCO)
+## Developer Certificate of Origin \(DCO\)
 
-```
+```text
 Developer Certificate of Origin
 Version 1.1
 
@@ -66,8 +66,9 @@ By making a contribution to this project, I certify that:
 
 ## Maintainers
 
-| Organization         | Name              |
-|:---------------------|:------------------|
-| The Linux Foundation | David Deal        |
-| The Linux Foundation | Fayaz Ghiasy      |
-| The Linux Foundation | Nirav Patel       |
+| Organization | Name |
+| :--- | :--- |
+| The Linux Foundation | David Deal |
+| The Linux Foundation | Fayaz Ghiasy |
+| The Linux Foundation | Nirav Patel |
+

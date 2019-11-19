@@ -1,9 +1,10 @@
-# Contributor Console Video Script (Verbatim)
+# Contributor Console Video Script \(Verbatim\)
+
 EasyCLA is designed to integrate seamlessly with your team's workflow.
 
-Once installed and configured, EasyCLA verifies that each pull request author is authorized under assigned CLA. 
+Once installed and configured, EasyCLA verifies that each pull request author is authorized under assigned CLA.
 
-Make a pull request within an EasyCLA-configured repository. 
+Make a pull request within an EasyCLA-configured repository.
 
 If you are already authorized under a signed CLA, then you'll see the badge "CLA Signed" associated with your pull request.
 
@@ -13,13 +14,13 @@ Click on the link.
 
 Authorize the app.
 
-If you're contributing on your own, rather than on behalf of a company, jump to the timestamp (2:00) displayed on the screen.
+If you're contributing on your own, rather than on behalf of a company, jump to the timestamp \(2:00\) displayed on the screen.
 
 If you're contributing on behalf of a company, click the "Corporate" block.
 
 Select your company.
 
-Confirm your affiliation with the company. 
+Confirm your affiliation with the company.
 
 In some instances, projects will require you to also sign an ICLA on top of the CCLA.
 
@@ -40,3 +41,4 @@ Press Continue.
 Click "Finish" Press reload if necessary.
 
 Now, you're done.
+

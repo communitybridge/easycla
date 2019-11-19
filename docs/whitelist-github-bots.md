@@ -4,6 +4,7 @@ Each project will need to whitelist any bots that open pull requests on GitHub. 
 
 Once you have completed the steps to add the bot to your whitelist, the bot should appear in your Employee Acknowledgments
 
- ![Edit GitHub Bot Whitelist](imgs/cla_add_github.png)
- 
- Refer [GitHub Bot Whitelist](whitelist-contributors.md)
+![Edit GitHub Bot Whitelist](../.gitbook/assets/cla_add_github.png)
+
+Refer [GitHub Bot Whitelist](whitelist-contributors.md)
+
