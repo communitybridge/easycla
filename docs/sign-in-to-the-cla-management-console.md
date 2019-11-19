@@ -11,13 +11,14 @@ This is a new sentence.
 
    The LF CLA sign-in dialog appears.
 
-3. Enter your credentials as the project manager and click **LOG IN**.
+3. This is another sentence for test.
+4. Enter your credentials as the project manager and click **LOG IN**.
 
    The CLA Management Console appears and lists your assigned projects from the Linux Foundation, for example:
 
    ![CLA Management All Projects](../.gitbook/assets/cla-management-all-projects.png)
 
-4. Click a **project name** of interest.
+5. Click a **project name** of interest.
 
    For each project, the CLA Management Console provides the following information:
 
