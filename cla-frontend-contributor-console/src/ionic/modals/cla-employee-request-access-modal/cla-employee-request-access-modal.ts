@@ -24,6 +24,7 @@ export class ClaEmployeeRequestAccessModal {
   authenticated: boolean;
   cclaSignature: any;
   managers: any;
+  formErrors: any[]
 
   userEmails: Array<string>;
 
@@ -45,9 +46,7 @@ export class ClaEmployeeRequestAccessModal {
     private claService: ClaService,
   ) {
     this.getDefaults();
-    this.loading = {
-      signatures: true,
-    };
+    this.loading = true;
     this.project = {};
     this.company = {};
 
@@ -57,141 +56,196 @@ export class ClaEmployeeRequestAccessModal {
     this.companyId = navParams.get('companyId');
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
-      email: [''], // Validators.compose([Validators.required, EmailValidator.isValid])
-      manager: [''], // Validators.compose([Validators.required])
-      message: [''], // Validators.compose([Validators.required])
-      adminname: [''],
-      managerOptions: [''],
-      adminemail: [''], // Validators.compose([Validators.required, EmailValidator.isValid])
+      user_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      message: [''],
+      recipient_name: [''],
+      recipient_email: [''],
+      manager: [''],
+      managerOptions: ['', Validators.compose([Validators.required])],
     });
     this.managers = [];
-}
-
-saveManagerOption() {
-  const option = this.form.value.managerOptions;
-  if (option === 'select manager') {
-    this.showManagerSelectOption = true;
-    this.showManagerEnterOption = false;
+    this.formErrors = [];
   }
-  else if (option === 'enter manager') {
-    this.showManagerSelectOption = false;
-    this.showManagerEnterOption = true;
-  }
-}
 
-getDefaults() {
-  this.userEmails = [];
-}
-
-ngOnInit() {
-  this.getUser(this.userId, this.authenticated).subscribe(user => {
-    if (user) {
-      this.userEmails = user.user_emails || [];
-      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-        this.userEmails.push(user.lf_email)
-      }
+  saveManagerOption() {
+    const option = this.form.value.managerOptions;
+    if (option === 'select manager') {
+      this.showManagerSelectOption = true;
+      this.showManagerEnterOption = false;
+      this.resetFormValues('recipient_name');
+      this.resetFormValues('recipient_email');
     }
-  });
-  this.getProject(this.projectId);
-  this.getCompany(this.companyId);
-  this.getProjectSignatures(this.projectId, this.companyId);
-}
-
-getUser(userId: string, authenticated: boolean) {
-  if (authenticated) {
-    // Gerrit Users
-    return this.claService.getUserWithAuthToken(userId);
-  } else {
-    // Github Users
-    return this.claService.getUser(userId);
+    else if (option === 'enter manager') {
+      this.showManagerSelectOption = false;
+      this.showManagerEnterOption = true;
+      this.resetFormValues('manager');
+    }
   }
-}
 
-getProject(projectId: string) {
-  this.claService.getProject(projectId).subscribe(response => {
-    this.project = response;
-  });
-}
+  resetFormValues(value) {
+    return this.form.controls[value].reset();
+  }
 
-getCompany(companyId: string) {
-  this.claService.getCompany(companyId).subscribe(response => {
-    this.company = response;
-  });
-}
 
-getProjectSignatures(projectId: string, companyId: string) {
-  // Get CCLA Company Signatures - should just be one
-  this.loading.signatures = true;
-  this.claService.getCompanyProjectSignatures(companyId, projectId)
-    .subscribe(response => {
-      this.loading.signatures = false;
-      console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-      console.log(response);
-      if (response.signatures) {
-        let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
-        console.log('CCLA Signatures for project: ' + cclaSignatures.length);
-        if (cclaSignatures.length) {
-          console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-          console.log(cclaSignatures);
-          this.cclaSignature = cclaSignatures[0];
-          console.log(this.cclaSignature);
-          console.log(this.cclaSignature.signatureACL);
-          if (this.cclaSignature.signatureACL != null) {
-            for (let manager of this.cclaSignature.signatureACL) {
-              this.managers.push({
-                userID: manager.userID,
-                username: manager.username,
-                lfEmail: manager.lfEmail,
-              });
+  getCLAManagerDetails(managerId) {
+    const manager = this.managers.filter((manager) => {
+      return manager.userID = managerId
+    });
+    return manager;
+  }
+
+  getDefaults() {
+    this.userEmails = [];
+  }
+
+  ngOnInit() {
+    this.getUser(this.userId, this.authenticated).subscribe(user => {
+      if (user) {
+        this.userEmails = user.user_emails || [];
+        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+          this.userEmails.push(user.lf_email)
+        }
+      }
+    });
+    this.getProject(this.projectId);
+    this.getCompany(this.companyId);
+    this.getProjectSignatures(this.projectId, this.companyId);
+  }
+
+  getUser(userId: string, authenticated: boolean) {
+    if (authenticated) {
+      // Gerrit Users
+      return this.claService.getUserWithAuthToken(userId);
+    } else {
+      // Github Users
+      return this.claService.getUser(userId);
+    }
+  }
+
+  getProject(projectId: string) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
+  }
+
+  getCompany(companyId: string) {
+    this.claService.getCompany(companyId).subscribe(response => {
+      this.company = response;
+    });
+  }
+
+  insertAndSortManagersList(manager) {
+    this.managers.push(manager)
+    this.managers.sort((first, second) => {
+      return first.username.toLowerCase() - second.username.toLowerCase();
+    });
+  }
+
+  getProjectSignatures(projectId: string, companyId: string) {
+    // Get CCLA Company Signatures - should just be one
+    this.loading = true;
+    this.claService.getCompanyProjectSignatures(companyId, projectId)
+      .subscribe(response => {
+        this.loading = false;
+        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
+        console.log(response);
+        if (response.signatures) {
+          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
+          if (cclaSignatures.length) {
+            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
+            console.log(cclaSignatures);
+            this.cclaSignature = cclaSignatures[0];
+            console.log(this.cclaSignature);
+            console.log(this.cclaSignature.signatureACL);
+            if (this.cclaSignature.signatureACL != null) {
+              for (let manager of this.cclaSignature.signatureACL) {
+                this.insertAndSortManagersList({
+                  userID: manager.userID,
+                  username: manager.username,
+                  lfEmail: manager.lfEmail,
+                });
+              }
             }
           }
         }
-      }
-    },
-      exception => {
-        this.loading.signatures = false;
-        console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
-          companyId + ' and project ID: ' + projectId);
-        console.log(exception);
-      });
-}
-
-// ContactUpdateModal modal dismiss
-dismiss() {
-  this.viewCtrl.dismiss();
-}
-
-submit() {
-  this.submitAttempt = true;
-  this.currentlySubmitting = true;
-
-  if (!this.form.valid) {
-    this.currentlySubmitting = false;
-    // prevent submit
-    return;
+      },
+        exception => {
+          this.loading = false;
+          console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
+            companyId + ' and project ID: ' + projectId);
+          console.log(exception);
+        });
   }
-  
-  let message = {
-    user_email: this.form.value.email,
-    message: this.form.value.message,
-    project_id: this.projectId,
-  };
-  
-  // this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, message).subscribe(response => {
-  //   this.emailSent();
-  // });
-}
 
-emailSent() {
-  let message = this.authenticated ?
-    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process' :
-    'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.'
-  let alert = this.alertCtrl.create({
-    title: 'E-Mail Successfully Sent!',
-    subTitle: message,
-    buttons: ['Dismiss']
-  });
-  alert.onDidDismiss(() => this.dismiss());
-  alert.present();
-}
+  // ContactUpdateModal modal dismiss
+  dismiss() {
+    this.viewCtrl.dismiss();
+  }
+
+  submit() {
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+    this.formErrors = [];
+    let data = {
+      company_id: this.companyId,
+      user_id: this.userId,
+      user_email: this.form.value.user_email,
+      project_id: this.projectId,
+      message: this.form.value.message,
+      recipient_name: this.form.value.recipient_name || this.getCLAManagerDetails(this.form.value.message)[0].username,
+      recipient_email: this.form.value.recipient_email || this.getCLAManagerDetails(this.form.value.message)[0].lfEmail,
+    }
+
+    console.log(data)
+
+    if (!this.form.valid) {
+      this.getFormValidationErrors();
+      this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, data).subscribe(response => {
+      this.loading = true;
+      this.emailSent();
+    });
+  }
+
+  emailSent() {
+    this.loading = false;
+    let message = this.authenticated ?
+      'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process' :
+      'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.'
+    let alert = this.alertCtrl.create({
+      title: 'E-Mail Successfully Sent!',
+      subTitle: message,
+      buttons: ['Dismiss']
+    });
+    alert.onDidDismiss(() => this.dismiss());
+    alert.present();
+  }
+
+  getFormValidationErrors() {
+    let message;
+    Object.keys(this.form.controls).forEach(key => {
+      const controlErrors = this.form.get(key).errors;
+      if (controlErrors != null) {
+        Object.keys(controlErrors).forEach(keyError => {
+          switch (key) {
+            case 'managerOptions':
+              message = `*Selecting an Option for Entering a CLA Manager is ${keyError}`;
+              break;
+            case 'user_email':
+              message = `*Email Authorize Field is ${keyError}`
+              break;
+            default:
+              message = `Check Fields for errors`
+          }
+          this.formErrors.push({
+            message
+          });
+        });
+      }
+    });
+  }
 }
