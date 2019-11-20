@@ -271,7 +271,7 @@ export class ClaService {
   /**
    * /user/{user_id}/request-company-whitelist/{company_id}
    */
-  postUserMessageToCompanyManager(userId, companyId, message) {
+  postUserMessageToCompanyManager(userId, companyId, data) {
     /*
       message: {
         'message': 'custom message to manager'
@@ -279,11 +279,11 @@ export class ClaService {
       */
     if (this.localTesting) {
       return this.http
-        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
+        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, data)
         .map(res => res.json());
     } else {
       return this.http
-        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, message)
+        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, data)
         .map(res => res.json());
     }
   }
