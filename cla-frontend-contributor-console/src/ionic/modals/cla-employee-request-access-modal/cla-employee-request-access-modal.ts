@@ -94,45 +94,40 @@ export class ClaEmployeeRequestAccessModal {
     return manager;
   }
 
-  getDefaults() {
-    this.userEmails = [];
-  }
 
-  ngOnInit() {
-    this.getUser(this.userId, this.authenticated).subscribe(user => {
-      if (user) {
-        this.userEmails = user.user_emails || [];
-        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-          this.userEmails.push(user.lf_email)
-        }
+getDefaults() {
+  this.userEmails = [];
+}
+
+ngOnInit() {
+  this.getUser(this.userId, this.authenticated).subscribe(user => {
+    if (user) {
+      this.userEmails = user.user_emails || [];
+      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+        this.userEmails.push(user.lf_email)
       }
-    });
-    this.getProject(this.projectId);
-    this.getCompany(this.companyId);
-    this.getProjectSignatures(this.projectId, this.companyId);
-  }
-
-  getUser(userId: string, authenticated: boolean) {
-    if (authenticated) {
-      // Gerrit Users
-      return this.claService.getUserWithAuthToken(userId);
-    } else {
-      // Github Users
-      return this.claService.getUser(userId);
     }
-  }
+  });
+  this.getProject(this.projectId);
+  // this.getCompany(this.companyId);
+  this.getProjectSignatures(this.projectId, this.companyId);
+}
 
-  getProject(projectId: string) {
-    this.claService.getProject(projectId).subscribe(response => {
-      this.project = response;
-    });
+getUser(userId: string, authenticated: boolean) {
+  if (authenticated) {
+    // Gerrit Users
+    return this.claService.getUserWithAuthToken(userId);
+  } else {
+    // Github Users
+    return this.claService.getUser(userId);
   }
+}
 
-  getCompany(companyId: string) {
-    this.claService.getCompany(companyId).subscribe(response => {
-      this.company = response;
-    });
-  }
+getProject(projectId: string) {
+  this.claService.getProject(projectId).subscribe(response => {
+    this.project = response;
+  });
+}
 
   insertAndSortManagersList(manager) {
     this.managers.push(manager)
@@ -178,10 +173,10 @@ export class ClaEmployeeRequestAccessModal {
         });
   }
 
-  // ContactUpdateModal modal dismiss
-  dismiss() {
-    this.viewCtrl.dismiss();
-  }
+// ContactUpdateModal modal dismiss
+dismiss() {
+  this.viewCtrl.dismiss();
+}
 
   submit() {
     this.submitAttempt = true;
@@ -193,11 +188,9 @@ export class ClaEmployeeRequestAccessModal {
       user_email: this.form.value.user_email,
       project_id: this.projectId,
       message: this.form.value.message,
-      recipient_name: this.form.value.recipient_name || this.getCLAManagerDetails(this.form.value.message)[0].username,
-      recipient_email: this.form.value.recipient_email || this.getCLAManagerDetails(this.form.value.message)[0].lfEmail,
+      recipient_name: this.form.value.recipient_name || this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].username : undefined,
+      recipient_email: this.form.value.recipient_email ||this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail : undefined,
     }
-
-    console.log(data)
 
     if (!this.form.valid) {
       this.getFormValidationErrors();
