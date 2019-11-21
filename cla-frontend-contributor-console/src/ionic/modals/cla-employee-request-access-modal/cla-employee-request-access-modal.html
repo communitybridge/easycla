@@ -36,14 +36,14 @@
         <ion-col col-12>
           <ion-list lines="none" radio-group (ionChange)="saveManagerOption();" formControlName="managerOptions">
             <ion-list-header lines="none">
-              <ion-label color="danger">Please Check Option first for entering CLA Manager*</ion-label>
+              <ion-label color="danger">Please select how you want to contact CLA Manager*</ion-label>
             </ion-list-header>
             <ion-item lines="none">
               <ion-label>Select a CLA Manager from a list of options</ion-label>
               <ion-radio value="select manager"></ion-radio>
             </ion-item>
             <ion-item lines="none">
-              <ion-label>Enter CLA Manger Directly</ion-label>
+              <ion-label>Enter CLA Manager Directly</ion-label>
               <ion-radio value="enter manager"></ion-radio>
             </ion-item>
             <ion-item lines="none" *ngIf="!form.controls.manager.valid && (form.controls.manager.touched || submitAttempt)" no-lines>
@@ -56,12 +56,12 @@
 
       <ion-row *ngIf="showManagerSelectOption && managers.length > 0">
         <ion-list-header lines="none">
-          <b>Select a CLA Manager for {{ company.company_name }}</b>
+          <b>Select CLA Manager for {{ company.company_name }}</b>
         </ion-list-header>
         <ion-col col-12>
           <ion-list>
             <ion-item lines="none">
-              <ion-label stacked>Select one of the existing the CLA Managers associated with {{ company.company_name }}.
+              <ion-label stacked>Select one of the existing CLA Managers associated with {{ company.company_name }}.
               </ion-label>
               <ion-select formControlName="manager">
                 <ion-option *ngFor="let manager of managers" value="{{ manager.userID }}">{{ manager.username }} / {{ manager.lfEmail }}</ion-option>

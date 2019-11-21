@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
-import { ClaService } from '../../services/cla.service';
+import {ChangeDetectorRef, Component} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {EmailValidator} from '../../validators/email';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -74,8 +74,7 @@ export class ClaEmployeeRequestAccessModal {
       this.showManagerEnterOption = false;
       this.resetFormValues('recipient_name');
       this.resetFormValues('recipient_email');
-    }
-    else if (option === 'enter manager') {
+    } else if (option === 'enter manager') {
       this.showManagerSelectOption = false;
       this.showManagerEnterOption = true;
       this.resetFormValues('manager');
@@ -86,7 +85,6 @@ export class ClaEmployeeRequestAccessModal {
     return this.form.controls[value].reset();
   }
 
-
   getCLAManagerDetails(managerId) {
     const manager = this.managers.filter((manager) => {
       return manager.userID = managerId
@@ -95,42 +93,48 @@ export class ClaEmployeeRequestAccessModal {
   }
 
 
-getDefaults() {
-  this.userEmails = [];
-}
-
-ngOnInit() {
-  this.getUser(this.userId, this.authenticated).subscribe(user => {
-    if (user) {
-      this.userEmails = user.user_emails || [];
-      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-        this.userEmails.push(user.lf_email)
-      }
-    }
-  });
-  this.getProject(this.projectId);
-  // this.getCompany(this.companyId);
-  this.getProjectSignatures(this.projectId, this.companyId);
-}
-
-getUser(userId: string, authenticated: boolean) {
-  if (authenticated) {
-    // Gerrit Users
-    return this.claService.getUserWithAuthToken(userId);
-  } else {
-    // Github Users
-    return this.claService.getUser(userId);
+  getDefaults() {
+    this.userEmails = [];
   }
-}
 
-getProject(projectId: string) {
-  this.claService.getProject(projectId).subscribe(response => {
-    this.project = response;
-  });
-}
+  ngOnInit() {
+    this.getUser(this.userId, this.authenticated).subscribe(user => {
+      if (user) {
+        this.userEmails = user.user_emails || [];
+        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+          this.userEmails.push(user.lf_email)
+        }
+      }
+    });
+    this.getProject(this.projectId);
+    this.getCompany(this.companyId);
+    this.getProjectSignatures(this.projectId, this.companyId);
+  }
+
+  getUser(userId: string, authenticated: boolean) {
+    if (authenticated) {
+      // Gerrit Users
+      return this.claService.getUserWithAuthToken(userId);
+    } else {
+      // Github Users
+      return this.claService.getUser(userId);
+    }
+  }
+
+  getProject(projectId: string) {
+    this.claService.getProject(projectId).subscribe(response => {
+      this.project = response;
+    });
+  }
+
+  getCompany(companyId: string) {
+    this.claService.getCompany(companyId).subscribe(response => {
+      this.company = response;
+    });
+  }
 
   insertAndSortManagersList(manager) {
-    this.managers.push(manager)
+    this.managers.push(manager);
     this.managers.sort((first, second) => {
       return first.username.toLowerCase() - second.username.toLowerCase();
     });
@@ -141,30 +145,30 @@ getProject(projectId: string) {
     this.loading = true;
     this.claService.getCompanyProjectSignatures(companyId, projectId)
       .subscribe(response => {
-        this.loading = false;
-        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-        console.log(response);
-        if (response.signatures) {
-          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
-          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
-          if (cclaSignatures.length) {
-            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-            console.log(cclaSignatures);
-            this.cclaSignature = cclaSignatures[0];
-            console.log(this.cclaSignature);
-            console.log(this.cclaSignature.signatureACL);
-            if (this.cclaSignature.signatureACL != null) {
-              for (let manager of this.cclaSignature.signatureACL) {
-                this.insertAndSortManagersList({
-                  userID: manager.userID,
-                  username: manager.username,
-                  lfEmail: manager.lfEmail,
-                });
+          this.loading = false;
+          console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
+          console.log(response);
+          if (response.signatures) {
+            let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+            console.log('CCLA Signatures for project: ' + cclaSignatures.length);
+            if (cclaSignatures.length) {
+              console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
+              console.log(cclaSignatures);
+              this.cclaSignature = cclaSignatures[0];
+              console.log(this.cclaSignature);
+              console.log(this.cclaSignature.signatureACL);
+              if (this.cclaSignature.signatureACL != null) {
+                for (let manager of this.cclaSignature.signatureACL) {
+                  this.insertAndSortManagersList({
+                    userID: manager.userID,
+                    username: manager.username,
+                    lfEmail: manager.lfEmail,
+                  });
+                }
               }
             }
           }
-        }
-      },
+        },
         exception => {
           this.loading = false;
           console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
@@ -174,9 +178,9 @@ getProject(projectId: string) {
   }
 
 // ContactUpdateModal modal dismiss
-dismiss() {
-  this.viewCtrl.dismiss();
-}
+  dismiss() {
+    this.viewCtrl.dismiss();
+  }
 
   submit() {
     this.submitAttempt = true;
@@ -189,8 +193,8 @@ dismiss() {
       project_id: this.projectId,
       message: this.form.value.message,
       recipient_name: this.form.value.recipient_name || this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].username : undefined,
-      recipient_email: this.form.value.recipient_email ||this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail : undefined,
-    }
+      recipient_email: this.form.value.recipient_email || this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail : undefined,
+    };
 
     if (!this.form.valid) {
       this.getFormValidationErrors();
@@ -229,7 +233,7 @@ dismiss() {
               message = `*Selecting an Option for Entering a CLA Manager is ${keyError}`;
               break;
             case 'user_email':
-              message = `*Email Authorize Field is ${keyError}`
+              message = `*Email Authorize Field is ${keyError}`;
               break;
             default:
               message = `Check Fields for errors`
