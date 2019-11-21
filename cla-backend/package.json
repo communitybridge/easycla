@@ -24,6 +24,8 @@
   "dependencies": {
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
-    "serverless": "^1.54.0"
+    "serverless": "^1.54.0",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-plugin-tracing": "^2.0.0"
   }
 }
