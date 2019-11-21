@@ -1877,17 +1877,17 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
-        cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
-                      ' project_id: {}, user_ccla_company_id: {}'
-                      ' signature_signed: {}, signature_approved: {}'.
-                      format(reference_id, reference_type, project_id, user_ccla_company_id, signature_signed,
-                             signature_approved))
+        #cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
+        #              ' project_id: {}, user_ccla_company_id: {}'
+        #              ' signature_signed: {}, signature_approved: {}'.
+        #              format(reference_id, reference_type, project_id, user_ccla_company_id, signature_signed,
+        #                     signature_approved))
 
-        cla.log.debug('Signatures.get_signatures_by_reference() - '
-                      'performing signature_reference_id query using: {}'.format(reference_id))
+        #cla.log.debug('Signatures.get_signatures_by_reference() - '
+        #              'performing signature_reference_id query using: {}'.format(reference_id))
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
-        cla.log.debug('Signatures.get_signatures_by_reference() - generator.last_evaluated_key: {}'.
-                      format(signature_generator.last_evaluated_key))
+        #cla.log.debug('Signatures.get_signatures_by_reference() - generator.last_evaluated_key: {}'.
+        #              format(signature_generator.last_evaluated_key))
 
         signatures = []
         for signature_model in signature_generator:
@@ -1931,8 +1931,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
-            cla.log.debug('Signatures.get_signatures_by_reference() - signature match - '
-                          'adding signature to signature list: {}'.format(signature))
+            #cla.log.debug('Signatures.get_signatures_by_reference() - signature match - '
+            #              'adding signature to signature list: {}'.format(signature))
         return signatures
 
     def get_signatures_by_project(self, project_id, signature_signed=None,

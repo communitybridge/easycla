@@ -103,7 +103,7 @@ def get_database_models(conf=None):
         raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
 
 
-def get_user_instance(conf=None):
+def get_user_instance(conf=None) -> User:
     """
     Helper function to get a database User model instance based on CLA configuration.
 
@@ -115,7 +115,7 @@ def get_user_instance(conf=None):
     return get_database_models(conf)['User']()
 
 
-def get_signature_instance(conf=None):
+def get_signature_instance(conf=None) -> Signature:
     """
     Helper function to get a database Signature model instance based on CLA configuration.
 
@@ -163,7 +163,7 @@ def get_gerrit_instance(conf=None):
     return get_database_models(conf)['Gerrit']()
 
 
-def get_company_instance(conf=None):
+def get_company_instance(conf=None) -> Company:
     """
     Helper function to get a database company model instance based on CLA configuration.
 
@@ -175,7 +175,7 @@ def get_company_instance(conf=None):
     return get_database_models(conf)['Company']()
 
 
-def get_project_instance(conf=None):
+def get_project_instance(conf=None) -> Project:
     """
     Helper function to get a database Project model instance based on CLA configuration.
 
