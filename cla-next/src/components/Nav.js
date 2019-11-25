@@ -76,7 +76,7 @@ const Nav = () => (
           <div className="header-right-column">
           <nav className="d-none d-lg-flex">
               <button className="get-help-button">
-                <Link href="https://docs.linuxfoundation.org/display/DOCS/CommunityBridge+EasyCLA">
+                <Link href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">
                   <a> <i className='fa fa-question-circle'></i>Get Help</a>
                 </Link>
               </button>
