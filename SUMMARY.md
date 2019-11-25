@@ -1,4 +1,7 @@
 # Table of contents
 
-* [Initial page](README.md)
-
+* [Introduction](README.md)
+* [Getting Started](getting-started.md)
+  * [EasyCLA FAQs](easycla-faqs.md)
+  * [Get Access to EasyCLA](get-access-to-easycla.md)
+  
