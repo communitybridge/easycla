@@ -1,10 +1,13 @@
-# Introduction
+---
+description: >-
+  EasyCLA helps maintainers of open source projects streamline their workflows
+  and reduce the hassle of managing Contributor License Agreements (CLAs) and
+  authorizing contributors. By automating many of
+---
 
-CommunityBridge is a platform created by the Linux Foundation to empower developers — and the individuals and companies who support them — to advance sustainability, security, and diversity in open source technology.
+# Introduction to EasyCLA
 
-
-
-### Support or Contact
+## Support or Contact
 
 Having trouble with this documentation? Help us improve by [creating an issue](https://github.com/communitybridge/communitybridge.github.io/issues).
 
