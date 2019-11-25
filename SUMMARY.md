@@ -13,7 +13,7 @@
    * [View Current and Previous CLA PDFs](docs/view-current-and-previous-cla-pdfs.md)
    * [Manage CLA Group Details](docs/manage-cla-group-details.md)
    * [Add GitHub Repositories to CLA Monitoring or Remove Them From CLA Monitoring](docs/add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring.md)
-   * [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](docs/Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring)
+   * [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](docs/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md)
    * [Uninstall the EasyCLA Application](docs/uninstall-the-easycla-application.md)
   * [Contributors](docs/contributors.md)
    * [Contribute to a GitHub Company Project](docs/contribute-to-a-github-company-project.md)
