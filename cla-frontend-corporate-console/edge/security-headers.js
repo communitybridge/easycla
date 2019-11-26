@@ -42,7 +42,12 @@ function generateCSP(env, isDevServer) {
     let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
 
     if (isDevServer) {
-        connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
+        connectSources = [...connectSources,
+            'http://localhost:8100/',
+            'http://localhost:8101/',
+            'https://localhost:8100/sockjs-node/',
+            'wss://localhost:8100/sockjs-node/',
+        ];
         // The webpack dev server uses system js which violates the unsafe-eval exception. This doesn't happen in the
         // production AOT build.
         scriptSources = [...scriptSources, UNSAFE_EVAL];
