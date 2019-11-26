@@ -6,10 +6,6 @@ This repository contains both the backend and front-end UI for supporting and ma
 
 This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](./#getting-started-guide).
 
-## Getting Started Guide
-
-See the [Getting Started Guide](https://github.com/swatimayur/easycla/tree/8b3d875be4f8c3afb4b0b0d5b3ae73fa519bf65b/docs/getting-started.md) to get started with EasyCLA.
-
 ## Third-party Services
 
 Besides integration with Auth0 and Salesforce, the CLA system has the following third party services:
@@ -34,10 +30,6 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 * `cla-frontend-project-console` for LinuxFoundation director/admin/user to manage project CLA
 * `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA whitelist
 * `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
-
-## Architecture
-
-See the [docs/ARCHITECTURE.md](https://github.com/swatimayur/easycla/tree/8b3d875be4f8c3afb4b0b0d5b3ae73fa519bf65b/docs/architecture.md) document.
 
 ## License
 
