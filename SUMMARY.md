@@ -9,7 +9,7 @@
     * [Sign In to the CLA Management Console](getting-started/project-managers/sign-in-to-the-cla-management-console.md)
     * [Install the EasyCLA Application](getting-started/project-managers/install-the-easycla-application.md)
     * [Add a CLA Group](getting-started/project-managers/add-a-cla-group.md)
-    * [Add Contributor License Agreements](getting-started/project-managers/add-contributor-license-agreements.md)
+    * [Add Contributor License Agreements](docs/add-contributor-license-agreements.md)
     * [View Current and Previous CLA PDFs](getting-started/project-managers/view-current-and-previous-cla-pdfs.md)
     * [Manage CLA Group Details](getting-started/project-managers/manage-cla-group-details.md)
     * [Add GitHub Repositories to CLA Monitoring or Remove Them From CLA Monitoring](getting-started/project-managers/add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring.md)
