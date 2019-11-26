@@ -23,13 +23,13 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
 
 3. Click **Branches** under Options.
 
-   ![Branches](../.gitbook/assets/cla-github-options.png)
+   ![Branches](/docs/imgs/cla-github-options.png)
 
    Branch settings appear.
 
 4. Select **master** for the Default branch. **Edit** or **Add rule** for Branch protection rules of your organization.
 
-   ![Branch Protection Rules](../.gitbook/assets/cla-github-branch-add-rule.png)
+   ![Branch Protection Rules](/docs/imgs/cla-github-branch-add-rule.png)
 
    Branch protection rule settings appear.
 
@@ -39,5 +39,5 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
    * Require branches to be up to date before merging
    * Include administrators
 
-   ![Rule Settings](../.gitbook/assets/cla-github-branch-protection-rule.png)
+   ![Rule Settings](/docs/imgs/cla-github-branch-protection-rule.png)
 
