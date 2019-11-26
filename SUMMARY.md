@@ -29,7 +29,7 @@
     * [View Employee Acknowledgements](getting-started/ccla-managers-and-ccla-signatories/view-employee-acknowledgements.md)
     * [Edit the Company Name and Manager Details](getting-started/ccla-managers-and-ccla-signatories/edit-the-company-name-and-manager-details.md)
   * [CLA Troubleshooting](getting-started/cla-troubleshooting/README.md)
-    * [\[CLA Management Console Data Does Not Load\]\(docs/](getting-started/cla-troubleshooting/cla-management-console-data-does-not-load-docs.md)
+    * [CLA Management Console Data Does Not Load](getting-started/cla-troubleshooting/cla-management-console-data-does-not-load-docs.md)
     * [\[CLA Manager Does Not Receive Email Notifications\]](getting-started/cla-troubleshooting/cla-manager-does-not-receive-email-notifications.md)
     * [\[EasyCLA is Disabled\]](getting-started/cla-troubleshooting/easycla-is-disabled.md)
   * [Sign Out of EasyCLA](getting-started/sign-out-of-easycla.md)

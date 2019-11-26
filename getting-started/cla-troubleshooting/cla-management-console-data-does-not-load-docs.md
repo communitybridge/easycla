@@ -4,7 +4,7 @@ description: >-
   implementation.
 ---
 
-# \[CLA Management Console Data Does Not Load\]\(docs/
+# CLA Management Console Data Does Not Load
 
 **Solution:**
 
