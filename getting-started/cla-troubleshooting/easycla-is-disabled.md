@@ -17,7 +17,7 @@ This is a known issue. GitHub is set up to permit administrators and organizatio
 1. As the GitHub organization owner or administrator, go to the GitHub repository that you want EasyCLA to monitor.
 2. Click **Settings** from the top menu.
 
-   ![Settings](docs/imgs/cla-github-repository-settings.png)
+   ![Settings](/docs/imgs/cla-github-repository-settings.png)
 
    Settings appear with Options in the left pane.
 
