@@ -2,7 +2,7 @@
 description: The CLA manager is not receiving email notifications.
 ---
 
-# \[CLA Manager Does Not Receive Email Notifications\]
+# CLA Manager Does Not Receive Email Notifications
 
 **Solution:**
 
