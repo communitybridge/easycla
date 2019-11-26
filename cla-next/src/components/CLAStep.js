@@ -67,8 +67,8 @@ class CLAStep extends Component {
                   <Link href={this.setLink('proj-console-link')}>
                     <a><Button variant="primary"> Sign In as Project Manager</Button></a>
                   </Link>
-                  <Link href="https://cloud.email.thelinuxfoundation.org/EasyCLA">
-                    <a><Button variant="success"> request to add project</Button></a>
+                  <Link href="https://docs.google.com/forms/d/e/1FAIpQLSdnTk_9xjk7YoiX_FcPEqsFytsLMcT8OzYUbK6TsYopR1XhdA/viewform">
+                    <a target="_blank"><Button variant="success"> request to add project</Button></a>
                   </Link>
                 </div>
               </div>
