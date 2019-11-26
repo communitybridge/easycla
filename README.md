@@ -1,5 +1,4 @@
-# Easy Contributor License Agreement \(CLA\) Project
-
+# Introduction to EasyCLA
 
 The Contributor License Agreement \(CLA\) service of the Linux Foundation lets project contributors read, sign, and submit contributor license agreements easily.
 
@@ -9,7 +8,7 @@ This platform supports both GitHub and Gerrit source code repositories. Addition
 
 ## Getting Started Guide
 
-See the [Getting Started Guide](docs/getting-started.md) to get started with EasyCLA.
+See the [Getting Started Guide](https://github.com/swatimayur/easycla/tree/8b3d875be4f8c3afb4b0b0d5b3ae73fa519bf65b/docs/getting-started.md) to get started with EasyCLA.
 
 ## Third-party Services
 
@@ -38,7 +37,7 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 
 ## Architecture
 
-See the [docs/ARCHITECTURE.md](docs/architecture.md) document.
+See the [docs/ARCHITECTURE.md](https://github.com/swatimayur/easycla/tree/8b3d875be4f8c3afb4b0b0d5b3ae73fa519bf65b/docs/architecture.md) document.
 
 ## License
 
