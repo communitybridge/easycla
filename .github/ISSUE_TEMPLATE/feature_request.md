@@ -2,27 +2,39 @@
 name: Feature Request
 about: Suggest an idea for this project
 title: ''
-labels: ''
+labels: 'enhancement'
 assignees: ''
 ---
 
-# feature\_request
-
-**Summary**
+## Summary
 
 Describe the feature - a clear and concise description of what the feature is.
 
-**Background**
+## Background
 
-Provide context to the issue - provide steps to indicate how this feature would be realized, such as: 1. Go to '...' 2. Click on '....' 3. Scroll down to '....' 4. See error
+Provide context to the feature request - provide steps to indicate how this feature would be realized, such as:
 
-**User Story**
+1. Go to '...'
+1. Click on '....'
+1. Scroll down to '....'
+1. See updated feature...
 
-A description from a user's perspective - e.g.: As a project manager I want to see the list of project sorted alphabetically when I select this button...
+## User Story
 
-**Acceptance Criteria**
+A description from a user's perspective.
 
-The "done" criteria when this feature or problem is resolved. Such as: 1. Unit Tests added and running in CI 2. Functional Tests updated to cover feature, if applicable 2. Demonstrate the set of capabilities to the product team while the code is running in the STAGING environment.
+For example:
 
-**References** \(Optional\) Provide any code or specification references that would be helpful for the developer implementing this feature.
+- As a project manager, I want to see the list of project sorted alphabetically when I select this button...
 
+## Acceptance Criteria
+
+The "done" criteria when this feature or problem is resolved. Such as:
+
+1. Unit Tests added and running in CI
+1. Functional Tests updated to cover feature, if applicable
+1. Demonstrate the set of capabilities to the product team while the code is running in the STAGING environment.
+
+## References
+
+\(Optional\) Provide any code or specification references that would be helpful for the developer implementing this feature.
