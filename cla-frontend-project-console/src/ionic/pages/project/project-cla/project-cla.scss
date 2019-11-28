@@ -5,7 +5,7 @@ body {
   -ms-user-select: text;
   user-select: text;
   }
-  
+
 .button-md-secondary {
   box-shadow: none;
 }
@@ -43,7 +43,7 @@ project-cla {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-  
+
   .navbar-logo {
     width: 100px;
     position: absolute;
@@ -248,4 +248,8 @@ h2 {
     color: #db4e4e !important;
     cursor: pointer;
   }
+}
+
+.align-items-center {
+  text-align: center;
 }
