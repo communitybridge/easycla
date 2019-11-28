@@ -1,3 +1,7 @@
+---
+description: This is sample description.
+---
+
 # EasyCLA Requirements
 
 EasyCLA has the following requirements:
