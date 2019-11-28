@@ -662,6 +662,7 @@ class ProjectModel(BaseModel):
     project_name = UnicodeAttribute()
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
+    project_member_documents = ListAttribute(of=DocumentModel, default=[])
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
@@ -703,6 +704,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
     def to_dict(self):
         individual_documents = []
         corporate_documents = []
+        member_documents = []
         for doc in self.model.project_individual_documents:
             document = Document()
             document.model = doc
@@ -711,9 +713,14 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             document = Document()
             document.model = doc
             corporate_documents.append(document.to_dict())
+        for doc in self.model.project_member_documents:
+            document = Document()
+            document.model = doc
+            member_documents.append(document.to_dict())
         project_dict = dict(self.model)
         project_dict['project_individual_documents'] = individual_documents
         project_dict['project_corporate_documents'] = corporate_documents
+        project_dict['project_member_documents'] = member_documents
 
         project_dict['logoUrl'] = '{}/{}.png'.format(cla_logo_url, self.model.project_external_id)
 
