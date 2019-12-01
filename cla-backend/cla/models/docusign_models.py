@@ -669,6 +669,11 @@ class DocuSign(signing_service_interface.SigningService):
         found_authority = False
         if authority_name is not None:
             for manager in managers:
+                if manager.get_user_name() is None:
+                    cla.log.warning(f'Manager name {manager} is missing the user name value. '
+                                    f'Unable to compare with provided authority_name={authority_name}. '
+                                    'Skipping this manager.')
+                    continue
                 if manager.get_user_name().lower() == authority_name.lower():
                     found_authority = True
                     cla.log.debug(f'Authority name {authority_name} provided is in the '
