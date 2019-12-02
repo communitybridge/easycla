@@ -11,5 +11,5 @@ Gerrit contributors, see [Contribute to a Gerrit Project](contribute-to-a-gerrit
 
 ## Need a walk-through?
 
-View this [video](https://www.youtube.com/watch?v=WvKX10S7FOk&feature=youtu.be) to see how to use EasyCLA as a contributor. Click [here](https://github.com/swatimayur/easycla/tree/8efd5fa019005c26f6e6c403ae5a0894a9be2e1f/docs/contributor-console-video-script.md) to read the video transcript.
+View this [video](https://www.youtube.com/watch?v=WvKX10S7FOk&feature=youtu.be) to see how to use EasyCLA as a contributor. Click [here ](https://github.com/communitybridge/easycla/blob/master/docs/contributor-console-video-script.md)to read the video transcript.
 
