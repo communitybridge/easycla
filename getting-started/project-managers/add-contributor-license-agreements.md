@@ -15,7 +15,7 @@ _Verify that the pop-up blocker is disabled on your browser before you begin thi
 
 **Do these steps:**
 
-1. [Sign in](https://github.com/swatimayur/easycla/tree/644dc90dad62a93c744f176bf2cd5e70ff48f9c0/docs/sign-in-to-the-cla-management-console.md).
+1. [Sign in](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/sign-in-to-the-cla-management-console).
 2. Click a **project** of interest.
 
    The project page appears.
@@ -46,5 +46,5 @@ _Verify that the pop-up blocker is disabled on your browser before you begin thi
 
 ## Next Step:
 
-* \(Optional\) [View Current and Previous CLA PDFs](https://github.com/swatimayur/easycla/tree/644dc90dad62a93c744f176bf2cd5e70ff48f9c0/docs/view-current-and-previous-cla-pdfs.md)
+* \(Optional\) [View Current and Previous CLA PDFs](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/view-current-and-previous-cla-pdfs)
 
