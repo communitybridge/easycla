@@ -13,7 +13,7 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
    The Add GitHub Organization dialog appears and lets you specify the GitHub organization.
 
-   Connecting your GitHub organization will let you enable EasyCLA checks on that organization. If you already have a CLA process in place, go to [https://cloud.email.thelinuxfoundation.org/EasyCLA](install-the-easycla-application.md) and file a ticket to describe your particular needs, and import your existing CLAs.
+   Connecting your GitHub organization will let you enable EasyCLA checks on that organization. If you already have a CLA process in place, go to [https://cloud.email.thelinuxfoundation.org/EasyCLA](https://cloud.email.thelinuxfoundation.org/EasyCLA) and file a ticket to describe your particular needs, and import your existing CLAs.
 
    ![CLA Add GitHub Organization](../../.gitbook/assets/cla-add-github-organization.png)
 
@@ -58,5 +58,5 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
   or
 
-* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](https://github.com/swatimayur/easycla/tree/8efd5fa019005c26f6e6c403ae5a0894a9be2e1f/docs/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md)
+* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring)
 
