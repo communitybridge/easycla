@@ -18,6 +18,11 @@
             <h2>No Signatures</h2>
           </div>
           <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
+            <form [formGroup]="form">
+              <input ion-input type="text" placeholder="Enter employee or company name..." formControlName="search"/>
+              <button ion-button (click)="filterDatatable()">Search</button>
+              <button ion-button (click)="resetFilter()" type="reset">Reset</button>
+            </form>
             <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="ColumnMode.force" [sortType]="SortType.multi"
               (sort)="sortMembers($event)">
               <ngx-datatable-column name="Type" prop="Type" [sortable]="true" [draggable]="true" [resizeable]="true">
