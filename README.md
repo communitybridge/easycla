@@ -1,7 +1,3 @@
----
-description: This is a sample sentence.
----
-
 # Introduction to EasyCLA
 
 The Contributor License Agreement \(CLA\) service of the Linux Foundation lets project contributors read, sign, and submit contributor license agreements easily.
