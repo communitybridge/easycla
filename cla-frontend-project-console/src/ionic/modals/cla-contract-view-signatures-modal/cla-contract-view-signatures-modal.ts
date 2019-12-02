@@ -17,6 +17,7 @@ import {SortService} from "../../services/sort.service";
 import {KeycloakService} from "../../services/keycloak/keycloak.service";
 import {RolesService} from "../../services/roles.service";
 import {ColumnMode, SortType} from "@swimlane/ngx-datatable";
+import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 
 @IonicPage({
@@ -39,6 +40,9 @@ export class ClaContractViewSignaturesModal {
   columns: any[];
   rows: any[];
 
+  form: FormGroup;
+  searchString: string;
+
   companies: any[];
   users: any[];
   filteredData: any[];
@@ -60,11 +64,16 @@ export class ClaContractViewSignaturesModal {
     private keycloak: KeycloakService,
     private datePipe: DatePipe,
     public rolesService: RolesService,
-    public events: Events
+    public events: Events,
+    private formBuilder: FormBuilder,
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.claProjectName = this.navParams.get('claProjectName');
     this.getDefaults();
+
+    this.form = formBuilder.group({
+      search: ['', Validators.compose([Validators.required])]
+    });
 
     events.subscribe('modal:close', () => {
       this.dismiss();
@@ -73,6 +82,10 @@ export class ClaContractViewSignaturesModal {
 
   ngOnInit() {
     this.getSignatures();
+  }
+
+  get search(): FormControl {
+    return <FormControl>this.form.get('search');
   }
 
   getDefaults() {
@@ -149,10 +162,21 @@ export class ClaContractViewSignaturesModal {
     return await this.claService.getCompany(referenceId).toPromise();
   }
 
+  filterDatatable() {
+    this.searchString = this.search.value;
+    this.getSignatures();
+  }
+
+  resetFilter() {
+    this.searchString = null;
+    this.search.reset();
+    this.getSignatures();
+  }
+
   // get all signatures
   getSignatures(lastKeyScanned = '') {
     this.loading.signatures = true;
-    this.claService.getProjectSignaturesV3(this.claProjectId, 100, lastKeyScanned).subscribe((response) => {
+    this.claService.getProjectSignaturesV3(this.claProjectId, 100, lastKeyScanned, this.searchString).subscribe((response) => {
       this.data = response;
 
       // Pagination Logic - add the key used to render this page to our previous keys

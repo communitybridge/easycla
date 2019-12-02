@@ -381,11 +381,16 @@ export class ClaService {
    * @param pageSize the optional page size - default is 50
    * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '') {
+  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '', search = '') {
     let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
       path += '&nextKey=' + nextKey;
     }
+
+    if (search != null && search !== '' && search.trim().length > 0) {
+      path += '&companyID=' + search;
+    }
+
     const url: URL = this.getV3Endpoint(path);
     return this.http.get(url).map(res => res.json());
   }
