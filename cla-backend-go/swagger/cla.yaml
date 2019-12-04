@@ -163,6 +163,88 @@ paths:
       tags:
         - users
 
+  /onboard/cla-manager/lfid/{lf_id}:
+    get:
+      summary: Get CLA Manager Request by LFID
+      description: Get CLA Manager Request by LFID
+      security: []
+      operationId: getCLAManagerRequestsByLFID
+      parameters:
+        - name: lf_id
+          description: the user lfid
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/onboard-cla-manager-requests'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - onboard
+
+  /onboard/cla-manager/requests/{request_id}:
+    delete:
+      summary: Deletes a CLA Manager Request by request id
+      description: Deletes CLA Manager Request by request id
+      security: []
+      operationId: deleteCLAManagerRequestsByRequestID
+      parameters:
+        - name: request_id
+          description: the request id
+          in: path
+          type: string
+          required: true
+      responses:
+        '204':
+          $ref: '#/responses/resource-deleted'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - onboard
+
+  /onboard/cla-manager:
+    post:
+      summary: CLA Manager Request
+      description: CLA Manager Request
+      security: []
+      operationId: createCLAManagerRequest
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/onboard-cla-manager-request'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/onboard-cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - onboard
+
   /signatures/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -1203,6 +1285,47 @@ definitions:
         items:
           type: string
 
+  onboard-cla-manager-requests:
+    type: object
+    x-nullable: false
+    title: Onboard CLA Manager Models
+    description: Onboard CLA Manager Request Models
+    properties:
+      requests:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/onboard-cla-manager-request'
+
+  onboard-cla-manager-request:
+    type: object
+    x-nullable: false
+    title: Onboard CLA Manager Model
+    description: Onboard CLA Manager Request Model
+    properties:
+      request_id:
+        type: string
+      lf_id:
+        type: string
+      project_name:
+        type: string
+      company_name:
+        type: string
+      user_full_name:
+        type: string
+      user_email:
+        type: string
+      date_created:
+        type: string
+      date_modified:
+        type: string
+    required:
+      - lf_id
+      - project_name
+      - company_name
+      - user_full_name
+      - user_email
+
   gh-org-whitelist:
     type: object
     x-nullable: false
@@ -1745,6 +1868,17 @@ definitions:
       Message:
         type: string
 
+  delete-response:
+    type: object
+    x-nullable: true
+    title: Delete Response
+    description: Response Message
+    properties:
+      Code:
+        type: string
+      Message:
+        type: string
+
   health:
     type: object
     title: Health
@@ -1782,6 +1916,10 @@ definitions:
     title: Health Status
 
 responses:
+  resource-deleted:
+    description: Resource Deleted
+    schema:
+      $ref: '#/definitions/delete-response'
   unauthorized:
     description: Unauthorized
     schema:
