@@ -1,12 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {IonicPage, ModalController, NavController} from "ionic-angular";
-import {ClaService} from "../../services/cla.service";
-import {RolesService} from "../../services/roles.service";
-import {Restricted} from "../../decorators/restricted";
-import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
+import { Component } from "@angular/core";
+import { IonicPage, ModalController, NavController } from "ionic-angular";
+import { ClaService } from "../../services/cla.service";
+import { RolesService } from "../../services/roles.service";
+import { Restricted } from "../../decorators/restricted";
+import { ColumnMode, SelectionType, SortType } from "@swimlane/ngx-datatable";
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from "../../validators/email";
 
 @Restricted({
   roles: ["isAuthenticated"]
@@ -29,6 +31,12 @@ export class CompaniesPage {
   manager: string;
   columns: any[];
   rows: any[];
+  formErrors: any[]
+  form: FormGroup;
+  submitAttempt: boolean = false;
+  currentlySubmitting: boolean = false;
+  formSuccessfullySubmitted: boolean = false;
+  claManagerApproved: boolean = false;
 
   ColumnMode = ColumnMode;
   SelectionType = SelectionType;
@@ -38,9 +46,37 @@ export class CompaniesPage {
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
+    private formBuilder: FormBuilder,
     private rolesService: RolesService // for @Restricted
+
   ) {
+    this.form = formBuilder.group({
+      project_name: [''],
+      compnay_name: ['', Validators.compose([Validators.required])],
+      full_name: ['', Validators.compose([Validators.required])],
+      lfid: [''],
+      email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      cla_admin: ['', Validators.compose([Validators.required])]
+    });
+    this.formErrors = [];
     this.getDefaults();
+  }
+
+  submit() {
+    // Reset our status and error messages
+    this.submitAttempt = true;
+    this.currentlySubmitting = true;
+
+    setTimeout(() => {
+      this.submitAttempt = false;
+      this.currentlySubmitting = false;
+      this.formSuccessfullySubmitted = true
+    }, 2000);
+
+  }
+
+  approveCLAManager() {
+    this.claManagerApproved = true;
   }
 
   getDefaults() {
@@ -50,10 +86,13 @@ export class CompaniesPage {
     this.userId = localStorage.getItem("userid");
     this.userEmail = localStorage.getItem("user_email");
     this.userName = localStorage.getItem("user_name");
+    this.setUserDetails();
     this.companies = [];
     this.columns = [
-      {prop: 'CompanyName'},
-      {prop: 'Status'}
+      { prop: 'CompanyName' },
+      { prop: 'Status' },
+      { prop: 'Action' },
+      { prop: 'CompanyID' }
     ];
   }
 
@@ -61,6 +100,13 @@ export class CompaniesPage {
     this.getCompanies();
   }
 
+  setUserDetails() {
+    this.form.controls['lfid'].setValue(this.userId);
+    this.form.controls['email_address'].setValue(this.userEmail)
+    this.form.controls['full_name'].setValue(this.userName);
+  }
+
+  
   openCompanyModal() {
     let modal = this.modalCtrl.create("AddCompanyModal", {});
     modal.onDidDismiss(data => {
@@ -117,13 +163,13 @@ export class CompaniesPage {
    */
   getCompaniesByUserManagerWithInvites(userId) {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe((companies) => {
-        this.loading.companies = false;
-        if (companies['companies-with-invites']) {
-          this.rows = this.mapCompanies(companies['companies-with-invites']);
-        } else{
-          this.rows = [];
-        }
-      },
+      this.loading.companies = false;
+      if (companies['companies-with-invites']) {
+        this.rows = this.mapCompanies(companies['companies-with-invites']);
+      } else {
+        this.rows = [];
+      }
+    },
       exception => {
         this.loading.companies = false;
         console.log("Exception while calling: getCompaniesByUserManagerWithInvites() for userId: " + userId);
@@ -146,9 +192,13 @@ export class CompaniesPage {
 
   mapCompanies(companies) {
     let rows = [];
+    let action;
     for (let company of companies) {
+      if (company.status === "Pending Approval") {
+        action = ""
+      }
       rows.push({
-        companyID: company.companyID,
+        CompanyID: company.companyID,
         CompanyName: company.companyName,
         Status: company.status
       });
