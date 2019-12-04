@@ -97,4 +97,8 @@ export class ClaCorporatePage {
     }
     window.open(this.signature.sign_url, "_blank");
   }
+
+  createTicket() {
+    window.open("https://jira.linuxfoundation.org/servicedesk/customer/portal/4", "_blank");
+  }
 }

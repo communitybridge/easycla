@@ -1,16 +1,10 @@
-# Easy Contributor License Agreement \(CLA\) Project
-
-[![CircleCI](https://circleci.com/gh/communitybridge/easycla.svg?style=svg&circle-token=936fbcd340fff1b26453a2f46ffeab48f4fd3be4)](https://circleci.com/gh/communitybridge/easycla)
+# Introduction to EasyCLA
 
 The Contributor License Agreement \(CLA\) service of the Linux Foundation lets project contributors read, sign, and submit contributor license agreements easily.
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
 
-This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](./#getting-started-guide).
-
-## Getting Started Guide
-
-See the [Getting Started Guide](docs/getting-started.md) to get started with EasyCLA.
+This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started).
 
 ## Third-party Services
 
@@ -37,10 +31,6 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 * `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA whitelist
 * `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
 
-## Architecture
-
-See the [docs/ARCHITECTURE.md](docs/architecture.md) document.
-
 ## License
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
@@ -50,4 +40,3 @@ This project’s source code is licensed under the MIT License. A copy of the li
 The project includes source code from keycloak, which is licensed under the Apache License, version 2.0 \(Apache-2.0\), a copy of which is available in LICENSE-keycloak.
 
 This project’s documentation is licensed under the Creative Commons Attribution 4.0 International License \(CC-BY-4.0\). A copy of the license is available in LICENSE-docs.
-

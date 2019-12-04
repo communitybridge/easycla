@@ -229,7 +229,7 @@ def test_signature_employee_field(audit, signature_table):
         "signature_id": signature_id,
         "column": "signature_user_ccla_company_id",
         "is_valid": False,
-        "error_type": ErrorType.ICLA,
+        "error_type": ErrorType.INVALID,
         "data":None
     }
 
