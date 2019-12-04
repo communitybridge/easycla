@@ -2,41 +2,36 @@
 name: Documentation Update
 about: Suggest an update for the project documentation
 title: ''
-labels: documentation
-assignees: swatimayur
+labels: 'documentation'
+assignees: ''
 ---
 
-# docs\_update
-
-**Impacted Docs**
+## Impacted Docs
 
 Describe what has changed and which documents need updating
 
 * [/docs/doc-to-update.md](https://github.com/communitybridge/easycla/blob/master/docs/)
 
-**Tasks**
+## Tasks
 
 * [ ] Review help documents for impacts beyond what this issue explicitly calls out
 * [ ] Task 2
 * [ ] Task 3
 * [ ] Comment on any additional changes made relating to this issue, provide help doc link\(s\)
 
-**Verbiage**
+## Verbiage
 
-Provide applicable markdown/text
+Provide applicable markdown/text.
 
-**User Story**
-
-Provide a user store and/or issue number that relates to this documentation update
-
-**Acceptance Criteria**
+## Acceptance Criteria
 
 The "done" criteria when this feature or problem is resolved. Such as:
 
-1. Doc update PR in review
-2. Update Reviewed and Approved by Product Owner
+1. Documentation changes submitted as a Pull Request
+1. Pull Request Reviewed and Approved by Product Owner
+1. Documentation changes merged to 'master' branch
 
-**Images**
+## Images
 
 Attach any images or screenshots related to this documentation update.
 

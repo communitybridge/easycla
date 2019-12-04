@@ -662,6 +662,7 @@ class ProjectModel(BaseModel):
     project_name = UnicodeAttribute()
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
+    project_member_documents = ListAttribute(of=DocumentModel, default=[])
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
@@ -703,6 +704,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
     def to_dict(self):
         individual_documents = []
         corporate_documents = []
+        member_documents = []
         for doc in self.model.project_individual_documents:
             document = Document()
             document.model = doc
@@ -711,9 +713,14 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             document = Document()
             document.model = doc
             corporate_documents.append(document.to_dict())
+        for doc in self.model.project_member_documents:
+            document = Document()
+            document.model = doc
+            member_documents.append(document.to_dict())
         project_dict = dict(self.model)
         project_dict['project_individual_documents'] = individual_documents
         project_dict['project_corporate_documents'] = corporate_documents
+        project_dict['project_member_documents'] = member_documents
 
         project_dict['logoUrl'] = '{}/{}.png'.format(cla_logo_url, self.model.project_external_id)
 
@@ -1877,16 +1884,16 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                                     signature_signed=None,
                                     signature_approved=None):
         # TODO: Optimize this query to use filters properly.
-        #cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
+        # cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
         #              ' project_id: {}, user_ccla_company_id: {}'
         #              ' signature_signed: {}, signature_approved: {}'.
         #              format(reference_id, reference_type, project_id, user_ccla_company_id, signature_signed,
         #                     signature_approved))
 
-        #cla.log.debug('Signatures.get_signatures_by_reference() - '
+        # cla.log.debug('Signatures.get_signatures_by_reference() - '
         #              'performing signature_reference_id query using: {}'.format(reference_id))
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
-        #cla.log.debug('Signatures.get_signatures_by_reference() - generator.last_evaluated_key: {}'.
+        # cla.log.debug('Signatures.get_signatures_by_reference() - generator.last_evaluated_key: {}'.
         #              format(signature_generator.last_evaluated_key))
 
         signatures = []
@@ -1931,7 +1938,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
-            #cla.log.debug('Signatures.get_signatures_by_reference() - signature match - '
+            # cla.log.debug('Signatures.get_signatures_by_reference() - signature match - '
             #              'adding signature to signature list: {}'.format(signature))
         return signatures
 
@@ -2205,6 +2212,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         user_model = User()
         for username in company_acl:
             users = user_model.get_user_by_username(str(username))
+            if len(users) > 1:
+                cla.log.warning(f'More than one user record returned for username: {username}')
             if users is not None:
                 managers.append(users[0])
         return managers
