@@ -1305,6 +1305,46 @@ export class ClaService {
   }
 
   /**
+   * Creates a new CLA Manager Request with the specified parameters.
+   * @param lfid the LF ID of the user
+   * @param projectName the project name
+   * @param companyName the company name
+   * @param userFullName the user full name
+   * @param userEmail the user email
+   */
+  createCLAManagerRequest(lfid, projectName: string, companyName: string, userFullName: string, userEmail: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager`);
+    const requestBody = {
+      lf_id: lfid,
+      project_name: projectName,
+      company_name: companyName,
+      user_full_name: userFullName,
+      user_email: userEmail
+    };
+    //return this.http.post(url, requestBody)
+    return this.http.postWithCreds(url, requestBody)
+  }
+
+  /**
+   * Returns zero or more CLA manager requests based on the user LFID.
+   *
+   * @param lfid the user's LF ID
+   */
+  getCLAManagerRequests(lfid: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/lfid/${lfid}`);
+    return this.http.getWithCreds(url).map(res => res.json());
+  }
+
+  /**
+   * Deletes the CLA manager request by request id
+   * @param requestID the unique request id
+   */
+  deleteCLAManagerRequests(requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/requests/${requestID}`);
+    return this.http.delete(url)
+  }
+
+  /**
    * Handle service error is a common routine to handle HTTP response errors
    * @param error the error
    */
