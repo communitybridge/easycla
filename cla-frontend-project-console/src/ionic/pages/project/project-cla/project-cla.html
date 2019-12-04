@@ -29,8 +29,8 @@
         </ion-col>
       </ion-row>
 
-      <ion-col col-12>
-        <div class="project-detail-card mt-30">
+      <ion-col col-12 *ngFor="let project of claProjects">
+        <div class="project-detail-card mt-30" *ngIf="project.project_name.search('OPNFV') == -1">
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
@@ -392,7 +392,7 @@
             </div>
           </ion-col>
 
-          <ion-col col-12>
+          <ion-col col-12 *ngIf="project.project_name.search('OPNFV') == -1">
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
                 <ion-col col-6 class="project-title">
