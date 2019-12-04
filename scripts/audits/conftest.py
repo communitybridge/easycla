@@ -1,10 +1,15 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
 
+
+import os
+
+import boto3
 import pytest
 from moto import mock_dynamodb2
-import os
-import boto3
 
-from audit import CompanyAudit
+from audit import CompanyAudit, ProjectAudit
+
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -45,6 +50,15 @@ def user_table(dynamodb):
     )
     yield user_table
 
+@pytest.fixture(scope="function")
+def project_table(dynamodb):
+    project_table = dynamodb.create_table(
+        TableName="cla-test-projects",
+        AttributeDefinitions=[{"AttributeName": "project_id", "AttributeType": "S"}],
+        KeySchema=[{"AttributeName": "project_id", "KeyType": "HASH"}],
+        ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
+    )
+    yield project_table
 
 
 @pytest.fixture(scope="function")
@@ -54,3 +68,8 @@ def audit_companies(dynamodb):
     audit.set_users_table(dynamodb.Table("cla-test-users"))
     yield audit
 
+@pytest.fixture(scope="function")
+def audit_projects(dynamodb):
+    audit = ProjectAudit(dynamodb)
+    audit.set_projects_table(dynamodb.Table("cla-test-projects"))
+    yield audit

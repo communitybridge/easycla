@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/onboard"
+
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
@@ -137,6 +139,7 @@ func server(localMode bool) http.Handler {
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
+	onboardRepo := onboard.NewRepository(awsSession, stage)
 
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
@@ -144,6 +147,7 @@ func server(localMode bool) http.Handler {
 	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
+	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
@@ -158,6 +162,7 @@ func server(localMode bool) http.Handler {
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
 	whitelist.Configure(api, whitelistService, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore)
+	onboard.Configure(api, onboardService)
 	docs.Configure(api)
 
 	company.Configure(api, companyService, usersService, companyUserValidation)
