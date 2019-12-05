@@ -18,11 +18,14 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
 
-
 @click.command()
-@click.option("--aws-profile", is_flag=False, default="default", help="The Named AWS profile")
 @click.option(
-    "--output-file", is_flag=False, help="The output file showing audit report for invalid records",
+    "--aws-profile", is_flag=False, default="default", help="The Named AWS profile"
+)
+@click.option(
+    "--output-file",
+    is_flag=False,
+    help="The output file showing audit report for invalid records",
 )
 def main(aws_profile, output_file):
     """
@@ -31,7 +34,9 @@ def main(aws_profile, output_file):
     start = datetime.now()
     try:
         if os.environ.get("STAGE") is None:
-            logging.warning("Please set the 'STAGE' environment variable - typically one of: {dev, staging, prod}")
+            logging.warning(
+                "Please set the 'STAGE' environment variable - typically one of: {dev, staging, prod}"
+            )
             return
         stage = os.environ.get("STAGE", "dev")
         signatures_table_name = "cla-{}-signatures".format(stage)
