@@ -56,7 +56,6 @@ export class CompaniesPage {
       full_name: ['', Validators.compose([Validators.required])],
       lfid: [''],
       email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      cla_admin: ['', Validators.compose([Validators.required])]
     });
     this.formErrors = [];
     this.getDefaults();
@@ -67,12 +66,16 @@ export class CompaniesPage {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
 
-    setTimeout(() => {
-      this.submitAttempt = false;
-      this.currentlySubmitting = false;
-      this.formSuccessfullySubmitted = true
-    }, 2000);
 
+    this.claService.createCLAManagerRequest(
+      this.form.value.lfid,
+      this.form.value.project_name,
+      this.form.value.compnay_name,
+      this.form.value.full_name,
+      this.form.value.email_address
+    ).subscribe((response) => {
+      console.log(response, 'this is response')
+    })
   }
 
   approveCLAManager() {
