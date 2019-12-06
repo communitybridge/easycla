@@ -50,32 +50,12 @@ export class CompaniesPage {
     private rolesService: RolesService // for @Restricted
 
   ) {
-    this.form = formBuilder.group({
-      project_name: [''],
-      compnay_name: ['', Validators.compose([Validators.required])],
-      full_name: ['', Validators.compose([Validators.required])],
-      lfid: [''],
-      email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-    });
-    this.formErrors = [];
     this.getDefaults();
   }
 
-  submit() {
-    // Reset our status and error messages
-    this.submitAttempt = true;
-    this.currentlySubmitting = true;
 
-
-    this.claService.createCLAManagerRequest(
-      this.form.value.lfid,
-      this.form.value.project_name,
-      this.form.value.compnay_name,
-      this.form.value.full_name,
-      this.form.value.email_address
-    ).subscribe((response) => {
-      console.log(response, 'this is response')
-    })
+  openCLAOnboardingForm() {
+    this.navCtrl.push('ClaManagerOnboardingPage')
   }
 
   approveCLAManager() {
@@ -89,7 +69,6 @@ export class CompaniesPage {
     this.userId = localStorage.getItem("userid");
     this.userEmail = localStorage.getItem("user_email");
     this.userName = localStorage.getItem("user_name");
-    this.setUserDetails();
     this.companies = [];
     this.columns = [
       { prop: 'CompanyName' },
@@ -101,15 +80,9 @@ export class CompaniesPage {
 
   ngOnInit() {
     this.getCompanies();
+    this.getSignedCLAs();
   }
 
-  setUserDetails() {
-    this.form.controls['lfid'].setValue(this.userId);
-    this.form.controls['email_address'].setValue(this.userEmail)
-    this.form.controls['full_name'].setValue(this.userName);
-  }
-
-  
   openCompanyModal() {
     let modal = this.modalCtrl.create("AddCompanyModal", {});
     modal.onDidDismiss(data => {
@@ -117,6 +90,13 @@ export class CompaniesPage {
       this.getCompanies();
     });
     modal.present();
+  }
+
+  getSignedCLAs() {
+  }
+
+  getPendingInvites() {
+
   }
 
   /**
@@ -189,7 +169,7 @@ export class CompaniesPage {
   onSelect(event) {
     let company = event.selected[0]
     if (company.Status === "Joined") {
-      this.viewCompany(company.companyID);
+      this.viewCompany(company.CompanyID);
     }
   }
 
@@ -208,4 +188,6 @@ export class CompaniesPage {
     }
     return rows;
   }
+
+  
 }

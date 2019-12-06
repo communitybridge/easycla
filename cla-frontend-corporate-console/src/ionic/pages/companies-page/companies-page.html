@@ -10,70 +10,46 @@
 
 <ion-content>
   <div class="page-content">
-    <ion-card class="sm-card" *ngIf="!formSuccessfullySubmitted && !claManagerApproved">
-      <ion-card-header>
-        <ion-card-title>
-          Welcome to the corporate console for EasyCLA
-        </ion-card-title>
-        <div text-center ion-card-subtitle>
-          Set up primary CLA Manager for your company
-        </div>
-      </ion-card-header>
+    <ion-row>
+      <ion-card class="sm-card">
+        <ion-card-header>
+          <ion-card-title class="center-card-title">
+            Welcome to the corporate console for EasyCLA
+          </ion-card-title>
+          <div ion-card-subtitle>
+            <ul>
+              <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
+                below to submit information.
+              </li>
+            </ul>
+            <ion-row justify-content-center>
+              <button ion-button (click)="openCLAOnboardingForm()">Input CLA Manager Information</button>
+            </ion-row>
+            <ul>
+              <li>Setup additional CLA Managers for your company (in case you want a separate CLA Manager for your projects)
+              </li>
+            </ul>
+            <ion-row justify-content-center>
+              <button ion-button (click)="openCompanyModal()">Request CLA Admin Access</button>
+            </ion-row>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+        </ion-card-content>
+      </ion-card>
+    </ion-row>
 
-      <ion-card-content>
-        <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
-          <ion-item>
-            <ion-label stacked>Project Name</ion-label>
-            <ion-input formControlName="project_name"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Company Name*</ion-label>
-            <ion-input formControlName="compnay_name" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Full Name*</ion-label>
-            <ion-input formControlName="full_name" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>LFID</ion-label>
-            <ion-input formControlName="lfid" disabled="true"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Email Address*</ion-label>
-            <ion-input formControlName="email_address" required disabled="true"></ion-input>
-          </ion-item>
-          <ion-row justify-content-center margin-top>
-            <button ion-button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">Submit CLA Manager Information </button>
-          </ion-row>
-        </form>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="sm-card" *ngIf="formSuccessfullySubmitted && !claManagerApproved">
-      <ion-card-header>
-        <ion-card-title>
-          Welcome to the corporate console for EasyCLA
-        </ion-card-title>
-        <div text-center ion-card-subtitle>
-          Your Request has been successfully submitted, it is awaiting approval and provisioning
-        </div>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-row justify-content-center margin-top>
-          <button ion-button (click)="approveCLAManager()">Approve CLA Manager</button>
-        </ion-row>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card *ngIf="claManagerApproved">
-      <ion-card-header>
-        <ion-card-title>
-          Companies
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-grid>
-          <div *ngIf="!loading.companies && rows && rows.length > 0" class="mt-4">
+    <ion-row>
+      <ion-card class="sm-card">
+        <ion-card-header>
+          <ion-card-title>
+            Companies
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            <h2>*Click on Sign CLA & Whitelist to administer</h2>
+          <loading-spinner [loading]="loading.companies"></loading-spinner>
+          <div *ngIf="!loading.companies && rows && rows.length > 0">
             <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
               [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
               <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
@@ -87,24 +63,15 @@
                     <p>After approval you can perform action</p>
                   </span>
                   <span *ngIf="row['Status'] === 'Joined'">
-                    <a href="">Sign CLA & Whitelist</a>
+                    <a>Sign CLA & Whitelist</a>
                   </span>
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
           </div>
-        </ion-grid>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card *ngIf="claManagerApproved">
-      <ion-card-header>
-        <ion-card-title>
-          Pending Invites
-        </ion-card-title>
-      </ion-card-header>
-    </ion-card>
-
+        </ion-card-content>
+      </ion-card>
+    </ion-row>
   </div>
   <cla-footer></cla-footer>
 </ion-content>
