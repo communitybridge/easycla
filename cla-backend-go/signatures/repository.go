@@ -1010,6 +1010,8 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 		SignatureDocumentMajorVersion string   `json:"signature_document_major_version"`
 		SignatureDocumentMinorVersion string   `json:"signature_document_minor_version"`
 		SignatureReferenceID          string   `json:"signature_reference_id"`
+		SignatureReferenceName        string   `json:"signature_reference_name"`
+		SignatureReferenceNameLower   string   `json:"signature_reference_name_lower"`
 		SignatureProjectID            string   `json:"signature_project_id"`
 		SignatureReferenceType        string   `json:"signature_reference_type"`
 		SignatureType                 string   `json:"signature_type"`
@@ -1079,27 +1081,29 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			}
 
 			signatures = append(signatures, models.Signature{
-				SignatureID:            dbSignature.SignatureID,
-				CompanyName:            companyName,
-				SignatureCreated:       dbSignature.DateCreated,
-				SignatureModified:      dbSignature.DateModified,
-				SignatureType:          dbSignature.SignatureType,
-				SignatureReferenceID:   dbSignature.SignatureReferenceID,
-				SignatureSigned:        dbSignature.SignatureSigned,
-				SignatureApproved:      dbSignature.SignatureApproved,
-				Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
-				SignatureReferenceType: dbSignature.SignatureReferenceType,
-				ProjectID:              dbSignature.SignatureProjectID,
-				Created:                dbSignature.DateCreated,
-				Modified:               dbSignature.DateModified,
-				UserName:               userName,
-				UserLFID:               userLFID,
-				UserGHID:               userGHID,
-				EmailWhitelist:         dbSignature.EmailWhitelist,
-				DomainWhitelist:        dbSignature.DomainWhitelist,
-				GithubWhitelist:        dbSignature.GitHubWhitelist,
-				GithubOrgWhitelist:     dbSignature.GitHubOrgWhitelist,
-				SignatureACL:           signatureACL,
+				SignatureID:                 dbSignature.SignatureID,
+				CompanyName:                 companyName,
+				SignatureCreated:            dbSignature.DateCreated,
+				SignatureModified:           dbSignature.DateModified,
+				SignatureType:               dbSignature.SignatureType,
+				SignatureReferenceID:        dbSignature.SignatureReferenceID,
+				SignatureReferenceName:      dbSignature.SignatureReferenceName,
+				SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
+				SignatureSigned:             dbSignature.SignatureSigned,
+				SignatureApproved:           dbSignature.SignatureApproved,
+				Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
+				SignatureReferenceType:      dbSignature.SignatureReferenceType,
+				ProjectID:                   dbSignature.SignatureProjectID,
+				Created:                     dbSignature.DateCreated,
+				Modified:                    dbSignature.DateModified,
+				UserName:                    userName,
+				UserLFID:                    userLFID,
+				UserGHID:                    userGHID,
+				EmailWhitelist:              dbSignature.EmailWhitelist,
+				DomainWhitelist:             dbSignature.DomainWhitelist,
+				GithubWhitelist:             dbSignature.GitHubWhitelist,
+				GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
+				SignatureACL:                signatureACL,
 			})
 		}(dbSignature)
 	}
@@ -1136,6 +1140,8 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("signature_document_major_version"),
 		expression.Name("signature_document_minor_version"),
 		expression.Name("signature_reference_id"),
+		expression.Name("signature_reference_name"),       // Added to support simplified UX queries
+		expression.Name("signature_reference_name_lower"), // Added to support case insensitive UX queries
 		expression.Name("signature_project_id"),
 		expression.Name("signature_reference_type"),       // user or company
 		expression.Name("signature_signed"),               // T/F

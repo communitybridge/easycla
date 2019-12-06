@@ -23,6 +23,7 @@ class ErrorType(Enum):
     CCLA = "CCLA"
     NULL = "NOT NULL"
     INVALID_SIG = "Invalid Signature"
+    INVALID = "Invalid"
 
 
 class AuditSignature:
@@ -36,13 +37,6 @@ class AuditSignature:
         self._users_table = None
         self._companies_table = None
         self._batch = batch
-        self._field_exists = {
-            "signature_document_major_version": False,
-            "signature_user_ccla_company_id": False,
-            "signature_reference_type": False,
-            "signature_type": False,
-            "signature_reference_id": False,
-        }
 
     def get_signatures_table(self):
         """
@@ -86,8 +80,11 @@ class AuditSignature:
         :return : A list of invalid audited_records dicts
         """
         audited_records = []
+        logging.info("Processing batch records")
+        logging.info("##########################")
 
         for record in self._batch:
+            logging.info("Auditing {}".format(record['signature_id']))
             if record:
                 audited_records.append(self.validate_ccla_signature(record))
                 audited_records.append(self.validate_employee_signature(record))
@@ -120,7 +117,6 @@ class AuditSignature:
             is_valid = False
             signature_id = record["signature_id"]
             version = record["signature_document_major_version"]
-            self._field_exists["signature_document_major_version"] = True
             is_valid = True
         except KeyError:
             pass
@@ -217,14 +213,14 @@ class AuditSignature:
                     Key={"company_id": signature_user_ccla_company}
                 )
             except ClientError as err:
-                logging.error(err.response["Error"]["Message"])
+                pass
             else:
                 if company and "Item" in company:
                     is_valid = True
 
-        except (KeyError) as err:
+        except (KeyError) :
             is_valid = True
-            logging.info(err)
+
         finally:
             result = {
                 "is_valid": is_valid,
@@ -238,6 +234,7 @@ class AuditSignature:
 
     def validate_employee_signature(self, record: Dict):
         try:
+            column = {"signature_user_ccla_company_id": False}
             signature_id = record["signature_id"]
             is_valid = False
             try:
@@ -250,20 +247,20 @@ class AuditSignature:
                 signature_user_ccla_company_id = record[
                     "signature_user_ccla_company_id"
                 ]
-                self._field_exists["signature_user_ccla_company_id"] = True
+                column["signature_user_ccla_company_id"] = True
                 # resolve valid company
                 try:
                     company = self._companies_table.get_item(
                         Key={"company_id": signature_user_ccla_company_id}
                     )
-                except ClientError as err:
-                    logging.error(err.response["Error"]["Message"])
+                except (KeyError, ClientError) as err:
+                    pass
                 else:
                     if company and "Item" in company:
                         is_valid = True
 
         except (Exception, ClientError) as err:
-            logging.error(err)
+            pass
         finally:
             result = {
                 "signature_id": signature_id,
@@ -271,10 +268,10 @@ class AuditSignature:
                 "is_valid": is_valid,
             }
             if not is_valid:
-                result["error_type"] = ErrorType.ICLA
+                result["error_type"] = ErrorType.INVALID
                 result["data"] = (
                     signature_user_ccla_company_id
-                    if self._field_exists["signature_user_ccla_company_id"]
+                    if column["signature_user_ccla_company_id"]
                     else None
                 )
 
@@ -282,16 +279,17 @@ class AuditSignature:
 
     def validate_ccla_signature(self, record: Dict):
         try:
+            columns = {'signature_reference_type:':False}
             is_valid = True
             signature_id = record["signature_id"]
             signature_reference_type = record["signature_reference_type"]
-            self._field_exists["signature_reference_type"] = True
+            columns["signature_reference_type"] = True
             signature_type = record["signature_type"]
-            self._field_exists["signature_type"] = True
+            columns["signature_type"] = True
             if signature_reference_type == "company" and signature_type == "ccla":
                 try:
                     company_id = record["signature_user_ccla_company_id"]
-                    self._field_exists["signature_user_ccla_company_id"] = True
+                    columns["signature_user_ccla_company_id"] = True
                     is_valid = False
                 except KeyError:
                     # If Key error then record is valid
@@ -309,9 +307,7 @@ class AuditSignature:
             if not is_valid:
                 result["error_type"] = ErrorType.CCLA_COMPANY
                 result["data"] = (
-                    company_id
-                    if self._field_exists["signature_user_ccla_company_id"]
-                    else None
+                    company_id if columns["signature_user_ccla_company_id"] else None
                 )
         return result
 
@@ -345,11 +341,12 @@ class AuditSignature:
 
     def validate_signature_type(self, record: Dict) -> Dict:
         try:
+            columns = {'signature_type':False}
             is_valid = False
             valid_signature_type = ["cla", "ccla"]
             signature_id = record["signature_id"]
             signature_type = record["signature_type"]
-            self._field_exists["signature_type"] = True
+            columns["signature_type"] = True
             is_valid = signature_type in valid_signature_type
 
         except KeyError:
@@ -359,9 +356,7 @@ class AuditSignature:
             result = {
                 "signature_id": signature_id,
                 "column": "signature_type",
-                "data": signature_type
-                if self._field_exists["signature_type"]
-                else None,
+                "data": signature_type if columns["signature_type"] else None,
                 "is_valid": is_valid,
             }
             if not is_valid:
@@ -374,11 +369,14 @@ class AuditSignature:
         values in (company,user)
         """
         try:
+            columns = {
+                'signature_reference_type':False
+            }
             is_valid = False
             valid_signature_reference_type = ["company", "user"]
             signature_id = record["signature_id"]
             signature_reference_type = record["signature_reference_type"]
-            self._field_exists["signature_reference_type"] = True
+            columns["signature_reference_type"] = True
             is_valid = signature_reference_type in valid_signature_reference_type
 
         except (KeyError) as err:
@@ -393,7 +391,7 @@ class AuditSignature:
             if not is_valid:
                 result["data"] = (
                     signature_reference_type
-                    if self._field_exists["signature_reference_type"]
+                    if columns["signature_reference_type"]
                     else None
                 )
                 result["error_type"] = ErrorType.CCLA
@@ -406,16 +404,17 @@ class AuditSignature:
         """
 
         try:
+            columns = {}
             is_valid = False
             signature_id = record["signature_id"]
             signature_reference_id = record["signature_reference_id"]
-            self._field_exists["signature_reference_id"] = True
+            columns["signature_reference_id"] = True
             try:
                 company = self._companies_table.get_item(
                     Key={"company_id": signature_reference_id}
                 )
             except ClientError as err:
-                logging.error(err.response["Error"]["Message"])
+                pass
             else:
                 if company and "Item" in company:
                     is_valid = True
@@ -424,13 +423,13 @@ class AuditSignature:
                     Key={"user_id": signature_reference_id}
                 )
             except ClientError as err:
-                logging.error(err.response["Error"]["Message"])
+                pass
             else:
                 if user and "Item" in user:
                     is_valid = True
 
         except KeyError as err:
-            logging.error(err)
+            pass
 
         finally:
             result = {
@@ -442,7 +441,7 @@ class AuditSignature:
                 result["error_type"] = ErrorType.CCLA
                 result["data"] = (
                     signature_reference_id
-                    if self._field_exists["signature_reference_id"]
+                    if columns["signature_reference_id"]
                     else None
                 )
         return result
