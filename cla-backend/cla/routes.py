@@ -231,7 +231,10 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 
 @hug.post('/user/{user_id}/request-company-whitelist/{company_id}', versions=2)
 def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uuid,
-                              user_email: cla.hug_types.email, project_id: hug.types.uuid, message=None):
+                              user_email: cla.hug_types.email, project_id: hug.types.uuid,
+                              message=None,
+                              recipient_name: hug.types.text = None,
+                              recipient_email: cla.hug_types.email = None):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
 
@@ -241,7 +244,7 @@ def request_company_whitelist(user_id: hug.types.uuid, company_id: hug.types.uui
     be added the the specified company's whitelist.
     """
     return cla.controllers.user.request_company_whitelist(user_id, str(company_id), str(user_email), str(project_id),
-                                                          message)
+                                                          message, str(recipient_name), str(recipient_email))
 
 
 @hug.post('/user/{user_id}/invite-company-admin', versions=2)
@@ -415,7 +418,8 @@ def put_signature(auth_user: check_auth,  # pylint: disable=too-many-arguments
                   signature_sign_url=None,
                   domain_whitelist=None,
                   email_whitelist=None,
-                  github_whitelist=None):
+                  github_whitelist=None,
+                  github_org_whitelist=None):
     """
     PUT: /signature
 
@@ -438,7 +442,8 @@ def put_signature(auth_user: check_auth,  # pylint: disable=too-many-arguments
         signature_sign_url=signature_sign_url,
         domain_whitelist=domain_whitelist,
         email_whitelist=email_whitelist,
-        github_whitelist=github_whitelist)
+        github_whitelist=github_whitelist,
+        github_org_whitelist=github_org_whitelist)
 
 
 @hug.delete('/signature/{signature_id}', versions=1)
@@ -1221,7 +1226,7 @@ def check_and_prepare_employee_signature(project_id: hug.types.uuid,
                                          company_id: hug.types.uuid,
                                          user_id: hug.types.uuid):
     """
-    POST: /check-employee-ccla-and-whitelist
+    POST: /check-prepare-employee-signature
 
     DATA: {'project_id': <project-id>,
            'company_id': <company-id>,

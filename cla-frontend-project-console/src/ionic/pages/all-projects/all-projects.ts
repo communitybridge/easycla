@@ -67,7 +67,7 @@ export class AllProjectsPage {
 
     switch (error.status) {
       case 401:
-        this.errorMessage = `You don't have permissions to see any projects.`;
+        this.errorMessage = `Your session may have expired or you don't have permissions to see any projects.`;
         break;
 
       default:
@@ -111,6 +111,6 @@ export class AllProjectsPage {
    * Opens the access page in a new window
    */
   openAccessPage() {
-    window.open('https://github.com/communitybridge/easycla/blob/master/docs/get-access-to-easycla.md', "_blank");
+    window.open('https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/get-access-to-easycla', "_blank");
   }
 }

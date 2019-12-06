@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>{{ cclaSignature.companyName || titlecase }} Project Signatures</ion-title>
+    <ion-title>{{ company.company_name }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
 </ion-header>
@@ -57,12 +57,12 @@
         <ion-col col-12 col-md-3>
           <h3>
             GitHub Org Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openGithubOrgWhitelistModal()"></ion-icon>
+            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
           </h3>
           <div class="list-container">
             <ion-list>
-              <ion-item *ngFor="let organization of githubEnabledWhitelist">
-                <span>{{ organization.id }}</span>
+              <ion-item *ngFor="let org of cclaSignature.githubOrgWhitelist">
+                {{ org }}
               </ion-item>
             </ion-list>
           </div>
@@ -79,8 +79,11 @@
             <ion-card-title>
               CLA Managers
             </ion-card-title>
-            <loading-spinner [loading]="loading.projects"></loading-spinner>
+            <loading-spinner [loading]="loading.managers"></loading-spinner>
             <ion-list>
+              <ion-item *ngIf="managersRestricted">
+                <p>Only Company Admins can view and update this list.</p>
+              </ion-item>
               <ion-item *ngFor="let manager of managers">
                 <div class="manager">
                   <ion-icon name="person" item-left class="icon-md"></ion-icon>
@@ -102,7 +105,7 @@
                 </div>
               </ion-item>
             </ion-list>
-            <button bottom right ion-fab mini class="add-manager-btn" (click)="openManagerModal()">
+            <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
               <ion-icon name="add"></ion-icon>
             </button>
           </ion-card-content>
@@ -110,34 +113,41 @@
       </ion-col>
       <ion-col col-12 col-md-8>
         <div class="table-responsive-vertical">
-          <h2>{{ cclaSignature.companyName | titlecase }} Employee Acknowledgements</h2>
+          <h2>{{ company.company_name }} Employee Acknowledgements</h2>
+          <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
           <table class="table table-hover">
             <thead>
-              <tr>
-                <th class="clickable">
-                  Name
-                </th>
-                <th class="clickable">
-                  Agreement
-                </th>
-                <th class="clickable" (click)="sortMembers('date')">
-                  Date
-                  <sorting-display [sorting]='sort.date.sort'></sorting-display>
-                </th>
-              </tr>
+            <tr>
+              <th class="clickable">
+                LFID/GHID
+              </th>
+              <th class="clickable">
+                Name
+              </th>
+              <th class="clickable">
+                Agreement
+              </th>
+              <th class="clickable" (click)="sortMembers('date')">
+                Date
+                <sorting-display [sorting]='sort.date.sort'></sorting-display>
+              </th>
+            </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let signature of employeeSignatures">
-                <td data-title="Name">
-                  {{ signature.userName }}
-                </td>
-                <td data-title="Agreement">
-                  v{{ signature.version}}
-                </td>
-                <td data-title="Date">
-                  {{ signature.modified | date:'medium' }}
-                </td>
-              </tr>
+            <tr *ngFor="let signature of employeeSignatures">
+              <td data-title="ID">
+                {{ signature.userLFID }}/{{ signature.userGHID }}
+              </td>
+              <td data-title="Name">
+                {{ signature.userName }}
+              </td>
+              <td data-title="Agreement">
+                v{{ signature.version}}
+              </td>
+              <td data-title="Date">
+                {{ signature.modified | date:'medium' }}
+              </td>
+            </tr>
             </tbody>
           </table>
         </div>

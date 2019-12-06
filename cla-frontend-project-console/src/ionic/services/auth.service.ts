@@ -62,6 +62,20 @@ export class AuthService {
     localStorage.removeItem("userid");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_name");
+
+    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
+    // property is: cla-proj-console-link-{STAGE} -> https://project.dev.lfcla.com
+    // but ask for the key without the prefix or the suffix/stage
+    let redirectUri = EnvConfig['proj-console-link'];
+    if (localServicesMode) {
+      redirectUri = 'http://localhost:8100'
+    }
+    console.log('Redirecting to: ' + redirectUri + '/#/login');
+    // This library seems to want the options to be `redirectUri`, but the API docs say to use: `returnTo`
+    // `returnTo` works
+    this.auth0.logout({
+      returnTo: redirectUri + '/#/login'
+    });
   }
 
   public isAuthenticated(): boolean {

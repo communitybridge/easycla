@@ -83,6 +83,39 @@ class TestUtils(unittest.TestCase):
             users = User().get_user_by_github_username('foooooo')
             self.assertIsNone(users, 'User lookup by github username is None')
 
+    def test_lookup_user_github_username(self) -> None:
+        """
+        Test that we can lookup a given gihub user by id
+        """
+        # TODO - should use mock data - disable tests for now :-(
+        if self.tests_enabled:
+            self.assertEqual('dealako', cla.utils.lookup_user_github_username(519609), 'Found github username')
+            # some invalid username
+            self.assertIsNone(cla.utils.lookup_user_github_username(5196090000), 'None response from invalid github id')
+
+    def test_lookup_user_github_id(self) -> None:
+        """
+        Test that we can lookup a given gihub id by the username
+        """
+        # TODO - should use mock data - disable tests for now :-(
+        if self.tests_enabled:
+            self.assertEqual(519609, cla.utils.lookup_user_github_id('dealako'), 'Found github id')
+            # some invalid username
+            self.assertIsNone(cla.utils.lookup_user_github_id('dealakooooooooo'),
+                              'None response from invalid github username')
+
+    def test_lookup_github_organizations(self) -> None:
+        """
+        Test that we can lookup a user's github organizations
+        """
+        # TODO - should use mock data - disable tests for now :-(
+        if self.tests_enabled:
+            organizations = cla.utils.lookup_github_organizations('dealako')
+            self.assertEqual(3, len(organizations), 'Find github organizations')
+            # some invalid username
+            organizations = cla.utils.lookup_github_organizations('dealakooooooooo')
+            self.assertTrue('error' in organizations, 'Find 0 github organizations')
+
 
 if __name__ == '__main__':
     unittest.main()

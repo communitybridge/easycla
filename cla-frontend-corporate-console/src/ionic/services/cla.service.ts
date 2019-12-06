@@ -330,11 +330,17 @@ export class ClaService {
    * GET /v3/signature/{signature_id}
    *
    * @param signatureId the signature ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getSignature(signatureId) {
+  getSignature(signatureId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signature/' + signatureId);
+    let path: string = '/v3/signature/' + signatureId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -354,11 +360,17 @@ export class ClaService {
    * GET /v3/signatures/user/{user_id}
    *
    * @param userId the user ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getSignaturesUser(userId) {
+  getSignaturesUser(userId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signatures/user/' + userId);
+    let path: string = '/v3/signatures/user/' + userId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -367,11 +379,17 @@ export class ClaService {
    * GET /v3/signatures/company/{company_id}
    *
    * @param companyId the company ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getCompanySignatures(companyId) {
+  getCompanySignatures(companyId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
     // Leverage the new go backend v3 endpoint
-    const url: URL = this.getV3Endpoint('/v3/signatures/company/' + companyId);
+    let path: string = '/v3/signatures/company/' + companyId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -381,11 +399,17 @@ export class ClaService {
    *
    * @param companyId the company ID
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getCompanyProjectSignatures(companyId, projectId) {
+  getCompanyProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId);
+    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -395,11 +419,17 @@ export class ClaService {
    *
    * @param companyId the company ID
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getEmployeeProjectSignatures(companyId, projectId) {
+  getEmployeeProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
     // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee');
+    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee' + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -408,11 +438,17 @@ export class ClaService {
    * GET /v3/signatures/project/{project_id}
    *
    * @param projectId the project ID
+   * @param pageSize the optional page size - default is 50
+   * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignatures(projectId) {
+  getProjectSignatures(projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path
-    const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId);
+    let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
+    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+      path += '&nextKey=' + nextKey;
+    }
+    const url: URL = this.getV3Endpoint(path);
     return this.http.getWithCreds(url)
       .map(res => res.json());
   }
@@ -1269,9 +1305,48 @@ export class ClaService {
   }
 
   /**
+   * Creates a new CLA Manager Request with the specified parameters.
+   * @param lfid the LF ID of the user
+   * @param projectName the project name
+   * @param companyName the company name
+   * @param userFullName the user full name
+   * @param userEmail the user email
+   */
+  createCLAManagerRequest(lfid, projectName: string, companyName: string, userFullName: string, userEmail: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager`);
+    const requestBody = {
+      lf_id: lfid,
+      project_name: projectName,
+      company_name: companyName,
+      user_full_name: userFullName,
+      user_email: userEmail
+    };
+    //return this.http.post(url, requestBody)
+    return this.http.postWithCreds(url, requestBody)
+  }
+
+  /**
+   * Returns zero or more CLA manager requests based on the user LFID.
+   *
+   * @param lfid the user's LF ID
+   */
+  getCLAManagerRequests(lfid: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/lfid/${lfid}`);
+    return this.http.getWithCreds(url).map(res => res.json());
+  }
+
+  /**
+   * Deletes the CLA manager request by request id
+   * @param requestID the unique request id
+   */
+  deleteCLAManagerRequests(requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/requests/${requestID}`);
+    return this.http.delete(url)
+  }
+
+  /**
    * Handle service error is a common routine to handle HTTP response errors
    * @param error the error
-   * @param caught the error that was caught
    */
   private handleServiceError(error: any) {
     /*
