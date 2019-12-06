@@ -22,6 +22,12 @@ This high-level diagram shows the different flows and roles that EasyCLA support
 
 ![CLA Diagram](../.gitbook/assets/cla_diagram_v8.png)
 
+## EasyCLA Architechture
+
+The following diagram explains the EasyCLA architecture. 
+
+![](../.gitbook/assets/architecture-overview.png)
+
 ## What Role are You?
 
 How you interact with EasyCLA depends on your role. EasyCLA supports the following roles in its workflow:
