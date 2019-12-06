@@ -14,7 +14,7 @@
       <ion-grid>
         <ion-row>
           <ion-col col-12>
-            <h1>
+            <h1 text-center>
               {{ company.company_name }}
               <ion-icon class="clickable" name="md-create" item-right (click)="openCompanyModal()"></ion-icon>
             </h1>
@@ -29,12 +29,28 @@
           <ion-card>
             <ion-card-content>
               <ion-card-title>
-                <h1>Signed CLAs</h1>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
                   New CLA
                 </button>
               </ion-card-title>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
+    <ion-grid>
+      <ion-row justify-content-center>
+        <ion-col col-12 col-md-8>
+          <ion-card>
+            <ion-card-title>
+              <h1>Signed CLAs</h1>
+            </ion-card-title>
+            <ion-card-title>
+              <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
+                company click "Manage Whitelist" for the project interest</p>
+            </ion-card-title>
+            <ion-card-content>
               <ion-grid [loading-display]="loading.projects">
                 <ion-row>
                   <ion-col col-12>
@@ -44,16 +60,8 @@
                         <h2>No Projects</h2>
                       </div>
                       <div *ngIf="!loading.projects && rows && rows.length > 0">
-                        <ngx-datatable
-                          class='material clickable'
-                          [rows]="rows"
-                          [columns]="columns"
-                          [headerHeight]="50"
-                          [rowHeight]="'auto'"
-                          [selectionType]="SelectionType.single"
-                          [columnMode]="ColumnMode.force"
-                          [sortType]="SortType.multi"
-                          (select)="onSelect($event)">
+                        <ngx-datatable class='material clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
+                          [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
                           <ngx-datatable-column name="Projects" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="Managers" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
                         </ngx-datatable>
@@ -75,47 +83,50 @@
           <ion-card *ngIf="invites">
             <ion-card-content>
               <ion-card-title>
+                <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated by EasyCLA.</p>
+              </ion-card-title>
+              <ion-card-title>
                 <h1>Pending Invites</h1>
               </ion-card-title>
               <ion-list>
                 <ion-row>
                   <table class="table table-hover invites">
                     <thead>
-                    <tr>
-                      <th class="clickable">
-                        Name
-                      </th>
-                      <th class="clickable">
-                        Email
-                      </th>
-                      <th class="clickable">
-                        LFID
-                      </th>
-                      <th class="clickable">
-                        Actions
-                      </th>
-                    </tr>
+                      <tr>
+                        <th class="clickable">
+                          Name
+                        </th>
+                        <th class="clickable">
+                          Email
+                        </th>
+                        <th class="clickable">
+                          LFID
+                        </th>
+                        <th class="clickable">
+                          Actions
+                        </th>
+                      </tr>
                     </thead>
                     <tbody>
-                    <tr *ngFor="let invite of invites">
-                      <td data-title="Name">
-                        <span>{{ invite.userName }}</span>
-                      </td>
-                      <td data-title="Email">
-                        <span>{{invite.userEmail}}</span>
-                      </td>
-                      <td data-title="LFID">
-                        <span>{{invite.userLFID}}</span>
-                      </td>
-                      <td data-title="Actions">
-                        <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
-                          Accept
-                        </button>
-                        <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
-                          Decline
-                        </button>
-                      </td>
-                    </tr>
+                      <tr *ngFor="let invite of invites">
+                        <td data-title="Name">
+                          <span>{{ invite.userName }}</span>
+                        </td>
+                        <td data-title="Email">
+                          <span>{{invite.userEmail}}</span>
+                        </td>
+                        <td data-title="LFID">
+                          <span>{{invite.userLFID}}</span>
+                        </td>
+                        <td data-title="Actions">
+                          <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                            Accept
+                          </button>
+                          <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
+                            Decline
+                          </button>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </ion-row>
