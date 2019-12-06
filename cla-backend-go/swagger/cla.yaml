@@ -1691,6 +1691,10 @@ definitions:
         type: string
       signatureReferenceID:
         type: string
+      signatureReferenceName:
+        type: string
+      signatureReferenceNameLower:
+        type: string
       signatureType:
         type: string
       signatureACL:

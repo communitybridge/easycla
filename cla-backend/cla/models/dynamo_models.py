@@ -1623,6 +1623,8 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     signature_document_minor_version = NumberAttribute()
     signature_document_major_version = NumberAttribute()
     signature_reference_id = UnicodeAttribute()
+    signature_reference_name = UnicodeAttribute(null=True)
+    signature_reference_name_lower = UnicodeAttribute(null=True)
     signature_reference_type = UnicodeAttribute()
     signature_type = UnicodeAttribute(default='cla')
     signature_signed = BooleanAttribute(default=False)
@@ -1658,6 +1660,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                  signature_document_minor_version=None,
                  signature_document_major_version=None,
                  signature_reference_id=None,
+                 signature_reference_name=None,
                  signature_reference_type='user',
                  signature_type=None,
                  signature_signed=False,
@@ -1682,6 +1685,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.signature_document_minor_version = signature_document_minor_version
         self.model.signature_document_major_version = signature_document_major_version
         self.model.signature_reference_id = signature_reference_id
+        self.model.signature_reference_name = signature_reference_name
+        if signature_reference_name:
+            self.model.signature_reference_name_lower = signature_reference_name.lower()
         self.model.signature_reference_type = signature_reference_type
         self.model.signature_type = signature_type
         self.model.signature_signed = signature_signed
@@ -1700,13 +1706,16 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.note = note
 
     def __str__(self):
-        return ('id: {}, project id: {}, reference id: {}, reference type: {}, '
+        return ('id: {}, project id: {}, reference id: {}, reference name: {}, reference name lower: {}, '
+                'reference type: {}, '
                 'user cla company id: {}, signed: {}, approved: {}, domain whitelist: {}, '
-                'email whitelist: {}, github user whitelist: {}, github domain whitelist: {}'
+                'email whitelist: {}, github user whitelist: {}, github domain whitelist: {}, '
                 'note: {}').format(
             self.model.signature_id,
             self.model.signature_project_id,
             self.model.signature_reference_id,
+            self.model.signature_reference_name,
+            self.model.signature_reference_name_lower,
             self.model.signature_reference_type,
             self.model.signature_user_ccla_company_id,
             self.model.signature_signed,
@@ -1769,6 +1778,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_signature_reference_id(self):
         return self.model.signature_reference_id
+
+    def get_signature_reference_name(self):
+        return self.model.signature_reference_name
+
+    def get_signature_reference_name_lower(self):
+        return self.model.signature_reference_name_lower
 
     def get_signature_reference_type(self):
         return self.model.signature_reference_type
@@ -1836,6 +1851,10 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_signature_reference_id(self, reference_id):
         self.model.signature_reference_id = reference_id
+
+    def set_signature_reference_name(self, reference_name):
+        self.model.signature_reference_name = reference_name
+        self.model.signature_reference_name_lower = reference_name.lower()
 
     def set_signature_reference_type(self, reference_type):
         self.model.signature_reference_type = reference_type
@@ -2176,6 +2195,15 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
                 latest = signature
 
         return latest
+
+    def get_company_by_id(self, company_id):
+        companies = self.model.scan()
+        for company in companies:
+            org = Company()
+            org.model = company
+            if org.model.company_id == company_id:
+                return org
+        return None
 
     def get_company_by_external_id(self, company_external_id):
         company_generator = self.model.company_external_id_index.query(company_external_id)
