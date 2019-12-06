@@ -1313,6 +1313,7 @@ export class ClaService {
    * @param userEmail the user email
    */
   createCLAManagerRequest(lfid, projectName: string, companyName: string, userFullName: string, userEmail: string) {
+    console.log("I got called")
     const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager`);
     const requestBody = {
       lf_id: lfid,
