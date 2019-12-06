@@ -50,6 +50,15 @@ export class CompaniesPage {
     private rolesService: RolesService // for @Restricted
 
   ) {
+    this.form = formBuilder.group({
+      project_name: [''],
+      compnay_name: ['', Validators.compose([Validators.required])],
+      full_name: ['', Validators.compose([Validators.required])],
+      lfid: [''],
+      email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      cla_admin: ['', Validators.compose([Validators.required])]
+    });
+    this.formErrors = [];
     this.getDefaults();
   }
 
@@ -69,6 +78,7 @@ export class CompaniesPage {
     this.userId = localStorage.getItem("userid");
     this.userEmail = localStorage.getItem("user_email");
     this.userName = localStorage.getItem("user_name");
+    this.setUserDetails();
     this.companies = [];
     this.columns = [
       { prop: 'CompanyName' },
@@ -83,6 +93,13 @@ export class CompaniesPage {
     this.getSignedCLAs();
   }
 
+  setUserDetails() {
+    this.form.controls['lfid'].setValue(this.userId);
+    this.form.controls['email_address'].setValue(this.userEmail)
+    this.form.controls['full_name'].setValue(this.userName);
+  }
+
+  
   openCompanyModal() {
     let modal = this.modalCtrl.create("AddCompanyModal", {});
     modal.onDidDismiss(data => {
