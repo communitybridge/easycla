@@ -1,6 +1,6 @@
 # Get Access to EasyCLA
 
-**Important:** Before you get started, make sure your project meets the [EasyCLA Requirements](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/easycla-requirements).
+**Important:** Before you get started, make sure your project meets the [EasyCLA Requirements](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/easycla-requirements).
 
 **As the project manager, do these steps to get access to EasyCLA:**
 
