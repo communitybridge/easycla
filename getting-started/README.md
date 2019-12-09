@@ -52,9 +52,9 @@ At any time, you can change the settings to manage your project CLA monitoring, 
 
 You are a _contributor_ \(developer\) if you contribute code to GitHub or Gerrit projects. With EasyCLA, you will follow different workflows depending on whether the project is hosted on GitHub or Gerrit, and whether you contribute on behalf of a company or yourself as an individual:
 
-* **GitHub company** contributor: [confirm your association with a company](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/contributors/contribute-to-a-github-company-project) that has a signed Corporate Contributor License Agreement.
-* **GitHub individual** contributor: [sign an Individual Contributor License Agreement](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/contributors/sign-a-cla-as-an-individual-contributor-to-github).
-* **Gerrit company** contributor: [confirm your association with a company](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/contributors/contribute-to-a-gerrit-project) that has a signed Corporate Contributor License Agreement.
+* **GitHub company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-github-company-project)that has a signed Corporate Contributor License Agreement.
+* **GitHub individual** contributor: [sign an Individual Contributor License Agreement](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/sign-a-cla-as-an-individual-contributor-to-github).
+* **Gerrit company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-gerrit-project)that has a signed Corporate Contributor License Agreement.
 * **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/contributors/contribute-to-a-gerrit-project).
 
 ### Corporate CLA Manager
