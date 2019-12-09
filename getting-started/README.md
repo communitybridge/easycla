@@ -55,14 +55,14 @@ You are a _contributor_ \(developer\) if you contribute code to GitHub or Gerrit
 * **GitHub company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-github-company-project)that has a signed Corporate Contributor License Agreement.
 * **GitHub individual** contributor: [sign an Individual Contributor License Agreement](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/sign-a-cla-as-an-individual-contributor-to-github).
 * **Gerrit company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-gerrit-project)that has a signed Corporate Contributor License Agreement.
-* **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/contributors/contribute-to-a-gerrit-project).
+* **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-gerrit-project).
 
 ### Corporate CLA Manager
 
 You are a _Corporate CLA manager_ \(CCLA manager\) if you are the person authorized to manage the list of approved contributors under your company’s Corporate CLA. With this responsibility, you use EasyCLA to:
 
-* [Add companies to a project](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/ccla-managers-and-ccla-signatories/add-a-company-to-a-project).
-* [Whitelist contributors](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/ccla-managers-and-ccla-signatories/whitelist-contributors).
+* [Add companies to a project](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/add-a-company-to-a-project).
+* [Whitelist contributors](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/whitelist-contributors).
 
 ### Corporate CLA Signatory
 
