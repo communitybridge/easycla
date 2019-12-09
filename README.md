@@ -4,7 +4,7 @@ The Contributor License Agreement \(CLA\) service of the Linux Foundation lets p
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
 
-This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started).
+This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started).
 
 ## Third-party Services
 
