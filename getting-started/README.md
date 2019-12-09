@@ -68,6 +68,6 @@ You are a _Corporate CLA manager_ \(CCLA manager\) if you are the person authori
 
 You are a _Corporate CLA signatory_ \(CCLA signatory\) if you are authorized to sign contracts, such as the project’s CLA, on behalf of the company. With EasyCLA, you can:
 
-* [Sign a Corporate CLA on behalf of the company](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/ccla-managers-and-ccla-signatories/sign-a-corporate-cla-on-behalf-of-the-company)—as a signatory you need to have legal authority to sign documents on behalf of the company.
-* [Review and sign a Corporate CLA by request](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/ccla-managers-and-ccla-signatories/review-and-sign-a-corporate-cla-by-request).
+* [Sign a Corporate CLA on behalf of the company](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/sign-a-corporate-cla-on-behalf-of-the-company)—as a signatory you need to have legal authority to sign documents on behalf of the company.
+* [Review and sign a Corporate CLA by request](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/review-and-sign-a-corporate-cla-by-request).
 
