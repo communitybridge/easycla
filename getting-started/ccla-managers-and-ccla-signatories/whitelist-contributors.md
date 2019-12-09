@@ -37,10 +37,9 @@ _Multiple CCLA managers cannot whitelist the same domain and sign a CCLA for the
 
 The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit, and delete values to a whitelist so that employees \(developers\) can be associated to the company. An example domain name value is joesbikes.com. A wildcard whitelists the domain and all subdomains, for example: \*.joesbikes.com or \*joesbikes.com would whitelist joes.bikes.com, shop.joesbikes.com, and blog.joesbikes.com.
 
-
 **Note:** To remove an entry from the whitelist, click **X** next to the item, and click **SAVE**.
 
-![Edit Domain Whitelist](../.gitbook/assets/cla_edit_domain.png)
+![Edit Domain Whitelist](https://github.com/swatimayur/easycla/tree/f8284ff79352265f00c8ccaed9dc90f652f38cda/getting-started/.gitbook/assets/cla_edit_domain.png)
 
 1. Click the **pencil** icon next to the whitelist that you want to edit:
 2. Click **ADD DOMAIN/EMAIL/GITHUB**, enter a **domain name**, **email address**, or **GitHub username** for the employees for whom you want to whitelist, respectively, and click **SAVE**. For example:

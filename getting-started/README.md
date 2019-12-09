@@ -38,15 +38,15 @@ You are a _project manager_ if you are the project maintainer who has responsibi
 
 With EasyCLA, you do the following CLA set-up tasks:
 
-1. [Install the EasyCLA Application](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/install-the-easycla-application).
-2. [Add a CLA Group](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-a-cla-group).
-3. [Add Contributor License Agreements](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-contributor-license-agreements).
-4. Add [GitHub repositories](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring) or [Gerrit instances](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring) to enforce CLA monitoring.
+1. [Install the EasyCLA Application](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/install-the-easycla-application).
+2. [Add a CLA Group](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/add-a-cla-group).
+3. [Add Contributor License Agreements](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/add-contributor-license-agreements).
+4. Add [GitHub repositories](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring) or [Gerrit instances](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring) to enforce CLA monitoring.
 
 At any time, you can change the settings to manage your project CLA monitoring, and do other management tasks:
 
-* [View Current and Previous CLA PDFs](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/view-current-and-previous-cla-pdfs)
-* [Manage CLA Group Details](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/manage-cla-group-details)
+* [View Current and Previous CLA PDFs](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/view-current-and-previous-cla-pdfs)
+* [Manage CLA Group Details](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/manage-cla-group-details)
 
 ### Contributor
 
