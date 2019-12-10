@@ -39,35 +39,35 @@ You are a _project manager_ if you are the project maintainer who has responsibi
 With EasyCLA, you do the following CLA set-up tasks:
 
 1. [Install the EasyCLA Application](project-managers/install-the-easycla-application.md).
-2. [Add a CLA Group](add-a-cla-group.md).
-3. [Add Contributor License Agreements](add-contributor-license-agreements.md).
-4. Add [GitHub repositories](add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring).md or [Gerrit instances](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md) to enforce CLA monitoring.
+2. [Add a CLA Group](project-managers/add-a-cla-group.md).
+3. [Add Contributor License Agreements](project-managers/add-contributor-license-agreements.md).
+4. Add [GitHub repositories](project-managers/add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring).md or [Gerrit instances](project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md) to enforce CLA monitoring.
 
 At any time, you can change the settings to manage your project CLA monitoring, and do other management tasks:
 
-* [View Current and Previous CLA PDFs](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/view-current-and-previous-cla-pdfs)
-* [Manage CLA Group Details](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/project-managers/manage-cla-group-details)
+* [View Current and Previous CLA PDFs](project-managers/view-current-and-previous-cla-pdfs)
+* [Manage CLA Group Details](project-managers/manage-cla-group-details)
 
 ### Contributor
 
 You are a _contributor_ \(developer\) if you contribute code to GitHub or Gerrit projects. With EasyCLA, you will follow different workflows depending on whether the project is hosted on GitHub or Gerrit, and whether you contribute on behalf of a company or yourself as an individual:
 
-* **GitHub company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-github-company-project)that has a signed Corporate Contributor License Agreement.
-* **GitHub individual** contributor: [sign an Individual Contributor License Agreement](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/sign-a-cla-as-an-individual-contributor-to-github).
-* **Gerrit company** contributor: [confirm your association with a company ](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-gerrit-project)that has a signed Corporate Contributor License Agreement.
-* **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/contributors/contribute-to-a-gerrit-project).
+* **GitHub company** contributor: [confirm your association with a company ](contributors/contribute-to-a-github-company-project)that has a signed Corporate Contributor License Agreement.
+* **GitHub individual** contributor: [sign an Individual Contributor License Agreement](contributors/sign-a-cla-as-an-individual-contributor-to-github).
+* **Gerrit company** contributor: [confirm your association with a company ](contributors/contribute-to-a-gerrit-project)that has a signed Corporate Contributor License Agreement.
+* **Gerrit individual** contributor: [sign an Individual Contributor License Agreement](contributors/contribute-to-a-gerrit-project).
 
 ### Corporate CLA Manager
 
 You are a _Corporate CLA manager_ \(CCLA manager\) if you are the person authorized to manage the list of approved contributors under your company’s Corporate CLA. With this responsibility, you use EasyCLA to:
 
-* [Add companies to a project](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/add-a-company-to-a-project).
-* [Whitelist contributors](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/whitelist-contributors).
+* [Add companies to a project](ccla-managers-and-ccla-signatories/add-a-company-to-a-project).
+* [Whitelist contributors](ccla-managers-and-ccla-signatories/whitelist-contributors).
 
 ### Corporate CLA Signatory
 
 You are a _Corporate CLA signatory_ \(CCLA signatory\) if you are authorized to sign contracts, such as the project’s CLA, on behalf of the company. With EasyCLA, you can:
 
-* [Sign a Corporate CLA on behalf of the company](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/sign-a-corporate-cla-on-behalf-of-the-company)—as a signatory you need to have legal authority to sign documents on behalf of the company.
-* [Review and sign a Corporate CLA by request](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/ccla-managers-and-ccla-signatories/review-and-sign-a-corporate-cla-by-request).
+* [Sign a Corporate CLA on behalf of the company](ccla-managers-and-ccla-signatories/sign-a-corporate-cla-on-behalf-of-the-company)—as a signatory you need to have legal authority to sign documents on behalf of the company.
+* [Review and sign a Corporate CLA by request](ccla-managers-and-ccla-signatories/review-and-sign-a-corporate-cla-by-request).
 
