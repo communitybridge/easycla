@@ -41,12 +41,18 @@
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open CLA
               </button>
+              <div *ngIf="error">
+                <p class="error">
+                  {{ error }}
+                </p>
+              </div>
               <loading-spinner [loading]="loadingSignature"></loading-spinner>
               <div *ngIf="loadingSignature"><span>Loading Individual CLA...</span></div>
             </div>
             <div *ngIf="!activeSignatures">
               <p class="error">
-                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and restarting the signing process from your pull request if necessary.
+                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and
+                restarting the signing process from your pull request if necessary.
               </p>
             </div>
           </ion-card-content>
