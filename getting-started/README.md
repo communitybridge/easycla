@@ -38,7 +38,7 @@ You are a _project manager_ if you are the project maintainer who has responsibi
 
 With EasyCLA, you do the following CLA set-up tasks:
 
-1. [Install the EasyCLA Application](install-the-easycla-application.md).
+1. [Install the EasyCLA Application](/project-managers/install-the-easycla-application.md).
 2. [Add a CLA Group](add-a-cla-group.md).
 3. [Add Contributor License Agreements](add-contributor-license-agreements.md).
 4. Add [GitHub repositories](add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring).md or [Gerrit instances](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md) to enforce CLA monitoring.
