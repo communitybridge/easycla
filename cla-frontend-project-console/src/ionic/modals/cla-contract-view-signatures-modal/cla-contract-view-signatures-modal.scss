@@ -34,10 +34,8 @@ cla-contract-config-modal {
 }
 
 input {
-  width: 30%;
+  width: 100%;
   padding: 8px;
-  display: inline-flex;
-  vertical-align: -webkit-baseline-middle;
 }
 
 .signature-select .select-md {
@@ -68,6 +66,12 @@ ion-modal .title-wrapper {
 .searchbar-md .searchbar-input {
   padding: 3px 40px;
   border-radius: 1px;
+}
+
+ion-segment-button {
+  .label-md {
+    margin: 0;
+  }
 }
 
 

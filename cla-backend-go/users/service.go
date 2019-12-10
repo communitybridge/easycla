@@ -11,7 +11,8 @@ import (
 type Service interface {
 	CreateUser(user *models.User) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
-	GetUserByUserName(userName string) (*models.User, error)
+	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	SearchUsers(field string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
 
 type service struct {
@@ -46,8 +47,18 @@ func (s service) GetUser(userID string) (*models.User, error) {
 }
 
 // GetUserByUserName attempts to locate the user by the user name field
-func (s service) GetUserByUserName(userName string) (*models.User, error) {
-	userModel, err := s.repo.GetUserByUserName(userName)
+func (s service) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
+	userModel, err := s.repo.GetUserByUserName(userName, fullMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	return userModel, nil
+}
+
+// SearchUsers attempts to locate the user by the searchField and searchTerm fields
+func (s service) SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error) {
+	userModel, err := s.repo.SearchUsers(searchField, searchTerm, fullMatch)
 	if err != nil {
 		return nil, err
 	}
