@@ -84,6 +84,7 @@ paths:
             - user
       operationId: searchUsers
       parameters:
+<<<<<<< HEAD
         - $ref: "#/parameters/searchTerm"
         - $ref: "#/parameters/searchField"
         - $ref: "#/parameters/nextKey"
@@ -102,6 +103,26 @@ paths:
           $ref: "#/responses/forbidden"
         "404":
           $ref: "#/responses/not-found"
+=======
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/fullMatch'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/users'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+>>>>>>> cf2348face0bb258048e0c20ce00d934184feda3
       tags:
         - users
 
@@ -319,6 +340,7 @@ paths:
           in: path
           type: string
           required: true
+<<<<<<< HEAD
         - $ref: "#/parameters/pageSize"
         - $ref: "#/parameters/nextKey"
         - $ref: "#/parameters/companyName"
@@ -328,6 +350,17 @@ paths:
         - $ref: "#/parameters/fullMatch"
         - $ref: "#/parameters/lfid"
         - $ref: "#/parameters/ghid"
+=======
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/fullMatch'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+>>>>>>> cf2348face0bb258048e0c20ce00d934184feda3
       responses:
         "200":
           description: "Success"
@@ -1363,8 +1396,8 @@ definitions:
         type: array
         x-omitempty: false
         items:
-          $ref: "#/definitions/user"
-
+          $ref: '#/definitions/user'
+          
   onboard-cla-manager-requests:
     type: object
     x-nullable: false
@@ -1375,7 +1408,7 @@ definitions:
         type: array
         x-omitempty: false
         items:
-          $ref: "#/definitions/onboard-cla-manager-request"
+          $ref: '#/definitions/onboard-cla-manager-request'
 
   onboard-cla-manager-request:
     type: object
