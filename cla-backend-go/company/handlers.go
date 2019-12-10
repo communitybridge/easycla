@@ -63,7 +63,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
 		if companyUserValidation {
 			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
-			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
+			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername, true)
 			if userErr != nil {
 				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
 					Code:    "401",
@@ -95,7 +95,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
 		if companyUserValidation {
 			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
-			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername)
+			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername, true)
 			if userErr != nil {
 				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
 					Code:    "401",

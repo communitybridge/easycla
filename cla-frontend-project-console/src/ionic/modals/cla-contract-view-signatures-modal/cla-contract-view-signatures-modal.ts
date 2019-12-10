@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {DatePipe} from '@angular/common';
+import { Component } from "@angular/core";
+import { DatePipe } from "@angular/common";
 import {
   Events,
   IonicPage,
@@ -10,22 +10,26 @@ import {
   NavController,
   NavParams,
   PopoverController,
-  ViewController,
-} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service'
-import {SortService} from "../../services/sort.service";
-import {KeycloakService} from "../../services/keycloak/keycloak.service";
-import {RolesService} from "../../services/roles.service";
-import {ColumnMode, SortType} from "@swimlane/ngx-datatable";
-import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
-
+  ViewController
+} from "ionic-angular";
+import { ClaService } from "../../services/cla.service";
+import { SortService } from "../../services/sort.service";
+import { KeycloakService } from "../../services/keycloak/keycloak.service";
+import { RolesService } from "../../services/roles.service";
+import { ColumnMode, SortType } from "@swimlane/ngx-datatable";
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  FormControl
+} from "@angular/forms";
 
 @IonicPage({
-  segment: 'cla-contract-view-signatures-modal'
+  segment: "cla-contract-view-signatures-modal"
 })
 @Component({
-  selector: 'cla-contract-view-signatures-modal',
-  templateUrl: 'cla-contract-view-signatures-modal.html',
+  selector: "cla-contract-view-signatures-modal",
+  templateUrl: "cla-contract-view-signatures-modal.html"
 })
 export class ClaContractViewSignaturesModal {
   selectedProject: any;
@@ -65,17 +69,22 @@ export class ClaContractViewSignaturesModal {
     private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events,
-    private formBuilder: FormBuilder,
+    private formBuilder: FormBuilder
   ) {
-    this.claProjectId = this.navParams.get('claProjectId');
-    this.claProjectName = this.navParams.get('claProjectName');
+    this.claProjectId = this.navParams.get("claProjectId");
+    this.claProjectName = this.navParams.get("claProjectName");
     this.getDefaults();
 
-    this.form = formBuilder.group({
-      search: ['', Validators.compose([Validators.required])]
+    this.form = this.formBuilder.group({
+      search: [
+        "",
+        Validators.compose([Validators.required, Validators.minLength(3)])
+      ],
+      searchField: ["user"],
+      fullMatch: [false]
     });
 
-    events.subscribe('modal:close', () => {
+    events.subscribe("modal:close", () => {
       this.dismiss();
     });
   }
@@ -85,7 +94,15 @@ export class ClaContractViewSignaturesModal {
   }
 
   get search(): FormControl {
-    return <FormControl>this.form.get('search');
+    return <FormControl>this.form.get("search");
+  }
+
+  get searchField(): FormControl {
+    return <FormControl>this.form.get("searchField");
+  }
+
+  get fullMatch(): FormControl {
+    return <FormControl>this.form.get("fullMatch");
   }
 
   getDefaults() {
@@ -144,13 +161,13 @@ export class ClaContractViewSignaturesModal {
 
     this.filteredData = this.rows;
     this.columns = [
-      {prop: 'Type'},
-      {prop: 'Name'},
-      {prop: 'Company'},
-      {prop: 'GitHubID'},
-      {prop: 'LFID'},
-      {prop: 'Version'},
-      {prop: 'Date'}
+      { prop: "Type" },
+      { prop: "Name" },
+      { prop: "Company" },
+      { prop: "GitHubID" },
+      { prop: "LFID" },
+      { prop: "Version" },
+      { prop: "Date" }
     ];
   }
 
@@ -163,35 +180,50 @@ export class ClaContractViewSignaturesModal {
   }
 
   filterDatatable() {
-    this.searchString = this.search.value;
-    this.getSignatures();
+    if (this.form.valid) {
+      this.searchString = this.search.value;
+      this.getSignatures();
+    }
   }
 
   resetFilter() {
     this.searchString = null;
+    this.searchField.reset("user");
+    this.fullMatch.setValue(false);
     this.search.reset();
     this.getSignatures();
   }
 
   // get all signatures
-  getSignatures(lastKeyScanned = '') {
+  getSignatures(lastKeyScanned = "") {
     this.loading.signatures = true;
-    this.claService.getProjectSignaturesV3(this.claProjectId, 100, lastKeyScanned, this.searchString).subscribe((response) => {
-      this.data = response;
+    this.claService
+      .getProjectSignaturesV3(
+        this.claProjectId,
+        100,
+        lastKeyScanned,
+        this.searchString,
+        this.searchField.value,
+        this.fullMatch.value
+      )
+      .subscribe(response => {
+        this.data = response;
 
-      // Pagination Logic - add the key used to render this page to our previous keys
-      this.previousKeys.push(lastKeyScanned);
-      // If we have a next key (usually we would unless there are no more records)
-      if (this.data.lastKeyScanned) {
-        this.nextKey = this.data.lastKeyScanned;
-      } else {
-        this.nextKey = null;
-      }
+        // Pagination Logic - add the key used to render this page to our previous keys
+        if (lastKeyScanned) {
+          this.previousKeys.push(lastKeyScanned);
+        }
+        // If we have a next key (usually we would unless there are no more records)
+        if (this.data.lastKeyScanned) {
+          this.nextKey = this.data.lastKeyScanned;
+        } else {
+          this.nextKey = null;
+        }
 
-      this.page.totalCount = this.data.resultCount;
-      this.rows = this.mapSignatures(this.data.signatures);
-      this.loading.signatures = false;
-    });
+        this.page.totalCount = this.data.resultCount;
+        this.rows = this.mapSignatures(this.data.signatures);
+        this.loading.signatures = false;
+      });
   }
 
   getNextPage() {
@@ -219,22 +251,22 @@ export class ClaContractViewSignaturesModal {
   }
 
   nextButtonDisabled(): boolean {
-    return (this.nextKey == null && this.previousKeys.length >= 0);
+    return this.nextKey == null && this.previousKeys.length >= 0;
   }
 
   previousButtonColor(): string {
     if (this.previousKeys.length <= 1) {
-      return 'gray';
+      return "gray";
     } else {
-      return 'secondary';
+      return "secondary";
     }
   }
 
   nextButtonColor(): string {
     if (this.nextKey == null && this.previousKeys.length >= 0) {
-      return 'gray';
+      return "gray";
     } else {
-      return 'secondary';
+      return "secondary";
     }
   }
 
@@ -242,10 +274,10 @@ export class ClaContractViewSignaturesModal {
    * Helper function to dump the pagination details.
    */
   debugShowPaginationReport() {
-    console.log('NextKey: ' + this.nextKey);
-    console.log('PreviousKeys:');
+    console.log("NextKey: " + this.nextKey);
+    console.log("PreviousKeys:");
     console.log(this.previousKeys);
-    console.log('------------------------------');
+    console.log("------------------------------");
   }
 
   /**
@@ -253,38 +285,34 @@ export class ClaContractViewSignaturesModal {
    *
    * @param prop
    */
-  sortMembers(prop) {
-  }
+  sortMembers(prop) {}
 
   signaturePopover(ev, signature) {
     let actions = {
       items: [
         {
-          label: 'Details',
-          callback: 'signatureDetails',
+          label: "Details",
+          callback: "signatureDetails",
           callbackData: {
-            signature: signature,
+            signature: signature
           }
         },
         {
-          label: 'CLA',
-          callback: 'signatureCla',
+          label: "CLA",
+          callback: "signatureCla",
           callbackData: {
-            signature: signature,
+            signature: signature
           }
-        },
+        }
       ]
     };
-    let popover = this.popoverCtrl.create(
-      'ActionPopoverComponent',
-      actions,
-    );
+    let popover = this.popoverCtrl.create("ActionPopoverComponent", actions);
 
     popover.present({
       ev: ev
     });
 
-    popover.onDidDismiss((popoverData) => {
+    popover.onDidDismiss(popoverData => {
       if (popoverData) {
         this.popoverResponse(popoverData);
       }
@@ -303,11 +331,11 @@ export class ClaContractViewSignaturesModal {
   }
 
   signatureDetails(data) {
-    console.log('signature details');
+    console.log("signature details");
   }
 
   signatureCla(data) {
-    console.log('signature cla');
+    console.log("signature cla");
   }
 
   dismiss() {
@@ -319,43 +347,55 @@ export class ClaContractViewSignaturesModal {
     if (signatures == null || signatures.length == 0) {
       return [];
     } else {
-      return signatures && signatures.map((signature) => {
-        let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
-        return {
-          /**
-           * | Type                   | Reference Type | Signature Type | Company Name |
-           * |------------------------|----------------|----------------|--------------|
-           * | ICLA (individual icon) | user           | cla            | empty        |
-           * | CCLA (employee icon)   | user           | cla            | not empty    |
-           * | CCLA (company icon)    | company        | ccla           | not empty    |
-           */
-          'Type': this.getSignatureType(signature),
-          'Name': signature.userName && signature.userName,
-          'Company': signature.companyName && signature.companyName,
-          'GitHubID': signature.userGHID && signature.userGHID,
-          "LFID": signature.userLFID && signature.userLFID,
-          'Version': `v${signature.version}`,
-          'Date': date
-        }
-      })
+      return (
+        signatures &&
+        signatures.map(signature => {
+          let date = this.datePipe.transform(
+            signature.signatureCreated,
+            "yyyy-MM-dd"
+          );
+          return {
+            /**
+             * | Type                   | Reference Type | Signature Type | Company Name |
+             * |------------------------|----------------|----------------|--------------|
+             * | ICLA (individual icon) | user           | cla            | empty        |
+             * | CCLA (employee icon)   | user           | cla            | not empty    |
+             * | CCLA (company icon)    | company        | ccla           | not empty    |
+             */
+            Type: this.getSignatureType(signature),
+            Name: signature.userName && signature.userName,
+            Company: signature.companyName && signature.companyName,
+            GitHubID: signature.userGHID && signature.userGHID,
+            LFID: signature.userLFID && signature.userLFID,
+            Version: `v${signature.version}`,
+            Date: date
+          };
+        })
+      );
     }
   }
 
   getSignatureType(signature: any): string {
-    if (signature.signatureReferenceType === 'user' &&
-      signature.signatureType === 'cla' &&
-      signature.companyName == undefined) {
-      return 'individual';
-    } else if (signature.signatureReferenceType === 'user' &&
-      signature.signatureType === 'cla' &&
-      signature.companyName != undefined) {
-      return 'employee';
-    } else if (signature.signatureReferenceType === 'company' &&
-      signature.signatureType === 'ccla' &&
-      signature.companyName != undefined) {
-      return 'company';
+    if (
+      signature.signatureReferenceType === "user" &&
+      signature.signatureType === "cla" &&
+      signature.companyName == undefined
+    ) {
+      return "individual";
+    } else if (
+      signature.signatureReferenceType === "user" &&
+      signature.signatureType === "cla" &&
+      signature.companyName != undefined
+    ) {
+      return "employee";
+    } else if (
+      signature.signatureReferenceType === "company" &&
+      signature.signatureType === "ccla" &&
+      signature.companyName != undefined
+    ) {
+      return "company";
     } else {
-      return 'unknown';
+      return "unknown";
     }
   }
 }
