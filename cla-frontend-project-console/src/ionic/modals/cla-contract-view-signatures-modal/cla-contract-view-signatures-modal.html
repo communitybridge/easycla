@@ -13,18 +13,46 @@
     <ion-row>
       <ion-col col-12>
         <div class="table-responsive-vertical">
+          <div>
+            <form [formGroup]="form">
+              <ion-row align-items-start align-items-center>
+                <ion-col col-3>
+                  <input ion-input type="text" placeholder="Enter employee or company name..."
+                    formControlName="search" />
+                </ion-col>
+                <ion-col col-2>
+                  <ion-segment (ionChange)="searchField = $event.value" color="primary" mode="ios"
+                    formControlName="searchField" layout="icon-start">
+                    <ion-segment-button value="user">
+                      <ion-label>Name</ion-label>
+                    </ion-segment-button>
+                    <ion-segment-button value="company">
+                      <ion-label>Company</ion-label>
+                    </ion-segment-button>
+                  </ion-segment>
+                </ion-col>
+                <ion-col col-auto>
+                  <ion-item>
+                    <ion-label>Full Match</ion-label>
+                    <ion-toggle color="primary" (ionChange)="fullMatch = $event.value" formControlName="fullMatch">
+                    </ion-toggle>
+                  </ion-item>
+                </ion-col>
+                <ion-col>
+                  <button ion-button (click)="filterDatatable()" [disabled]="loading.signatures">Search</button>
+                  <button ion-button (click)="resetFilter()">Reset</button>
+                </ion-col>
+
+              </ion-row>
+            </form>
+          </div>
           <loading-spinner [loading]="loading.signatures"></loading-spinner>
           <div *ngIf="!loading.signatures && rows && rows.length === 0" class="empty-signatures">
             <h2>No Signatures</h2>
           </div>
           <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
-            <form [formGroup]="form">
-              <input ion-input type="text" placeholder="Enter employee or company name..." formControlName="search"/>
-              <button ion-button (click)="filterDatatable()">Search</button>
-              <button ion-button (click)="resetFilter()" type="reset">Reset</button>
-            </form>
-            <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'" [columnMode]="ColumnMode.force" [sortType]="SortType.multi"
-              (sort)="sortMembers($event)">
+            <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'"
+              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (sort)="sortMembers($event)">
               <ngx-datatable-column name="Type" prop="Type" [sortable]="true" [draggable]="true" [resizeable]="true">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span *ngIf="row['Type'] === 'individual'">
@@ -41,12 +69,18 @@
                   </span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Name" prop="Name" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="Company" prop="Company" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="GitHub ID" prop="GitHubID" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="LFID" prop="LFID" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="Version" prop="Version" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="Date Signed" prop="Date" [sortable]="true" [draggable]="true" [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="Name" prop="Name" [sortable]="true" [draggable]="true" [resizeable]="true">
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Company" prop="Company" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="GitHub ID" prop="GitHubID" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="LFID" prop="LFID" [sortable]="true" [draggable]="true" [resizeable]="true">
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Version" prop="Version" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="Date Signed" prop="Date" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
             </ngx-datatable>
           </div>
         </div>
@@ -57,10 +91,12 @@
 
 <ion-footer class="transparent">
   <ion-row class="align-items-center">
-    <ion-col col-6 class="pagination-buttons">
+    <ion-col col-12 class="pagination-buttons">
       <ion-buttons>
-        <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()" (click)="getPreviousPage()">Prev</button>
-        <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()" (click)="getNextPage()">Next</button>
+        <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()"
+          (click)="getPreviousPage()">Prev</button>
+        <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()"
+          (click)="getNextPage()">Next</button>
       </ion-buttons>
     </ion-col>
 
