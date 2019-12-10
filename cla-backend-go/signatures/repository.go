@@ -1166,8 +1166,6 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("signature_reference_name"),       // Added to support simplified UX queries
 		expression.Name("signature_reference_name_lower"), // Added to support case insensitive UX queries
 		expression.Name("signature_project_id"),
-		expression.Name("signature_reference_name"),
-		expression.Name("signature_reference_name_lower"),
 		expression.Name("signature_reference_type"),       // user or company
 		expression.Name("signature_signed"),               // T/F
 		expression.Name("signature_type"),                 // ccla or cla
