@@ -1,9 +1,9 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
-swagger: "2.0"
+swagger: '2.0'
 info:
   title: CLA API
-  version: "1.0"
+  version: '1.0'
 basePath: /v3
 schemes:
   - http
@@ -15,8 +15,8 @@ securityDefinitions:
   OauthSecurity:
     type: oauth2
     flow: accessCode
-    authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth"
-    tokenUrl: "https://www.googleapis.com/oauth2/v4/token"
+    authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth'
+    tokenUrl: 'https://www.googleapis.com/oauth2/v4/token'
     scopes:
       admin: LF Admin scope
       project: Project Manager scope
@@ -32,20 +32,20 @@ paths:
       security: []
       operationId: healthCheck
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/health"
-        "503":
-          description: ""
+            $ref: '#/definitions/health'
+        '503':
+          description: ''
           schema:
-            $ref: "#/definitions/health"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/health'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - health
 
@@ -84,26 +84,6 @@ paths:
             - user
       operationId: searchUsers
       parameters:
-<<<<<<< HEAD
-        - $ref: "#/parameters/searchTerm"
-        - $ref: "#/parameters/searchField"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/fullMatch"
-      responses:
-        "200":
-          description: "Success"
-          schema:
-            $ref: "#/definitions/users"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
-=======
         - $ref: '#/parameters/searchTerm'
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/nextKey'
@@ -122,7 +102,6 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
->>>>>>> cf2348face0bb258048e0c20ce00d934184feda3
       tags:
         - users
 
@@ -141,16 +120,16 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/user"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - users
 
@@ -166,21 +145,21 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: "#/definitions/user"
+            $ref: '#/definitions/user'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/user"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "409":
-          $ref: "#/responses/conflict"
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - users
 
@@ -199,18 +178,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/user"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - users
 
@@ -227,18 +206,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/onboard-cla-manager-requests"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/onboard-cla-manager-requests'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - onboard
 
@@ -255,16 +234,16 @@ paths:
           type: string
           required: true
       responses:
-        "204":
-          $ref: "#/responses/resource-deleted"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+        '204':
+          $ref: '#/responses/resource-deleted'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - onboard
 
@@ -278,21 +257,21 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: "#/definitions/onboard-cla-manager-request"
+            $ref: '#/definitions/onboard-cla-manager-request'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/onboard-cla-manager-request"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "409":
-          $ref: "#/responses/conflict"
+            $ref: '#/definitions/onboard-cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - onboard
 
@@ -308,23 +287,23 @@ paths:
           in: path
           type: string
           required: true
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -340,17 +319,6 @@ paths:
           in: path
           type: string
           required: true
-<<<<<<< HEAD
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/searchTerm"
-        - $ref: "#/parameters/searchField"
-        - $ref: "#/parameters/fullMatch"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
-=======
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
@@ -360,18 +328,17 @@ paths:
         - $ref: '#/parameters/fullMatch'
         - $ref: '#/parameters/lfid'
         - $ref: '#/parameters/ghid'
->>>>>>> cf2348face0bb258048e0c20ce00d934184feda3
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -392,23 +359,23 @@ paths:
           in: path
           type: string
           required: true
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -424,23 +391,23 @@ paths:
           in: path
           type: string
           required: true
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -456,23 +423,23 @@ paths:
           in: path
           type: string
           required: true
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -493,23 +460,23 @@ paths:
           in: path
           type: string
           required: true
-        - $ref: "#/parameters/pageSize"
-        - $ref: "#/parameters/nextKey"
-        - $ref: "#/parameters/companyName"
-        - $ref: "#/parameters/userName"
-        - $ref: "#/parameters/lfid"
-        - $ref: "#/parameters/ghid"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -524,18 +491,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/github-org"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
     delete:
@@ -550,20 +517,20 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: "#/definitions/gh-org-whitelist"
+            $ref: '#/definitions/gh-org-whitelist'
       responses:
-        "204":
-          description: "Success"
+        '204':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/github-org"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
     post:
@@ -578,20 +545,20 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: "#/definitions/gh-org-whitelist"
+            $ref: '#/definitions/gh-org-whitelist'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/github-org"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - signatures
 
@@ -601,18 +568,18 @@ paths:
       security: []
       operationId: getProjects
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/project"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - project
 
@@ -627,16 +594,16 @@ paths:
       security: []
       operationId: getProjectById
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - project
 
@@ -653,18 +620,18 @@ paths:
       tags:
         - contractGroup
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/contract-group"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/contract-group'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
     post:
       summary: Create new Contract Group
       security: []
@@ -673,18 +640,18 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/contract-group"
+            $ref: '#/definitions/contract-group'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
@@ -702,19 +669,19 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/contract-template"
+            $ref: '#/definitions/contract-template'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
@@ -732,19 +699,19 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/github"
+            $ref: '#/definitions/github'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
@@ -766,24 +733,24 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/gerrit"
+            $ref: '#/definitions/gerrit'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
-  ? /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit/{gerritInstanceId}
-  : parameters:
+  /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit/{gerritInstanceId}:
+    parameters:
       - name: projectSfdcId
         in: path
         type: string
@@ -801,14 +768,14 @@ paths:
       security: []
       operationId: deleteGerritInstance
       responses:
-        "204":
-          description: "Success"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
@@ -827,16 +794,16 @@ paths:
       security: []
       operationId: getContractGroupSignatures
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/contract-group-signatures"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/contract-group-signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - contractGroup
 
@@ -854,18 +821,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/company"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -883,18 +850,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/companies"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -912,18 +879,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/companies-with-invites"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/companies-with-invites'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -946,20 +913,20 @@ paths:
           type: string
           required: false
           # UUID v4 regex
-          pattern: "[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}"
+          pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/companies"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -976,18 +943,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/company-invite-user"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/company-invite-user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
 
@@ -1010,18 +977,18 @@ paths:
           type: string
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/company-invite-user"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
-        "404":
-          $ref: "#/responses/not-found"
+            $ref: '#/definitions/company-invite-user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -1034,7 +1001,7 @@ paths:
       - name: user
         in: body
         schema:
-          $ref: "#/definitions/access-list-user"
+          $ref: '#/definitions/access-list-user'
     post:
       summary: Add user to CLA accesslist
       security:
@@ -1042,16 +1009,16 @@ paths:
             - company
       operationId: addUsertoCompanyAccessList
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
     delete:
@@ -1061,16 +1028,16 @@ paths:
             - company
       operationId: deletePendingInvite
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
 
@@ -1089,19 +1056,19 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/user"
+            $ref: '#/definitions/user'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
 
@@ -1118,7 +1085,7 @@ paths:
       - name: githubOrganizationId
         in: body
         schema:
-          $ref: "#/definitions/github-org"
+          $ref: '#/definitions/github-org'
     get:
       summary: Get All Github Organization Under the CCLA whitelist
       security:
@@ -1126,18 +1093,18 @@ paths:
             - company
       operationId: getGithubOrganizationfromCla
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/github-org"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
     post:
@@ -1147,16 +1114,16 @@ paths:
             - company
       operationId: addGithubOrganizationFromCla
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
     delete:
@@ -1166,16 +1133,16 @@ paths:
             - company
       operationId: deleteGithubOrganizationFromCla
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: object
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - company
 
@@ -1185,18 +1152,18 @@ paths:
       security: []
       operationId: getTemplates
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
             type: array
             items:
-              $ref: "#/definitions/template"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+              $ref: '#/definitions/template'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - template
 
@@ -1214,19 +1181,19 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/create-cla-group-template"
+            $ref: '#/definitions/create-cla-group-template'
           required: true
       responses:
-        "200":
-          description: "Success"
+        '200':
+          description: 'Success'
           schema:
-            $ref: "#/definitions/template-pdfs"
-        "400":
-          $ref: "#/responses/invalid-request"
-        "401":
-          $ref: "#/responses/unauthorized"
-        "403":
-          $ref: "#/responses/forbidden"
+            $ref: '#/definitions/template-pdfs'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - template
 
@@ -1242,10 +1209,10 @@ paths:
           required: true
       responses:
         302:
-          description: "302 response"
+          description: '302 response'
           headers:
             Location:
-              type: "string"
+              type: 'string'
       tags:
         - github
 
@@ -1265,10 +1232,10 @@ paths:
           required: true
       responses:
         302:
-          description: "302 response"
+          description: '302 response'
           headers:
             Location:
-              type: "string"
+              type: 'string'
       tags:
         - github
 
@@ -1281,7 +1248,7 @@ parameters:
     type: string
     required: false
     pattern: '^[1-9][\d]*$'
-    default: "10"
+    default: '10'
   companyName:
     name: companyName
     description: The optional company name filter
@@ -1336,7 +1303,7 @@ parameters:
     type: string
     required: false
     # UUID v4 regex
-    pattern: "[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}"
+    pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
 
 definitions:
   user:
@@ -1397,7 +1364,7 @@ definitions:
         x-omitempty: false
         items:
           $ref: '#/definitions/user'
-          
+
   onboard-cla-manager-requests:
     type: object
     x-nullable: false
@@ -1532,19 +1499,19 @@ definitions:
         type: boolean
       cclaTemplate:
         type: object
-        $ref: "#/definitions/contract-template"
+        $ref: '#/definitions/contract-template'
       iclaTemplate:
         type: object
-        $ref: "#/definitions/contract-template"
+        $ref: '#/definitions/contract-template'
       githubOrganizations:
         type: array
         items:
-          $ref: "#/definitions/github"
+          $ref: '#/definitions/github'
         readOnly: true
       gerritInstances:
         type: array
         items:
-          $ref: "#/definitions/gerrit"
+          $ref: '#/definitions/gerrit'
         readOnly: true
     required:
       - name
@@ -1586,7 +1553,7 @@ definitions:
       MetaFields:
         type: array
         items:
-          $ref: "#/definitions/meta-field"
+          $ref: '#/definitions/meta-field'
 
   template-pdfs:
     title: TemplatePDFs
@@ -1677,7 +1644,7 @@ definitions:
         type: array
         x-omitempty: false
         items:
-          $ref: "#/definitions/company"
+          $ref: '#/definitions/company'
 
   companies-with-invites:
     type: object
@@ -1699,7 +1666,7 @@ definitions:
         type: array
         x-omitempty: false
         items:
-          $ref: "#/definitions/company-with-invite"
+          $ref: '#/definitions/company-with-invite'
 
   company:
     type: object
@@ -1782,7 +1749,7 @@ definitions:
         type: array
         x-omitempty: false
         items:
-          $ref: "#/definitions/signature"
+          $ref: '#/definitions/signature'
 
   signature:
     type: object
@@ -1813,7 +1780,7 @@ definitions:
       signatureACL:
         type: array
         items:
-          $ref: "#/definitions/user"
+          $ref: '#/definitions/user'
       userName:
         type: string
       companyName:
@@ -1861,11 +1828,11 @@ definitions:
       cclaSignatures:
         type: array
         items:
-          $ref: "#/definitions/ccla-signature-details"
+          $ref: '#/definitions/ccla-signature-details'
       iclaSignatures:
         type: array
         items:
-          $ref: "#/definitions/icla-signature-details"
+          $ref: '#/definitions/icla-signature-details'
 
   ccla-signature-details:
     type: object
@@ -1926,15 +1893,15 @@ definitions:
       metaFields:
         type: array
         items:
-          $ref: "#/definitions/meta-field"
+          $ref: '#/definitions/meta-field'
       iclaFields:
         type: array
         items:
-          $ref: "#/definitions/field"
+          $ref: '#/definitions/field'
       cclaFields:
         type: array
         items:
-          $ref: "#/definitions/field"
+          $ref: '#/definitions/field'
 
   meta-field:
     title: MetaField
@@ -2015,7 +1982,7 @@ definitions:
       Healths:
         type: array
         items:
-          $ref: "#/definitions/health-status"
+          $ref: '#/definitions/health-status'
 
   health-status:
     type: object
@@ -2036,24 +2003,24 @@ responses:
   resource-deleted:
     description: Resource Deleted
     schema:
-      $ref: "#/definitions/delete-response"
+      $ref: '#/definitions/delete-response'
   unauthorized:
     description: Unauthorized
     schema:
-      $ref: "#/definitions/error-response"
+      $ref: '#/definitions/error-response'
   invalid-request:
     description: Invalid request
     schema:
-      $ref: "#/definitions/error-response"
+      $ref: '#/definitions/error-response'
   forbidden:
     description: Insufficient privilege to execute action.
     schema:
-      $ref: "#/definitions/error-response"
+      $ref: '#/definitions/error-response'
   not-found:
     description: Not found
     schema:
-      $ref: "#/definitions/error-response"
+      $ref: '#/definitions/error-response'
   conflict:
     description: The request could not be completed due to a conflict with the current state of the target resource.
     schema:
-      $ref: "#/definitions/error-response"
+      $ref: '#/definitions/error-response'
