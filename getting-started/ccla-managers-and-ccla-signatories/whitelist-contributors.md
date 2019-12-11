@@ -46,6 +46,8 @@ The corresponding Edit _domain/email/github_ Whitelist dialog lets you add, edit
 
 Your entries appear in their corresponding whitelists.
 
+Your entries appear in their corresponding whitelists.
+
 ### GitHub Whitelist
 
 ## GitHub Organization Whitelist
