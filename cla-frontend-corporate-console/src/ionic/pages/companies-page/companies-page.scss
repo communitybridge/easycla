@@ -1,100 +1,107 @@
-<ion-header class="cla-header">
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>cla-manager-onboarding-page</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
-</ion-header>
+companies-page {
+  
+  .page-content {
+    min-height: calc(100vh - 200px);
+
+    ion-label {
+      color: dark;
+    }
+
+    ion-input {
+      border-bottom: 0.5px solid map-get($colors, primary);
+    }
+
+    .sm-card {
+      width: 80vw;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 3rem;
+      border-top: 2px solid #4C79B6;
+    }
+  }
+  .scroll-content {
+    margin-top: 96px;
+  }
+
+  .add-company-btn {
+    bottom: 155px;
+    right: 15px;
+  }
+
+  ion-footer {
+    position: relative;
+  }
+  ul {
+    list-style: none; /* Remove default bullets */
+  }
+  
+  ul li::before {
+    content: "\2022";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: #4C79B6; /* Change the color */
+    font-weight: bold; /* If you want it to be bold */
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em; /* Also needed for space (tweak if needed) */
+    margin-left: -1em; /* Also needed for space (tweak if needed) */
+  }
+
+  .cta-button {
+    background-color: #4C79B6;
+
+    a {
+      color: #4C79B6;
+    }
+  }
+  a {
+    font-weight: bold;
+  }
+}
 
 
-<ion-content>
-  <div class="page-content">
-    <ion-row justify-content-center>
-    </ion-row>
-    <ion-row>
-      <ion-col>
-        <ion-card class="sm-card">
-          <ion-row justify-content-center *ngIf="loading.companies && loading.projects">
-            <h2>Loading Projects and Companies</h2>
-          </ion-row>
-          <ion-row justify-content-center *ngIf="loading.companies && loading.projects">
-            <ion-spinner></ion-spinner>
-          </ion-row>
-          <ion-card-content *ngIf="!loading.companies && !loading.projects">
-            <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
-              <ion-item>
-                <ion-label stacked>
-                  <h2>Company*</h2>
-                </ion-label>
-                <ion-input formControlName="company_name" [(ngModel)]="company_name" (ionChange)="findCompany($event)" placeholder="Find Company" required></ion-input>
-              </ion-item>
-              <ion-list class="company-dropdown-list" *ngIf="filteredCompanies && filteredCompanies.length > 0">
-                <ion-item *ngFor="let company of filteredCompanies">
-                  <ion-label class="clickable" (click)="setCompanyName(company)">
-                    {{ company.company_name }}
-                  </ion-label>
-                </ion-item>
-              </ion-list>
-              <ion-item>
-                <ion-label color="primary">
-                  Select Project to populate project name*
-                </ion-label>
-                <ion-select (ionChange)="projectSelectChanged($event)" cancelText="Reset" okText="Add Project">
-                  <ion-option *ngFor="let project of allProjects" [value]="project">{{ project.project_name }}</ion-option>
-                </ion-select>
-              </ion-item>
-              <ion-item>
-                <ion-label stacked>
-                  <h2>Project Name*</h2>
-                </ion-label>
-                <ion-input formControlName="project_name" required disabled="true" placeholder="Project Name"></ion-input>
-              </ion-item>
+.cla-header {
+  border-bottom: 10px solid #4C79B6;
 
-              <ion-item class="project-list" *ngIf="selectedProjects && selectedProjects.length > 0">
-                <ion-row>
-                  <ion-badge margin-right *ngFor="let project of selectedProjects">{{project.project_name}}</ion-badge>
-                </ion-row>
-              </ion-item>
-              <ion-item>
-                <ion-label stacked>
-                  <h2>Full Name*</h2>
-                </ion-label>
-                <ion-input formControlName="full_name" required></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label stacked>
-                  <h2>LFID</h2>
-                </ion-label>
-                <ion-input formControlName="lfid" disabled="true"></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label stacked>
-                  <h2>Email Address*</h2>
-                </ion-label>
-                <ion-input formControlName="email_address" required disabled="true"></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label stacked>
-                  <h2>Reason for request*</h2>
-                </ion-label>
-                <ion-input formControlName="reason_for_request"></ion-input>
-              </ion-item>
-              <ion-row justify-content-center margin-top>
+  .toolbar {
+    color: #7b7b7b;
+    background-color: white;
+    padding: 4px 25px;
 
-              </ion-row>
-              <ion-row justify-content-center margin-top>
-                <button ion-button type="submit" form="form" ion-button icon-right color="primary" [disabled]="!form.valid">
-                  <span *ngIf="!currentlySubmitting">Submit</span>
-                  <ion-spinner *ngIf="currentlySubmitting"></ion-spinner>
-                </button>
-              </ion-row>
-            </form>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </div>
-  <!-- <cla-footer></cla-footer> -->
-</ion-content>
+    ion-icon {
+      color: #7b7b7b;
+      line-height: 6px;
+
+      &:before {
+        font-size: 19px;
+      }
+    }
+  }
+
+  .navbar-logo {
+    width: 100px;
+    position: absolute;
+    left: calc(50% - 20px);
+  }
+}
+
+.card-md {
+  box-shadow: none !important;
+  padding: 30px;
+}
+
+ion-card-title {
+  display: flex !important;
+  justify-content: space-between;
+}
+
+span[title="Joined"] {
+  color: green;
+  font-weight: bold;
+}
+
+span[title="Pending Approval"] {
+  color: #4C79B6;
+  font-weight: bold;
+}
+
+span[title="rejeted"] {
+  color: red;
+}
