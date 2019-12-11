@@ -40,7 +40,7 @@
   version = "v1.13.3"
 
 [[projects]]
-  digest = "1:d3859c480372f3e41f2829706bd5fa6b8e1f6dc632d05405439f53370c0ba9e2"
+  digest = "1:51624df75eb75ffbd795fd9c7e259b9013155c277da7212937e39fe2a90111ee"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",

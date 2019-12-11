@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "graceful-fs": "^4.2.2",
-    "serverless": "^1.52.2"
+    "serverless": "^1.58.0"
   }
 }
