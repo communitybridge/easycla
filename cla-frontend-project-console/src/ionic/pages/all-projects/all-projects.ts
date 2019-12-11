@@ -111,6 +111,6 @@ export class AllProjectsPage {
    * Opens the access page in a new window
    */
   openAccessPage() {
-    window.open('https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/get-access-to-easycla', "_blank");
+    window.open('https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started', "_blank");
   }
 }

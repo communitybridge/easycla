@@ -75,6 +75,36 @@ paths:
       tags:
         - docs
 
+  /users/search:
+    get:
+      summary: Search users
+      description: Searches for matching users by field
+      security:
+        - OauthSecurity:
+            - user
+      operationId: searchUsers
+      parameters:
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/fullMatch'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/users'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - users
+
   /users/{userID}:
     get:
       summary: Get user by ID
@@ -293,6 +323,9 @@ paths:
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
         - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/fullMatch'
         - $ref: '#/parameters/lfid'
         - $ref: '#/parameters/ghid'
       responses:
@@ -1176,10 +1209,10 @@ paths:
           required: true
       responses:
         302:
-          description: "302 response"
+          description: '302 response'
           headers:
             Location:
-              type: "string"
+              type: 'string'
       tags:
         - github
 
@@ -1199,10 +1232,10 @@ paths:
           required: true
       responses:
         302:
-          description: "302 response"
+          description: '302 response'
           headers:
             Location:
-              type: "string"
+              type: 'string'
       tags:
         - github
 
@@ -1230,6 +1263,25 @@ parameters:
     type: string
     required: false
     pattern: '^\w+$'
+  searchField:
+    name: searchField
+    description: The optional user name filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  searchTerm:
+    name: searchTerm
+    description: The optional search filter
+    in: query
+    type: string
+    required: false
+  fullMatch:
+    name: fullMatch
+    in: query
+    type: boolean
+    default: false
+    required: false
   lfid:
     name: lfid
     description: The optional LFID filter
@@ -1284,6 +1336,34 @@ definitions:
         type: array
         items:
           type: string
+
+  users:
+    type: object
+    x-nullable: false
+    title: Users
+    description: A list of users
+    properties:
+      searchField:
+        type: string
+      searchTerm:
+        type: string
+      fullMatch:
+        type: boolean
+      resultCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      lastKeyScanned:
+        type: string
+      users:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/user'
 
   onboard-cla-manager-requests:
     type: object
@@ -1690,6 +1770,10 @@ definitions:
       signatureReferenceType:
         type: string
       signatureReferenceID:
+        type: string
+      signatureReferenceName:
+        type: string
+      signatureReferenceNameLower:
         type: string
       signatureType:
         type: string

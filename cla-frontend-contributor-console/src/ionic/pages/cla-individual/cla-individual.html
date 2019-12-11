@@ -41,12 +41,23 @@
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open CLA
               </button>
+              <div *ngIf="error">
+                <p class="error" *ngIf="error.message === 'missing template document'">
+                  The Individual CLA template has not been selected by the Project Manager. Please <a
+                    (click)="createTicket()">create a ticket</a> to help us resolve this issue.
+                </p>
+                <p class="error" *ngIf="error.message !== 'missing template document'">
+                  It looks like something has gone wrong. Please <a (click)="createTicket()">create a ticket</a> to help
+                  us resolve this issue.
+                </p>
+              </div>
               <loading-spinner [loading]="loadingSignature"></loading-spinner>
               <div *ngIf="loadingSignature"><span>Loading Individual CLA...</span></div>
             </div>
             <div *ngIf="!activeSignatures">
               <p class="error">
-                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and restarting the signing process from your pull request if necessary.
+                Whoops, It looks like you don't have any signatures in progress. Try going back to your pull request and
+                restarting the signing process from your pull request if necessary.
               </p>
             </div>
           </ion-card-content>
