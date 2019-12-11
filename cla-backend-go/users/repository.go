@@ -5,6 +5,8 @@ package users
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -208,29 +210,46 @@ func (repo repository) GetUserByUserName(userName string) (*models.User, error) 
 
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
+	var indexName string
+
 	// This is the filter we want to match
-	filter := expression.Name("lf_username").Equal(expression.Value(userName))
+	var condition expression.KeyConditionBuilder
+
+	if strings.Contains(userName, "github:") {
+		indexName = "github-user-index"
+		// Username for Github comes in as github:123456, so we want to remove the initial string
+		githubID, err := strconv.Atoi(strings.Replace(userName, "github:", "", 1))
+		if err != nil {
+			log.Warnf("Unable to convert Github ID to number: %s", err)
+			return nil, err
+		}
+		condition = expression.Key("user_github_id").Equal(expression.Value(githubID))
+	} else {
+		indexName = "lf-username-index"
+		condition = expression.Key("lf_username").Equal(expression.Value(userName))
+	}
 
 	// These are the columns we want returned
 	projection := buildUserProjection()
 
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
 	if err != nil {
 		log.Warnf("error building expression for user name: %s, error: %v", userName, err)
 		return nil, err
 	}
 
 	// Assemble the scan input parameters
-	scanInput := &dynamodb.ScanInput{
+	queryInput := &dynamodb.QueryInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
+		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
 	}
 
-	//log.Debugf("Running user query using scanInput: %+v", scanInput)
+	log.Debugf("Running user query using queryInput: %+v", queryInput)
 
 	var lastEvaluatedKey string
 	// The user model
@@ -239,7 +258,7 @@ func (repo repository) GetUserByUserName(userName string) (*models.User, error) 
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		result, err := repo.dynamoDBClient.Scan(scanInput)
+		result, err := repo.dynamoDBClient.Query(queryInput)
 		if err != nil {
 			log.Warnf("Error retrieving user by user name: %s, error: %+v", userName, err)
 			return nil, err
@@ -264,7 +283,7 @@ func (repo repository) GetUserByUserName(userName string) (*models.User, error) 
 		// If we have another page of results...
 		if result.LastEvaluatedKey["user_id"] != nil {
 			lastEvaluatedKey = *result.LastEvaluatedKey["user_id"].S
-			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
 				"user_id": {
 					S: aws.String(lastEvaluatedKey),
 				},
