@@ -39,7 +39,6 @@ export class MyApp {
     const localServicesMode =
       (process.env.USE_LOCAL_SERVICES || "false").toLowerCase() === "true";
     // Set true for local debugging using localhost (local ports set in claService)
-    console.log(localServicesMode);
     this.claService.isLocalTesting(localServicesMode);
 
     this.claService.setApiUrl(EnvConfig["cla-api-url"]);

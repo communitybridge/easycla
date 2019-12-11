@@ -98,13 +98,22 @@ export class ClaIndividualPage {
         //   sign_url: docusign.com/some-docusign-url
         // }
         if (response.errors) {
-          this.error = response;
+          this.error = response.errors;
+          console.log(this.error.message);
+        } else {
+          this.signature = response;
         }
-        this.signature = response;
       },
       err => {
         this.error = err;
       }
+    );
+  }
+
+  createTicket() {
+    window.open(
+      "https://jira.linuxfoundation.org/servicedesk/customer/portal/4",
+      "_blank"
     );
   }
 

@@ -42,8 +42,13 @@
                 Open CLA
               </button>
               <div *ngIf="error">
-                <p class="error">
-                  {{ error }}
+                <p class="error" *ngIf="error.message === 'missing template document'">
+                  The Individual CLA template has not been selected by the Project Manager. Please <a
+                    (click)="createTicket()">create a ticket</a> to help us resolve this issue.
+                </p>
+                <p class="error" *ngIf="error.message !== 'missing template document'">
+                  It looks like something has gone wrong. Please <a (click)="createTicket()">create a ticket</a> to help
+                  us resolve this issue.
                 </p>
               </div>
               <loading-spinner [loading]="loadingSignature"></loading-spinner>

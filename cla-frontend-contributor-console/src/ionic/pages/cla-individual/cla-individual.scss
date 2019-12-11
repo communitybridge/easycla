@@ -11,7 +11,11 @@ cla-individual {
   }
 
   .error {
-    color: red;
+    color: #db4e4e;
     font-size: 12px;
+
+    a {
+      cursor: pointer;
+    }
   }
 }
