@@ -58,5 +58,5 @@ As a project manager, you use the CLA Management Console to install the EasyCLA 
 
   or
 
-* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring)
+* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md)
 

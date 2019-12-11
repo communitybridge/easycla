@@ -38,11 +38,11 @@ As a project manager, you use the CLA Management Console to add and name a CLA g
 
 ## Next Steps:
 
-* [Add Contributor License Agreements](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-contributor-license-agreements)
+* [Add Contributor License Agreements](add-contributor-license-agreements.md)
 * [Add GitHub Repositories to CLA Monitoring or Remove Them From CLA Monitoring](add-github-repositories-to-cla-monitoring-or-remove-them-from-cla-monitoring.md)
 
   or
 
-* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring)
+* [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md)
 * \(Optional\) [Manage CLA Group Details](manage-cla-group-details.md)
 

@@ -6,8 +6,8 @@ Do the following CLA set-up steps after you [sign in to the CLA Management Conso
 
 1. [Install the EasyCLA Application](install-the-easycla-application.md).
 2. [Add a CLA Group](add-a-cla-group.md).
-3. [Add Contributor License Agreements](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-contributor-license-agreements).
-4. [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](https://app.gitbook.com/@lf-docs-linux-foundation/s/easycla/getting-started/project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring).
+3. [Add Contributor License Agreements](add-contributor-license-agreements.md).
+4. [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md).
 
 At any time, you can change the settings to manage your project CLA monitoring, and do other management tasks:
 
