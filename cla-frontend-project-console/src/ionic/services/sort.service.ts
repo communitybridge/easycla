@@ -7,7 +7,6 @@ var TimSort = require('timsort');
 
 @Injectable()
 export class SortService {
-
   toggleSort(config, prop, dataArray) {
     let current_sort = config[prop].sort;
     this.resetSort(config);
@@ -35,18 +34,18 @@ export class SortService {
     }
     return function(a, b) {
       prop = prop.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
-      prop = prop.replace(/^\./, '');           // strip a leading dot
+      prop = prop.replace(/^\./, ''); // strip a leading dot
       var props = prop.split('.');
       var props_len = props.length;
       for (var i = 0; i < props_len; ++i) {
         var k = props[i];
         if (k in a) {
-            a = a[k];
+          a = a[k];
         } else {
           return;
         }
         if (k in b) {
-            b = b[k];
+          b = b[k];
         } else {
           return;
         }
@@ -79,15 +78,15 @@ export class SortService {
 
         let isValidPart = function(x) {
           return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
-        }
+        };
 
         if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
           return NaN;
         }
 
         if (zeroExtend) {
-          while (v1parts.length < v2parts.length) v1parts.push("0");
-          while (v2parts.length < v1parts.length) v2parts.push("0");
+          while (v1parts.length < v2parts.length) v1parts.push('0');
+          while (v2parts.length < v1parts.length) v2parts.push('0');
         }
 
         if (!lexicographical) {
@@ -102,11 +101,9 @@ export class SortService {
 
           if (v1parts[i] == v2parts[i]) {
             continue;
-          }
-          else if (v1parts[i] > v2parts[i]) {
+          } else if (v1parts[i] > v2parts[i]) {
             return 1 * sort;
-          }
-          else {
+          } else {
             return -1 * sort;
           }
         }
@@ -117,6 +114,6 @@ export class SortService {
 
         return 0;
       }
-    }
+    };
   }
 }

@@ -2,13 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { NgModule } from '@angular/core';
-import { LoadingDisplayDirective  } from './loading-display';
+import { LoadingDisplayDirective } from './loading-display';
 @NgModule({
-  declarations: [
-    LoadingDisplayDirective
-  ],
-  exports: [
-    LoadingDisplayDirective
-  ]
+  declarations: [LoadingDisplayDirective],
+  exports: [LoadingDisplayDirective]
 })
-export class LoadingDisplayDirectiveModule { }
+export class LoadingDisplayDirectiveModule {}

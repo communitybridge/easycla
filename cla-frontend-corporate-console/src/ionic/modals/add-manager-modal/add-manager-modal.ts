@@ -1,22 +1,19 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {
-  ViewController,
-  IonicPage, NavParams
-} from "ionic-angular";
-import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {ClaService} from "../../services/cla.service";
-import {AuthService} from "../../services/auth.service";
-import {ClaCompanyModel} from "../../models/cla-company";
+import { Component } from '@angular/core';
+import { ViewController, IonicPage, NavParams } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { AuthService } from '../../services/auth.service';
+import { ClaCompanyModel } from '../../models/cla-company';
 
 @IonicPage({
-  segment: "add-manager-modal"
+  segment: 'add-manager-modal'
 })
 @Component({
-  selector: "add-manager-modal",
-  templateUrl: "add-manager-modal.html"
+  selector: 'add-manager-modal',
+  templateUrl: 'add-manager-modal.html'
 })
 export class AddManagerModal {
   form: FormGroup;
@@ -25,26 +22,26 @@ export class AddManagerModal {
   signatureId: string;
   managerLFID: string;
 
-  constructor(public viewCtrl: ViewController,
-              public navParams: NavParams,
-              public formBuilder: FormBuilder,
-              private claService: ClaService) {
-    this.signatureId = this.navParams.get("signatureId");
+  constructor(
+    public viewCtrl: ViewController,
+    public navParams: NavParams,
+    public formBuilder: FormBuilder,
+    private claService: ClaService
+  ) {
+    this.signatureId = this.navParams.get('signatureId');
 
     this.form = this.formBuilder.group({
-      managerLFID: [this.managerLFID, Validators.compose([Validators.required])],
+      managerLFID: [this.managerLFID, Validators.compose([Validators.required])]
     });
   }
 
-
   submit() {
     this.submitAttempt = true;
-    this.addManager()
+    this.addManager();
   }
 
   addManager() {
-    this.claService.postCLAManager(this.signatureId, this.form.getRawValue())
-      .subscribe(() => this.dismiss(true));
+    this.claService.postCLAManager(this.signatureId, this.form.getRawValue()).subscribe(() => this.dismiss(true));
   }
 
   dismiss(data = false) {

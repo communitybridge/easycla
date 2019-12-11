@@ -1,5 +1,4 @@
 cla-new-company-modal {
-
   .content-container {
     max-width: 500px;
     margin: 0 auto;
@@ -8,7 +7,7 @@ cla-new-company-modal {
   .clearfix {
     padding-top: 1px;
     &::after {
-      content: "";
+      content: '';
       display: block;
       clear: both;
     }
@@ -24,7 +23,6 @@ cla-new-company-modal {
     }
   }
 
-
   .simple-sharing-link-management {
     .link-management-container {
       .link-management-text-container {
@@ -34,7 +32,6 @@ cla-new-company-modal {
           border-right: 1px solid #d8d8d8;
           padding: 1rem 2rem;
           .link-management-label {
-
           }
         }
         .link-management-copy-link-button {
@@ -53,7 +50,6 @@ cla-new-company-modal {
         .link-management-url-input {
           border: none;
           width: 100%;
-
         }
         .link-management-url-text-area {
           display: none;

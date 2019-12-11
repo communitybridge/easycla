@@ -10,10 +10,9 @@ import { CincoService } from '../../services/cinco.service';
 })
 @Component({
   selector: 'member-modal',
-  templateUrl: 'member-modal.html',
+  templateUrl: 'member-modal.html'
 })
 export class MemberModal {
-
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -25,17 +24,12 @@ export class MemberModal {
     this.getDefaults();
   }
 
-  ngOnInit() {
+  ngOnInit() {}
 
-  }
-
-  getDefaults() {
-
-  }
+  getDefaults() {}
 
   // MemberModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
-
 }

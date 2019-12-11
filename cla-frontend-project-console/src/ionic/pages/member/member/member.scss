@@ -33,15 +33,27 @@ member {
     border-radius: 1000px;
 
     @keyframes colorchange {
-      0%   {background: grey;}
-      50%  {background: #d8d8d8;}
-      100% {background: grey;}
+      0% {
+        background: grey;
+      }
+      50% {
+        background: #d8d8d8;
+      }
+      100% {
+        background: grey;
+      }
     }
 
     @-webkit-keyframes colorchange {
-      0%   {background: grey;}
-      50%  {background: #d8d8d8;}
-      100% {background: grey;}
+      0% {
+        background: grey;
+      }
+      50% {
+        background: #d8d8d8;
+      }
+      100% {
+        background: grey;
+      }
     }
   }
 

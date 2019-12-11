@@ -1,22 +1,21 @@
 login {
-
   .login-wrapper {
     display: flex;
     align-items: center;
     min-height: 65vh;
     position: relative;
     padding: 4px 25px;
-    
-    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
+
+    background: url('../assets/img/boat.jpeg') no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
-    
+
     &:before {
-      background: linear-gradient(90deg,#003366 0%,rgba(255,255,255,0.2) 100%);
+      background: linear-gradient(90deg, #003366 0%, rgba(255, 255, 255, 0.2) 100%);
       opacity: 0.8;
-      content: "";
+      content: '';
       display: block;
       position: absolute;
       top: 0;
@@ -40,9 +39,10 @@ login {
   .login-content {
     z-index: 2;
 
-    h3, .login-paragraph {
+    h3,
+    .login-paragraph {
       color: color($colors, white);
-      text-align: left
+      text-align: left;
     }
 
     h3 {
@@ -50,7 +50,8 @@ login {
     }
   }
 
-  .invert  h3, p {
+  .invert h3,
+  p {
     text-align: center;
     color: color($colors, dark);
   }
@@ -120,15 +121,15 @@ login {
       font-size: 20px;
     }
   }
-  
+
   .cla-list::before {
     font-family: 'IconsMind';
-    content: "\ee5e";
+    content: '\ee5e';
     margin: 0px 5px 0px -15px;
     color: #0099ee;
     list-style-type: none;
   }
-  
+
   .cla-list {
     margin-bottom: 15px;
     list-style: none;
@@ -139,16 +140,15 @@ login {
   }
 
   .cla-list-paragraph {
-      color: #676767;
-      font-family: 'Work Sans', sans-serif;
+    color: #676767;
+    font-family: 'Work Sans', sans-serif;
 
-      a {
-        color: color($colors, light_blue)
-      }
+    a {
+      color: color($colors, light_blue);
+    }
   }
 
   ion-footer {
     position: relative;
   }
-
 }

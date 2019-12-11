@@ -9,17 +9,13 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
-  declarations: [
-    ClaContractsContributorsPage,
-  ],
+  declarations: [ClaContractsContributorsPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
     IonicPageModule.forChild(ClaContractsContributorsPage)
   ],
-  entryComponents: [
-    ClaContractsContributorsPage,
-  ]
+  entryComponents: [ClaContractsContributorsPage]
 })
 export class ClaContractsContributorsPageModule {}

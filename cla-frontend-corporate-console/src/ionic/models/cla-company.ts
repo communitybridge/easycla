@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 export class ClaCompanyModel {
-
   // This model is based on CLA Company class
   company_external_id: string;
   company_id: string;
@@ -12,8 +11,5 @@ export class ClaCompanyModel {
   date_modified: string;
   version: string;
 
-  constructor() {
-    
-  }
-
+  constructor() {}
 }

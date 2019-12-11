@@ -8,16 +8,12 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    ClaCorporateWhitelistModal
-  ],
+  declarations: [ClaCorporateWhitelistModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(ClaCorporateWhitelistModal)
   ],
-  entryComponents: [
-    ClaCorporateWhitelistModal
-  ]
+  entryComponents: [ClaCorporateWhitelistModal]
 })
 export class ClaCorporateWhitelistModalModule {}

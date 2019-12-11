@@ -8,13 +8,7 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    ProjectDetailsPage
-  ],
-  imports: [
-    LoadingSpinnerComponentModule,
-    LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ProjectDetailsPage)
-  ],
+  declarations: [ProjectDetailsPage],
+  imports: [LoadingSpinnerComponentModule, LoadingDisplayDirectiveModule, IonicPageModule.forChild(ProjectDetailsPage)]
 })
 export class ProjectDetailsPageModule {}

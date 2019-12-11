@@ -1,23 +1,23 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import { NavController, IonicPage } from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
-import { FilterService } from "../../services/filter.service";
-import { RolesService } from "../../services/roles.service";
-import { Restricted } from "../../decorators/restricted";
+import { Component } from '@angular/core';
+import { NavController, IonicPage } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { FilterService } from '../../services/filter.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ["isAuthenticated", "isPmcUser"]
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 @IonicPage({
-  name: "AllProjectsPage",
-  segment: "projects"
+  name: 'AllProjectsPage',
+  segment: 'projects'
 })
 @Component({
-  selector: "all-projects",
-  templateUrl: "all-projects.html"
+  selector: 'all-projects',
+  templateUrl: 'all-projects.html'
 })
 export class AllProjectsPage {
   loading: any;
@@ -42,13 +42,14 @@ export class AllProjectsPage {
   }
 
   getAllProjectFromSFDC() {
-    this.claService.getAllProjectsFromSFDC().subscribe(response => {
-      this.allProjects = this.sortProjects(response);
-      this.allFilteredProjects = this.filterService.resetFilter(
-        this.allProjects
-      );
-      this.loading.projects = false;
-    }, (error) => this.handleErrors(error));
+    this.claService.getAllProjectsFromSFDC().subscribe(
+      (response) => {
+        this.allProjects = this.sortProjects(response);
+        this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
+        this.loading.projects = false;
+      },
+      (error) => this.handleErrors(error)
+    );
   }
 
   sortProjects(projects) {
@@ -61,7 +62,7 @@ export class AllProjectsPage {
     });
   }
 
-  handleErrors (error) {
+  handleErrors(error) {
     this.setLoadingSpinner(false);
     this.errorStatus = error.status;
 
@@ -76,7 +77,7 @@ export class AllProjectsPage {
   }
 
   viewProjectCLA(projectId) {
-    this.navCtrl.setRoot("ProjectClaPage", {
+    this.navCtrl.setRoot('ProjectClaPage', {
       projectId: projectId
     });
   }
@@ -87,23 +88,17 @@ export class AllProjectsPage {
     this.setLoadingSpinner(true);
   }
 
-  setLoadingSpinner (value) {
+  setLoadingSpinner(value) {
     this.loading = {
       projects: value
     };
   }
 
   filterAllProjects(projectProperty, keyword) {
-    if (keyword == "NO_FILTER") {
-      this.allFilteredProjects = this.filterService.resetFilter(
-        this.allProjects
-      );
+    if (keyword == 'NO_FILTER') {
+      this.allFilteredProjects = this.filterService.resetFilter(this.allProjects);
     } else {
-      this.allFilteredProjects = this.filterService.filterAllProjects(
-        this.allProjects,
-        projectProperty,
-        keyword
-      );
+      this.allFilteredProjects = this.filterService.filterAllProjects(this.allProjects, projectProperty, keyword);
     }
   }
 
@@ -111,6 +106,6 @@ export class AllProjectsPage {
    * Opens the access page in a new window
    */
   openAccessPage() {
-    window.open('https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started', "_blank");
+    window.open('https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started', '_blank');
   }
 }

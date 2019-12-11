@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 export class SFProjectModel {
-
   // This project definition is based on response from SFDC
   id: string;
   name: string;
   logoRef: string;
   description: string;
 
-  constructor() {
-  }
-
+  constructor() {}
 }

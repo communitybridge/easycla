@@ -5,13 +5,13 @@ import { Component } from '@angular/core';
 
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
-import { CincoService } from '../../services/cinco.service'
+import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser', 'isAdmin'],
+  roles: ['isAuthenticated', 'isPmcUser', 'isAdmin']
 })
 // @IonicPage({
 //   segment: 'console-users'
@@ -30,34 +30,34 @@ export class ConsoleUsersPage {
     private cincoService: CincoService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.getDefaults();
   }
 
   getDefaults() {
     this.loading = {
-      users: true,
+      users: true
     };
     this.users = [];
     this.userRoles = {};
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getUserRoles();
     // this.getAllUsers();
   }
 
   getUserRoles() {
-    this.cincoService.getUserRoles().subscribe(response => {
-      if(response) {
+    this.cincoService.getUserRoles().subscribe((response) => {
+      if (response) {
         this.userRoles = response;
       }
     });
   }
 
-// TODO: Get all Users is not avaiable anymore in CINCO.
-// We need logic for search users instead now.
+  // TODO: Get all Users is not avaiable anymore in CINCO.
+  // We need logic for search users instead now.
   // getAllUsers() {
   //   this.cincoService.getAllUsers().subscribe(response => {
   //     if(response) {
@@ -69,9 +69,9 @@ export class ConsoleUsersPage {
 
   userSelected(user) {
     let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {
-      user: user,
+      user: user
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       // this.getAllUsers();
     });
@@ -79,13 +79,11 @@ export class ConsoleUsersPage {
   }
 
   addNewUser() {
-    let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {
-    });
-    modal.onDidDismiss(data => {
+    let modal = this.modalCtrl.create('ConsoleUserUpdateModal', {});
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       // this.getAllUsers();
     });
     modal.present();
   }
-
 }
