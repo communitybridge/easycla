@@ -45,7 +45,8 @@
                 <ion-label stacked>Company Name:</ion-label>
                 <ion-input type="text" formControlName="company" required></ion-input>
               </ion-item>
-              <ion-item *ngIf="!form.controls.company.valid && (form.controls.company.touched || submitAttempt)" no-lines>
+              <ion-item *ngIf="!form.controls.company.valid && (form.controls.company.touched || submitAttempt)"
+                no-lines>
                 <p>* A company name is required.</p>
               </ion-item>
               <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">

@@ -31,7 +31,11 @@ cla-contract-config-modal {
     font-size: 18px !important;
   }
 
-  
+}
+
+input {
+  width: 100%;
+  padding: 8px;
 }
 
 .signature-select .select-md {
@@ -62,6 +66,12 @@ ion-modal .title-wrapper {
 .searchbar-md .searchbar-input {
   padding: 3px 40px;
   border-radius: 1px;
+}
+
+ion-segment-button {
+  .label-md {
+    margin: 0;
+  }
 }
 
 

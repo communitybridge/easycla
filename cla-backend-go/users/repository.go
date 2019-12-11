@@ -5,6 +5,7 @@ package users
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -27,7 +28,8 @@ import (
 type Repository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
-	GetUserByUserName(userName string) (*models.User, error)
+	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
 
 // repository data model
@@ -131,7 +133,7 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 
 	log.Debugf("AddUser put took: %v", utils.FmtDuration(time.Since(putStartTime)))
 	log.Debugf("Created new user: %+v", user)
-	userModel, err := repo.GetUserByUserName(user.Username)
+	userModel, err := repo.GetUserByUserName(user.Username, true)
 	if err != nil {
 		log.Warnf("Error locating new user after creation, user: %+v, error: %+v", user, err)
 	}
@@ -203,19 +205,26 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 	return convertDBUserModel(dbUserModels[0]), nil
 }
 
-func (repo repository) GetUserByUserName(userName string) (*models.User, error) {
+func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
 	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
-	// This is the filter we want to match
-	filter := expression.Name("lf_username").Equal(expression.Value(userName))
-
 	// These are the columns we want returned
 	projection := buildUserProjection()
 
+	builder := expression.NewBuilder().WithProjection(projection)
+	// This is the filter we want to match
+	if fullMatch {
+		filter := expression.Name("lf_username").Equal(expression.Value(userName))
+		builder.WithFilter(filter)
+	} else {
+		filter := expression.Name("lf_username").Contains(userName)
+		builder.WithFilter(filter)
+	}
+
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	expr, err := builder.Build()
 	if err != nil {
 		log.Warnf("error building expression for user name: %s, error: %v", userName, err)
 		return nil, err
@@ -277,6 +286,115 @@ func (repo repository) GetUserByUserName(userName string) (*models.User, error) 
 	return nil, nil
 }
 
+func (repo repository) SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error) {
+	log.Debugf("Starting Search User")
+	// Sorry, no results if empty search field or search term
+	if strings.TrimSpace(searchTerm) == "" || strings.TrimSpace(searchField) == "" {
+		return &models.Users{
+			Users:          []models.User{},
+			LastKeyScanned: "",
+			ResultCount:    0,
+			SearchTerm:     searchTerm,
+			TotalCount:     0,
+		}, nil
+	}
+
+	queryStartTime := time.Now()
+
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	builder := expression.NewBuilder().WithProjection(projection)
+	// This is the filter we want to match
+	if fullMatch {
+		filter := expression.Name(searchField).Equal(expression.Value(searchTerm))
+		builder.WithFilter(filter)
+	} else {
+		filter := expression.Name(searchField).Contains(searchTerm)
+		builder.WithFilter(filter)
+	}
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		log.Warnf("error building expression for user name: %s, error: %v", searchTerm, err)
+		return nil, err
+	}
+
+	// Assemble the scan input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	var lastEvaluatedKey string
+	var users []models.User
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
+		if dbErr != nil {
+			log.Warnf("error retrieving users for search term: %s, error: %v", searchTerm, dbErr)
+			return nil, dbErr
+		}
+
+		// Convert the list of DB models to a list of response models
+		userList, modelErr := buildDBUserModels(results)
+		if modelErr != nil {
+			log.Warnf("error retrieving users for searchTerm %s in ACL, error: %v", searchTerm, modelErr)
+			return nil, modelErr
+		}
+
+		// Add to our response model list
+		users = append(users, userList...)
+
+		log.Debugf("User search scan took: %v resulting in %d results",
+			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+
+		if results.LastEvaluatedKey["user_id"] != nil {
+			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
+			lastEvaluatedKey = *results.LastEvaluatedKey["user_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"user_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	// How many total records do we have - may not be up-to-date as this value is updated only periodically
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total user record count for searchTerm: %s, error: %v", searchTerm, err)
+		return nil, err
+	}
+
+	totalCount := *describeTableResult.Table.ItemCount
+
+	log.Debugf("Total user search took: %v resulting in %d results",
+		utils.FmtDuration(time.Since(queryStartTime)), len(users))
+
+	return &models.Users{
+		ResultCount:    int64(len(users)),
+		TotalCount:     totalCount,
+		LastKeyScanned: lastEvaluatedKey,
+		Users:          users,
+	}, nil
+
+}
+
 // convertDBUserModel translates a dyanamoDB data model into a service response model
 func convertDBUserModel(user DBUser) *models.User {
 	return &models.User{
@@ -308,4 +426,34 @@ func buildUserProjection() expression.ProjectionBuilder {
 		expression.Name("user_github_username"),
 		expression.Name("user_github_id"),
 	)
+}
+
+// buildDBUserModels converts the response model into a response data model
+func buildDBUserModels(results *dynamodb.ScanOutput) ([]models.User, error) {
+	var users []models.User
+
+	type ItemSignature struct {
+		UserID       string `json:"user_id"`
+		DateCreated  string `json:"date_created"`
+		DateModified string `json:"date_modified"`
+	}
+
+	// The DB company model
+	var dbUsers []ItemSignature
+
+	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbUsers)
+	if err != nil {
+		log.Warnf("error unmarshalling users from database, error: %v", err)
+		return nil, err
+	}
+
+	for _, dbUser := range dbUsers {
+		users = append(users, models.User{
+			UserID:       dbUser.UserID,
+			DateCreated:  dbUser.DateCreated,
+			DateModified: dbUser.DateModified,
+		})
+	}
+
+	return users, nil
 }

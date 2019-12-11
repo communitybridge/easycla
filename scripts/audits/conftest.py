@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 
+import os
+
+import boto3
 import pytest
 from moto import mock_dynamodb2
-import os
-import boto3
 
-from audit import ProjectAudit
+from audit import CompanyAudit, ProjectAudit
+
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -28,6 +30,27 @@ def dynamodb(aws_credentials):
 
 
 @pytest.fixture(scope="function")
+def company_table(dynamodb):
+    company_table = dynamodb.create_table(
+        TableName="cla-test-companies",
+        AttributeDefinitions=[{"AttributeName": "company_id", "AttributeType": "S"}],
+        KeySchema=[{"AttributeName": "company_id", "KeyType": "HASH"}],
+        ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
+    )
+    yield company_table
+
+
+@pytest.fixture(scope="function")
+def user_table(dynamodb):
+    user_table = dynamodb.create_table(
+        TableName="cla-test-users",
+        AttributeDefinitions=[{"AttributeName": "user_id", "AttributeType": "S",}],
+        KeySchema=[{"AttributeName": "user_id", "KeyType": "HASH"}],
+        ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
+    )
+    yield user_table
+
+@pytest.fixture(scope="function")
 def project_table(dynamodb):
     project_table = dynamodb.create_table(
         TableName="cla-test-projects",
@@ -38,10 +61,15 @@ def project_table(dynamodb):
     yield project_table
 
 
+@pytest.fixture(scope="function")
+def audit_companies(dynamodb):
+    audit = CompanyAudit(dynamodb)
+    audit.set_companies_table(dynamodb.Table("cla-test-companies"))
+    audit.set_users_table(dynamodb.Table("cla-test-users"))
+    yield audit
 
 @pytest.fixture(scope="function")
 def audit_projects(dynamodb):
     audit = ProjectAudit(dynamodb)
     audit.set_projects_table(dynamodb.Table("cla-test-projects"))
     yield audit
-
