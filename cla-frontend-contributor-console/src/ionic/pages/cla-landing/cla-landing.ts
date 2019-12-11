@@ -1,16 +1,21 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {IonicPage, ModalController, NavController, NavParams,} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
+import { Component } from "@angular/core";
+import {
+  IonicPage,
+  ModalController,
+  NavController,
+  NavParams
+} from "ionic-angular";
+import { ClaService } from "../../services/cla.service";
 
 @IonicPage({
-  segment: 'cla/project/:projectId/user/:userId'
+  segment: "cla/project/:projectId/user/:userId"
 })
 @Component({
-  selector: 'cla-landing',
-  templateUrl: 'cla-landing.html'
+  selector: "cla-landing",
+  templateUrl: "cla-landing.html"
 })
 export class ClaLandingPage {
   loading: any;
@@ -27,20 +32,20 @@ export class ClaLandingPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
-    this.projectId = navParams.get('projectId');
-    this.userId = navParams.get('userId');
+    this.projectId = navParams.get("projectId");
+    this.userId = navParams.get("userId");
     this.getDefaults();
   }
 
   getDefaults() {
     this.loading = {
       individualDoc: true,
-      corporateDoc: true,
+      corporateDoc: true
     };
     this.project = {
-      project_name: "",
+      project_name: ""
     };
 
     this.hasCorporateCla = false;
@@ -50,21 +55,20 @@ export class ClaLandingPage {
   ngOnInit() {
     this.getUser(this.userId);
     this.getProject(this.projectId);
-    this.getProjectDocuments();
   }
 
   openClaIndividualPage() {
     // send to the individual cla page which will give directions and redirect
-    this.navCtrl.push('ClaIndividualPage', {
+    this.navCtrl.push("ClaIndividualPage", {
       projectId: this.projectId,
-      userId: this.userId,
+      userId: this.userId
     });
   }
 
   openClaIndividualEmployeeModal() {
-    let modal = this.modalCtrl.create('ClaSelectCompanyModal', {
+    let modal = this.modalCtrl.create("ClaSelectCompanyModal", {
       projectId: this.projectId,
-      userId: this.userId,
+      userId: this.userId
     });
     modal.present();
   }
@@ -81,29 +85,15 @@ export class ClaLandingPage {
     });
   }
 
-  getProjectDocuments() {
-    this.claService.getProjectDocument(this.projectId, 'individual').subscribe(response => {
-
-      if (!response.hasOwnProperty('errors')) {
-        this.hasIndividualCla = true;
-      }
-      this.loading.individualDoc = false;
-    });
-    this.claService.getProjectDocument(this.projectId, 'corporate').subscribe(response => {
-      if (!response.hasOwnProperty('errors')) {
-        this.hasCorporateCla = true;
-      }
-      this.loading.corporateDoc = false;
-    });
-  }
-
   /**
    * Returns true if this is a CFF project, returns false otherwise.
    * We have special instructions on the view for this project.
    */
   isCFFProject(): boolean {
     if (this.project && this.project.project_name) {
-      return this.project.project_name.toLowerCase().includes("Cloud Foundry Foundation".toLowerCase());
+      return this.project.project_name
+        .toLowerCase()
+        .includes("Cloud Foundry Foundation".toLowerCase());
     } else {
       return false;
     }

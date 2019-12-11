@@ -9,4 +9,13 @@ cla-individual {
   .scroll-content {
     padding-bottom: 162px;
   }
+
+  .error {
+    color: #db4e4e;
+    font-size: 12px;
+
+    a {
+      cursor: pointer;
+    }
+  }
 }
