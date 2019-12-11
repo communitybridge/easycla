@@ -1,0 +1,13 @@
+boto3==1.9.236
+flask==1.1.1
+Flask-RESTful==0.3.7
+falcon==2.0.0
+hug==2.6.0
+isort==4.3.21
+oauthlib==3.1.0
+requests==2.22.0
+requests-oauthlib==1.2.0
+python-dateutil==2.8.0
+pylint==2.4.3
+pynamodb==4.0.0
+pytest==5.0.1

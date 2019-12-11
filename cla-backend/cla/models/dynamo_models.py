@@ -38,7 +38,7 @@ def create_database():
     is expected to exist in all database storage wrappers.
     """
     tables = [RepositoryModel, ProjectModel, SignatureModel,
-              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel]
+              CompanyModel, UserModel, StoreModel, GitHubOrgModel, GerritModel,EventModel]
     # Create all required tables.
     for table in tables:
         # Wait blocks until table is created.
@@ -256,6 +256,34 @@ class RequestedCompanyIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     requested_company_id = UnicodeAttribute(hash_key=True)
+
+class EventTypeIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying events with an event type
+    """
+
+    class Meta:
+        """Meta class for event type index."""
+        index_name = 'event-type-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        projection = AllProjection()
+
+    event_type = UnicodeAttribute(hash_key=True)
+
+class EventUserIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying events by user ID.
+    """
+
+    class Meta:
+        """Meta class for user ID index"""
+        index_name = 'user-id-index'
+        write_capacity_units = int(cla.conf['DYNAMO_WRITE_UNITS'])
+        read_capacity_units = int(cla.conf['DYNAMO_READ_UNITS'])
+        projection = AllProjection()
+
+    event_user_id = UnicodeAttribute(hash_key=True)
 
 
 class BaseModel(Model):
@@ -1368,7 +1396,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         github_username = self.get_user_github_username()
         github_id = self.get_user_github_id()
 
-        # TODO: DAD - 
+        # TODO: DAD -
         # Since usernames can be changed, if we have the github_id already - let's
         # lookup the username by id to see if they have changed their username
         # if the username is different, then we should reset the field to the
@@ -1905,9 +1933,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                               format(signature_model.signature_reference_type, reference_type))
                 continue
 
-            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present. 
+            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present.
             # if user_ccla_company_id and signature_user_ccla_company_id are both none
-            # it loads the ICLA signatures for a user. 
+            # it loads the ICLA signatures for a user.
             if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
                               'user_ccla_company_id values do not match: {} versus {}'.
@@ -1921,8 +1949,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                               format(signature_model.signature_project_id, project_id))
                 continue
 
-            # SKip signatures that do not have the same signed flags 
-            # e.g. retrieving only signed / approved signatures 
+            # SKip signatures that do not have the same signed flags
+            # e.g. retrieving only signed / approved signatures
             if signature_signed is not None and signature_model.signature_signed != signature_signed:
                 cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
                               'signature_signed values do not match: {} versus {}'.
@@ -2010,7 +2038,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_projects_by_company_signed(self, company_id):
         # Query returns all the signatures that the company has signed a CCLA for.
-        # Loop through the signatures and retrieve only the project IDs referenced by the signatures. 
+        # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
         signature_generator = self.model.signature_reference_index. \
             query(company_id, SignatureModel.signature_signed == True)
         project_ids = []
@@ -2280,7 +2308,7 @@ class Store(key_value_store_interface.KeyValueStore):
 
 class GitHubOrgModel(BaseModel):
     """
-    Represents a Github Organization in the database. 
+    Represents a Github Organization in the database.
     Company_id, project_id are deprecated now that organizations are under an SFDC ID.
     """
 
@@ -2561,8 +2589,8 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
 class CompanyInviteModel(BaseModel):
     """
     Represents company invites in the database.
-    
-    Note that this model is utilized in the Go backend from the 'accesslist' package. 
+
+    Note that this model is utilized in the Go backend from the 'accesslist' package.
     """
 
     class Meta:
@@ -2620,3 +2648,137 @@ class CompanyInvite(model_interfaces.CompanyInvite):
 
     def delete(self):
         self.model.delete()
+
+
+class EventModel(BaseModel):
+    """
+    Represents an event in the database
+    """
+
+    class Meta:
+        """Meta class for event """
+        table_name = 'cla-{}-events'.format(stage)
+        if stage == 'local':
+            host = 'http://localhost:8000'
+
+        event_id = UnicodeAttribute(hash_key=True)
+        event_user_id = UnicodeAttribute(null=True)
+        event_type = UnicodeAttribute(null=True)
+        event_project_id = UnicodeAttribute(null=True)
+        event_company_id = UnicodeAttribute(null=True)
+        event_time = UnicodeAttribute(null=True)
+        event_data = UnicodeAttribute(null=True)
+        #event_user_index = EventUserIndex(null=True)
+        #event_type_index = EventTypeIndex(null=True)
+
+class Event(model_interfaces.Event):
+    """
+    ORM-agnostic wrapper for the DynamoDB Event model.
+    """
+    def __init__(self,
+                 event_id=None,
+                 event_type=None,
+                 event_user_id=None,
+                 event_project_id=None,
+                 event_company_id=None,
+                 event_time=None,
+                 event_data=None, ):
+
+        super(Event).__init__()
+        self.model = EventModel()
+        self.model.event_id = event_id
+        self.model.event_type = event_type
+        self.model.event_user_id = event_user_id
+        self.model.event_project_id = event_project_id
+        self.model.event_company_id = event_company_id
+        self.model.event_time = event_time
+        self.model.event_data = event_data
+
+    def __str__(self):
+        return (f'id:{self.model.event_id}, '
+                f'event type:{self.model.event_type}, '
+                f'user id:{self.model.user_id}, '
+                f'project id:{self.model.project_id}, '
+                f'company id: {self.model.company_id}, '
+                f'event time: {self.model.event_time}, '
+                f'event data: {self.model.event_data}')
+
+    def to_dict(self):
+        return dict(self.model)
+
+    def save(self):
+        self.model.save()
+
+    def load(self, event_id):
+        try:
+            event = self.model.get(str(event_id))
+        except EventModel.DoesNotExist:
+            raise cla.models.DoesNotExist('Event not found')
+        self.model = event
+
+    def get_event_company_id(self):
+        return self.get_event_company_id
+
+    def get_event_data(self):
+        return self.get_event_data
+
+    def get_event_id(self):
+        return self.get_event_id
+
+    def get_event_project_id(self):
+        return self.get_event_project_id
+
+    def get_event_type(self):
+        return self.get_event_type
+
+    def get_event_time(self):
+        return self.get_event_time
+
+    def all(self, ids=None):
+        if ids is None:
+            events = self.model.scan()
+        else:
+            events = EventModel.batch_get(ids)
+        ret = []
+        for event in events:
+            ev = Event()
+            ev.model = event
+            ret.append(ev)
+        return ret
+
+    def set_event_company_id(self, company_id):
+        self.model.event_company_id = company_id
+
+    def set_event_data(self, event_data):
+        self.model.event_data = event_data
+
+    def set_event_id(self, event_id):
+        self.model.event_id = event_id
+
+    def set_event_user_id(self, event_user_id):
+        self.model.event_user_id = event_user_id
+
+    def set_event_time(self, event_time):
+        self.model.event_time = event_time
+
+    def set_event_project_id(self, event_project_id):
+        self.model.event_project_id = event_project_id
+
+    def set_event_type(self, event_type):
+        self.model.event_type = event_type
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
