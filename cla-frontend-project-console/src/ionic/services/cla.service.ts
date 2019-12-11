@@ -1,18 +1,18 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from "@angular/core";
-import {Http} from '@angular/http';
-import {AuthService} from "./auth.service"
+import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
+import { AuthService } from './auth.service';
 
-import "rxjs/Rx";
+import 'rxjs/Rx';
 
 @Injectable()
 export class ClaService {
   http: any;
   authService: AuthService;
-  claApiUrl: string = "";
-  s3LogoUrl: string = "";
+  claApiUrl: string = '';
+  s3LogoUrl: string = '';
   localTesting = false;
   v1ClaAPIURLLocal = 'http://localhost:5000';
   v2ClaAPIURLLocal = 'http://localhost:5000';
@@ -284,9 +284,10 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signature/' + signatureId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -295,9 +296,10 @@ export class ClaService {
    */
   deleteSignature(signatureId) {
     const url: URL = this.getV1Endpoint('/v1/signatures/' + signatureId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -309,9 +311,10 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/user/' + userId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signatures/user/' + userId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -323,9 +326,10 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId);
     // Leverage the new go backend v3 endpoint
     const url: URL = this.getV3Endpoint('/v3/signatures/company/' + companyId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -338,9 +342,10 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
     const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -353,9 +358,10 @@ export class ClaService {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
     // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
     const url: URL = this.getV3Endpoint('/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -367,10 +373,16 @@ export class ClaService {
     // Leverage the new go backend v3 endpoint - note the slightly different path
     if (lastKeyScanned) {
       const url: URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50&nextKey=${lastKeyScanned}`);
-      return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
+      return this.http
+        .get(url)
+        .map(res => res.json())
+        .catch(error => this.handleServiceError(error));
     } else {
       const url: URL = this.getV3Endpoint(`/v3/signatures/project/${projectId}?pageSize=50`);
-      return this.http.get(url).map(res => res.json()).catch((error) => this.handleServiceError(error));
+      return this.http
+        .get(url)
+        .map(res => res.json())
+        .catch(error => this.handleServiceError(error));
     }
   }
 
@@ -381,11 +393,20 @@ export class ClaService {
    * @param pageSize the optional page size - default is 50
    * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '') {
+  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '', searchTerm = '', searchField = '', fullMatch = false) {
     let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
-      path += '&nextKey=' + nextKey;
+      path += `&nextKey=${nextKey}`;
     }
+
+    if (searchTerm != null && searchTerm !== '' && searchTerm.trim().length > 0) {
+      path += `&searchTerm=${searchTerm}&searchField=${searchField}`;
+
+      if (fullMatch) {
+        path += '&fullMatch=true';
+      }
+    }
+
     const url: URL = this.getV3Endpoint(path);
     return this.http.get(url).map(res => res.json());
   }
@@ -467,15 +488,15 @@ export class ClaService {
     return this.http.get(url).map(res => res.json());
   }
 
-
   /**
    * GET /v3/company/search?companyName={company_name}
    */
   searchCompaniesByName(companyName) {
     const url: URL = this.getV3Endpoint('/v3/company/search?companyName=' + companyName);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   postCompany(company) {
@@ -576,9 +597,10 @@ export class ClaService {
    */
   getProjectsByExternalId(externalId) {
     const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -683,7 +705,9 @@ export class ClaService {
    * DELETE /project/{project_id}/document/{document_type}/{major_version}/{minor_version}
    */
   deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion);
+    const url: URL = this.getV1Endpoint(
+      '/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion
+    );
     return this.http.delete(url).map(res => res.json());
   }
 
@@ -691,7 +715,9 @@ export class ClaService {
    * GET /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
    */
   getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion);
+    const url: URL = this.getV1Endpoint(
+      '/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion
+    );
     return this.http.get(url).map(res => {
       return res._body;
     });
@@ -747,7 +773,9 @@ export class ClaService {
    * POST /signed/{installation_id}/{github_repository_id}/{change_request_id}
    */
   postSigned(installationId, githubRepositoryId, changeRequestId) {
-    const url: URL = this.getV1Endpoint('/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
+    const url: URL = this.getV1Endpoint(
+      '/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId
+    );
     return this.http.post(url).map(res => res.json());
   }
 
@@ -763,7 +791,16 @@ export class ClaService {
    * GET /repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}
    */
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
-    const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/sign/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
+    const url: URL = this.getV2Endpoint(
+      '/v2/repository-provider/' +
+        provider +
+        '/sign/' +
+        installationId +
+        '/' +
+        githubRepositoryId +
+        '/' +
+        changeRequestId
+    );
     return this.http.get(url).map(res => res.json());
   }
 
@@ -895,14 +932,17 @@ export class ClaService {
     // Use the deployed API endpoint regardless as the salesforce endpoints are on a different lambda and
     // we don't/can't run this locally
     const url: URL = this.getV1APIEndpoint('/v1/salesforce/project?id=' + projectId);
-    return this.http.get(url).map(res => res.json()).map(p => this.addProjectLogoFromS3(p));
+    return this.http
+      .get(url)
+      .map(res => res.json())
+      .map(p => this.addProjectLogoFromS3(p));
   }
 
   addProjectLogoFromS3(project) {
     let objLogoUrl = {
-      "logoRef": `${this.s3LogoUrl}/${project.id}.png`
+      logoRef: `${this.s3LogoUrl}/${project.id}.png`
     };
-    return {...project, ...objLogoUrl};
+    return { ...project, ...objLogoUrl };
   }
 
   getGerritInstance(projectId) {
