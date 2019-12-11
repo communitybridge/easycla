@@ -1,25 +1,25 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ViewChild } from "@angular/core";
-import { Nav, Platform, App, Events } from "ionic-angular";
-import { StatusBar } from "@ionic-native/status-bar";
-import { SplashScreen } from "@ionic-native/splash-screen";
+import { Component, ViewChild } from '@angular/core';
+import { Nav, Platform, App, Events } from 'ionic-angular';
+import { StatusBar } from '@ionic-native/status-bar';
+import { SplashScreen } from '@ionic-native/splash-screen';
 
-import { CincoService } from "../services/cinco.service";
-import { KeycloakService } from "../services/keycloak/keycloak.service";
-import { KeycloakHttp } from "../services/keycloak/keycloak.http";
-import { RolesService } from "../services/roles.service";
-import { S3Service } from "../services/s3.service";
-import { ClaService } from "../services/cla.service";
-import { HttpClient } from "../services/http-client";
+import { CincoService } from '../services/cinco.service';
+import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { KeycloakHttp } from '../services/keycloak/keycloak.http';
+import { RolesService } from '../services/roles.service';
+import { S3Service } from '../services/s3.service';
+import { ClaService } from '../services/cla.service';
+import { HttpClient } from '../services/http-client';
 
-import { AuthService } from "../services/auth.service";
-import { AuthPage } from "../pages/auth/auth";
-import { EnvConfig } from "../services/cla.env.utils";
+import { AuthService } from '../services/auth.service';
+import { AuthPage } from '../pages/auth/auth';
+import { EnvConfig } from '../services/cla.env.utils';
 
 @Component({
-  templateUrl: "app.html"
+  templateUrl: 'app.html'
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
@@ -62,7 +62,7 @@ export class MyApp {
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to 'true', otherwise we're using normal services deployed in each environment
-    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
+    const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';
     // Set true for local debugging using localhost (local ports set in claService)
     this.claService.isLocalTesting(localServicesMode);
 
@@ -79,7 +79,6 @@ export class MyApp {
     events.subscribe('nav:allProjects', () => {
       this.nav.setRoot('AllProjectsPage');
     });
-
   }
 
   getDefaults() {
@@ -116,9 +115,9 @@ export class MyApp {
   regeneratePagesMenu() {
     this.pages = [
       {
-        title: "All Projects",
+        title: 'All Projects',
         access: this.userRoles.isPmcUser,
-        component: "AllProjectsPage"
+        component: 'AllProjectsPage'
       },
       // {
       //   title: "Member Companies",
@@ -141,14 +140,14 @@ export class MyApp {
       //   component: "ActivityLogPage"
       // },
       {
-        title: "Sign Out",
+        title: 'Sign Out',
         access: true,
-        component: "LogoutPage"
+        component: 'LogoutPage'
       },
       {
-        title: "Sign In",
+        title: 'Sign In',
         access: !this.userRoles.isAuthenticated,
-        component: "LoginPage"
+        component: 'LoginPage'
       }
     ];
   }

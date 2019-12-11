@@ -15,7 +15,6 @@ import { PopoverController, ToastController } from 'ionic-angular';
   templateUrl: 'upload-button.html'
 })
 export class UploadButtonComponent {
-
   /**
    * The fileList maintained as files are added and removed
    */
@@ -58,13 +57,7 @@ export class UploadButtonComponent {
    */
   @Output() notify: EventEmitter<Array<any>> = new EventEmitter<Array<any>>();
 
-  constructor(
-    private renderer: Renderer,
-    private popoverCtrl: PopoverController,
-    public toastCtrl: ToastController,
-  ) {
-
-  }
+  constructor(private renderer: Renderer, private popoverCtrl: PopoverController, public toastCtrl: ToastController) {}
 
   ngOnInit() {
     this.fileList = this.files;
@@ -73,37 +66,34 @@ export class UploadButtonComponent {
       this.multiple = false;
     }
 
-    if(!this.uploadText) {
-      this.uploadText = "Upload";
+    if (!this.uploadText) {
+      this.uploadText = 'Upload';
     }
   }
 
   /**
-  * Callback executed when the visible button is pressed
-  * @param  {Event}  event should be a mouse click event
-  */
+   * Callback executed when the visible button is pressed
+   * @param  {Event}  event should be a mouse click event
+   */
   public callback(event: Event): void {
-
     // trigger click event of hidden input
-    let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-    this.renderer.invokeElementMethod(
-      this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-    );
+    let clickEvent: MouseEvent = new MouseEvent('click', { bubbles: true });
+    this.renderer.invokeElementMethod(this.nativeInputBtn.nativeElement, 'dispatchEvent', [clickEvent]);
   }
 
   /**
-  * Callback which is executed after files from native popup are selected.
-  * @param  {Event}    event change event containing selected files
-  */
+   * Callback which is executed after files from native popup are selected.
+   * @param  {Event}    event change event containing selected files
+   */
   filesAdded(event: Event): void {
     let addedFiles: FileList = this.nativeInputBtn.nativeElement.files;
 
-    for(let i=0; i< addedFiles.length; i++) {
+    for (let i = 0; i < addedFiles.length; i++) {
       let file = addedFiles.item(i);
       let valid = this.validateFile(file);
-      if(valid) {
+      if (valid) {
         // merge files from the input with the fileList
-        if(!this.fileList) {
+        if (!this.fileList) {
           this.fileList = [];
         }
         this.fileList.push(file);
@@ -113,21 +103,24 @@ export class UploadButtonComponent {
   }
 
   validateFile(file) {
-    if(typeof this.uploadTypes == 'undefined') {
+    if (typeof this.uploadTypes == 'undefined') {
       return true;
     }
     // Validate extension by checking extension in filename against uploadTypes
     var validTypes = this.uploadTypes.split(',');
     var extensionValid = false;
     for (var i = 0; i < validTypes.length; i++) {
-        var currentType = validTypes[i];
-        if (file.name.substr(file.name.length - currentType.length, currentType.length).toLowerCase() == currentType.toLowerCase()) {
-            extensionValid = true;
-            return extensionValid;
-        }
+      var currentType = validTypes[i];
+      if (
+        file.name.substr(file.name.length - currentType.length, currentType.length).toLowerCase() ==
+        currentType.toLowerCase()
+      ) {
+        extensionValid = true;
+        return extensionValid;
+      }
     }
     if (!extensionValid) {
-      this.uploadError("Sorry, " + file.name + " is invalid, allowed extensions are: " + validTypes.join(", "));
+      this.uploadError('Sorry, ' + file.name + ' is invalid, allowed extensions are: ' + validTypes.join(', '));
       return false;
     }
   }
@@ -149,30 +142,27 @@ export class UploadButtonComponent {
           label: 'Download file',
           callback: 'fileDownload',
           callbackData: {
-            index: index,
+            index: index
           }
         },
         {
           label: 'Delete file',
           callback: 'fileDelete',
           callbackData: {
-            index: index,
+            index: index
           }
-        },
+        }
       ]
     };
 
-    let popover = this.popoverCtrl.create(
-      'ActionPopoverComponent',
-      popoverData,
-    );
+    let popover = this.popoverCtrl.create('ActionPopoverComponent', popoverData);
 
     popover.present({
       ev: ev
     });
 
-    popover.onDidDismiss((popoverData) => {
-      if(popoverData) {
+    popover.onDidDismiss(popoverData => {
+      if (popoverData) {
         this.popoverResponse(popoverData);
       }
     });
@@ -184,7 +174,7 @@ export class UploadButtonComponent {
    */
   popoverResponse(popoverData) {
     let callback = popoverData.callback;
-    if(this[callback]) {
+    if (this[callback]) {
       this[callback](popoverData.callbackData);
     }
   }
@@ -199,5 +189,4 @@ export class UploadButtonComponent {
     // data.index
     // this.fileList
   }
-
 }

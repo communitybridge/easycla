@@ -26,8 +26,9 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>After you click send you will have to wait for {{ company.company_name }} CLA Manager to add you to their whitelist
-            before you can complete your employee contributor CLA process.
+          <p>
+            After you click send you will have to wait for {{ company.company_name }} CLA Manager to add you to their
+            whitelist before you can complete your employee contributor CLA process.
           </p>
         </ion-col>
       </ion-row>
@@ -46,11 +47,14 @@
               <ion-label>Enter CLA Manager Directly</ion-label>
               <ion-radio value="enter manager"></ion-radio>
             </ion-item>
-            <ion-item lines="none" *ngIf="!form.controls.manager.valid && (form.controls.manager.touched || submitAttempt)" no-lines>
+            <ion-item
+              lines="none"
+              *ngIf="!form.controls.manager.valid && (form.controls.manager.touched || submitAttempt)"
+              no-lines
+            >
               <p>* Selecting an option is required.</p>
             </ion-item>
           </ion-list>
-
         </ion-col>
       </ion-row>
 
@@ -61,10 +65,13 @@
         <ion-col col-12>
           <ion-list>
             <ion-item lines="none">
-              <ion-label stacked>Select one of the existing CLA Managers associated with {{ company.company_name }}.
+              <ion-label stacked
+                >Select one of the existing CLA Managers associated with {{ company.company_name }}.
               </ion-label>
               <ion-select formControlName="manager">
-                <ion-option *ngFor="let manager of managers" value="{{ manager.userID }}">{{ manager.username }} / {{ manager.lfEmail }}</ion-option>
+                <ion-option *ngFor="let manager of managers" value="{{ manager.userID }}"
+                  >{{ manager.username }} / {{ manager.lfEmail }}</ion-option
+                >
               </ion-select>
             </ion-item>
           </ion-list>
@@ -87,8 +94,11 @@
             <ion-textarea formControlName="recipient_email"></ion-textarea>
           </ion-item>
           <p class="field-description">Type an E-Mail.</p>
-          <ion-item lines="none" *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)"
-            no-lines>
+          <ion-item
+            lines="none"
+            *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)"
+            no-lines
+          >
             <p>* A valid email address is required.</p>
           </ion-item>
         </ion-col>
@@ -105,8 +115,15 @@
               <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
             </ion-select>
           </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your company's CLA Manager to whitelist.</p>
-          <ion-item lines="none" *ngIf="!form.controls.user_email.valid && (form.controls.user_email.touched || submitAttempt)" no-lines>
+          <p class="field-description">
+            Select the email address attached to your account that you would like your company's CLA Manager to
+            whitelist.
+          </p>
+          <ion-item
+            lines="none"
+            *ngIf="!form.controls.user_email.valid && (form.controls.user_email.touched || submitAttempt)"
+            no-lines
+          >
             <p>* A valid email address is required.</p>
           </ion-item>
         </ion-col>
@@ -121,8 +138,10 @@
             <ion-label stacked>Message:</ion-label>
             <ion-textarea formControlName="message"></ion-textarea>
           </ion-item>
-          <p class="field-description">Explain to your CLA Manager who you are and why you would like to contribute to {{project.project_name}} as an
-            employee of {{ company.company_name}}.</p>
+          <p class="field-description">
+            Explain to your CLA Manager who you are and why you would like to contribute to {{project.project_name}} as
+            an employee of {{ company.company_name}}.
+          </p>
         </ion-col>
       </ion-row>
     </ion-grid>

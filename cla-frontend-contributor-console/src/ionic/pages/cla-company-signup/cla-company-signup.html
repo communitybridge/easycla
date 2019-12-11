@@ -12,7 +12,7 @@
     <ion-grid>
       <ion-row>
         <ion-col col-12 col-md-2>
-          <img [src]='project.logoUrl' alt="{{ project.name }} Logo" />
+          <img [src]="project.logoUrl" alt="{{ project.name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
           <h1></h1>
@@ -45,7 +45,10 @@
                 <ion-label stacked>Company Name:</ion-label>
                 <ion-input type="text" formControlName="company" required></ion-input>
               </ion-item>
-              <ion-item *ngIf="!form.controls.company.valid && (form.controls.company.touched || submitAttempt)" no-lines>
+              <ion-item
+                *ngIf="!form.controls.company.valid && (form.controls.company.touched || submitAttempt)"
+                no-lines
+              >
                 <p>* A company name is required.</p>
               </ion-item>
               <button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
@@ -55,10 +58,8 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-
     </ion-row>
   </ion-grid>
-
 </ion-content>
 
 <cla-footer></cla-footer>

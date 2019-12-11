@@ -1,19 +1,19 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from "@angular/core";
-import {Http} from "@angular/http";
-import {AuthService} from "./auth.service"
+import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
+import { AuthService } from './auth.service';
 
-import "rxjs/Rx";
+import 'rxjs/Rx';
 import 'rxjs/add/operator/catch';
-import {Observable} from "rxjs";
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class ClaService {
   http: any;
   authService: AuthService;
-  claApiUrl: string = "";
+  claApiUrl: string = '';
   localTesting = false;
   v1ClaAPIURLLocal = 'http://localhost:5000';
   v2ClaAPIURLLocal = 'http://localhost:5000';
@@ -102,9 +102,10 @@ export class ClaService {
    **/
   getUsers() {
     const url: URL = this.getV1Endpoint('/v1/user');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -112,7 +113,8 @@ export class ClaService {
    **/
   getUserByUserId(userId) {
     const url: URL = this.getV3Endpoint('/v3/users/' + userId);
-    return this.http.getWithCreds(url)
+    return this.http
+      .getWithCreds(url)
       .map(res => res.json())
       .catch(this.handleServiceError);
   }
@@ -122,9 +124,10 @@ export class ClaService {
    **/
   getUserByUserName(userName) {
     const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
-    return this.http.getWithCreds(url)
+    return this.http
+      .getWithCreds(url)
       .map(res => res.json())
-      .catch((err) => this.handleServiceError(err));
+      .catch(err => this.handleServiceError(err));
   }
 
   /**
@@ -140,9 +143,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/user');
-    return this.http.post(url, user)
+    return this.http
+      .post(url, user)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -158,9 +162,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV3Endpoint('/v3/users');
-    return this.http.post(url, user)
+    return this.http
+      .post(url, user)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -177,9 +182,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/user');
-    return this.http.put(url, user)
+    return this.http
+      .put(url, user)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -187,9 +193,10 @@ export class ClaService {
    **/
   getUser(userId) {
     const url: URL = this.getV2Endpoint('/v2/user/' + userId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -197,9 +204,10 @@ export class ClaService {
    **/
   deleteUser(userId) {
     const url: URL = this.getV1Endpoint('/v1/user/' + userId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -207,9 +215,10 @@ export class ClaService {
    **/
   getUserByEmail(userEmail) {
     const url: URL = this.getV1Endpoint('/v1/user/email/' + userEmail);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -217,9 +226,10 @@ export class ClaService {
    **/
   getUserByGithubId(userGithubId) {
     const url: URL = this.getV1Endpoint('/v1/user/github/' + userGithubId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -227,9 +237,10 @@ export class ClaService {
    **/
   getUserSignatures(userId) {
     const url: URL = this.getV1Endpoint('/v1/user/' + userId + '/signatures');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -237,9 +248,10 @@ export class ClaService {
    **/
   getUsersByCompanyId(userCompanyId) {
     const url: URL = this.getV1Endpoint('/v1/users/company/' + userCompanyId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -252,9 +264,10 @@ export class ClaService {
       }
       */
     const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/request-company-whitelist/' + companyId);
-    return this.http.post(url, message)
+    return this.http
+      .post(url, message)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -262,9 +275,10 @@ export class ClaService {
    **/
   getUserSignatureIntent(userId) {
     const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/active-signature');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -272,9 +286,10 @@ export class ClaService {
    **/
   getLastIndividualSignature(userId, projectId) {
     const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/project/' + projectId + '/last-signature');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -282,9 +297,10 @@ export class ClaService {
    */
   getSignatures() {
     const url: URL = this.getV1Endpoint('/v1/signature');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   postSignature(signature) {
@@ -301,9 +317,10 @@ export class ClaService {
       }
       */
     const url: URL = this.getV1Endpoint('/v1/signature');
-    return this.http.post(url, signature)
+    return this.http
+      .post(url, signature)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   putSignature(signature) {
@@ -321,9 +338,10 @@ export class ClaService {
       }
       */
     const url: URL = this.getV1Endpoint('/v1/signature');
-    return this.http.put(url, signature)
+    return this.http
+      .put(url, signature)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -341,8 +359,7 @@ export class ClaService {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -351,9 +368,10 @@ export class ClaService {
    */
   deleteSignature(signatureId) {
     const url: URL = this.getV1Endpoint('/v1/signatures/' + signatureId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -371,8 +389,7 @@ export class ClaService {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -390,8 +407,7 @@ export class ClaService {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -410,8 +426,7 @@ export class ClaService {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -425,13 +440,13 @@ export class ClaService {
   getEmployeeProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId + '/employee');
     // Leverage the new go backend v3 endpoint - note the different order of the parameters in the path
-    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee' + '?pageSize=' + pageSize;
+    let path: string =
+      '/v3/signatures/project/' + projectId + '/company/' + companyId + '/employee' + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -449,8 +464,7 @@ export class ClaService {
       path += '&nextKey=' + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -458,9 +472,10 @@ export class ClaService {
    */
   getRepositories() {
     const url: URL = this.getV1Endpoint('/v1/repository');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -478,9 +493,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/repository');
-    return this.http.post(url, repository)
+    return this.http
+      .post(url, repository)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -499,9 +515,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/repository');
-    return this.http.put(url, repository)
+    return this.http
+      .put(url, repository)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -509,9 +526,10 @@ export class ClaService {
    */
   getRepository(repositoryId) {
     const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -519,9 +537,10 @@ export class ClaService {
    */
   deleteRepository(repositoryId) {
     const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -529,9 +548,10 @@ export class ClaService {
    */
   getCompanies() {
     const url: URL = this.getV1Endpoint('/v1/company');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -592,8 +612,7 @@ export class ClaService {
    */
   getCompaniesByUserManager(userID) {
     const url: URL = this.getV3Endpoint('/v3/company/user/' + userID);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -609,9 +628,10 @@ export class ClaService {
    */
   getCompaniesByUserManagerWithInvites(userID) {
     const url: URL = this.getV3Endpoint('/v3/company/user/' + userID + '/invites');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -619,9 +639,10 @@ export class ClaService {
    */
   getAllCompanies() {
     const url: URL = this.getV2Endpoint('/v2/company');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -636,9 +657,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/company');
-    return this.http.post(url, company)
+    return this.http
+      .post(url, company)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -652,9 +674,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/company');
-    return this.http.put(url, company)
+    return this.http
+      .put(url, company)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -662,9 +685,10 @@ export class ClaService {
    */
   getCompany(companyId) {
     const url: URL = this.getV2Endpoint('/v2/company/' + companyId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -672,8 +696,7 @@ export class ClaService {
    */
   searchCompaniesByName(companyName) {
     const url: URL = this.getV3Endpoint('/v3/company/search?companyName=' + companyName);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -681,9 +704,10 @@ export class ClaService {
    */
   deleteCompany(companyId) {
     const url: URL = this.getV1Endpoint('/v1/company/' + companyId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -691,9 +715,10 @@ export class ClaService {
    */
   getProjectManagers(projectId) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -701,9 +726,10 @@ export class ClaService {
    */
   postProjectManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager');
-    return this.http.post(url, {lfid: payload.managerLFID})
+    return this.http
+      .post(url, { lfid: payload.managerLFID })
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -711,9 +737,10 @@ export class ClaService {
    */
   deleteProjectManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager/' + payload.lfid);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -721,9 +748,10 @@ export class ClaService {
    */
   getCLAManagers(signatureId) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -731,9 +759,10 @@ export class ClaService {
    */
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
-    return this.http.post(url, {lfid: payload.managerLFID})
+    return this.http
+      .post(url, { lfid: payload.managerLFID })
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -741,9 +770,10 @@ export class ClaService {
    */
   deleteCLAManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + projectId + '/manager/' + payload.lfid);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -751,16 +781,18 @@ export class ClaService {
    */
   getProjects() {
     const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   getCompanyUnsignedProjects(companyId) {
     const url: URL = this.getV1Endpoint('/v1/company/' + companyId + '/project/unsigned');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   postProject(project) {
@@ -774,9 +806,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.post(url, project)
+    return this.http
+      .post(url, project)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   putProject(project) {
@@ -787,9 +820,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.put(url, project)
+    return this.http
+      .put(url, project)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -797,23 +831,26 @@ export class ClaService {
    */
   getProject(projectId) {
     const url: URL = this.getV2Endpoint('/v2/project/' + projectId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   getProjectsByExternalId(externalId) {
     const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   deleteProject(projectId) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -821,9 +858,10 @@ export class ClaService {
    */
   getProjectRepositories(projectId) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -831,9 +869,10 @@ export class ClaService {
    */
   getProjectCompanies(projectId) {
     const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/companies');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -841,9 +880,10 @@ export class ClaService {
    */
   getProjectDocument(projectId, documentType) {
     const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/document/' + documentType);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   postProjectDocument(projectId, documentType, document) {
@@ -855,9 +895,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType);
-    return this.http.post(url, document)
+    return this.http
+      .post(url, document)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   postProjectDocumentTemplate(projectId, documentType, document) {
@@ -870,29 +911,36 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/template/' + documentType);
-    return this.http.post(url, document)
+    return this.http
+      .post(url, document)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
    * DELETE /project/{project_id}/document/{document_type}/{major_version}/{minor_version}
    */
   deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion);
-    return this.http.delete(url)
+    const url: URL = this.getV1Endpoint(
+      '/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion
+    );
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /*
    * GET /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
    */
   getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion);
-    return this.http.get(url)
+    const url: URL = this.getV1Endpoint(
+      '/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion
+    );
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -908,9 +956,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV2Endpoint('/v2/request-individual-signature');
-    return this.http.post(url, signatureRequest)
+    return this.http
+      .post(url, signatureRequest)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -925,9 +974,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV2Endpoint('/v2/request-employee-signature');
-    return this.http.post(url, signatureRequest)
+    return this.http
+      .post(url, signatureRequest)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -942,19 +992,23 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/request-corporate-signature');
-    return this.http.post(url, signatureRequest)
+    return this.http
+      .post(url, signatureRequest)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
    * /signed/{installation_id}/{github_repository_id}/{change_request_id}
    */
   postSigned(installationId, githubRepositoryId, changeRequestId) {
-    const url: URL = this.getV1Endpoint('/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
-    return this.http.post(url)
+    const url: URL = this.getV1Endpoint(
+      '/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId
+    );
+    return this.http
+      .post(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -962,19 +1016,30 @@ export class ClaService {
    */
   getReturnUrl(signatureId) {
     const url: URL = this.getV2Endpoint('/v2/return-url/' + signatureId);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
    * GET /v2/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}
    */
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
-    const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/sign/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId);
-    return this.http.get(url)
+    const url: URL = this.getV2Endpoint(
+      '/v2/repository-provider/' +
+        provider +
+        '/sign/' +
+        installationId +
+        '/' +
+        githubRepositoryId +
+        '/' +
+        changeRequestId
+    );
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -990,9 +1055,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV2Endpoint('/v2/send-authority-email');
-    return this.http.post(url, data)
+    return this.http
+      .post(url, data)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1001,9 +1067,10 @@ export class ClaService {
   getChangeIcon(provider) {
     // This probably won't map to json, but instead to svg/xml
     const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/icon.svg');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1011,9 +1078,10 @@ export class ClaService {
    */
   postReceivedActivity(provider) {
     const url: URL = this.getV2Endpoint('/v2/repository-provider/' + provider + '/activity');
-    return this.http.post(url)
+    return this.http
+      .post(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1021,9 +1089,10 @@ export class ClaService {
    */
   getGithubOrganizations() {
     const url: URL = this.getV1Endpoint('/v1/github/organizations');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1037,9 +1106,10 @@ export class ClaService {
       }
      */
     const url: URL = this.getV1Endpoint('/v1/github/organizations');
-    return this.http.post(url, organization)
+    return this.http
+      .post(url, organization)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1047,9 +1117,10 @@ export class ClaService {
    */
   getGithubGetNamespace(namespace) {
     const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1057,9 +1128,10 @@ export class ClaService {
    */
   getGithubCheckNamespace(namespace) {
     const url: URL = this.getV1Endpoint('/v1/github/check/namespace/' + namespace);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1067,9 +1139,10 @@ export class ClaService {
    */
   getGithubOrganization(organizationName) {
     const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1077,9 +1150,10 @@ export class ClaService {
    */
   deleteGithubOrganization(organizationName) {
     const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
-    return this.http.delete(url)
+    return this.http
+      .delete(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1087,9 +1161,10 @@ export class ClaService {
    */
   getGithubOrganizationRepositories(organizationName) {
     const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName + '/repositories');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1097,9 +1172,10 @@ export class ClaService {
    */
   getGithubInstallation() {
     const url: URL = this.getV2Endpoint('/v2/github/installation');
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1107,9 +1183,10 @@ export class ClaService {
    */
   postGithubInstallation() {
     const url: URL = this.getV2Endpoint('/v2/github/installation');
-    return this.http.post(url)
+    return this.http
+      .post(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1117,9 +1194,10 @@ export class ClaService {
    */
   postGithubActivity() {
     const url: URL = this.getV2Endpoint('/v2/github/activity');
-    return this.http.post(url)
+    return this.http
+      .post(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1127,9 +1205,10 @@ export class ClaService {
    */
   postGithubValidate() {
     const url: URL = this.getV1Endpoint('/v1/github/validate');
-    return this.http.post(url)
+    return this.http
+      .post(url)
       .map(res => res.json())
-      .catch((error) => this.handleServiceError(error));
+      .catch(error => this.handleServiceError(error));
   }
 
   /**
@@ -1137,9 +1216,15 @@ export class ClaService {
    */
   githubLogin(companyID, corporateClaID) {
     if (this.localTesting) {
-      window.location.assign(this.v3ClaAPIURLLocal + `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`);
+      window.location.assign(
+        this.v3ClaAPIURLLocal +
+          `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
+      );
     } else {
-      window.location.assign(this.claApiUrl + `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`);
+      window.location.assign(
+        this.claApiUrl +
+          `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
+      );
     }
   }
 
@@ -1148,8 +1233,7 @@ export class ClaService {
    **/
   getGithubOrganizationWhitelist(signatureID, companyID, corporateClaID) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -1157,8 +1241,7 @@ export class ClaService {
    **/
   getGithubOrganizationWhitelistEntries(signatureID) {
     const url: URL = this.getV3Endpoint(`/v3/signatures/${signatureID}/gh-org-whitelist`);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -1166,10 +1249,9 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {"organization_id": organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
-    return this.http.postWithCreds(url, data)
-      .map(res => res.json());
+    return this.http.postWithCreds(url, data).map(res => res.json());
   }
 
   /**
@@ -1177,10 +1259,9 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {"organization_id": organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
-    return this.http.deleteWithCredsAndBody(url, data)
-      .map(res => res.json());
+    return this.http.deleteWithCredsAndBody(url, data).map(res => res.json());
   }
 
   /**
@@ -1188,10 +1269,9 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {"id": organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
-    return this.http.postWithCreds(url, data)
-      .map(res => res.json());
+    return this.http.postWithCreds(url, data).map(res => res.json());
   }
 
   /**
@@ -1199,10 +1279,9 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {"id": organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
-    return this.http.deleteWithCredsAndBody(url, data)
-      .map(res => res.json());
+    return this.http.deleteWithCredsAndBody(url, data).map(res => res.json());
   }
 
   /**
@@ -1214,10 +1293,11 @@ export class ClaService {
       userID: userId,
       lfUsername: userId,
       lfEmail: userEmail,
-      username: userName,
+      username: userName
     };
     console.log('Invoking sendInviteRequestEmail() with url: ' + url);
-    return this.http.postWithCreds(url, data)
+    return this.http
+      .postWithCreds(url, data)
       .map(res => res.json())
       .catch(this.handleServiceError);
 
@@ -1255,8 +1335,7 @@ export class ClaService {
    **/
   getPendingInvites(companyId) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -1288,20 +1367,17 @@ export class ClaService {
    */
   getPendingUserInvite(companyId, userID) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/${userID}/invitelist`);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   acceptCompanyInvite(companyId, data) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.postWithCreds(url, data)
-      .map(res => res.json());
+    return this.http.postWithCreds(url, data).map(res => res.json());
   }
 
   declineCompanyInvite(companyId, data) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.deleteWithCredsAndBody(url, data)
-      .map(res => res.json());
+    return this.http.deleteWithCredsAndBody(url, data).map(res => res.json());
   }
 
   /**
@@ -1313,7 +1389,7 @@ export class ClaService {
    * @param userEmail the user email
    */
   createCLAManagerRequest(lfid, projectName: string, companyName: string, userFullName: string, userEmail: string) {
-    console.log("I got called")
+    console.log('I got called');
     const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager`);
     const requestBody = {
       lf_id: lfid,
@@ -1323,7 +1399,7 @@ export class ClaService {
       user_email: userEmail
     };
     //return this.http.post(url, requestBody)
-    return this.http.postWithCreds(url, requestBody)
+    return this.http.postWithCreds(url, requestBody);
   }
 
   /**
@@ -1342,7 +1418,7 @@ export class ClaService {
    */
   deleteCLAManagerRequests(requestID: string) {
     const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/requests/${requestID}`);
-    return this.http.delete(url)
+    return this.http.delete(url);
   }
 
   /**

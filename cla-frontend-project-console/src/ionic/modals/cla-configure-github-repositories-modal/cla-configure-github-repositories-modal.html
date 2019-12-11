@@ -18,40 +18,66 @@
           <ion-card-content>
             <div class="org-name">
               {{ organization.organization_name }}
-              <button type="button" ion-button color="light" size="small"
-                      *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRepos(organization.organization_name) && !loading.activateSpinner"
-                      (click)="addAll(organization.organization_name)">
+              <button
+                type="button"
+                ion-button
+                color="light"
+                size="small"
+                *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRepos(organization.organization_name) && !loading.activateSpinner"
+                (click)="addAll(organization.organization_name)"
+              >
                 ADD ALL REPOS
               </button>
-              <button type="button" ion-button color="light" size="small"
-                      *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRemoveRepos(organization.organization_name) && !loading.activateSpinner"
-                      (click)="removeAll(organization.organization_name)">
+              <button
+                type="button"
+                ion-button
+                color="light"
+                size="small"
+                *ngIf="organization.repositories != null && organization.repositories.length > 0 && anyAvailableRemoveRepos(organization.organization_name) && !loading.activateSpinner"
+                (click)="removeAll(organization.organization_name)"
+              >
                 REMOVE ALL REPOS
               </button>
             </div>
             <div class="repositories">
-              <h4 class="repository" [ngClass]="{
+              <h4
+                class="repository"
+                [ngClass]="{
                     'disabled': repository.status === 'taken',
                     'assigned': repository.status === 'assigned'
-                  }" *ngFor="let repository of organization.repositories">
+                  }"
+                *ngFor="let repository of organization.repositories"
+              >
                 {{ repository.repository_name }}
-                <button type="button" ion-button color="light" size="small"
-                        *ngIf="repository.status === 'free' && !loading.activateSpinner"
-                        (click)="assignRepository(repository)">
+                <button
+                  type="button"
+                  ion-button
+                  color="light"
+                  size="small"
+                  *ngIf="repository.status === 'free' && !loading.activateSpinner"
+                  (click)="assignRepository(repository)"
+                >
                   Add
                 </button>
-                <button type="button" ion-button color="light" size="small" class="remove"
-                        *ngIf="repository.status === 'assigned' && !loading.activateSpinner"
-                        (click)="removeRepository(repository)">
+                <button
+                  type="button"
+                  ion-button
+                  color="light"
+                  size="small"
+                  class="remove"
+                  *ngIf="repository.status === 'assigned' && !loading.activateSpinner"
+                  (click)="removeRepository(repository)"
+                >
                   Remove
                 </button>
-                <button type="button" ion-button color="light" size="small" *ngIf="repository.status === 'taken'">Disabled</button>
+                <button type="button" ion-button color="light" size="small" *ngIf="repository.status === 'taken'">
+                  Disabled
+                </button>
               </h4>
             </div>
             <p class="form-message" *ngFor="let error of responseErrors">{{error}}</p>
           </ion-card-content>
         </ion-card>
-
       </ion-col>
     </ion-row>
   </ion-grid>

@@ -4,8 +4,8 @@
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
-import { EmailValidator } from  '../../validators/email';
-import {Observable} from 'rxjs/Observable';
+import { EmailValidator } from '../../validators/email';
+import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/forkJoin';
 import { CincoService } from '../../services/cinco.service';
 
@@ -14,7 +14,7 @@ import { CincoService } from '../../services/cinco.service';
 })
 @Component({
   selector: 'console-user-update-modal',
-  templateUrl: 'console-user-update-modal.html',
+  templateUrl: 'console-user-update-modal.html'
 })
 export class ConsoleUserUpdateModal {
   user: any;
@@ -42,9 +42,9 @@ export class ConsoleUserUpdateModal {
     this.user = Object.assign({}, originalUser);
     this.user.userId = this.user.lfId;
     this.form = formBuilder.group({
-      userId:[this.user.userId, Validators.required],
-      email:[this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
-      roles:[this.user.roles],
+      userId: [this.user.userId, Validators.required],
+      email: [this.user.email, Validators.compose([Validators.required, EmailValidator.isValid])],
+      roles: [this.user.roles]
     });
   }
 
@@ -55,7 +55,7 @@ export class ConsoleUserUpdateModal {
       lfId: '',
       userId: '',
       email: '',
-      roles: [],
+      roles: []
     };
     this.userRoles = {};
   }
@@ -66,7 +66,7 @@ export class ConsoleUserUpdateModal {
 
   getUserRoles() {
     this.cincoService.getUserRoles().subscribe(response => {
-      if(response) {
+      if (response) {
         this.userRoles = response;
       }
     });
@@ -99,11 +99,10 @@ export class ConsoleUserUpdateModal {
     prompt.present();
   }
 
-
   saveUser() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this.form.valid){
+    if (!this.form.valid) {
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
@@ -126,12 +125,11 @@ export class ConsoleUserUpdateModal {
 
     var user = {
       lfId: userId,
-      email: email,
+      email: email
     };
     if (this.user.userId) {
       this.updateUserRoles();
-    }
-    else {
+    } else {
       // create user
       // update roles
       this.cincoService.createUser(user).subscribe(response => {
@@ -140,7 +138,6 @@ export class ConsoleUserUpdateModal {
         }
       });
     }
-
   }
 
   addUser() {
@@ -161,18 +158,18 @@ export class ConsoleUserUpdateModal {
     }
     var newRoles = this.form.value.roles || [];
     let observablesArray = [];
-    for (let i=0; i<prevRoles.length; i++) {
+    for (let i = 0; i < prevRoles.length; i++) {
       let role = prevRoles[i];
-      let inNew = (newRoles.indexOf(role) !== -1);
-      if(!inNew) {
+      let inNew = newRoles.indexOf(role) !== -1;
+      if (!inNew) {
         let observable = this.cincoService.removeUserRole(userId, role);
         observablesArray.push(observable);
       }
     }
-    for (let i=0; i<newRoles.length; i++) {
+    for (let i = 0; i < newRoles.length; i++) {
       let role = newRoles[i];
-      let inPrev = (prevRoles.indexOf(role) !== -1);
-      if(!inPrev) {
+      let inPrev = prevRoles.indexOf(role) !== -1;
+      if (!inPrev) {
         let observable = this.cincoService.addUserRole(userId, role);
         observablesArray.push(observable);
       }
@@ -196,10 +193,9 @@ export class ConsoleUserUpdateModal {
       userId = this.form.value.userId;
     }
     this.cincoService.removeUser(userId).subscribe(response => {
-      if(response) {
+      if (response) {
         this.dismiss();
       }
     });
   }
-
 }

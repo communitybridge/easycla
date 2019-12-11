@@ -4,7 +4,7 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>CLA Corporate Console</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
 
@@ -18,15 +18,18 @@
           </ion-card-title>
           <div ion-card-subtitle>
             <ul>
-              <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
-                below to submit information.
+              <li>
+                Set up primary CLA Manager for your company. If you have already done this, you are all set. If not,
+                click below to submit information.
               </li>
             </ul>
             <ion-row justify-content-center>
               <button ion-button (click)="openCLAOnboardingForm()">Input CLA Manager Information</button>
             </ion-row>
             <ul>
-              <li>Setup additional CLA Managers for your company (in case you want a separate CLA Manager for your projects)
+              <li>
+                Setup additional CLA Managers for your company (in case you want a separate CLA Manager for your
+                projects)
               </li>
             </ul>
             <ion-row justify-content-center>
@@ -34,8 +37,7 @@
             </ion-row>
           </div>
         </ion-card-header>
-        <ion-card-content>
-        </ion-card-content>
+        <ion-card-content> </ion-card-content>
       </ion-card>
     </ion-row>
 
@@ -47,17 +49,23 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
-            <h2>*Click on Sign CLA & Whitelist to administer</h2>
+          <h2>*Click on Sign CLA & Whitelist to administer</h2>
           <loading-spinner [loading]="loading.companies"></loading-spinner>
           <div *ngIf="!loading.companies && rows && rows.length > 0">
-            <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
-              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
-              <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
-              </ngx-datatable-column>
+            <ngx-datatable
+              class="bootstrap clickable"
+              [rows]="rows"
+              [columns]="columns"
+              [headerHeight]="50"
+              [rowHeight]="'auto'"
+              [selectionType]="SelectionType.single"
+              [columnMode]="ColumnMode.force"
+              [sortType]="SortType.multi"
+              (select)="onSelect($event)"
+            >
+              <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true"> </ngx-datatable-column>
+              <ngx-datatable-column name="Status" prop="Status" [sortable]="true"> </ngx-datatable-column>
               <ngx-datatable-column name="Action" sortable="false" prop="CompanyID">
-
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span *ngIf="row['Status'] === 'Pending Approval'">
                     <p>After approval you can perform action</p>

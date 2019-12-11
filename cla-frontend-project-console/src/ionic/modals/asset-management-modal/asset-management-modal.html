@@ -1,7 +1,7 @@
 <div class="asset-management-modal-wrapper" (click)="modalClick($event)">
   <ion-header>
     <ion-toolbar>
-      <ion-title >
+      <ion-title>
         <ng-container *ngIf="selectedDirectory != 'root'">
           <ion-icon name="arrow-dropleft" class="clickable" (click)="selectDirectory('root')"></ion-icon>
         </ng-container>
@@ -25,7 +25,6 @@
   <ion-content [ngClass]="{'selected':selectedFiles.length > 0}">
     <ion-grid>
       <table id="table" class="table table-hover asset-management-table">
-
         <thead>
           <tr>
             <th>&nbsp;</th>
@@ -38,7 +37,6 @@
         </thead>
 
         <tbody>
-
           <ng-container *ngIf="selectedDirectory == 'root'">
             <tr *ngFor="let folder of folders" (click)="selectDirectory(folder.value)" class="clickable">
               <td data-title="Type">
@@ -51,7 +49,7 @@
           </ng-container>
 
           <ng-container *ngIf="selectedDirectory == 'logos'">
-            <tr *ngFor="let logo of projectLogos" >
+            <tr *ngFor="let logo of projectLogos">
               <td data-title="Type">
                 <ion-icon name="document"></ion-icon>
               </td>
@@ -82,17 +80,19 @@
             <td data-title="Notes">{{ file.classifier }}</td>
           </tr>
           -->
-
         </tbody>
       </table>
     </ion-grid>
-
   </ion-content>
 
   <div class="selected-show" *ngIf="selectedFiles.length > 0" (click)="stopEventPropagation($event)">
     <div class="selected-text-wrapper">
       <span class="selected-text">
-        <ion-icon name="checkmark" icon-left></ion-icon> {{ selectedFiles.length }} File<span *ngIf="selectedFiles.length > 1">s</span> Selected
+        <ion-icon name="checkmark" icon-left></ion-icon> {{ selectedFiles.length }} File<span
+          *ngIf="selectedFiles.length > 1"
+          >s</span
+        >
+        Selected
       </span>
     </div>
     <span class="selected-actions">
@@ -114,7 +114,7 @@
           <ion-icon name="cloud-upload"></ion-icon> Upload
         </button>
       </ion-buttons>
-      <input type="file" (change)="filesAdded($event, uploadMode)" style="display: none" #input multiple/>
+      <input type="file" (change)="filesAdded($event, uploadMode)" style="display: none" #input multiple />
       <ion-buttons end>
         <button ion-button icon-right color="light" (click)="dismiss()">
           Close

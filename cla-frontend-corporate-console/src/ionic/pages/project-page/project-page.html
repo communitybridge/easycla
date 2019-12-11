@@ -4,12 +4,11 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
 
 <ion-content padding headerspacing>
-
   <loading-spinner [loading]="loading.signatures"></loading-spinner>
 
   <header>
@@ -90,7 +89,9 @@
                   <div class="manager-details" *ngIf="manager.email">
                     <div class="manager-name">
                       <span>{{ manager.name }}</span>
-                      <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn"
+                        >Delete</span
+                      >
                     </div>
                     <h4>{{ manager.email }}</h4>
                   </div>
@@ -105,7 +106,15 @@
                 </div>
               </ion-item>
             </ion-list>
-            <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
+            <button
+              bottom
+              right
+              ion-fab
+              mini
+              class="add-manager-btn"
+              *ngIf="!managersRestricted"
+              (click)="openManagerModal()"
+            >
               <ion-icon name="add"></ion-icon>
             </button>
           </ion-card-content>
@@ -117,37 +126,37 @@
           <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
           <table class="table table-hover">
             <thead>
-            <tr>
-              <th class="clickable">
-                LFID/GHID
-              </th>
-              <th class="clickable">
-                Name
-              </th>
-              <th class="clickable">
-                Agreement
-              </th>
-              <th class="clickable" (click)="sortMembers('date')">
-                Date
-                <sorting-display [sorting]='sort.date.sort'></sorting-display>
-              </th>
-            </tr>
+              <tr>
+                <th class="clickable">
+                  LFID/GHID
+                </th>
+                <th class="clickable">
+                  Name
+                </th>
+                <th class="clickable">
+                  Agreement
+                </th>
+                <th class="clickable" (click)="sortMembers('date')">
+                  Date
+                  <sorting-display [sorting]="sort.date.sort"></sorting-display>
+                </th>
+              </tr>
             </thead>
             <tbody>
-            <tr *ngFor="let signature of employeeSignatures">
-              <td data-title="ID">
-                {{ signature.userLFID }}/{{ signature.userGHID }}
-              </td>
-              <td data-title="Name">
-                {{ signature.userName }}
-              </td>
-              <td data-title="Agreement">
-                v{{ signature.version}}
-              </td>
-              <td data-title="Date">
-                {{ signature.modified | date:'medium' }}
-              </td>
-            </tr>
+              <tr *ngFor="let signature of employeeSignatures">
+                <td data-title="ID">
+                  {{ signature.userLFID }}/{{ signature.userGHID }}
+                </td>
+                <td data-title="Name">
+                  {{ signature.userName }}
+                </td>
+                <td data-title="Agreement">
+                  v{{ signature.version}}
+                </td>
+                <td data-title="Date">
+                  {{ signature.modified | date:'medium' }}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

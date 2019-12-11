@@ -55,12 +55,13 @@
           <ion-item>
             <ion-label stacked>Roles</ion-label>
             <ion-select formControlName="roles" multiple>
-              <ion-option *ngFor="let role of keysGetter(userRoles)" value="{{ role }}">{{ userRoles[role] }}</ion-option>
+              <ion-option *ngFor="let role of keysGetter(userRoles)" value="{{ role }}"
+                >{{ userRoles[role] }}</ion-option
+              >
             </ion-select>
           </ion-item>
         </ion-col>
       </ion-row>
-
     </ion-grid>
   </form>
 </ion-content>
@@ -76,10 +77,24 @@
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
       </button>
-      <button *ngIf="user.userId" ion-button icon-right color="primary" (click)="saveUser()" [disabled]="currentlySubmitting">
+      <button
+        *ngIf="user.userId"
+        ion-button
+        icon-right
+        color="primary"
+        (click)="saveUser()"
+        [disabled]="currentlySubmitting"
+      >
         Save
       </button>
-      <button *ngIf="!user.userId" ion-button icon-right color="primary" (click)="addUser()" [disabled]="currentlySubmitting">
+      <button
+        *ngIf="!user.userId"
+        ion-button
+        icon-right
+        color="primary"
+        (click)="addUser()"
+        [disabled]="currentlySubmitting"
+      >
         Add User
       </button>
     </ion-buttons>

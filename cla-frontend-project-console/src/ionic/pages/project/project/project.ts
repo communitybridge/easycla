@@ -1,30 +1,25 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  ModalController,
-  NavParams,
-  IonicPage
-} from "ionic-angular";
-import { ClaService } from "../../../services/cla.service";
-import { CincoService } from "../../../services/cinco.service";
-import { KeycloakService } from "../../../services/keycloak/keycloak.service";
-import { SortService } from "../../../services/sort.service";
-import { SFProjectModel } from "../../../models/sfdc-project-model";
-import { RolesService } from "../../../services/roles.service";
-import { Restricted } from "../../../decorators/restricted";
+import { Component } from '@angular/core';
+import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
+import { ClaService } from '../../../services/cla.service';
+import { CincoService } from '../../../services/cinco.service';
+import { KeycloakService } from '../../../services/keycloak/keycloak.service';
+import { SortService } from '../../../services/sort.service';
+import { SFProjectModel } from '../../../models/sfdc-project-model';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
-  roles: ["isAuthenticated", "isPmcUser"]
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 @IonicPage({
-  segment: "project/:projectId"
+  segment: 'project/:projectId'
 })
 @Component({
-  selector: "project",
-  templateUrl: "project.html"
+  selector: 'project',
+  templateUrl: 'project.html'
 })
 export class ProjectPage {
   selectedProject: any;
@@ -45,12 +40,12 @@ export class ProjectPage {
     private rolesService: RolesService,
     private claService: ClaService
   ) {
-    this.projectId = navParams.get("projectId");
+    this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
 
   ngOnInit() {
-    console.log("project id: " + this.projectId);
+    console.log('project id: ' + this.projectId);
     // this.getSFDCProject(this.projectId);
 
     // this.cincoService
@@ -63,14 +58,12 @@ export class ProjectPage {
   }
 
   getSFDCProject(projectId) {
-    this.claService
-      .getProjectFromSFDC(projectId)
-      .subscribe(response => {
-        if (response) {
-          this.project = response;
-          this.loading.project = false;
-        }
-      });
+    this.claService.getProjectFromSFDC(projectId).subscribe(response => {
+      if (response) {
+        this.project = response;
+        this.loading.project = false;
+      }
+    });
   }
 
   // getProject(projectId) {
@@ -101,40 +94,40 @@ export class ProjectPage {
       project: true
     };
     this.project = {
-      id: "mock_project_id",
-      name: "Mock Project AOSP",
-      logoRef: "mocklogo.com",
-      description: "description"
+      id: 'mock_project_id',
+      name: 'Mock Project AOSP',
+      logoRef: 'mocklogo.com',
+      description: 'description'
     };
     this.sort = {
       alert: {
-        arrayProp: "alert",
-        sortType: "text",
+        arrayProp: 'alert',
+        sortType: 'text',
         sort: null
       },
       company: {
-        arrayProp: "org.name",
-        sortType: "text",
+        arrayProp: 'org.name',
+        sortType: 'text',
         sort: null
       },
       product: {
-        arrayProp: "product",
-        sortType: "text",
+        arrayProp: 'product',
+        sortType: 'text',
         sort: null
       },
       status: {
-        arrayProp: "invoices[0].status",
-        sortType: "text",
+        arrayProp: 'invoices[0].status',
+        sortType: 'text',
         sort: null
       },
       dues: {
-        arrayProp: "annualDues",
-        sortType: "number",
+        arrayProp: 'annualDues',
+        sortType: 'number',
         sort: null
       },
       renewal: {
-        arrayProp: "renewalDate",
-        sortType: "date",
+        arrayProp: 'renewalDate',
+        sortType: 'date',
         sort: null
       }
     };

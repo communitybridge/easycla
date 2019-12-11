@@ -4,12 +4,11 @@
       <ion-icon name="arrow-back"></ion-icon>
     </button>
     <ion-title (click)="backToProjects()">Back to all Projects</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
 
 <ion-content headerspacing overflow-scroll="true">
-
   <div class="page-content">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
@@ -19,9 +18,9 @@
       <ion-row *ngIf="claProjects.length == 0">
         <ion-col col-12 class="no-claProjects">
           <ion-icon name="folder-open"></ion-icon>
-          <p>A CLA group defines one or more CLAs that may need to be signed as a prerequisite to someone contributing
-            to a
-            project. Currently this project does not have a CLA group defined. Please click below to add a CLA group.
+          <p>
+            A CLA group defines one or more CLAs that may need to be signed as a prerequisite to someone contributing to
+            a project. Currently this project does not have a CLA group defined. Please click below to add a CLA group.
           </p>
           <button ion-button class="clickable" (click)="openClaContractConfigModal()" color="secondary">
             Add CLA Group
@@ -52,8 +51,12 @@
               <ion-card class="organization-card">
                 <ion-grid>
                   <ion-row>
-                    <ion-col class="vertical-rule-right" col-12 col-md-6
-                             *ngFor="let organization of githubOrganizations">
+                    <ion-col
+                      class="vertical-rule-right"
+                      col-12
+                      col-md-6
+                      *ngFor="let organization of githubOrganizations"
+                    >
                       <ion-card-content *ngIf="organization.providerInfo">
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
@@ -71,8 +74,11 @@
                         <p>{{ organization.providerInfo.bio }}</p>
 
                         <div class="organization-actions">
-                          <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
-                                  color="light">
+                          <button
+                            ion-button
+                            (click)="deleteConfirmation('Github Organization', organization)"
+                            color="light"
+                          >
                             Delete
                           </button>
                         </div>
@@ -114,8 +120,11 @@
                     <button ion-button (click)="goToSelectTemplatePage(project.project_id)" color="light">
                       Select Template
                     </button>
-                    <button ion-button (click)="openClaViewSignaturesModal(project.project_id, project.project_name)"
-                            color="light">
+                    <button
+                      ion-button
+                      (click)="openClaViewSignaturesModal(project.project_id, project.project_name)"
+                      color="light"
+                    >
                       View Signatures
                     </button>
                   </ion-buttons>
@@ -139,11 +148,15 @@
                           <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
                           <span>Corporate CLA</span>
                           <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
-                            <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
-                              <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Corporate CLA as a PDF document"
-                                   alt="pdf icon"/>
+                            <button
+                              clear
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)"
+                            >
+                              <img
+                                src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Corporate CLA as a PDF document"
+                                alt="pdf icon"
+                              />
                             </button>
                           </div>
                         </ion-card-title>
@@ -156,27 +169,34 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_name }}
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_name }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_creation_date | date:'medium'
-                                }}
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_creation_date | date:'medium' }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_major_version }}.{{
-                                  project.project_corporate_documents[project.project_corporate_documents.length - 1].document_minor_version
-                                }}
+                                Version {{
+                                project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_major_version }}.{{
+                                project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_minor_version }}
                               </span>
-                              <br>
+                              <br />
                             </ion-col>
                           </ion-row>
                           <ion-row>
                             <ion-col>
                               <ion-buttons end="" class="bar-buttons bar-buttons-md">
-                                <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
-                                        color="secondary">
+                                <button
+                                  ion-button
+                                  clear
+                                  (click)="openClaContractCompaniesModal(project.project_id)"
+                                  color="secondary"
+                                >
                                   View Companies
                                 </button>
                               </ion-buttons>
@@ -197,11 +217,15 @@
                           <ion-icon name="person" item-left class="icon-md"></ion-icon>
                           <span>Individual CLA</span>
                           <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
-                            <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
-                              <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Individual CLA as a PDF document"
-                                   alt="pdf icon"/>
+                            <button
+                              clear
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)"
+                            >
+                              <img
+                                src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Individual CLA as a PDF document"
+                                alt="pdf icon"
+                              />
                             </button>
                           </div>
                         </ion-card-title>
@@ -214,20 +238,23 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_name }}
+                                {{ project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_name }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_creation_date | date:'medium'
-                                }}
+                                {{ project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_creation_date | date:'medium' }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                Version {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_major_version }}.{{
-                                  project.project_individual_documents[project.project_individual_documents.length - 1].document_minor_version
-                                }}
+                                Version {{
+                                project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_major_version }}.{{
+                                project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_minor_version }}
                               </span>
-                              <br>
+                              <br />
                             </ion-col>
                           </ion-row>
                         </ion-grid>
@@ -245,11 +272,15 @@
                           <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
                           <span>LF Member Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_member_documents.length">
-                            <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'member', project.project_member_documents)">
-                              <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} LF Member Agreement CLA as a PDF document"
-                                   alt="pdf icon"/>
+                            <button
+                              clear
+                              (click)="openClaContractVersionModal(project.project_id, 'member', project.project_member_documents)"
+                            >
+                              <img
+                                src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon"
+                              />
                             </button>
                           </div>
                         </ion-card-title>
@@ -262,20 +293,22 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ project.project_member_documents[project.project_member_documents.length - 1].document_name }}
+                                {{ project.project_member_documents[project.project_member_documents.length -
+                                1].document_name }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                {{ project.project_member_documents[project.project_member_documents.length - 1].document_creation_date | date:'medium'
-                                }}
+                                {{ project.project_member_documents[project.project_member_documents.length -
+                                1].document_creation_date | date:'medium' }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                Version {{ project.project_member_documents[project.project_member_documents.length - 1].document_major_version }}.{{
-                                  project.project_member_documents[project.project_member_documents.length - 1].document_minor_version
-                                }}
+                                Version {{ project.project_member_documents[project.project_member_documents.length -
+                                1].document_major_version }}.{{
+                                project.project_member_documents[project.project_member_documents.length -
+                                1].document_minor_version }}
                               </span>
-                              <br>
+                              <br />
                             </ion-col>
                           </ion-row>
                         </ion-grid>
@@ -293,11 +326,15 @@
                           <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
                           <span>Non-LF Member Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
-                            <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
-                              <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Non-LF Member Agreement CLA as a PDF document"
-                                   alt="pdf icon"/>
+                            <button
+                              clear
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)"
+                            >
+                              <img
+                                src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Non-LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon"
+                              />
                             </button>
                           </div>
                         </ion-card-title>
@@ -310,20 +347,23 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_name }}
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_name }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_creation_date | date:'medium'
-                                }}
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_creation_date | date:'medium' }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_major_version }}.{{
-                                  project.project_corporate_documents[project.project_corporate_documents.length - 1].document_minor_version
-                                }}
+                                Version {{
+                                project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_major_version }}.{{
+                                project.project_corporate_documents[project.project_corporate_documents.length -
+                                1].document_minor_version }}
                               </span>
-                              <br>
+                              <br />
                             </ion-col>
                           </ion-row>
                         </ion-grid>
@@ -341,11 +381,15 @@
                           <ion-icon name="person" item-left class="icon-md"></ion-icon>
                           <span>Individual Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
-                            <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
-                              <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Individual Agreement as a PDF document"
-                                   alt="pdf icon"/>
+                            <button
+                              clear
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)"
+                            >
+                              <img
+                                src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Individual Agreement as a PDF document"
+                                alt="pdf icon"
+                              />
                             </button>
                           </div>
                         </ion-card-title>
@@ -358,20 +402,23 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_name }}
+                                {{ project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_name }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_creation_date | date:'medium'
-                                }}
+                                {{ project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_creation_date | date:'medium' }}
                               </span>
-                              <br>
+                              <br />
                               <span>
-                                Version {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_major_version }}.{{
-                                  project.project_individual_documents[project.project_individual_documents.length - 1].document_minor_version
-                                }}
+                                Version {{
+                                project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_major_version }}.{{
+                                project.project_individual_documents[project.project_individual_documents.length -
+                                1].document_minor_version }}
                               </span>
-                              <br>
+                              <br />
                             </ion-col>
                           </ion-row>
                         </ion-grid>
@@ -383,8 +430,12 @@
 
               <ion-row class="align-items-center">
                 <ion-buttons end="" class="bar-buttons bar-buttons-md">
-                  <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
-                          color="secondary">
+                  <button
+                    ion-button
+                    clear
+                    (click)="openClaContractCompaniesModal(project.project_id)"
+                    color="secondary"
+                  >
                     View Companies
                   </button>
                 </ion-buttons>
@@ -402,8 +453,11 @@
                 </ion-col>
                 <ion-col col-6>
                   <ion-buttons end>
-                    <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)"
-                            color="secondary">
+                    <button
+                      ion-button
+                      (click)="openClaConfigureGithubRepositoriesModal(project.project_id)"
+                      color="secondary"
+                    >
                       Configure Github Repositories
                     </button>
                   </ion-buttons>
@@ -473,7 +527,7 @@
                       <ion-row>
                         <ion-col class="vertical-rule-right" col-12 col-md-6>
                           <ion-card-content>
-                            <h1>{{ gerrit.gerrit_name }} </h1>
+                            <h1>{{ gerrit.gerrit_name }}</h1>
                             <p>
                               <a target="_blank" href="{{ gerrit.gerrit_url }}">
                                 {{gerrit.gerrit_url }}
@@ -482,7 +536,6 @@
                           </ion-card-content>
                         </ion-col>
                         <ion-col class="vertical-rule-right" col-12 col-md-6>
-
                           <ion-card-content>
                             <div class="gerrit-actions">
                               <button ion-button (click)="deleteConfirmation('Gerrit Instance', gerrit)" color="light">
@@ -492,22 +545,22 @@
 
                             <p class="code_snippet">
                               [contributor-agreement "ICLA - {{ gerrit.gerrit_name }}"]
-                              <br> description = ICLA for Linux Foundation
-                              <br> agreementUrl
-                              = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/individual/agreementUrl.html"
-                              }}
-                              <br> accepted = group {{ gerrit.group_name_icla }}
-                              <br>
+                              <br />
+                              description = ICLA for Linux Foundation <br />
+                              agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id +
+                              "/individual/agreementUrl.html" }} <br />
+                              accepted = group {{ gerrit.group_name_icla }}
+                              <br />
                             </p>
 
                             <p class="code_snippet">
                               [contributor-agreement "CCLA - {{ gerrit.gerrit_name }}"]
-                              <br> description = CCLA for Linux Foundation
-                              <br> agreementUrl
-                              = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id + "/corporate/agreementUrl.html"
-                              }}
-                              <br> accepted = group {{ gerrit.group_name_ccla }}
-                              <br>
+                              <br />
+                              description = CCLA for Linux Foundation <br />
+                              agreementUrl = {{ claService.claApiUrl + "/v2/gerrit/" + gerrit.gerrit_id +
+                              "/corporate/agreementUrl.html" }} <br />
+                              accepted = group {{ gerrit.group_name_ccla }}
+                              <br />
                             </p>
 
                             <small class="mt-10">
@@ -522,7 +575,6 @@
               </ion-row>
             </div>
           </ion-col>
-
         </ion-row>
       </ion-col>
     </ion-grid>

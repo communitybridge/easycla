@@ -1,16 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, Renderer, ElementRef, ViewChild, } from '@angular/core';
-import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage  } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service'
+import { Component, Renderer, ElementRef, ViewChild } from '@angular/core';
+import { NavController, NavParams, ViewController, AlertController, ToastController, IonicPage } from 'ionic-angular';
+import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'assign-user-modal'
 })
 @Component({
   selector: 'assign-user-modal',
-  templateUrl: 'assign-user-modal.html',
+  templateUrl: 'assign-user-modal.html'
 })
 export class AssignUserModal {
   projectId: string; // Always Needed
@@ -42,7 +42,7 @@ export class AssignUserModal {
     private cincoService: CincoService,
     public toastCtrl: ToastController,
     private renderer: Renderer,
-    public alertCtrl: AlertController,
+    public alertCtrl: AlertController
   ) {
     this.selectedUsers = [];
     this.getDefaults();
@@ -54,15 +54,15 @@ export class AssignUserModal {
 
   getDefaults() {
     this.loading = {
-      users: true,
+      users: true
     };
     this.users = [
       {
-        userId:'',
-        email:'',
-        roles:[],
-        calendar:null
-      },
+        userId: '',
+        email: '',
+        roles: [],
+        calendar: null
+      }
     ];
   }
 
@@ -83,7 +83,7 @@ export class AssignUserModal {
   dismissWithData(event) {
     event.stopPropagation();
     this.viewCtrl.dismiss({
-      selectedUsers: this.selectedUsers,
+      selectedUsers: this.selectedUsers
     });
   }
 
@@ -93,13 +93,12 @@ export class AssignUserModal {
     if (event.ctrlKey) {
       if (user.selected) {
         this.deselectUsers([user]);
-      }
-      else {
+      } else {
         user.selected = true;
         this.selectedUsers.push(user);
       }
-    }
-    else { // standard single user select
+    } else {
+      // standard single user select
       // deselect the entire selected users array
       this.deselectUsers(this.selectedUsers);
       user.selected = true;
@@ -109,26 +108,25 @@ export class AssignUserModal {
 
   downloadSelected(event) {
     event.stopPropagation();
-
   }
 
   previewSelected(event) {
     event.stopPropagation();
-
   }
 
   deleteSelected(event) {
     event.stopPropagation();
     let prompt_title = '';
-    if(this.selectedUsers.length > 1) {
+    if (this.selectedUsers.length > 1) {
       prompt_title = 'Delete users?';
-    }
-    else {
+    } else {
       prompt_title = 'Delete user?';
     }
-    let prompt_message = this.selectedUsers.map(function(user){
-      return user.name;
-    }).join(',<br>');
+    let prompt_message = this.selectedUsers
+      .map(function(user) {
+        return user.name;
+      })
+      .join(',<br>');
     let prompt = this.alertCtrl.create({
       title: prompt_title,
       message: prompt_message,
@@ -166,7 +164,7 @@ export class AssignUserModal {
       let user = users[i];
       user.selected = false;
       let index = this.selectedUsers.indexOf(user);
-      if(index !== -1) {
+      if (index !== -1) {
         this.selectedUsers.splice(index, 1);
       }
     }
@@ -178,16 +176,12 @@ export class AssignUserModal {
   }
 
   /**
-  * Callback executed when the visible button is pressed
-  * @param  {Event}  event should be a mouse click event
-  */
+   * Callback executed when the visible button is pressed
+   * @param  {Event}  event should be a mouse click event
+   */
   uploadClicked(event: Event) {
-
     // trigger click event of hidden input
-    let clickEvent: MouseEvent = new MouseEvent("click", {bubbles: true});
-    this.renderer.invokeElementMethod(
-      this.nativeInputBtn.nativeElement, "dispatchEvent", [clickEvent]
-    );
+    let clickEvent: MouseEvent = new MouseEvent('click', { bubbles: true });
+    this.renderer.invokeElementMethod(this.nativeInputBtn.nativeElement, 'dispatchEvent', [clickEvent]);
   }
-
 }

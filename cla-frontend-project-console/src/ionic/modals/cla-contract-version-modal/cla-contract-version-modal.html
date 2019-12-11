@@ -7,15 +7,13 @@
 <ion-content>
   <ion-grid>
     <table class="table">
-      <thead>
-
-      </thead>
+      <thead></thead>
       <tbody>
         <ng-container *ngIf="currentDocument">
           <tr *ngFor="let document of currentDocument">
             <td data-title="Name">
-              {{ document.document_name }} <br>
-              {{ document.document_creation_date | date:'medium' }} <br>
+              {{ document.document_name }} <br />
+              {{ document.document_creation_date | date:'medium' }} <br />
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
@@ -33,8 +31,8 @@
           </tr>
           <tr *ngFor="let document of previousDocuments">
             <td data-title="Name">
-              {{ document.document_name }} <br>
-              {{ document.document_creation_date | date:'medium' }} <br>
+              {{ document.document_name }} <br />
+              {{ document.document_creation_date | date:'medium' }} <br />
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
@@ -46,6 +44,5 @@
         </ng-container>
       </tbody>
     </table>
-
   </ion-grid>
 </ion-content>

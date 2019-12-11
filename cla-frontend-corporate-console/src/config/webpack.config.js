@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-const { dev, prod} = require('@ionic/app-scripts/config/webpack.config');
+const { dev, prod } = require('@ionic/app-scripts/config/webpack.config');
 const webpack = require('webpack');
 const RetrieveLocalConfigValues = require('./scripts/read-local');
 const configVarArray = ['auth0-clientId', 'auth0-domain', 'cinco-api-url', 'cla-api-url'];
@@ -14,15 +14,13 @@ const stageEnv = process.env.STAGE_ENV;
  */
 module.exports = async env => {
   // Here we hard code stage name, it's not perfect since if a new stage created/modified, we also need to change it.
-  const shouldReadFromSSM = stageEnv !== undefined && (
-    stageEnv === 'staging' ||
-    stageEnv === 'prod' ||
-    stageEnv === 'qa' ||
-    stageEnv === 'dev');
+  const shouldReadFromSSM =
+    stageEnv !== undefined &&
+    (stageEnv === 'staging' || stageEnv === 'prod' || stageEnv === 'qa' || stageEnv === 'dev');
   let configMap = {};
 
   // Here in the future, we maybe want to use Enum class to replace hard-code file name as indicator.
-  if (shouldReadFromSSM){
+  if (shouldReadFromSSM) {
     configMap = await RetrieveLocalConfigValues(configVarArray, `config-${stageEnv}.json`);
   } else {
     configMap = await RetrieveLocalConfigValues(configVarArray, 'config-local.json');

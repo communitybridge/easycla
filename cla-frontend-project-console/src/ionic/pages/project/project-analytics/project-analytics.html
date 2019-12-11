@@ -20,7 +20,6 @@
     </ion-row>
 
     <ion-row>
-
       <ion-col col-6>
         <ion-card>
           <ion-card-header>
@@ -32,10 +31,8 @@
             <ion-row text-center>
               <ion-col col-12>
                 <div class="progress-cla-bar">
-                  <div class="progress-one">
-                  </div>
-                  <div class="progress-two">
-                  </div>
+                  <div class="progress-one"></div>
+                  <div class="progress-two"></div>
                 </div>
               </ion-col>
             </ion-row>
@@ -64,11 +61,10 @@
                     </ion-col>
                     <ion-col col-12 col-md-8>
                       Code of Conduct
-                      <br>
+                      <br />
                       <small><a href="#">Code of Conduct Guide</a></small>
                     </ion-col>
                   </ion-row>
-
                 </div>
               </ion-col>
               <ion-col col-6>
@@ -120,7 +116,6 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-
     </ion-row>
 
     <ion-row>
@@ -152,7 +147,7 @@
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('day')">1 D</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('week')">1 W</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('month')">1 M</button>
-                <br>
+                <br />
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('quarter')">1 Q</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('year')">1 Y</button>
                 <button ion-button color="dark_blue" clear small (click)="getIssuesStatus('year')">ALL</button>
@@ -173,7 +168,7 @@
             <span>Issues - Performance</span>
           </ion-card-header>
           <ion-card-content class="issues-tile" padding>
-            <ion-row >
+            <ion-row>
               <ion-col col-12>
                 Time to first Response
               </ion-col>
@@ -241,15 +236,15 @@
           <ion-card-content class="pipeline-content">
             <div class="pipeline-gauge-title">
               Pull Requests
-              <br>
+              <br />
               Ready for Review
             </div>
             <div class="gauge-current-value">{{ sumOpenPRs }}</div>
             <div class="pipeline-chart">
-<!--              <round-progress-->
-<!--                [current]="sumOpenPRs"-->
-<!--                [max]="100">-->
-<!--              </round-progress>-->
+              <!--              <round-progress-->
+              <!--                [current]="sumOpenPRs"-->
+              <!--                [max]="100">-->
+              <!--              </round-progress>-->
             </div>
           </ion-card-content>
         </ion-card>
@@ -299,7 +294,6 @@
 
     <ion-row>
       <ion-col col-3>
-
         <ion-card>
           <ion-card-header>
             <span>Distribution of Commits</span>
@@ -307,7 +301,7 @@
           <ion-card-content>
             <div text-center>
               <span>% of Commits Made by</span>
-              <br>
+              <br />
               <span>Top 10 Contributors</span>
             </div>
             <google-chart #commitsDistribution [data]="commitsDistributionChart" padding></google-chart>
@@ -315,8 +309,7 @@
         </ion-card>
 
         <ion-card>
-          <ion-card-header>
-          </ion-card-header>
+          <ion-card-header> </ion-card-header>
           <ion-card-content>
             <ion-row text-center>
               <ion-col col-12>
@@ -335,13 +328,12 @@
                 Total Contributors
               </ion-col>
               <ion-col col-12>
-                 <ion-icon class="contributor-icon" ios="ios-people" md="md-people"></ion-icon>
-                 <span class="contributor-index">{{ totalContributors }}</span>
+                <ion-icon class="contributor-icon" ios="ios-people" md="md-people"></ion-icon>
+                <span class="contributor-index">{{ totalContributors }}</span>
               </ion-col>
             </ion-row>
           </ion-card-content>
         </ion-card>
-
       </ion-col>
 
       <ion-col col-9>
@@ -395,6 +387,5 @@
         </ion-card>
       </ion-col>
     </ion-row>
-
   </ion-grid>
 </ion-content>

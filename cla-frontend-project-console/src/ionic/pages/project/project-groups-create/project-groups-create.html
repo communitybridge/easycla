@@ -22,8 +22,7 @@
     <ion-row>
       <ion-col col-23>
         <ion-card>
-          <ion-card-header>
-          </ion-card-header>
+          <ion-card-header> </ion-card-header>
           <ion-card-content>
             <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
               <ion-grid>
@@ -48,7 +47,9 @@
                     <ion-item>
                       <ion-label stacked>Group Listing and Archive Privacy Setting</ion-label>
                       <ion-select formControlName="groupPrivacy">
-                        <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}">{{ groupPrivacy[privacy].description }}</ion-option>
+                        <ion-option *ngFor="let privacy of keysGetter(groupPrivacy)" value="{{ privacy }}"
+                          >{{ groupPrivacy[privacy].description }}</ion-option
+                        >
                       </ion-select>
                     </ion-item>
                   </ion-col>
@@ -75,8 +76,24 @@
                   <ion-col col-12>
                     <ion-item>
                       <ion-buttons item-end>
-                        <button ion-button default (click)="submitGroup()" color="secondary" [disabled]="currentlySubmitting">+ Create</button>
-                        <button ion-button default (click)="getGroupsList()" color="secondary" [disabled]="currentlySubmitting">Cancel</button>
+                        <button
+                          ion-button
+                          default
+                          (click)="submitGroup()"
+                          color="secondary"
+                          [disabled]="currentlySubmitting"
+                        >
+                          + Create
+                        </button>
+                        <button
+                          ion-button
+                          default
+                          (click)="getGroupsList()"
+                          color="secondary"
+                          [disabled]="currentlySubmitting"
+                        >
+                          Cancel
+                        </button>
                       </ion-buttons>
                     </ion-item>
                   </ion-col>
@@ -87,6 +104,5 @@
         </ion-card>
       </ion-col>
     </ion-row>
-
   </ion-grid>
 </ion-content>

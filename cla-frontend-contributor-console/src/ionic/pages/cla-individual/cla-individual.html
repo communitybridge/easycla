@@ -31,20 +31,19 @@
             </ion-card-title>
             <div *ngIf="activeSignatures">
               <p>
-                We are generating a document to sign for the purposes of your CLA. Please fill out
-                accurately and complete the signing process.
+                We are generating a document to sign for the purposes of your CLA. Please fill out accurately and
+                complete the signing process.
               </p>
               <p>
-                If a new tab with the document to sign did not open, you may use
-                the button below:
+                If a new tab with the document to sign did not open, you may use the button below:
               </p>
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open CLA
               </button>
               <div *ngIf="error">
                 <p class="error" *ngIf="error.message === 'missing template document'">
-                  The Individual CLA template has not been selected by the Project Manager. Please <a
-                    (click)="createTicket()">create a ticket</a> to help us resolve this issue.
+                  The Individual CLA template has not been selected by the Project Manager. Please
+                  <a (click)="createTicket()">create a ticket</a> to help us resolve this issue.
                 </p>
                 <p class="error" *ngIf="error.message !== 'missing template document'">
                   It looks like something has gone wrong. Please <a (click)="createTicket()">create a ticket</a> to help
@@ -65,7 +64,6 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-
 </ion-content>
 
 <cla-footer></cla-footer>

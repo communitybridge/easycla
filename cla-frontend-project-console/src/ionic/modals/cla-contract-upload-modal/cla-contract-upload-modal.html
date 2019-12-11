@@ -17,8 +17,8 @@
           <ion-label stacked>Template *</ion-label>
           <select formControlName="templateName" class="template-dropdown">
             <option value="">- Select -</option>
-            <option *ngFor="let template of keysGetter(templateOptions)" value="{{ template }}">{{
-              templateOptions[template] }}
+            <option *ngFor="let template of keysGetter(templateOptions)" value="{{ template }}"
+              >{{ templateOptions[template] }}
             </option>
           </select>
         </ion-col>
@@ -50,7 +50,14 @@
   </form>
 
   <div class="btn-wrapper">
-    <button form="form" type="submit" ion-button icon-right color="secondary" [disabled]="currentlySubmitting || !form.get('templateName').valid">
+    <button
+      form="form"
+      type="submit"
+      ion-button
+      icon-right
+      color="secondary"
+      [disabled]="currentlySubmitting || !form.get('templateName').valid"
+    >
       Save
     </button>
   </div>

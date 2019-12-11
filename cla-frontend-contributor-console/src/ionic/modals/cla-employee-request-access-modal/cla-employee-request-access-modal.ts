@@ -1,18 +1,18 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {ChangeDetectorRef, Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EmailValidator} from '../../validators/email';
-import {ClaService} from '../../services/cla.service';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from '../../validators/email';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
 })
 @Component({
   selector: 'cla-employee-request-access-modal',
-  templateUrl: 'cla-employee-request-access-modal.html',
+  templateUrl: 'cla-employee-request-access-modal.html'
 })
 export class ClaEmployeeRequestAccessModal {
   project: any;
@@ -24,7 +24,7 @@ export class ClaEmployeeRequestAccessModal {
   authenticated: boolean;
   cclaSignature: any;
   managers: any;
-  formErrors: any[]
+  formErrors: any[];
 
   userEmails: Array<string>;
 
@@ -43,7 +43,7 @@ export class ClaEmployeeRequestAccessModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.getDefaults();
     this.loading = true;
@@ -61,7 +61,7 @@ export class ClaEmployeeRequestAccessModal {
       recipient_name: [''],
       recipient_email: [''],
       manager: [''],
-      managerOptions: ['', Validators.compose([Validators.required])],
+      managerOptions: ['', Validators.compose([Validators.required])]
     });
     this.managers = [];
     this.formErrors = [];
@@ -86,12 +86,11 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   getCLAManagerDetails(managerId) {
-    const manager = this.managers.filter((manager) => {
-      return manager.userID = managerId
+    const manager = this.managers.filter(manager => {
+      return (manager.userID = managerId);
     });
     return manager;
   }
-
 
   getDefaults() {
     this.userEmails = [];
@@ -102,7 +101,7 @@ export class ClaEmployeeRequestAccessModal {
       if (user) {
         this.userEmails = user.user_emails || [];
         if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-          this.userEmails.push(user.lf_email)
+          this.userEmails.push(user.lf_email);
         }
       }
     });
@@ -143,41 +142,46 @@ export class ClaEmployeeRequestAccessModal {
   getProjectSignatures(projectId: string, companyId: string) {
     // Get CCLA Company Signatures - should just be one
     this.loading = true;
-    this.claService.getCompanyProjectSignatures(companyId, projectId)
-      .subscribe(response => {
-          this.loading = false;
-          console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-          console.log(response);
-          if (response.signatures) {
-            let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
-            console.log('CCLA Signatures for project: ' + cclaSignatures.length);
-            if (cclaSignatures.length) {
-              console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-              console.log(cclaSignatures);
-              this.cclaSignature = cclaSignatures[0];
-              console.log(this.cclaSignature);
-              console.log(this.cclaSignature.signatureACL);
-              if (this.cclaSignature.signatureACL != null) {
-                for (let manager of this.cclaSignature.signatureACL) {
-                  this.insertAndSortManagersList({
-                    userID: manager.userID,
-                    username: manager.username,
-                    lfEmail: manager.lfEmail,
-                  });
-                }
+    this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
+      response => {
+        this.loading = false;
+        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
+        console.log(response);
+        if (response.signatures) {
+          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
+          if (cclaSignatures.length) {
+            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
+            console.log(cclaSignatures);
+            this.cclaSignature = cclaSignatures[0];
+            console.log(this.cclaSignature);
+            console.log(this.cclaSignature.signatureACL);
+            if (this.cclaSignature.signatureACL != null) {
+              for (let manager of this.cclaSignature.signatureACL) {
+                this.insertAndSortManagersList({
+                  userID: manager.userID,
+                  username: manager.username,
+                  lfEmail: manager.lfEmail
+                });
               }
             }
           }
-        },
-        exception => {
-          this.loading = false;
-          console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
-            companyId + ' and project ID: ' + projectId);
-          console.log(exception);
-        });
+        }
+      },
+      exception => {
+        this.loading = false;
+        console.log(
+          'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
+            companyId +
+            ' and project ID: ' +
+            projectId
+        );
+        console.log(exception);
+      }
+    );
   }
 
-// ContactUpdateModal modal dismiss
+  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -192,8 +196,14 @@ export class ClaEmployeeRequestAccessModal {
       user_email: this.form.value.user_email,
       project_id: this.projectId,
       message: this.form.value.message,
-      recipient_name: this.form.value.recipient_name || this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].username : undefined,
-      recipient_email: this.form.value.recipient_email || this.form.value.manager ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail : undefined,
+      recipient_name:
+        this.form.value.recipient_name || this.form.value.manager
+          ? this.getCLAManagerDetails(this.form.value.message)[0].username
+          : undefined,
+      recipient_email:
+        this.form.value.recipient_email || this.form.value.manager
+          ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail
+          : undefined
     };
 
     if (!this.form.valid) {
@@ -210,9 +220,9 @@ export class ClaEmployeeRequestAccessModal {
 
   emailSent() {
     this.loading = false;
-    let message = this.authenticated ?
-      'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process' :
-      'Thank you for contacting your company\'s administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.'
+    let message = this.authenticated
+      ? "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process"
+      : "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.";
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
       subTitle: message,
@@ -236,7 +246,7 @@ export class ClaEmployeeRequestAccessModal {
               message = `*Email Authorize Field is ${keyError}`;
               break;
             default:
-              message = `Check Fields for errors`
+              message = `Check Fields for errors`;
           }
           this.formErrors.push({
             message

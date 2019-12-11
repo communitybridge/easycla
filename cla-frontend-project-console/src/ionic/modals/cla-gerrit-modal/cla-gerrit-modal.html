@@ -26,8 +26,9 @@
             <ion-label stacked>Gerrit Instance URL</ion-label>
             <ion-input formControlName="URL"></ion-input>
           </ion-item>
-          <p *ngIf="form.controls['URL'].errors != null" class="form-message"> 
-          {{ form.controls['URL'].errors.invalidURL }} </p>
+          <p *ngIf="form.controls['URL'].errors != null" class="form-message">
+            {{ form.controls['URL'].errors.invalidURL }}
+          </p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -36,8 +37,9 @@
             <ion-label stacked>ICLA Group ID</ion-label>
             <ion-input formControlName="groupIdIcla"></ion-input>
           </ion-item>
-          <p *ngIf="form.controls['groupIdIcla'].errors != null" class="form-message"> 
-          {{ form.controls['groupIdIcla'].errors.groupNotExistentError }} </p>
+          <p *ngIf="form.controls['groupIdIcla'].errors != null" class="form-message">
+            {{ form.controls['groupIdIcla'].errors.groupNotExistentError }}
+          </p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -46,8 +48,9 @@
             <ion-label stacked>CCLA Group ID</ion-label>
             <ion-input formControlName="groupIdCcla"></ion-input>
           </ion-item>
-          <p *ngIf="form.controls['groupIdCcla'].errors != null" class="form-message"> 
-          {{ form.controls['groupIdCcla'].errors.groupNotExistentError }} </p>
+          <p *ngIf="form.controls['groupIdCcla'].errors != null" class="form-message">
+            {{ form.controls['groupIdCcla'].errors.groupNotExistentError }}
+          </p>
         </ion-col>
       </ion-row>
     </ion-grid>

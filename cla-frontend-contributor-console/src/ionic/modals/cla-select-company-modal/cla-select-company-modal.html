@@ -7,7 +7,6 @@
       <loading-spinner [loading]="loading.activateSpinner"></loading-spinner>
     </ion-row>
 
-
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
@@ -23,7 +22,7 @@
         <ion-label class="header">Search:</ion-label>
       </ion-col>
       <ion-col col-3>
-        <ion-input type="text" formControlName="search" placeholder="search term" (ionChange)='onSearch()'></ion-input>
+        <ion-input type="text" formControlName="search" placeholder="search term" (ionChange)="onSearch()"></ion-input>
       </ion-col>
     </ion-row>
   </form>
@@ -32,7 +31,11 @@
     <ion-row>
       <ion-col col-12>
         <ion-list>
-          <button ion-item *ngFor="let company of companiesFiltered" (click)="openClaEmployeeCompanyConfirmPage(company)">
+          <button
+            ion-item
+            *ngFor="let company of companiesFiltered"
+            (click)="openClaEmployeeCompanyConfirmPage(company)"
+          >
             <ion-label class="project-name">{{company.company_name}}</ion-label>
           </button>
         </ion-list>

@@ -6,13 +6,13 @@ import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angu
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
-import { DomSanitizer} from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { AlertController } from 'ionic-angular';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'project/:projectId/groups'
@@ -21,9 +21,7 @@ import { AlertController } from 'ionic-angular';
   selector: 'project-groups',
   templateUrl: 'project-groups.html'
 })
-
 export class ProjectGroupsPage {
-
   projectId: string;
 
   groupName: string;
@@ -44,14 +42,14 @@ export class ProjectGroupsPage {
   participantEmail: any;
 
   expand: any;
-  isTrue:boolean = null;
+  isTrue: boolean = null;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
-    private domSanitizer : DomSanitizer,
+    private domSanitizer: DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
     private formBuilder: FormBuilder,
@@ -60,17 +58,16 @@ export class ProjectGroupsPage {
     this.projectId = navParams.get('projectId');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.required])],
-      groupDescription:[this.groupDescription],
-      groupPrivacy:[this.groupPrivacy],
-      groupRequiresApproval:[this.groupRequiresApproval],
+      groupName: [this.groupName, Validators.compose([Validators.required])],
+      groupDescription: [this.groupDescription],
+      groupPrivacy: [this.groupPrivacy],
+      groupRequiresApproval: [this.groupRequiresApproval]
     });
 
     this.form = formBuilder.group({
-      participantName:[this.participantName],
-      participantEmail:[this.participantEmail, Validators.compose([Validators.required])],
+      participantName: [this.participantName],
+      participantEmail: [this.participantEmail, Validators.compose([Validators.required])]
     });
-
   }
 
   async ngOnInit() {
@@ -90,10 +87,10 @@ export class ProjectGroupsPage {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
         if (!response.mailingGroup) {
-          console.log("no mailingGroup");
-          console.log("creating a new mailingGroup");
+          console.log('no mailingGroup');
+          console.log('creating a new mailingGroup');
           this.cincoService.createMainProjectGroup(this.projectId).subscribe(response => {
-            console.log("new mailingGroup");
+            console.log('new mailingGroup');
             console.log(response);
           });
         }
@@ -104,13 +101,13 @@ export class ProjectGroupsPage {
   getProjectGroups() {
     this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
       this.projectGroups = response;
-      for(let eachProject of this.projectGroups) {
+      for (let eachProject of this.projectGroups) {
         this.getAllGroupParticipants(eachProject.name);
       }
     });
   }
 
-  getAllGroupParticipants(groupName){
+  getAllGroupParticipants(groupName) {
     let group = {
       info: [],
       participants: []
@@ -137,7 +134,7 @@ export class ProjectGroupsPage {
       name: this.form.value.groupName,
       description: this.form.value.groupDescription,
       privacy: this.groupPrivacy[this.form.value.groupPrivacy].value,
-      requires_approval: this.groupRequiresApproval[this.form.value.groupRequiresApproval].value,
+      requires_approval: this.groupRequiresApproval[this.form.value.groupRequiresApproval].value
     };
     console.log(this.group);
     this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
@@ -166,41 +163,44 @@ export class ProjectGroupsPage {
       // prevent submit
       return;
     }
-    let participant = [{
+    let participant = [
+      {
         address: this.form.value.participantEmail,
         name: this.form.value.participantName
-    }];
+      }
+    ];
     this.cincoService.addGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
       this.currentlySubmitting = false;
       this.getDefaults();
     });
   }
 
-  removeGroupParticipant(groupName, participantEmail){
-    let participant = [{
+  removeGroupParticipant(groupName, participantEmail) {
+    let participant = [
+      {
         address: participantEmail
-    }];
-    this.presentRemoveConfirm((confirm) => {
-      if(confirm) {
+      }
+    ];
+    this.presentRemoveConfirm(confirm => {
+      if (confirm) {
         this.cincoService.removeGroupParticipant(this.projectId, groupName, participant).subscribe(response => {
           // CINCO and Groups.io sync takes a while
-          let refreshData = setTimeout( () => {
-            this.getDefaults()
+          let refreshData = setTimeout(() => {
+            this.getDefaults();
           }, 2000);
         });
       }
-
     });
   }
 
-  removeProjectGroup(groupName){
-    this.presentRemoveConfirm((confirm) => {
-      if(confirm) {
+  removeProjectGroup(groupName) {
+    this.presentRemoveConfirm(confirm => {
+      if (confirm) {
         this.cincoService.removeProjectGroup(this.projectId, groupName).subscribe(response => {
           console.log(response);
           // CINCO and Groups.io sync takes a while
-          let refreshData = setTimeout( () => {
-            this.getDefaults()
+          let refreshData = setTimeout(() => {
+            this.getDefaults();
           }, 2000);
         });
       }
@@ -229,5 +229,4 @@ export class ProjectGroupsPage {
     });
     alert.present();
   }
-
 }

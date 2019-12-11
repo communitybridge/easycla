@@ -1,16 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component,  } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from "../../services/roles.service";
-import { AuthService } from "../../services/auth.service";
+import { RolesService } from '../../services/roles.service';
+import { AuthService } from '../../services/auth.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
-import { Restricted } from "../../decorators/restricted";
+import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ["isAuthenticated"]
+  roles: ['isAuthenticated']
 })
 @IonicPage({
   segment: 'cla/gerrit/project/:gerritId/corporate'
@@ -18,8 +18,7 @@ import { Restricted } from "../../decorators/restricted";
 @Component({
   selector: 'cla-gerrit-corporate',
   templateUrl: 'cla-gerrit-corporate.html',
-  providers: [
-  ]
+  providers: []
 })
 export class ClaGerritCorporatePage {
   loading: any;
@@ -28,9 +27,8 @@ export class ClaGerritCorporatePage {
   userId: string;
 
   signature: string;
-  
+
   companies: any;
-  
 
   constructor(
     public navCtrl: NavController,
@@ -40,17 +38,17 @@ export class ClaGerritCorporatePage {
     private claService: ClaService,
     private rolesService: RolesService,
     private authService: AuthService,
-    private keycloak: KeycloakService,
+    private keycloak: KeycloakService
   ) {
     this.gerritId = navParams.get('gerritId');
     this.getDefaults();
-    localStorage.setItem("gerritId", this.gerritId);
-    localStorage.setItem("gerritClaType", "CCLA");
+    localStorage.setItem('gerritId', this.gerritId);
+    localStorage.setItem('gerritClaType', 'CCLA');
   }
 
   getDefaults() {
     this.loading = {
-      companies: true,
+      companies: true
     };
     this.companies = [];
   }
@@ -61,11 +59,11 @@ export class ClaGerritCorporatePage {
     this.getProject(this.gerritId);
   }
 
-  ionViewCanEnter(){
-    if(!this.authService.isAuthenticated){
-      setTimeout(()=>this.navCtrl.setRoot('LoginPage'))
+  ionViewCanEnter() {
+    if (!this.authService.isAuthenticated) {
+      setTimeout(() => this.navCtrl.setRoot('LoginPage'));
     }
-    return this.authService.isAuthenticated
+    return this.authService.isAuthenticated;
   }
 
   dismiss() {
@@ -85,12 +83,12 @@ export class ClaGerritCorporatePage {
 
   getUserInfo() {
     // retrieve userInfo from auth0 service
-      this.claService.postOrGetUserForGerrit().subscribe(user => {
-          this.userId = user.user_id;
-          console.log(this.userId);
-          // get signatureIntent object, similar to the Github flow. 
-          //this.postSignatureRequest();
-      })
+    this.claService.postOrGetUserForGerrit().subscribe(user => {
+      this.userId = user.user_id;
+      console.log(this.userId);
+      // get signatureIntent object, similar to the Github flow.
+      //this.postSignatureRequest();
+    });
   }
 
   openClaEmployeeCompanyConfirmPage(company) {
@@ -102,7 +100,6 @@ export class ClaGerritCorporatePage {
     this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
-        
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
           this.openClaSendClaManagerEmailModal(company);
@@ -116,16 +113,15 @@ export class ClaGerritCorporatePage {
       } else {
         this.signature = response;
 
-      this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
-        projectId: this.projectId,
-        signingType: "Gerrit",
-        userId: this.userId,
-        companyId: company.company_id,
-      });
+        this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
+          projectId: this.projectId,
+          signingType: 'Gerrit',
+          userId: this.userId,
+          companyId: company.company_id
+        });
       }
     });
-  } 
-
+  }
 
   openClaSendClaManagerEmailModal(company) {
     let modal = this.modalCtrl.create('ClaSendClaManagerEmailModal', {
@@ -137,14 +133,13 @@ export class ClaGerritCorporatePage {
     modal.present();
   }
 
-
   openClaNewCompanyModal() {
     let modal = this.modalCtrl.create('ClaNewCompanyModal', {
-      projectId: this.projectId,
+      projectId: this.projectId
     });
     modal.present();
   }
-  
+
   openClaCompanyAdminYesnoModal() {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
@@ -153,11 +148,11 @@ export class ClaGerritCorporatePage {
     });
     modal.present();
   }
-  
+
   openClaEmployeeCompanyTroubleshootPage(company) {
     this.navCtrl.push('ClaEmployeeCompanyTroubleshootPage', {
       projectId: this.projectId,
-      repositoryId: "",
+      repositoryId: '',
       userId: this.userId,
       companyId: company.company_id,
       gitService: 'Gerrit'
@@ -168,6 +163,6 @@ export class ClaGerritCorporatePage {
     //retrieve projectId from this Gerrit
     this.claService.getGerrit(gerritId).subscribe(gerrit => {
       this.projectId = gerrit.project_id;
-    })
+    });
   }
 }

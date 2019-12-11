@@ -1,27 +1,27 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {AlertController, IonicPage, ModalController, NavController, NavParams} from "ionic-angular";
-import {ClaService} from "../../services/cla.service";
-import {ClaCompanyModel} from "../../models/cla-company";
-import {ClaUserModel} from "../../models/cla-user";
-import {ClaSignatureModel} from "../../models/cla-signature";
-import {ClaManager} from "../../models/cla-manager";
-import {SortService} from "../../services/sort.service";
-import {RolesService} from "../../services/roles.service";
-import {Restricted} from "../../decorators/restricted";
-import {WhitelistModal} from "../../modals/whitelist-modal/whitelist-modal";
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { ClaUserModel } from '../../models/cla-user';
+import { ClaSignatureModel } from '../../models/cla-signature';
+import { ClaManager } from '../../models/cla-manager';
+import { SortService } from '../../services/sort.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
+import { WhitelistModal } from '../../modals/whitelist-modal/whitelist-modal';
 
 @Restricted({
-  roles: ["isAuthenticated"]
+  roles: ['isAuthenticated']
 })
 @IonicPage({
-  segment: "company/:companyId/project/:projectId/:modal"
+  segment: 'company/:companyId/project/:projectId/:modal'
 })
 @Component({
-  selector: "project-page",
-  templateUrl: "project-page.html"
+  selector: 'project-page',
+  templateUrl: 'project-page.html'
 })
 export class ProjectPage {
   cclaSignature: any;
@@ -51,9 +51,9 @@ export class ProjectPage {
     private rolesService: RolesService, // for @Restricted
     private sortService: SortService
   ) {
-    this.companyId = navParams.get("companyId");
-    this.projectId = navParams.get("projectId");
-    this.showModal = navParams.get("modal");
+    this.companyId = navParams.get('companyId');
+    this.projectId = navParams.get('projectId');
+    this.showModal = navParams.get('modal');
     this.getDefaults();
     this.managersRestricted = false;
   }
@@ -63,8 +63,8 @@ export class ProjectPage {
     this.users = {};
     this.sort = {
       date: {
-        arrayProp: "date_modified",
-        sortType: "date",
+        arrayProp: 'date_modified',
+        sortType: 'date',
         sort: null
       }
     };
@@ -129,84 +129,94 @@ export class ProjectPage {
   getProjectSignatures() {
     // Get CCLA Company Signatures - should just be one
     this.loading.signatures = true;
-    this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
-      .subscribe(response => {
-          this.loading.signatures = false;
-          console.log('Signatures for project: ' + this.projectId + ' for company: ' + this.companyId);
-          console.log(response);
-          if (response.signatures) {
-            let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
-            console.log('CCLA Signatures for project: ' + cclaSignatures.length);
-            if (cclaSignatures.length) {
-              console.log('CCLA Signatures for project id: ' + this.projectId + ' and company id: ' + this.companyId);
-              console.log(cclaSignatures);
-              this.cclaSignature = cclaSignatures[0];
+    this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe(
+      response => {
+        this.loading.signatures = false;
+        console.log('Signatures for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.log(response);
+        if (response.signatures) {
+          let cclaSignatures = response.signatures.filter(sig => sig.signatureType === 'ccla');
+          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
+          if (cclaSignatures.length) {
+            console.log('CCLA Signatures for project id: ' + this.projectId + ' and company id: ' + this.companyId);
+            console.log(cclaSignatures);
+            this.cclaSignature = cclaSignatures[0];
 
-              // Sort the values
-              if (this.cclaSignature.domainWhitelist) {
-                const sortedList: string[] = this.cclaSignature.domainWhitelist.sort((a, b) => {
-                  return a.trim().localeCompare(b.trim())
-                });
-                // Remove duplicates - set doesn't allow dups
-                this.cclaSignature.domainWhitelist = Array.from(new Set(sortedList));
-              }
-              if (this.cclaSignature.emailWhitelist) {
-                const sortedList: string[] = this.cclaSignature.emailWhitelist.sort((a, b) => {
-                  return a.trim().localeCompare(b.trim())
-                });
-                // Remove duplicates - set doesn't allow dups
-                this.cclaSignature.emailWhitelist = Array.from(new Set(sortedList));
-              }
-              if (this.cclaSignature.githubWhitelist) {
-                const sortedList: string[] = this.cclaSignature.githubWhitelist.sort((a, b) => {
-                  return a.trim().localeCompare(b.trim())
-                });
-                // Remove duplicates - set doesn't allow dups
-                this.cclaSignature.githubWhitelist = Array.from(new Set(sortedList));
-              }
-              if (this.cclaSignature.githubOrgWhitelist) {
-                const sortedList: string[] = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
-                  return a.trim().localeCompare(b.trim())
-                });
-                // Remove duplicates - set doesn't allow dups
-                this.cclaSignature.githubOrgWhitelist = Array.from(new Set(sortedList));
-              }
-              this.getCLAManagers();
-              //this.getGitHubOrgWhitelist();
+            // Sort the values
+            if (this.cclaSignature.domainWhitelist) {
+              const sortedList: string[] = this.cclaSignature.domainWhitelist.sort((a, b) => {
+                return a.trim().localeCompare(b.trim());
+              });
+              // Remove duplicates - set doesn't allow dups
+              this.cclaSignature.domainWhitelist = Array.from(new Set(sortedList));
             }
+            if (this.cclaSignature.emailWhitelist) {
+              const sortedList: string[] = this.cclaSignature.emailWhitelist.sort((a, b) => {
+                return a.trim().localeCompare(b.trim());
+              });
+              // Remove duplicates - set doesn't allow dups
+              this.cclaSignature.emailWhitelist = Array.from(new Set(sortedList));
+            }
+            if (this.cclaSignature.githubWhitelist) {
+              const sortedList: string[] = this.cclaSignature.githubWhitelist.sort((a, b) => {
+                return a.trim().localeCompare(b.trim());
+              });
+              // Remove duplicates - set doesn't allow dups
+              this.cclaSignature.githubWhitelist = Array.from(new Set(sortedList));
+            }
+            if (this.cclaSignature.githubOrgWhitelist) {
+              const sortedList: string[] = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
+                return a.trim().localeCompare(b.trim());
+              });
+              // Remove duplicates - set doesn't allow dups
+              this.cclaSignature.githubOrgWhitelist = Array.from(new Set(sortedList));
+            }
+            this.getCLAManagers();
+            //this.getGitHubOrgWhitelist();
           }
-        },
-        exception => {
-          this.loading.signatures = false;
-          console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
-            this.companyId + ' and project ID: ' + this.projectId);
-          console.log(exception);
-        });
+        }
+      },
+      exception => {
+        this.loading.signatures = false;
+        console.log(
+          'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
+            this.companyId +
+            ' and project ID: ' +
+            this.projectId
+        );
+        console.log(exception);
+      }
+    );
 
     // Get CCLA Employee Signatures
     this.loading.acknowledgements = true;
-    this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId)
-      .subscribe(response => {
-          this.loading.acknowledgements = false;
-          console.log('Employee signatures:');
-          console.log(response);
-          if (response.signatures) {
-            const sigs = response.signatures || [];
-            this.employeeSignatures = sigs.sort((a, b) => {
-              if (a.userName != null && b.userName != null) {
-                return a.userName.trim().localeCompare(b.userName.trim())
-              } else {
-                return 0;
-              }
-            });
-          }
-        },
-        exception => {
-          this.loading.acknowledgements = false;
-          console.log("Exception while calling: getEmployeeProjectSignatures() for company ID: " +
-            this.companyId + ' and project ID: ' + this.projectId);
-          console.log(exception);
-        });
+    this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId).subscribe(
+      response => {
+        this.loading.acknowledgements = false;
+        console.log('Employee signatures:');
+        console.log(response);
+        if (response.signatures) {
+          const sigs = response.signatures || [];
+          this.employeeSignatures = sigs.sort((a, b) => {
+            if (a.userName != null && b.userName != null) {
+              return a.userName.trim().localeCompare(b.userName.trim());
+            } else {
+              return 0;
+            }
+          });
+        }
+      },
+      exception => {
+        this.loading.acknowledgements = false;
+        console.log(
+          'Exception while calling: getEmployeeProjectSignatures() for company ID: ' +
+            this.companyId +
+            ' and project ID: ' +
+            this.projectId
+        );
+        console.log(exception);
+      }
+    );
   }
 
   getManager(userId) {
@@ -217,8 +227,8 @@ export class ProjectPage {
   }
 
   openWhitelistDomainModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "domain",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'domain',
       projectName: this.project.project_name,
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
@@ -233,8 +243,8 @@ export class ProjectPage {
   }
 
   openWhitelistEmailModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "email",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'email',
       projectName: this.project.project_name,
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
@@ -250,8 +260,8 @@ export class ProjectPage {
   }
 
   openWhitelistGithubModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "github",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'github',
       projectName: this.project.project_name,
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
@@ -266,8 +276,8 @@ export class ProjectPage {
   }
 
   openWhitelistGithubOrgModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "githubOrg",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'githubOrg',
       projectName: this.project.project_name,
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
@@ -294,9 +304,9 @@ export class ProjectPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => {
-          }
-        }, {
+          handler: () => {}
+        },
+        {
           text: 'Delete',
           handler: () => {
             this.deleteManager(payload);
@@ -309,12 +319,11 @@ export class ProjectPage {
   }
 
   deleteManager(payload: ClaManager) {
-    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload)
-      .subscribe(() => this.getCLAManagers())
+    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload).subscribe(() => this.getCLAManagers());
   }
 
   openManagerModal() {
-    let modal = this.modalCtrl.create("AddManagerModal", {
+    let modal = this.modalCtrl.create('AddManagerModal', {
       signatureId: this.cclaSignature.signatureID
     });
     modal.onDidDismiss(data => {

@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import {NavController, NavParams, ViewController, IonicPage, Events,} from 'ionic-angular';
+import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service'
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
 })
 @Component({
   selector: 'cla-contract-config-modal',
-  templateUrl: 'cla-contract-config-modal.html',
+  templateUrl: 'cla-contract-config-modal.html'
 })
 export class ClaContractConfigModal {
   form: FormGroup;
@@ -34,10 +34,10 @@ export class ClaContractConfigModal {
     this.claProject = this.navParams.get('claProject');
     this.getDefaults();
     this.form = formBuilder.group({
-      name:[this.claProject.project_name, Validators.compose([Validators.required])],
-      ccla:[this.claProject.project_ccla_enabled],
-      cclaAndIcla:[this.claProject.project_ccla_requires_icla_signature],
-      icla:[this.claProject.project_icla_enabled],
+      name: [this.claProject.project_name, Validators.compose([Validators.required])],
+      ccla: [this.claProject.project_ccla_enabled],
+      cclaAndIcla: [this.claProject.project_ccla_requires_icla_signature],
+      icla: [this.claProject.project_icla_enabled]
     });
 
     events.subscribe('modal:close', () => {
@@ -55,13 +55,12 @@ export class ClaContractConfigModal {
         project_name: '',
         project_ccla_enabled: false,
         project_ccla_requires_icla_signature: false,
-        project_icla_enabled: false,
+        project_icla_enabled: false
       };
     }
   }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   submit() {
     this.submitAttempt = true;
@@ -78,7 +77,7 @@ export class ClaContractConfigModal {
     }
   }
 
-  checkMandatory (value: boolean = true) {
+  checkMandatory(value: boolean = true) {
     this.form.controls['cclaAndIcla'].setValue(value);
   }
 
@@ -88,9 +87,9 @@ export class ClaContractConfigModal {
       project_name: this.form.value.name,
       project_ccla_enabled: this.form.value.ccla,
       project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla,
+      project_icla_enabled: this.form.value.icla
     };
-    this.claService.postProject(claProject).subscribe((response) => {
+    this.claService.postProject(claProject).subscribe(response => {
       this.dismiss();
     });
   }
@@ -103,9 +102,9 @@ export class ClaContractConfigModal {
       project_name: this.form.value.name,
       project_ccla_enabled: this.form.value.ccla,
       project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla,
+      project_icla_enabled: this.form.value.icla
     };
-    this.claService.putProject(claProject).subscribe((response) => {
+    this.claService.putProject(claProject).subscribe(response => {
       this.dismiss();
     });
   }
@@ -113,5 +112,4 @@ export class ClaContractConfigModal {
   dismiss() {
     this.viewCtrl.dismiss();
   }
-
 }

@@ -3,15 +3,15 @@
 
 import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CalendarLinkValidator } from  '../../validators/calendarlink';
-import { NavController, IonicPage, Content, ToastController, } from 'ionic-angular';
+import { CalendarLinkValidator } from '../../validators/calendarlink';
+import { NavController, IonicPage, Content, ToastController } from 'ionic-angular';
 import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'account-settings'
@@ -36,24 +36,24 @@ export class AccountSettingsPage {
     public formBuilder: FormBuilder,
     public toastCtrl: ToastController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.getDefaults();
 
     this.form = formBuilder.group({
-      calendar:[this.user.calendar, Validators.compose([CalendarLinkValidator.isValid])],
+      calendar: [this.user.calendar, Validators.compose([CalendarLinkValidator.isValid])]
     });
   }
 
   getDefaults() {
     this.loading = {
-      user: true,
+      user: true
     };
     this.user = {
-      userId: "",
-      email: "",
+      userId: '',
+      email: '',
       roles: [],
-      calendar: null,
+      calendar: null
     };
   }
 
@@ -65,7 +65,7 @@ export class AccountSettingsPage {
     this.cincoService.getCurrentUser().subscribe(response => {
       this.user = response;
       this.user.userId = this.user.lfId;
-      this.form.patchValue({calendar:this.user.calendar});
+      this.form.patchValue({ calendar: this.user.calendar });
       this.loading.user = false;
     });
   }
@@ -73,7 +73,7 @@ export class AccountSettingsPage {
   submitEditUser() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this.form.valid){
+    if (!this.form.valid) {
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
@@ -85,7 +85,7 @@ export class AccountSettingsPage {
       lfId: this.user.userId,
       id: this.user.id,
       email: this.user.email,
-      calendar: calendar_url,
+      calendar: calendar_url
     };
     this.cincoService.updateUser(this.user.id, user).subscribe(response => {
       this.currentlySubmitting = false;
@@ -114,10 +114,8 @@ export class AccountSettingsPage {
       var re = /(?:src=)["']([^"']*)["']/g;
       var found = re.exec(calendar_str);
       if (found.length >= 1) {
-        let parser = new DOMParser;
-        let dom = parser.parseFromString(
-            '<!doctype html><body>' + found[1],
-            'text/html');
+        let parser = new DOMParser();
+        let dom = parser.parseFromString('<!doctype html><body>' + found[1], 'text/html');
         calendar_str = dom.body.textContent;
       }
     }
@@ -127,6 +125,4 @@ export class AccountSettingsPage {
   cancelEditUser() {
     this.navCtrl.setRoot(this.navCtrl['root']);
   }
-
-
 }

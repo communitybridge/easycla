@@ -4,8 +4,8 @@
 import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, NavParams, ViewController, AlertController, IonicPage, Content } from 'ionic-angular';
-import { PhoneNumberValidator } from  '../../validators/phonenumber';
-import { EmailValidator } from  '../../validators/email';
+import { PhoneNumberValidator } from '../../validators/phonenumber';
+import { EmailValidator } from '../../validators/email';
 import { CincoService } from '../../services/cinco.service';
 
 import { MemberContactModel } from '../../models/member-contact-model';
@@ -15,7 +15,7 @@ import { MemberContactModel } from '../../models/member-contact-model';
 })
 @Component({
   selector: 'contact-update-modal',
-  templateUrl: 'contact-update-modal.html',
+  templateUrl: 'contact-update-modal.html'
 })
 export class ContactUpdateModal {
   projectId: string; // Always Needed
@@ -49,21 +49,21 @@ export class ContactUpdateModal {
     this.primaryContactOptions = [
       {
         value: true,
-        name: 'Yes',
+        name: 'Yes'
       },
       {
         value: false,
-        name: 'No',
+        name: 'No'
       }
     ];
     this.boardMemberOptions = [
       {
         value: true,
-        name: 'Yes',
+        name: 'Yes'
       },
       {
         value: false,
-        name: 'No',
+        name: 'No'
       }
     ];
     this.getDefaults();
@@ -84,29 +84,22 @@ export class ContactUpdateModal {
     // Deep copy originalContact to contact
     this.contact = Object.assign({}, originalContact);
     // convert from bool to string
-    this.contact.primaryContact = (this.contact.primaryContact)
-      ? 'true'
-      : 'false';
+    this.contact.primaryContact = this.contact.primaryContact ? 'true' : 'false';
 
-    this.contact.boardMember = (this.contact.boardMember)
-      ? 'true'
-      : 'false';
+    this.contact.boardMember = this.contact.boardMember ? 'true' : 'false';
 
     this.form = formBuilder.group({
-      email:[this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
-      givenName:[this.contact.contact.givenName, Validators.required],
-      familyName:[this.contact.contact.familyName, Validators.required],
-      phone:[this.contact.contact.phone, Validators.compose([PhoneNumberValidator.isValid])],
-      title:[this.contact.contact.title],
-      type:[this.contact.contact.type],
-      role:[this.contact.type, Validators.required],
-      primaryContact:[this.contact.primaryContact, Validators.required],
-      boardMember:[this.contact.boardMember, Validators.required],
-      bio:[this.contact.contact.bio],
+      email: [this.contact.contact.email, Validators.compose([Validators.required, EmailValidator.isValid])],
+      givenName: [this.contact.contact.givenName, Validators.required],
+      familyName: [this.contact.contact.familyName, Validators.required],
+      phone: [this.contact.contact.phone, Validators.compose([PhoneNumberValidator.isValid])],
+      title: [this.contact.contact.title],
+      type: [this.contact.contact.type],
+      role: [this.contact.type, Validators.required],
+      primaryContact: [this.contact.primaryContact, Validators.required],
+      boardMember: [this.contact.boardMember, Validators.required],
+      bio: [this.contact.contact.bio]
     });
-
-
-
   }
 
   ngOnInit() {
@@ -117,51 +110,50 @@ export class ContactUpdateModal {
   getDefaults() {
     // Instantiate member data
     this.org = {
-      name: '',
+      name: ''
     };
     // Instantiate contact data
     this.contact = {
-      type:"",
-      primaryContact:false,
-      boardMember:false,
-      contact:{
-        email:"",
-        givenName:"",
-        familyName:"",
-        title:"",
-        phone:"",
-        type:"",
-        bio:"",
-      },
+      type: '',
+      primaryContact: false,
+      boardMember: false,
+      contact: {
+        email: '',
+        givenName: '',
+        familyName: '',
+        title: '',
+        phone: '',
+        type: '',
+        bio: ''
+      }
     };
 
     this.memberContactRoles = {};
     this.orgContactRoles = {};
 
     this.memberContact = {
-      id: "",
-      memberId: "",
-      type: "",
+      id: '',
+      memberId: '',
+      type: '',
       primaryContact: false,
       boardMember: false,
       contact: {
-        id: "",
-        accountId: "",
-        givenName: "",
-        familyName: "",
-        title: "",
-        bio: "",
-        email: "",
-        phone: "",
-        type: ""
+        id: '',
+        accountId: '',
+        givenName: '',
+        familyName: '',
+        title: '',
+        bio: '',
+        email: '',
+        phone: '',
+        type: ''
       }
     };
-
   }
 
   getOrgContactRoles() {
     this.cincoService.getOrganizationContactTypes().subscribe(response => {
-      if(response) {
+      if (response) {
         this.orgContactRoles = response;
       }
     });
@@ -169,7 +161,7 @@ export class ContactUpdateModal {
 
   getMemberContactRoles() {
     this.cincoService.getMemberContactRoles().subscribe(response => {
-      if(response) {
+      if (response) {
         this.memberContactRoles = response;
       }
     });
@@ -190,13 +182,13 @@ export class ContactUpdateModal {
           {
             text: 'Cancel',
             handler: data => {
-              this.form.patchValue({primaryContact:'false'});
+              this.form.patchValue({ primaryContact: 'false' });
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.form.patchValue({primaryContact:'true'});
+              this.form.patchValue({ primaryContact: 'true' });
             }
           }
         ]
@@ -215,13 +207,13 @@ export class ContactUpdateModal {
           {
             text: 'Cancel',
             handler: data => {
-              this.form.patchValue({boardMember:'false'});
+              this.form.patchValue({ boardMember: 'false' });
             }
           },
           {
             text: 'Assign',
             handler: data => {
-              this.form.patchValue({boardMember:'true'});
+              this.form.patchValue({ boardMember: 'true' });
             }
           }
         ]
@@ -252,7 +244,6 @@ export class ContactUpdateModal {
     prompt.present();
   }
 
-
   showPrompt() {
     let prompt = this.alertCtrl.create({
       title: 'Add Email Group',
@@ -261,7 +252,7 @@ export class ContactUpdateModal {
         {
           name: 'email',
           placeholder: 'Title'
-        },
+        }
       ],
       buttons: [
         {
@@ -282,14 +273,12 @@ export class ContactUpdateModal {
   }
 
   addEmailGroup(groupName) {
-    if(!this.contact.emailGroups) {
+    if (!this.contact.emailGroups) {
       this.contact.emailGroups = [];
     }
-    this.contact.emailGroups.push(
-      {
-        name: groupName
-      }
-    );
+    this.contact.emailGroups.push({
+      name: groupName
+    });
   }
 
   removeEmailGroup(index) {
@@ -299,20 +288,16 @@ export class ContactUpdateModal {
   saveContact() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this.form.valid){
+    if (!this.form.valid) {
       this.content.scrollToTop();
       this.currentlySubmitting = false;
       // prevent submit
       return;
     }
     let primaryContact = this.form.value.primaryContact;
-    primaryContact = (primaryContact === true || primaryContact === 'true')
-          ? true
-          : false;
+    primaryContact = primaryContact === true || primaryContact === 'true' ? true : false;
     let boardMember = this.form.value.boardMember;
-    boardMember = (boardMember === true || boardMember === 'true')
-          ? true
-          : false;
+    boardMember = boardMember === true || boardMember === 'true' ? true : false;
     this.memberContact = {
       id: this.contact.id,
       memberId: this.contact.memberId,
@@ -321,7 +306,7 @@ export class ContactUpdateModal {
       boardMember: boardMember,
       contact: {
         id: this.contact.contact.id,
-        accountId: "",
+        accountId: '',
         givenName: this.form.value.givenName,
         familyName: this.form.value.familyName,
         title: this.form.value.title,
@@ -329,70 +314,78 @@ export class ContactUpdateModal {
         email: this.form.value.email,
         phone: this.form.value.phone,
         type: this.form.value.type
-      },
+      }
     };
     if (this.contactId) {
       if (this.roleId) {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact).subscribe(response => {
-          if (response) {
-            // update org contact with response from update
-            // should be the same as what was sent, but we will just be sure
-            // TODO: Validate response and this.memberContact.contact are equivalent
-            this.memberContact.contact = response;
-            // add as a member contact
-            this.cincoService.updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.memberContact).subscribe(response => {
-              if(response) {
-                this.dismiss();
-              }
-            });
-          }
-        });
+        this.cincoService
+          .updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact)
+          .subscribe(response => {
+            if (response) {
+              // update org contact with response from update
+              // should be the same as what was sent, but we will just be sure
+              // TODO: Validate response and this.memberContact.contact are equivalent
+              this.memberContact.contact = response;
+              // add as a member contact
+              this.cincoService
+                .updateMemberContact(this.projectId, this.memberId, this.contactId, this.roleId, this.memberContact)
+                .subscribe(response => {
+                  if (response) {
+                    this.dismiss();
+                  }
+                });
+            }
+          });
+      } else {
+        this.cincoService
+          .updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact)
+          .subscribe(response => {
+            if (response) {
+              // update org contact with response from update
+              // should be the same as what was sent, but we will just be sure
+              // TODO: Validate response and this.memberContact.contact are equivalent
+              this.memberContact.contact = response;
+              // add as a member contact
+              this.cincoService
+                .addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact)
+                .subscribe(response => {
+                  if (response) {
+                    this.dismiss();
+                  }
+                });
+            }
+          });
       }
-      else {
-        this.cincoService.updateOrganizationContact(this.org.id, this.contactId, this.memberContact.contact).subscribe(response => {
-          if (response) {
-            // update org contact with response from update
-            // should be the same as what was sent, but we will just be sure
-            // TODO: Validate response and this.memberContact.contact are equivalent
-            this.memberContact.contact = response;
-            // add as a member contact
-            this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact).subscribe(response => {
-              if (response) {
-                this.dismiss();
-              }
-            });
-          }
-        });
-      }
-    }
-    else {
+    } else {
       // Add new contact to organization
       this.cincoService.createOrganizationContact(this.org.id, this.memberContact.contact).subscribe(response => {
         if (response) {
           this.contactId = response.id;
           this.memberContact.contact.id = this.contactId;
           // add to member
-          this.cincoService.addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact).subscribe(response => {
-            if (response) {
-              this.dismiss();
-            }
-          });
+          this.cincoService
+            .addMemberContact(this.projectId, this.memberId, this.contactId, this.memberContact)
+            .subscribe(response => {
+              if (response) {
+                this.dismiss();
+              }
+            });
         }
       });
     }
-
   }
 
   removeContact() {
     this.currentlySubmitting = true;
-    this.cincoService.removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId).subscribe(response => {
-      // Doesn't return anything. Resolves as 204
-      this.dismiss();
-    });
+    this.cincoService
+      .removeMemberContact(this.projectId, this.memberId, this.contactId, this.roleId)
+      .subscribe(response => {
+        // Doesn't return anything. Resolves as 204
+        this.dismiss();
+      });
   }
 
   filesNotify(files) {
     this.contact.contact.photos = files;
   }
-
 }

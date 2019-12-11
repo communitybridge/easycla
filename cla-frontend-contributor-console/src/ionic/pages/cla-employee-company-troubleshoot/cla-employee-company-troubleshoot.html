@@ -13,12 +13,14 @@
       <ion-grid>
         <ion-row>
           <ion-col col-12 col-md-2>
-            <img [src]='project.logoUrl' alt="{{ project.project_name }} Logo"/>
+            <img [src]="project.logoUrl" alt="{{ project.project_name }} Logo" />
           </ion-col>
           <ion-col col-12 col-md-10>
             <h1>{{ company.company_name }}</h1>
-            <p>Unfortunately, you are not yet whitelisted by the Corporate CLA of {{ company.company_name }}
-              on {{ project.project_name }}.</p>
+            <p>
+              Unfortunately, you are not yet whitelisted by the Corporate CLA of {{ company.company_name }} on {{
+              project.project_name }}.
+            </p>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -34,20 +36,21 @@
               </ion-card-title>
 
               <p *ngIf="cclaSignature.githubOrgWhitelist">
-                {{ company.company_name }} has whitelisted the following GitHub Organization(s), and all public
-                members therein will be approved to contribute:
+                {{ company.company_name }} has whitelisted the following GitHub Organization(s), and all public members
+                therein will be approved to contribute:
               </p>
               <ul *ngFor="let org of cclaSignature.githubOrgWhitelist">
                 <li>{{ org }}</li>
               </ul>
 
               <p>
-
                 If you are currently a member of an Org listed above, but haven't publicized it, please
                 <a
-                  href="https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/publicizing-or-hiding-organization-membership">
-                  change your GitHub settings to make this public</a>, and then come back to EasyCLA and select
-                "Corporate" > {{ company.company_name }} again. You should be all set!
+                  href="https://help.github.com/en/github/setting-up-and-managing-your-github-user-account/publicizing-or-hiding-organization-membership"
+                >
+                  change your GitHub settings to make this public</a
+                >, and then come back to EasyCLA and select "Corporate" > {{ company.company_name }} again. You should
+                be all set!
               </p>
 
               <p>
@@ -59,7 +62,8 @@
                 Make sure your employee email is verified in your GitHub account settings.
               </p>
 
-              <p>Go to GitHub and make sure your employee email address is associated with your GitHub account. Then
+              <p>
+                Go to GitHub and make sure your employee email address is associated with your GitHub account. Then
                 restart this process from the PR status message. Feel free to close this page.
               </p>
 
@@ -88,8 +92,10 @@
                 Contact the CLA Manager to be whitelisted under their signed Corporate CLA.
               </ion-card-title>
               <ion-item>
-                <p>You must be authorized under a signed Contributor License Agreement. You are contributing on behalf
-                  of your work for a company. Contact your CLA manager to request authorization.</p>
+                <p>
+                  You must be authorized under a signed Contributor License Agreement. You are contributing on behalf of
+                  your work for a company. Contact your CLA manager to request authorization.
+                </p>
                 <button ion-button (click)="openClaEmployeeRequestAccessModal()">
                   Contact
                 </button>
@@ -101,5 +107,4 @@
     </ion-grid>
   </div>
   <cla-footer></cla-footer>
-
 </ion-content>

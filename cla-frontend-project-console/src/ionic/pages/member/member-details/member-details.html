@@ -10,7 +10,11 @@
 <ion-content headerspacing>
   <header padding>
     <member-header [projectId]="projectId" [memberId]="memberId"></member-header>
-    <member-navigation [context]="__proto__.constructor.name" [projectId]="projectId" [memberId]="memberId"></member-navigation>
+    <member-navigation
+      [context]="__proto__.constructor.name"
+      [projectId]="projectId"
+      [memberId]="memberId"
+    ></member-navigation>
   </header>
   <loading-spinner [loading]="loading.details"></loading-spinner>
   <ion-grid [loading-display]="loading.details" class="main-content">
@@ -42,7 +46,7 @@
                 <ion-col col-9>End User</ion-col>
               </ion-row>
               <ion-row class="divider">
-                <ion-col col-12><hr></ion-col>
+                <ion-col col-12><hr /></ion-col>
               </ion-row>
               <ion-row>
                 <ion-col col-3>Start Date</ion-col>
@@ -53,14 +57,14 @@
                 <ion-col col-9>12/31/2017</ion-col>
               </ion-row>
               <ion-row class="divider">
-                <ion-col col-12><hr></ion-col>
+                <ion-col col-12><hr /></ion-col>
               </ion-row>
               <ion-row>
                 <ion-col col-3>PO Number</ion-col>
                 <ion-col col-9>0123456789</ion-col>
               </ion-row>
               <ion-row class="divider">
-                <ion-col col-12><hr></ion-col>
+                <ion-col col-12><hr /></ion-col>
               </ion-row>
               <ion-row>
                 <ion-col col-3>Description</ion-col>
@@ -70,7 +74,9 @@
                 <ion-col col-3>Netsuite Memo</ion-col>
                 <ion-col col-9>
                   <p>
-                    400 character memo field goes here. This is a memo field where someone might choose to write some sort of memo or other information that relates to specifically how the member should receive their invoice, for instance one time Jen had to write out a detailed fee schedule.
+                    400 character memo field goes here. This is a memo field where someone might choose to write some
+                    sort of memo or other information that relates to specifically how the member should receive their
+                    invoice, for instance one time Jen had to write out a detailed fee schedule.
                   </p>
                 </ion-col>
               </ion-row>
@@ -122,7 +128,6 @@
             </form>
           </ion-card-content>
         </ion-card>
-
       </ion-col>
     </ion-row>
   </ion-grid>

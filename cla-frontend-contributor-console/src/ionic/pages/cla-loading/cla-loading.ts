@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, IonicPage, ModalController, NavParams, } from 'ionic-angular';
+import { NavController, IonicPage, ModalController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -24,7 +24,7 @@ export class ClaLoadingPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -33,9 +33,8 @@ export class ClaLoadingPage {
 
   getDefaults() {
     this.project = {
-      project_name: "",
-    }
-
+      project_name: ''
+    };
   }
 
   ngOnInit() {
@@ -54,14 +53,14 @@ export class ClaLoadingPage {
     // send to the individual cla page which will give directions and redirect
     this.navCtrl.push('ClaIndividualPage', {
       projectId: this.projectId,
-      userId: this.userId,
+      userId: this.userId
     });
   }
 
   openClaIndividualEmployeeModal() {
     let modal = this.modalCtrl.create('ClaSelectCompanyModal', {
       projectId: this.projectId,
-      userId: this.userId,
+      userId: this.userId
     });
     modal.present();
   }
@@ -81,5 +80,4 @@ export class ClaLoadingPage {
   saveReturnUrl() {
     // TODO: There should be a get parameter 'redirect' that has the return url
   }
-
 }

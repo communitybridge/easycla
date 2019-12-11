@@ -2,20 +2,19 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, } from 'ionic-angular';
+import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { UrlValidator } from  '../../validators/url';
-import { CincoService } from '../../services/cinco.service'
+import { UrlValidator } from '../../validators/url';
+import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'analytics-config-modal'
 })
 @Component({
   selector: 'analytics-config-modal',
-  templateUrl: 'analytics-config-modal.html',
+  templateUrl: 'analytics-config-modal.html'
 })
 export class AnalyticsConfigModal {
-
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
@@ -28,12 +27,12 @@ export class AnalyticsConfigModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
-    private cincoService: CincoService,
+    private cincoService: CincoService
   ) {
     this.getDefaults();
     this.projectId = this.navParams.get('projectId');
     this.form = formBuilder.group({
-      analyticsUrl:[this.analyticsUrl, Validators.compose([UrlValidator.isValid])],
+      analyticsUrl: [this.analyticsUrl, Validators.compose([UrlValidator.isValid])]
     });
   }
 
@@ -41,9 +40,7 @@ export class AnalyticsConfigModal {
     this.getProjectConfig(this.projectId);
   }
 
-  getDefaults() {
-
-  }
+  getDefaults() {}
 
   submit() {
     this.submitAttempt = true;
@@ -51,8 +48,7 @@ export class AnalyticsConfigModal {
     if (!this.form.valid) {
       this.currentlySubmitting = false;
       return;
-    }
-    else {
+    } else {
       this.analyticsUrl = this.form.value.analyticsUrl;
       this.addAnalyticsUrl();
     }
@@ -80,14 +76,13 @@ export class AnalyticsConfigModal {
     this.cincoService.getProjectConfig(projectId).subscribe(response => {
       if (response) {
         let projectConfig = response;
-        if(projectConfig.analyticsUrl) {
+        if (projectConfig.analyticsUrl) {
           this.analyticsUrl = projectConfig.analyticsUrl;
           this.form.patchValue({
-            analyticsUrl:this.analyticsUrl
+            analyticsUrl: this.analyticsUrl
           });
         }
       }
     });
   }
-
 }

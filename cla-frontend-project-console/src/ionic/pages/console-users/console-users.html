@@ -11,33 +11,33 @@
     <ion-row>
       <ion-col col-12>
         <loading-spinner [loading]="loading.users"></loading-spinner>
-          <div class="table-responsive-vertical" [loading-display]="loading.users">
-            <table id="table" class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Roles</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let user of users" (click)="userSelected(user)">
-                  <td data-title="Name">{{ user.lfId }}</td>
-                  <td data-title="Email">{{ user.email }}</td>
-                  <td data-title="Roles">
-                    <span *ngFor="let role of user.roles; let last = last;">
-                      <ng-container *ngIf="!last; else lastRole;">
-                        {{ userRoles[role] }},
-                      </ng-container>
-                      <ng-template #lastRole>
-                        {{ userRoles[role] }}
-                      </ng-template>
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div class="table-responsive-vertical" [loading-display]="loading.users">
+          <table id="table" class="table table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Roles</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users" (click)="userSelected(user)">
+                <td data-title="Name">{{ user.lfId }}</td>
+                <td data-title="Email">{{ user.email }}</td>
+                <td data-title="Roles">
+                  <span *ngFor="let role of user.roles; let last = last;">
+                    <ng-container *ngIf="!last; else lastRole;">
+                      {{ userRoles[role] }},
+                    </ng-container>
+                    <ng-template #lastRole>
+                      {{ userRoles[role] }}
+                    </ng-template>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </ion-col>
     </ion-row>
   </ion-grid>
@@ -50,26 +50,26 @@
 </ion-content>
 
 <ion-footer>
-    <footer class="text-white footer-section">
-        <ion-grid>
-            <ion-row>
-              <ion-col>
-                  <picture class="d-inline-block">
-                      <img src="./assets/logo/logo_white.svg" alt="" title="">
-                  </picture>
-              </ion-col>
-            </ion-row>
-            <hr />
-            <ion-row>
-                <ion-col>
-                    <small>&copy;2018 The Linux Foundation</small>
-                </ion-col>
-                <ion-col text-sm-right>
-                    <small>
-                        <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
-                    </small>
-                </ion-col>
-            </ion-row>
-        </ion-grid>
-    </footer>
+  <footer class="text-white footer-section">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <picture class="d-inline-block">
+            <img src="./assets/logo/logo_white.svg" alt="" title="" />
+          </picture>
+        </ion-col>
+      </ion-row>
+      <hr />
+      <ion-row>
+        <ion-col>
+          <small>&copy;2018 The Linux Foundation</small>
+        </ion-col>
+        <ion-col text-sm-right>
+          <small>
+            <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+          </small>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </footer>
 </ion-footer>

@@ -5,7 +5,7 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
-import { EmailValidator } from  '../../validators/email';
+import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -13,7 +13,7 @@ import { ClaService } from '../../services/cla.service';
 })
 @Component({
   selector: 'cla-send-cla-manager-email-modal',
-  templateUrl: 'cla-send-cla-manager-email-modal.html',
+  templateUrl: 'cla-send-cla-manager-email-modal.html'
 })
 export class ClaSendClaManagerEmailModal {
   projectId: string;
@@ -38,7 +38,7 @@ export class ClaSendClaManagerEmailModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
@@ -46,15 +46,15 @@ export class ClaSendClaManagerEmailModal {
     this.companyId = navParams.get('companyId');
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
-      email:['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      message:[''], // Validators.compose([Validators.required])
+      email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      message: [''] // Validators.compose([Validators.required])
     });
   }
 
   getDefaults() {
     this.userEmails = [];
     this.company = {
-      company_name: '',
+      company_name: ''
     };
   }
 
@@ -62,7 +62,7 @@ export class ClaSendClaManagerEmailModal {
     this.getUser();
     this.getCompany();
   }
- 
+
   getUser() {
     if (this.authenticated) {
       // Gerrit Users
@@ -70,21 +70,19 @@ export class ClaSendClaManagerEmailModal {
         if (user) {
           this.userEmails = user.user_emails || [];
           if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-            this.userEmails.push(user.lf_email) 
+            this.userEmails.push(user.lf_email);
           }
+        } else {
+          console.log('Unable to retrieve user.');
         }
-        else {
-          console.log("Unable to retrieve user.")
-        }
-      })
+      });
     } else {
       // Github Users
       this.claService.getUser(this.userId).subscribe(user => {
         if (user) {
           this.userEmails = user.user_emails || [];
-        }
-        else {
-          console.log("Unable to retrieve user.")
+        } else {
+          console.log('Unable to retrieve user.');
         }
       });
     }
@@ -112,7 +110,7 @@ export class ClaSendClaManagerEmailModal {
     let data = {
       user_email: this.form.value.email,
       company_id: this.companyId,
-      project_id: this.projectId,
+      project_id: this.projectId
     };
     this.claService.postUserCCLARequestToManager(this.userId, data).subscribe(response => {
       this.emailSent();
@@ -122,11 +120,11 @@ export class ClaSendClaManagerEmailModal {
   emailSent() {
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
-      subTitle: 'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
+      subTitle:
+        'Thank you for contacting your CLA Manager. Once you are authorized, you will have to complete the CLA process from your existing pull request.',
       buttons: ['Dismiss']
     });
     alert.onDidDismiss(() => this.dismiss());
     alert.present();
   }
-
 }

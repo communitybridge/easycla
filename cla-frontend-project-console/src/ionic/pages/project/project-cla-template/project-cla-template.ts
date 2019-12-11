@@ -1,22 +1,22 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component, ViewChild} from "@angular/core";
-import {IonicPage, Nav, NavController, NavParams} from "ionic-angular";
-import {ClaService} from "../../../services/cla.service";
-import {Restricted} from "../../../decorators/restricted";
-import {DomSanitizer} from '@angular/platform-browser';
-import {RolesService} from "../../../services/roles.service";
+import { Component, ViewChild } from '@angular/core';
+import { IonicPage, Nav, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../../services/cla.service';
+import { Restricted } from '../../../decorators/restricted';
+import { DomSanitizer } from '@angular/platform-browser';
+import { RolesService } from '../../../services/roles.service';
 
 @Restricted({
-  roles: ["isAuthenticated", "isPmcUser"]
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 @IonicPage({
-  segment: "project/:projectId/cla/template/:projectTemplateId"
+  segment: 'project/:projectId/cla/template/:projectTemplateId'
 })
 @Component({
-  selector: "project-cla-template",
-  templateUrl: "project-cla-template.html"
+  selector: 'project-cla-template',
+  templateUrl: 'project-cla-template.html'
 })
 export class ProjectClaTemplatePage {
   sfdcProjectId: string;
@@ -43,10 +43,10 @@ export class ProjectClaTemplatePage {
     public navParams: NavParams,
     public claService: ClaService,
     public sanitizer: DomSanitizer,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
-    this.sfdcProjectId = navParams.get("sfdcProjectId");
-    this.projectId = navParams.get("projectId");
+    this.sfdcProjectId = navParams.get('sfdcProjectId');
+    this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
 
@@ -55,7 +55,7 @@ export class ProjectClaTemplatePage {
   }
 
   getTemplates() {
-    this.claService.getTemplates().subscribe(templates => this.templates = templates);
+    this.claService.getTemplates().subscribe(templates => (this.templates = templates));
   }
 
   ngOnInit() {
@@ -90,27 +90,28 @@ export class ProjectClaTemplatePage {
     const metaFields = this.selectedTemplate.metaFields;
     metaFields.forEach(metaField => {
       if (this.templateValues.hasOwnProperty(metaField.templateVariable)) {
-        metaField.value = this.templateValues[metaField.templateVariable]
+        metaField.value = this.templateValues[metaField.templateVariable];
       }
-
     });
     let data = {
       templateID: this.selectedTemplate.ID,
       metaFields: metaFields
     };
 
-    this.claService.postClaGroupTemplate(this.projectId, data)
-      .subscribe(response => {
+    this.claService.postClaGroupTemplate(this.projectId, data).subscribe(
+      response => {
         this.setLoadingSpinner(false);
         this.buttonGenerateEnabled = true;
         this.message = null;
         this.pdfPath = response;
         this.goToStep('review');
-      }, (error) => {
+      },
+      error => {
         this.setLoadingSpinner(false);
         this.buttonGenerateEnabled = true;
         this.message = 'Error creating PDFs: ' + error;
-      });
+      }
+    );
   }
 
   goToStep(step) {

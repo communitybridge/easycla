@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
 import {
   Http,
   Request,
@@ -25,40 +25,31 @@ import {
   RequestOptionsArgs,
   Response,
   Headers
-} from "@angular/http";
+} from '@angular/http';
 
-import { AuthService } from "../auth.service";
-import { Observable } from "rxjs/Rx";
+import { AuthService } from '../auth.service';
+import { Observable } from 'rxjs/Rx';
 
 /**
  * This provides a wrapper over the ng2 Http class that insures tokens are refreshed on each request.
  */
 @Injectable()
 export class KeycloakHttp extends Http {
-  constructor(
-    _backend: ConnectionBackend,
-    _defaultOptions: RequestOptions,
-    private _authService: AuthService
-  ) {
+  constructor(_backend: ConnectionBackend, _defaultOptions: RequestOptions, private _authService: AuthService) {
     super(_backend, _defaultOptions);
   }
 
-  request(
-    url: string | Request,
-    options?: RequestOptionsArgs
-  ): Observable<Response> {
+  request(url: string | Request, options?: RequestOptionsArgs): Observable<Response> {
     if (!true) return super.request(url, options);
 
     const tokenPromise: Promise<string> = this._authService.getIdToken();
-    const tokenObservable: Observable<string> = Observable.fromPromise(
-      tokenPromise
-    );
+    const tokenObservable: Observable<string> = Observable.fromPromise(tokenPromise);
 
-    if (typeof url === "string") {
+    if (typeof url === 'string') {
       return tokenObservable
         .map(token => {
           const authOptions = new RequestOptions({
-            headers: new Headers({ Authorization: "Bearer " + token })
+            headers: new Headers({ Authorization: 'Bearer ' + token })
           });
           return new RequestOptions().merge(options).merge(authOptions);
         })
@@ -66,7 +57,7 @@ export class KeycloakHttp extends Http {
     } else if (url instanceof Request) {
       return tokenObservable
         .map(token => {
-          url.headers.set("Authorization", "Bearer " + token);
+          url.headers.set('Authorization', 'Bearer ' + token);
           return url;
         })
         .concatMap(request => super.request(request));
@@ -74,11 +65,7 @@ export class KeycloakHttp extends Http {
   }
 }
 
-export function keycloakHttpFactory(
-  backend: XHRBackend,
-  defaultOptions: RequestOptions,
-  authService: AuthService
-) {
+export function keycloakHttpFactory(backend: XHRBackend, defaultOptions: RequestOptions, authService: AuthService) {
   return new KeycloakHttp(backend, defaultOptions, authService);
 }
 

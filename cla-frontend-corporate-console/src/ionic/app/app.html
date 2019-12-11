@@ -1,12 +1,19 @@
 <ion-menu [content]="content">
-  <ion-header  menuClose (click)="openHomePage()" class="clickable">
-    <img class="app-logo" src="assets/icon/logo.svg" alt="The Linux Foundation">
+  <ion-header menuClose (click)="openHomePage()" class="clickable">
+    <img class="app-logo" src="assets/icon/logo.svg" alt="The Linux Foundation" />
   </ion-header>
 
   <ion-content>
     <ul class="menu-list">
       <ng-container *ngFor="let p of pages">
-        <li *ngIf="p.access" menuClose ion-item class="clickable" (click)="openPage(p)" style="background-color: #fafafa">
+        <li
+          *ngIf="p.access"
+          menuClose
+          ion-item
+          class="clickable"
+          (click)="openPage(p)"
+          style="background-color: #fafafa"
+        >
           <ng-container *ngIf="p.icon">
             <ion-icon name="{{ p.icon }}"></ion-icon>
           </ng-container>
@@ -15,7 +22,6 @@
       </ng-container>
     </ul>
   </ion-content>
-
 </ion-menu>
 
 <!-- Disable swipe-to-go-back because it's poor UX to combine STGB with side menus -->

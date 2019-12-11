@@ -13,9 +13,7 @@ import { Ng2GoogleChartsModule } from 'ng2-google-charts';
 //import { RoundProgressModule } from 'angular-svg-round-progressbar';
 
 @NgModule({
-  declarations: [
-    ProjectAnalyticsPage,
-  ],
+  declarations: [ProjectAnalyticsPage],
   imports: [
     Ng2GoogleChartsModule,
     //RoundProgressModule,
@@ -26,8 +24,6 @@ import { Ng2GoogleChartsModule } from 'ng2-google-charts';
     ProjectNavigationComponentModule,
     IonicPageModule.forChild(ProjectAnalyticsPage)
   ],
-  entryComponents: [
-    ProjectAnalyticsPage,
-  ]
+  entryComponents: [ProjectAnalyticsPage]
 })
 export class ProjectAnalyticsPageModule {}

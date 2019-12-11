@@ -23,28 +23,28 @@
               <tr>
                 <th class="clickable" (click)="sortMembers('alert')">
                   Alert
-                  <sorting-display [sorting]='sort.alert.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.alert.sort"></sorting-display>
                 </th>
                 <th class="clickable" (click)="sortMembers('company')">
                   Company
-                  <sorting-display [sorting]='sort.company.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.company.sort"></sorting-display>
                 </th>
                 <th>Tier</th>
                 <th class="clickable" (click)="sortMembers('product')">
                   Product
-                  <sorting-display [sorting]='sort.product.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.product.sort"></sorting-display>
                 </th>
                 <th class="clickable" (click)="sortMembers('status')">
                   Invoices Status
-                  <sorting-display [sorting]='sort.status.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.status.sort"></sorting-display>
                 </th>
                 <th class="clickable" (click)="sortMembers('dues')">
                   Annual Dues
-                  <sorting-display [sorting]='sort.dues.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.dues.sort"></sorting-display>
                 </th>
                 <th class="clickable" (click)="sortMembers('renewal')">
                   Renewal Date
-                  <sorting-display [sorting]='sort.renewal.sort'></sorting-display>
+                  <sorting-display [sorting]="sort.renewal.sort"></sorting-display>
                 </th>
               </tr>
             </thead>
@@ -55,13 +55,20 @@
                   <span *ngIf="member.alert == 'notice'" class="circle-notice"></span>
                   <span *ngIf="member.alert == ''" class="circle-null"></span>
                 </td>
-                <td data-title="Company" (click)="memberSelected($event, member.id)"><strong>{{ member.org.name }}</strong></td>
+                <td data-title="Company" (click)="memberSelected($event, member.id)">
+                  <strong>{{ member.org.name }}</strong>
+                </td>
                 <td data-title="Tier">{{ member.tier }}</td>
                 <td data-title="Product">{{ member.product }}</td>
                 <td data-title="Status">{{ member.invoices[0].status }}</td>
                 <td data-title="Annual Dues">{{ member.annualDues | currency:'USD':true:'4.2-2' }}</td>
                 <td data-title="Renewal Date">
-                  <ion-datetime no-padding [disabled]="true" displayFormat="MM/DD/YYYY" [(ngModel)]="member.renewalDate" ></ion-datetime>
+                  <ion-datetime
+                    no-padding
+                    [disabled]="true"
+                    displayFormat="MM/DD/YYYY"
+                    [(ngModel)]="member.renewalDate"
+                  ></ion-datetime>
                 </td>
               </tr>
             </tbody>

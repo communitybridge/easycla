@@ -11,14 +11,14 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'project/:projectId/members'
 // })
 @Component({
   selector: 'project-members',
-  templateUrl: 'project-members.html',
+  templateUrl: 'project-members.html'
 })
 export class ProjectMembersPage {
   selectedProject: any;
@@ -41,7 +41,7 @@ export class ProjectMembersPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.selectedProject = navParams.get('project');
     this.projectId = navParams.get('projectId');
@@ -55,10 +55,12 @@ export class ProjectMembersPage {
   getProject(projectId) {
     let getMembers = true;
     this.cincoService.getProject(projectId, getMembers).subscribe(response => {
-      if(response) {
+      if (response) {
         this.project = response;
         // This is to refresh an image that have same URL
-        if(this.project.config.logoRef) { this.project.config.logoRef += "?" + new Date().getTime(); }
+        if (this.project.config.logoRef) {
+          this.project.config.logoRef += '?' + new Date().getTime();
+        }
         this.loading.project = false;
       }
     });
@@ -67,83 +69,78 @@ export class ProjectMembersPage {
   memberSelected(event, memberId) {
     this.navCtrl.push('MemberPage', {
       projectId: this.projectId,
-      memberId: memberId,
+      memberId: memberId
     });
   }
 
   getDefaults() {
     this.loading = {
-      project: true,
+      project: true
     };
     this.project = {
-      id: "",
-      name: "Project",
-      description: "Description",
-      managers: "",
+      id: '',
+      name: 'Project',
+      description: 'Description',
+      managers: '',
       members: [],
-      status: "",
-      category: "",
-      sector: "",
-      url: "",
-      logoRef: "",
-      startDate: "",
-      agreementRef: "",
-      mailingListType: "",
-      emailAliasType: "",
+      status: '',
+      category: '',
+      sector: '',
+      url: '',
+      logoRef: '',
+      startDate: '',
+      agreementRef: '',
+      mailingListType: '',
+      emailAliasType: '',
       address: {
         address: {
-          administrativeArea: "",
-          country: "",
-          localityName: "",
-          postalCode: "",
-          thoroughfare: ""
+          administrativeArea: '',
+          country: '',
+          localityName: '',
+          postalCode: '',
+          thoroughfare: ''
         },
-        type: ""
+        type: ''
       },
       config: {
-        logoRef: ""
+        logoRef: ''
       }
     };
     this.sort = {
       alert: {
         arrayProp: 'alert',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       company: {
         arrayProp: 'org.name',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       product: {
         arrayProp: 'product',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       status: {
         arrayProp: 'invoices[0].status',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       dues: {
         arrayProp: 'annualDues',
         sortType: 'number',
-        sort: null,
+        sort: null
       },
       renewal: {
         arrayProp: 'renewalDate',
         sortType: 'date',
-        sort: null,
-      },
+        sort: null
+      }
     };
   }
 
   sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.project.members,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.project.members);
   }
-
 }

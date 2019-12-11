@@ -5,9 +5,11 @@
     </button>
     <ion-title>Account Settings</ion-title>
   </ion-navbar>
-  <ion-row margin-left margin-top margin-bottom >
+  <ion-row margin-left margin-top margin-bottom>
     <ion-col col-12>
-      <button ion-button (click)="submitEditUser()" color="secondary" [disabled]="currentlySubmitting">SAVE AND FINISH</button>
+      <button ion-button (click)="submitEditUser()" color="secondary" [disabled]="currentlySubmitting">
+        SAVE AND FINISH
+      </button>
       <button ion-button (click)="cancelEditUser()" color="gray">CANCEL</button>
     </ion-col>
   </ion-row>
@@ -51,7 +53,11 @@
             <ion-input type="text" formControlName="calendar"></ion-input>
           </ion-item>
           <ion-item class="description" no-lines>
-            <p>Use the <a href="https://calendar.google.com/calendar/embedhelper" target="_blank">Calendar Embed Helper</a> to generate your embed code.</p>
+            <p>
+              Use the
+              <a href="https://calendar.google.com/calendar/embedhelper" target="_blank">Calendar Embed Helper</a> to
+              generate your embed code.
+            </p>
           </ion-item>
           <ion-item *ngIf="!form.controls.calendar.valid && (form.controls.calendar.touched || submitAttempt)" no-lines>
             <p>* You must use a Google Calendar embed or link with 'https://calendar.google.com/calendar/embed'.</p>
@@ -63,26 +69,26 @@
 </ion-content>
 
 <ion-footer>
-    <footer class="text-white footer-section">
-        <ion-grid>
-            <ion-row>
-              <ion-col>
-                  <picture class="d-inline-block">
-                      <img src="./assets/logo/logo_white.svg" alt="" title="">
-                  </picture>
-              </ion-col>
-            </ion-row>
-            <hr />
-            <ion-row>
-                <ion-col>
-                    <small>&copy;2018 The Linux Foundation</small>
-                </ion-col>
-                <ion-col text-sm-right>
-                    <small>
-                        <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
-                    </small>
-                </ion-col>
-            </ion-row>
-        </ion-grid>
-    </footer>
+  <footer class="text-white footer-section">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <picture class="d-inline-block">
+            <img src="./assets/logo/logo_white.svg" alt="" title="" />
+          </picture>
+        </ion-col>
+      </ion-row>
+      <hr />
+      <ion-row>
+        <ion-col>
+          <small>&copy;2018 The Linux Foundation</small>
+        </ion-col>
+        <ion-col text-sm-right>
+          <small>
+            <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+          </small>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </footer>
 </ion-footer>

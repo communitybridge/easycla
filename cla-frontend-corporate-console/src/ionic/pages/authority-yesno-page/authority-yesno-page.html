@@ -4,7 +4,7 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>CLA - Corporate</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
 
@@ -31,11 +31,10 @@
               <div>
                 <p>
                   In order to contribute to this project, an authorized person with corporate authority needs to sign
-                  the CLA for your organization.
-                  Are you an authorized signatory with corporate authority?
+                  the CLA for your organization. Are you an authorized signatory with corporate authority?
                 </p>
-                <button ion-button color="secondary" (click)='openClaCorporatePage()'> YES </button>
-                <button ion-button color="secondary" (click)='openCollectAuthorityEmailModal()'> NO </button>
+                <button ion-button color="secondary" (click)="openClaCorporatePage()">YES</button>
+                <button ion-button color="secondary" (click)="openCollectAuthorityEmailModal()">NO</button>
               </div>
             </ion-card-content>
           </ion-card>

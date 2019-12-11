@@ -21,7 +21,10 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>Your company {{ company.company_name }} has not signed a Corporate CLA yet. Would you like to send an E-Mail Notification to the Company Administrator to sign the Corporate CLA?</p>
+          <p>
+            Your company {{ company.company_name }} has not signed a Corporate CLA yet. Would you like to send an E-Mail
+            Notification to the Company Administrator to sign the Corporate CLA?
+          </p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -32,7 +35,10 @@
               <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
             </ion-select>
           </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your company's CLA Manager to whitelist.</p>
+          <p class="field-description">
+            Select the email address attached to your account that you would like your company's CLA Manager to
+            whitelist.
+          </p>
           <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>

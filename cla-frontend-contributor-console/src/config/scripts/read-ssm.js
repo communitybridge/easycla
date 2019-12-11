@@ -12,7 +12,9 @@ const AWS = require('aws-sdk');
  * @returns {Promise<{ [key:string]: string}>}
  */
 async function retrieveSSMValues(variables, stage, region, profile) {
-  const scopedVariables = variables.map(param => { return `cla-${param}-${stage}` });
+  const scopedVariables = variables.map(param => {
+    return `cla-${param}-${stage}`;
+  });
 
   const result = await requestSSMParameters(scopedVariables, stage, region, profile);
   const parameters = result.Parameters;

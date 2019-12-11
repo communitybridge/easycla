@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span>Edit {{  getTitleType() }} Whitelist for {{ companyName }}</span>
+      <span>Edit {{ getTitleType() }} Whitelist for {{ companyName }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -17,14 +17,16 @@
       <ion-row>
         <ion-col col-12>
           <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add New Line</button>
-          <p *ngIf="type === 'github'">Note: Any GitHub bots you whitelist will be automatically affiliated
-            to {{companyName}} on {{projectName}}.</p>
+          <p *ngIf="type === 'github'">
+            Note: Any GitHub bots you whitelist will be automatically affiliated to {{companyName}} on {{projectName}}.
+          </p>
         </ion-col>
       </ion-row>
       <ion-row *ngIf="message.error != null && message.error.trim() !== ''">
         <ion-col col-12>
           <div class="isa_warning">
-            Please check the fields below for errors. {{message.error}}</div>
+            Please check the fields below for errors. {{message.error}}
+          </div>
         </ion-col>
       </ion-row>
       <ion-row *ngFor="let item of form.controls.whitelist.controls; let i = index" [formGroupName]="i">
@@ -50,7 +52,7 @@
     <ion-buttons end>
       <loading-spinner [loading]="currentlySubmitting"></loading-spinner>
       <button type="button" ion-button icon-left (click)="dismiss()" color="primary" [disabled]="currentlySubmitting">
-<!--        <button ion-button icon-left (click)="dismiss()" [color]="cancelButton()" [disabled]="currentlySubmitting">-->
+        <!--        <button ion-button icon-left (click)="dismiss()" [color]="cancelButton()" [disabled]="currentlySubmitting">-->
         Cancel
       </button>
       <button form="form" type="submit" ion-button icon-right [color]="saveButton()" [disabled]="currentlySubmitting">

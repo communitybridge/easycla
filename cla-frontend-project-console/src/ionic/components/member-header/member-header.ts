@@ -8,10 +8,9 @@ import { RolesService } from '../../services/roles.service';
 
 @Component({
   selector: 'member-header',
-  templateUrl: 'member-header.html',
+  templateUrl: 'member-header.html'
 })
 export class MemberHeaderComponent {
-
   @Input('memberId')
   private memberId: string;
 
@@ -30,11 +29,11 @@ export class MemberHeaderComponent {
 
   userRoles: any;
 
-  constructor (
+  constructor(
     private navCtrl: NavController,
     private cincoService: CincoService,
     public modalCtrl: ModalController,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.getDefaults();
   }
@@ -42,7 +41,7 @@ export class MemberHeaderComponent {
   ngOnInit() {
     this.getMember();
 
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
+    this.rolesService.getUserRolesPromise().then(userRoles => {
       this.userRoles = userRoles;
       this.can.viewPartnerships = !userRoles.isStaffInc;
       this.getMember();
@@ -51,30 +50,30 @@ export class MemberHeaderComponent {
 
   getDefaults() {
     this.can = {
-      viewPartnerships: false,
+      viewPartnerships: false
     };
     this.loading = {
       member: true,
-      memberships: true,
+      memberships: true
     };
     this.member = {
       id: this.memberId,
-      projectId: "",
-      projectName: "",
+      projectId: '',
+      projectName: '',
       org: {
-        id: "",
-        name: "",
-        parent: "",
-        logoRef: "",
-        url: "",
-        addresses: ""
+        id: '',
+        name: '',
+        parent: '',
+        logoRef: '',
+        url: '',
+        addresses: ''
       },
-      product: "",
-      tier: "",
-      annualDues: "",
-      startDate: "",
-      renewalDate: "",
-      invoices: [""]
+      product: '',
+      tier: '',
+      annualDues: '',
+      startDate: '',
+      renewalDate: '',
+      invoices: ['']
     };
 
     this.memberships = [];
@@ -82,7 +81,7 @@ export class MemberHeaderComponent {
 
   getMember() {
     this.cincoService.getMember(this.projectId, this.memberId).subscribe(response => {
-      if(response) {
+      if (response) {
         this.member = response;
         this.loading.member = false;
         if (!this.userRoles.isStaffInc) {
@@ -95,25 +94,24 @@ export class MemberHeaderComponent {
   openMembershipsModal() {
     let modal = this.modalCtrl.create('MembershipsModal', {
       orgName: this.member.org.name,
-      memberships: this.memberships,
+      memberships: this.memberships
     });
     modal.present();
   }
 
   openProjectPage(projectId) {
     this.navCtrl.push('ProjectPage', {
-      projectId: projectId,
+      projectId: projectId
     });
   }
 
   getOrganizationProjectMemberships(organizationId) {
     this.cincoService.getOrganizationProjectMemberships(organizationId).subscribe(response => {
-      if(response) {
+      if (response) {
         this.memberships = response;
         this.loading.memberships = false;
-        this.membershipsFiltered = this.memberships.filter((item, index) => index < 2 );
+        this.membershipsFiltered = this.memberships.filter((item, index) => index < 2);
       }
     });
   }
-
 }

@@ -5,7 +5,7 @@ import { Component, ViewChild } from '@angular/core';
 
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
-import { CincoService } from '../../services/cinco.service'
+import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { SortService } from '../../services/sort.service';
 
@@ -14,7 +14,7 @@ import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'all-projects-logos'
@@ -24,7 +24,6 @@ import { Restricted } from '../../decorators/restricted';
   templateUrl: 'all-projects-logos.html'
 })
 export class AllProjectsLogosPage {
-
   project = new ProjectModel();
   allProjects: any;
   projectLogos: any;
@@ -36,21 +35,19 @@ export class AllProjectsLogosPage {
     private keycloak: KeycloakService,
     private sortService: SortService,
     public modalCtrl: ModalController,
-    public rolesService: RolesService,
-  ) {
+    public rolesService: RolesService
+  ) {}
 
-  }
-
-  async ngOnInit(){
+  async ngOnInit() {
     this.setSortProperties();
     this.getAllProjects();
   }
 
   getAllProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
-      if(response) {
+      if (response) {
         this.allProjects = response;
-        for(let eachProject of this.allProjects) {
+        for (let eachProject of this.allProjects) {
           this.getAllProjectsLogos(eachProject);
         }
       }
@@ -59,9 +56,9 @@ export class AllProjectsLogosPage {
 
   getAllProjectsLogos(project) {
     this.cincoService.getProjectLogos(project.id).subscribe(response => {
-      if(response) {
+      if (response) {
         this.projectLogos = response;
-        project.logosCount = this.projectLogos.length
+        project.logosCount = this.projectLogos.length;
       }
     });
   }
@@ -72,7 +69,7 @@ export class AllProjectsLogosPage {
       projectName: project.name
     });
     modal.onDidDismiss(newlogoRef => {
-      if(newlogoRef){
+      if (newlogoRef) {
         project.config.logoRef = newlogoRef;
       }
       this.getAllProjectsLogos(project);
@@ -80,33 +77,27 @@ export class AllProjectsLogosPage {
     modal.present();
   }
 
-
-  setSortProperties(){
+  setSortProperties() {
     this.sort = {
       project: {
         arrayProp: 'name',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       status: {
         arrayProp: 'status',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       logosCount: {
         arrayProp: 'logosCount',
         sortType: 'text',
-        sort: null,
+        sort: null
       }
     };
   }
 
   sortLogosTable(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.allProjects,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.allProjects);
   }
-
 }

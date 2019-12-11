@@ -49,9 +49,7 @@ function matchDistributions(distributions, stackResources, stackName) {
       }
       if (resource.ResourceType !== CLOUDFRONT_TYPE) {
         throw new Error(
-          `InvalidateCloudfront: Stack '${stackName}' had resource with logical name '${distributionName}', but was of incorrect type '${
-            resource.ResourceType
-          }'`
+          `InvalidateCloudfront: Stack '${stackName}' had resource with logical name '${distributionName}', but was of incorrect type '${resource.ResourceType}'`
         );
       }
       const distributionId = resource.PhysicalResourceId;

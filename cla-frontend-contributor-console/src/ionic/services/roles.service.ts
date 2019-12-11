@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Observable } from "rxjs/Observable";
-import { AuthService } from "./auth.service";
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class RolesService {
@@ -14,12 +14,10 @@ export class RolesService {
   public getData: any;
   private rolesFetched: boolean;
 
-  private LF_USERNAME_CLAIM = "https://sso.linuxfoundation.org/claims/username";
-  private CLA_PROJECT_ADMIN = "cla-system-admin";
+  private LF_USERNAME_CLAIM = 'https://sso.linuxfoundation.org/claims/username';
+  private CLA_PROJECT_ADMIN = 'cla-system-admin';
 
-  constructor(
-    private authService: AuthService
-  ) {
+  constructor(private authService: AuthService) {
     this.rolesFetched = false;
     this.userRoleDefaults = {
       isAuthenticated: this.authService.isAuthenticated(),
@@ -44,7 +42,7 @@ export class RolesService {
   //////////////////////////////////////////////////////////////////////////////
 
   getUserRolesPromise() {
-    console.log("Get UserRole Promise.");
+    console.log('Get UserRole Promise.');
     if (this.authService.isAuthenticated()) {
       return this.authService
         .getIdToken()
@@ -61,7 +59,7 @@ export class RolesService {
               isStaffDirect: false,
               isDirectorDirect: false,
               isExec: false,
-              isAdmin: false,
+              isAdmin: false
             };
 
             return this.userRoles;

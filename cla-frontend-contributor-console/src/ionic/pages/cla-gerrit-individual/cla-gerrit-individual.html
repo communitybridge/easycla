@@ -28,12 +28,11 @@
             </ion-card-title>
             <div *ngIf="activeSignatures">
               <p>
-                We are generating a document to sign for the purposes of your CLA. Please fill out
-                accurately and complete the signing process.
+                We are generating a document to sign for the purposes of your CLA. Please fill out accurately and
+                complete the signing process.
               </p>
               <p>
-                If a new tab with the document to sign did not open, you may use
-                the button below:
+                If a new tab with the document to sign did not open, you may use the button below:
               </p>
               <button [disabled]="!signature.sign_url" ion-button (click)="openClaAgreement()">
                 Open CLA
@@ -41,7 +40,8 @@
             </div>
             <div *ngIf="!activeSignatures">
               <p class="error">
-                Whoops, It looks like you don't have any signatures in progress. Try logging in with your Linux Foundation ID again. 
+                Whoops, It looks like you don't have any signatures in progress. Try logging in with your Linux
+                Foundation ID again.
               </p>
             </div>
           </ion-card-content>
@@ -49,5 +49,4 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-
 </ion-content>

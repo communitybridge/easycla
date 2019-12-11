@@ -1,50 +1,51 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-import Link from 'next/link'
+import React from 'react';
+import Link from 'next/link';
 import HamburgerIcon from './HamburgerIcon';
 
 const leftLinks = [
   {
-    href: 'https://funding.communitybridge.org/', label: 'Funding'
+    href: 'https://funding.communitybridge.org/',
+    label: 'Funding'
   },
   {
-    href: 'https://people.communitybridge.org/', label: 'Mentorship'
+    href: 'https://people.communitybridge.org/',
+    label: 'Mentorship'
   }
 ].map(link => {
-  link.key = `nav-link-${link.href}-${link.label}`
-  return link
-})
+  link.key = `nav-link-${link.href}-${link.label}`;
+  return link;
+});
 
-
-const middleLinks  = [
-  
-]
+const middleLinks = [];
 
 const rightLinks = [
   {
-    href: 'https://github.com/communitybridge/easycla', label: 'github'
+    href: 'https://github.com/communitybridge/easycla',
+    label: 'github'
   },
   {
-    href: 'https://twitter.com/linuxfoundation', label: 'twitter'
+    href: 'https://twitter.com/linuxfoundation',
+    label: 'twitter'
   },
   {
-    href: 'https://www.facebook.com/TheLinuxFoundation', label: 'facebook'
+    href: 'https://www.facebook.com/TheLinuxFoundation',
+    label: 'facebook'
   },
   {
-    href: 'https://www.linkedin.com/company/208777', label: 'linkedin'
+    href: 'https://www.linkedin.com/company/208777',
+    label: 'linkedin'
   },
   {
-    href: 'https://www.youtube.com/user/TheLinuxFoundation', label: 'youtube-play'
+    href: 'https://www.youtube.com/user/TheLinuxFoundation',
+    label: 'youtube-play'
   }
 ].map(link => {
-  link.key = `nav-link-${link.href}-${link.label}`
-  return link
-})
-
-
-
+  link.key = `nav-link-${link.href}-${link.label}`;
+  return link;
+});
 
 const Nav = () => (
   <header>
@@ -74,14 +75,17 @@ const Nav = () => (
             </nav>
           </div>
           <div className="header-right-column">
-          <nav className="d-none d-lg-flex">
+            <nav className="d-none d-lg-flex">
               <button className="get-help-button">
                 <Link href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">
-                  <a> <i className='fa fa-question-circle'></i>Get Help</a>
+                  <a>
+                    {' '}
+                    <i className="fa fa-question-circle"></i>Get Help
+                  </a>
                 </Link>
               </button>
             </nav>
-            
+
             <nav className="d-none d-lg-flex">
               <ul className="header-navs">
                 {rightLinks.map(({ key, href, label }) => (
@@ -107,7 +111,7 @@ const Nav = () => (
         </div>
       </div>
     </div>
-  </header >
-)
+  </header>
+);
 
-export default Nav
+export default Nav;

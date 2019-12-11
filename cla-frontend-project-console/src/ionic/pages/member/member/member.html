@@ -16,7 +16,11 @@
   </ion-fab>
   <header padding>
     <member-header [projectId]="projectId" [memberId]="memberId"></member-header>
-    <member-navigation [context]="__proto__.constructor.name" [projectId]="projectId" [memberId]="memberId"></member-navigation>
+    <member-navigation
+      [context]="__proto__.constructor.name"
+      [projectId]="projectId"
+      [memberId]="memberId"
+    ></member-navigation>
   </header>
 
   <ion-grid>
@@ -35,17 +39,17 @@
                     <th></th>
                     <th class="clickable" (click)="sortContacts('role')">
                       Role
-                      <sorting-display [sorting]='sort.role.sort'></sorting-display>
+                      <sorting-display [sorting]="sort.role.sort"></sorting-display>
                     </th>
                     <th></th>
                     <th class="clickable" (click)="sortContacts('name')">
                       Name / Title
-                      <sorting-display [sorting]='sort.name.sort'></sorting-display>
+                      <sorting-display [sorting]="sort.name.sort"></sorting-display>
                     </th>
                     <!--th>Timezone</th-->
                     <th class="clickable" (click)="sortContacts('email')">
                       Email
-                      <sorting-display [sorting]='sort.email.sort'></sorting-display>
+                      <sorting-display [sorting]="sort.email.sort"></sorting-display>
                     </th>
                     <th></th>
                     <th></th>

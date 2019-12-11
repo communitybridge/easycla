@@ -4,10 +4,9 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>cla-manager-onboarding-page</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
-
 
 <ion-content>
   <div class="page-content">
@@ -38,7 +37,17 @@
             <ion-input formControlName="email_address" required disabled="true"></ion-input>
           </ion-item>
           <ion-row justify-content-center margin-top>
-            <button ion-button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">Submit CLA Manager Information </button>
+            <button
+              ion-button
+              type="submit"
+              form="form"
+              ion-button
+              icon-right
+              color="primary"
+              [disabled]="currentlySubmitting"
+            >
+              Submit CLA Manager Information
+            </button>
           </ion-row>
         </form>
       </ion-card-content>

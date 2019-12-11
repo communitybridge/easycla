@@ -15,7 +15,12 @@
               <ion-icon class="file_list-icon" name="document"></ion-icon>
               {{file.name}}
             </span>
-            <span icon-right class="file_list-more" (click)="presentPopover($event, index)" (popoverNotice)="popoverNotice(eventInfo)">
+            <span
+              icon-right
+              class="file_list-more"
+              (click)="presentPopover($event, index)"
+              (popoverNotice)="popoverNotice(eventInfo)"
+            >
               <ion-icon name="more"></ion-icon>
             </span>
           </div>
@@ -25,4 +30,4 @@
     </div>
   </div>
 </div>
-<input type="file" (change)="filesAdded($event)" style="display: none" #input [multiple]="multiple"/>
+<input type="file" (change)="filesAdded($event)" style="display: none" #input [multiple]="multiple" />

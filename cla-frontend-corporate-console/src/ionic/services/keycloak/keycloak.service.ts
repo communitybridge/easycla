@@ -17,95 +17,96 @@
 
 /// <reference path="keycloak.d.ts"/>
 
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
-var Keycloak = require("./keycloak"); // load keycloak.js locally
+var Keycloak = require('./keycloak'); // load keycloak.js locally
 type KeycloakClient = KeycloakModule.KeycloakClient;
 
 @Injectable()
 export class KeycloakService {
+  static keycloakAuth: KeycloakClient = Keycloak('assets/keycloak.json');
 
-    static keycloakAuth: KeycloakClient = Keycloak('assets/keycloak.json');
-
-    static init(options?: any): Promise<any> {
-        return new Promise((resolve, reject) => {
-            KeycloakService.keycloakAuth.init(options)
-                .success(() => {
-                    resolve();
-                })
-                .error((errorData: any) => {
-                    reject(errorData);
-                });
+  static init(options?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      KeycloakService.keycloakAuth
+        .init(options)
+        .success(() => {
+          resolve();
+        })
+        .error((errorData: any) => {
+          reject(errorData);
         });
-    };
+    });
+  }
 
-    authenticated = ():boolean => {
-        return KeycloakService.keycloakAuth.authenticated;
-    };
+  authenticated = (): boolean => {
+    return KeycloakService.keycloakAuth.authenticated;
+  };
 
-    login() {
-        KeycloakService.keycloakAuth.login();
-    };
+  login() {
+    KeycloakService.keycloakAuth.login();
+  }
 
-    logout = () => {
-      return KeycloakService.keycloakAuth.logout();
-    };
+  logout = () => {
+    return KeycloakService.keycloakAuth.logout();
+  };
 
-    account() {
-        KeycloakService.keycloakAuth.accountManagement();
-    };
+  account() {
+    KeycloakService.keycloakAuth.accountManagement();
+  }
 
-    createLogoutUrl = () => {
-      return KeycloakService.keycloakAuth.createLogoutUrl();
-    };
+  createLogoutUrl = () => {
+    return KeycloakService.keycloakAuth.createLogoutUrl();
+  };
 
-    profile(): Promise<any> {
-      return new Promise((resolve, reject) => {
-        KeycloakService.keycloakAuth.loadUserProfile()
-          .success((profile: any) => {
-            resolve(profile);
+  profile(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      KeycloakService.keycloakAuth
+        .loadUserProfile()
+        .success((profile: any) => {
+          resolve(profile);
+        })
+        .error((errorData: any) => {
+          reject(errorData);
+        });
+    });
+  }
+
+  getToken(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      if (KeycloakService.keycloakAuth.token) {
+        KeycloakService.keycloakAuth
+          .updateToken(5)
+          .success(() => {
+            resolve(<string>KeycloakService.keycloakAuth.token);
           })
-          .error((errorData: any) => {
-            reject(errorData);
+          .error(() => {
+            this.login();
+            return reject('Failed to refresh token');
           });
-      })
-    };
+      } else {
+        this.login();
+        return reject('Not logged in');
+      }
+    });
+  }
 
-    getToken(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            if (KeycloakService.keycloakAuth.token) {
-                KeycloakService.keycloakAuth
-                    .updateToken(5)
-                    .success(() => {
-                        resolve(<string>KeycloakService.keycloakAuth.token);
-                    })
-                    .error(() => {
-                        this.login();
-                        return reject('Failed to refresh token');
-                    });
-            } else {
-              this.login();
-              return reject('Not logged in');
-            }
-        });
-    };
-
-    getTokenParsed(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (KeycloakService.keycloakAuth.tokenParsed) {
-                KeycloakService.keycloakAuth
-                    .updateToken(5)
-                    .success(() => {
-                        resolve(KeycloakService.keycloakAuth.tokenParsed);
-                    })
-                    .error(() => {
-                        this.login();
-                        return reject('Failed to refresh token');
-                    });
-            } else {
-                this.login();
-                return reject('Not logged in');
-            }
-        });
-    };
+  getTokenParsed(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (KeycloakService.keycloakAuth.tokenParsed) {
+        KeycloakService.keycloakAuth
+          .updateToken(5)
+          .success(() => {
+            resolve(KeycloakService.keycloakAuth.tokenParsed);
+          })
+          .error(() => {
+            this.login();
+            return reject('Failed to refresh token');
+          });
+      } else {
+        this.login();
+        return reject('Not logged in');
+      }
+    });
+  }
 }

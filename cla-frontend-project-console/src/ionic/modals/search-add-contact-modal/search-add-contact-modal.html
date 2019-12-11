@@ -21,7 +21,12 @@
         </ion-item>
       </ion-col>
       <ion-col col-2>
-        <button type="submit" ion-button class="input-forward-button" (click)="addContact({'contact':{'email':enteredEmail}})">
+        <button
+          type="submit"
+          ion-button
+          class="input-forward-button"
+          (click)="addContact({'contact':{'email':enteredEmail}})"
+        >
           <ion-icon name="arrow-forward" large></ion-icon>
         </button>
       </ion-col>
@@ -34,15 +39,15 @@
         <tr>
           <th class="clickable" (click)="sortContacts('type')">
             Type
-            <sorting-display [sorting]='sort.type.sort'></sorting-display>
+            <sorting-display [sorting]="sort.type.sort"></sorting-display>
           </th>
           <th class="clickable" (click)="sortContacts('name')">
             Name
-            <sorting-display [sorting]='sort.name.sort'></sorting-display>
+            <sorting-display [sorting]="sort.name.sort"></sorting-display>
           </th>
           <th class="clickable" (click)="sortContacts('email')">
             Email
-            <sorting-display [sorting]='sort.email.sort'></sorting-display>
+            <sorting-display [sorting]="sort.email.sort"></sorting-display>
           </th>
         </tr>
       </thead>

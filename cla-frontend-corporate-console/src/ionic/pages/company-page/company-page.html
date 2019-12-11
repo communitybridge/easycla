@@ -4,7 +4,7 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Company</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="" />
   </ion-navbar>
 </ion-header>
 
@@ -47,8 +47,10 @@
               <h1>Signed CLAs</h1>
             </ion-card-title>
             <ion-card-title>
-              <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
-                company click "Manage Whitelist" for the project interest</p>
+              <p>
+                You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at
+                your company click "Manage Whitelist" for the project interest
+              </p>
             </ion-card-title>
             <ion-card-content>
               <ion-grid [loading-display]="loading.projects">
@@ -60,10 +62,27 @@
                         <h2>No Projects</h2>
                       </div>
                       <div *ngIf="!loading.projects && rows && rows.length > 0">
-                        <ngx-datatable class='material clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
-                          [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
-                          <ngx-datatable-column name="Projects" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="Managers" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                        <ngx-datatable
+                          class="material clickable"
+                          [rows]="rows"
+                          [columns]="columns"
+                          [headerHeight]="50"
+                          [rowHeight]="'auto'"
+                          [selectionType]="SelectionType.single"
+                          [columnMode]="ColumnMode.force"
+                          [sortType]="SortType.multi"
+                          (select)="onSelect($event)"
+                        >
+                          <ngx-datatable-column
+                            name="Projects"
+                            prop="ProjectName"
+                            [sortable]="true"
+                          ></ngx-datatable-column>
+                          <ngx-datatable-column
+                            name="Managers"
+                            prop="ProjectManagers"
+                            [sortable]="true"
+                          ></ngx-datatable-column>
                         </ngx-datatable>
                       </div>
                     </div>
@@ -76,14 +95,16 @@
       </ion-row>
     </ion-grid>
 
-
     <ion-grid [loading-display]="loading.invites">
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
             <ion-card-content>
               <ion-card-title>
-                <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated by EasyCLA.</p>
+                <p>
+                  You can also see pending requests from individual contributors of your companies whose PRs have been
+                  gated by EasyCLA.
+                </p>
               </ion-card-title>
               <ion-card-title>
                 <h1>Pending Invites</h1>
@@ -133,11 +154,9 @@
               </ion-list>
             </ion-card-content>
           </ion-card>
-
         </ion-col>
       </ion-row>
     </ion-grid>
   </div>
   <cla-footer></cla-footer>
-
 </ion-content>

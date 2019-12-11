@@ -28,10 +28,7 @@
         </tbody>
       </table>
       <h2 class="table-heading">Linux Foundation Users</h2>
-      <ion-searchbar
-        [(ngModel)]="userTerm"
-        (ionInput)="searchUsers($event)">
-      </ion-searchbar>
+      <ion-searchbar [(ngModel)]="userTerm" (ionInput)="searchUsers($event)"> </ion-searchbar>
       <table class="table table-hover project-user-management-table">
         <tbody>
           <tr *ngFor="let user of userResults; let index = index;" [ngClass]="{'selected':user.selected}">

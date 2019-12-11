@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component,  } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
@@ -11,8 +11,7 @@ import { ClaService } from '../../services/cla.service';
 @Component({
   selector: 'cla-next-step-modal',
   templateUrl: 'cla-next-step-modal.html',
-  providers: [
-  ]
+  providers: []
 })
 export class ClaNextStepModal {
   projectId: string;
@@ -24,14 +23,14 @@ export class ClaNextStepModal {
   userIsDone: boolean;
   loading: any;
 
-  signingType: string; // "Gerrit" / "Github" 
+  signingType: string; // "Gerrit" / "Github"
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
@@ -42,9 +41,8 @@ export class ClaNextStepModal {
   }
 
   getDefaults() {
-
     this.loading = {
-      icla: true,
+      icla: true
     };
   }
 
@@ -53,9 +51,9 @@ export class ClaNextStepModal {
     if (!requiresIcla) {
       this.userIsDone = true;
       this.loading.icla = false;
-      console.log("no icla required. redirect.");
+      console.log('no icla required. redirect.');
     } else {
-      console.log("icla required");
+      console.log('icla required');
       this.claService.getLastIndividualSignature(this.userId, this.projectId).subscribe(response => {
         console.log(response);
         console.log('need to get the value for if the latest icla is valid');
@@ -83,7 +81,7 @@ export class ClaNextStepModal {
   openIclaPage() {
     this.navCtrl.push('ClaIndividualPage', {
       projectId: this.projectId,
-      userId: this.userId,
+      userId: this.userId
     });
   }
 
@@ -91,13 +89,13 @@ export class ClaNextStepModal {
     this.claService.getProjectGerrits(this.projectId).subscribe(gerrits => {
       if (gerrits.length) {
         // picking the first Gerrit Instance will suffice in supplying a Gerrit ID,
-        // since all Gerrit Instances in the response will be under the same CLA Group. 
+        // since all Gerrit Instances in the response will be under the same CLA Group.
         let gerrit = gerrits[0];
         this.navCtrl.push('ClaGerritIndividualPage', {
           gerritId: gerrit.gerrit_id
         });
       }
-    })
+    });
   }
 
   gotoRepo() {

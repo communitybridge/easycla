@@ -21,7 +21,10 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>Please send an E-Mail to your CLA's manager to set up a Corporate CLA account and add you to their whitelist. </p>
+          <p>
+            Please send an E-Mail to your CLA's manager to set up a Corporate CLA account and add you to their
+            whitelist.
+          </p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -46,8 +49,11 @@
               <ion-option *ngFor="let useremail of userEmails" value="{{ useremail }}">{{ useremail }}</ion-option>
             </ion-select>
           </ion-item>
-          <p class="field-description">Select the E-Mail address associated with this company. </p>
-          <ion-item *ngIf="!form.controls.useremail.valid && (form.controls.useremail.touched || submitAttempt)" no-lines>
+          <p class="field-description">Select the E-Mail address associated with this company.</p>
+          <ion-item
+            *ngIf="!form.controls.useremail.valid && (form.controls.useremail.touched || submitAttempt)"
+            no-lines
+          >
             <p>* A valid email address is required.</p>
           </ion-item>
         </ion-col>

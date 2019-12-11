@@ -8,7 +8,7 @@ import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAdmin'],
+  roles: ['isAdmin']
 })
 // @IonicPage({
 //   segment: 'activity-log'
@@ -28,7 +28,7 @@ export class ActivityLogPage {
   constructor(
     public navCtrl: NavController,
     private cincoService: CincoService,
-    private rolesService: RolesService, // for @Restricted
+    private rolesService: RolesService // for @Restricted
   ) {
     this.getDefaults();
   }
@@ -36,17 +36,17 @@ export class ActivityLogPage {
   getDefaults() {
     this.events = [];
     this.loading = {
-      events: true,
+      events: true
     };
     this.expand = {};
     this.users = {};
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getProjects();
   }
 
-  getProjects(){
+  getProjects() {
     this.cincoService.getAllProjects().subscribe(response => {
       this.allProjects = response;
       this.selectedProject = this.allProjects[0];
@@ -74,7 +74,7 @@ export class ActivityLogPage {
   }
 
   getUser(userId) {
-    if(!this.users[userId]) {
+    if (!this.users[userId]) {
       this.users[userId] = true; //placeholder
       this.cincoService.getUser(userId).subscribe(response => {
         if (response) {
@@ -87,5 +87,4 @@ export class ActivityLogPage {
   toggle(index) {
     this.expand[index] = !this.expand[index];
   }
-
 }

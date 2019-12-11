@@ -5,13 +5,13 @@ import { Component } from '@angular/core';
 
 import { NavController, IonicPage, ModalController } from 'ionic-angular';
 
-import { CincoService } from '../../services/cinco.service'
+import { CincoService } from '../../services/cinco.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'all-members'
@@ -33,7 +33,7 @@ export class AllMembersPage {
     private cincoService: CincoService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.getDefaults();
     this.keysGetter = Object.keys;
@@ -45,20 +45,20 @@ export class AllMembersPage {
     this.projectSectors = [];
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getProjectMembers();
     this.getProjectSectors();
   }
 
   getProjectSectors() {
     this.cincoService.getProjectSectors().subscribe(response => {
-      if(response) {
+      if (response) {
         this.projectSectors = response;
       }
     });
   }
 
-  getProjectMembers(){
+  getProjectMembers() {
     this.cincoService.getAllProjects().subscribe(response => {
       this.allProjects = response;
       this.selectedProject = this.allProjects[0];
@@ -68,10 +68,9 @@ export class AllMembersPage {
 
   projectSelectChanged() {
     let value = this.selectedProject;
-    if (value=='all') {
+    if (value == 'all') {
       this.selectProjectMembers(this.allProjects);
-    }
-    else {
+    } else {
       this.selectProjectMembers([value]);
     }
   }
@@ -81,7 +80,7 @@ export class AllMembersPage {
     for (let i = 0; i < projectsArray.length; i++) {
       let project = projectsArray[i];
       // We already have data for that project's members
-      if(this.membersList.hasOwnProperty(project.id)) {
+      if (this.membersList.hasOwnProperty(project.id)) {
         // Create a reference to it
         this.membersSelected[project.id] = this.membersList[project.id];
       }
@@ -95,9 +94,11 @@ export class AllMembersPage {
 
   attachProjectMember(project) {
     this.cincoService.getProjectMembers(project.id).subscribe(response => {
-      if(response) {
+      if (response) {
         let members = response;
-        if(members.length == 0){ return; }
+        if (members.length == 0) {
+          return;
+        }
         let buildArray = [];
         for (let i = 0; i < members.length; i++) {
           let member = members[i];
@@ -110,7 +111,7 @@ export class AllMembersPage {
             level: member.product,
             invoiceStatus: member.invoices[0].status,
             renewalDate: member.renewalDate,
-            projectCategory: project.sector,
+            projectCategory: project.sector
           });
         }
         this.membersList[project.id] = buildArray;
@@ -126,8 +127,7 @@ export class AllMembersPage {
     // modal.present();
     this.navCtrl.push('MemberPage', {
       projectId: member.projectId,
-      memberId: member.id,
+      memberId: member.id
     });
   }
-
 }

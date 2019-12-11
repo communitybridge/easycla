@@ -79,7 +79,9 @@
             <ion-label stacked>Type *</ion-label>
             <ion-select formControlName="type">
               <ion-option value="">None</ion-option>
-              <ion-option *ngFor="let role of keysGetter(orgContactRoles)" value="{{ role }}">{{ orgContactRoles[role] }}</ion-option>
+              <ion-option *ngFor="let role of keysGetter(orgContactRoles)" value="{{ role }}"
+                >{{ orgContactRoles[role] }}</ion-option
+              >
             </ion-select>
           </ion-item>
         </ion-col>
@@ -99,7 +101,9 @@
             <ion-label stacked>Role</ion-label>
             <ion-select formControlName="role">
               <ion-option value="">None</ion-option>
-              <ion-option *ngFor="let role of keysGetter(memberContactRoles)" value="{{ role }}">{{ memberContactRoles[role] }}</ion-option>
+              <ion-option *ngFor="let role of keysGetter(memberContactRoles)" value="{{ role }}"
+                >{{ memberContactRoles[role] }}</ion-option
+              >
             </ion-select>
           </ion-item>
         </ion-col>
@@ -108,12 +112,18 @@
             <ion-col col-12 col-md-6>
               <ion-item class="contact-primary">
                 <ion-label stacked>Primary</ion-label>
-                <ion-icon *ngIf="form.value.primaryContact=='true'; else notPrimaryContact" name="star" item-left></ion-icon>
+                <ion-icon
+                  *ngIf="form.value.primaryContact=='true'; else notPrimaryContact"
+                  name="star"
+                  item-left
+                ></ion-icon>
                 <ng-template #notPrimaryContact>
                   <ion-icon name="star-outline" item-left></ion-icon>
                 </ng-template>
                 <ion-select formControlName="primaryContact" (ionChange)="primarySelectChanged($event)">
-                  <ion-option *ngFor="let option of primaryContactOptions" value="{{ option.value }}">{{ option.name }}</ion-option>
+                  <ion-option *ngFor="let option of primaryContactOptions" value="{{ option.value }}"
+                    >{{ option.name }}</ion-option
+                  >
                 </ion-select>
               </ion-item>
             </ion-col>
@@ -122,7 +132,9 @@
                 <ion-label stacked>Board</ion-label>
                 <ion-icon name="contact" item-left></ion-icon>
                 <ion-select formControlName="boardMember" (ionChange)="boardSelectChanged($event)">
-                  <ion-option *ngFor="let option of boardMemberOptions" value="{{ option.value }}">{{ option.name }}</ion-option>
+                  <ion-option *ngFor="let option of boardMemberOptions" value="{{ option.value }}"
+                    >{{ option.name }}</ion-option
+                  >
                 </ion-select>
               </ion-item>
             </ion-col>
@@ -157,7 +169,12 @@
 
       <ion-row>
         <ion-col col-12>
-          <upload-button (notify)='filesNotify($event)' [files]="contact.contact.photos" uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)" uploadTypes="png,psd,tif,jpg,jpeg"></upload-button>
+          <upload-button
+            (notify)="filesNotify($event)"
+            [files]="contact.contact.photos"
+            uploadText="Print-ready photo (.png, .psd, .tif, .jpg and 300dpi)"
+            uploadTypes="png,psd,tif,jpg,jpeg"
+          ></upload-button>
         </ion-col>
       </ion-row>
 
@@ -169,7 +186,6 @@
           </ion-item>
         </ion-col>
       </ion-row>
-
     </ion-grid>
   </form>
 </ion-content>
@@ -177,7 +193,15 @@
 <ion-footer class="footer-seamless">
   <ion-toolbar>
     <ion-buttons>
-      <button *ngIf="contact.id" ion-button clear icon-right color="primary" (click)="removeContactPrompt()" [disabled]="currentlySubmitting">
+      <button
+        *ngIf="contact.id"
+        ion-button
+        clear
+        icon-right
+        color="primary"
+        (click)="removeContactPrompt()"
+        [disabled]="currentlySubmitting"
+      >
         Remove Contact
       </button>
     </ion-buttons>
@@ -185,10 +209,24 @@
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
       </button>
-      <button *ngIf="contact.id" ion-button icon-right color="primary" (click)="saveContact()" [disabled]="currentlySubmitting">
+      <button
+        *ngIf="contact.id"
+        ion-button
+        icon-right
+        color="primary"
+        (click)="saveContact()"
+        [disabled]="currentlySubmitting"
+      >
         Save
       </button>
-      <button *ngIf="!contact.id" ion-button icon-right color="primary" (click)="saveContact()" [disabled]="currentlySubmitting">
+      <button
+        *ngIf="!contact.id"
+        ion-button
+        icon-right
+        color="primary"
+        (click)="saveContact()"
+        [disabled]="currentlySubmitting"
+      >
         Add Contact
       </button>
     </ion-buttons>

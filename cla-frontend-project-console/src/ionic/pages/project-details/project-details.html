@@ -18,7 +18,12 @@
           </div>
         </div>
         <div *ngIf="project.config.logoRef" name="logo-placeholder" text-center>
-          <img class="change-link" (click)="openAssetManagementModal()" src="{{ project.config.logoRef }}" alt="{{ project.name }} logo"/>
+          <img
+            class="change-link"
+            (click)="openAssetManagementModal()"
+            src="{{ project.config.logoRef }}"
+            alt="{{ project.name }} logo"
+          />
           <div name="change-placeholder">
             <ion-label class="change-link" (click)="openAssetManagementModal()">CHANGE</ion-label>
           </div>
@@ -53,7 +58,9 @@
           <ion-item>
             <ion-label stacked>Membership Status</ion-label>
             <ion-select formControlName="status" interface="popover">
-              <ion-option *ngFor="let status of keysGetter(projectStatuses)" value="{{ status }}">{{ projectStatuses[status] }}</ion-option>
+              <ion-option *ngFor="let status of keysGetter(projectStatuses)" value="{{ status }}"
+                >{{ projectStatuses[status] }}</ion-option
+              >
             </ion-select>
           </ion-item>
         </ion-col>
@@ -61,7 +68,9 @@
           <ion-item>
             <ion-label stacked>Project Type</ion-label>
             <ion-select formControlName="category" interface="popover">
-              <ion-option *ngFor="let category of keysGetter(projectCategories)" value="{{ category }}">{{ projectCategories[category] }}</ion-option>
+              <ion-option *ngFor="let category of keysGetter(projectCategories)" value="{{ category }}"
+                >{{ projectCategories[category] }}</ion-option
+              >
             </ion-select>
           </ion-item>
         </ion-col>
@@ -70,7 +79,9 @@
             <ion-label stacked>Project Sector</ion-label>
             <ion-select formControlName="sector" interface="popover">
               <ion-option value="">None</ion-option>
-              <ion-option *ngFor="let sector of keysGetter(projectSectors)" value="{{ sector }}">{{ projectSectors[sector] }}</ion-option>
+              <ion-option *ngFor="let sector of keysGetter(projectSectors)" value="{{ sector }}"
+                >{{ projectSectors[sector] }}</ion-option
+              >
             </ion-select>
           </ion-item>
           <ion-item *ngIf="!form.controls.sector.valid && (form.controls.sector.touched || submitAttempt)" no-lines>
@@ -146,26 +157,26 @@
   </ion-grid>
 </ion-content>
 <ion-footer>
-    <footer class="text-white footer-section">
-        <ion-grid>
-            <ion-row>
-              <ion-col>
-                  <picture class="d-inline-block">
-                      <img src="./assets/logo/logo_white.svg" alt="" title="">
-                  </picture>
-              </ion-col>
-            </ion-row>
-            <hr />
-            <ion-row>
-                <ion-col>
-                    <small>&copy;2018 The Linux Foundation</small>
-                </ion-col>
-                <ion-col text-sm-right>
-                    <small>
-                        <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
-                    </small>
-                </ion-col>
-            </ion-row>
-        </ion-grid>
-    </footer>
+  <footer class="text-white footer-section">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <picture class="d-inline-block">
+            <img src="./assets/logo/logo_white.svg" alt="" title="" />
+          </picture>
+        </ion-col>
+      </ion-row>
+      <hr />
+      <ion-row>
+        <ion-col>
+          <small>&copy;2018 The Linux Foundation</small>
+        </ion-col>
+        <ion-col text-sm-right>
+          <small>
+            <a href="javascript:void;">Terms of Service</a>&nbsp;|&nbsp;<a href="javascript:void;">Privacy Policy</a>
+          </small>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </footer>
 </ion-footer>

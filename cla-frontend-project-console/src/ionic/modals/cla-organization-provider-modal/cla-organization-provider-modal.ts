@@ -6,14 +6,14 @@ import { NavController, NavParams, ViewController, IonicPage, Events } from 'ion
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { Http } from '@angular/http';
-import {EnvConfig} from "../../services/cla.env.utils";
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla-organization-provider-modal'
 })
 @Component({
   selector: 'cla-organization-provider-modal',
-  templateUrl: 'cla-organization-provider-modal.html',
+  templateUrl: 'cla-organization-provider-modal.html'
 })
 export class ClaOrganizationProviderModal {
   form: FormGroup;
@@ -34,7 +34,7 @@ export class ClaOrganizationProviderModal {
     this.claProjectId = this.navParams.get('claProjectId');
     this.form = formBuilder.group({
       // provider: ['', Validators.required],
-      orgName: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
+      orgName: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
     });
 
     events.subscribe('modal:close', () => {
@@ -56,20 +56,19 @@ export class ClaOrganizationProviderModal {
   postClaGithubOrganization() {
     let organization = {
       organization_sfid: this.claProjectId,
-      organization_name: this.form.value.orgName,
+      organization_name: this.form.value.orgName
     };
-    this.claService.postGithubOrganization(organization).subscribe((response) => {
+    this.claService.postGithubOrganization(organization).subscribe(response => {
       this.responseErrors = [];
 
       if (response.errors) {
-        this.form.controls['orgName'].setErrors({'incorrect': true});
+        this.form.controls['orgName'].setErrors({ incorrect: true });
 
         for (let errorKey in response.errors) {
           this.responseErrors.push(response.errors[errorKey]);
         }
-
       } else {
-        this.dismiss(true)
+        this.dismiss(true);
       }
     });
   }
@@ -77,5 +76,4 @@ export class ClaOrganizationProviderModal {
   dismiss(data = false) {
     this.viewCtrl.dismiss(data);
   }
-
 }
