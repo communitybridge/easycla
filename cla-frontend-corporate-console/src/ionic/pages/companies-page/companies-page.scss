@@ -11,6 +11,10 @@ companies-page {
       border-bottom: 0.5px solid map-get($colors, primary);
     }
 
+    ion-card-title {
+      justify-content: center;
+    }
+
     .sm-card {
       width: 80vw;
       margin-left: auto;
