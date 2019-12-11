@@ -287,8 +287,9 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 }
 
 func (repo repository) SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error) {
-	// Sorry, no results if empty company name
-	if strings.TrimSpace(searchTerm) == "" {
+	log.Debugf("Starting Search User")
+	// Sorry, no results if empty search field or search term
+	if strings.TrimSpace(searchTerm) == "" || strings.TrimSpace(searchField) == "" {
 		return &models.Users{
 			Users:          []models.User{},
 			LastKeyScanned: "",
@@ -308,10 +309,10 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 	builder := expression.NewBuilder().WithProjection(projection)
 	// This is the filter we want to match
 	if fullMatch {
-		filter := expression.Name("user_name").Equal(expression.Value(searchTerm))
+		filter := expression.Name(searchField).Equal(expression.Value(searchTerm))
 		builder.WithFilter(filter)
 	} else {
-		filter := expression.Name("user_name").Contains(searchTerm)
+		filter := expression.Name(searchField).Contains(searchTerm)
 		builder.WithFilter(filter)
 	}
 
@@ -344,23 +345,23 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 		}
 
 		// Convert the list of DB models to a list of response models
-		companyList, modelErr := buildUserModels(results)
+		userList, modelErr := buildDBUserModels(results)
 		if modelErr != nil {
 			log.Warnf("error retrieving users for searchTerm %s in ACL, error: %v", searchTerm, modelErr)
 			return nil, modelErr
 		}
 
 		// Add to our response model list
-		users = append(users, companyList...)
+		users = append(users, userList...)
 
-		log.Debugf("Company search scan took: %v resulting in %d results",
+		log.Debugf("User search scan took: %v resulting in %d results",
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
-		if results.LastEvaluatedKey["company_id"] != nil {
+		if results.LastEvaluatedKey["user_id"] != nil {
 			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
-			lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
+			lastEvaluatedKey = *results.LastEvaluatedKey["user_id"].S
 			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"company_id": {
+				"user_id": {
 					S: aws.String(lastEvaluatedKey),
 				},
 			}
@@ -376,13 +377,13 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
-		log.Warnf("error retrieving total company record count for searchTerm: %s, error: %v", searchTerm, err)
+		log.Warnf("error retrieving total user record count for searchTerm: %s, error: %v", searchTerm, err)
 		return nil, err
 	}
 
 	totalCount := *describeTableResult.Table.ItemCount
 
-	log.Debugf("Total company search took: %v resulting in %d results",
+	log.Debugf("Total user search took: %v resulting in %d results",
 		utils.FmtDuration(time.Since(queryStartTime)), len(users))
 
 	return &models.Users{
@@ -427,8 +428,8 @@ func buildUserProjection() expression.ProjectionBuilder {
 	)
 }
 
-// buildCompanyModels converts the response model into a response data model
-func buildUserModels(results *dynamodb.ScanOutput) ([]models.User, error) {
+// buildDBUserModels converts the response model into a response data model
+func buildDBUserModels(results *dynamodb.ScanOutput) ([]models.User, error) {
 	var users []models.User
 
 	type ItemSignature struct {
