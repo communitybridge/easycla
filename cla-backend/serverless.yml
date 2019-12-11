@@ -50,6 +50,10 @@ provider:
       Condition:
         StringEquals:
           ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
+        - '*'
+      Condition:
+        StringEquals:
+          ses:FromAddress: 'admin@${env:PRODUCT_DOMAIN}'
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -441,6 +445,8 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: company_id
             AttributeType: S

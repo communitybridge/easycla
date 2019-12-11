@@ -94,8 +94,8 @@
     "service/sts/stsiface",
   ]
   pruneopts = "UT"
-  revision = "c5f6db9139bd300297119f712fd4e09f6b0f89f7"
-  version = "v1.25.49"
+  revision = "e060d39a425ab39a21df3f3182b7446c60b56c7d"
+  version = "v1.25.50"
 
 [[projects]]
   digest = "1:a93c813efa8ad3e9b7c70b9a4af83c976a6559cfd9ee9eb0146309a0297707ca"
@@ -557,19 +557,20 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:8458b1a19a304c09d8f109a9463a419f703e3d1a81615afcaf3593dcce6749b9"
+  digest = "1:c16208844229891e89d2055dd85a08053928c8e50857ff0c9e7479adcf5c592c"
   name = "go.mongodb.org/mongo-driver"
   packages = [
     "bson",
     "bson/bsoncodec",
+    "bson/bsonoptions",
     "bson/bsonrw",
     "bson/bsontype",
     "bson/primitive",
     "x/bsonx/bsoncore",
   ]
   pruneopts = "UT"
-  revision = "797e0a635920c291b1808180bf7249eaac5eafed"
-  version = "v1.1.3"
+  revision = "b414b897457665f12997cefd10ad934ccb9dfb3e"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
