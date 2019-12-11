@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from "@angular/core";
-import {Http} from "@angular/http";
+import { Injectable } from "@angular/core";
+import { Http } from "@angular/http";
 
 import "rxjs/Rx";
 
@@ -11,9 +11,9 @@ export class ClaService {
   http: any;
   claApiUrl: string = "";
   localTesting = false;
-  v1ClaAPIURLLocal = 'http://localhost:5000';
-  v2ClaAPIURLLocal = 'http://localhost:5000';
-  v3ClaAPIURLLocal = 'http://localhost:8080';
+  v1ClaAPIURLLocal = "http://localhost:5000";
+  v2ClaAPIURLLocal = "http://localhost:5000";
+  v3ClaAPIURLLocal = "http://localhost:8080";
 
   constructor(http: Http) {
     this.http = http;
@@ -69,9 +69,9 @@ export class ClaService {
 
   public isLocalTesting(flag: boolean) {
     if (flag) {
-      console.log('Running in local services mode');
+      console.log("Running in local services mode");
     } else {
-      console.log('Running in deployed services mode');
+      console.log("Running in deployed services mode");
     }
     this.localTesting = flag;
   }
@@ -97,7 +97,9 @@ export class ClaService {
    */
   getUsers() {
     if (this.localTesting) {
-      return this.http.get(this.v1ClaAPIURLLocal + "/v1/user").map(res => res.json());
+      return this.http
+        .get(this.v1ClaAPIURLLocal + "/v1/user")
+        .map(res => res.json());
     } else {
       return this.http.get(this.claApiUrl + "/v1/user").map(res => res.json());
     }
@@ -134,9 +136,13 @@ export class ClaService {
       }
      */
     if (this.localTesting) {
-      return this.http.put(this.v1ClaAPIURLLocal + "/v1/user", user).map(res => res.json());
+      return this.http
+        .put(this.v1ClaAPIURLLocal + "/v1/user", user)
+        .map(res => res.json());
     } else {
-      return this.http.put(this.claApiUrl + "/v1/user", user).map(res => res.json());
+      return this.http
+        .put(this.claApiUrl + "/v1/user", user)
+        .map(res => res.json());
     }
   }
 
@@ -159,7 +165,7 @@ export class ClaService {
    * GET /v3/users/{userId}
    **/
   getUserByUserId(userId) {
-    const url: URL = this.getV3Endpoint('/v3/users/' + userId);
+    const url: URL = this.getV3Endpoint("/v3/users/" + userId);
     return this.http.getWithCreds(url).map(res => res.json());
   }
 
@@ -167,7 +173,7 @@ export class ClaService {
    * GET /v3/users/username/{userName}
    **/
   getUserByUserName(userName) {
-    const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
+    const url: URL = this.getV3Endpoint("/v3/users/username/" + userName);
     return this.http.getWithCreds(url).map(res => res.json());
   }
 
@@ -279,11 +285,25 @@ export class ClaService {
       */
     if (this.localTesting) {
       return this.http
-        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, data)
+        .post(
+          this.v2ClaAPIURLLocal +
+            "/v2/user/" +
+            userId +
+            "/request-company-whitelist/" +
+            companyId,
+          data
+        )
         .map(res => res.json());
     } else {
       return this.http
-        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-whitelist/" + companyId, data)
+        .post(
+          this.claApiUrl +
+            "/v2/user/" +
+            userId +
+            "/request-company-whitelist/" +
+            companyId,
+          data
+        )
         .map(res => res.json());
     }
   }
@@ -294,11 +314,20 @@ export class ClaService {
   postEmailToCompanyAdmin(userId, data) {
     if (this.localTesting) {
       return this.http
-        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/invite-company-admin/", data)
+        .post(
+          this.v2ClaAPIURLLocal +
+            "/v2/user/" +
+            userId +
+            "/invite-company-admin/",
+          data
+        )
         .map(res => res.json());
     } else {
       return this.http
-        .post(this.claApiUrl + "/v2/user/" + userId + "/invite-company-admin/", data)
+        .post(
+          this.claApiUrl + "/v2/user/" + userId + "/invite-company-admin/",
+          data
+        )
         .map(res => res.json());
     }
   }
@@ -309,11 +338,20 @@ export class ClaService {
   postUserCCLARequestToManager(userId, data) {
     if (this.localTesting) {
       return this.http
-        .post(this.v2ClaAPIURLLocal + "/v2/user/" + userId + "/request-company-ccla/", data)
+        .post(
+          this.v2ClaAPIURLLocal +
+            "/v2/user/" +
+            userId +
+            "/request-company-ccla/",
+          data
+        )
         .map(res => res.json());
     } else {
       return this.http
-        .post(this.claApiUrl + "/v2/user/" + userId + "/request-company-ccla/", data)
+        .post(
+          this.claApiUrl + "/v2/user/" + userId + "/request-company-ccla/",
+          data
+        )
         .map(res => res.json());
     }
   }
@@ -342,22 +380,22 @@ export class ClaService {
       return this.http
         .get(
           this.v2ClaAPIURLLocal +
-          "/v2/user/" +
-          userId +
-          "/project/" +
-          projectId +
-          "/last-signature"
+            "/v2/user/" +
+            userId +
+            "/project/" +
+            projectId +
+            "/last-signature"
         )
         .map(res => res.json());
     } else {
       return this.http
         .get(
           this.claApiUrl +
-          "/v2/user/" +
-          userId +
-          "/project/" +
-          projectId +
-          "/last-signature"
+            "/v2/user/" +
+            userId +
+            "/project/" +
+            projectId +
+            "/last-signature"
         )
         .map(res => res.json());
     }
@@ -368,7 +406,9 @@ export class ClaService {
    **/
 
   getSignatures() {
-    return this.http.get(this.claApiUrl + "/v1/signature").map(res => res.json());
+    return this.http
+      .get(this.claApiUrl + "/v1/signature")
+      .map(res => res.json());
   }
 
   postSignature(signature) {
@@ -463,7 +503,9 @@ export class ClaService {
    * GET /v1/signature/{signature_id}/manager
    */
   getCLAManagers(signatureId) {
-    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
+    const url: URL = this.getV1Endpoint(
+      "/v1/signature/" + signatureId + "/manager"
+    );
     return this.http.get(url).map(res => res.json());
   }
 
@@ -475,16 +517,26 @@ export class ClaService {
    * @param pageSize the optional page size - default is 50
    * @param nextKey the next key used when asking for the next page of results
    */
-  getCompanyProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
+  getCompanyProjectSignatures(
+    companyId,
+    projectId,
+    pageSize = 50,
+    nextKey = ""
+  ) {
     //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
-    let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '?pageSize=' + pageSize;
-    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
-      path += '&nextKey=' + nextKey;
+    let path: string =
+      "/v3/signatures/project/" +
+      projectId +
+      "/company/" +
+      companyId +
+      "?pageSize=" +
+      pageSize;
+    if (nextKey != null && nextKey !== "" && nextKey.trim().length > 0) {
+      path += "&nextKey=" + nextKey;
     }
     const url: URL = this.getV3Endpoint(path);
-    return this.http.getWithCreds(url)
-      .map(res => res.json());
+    return this.http.getWithCreds(url).map(res => res.json());
   }
 
   /**
@@ -502,7 +554,9 @@ export class ClaService {
    **/
 
   getRepositories() {
-    return this.http.get(this.claApiUrl + "/v1/repository").map(res => res.json());
+    return this.http
+      .get(this.claApiUrl + "/v1/repository")
+      .map(res => res.json());
   }
 
   postRepository(repository) {
@@ -556,12 +610,10 @@ export class ClaService {
    * /company
    **/
 
-
   // Returns list of companies for current user
   getCompanies() {
     return this.http.get(this.claApiUrl + "/v1/company").map(res => res.json());
   }
-
 
   getAllCompanies() {
     return this.http.get(this.claApiUrl + "/v2/company").map(res => res.json());
@@ -703,7 +755,11 @@ export class ClaService {
   getProjectDocument(projectId, documentType) {
     return this.http
       .get(
-        this.claApiUrl + "/v2/project/" + projectId + "/document/" + documentType
+        this.claApiUrl +
+          "/v2/project/" +
+          projectId +
+          "/document/" +
+          documentType
       )
       .map(res => res.json());
   }
@@ -718,7 +774,11 @@ export class ClaService {
      */
     return this.http
       .post(
-        this.claApiUrl + "/v1/project/" + projectId + "/document/" + documentType,
+        this.claApiUrl +
+          "/v1/project/" +
+          projectId +
+          "/document/" +
+          documentType,
         document
       )
       .map(res => res.json());
@@ -736,10 +796,10 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-        "/v1/project/" +
-        projectId +
-        "/document/template/" +
-        documentType,
+          "/v1/project/" +
+          projectId +
+          "/document/template/" +
+          documentType,
         document
       )
       .map(res => res.json());
@@ -758,14 +818,14 @@ export class ClaService {
     return this.http
       .delete(
         this.claApiUrl +
-        "/v1/project/" +
-        projectId +
-        "/document/" +
-        documentType +
-        "/" +
-        majorVersion +
-        "/" +
-        minorVersion
+          "/v1/project/" +
+          projectId +
+          "/document/" +
+          documentType +
+          "/" +
+          majorVersion +
+          "/" +
+          minorVersion
       )
       .map(res => res.json());
   }
@@ -807,10 +867,12 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/v2/request-individual-signature", signatureRequest)
+      .post(
+        this.getV2Endpoint("/v2/request-individual-signature"),
+        signatureRequest
+      )
       .map(res => res.json());
   }
-
 
   /**
    * /check-prepare-employee-signature
@@ -861,7 +923,10 @@ export class ClaService {
       }
      */
     return this.http
-      .post(this.claApiUrl + "/v1/request-corporate-signature", signatureRequest)
+      .post(
+        this.claApiUrl + "/v1/request-corporate-signature",
+        signatureRequest
+      )
       .map(res => res.json());
   }
 
@@ -873,12 +938,12 @@ export class ClaService {
     return this.http
       .post(
         this.claApiUrl +
-        "/v1/signed/" +
-        installationId +
-        "/" +
-        githubRepositoryId +
-        "/" +
-        changeRequestId
+          "/v1/signed/" +
+          installationId +
+          "/" +
+          githubRepositoryId +
+          "/" +
+          changeRequestId
       )
       .map(res => res.json());
   }
@@ -906,14 +971,14 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-        "/v2/repository-provider/" +
-        provider +
-        "/sign/" +
-        installationId +
-        "/" +
-        githubRepositoryId +
-        "/" +
-        changeRequestId
+          "/v2/repository-provider/" +
+          provider +
+          "/sign/" +
+          installationId +
+          "/" +
+          githubRepositoryId +
+          "/" +
+          changeRequestId
       )
       .map(res => res.json());
   }
@@ -935,7 +1000,9 @@ export class ClaService {
 
   postReceivedActivity(provider) {
     return this.http
-      .post(this.claApiUrl + "/v2/repository-provider/" + provider + "/activity")
+      .post(
+        this.claApiUrl + "/v2/repository-provider/" + provider + "/activity"
+      )
       .map(res => res.json());
   }
 
@@ -1005,9 +1072,9 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-        "/v1/github/organizations/" +
-        organizationName +
-        "/repositories"
+          "/v1/github/organizations/" +
+          organizationName +
+          "/repositories"
       )
       .map(res => res.json());
   }

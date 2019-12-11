@@ -1,0 +1,663 @@
+service: cla-backend
+
+provider:
+  name: aws
+  runtime: python3.7
+  stage: ${opt:stage}
+  region: us-east-1
+  timeout: 60 # optional, in seconds, default is 6
+
+  tracing:
+    apiGateway: true
+    lambda: true
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+        - s3:PutObjectAcl
+      Resource:
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt: FilesBucket.Arn
+            - '*'
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt: LogoBucket.Arn
+            - '*'
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        Fn::Join:
+          - ''
+          - - "arn:aws:ssm:${self:provider.region}:"
+            - Ref: AWS::AccountId
+            - ":parameter/cla-*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+      Resource:
+        - '*'
+      Condition:
+        StringEquals:
+          ses:FromAddress: 'admin@${env:PRODUCT_DOMAIN}'
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:DeleteItem
+        - dynamodb:UpdateItem
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Scan
+        - dynamodb:DescribeTable
+        - dynamodb:BatchGetItem
+      Resource:
+        - Fn::GetAtt: UsersTable.Arn
+        - Fn::GetAtt: SignaturesTable.Arn
+        - Fn::GetAtt: CompaniesTable.Arn
+        - Fn::GetAtt: ProjectsTable.Arn
+        - Fn::GetAtt: RepositoriesTable.Arn
+        - Fn::GetAtt: GithubOrgsTable.Arn
+        - Fn::GetAtt: StoreTable.Arn
+        - Fn::GetAtt: GerritInstancesTable.Arn
+        - Fn::GetAtt: UserPermissionsTableNew.Arn
+        - Fn::GetAtt: SessionTable.Arn
+        - Fn::GetAtt: CompanyInvitesTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource:
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - github-user-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - github-username-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - lf-username-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - SignaturesTable
+              - Arn
+            - index
+            - reference-signature-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - SignaturesTable
+              - Arn
+            - index
+            - project-signature-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - CompaniesTable
+              - Arn
+            - index
+            - external-company-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - ProjectsTable
+              - Arn
+            - index
+            - external-project-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - project-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - external-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - sfdc-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - GithubOrgsTable
+              - Arn
+            - index
+            - github-org-sfid-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - CompanyInvitesTable
+              - Arn
+            - index
+            - requested-company-index
+
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: us-east-1
+    GH_APP_PRIVATE_SECRET: ${file(./env.json):gh-app-private-key, ssm:/cla-gh-app-private-key-${opt:stage}~true}
+    GH_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
+    GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
+    GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
+    GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
+    GH_STATUS_CTX_NAME: 'EasyCLA'
+    GH_ORG_VALIDATION: true
+    COMPANY_USER_VALIDATION: true
+    AUTH0_DOMAIN: ${file(./env.json):auth0-domain, ssm:/cla-auth0-domain-${opt:stage}~true}
+    AUTH0_CLIENT_ID: ${file(./env.json):auth0-clientId, ssm:/cla-auth0-clientId-${opt:stage}~true}
+    AUTH0_USERNAME_CLAIM: ${file(./env.json):auth0-username-claim, ssm:/cla-auth0-username-claim-${opt:stage}}
+    AUTH0_ALGORITHM: ${file(./env.json):auth0-algorithm, ssm:/cla-auth0-algorithm-${opt:stage}}
+    SF_INSTANCE_URL: ${file(./env.json):sf-instance-url, ssm:/cla-sf-instance-url-${opt:stage}~true}
+    SF_CLIENT_ID: ${file(./env.json):sf-client-id, ssm:/cla-sf-consumer-key-${opt:stage}~true}
+    SF_CLIENT_SECRET: ${file(./env.json):sf-client-secret, ssm:/cla-sf-consumer-secret-${opt:stage}~true}
+    SF_USERNAME: ${file(./env.json):sf-username, ssm:/cla-sf-username-${opt:stage}~true}
+    SF_PASSWORD: ${file(./env.json):sf-password, ssm:/cla-sf-password-${opt:stage}~true}
+    DOCRAPTOR_API_KEY: ${file(./env.json):doc-raptor-api-key, ssm:/cla-doc-raptor-api-key-${opt:stage}}
+    DOCUSIGN_ROOT_URL: ${file(./env.json):docusign-root-url, ssm:/cla-docusign-root-url-${opt:stage}}
+    DOCUSIGN_USERNAME: ${file(./env.json):docusign-username, ssm:/cla-docusign-username-${opt:stage}}
+    DOCUSIGN_PASSWORD: ${file(./env.json):docusign-password, ssm:/cla-docusign-password-${opt:stage}}
+    DOCUSIGN_INTEGRATOR_KEY: ${file(./env.json):docusign-integrator-key, ssm:/cla-docusign-integrator-key-${opt:stage}}
+    CLA_API_BASE: ${file(./env.json):cla-api-base, ssm:/cla-api-base-${opt:stage}}
+    CLA_CONTRIBUTOR_BASE: ${file(./env.json):cla-contributor-base, ssm:/cla-contributor-base-${opt:stage}}
+    CLA_CORPORATE_BASE: ${file(./env.json):cla-corporate-base, ssm:/cla-corporate-base-${opt:stage}}
+    CLA_LANDING_PAGE: ${file(./env.json):cla-landing-page, ssm:/cla-landing-page-${opt:stage}}
+    CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}
+    CLA_BUCKET_LOGO_URL: ${file(./env.json):cla-logo-s3-url, ssm:/cla-cla-logo-s3-url-${opt:stage}~true}
+    SES_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-ses-sender-email-address, ssm:/cla-ses-sender-email-address-${opt:stage}}
+    LF_GROUP_CLIENT_ID: ${file(./env.json):lf-group-client-id, ssm:/cla-lf-group-client-id-${opt:stage}}
+    LF_GROUP_CLIENT_SECRET: ${file(./env.json):lf-group-client-secret, ssm:/cla-lf-group-client-secret-${opt:stage}}
+    LF_GROUP_REFRESH_TOKEN: ${file(./env.json):lf-group-refresh-token, ssm:/cla-lf-group-refresh-token-${opt:stage}}
+    LF_GROUP_CLIENT_URL: ${file(./env.json):lf-group-client-url, ssm:/cla-lf-group-client-url-${opt:stage}}
+    DOCRAPTOR_TEST_MODE: ${file(./env.json):docraptor-test-mode}
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dynamodb-local
+  - serverless-s3-local
+  - serverless-wsgi
+  - serverless-plugin-tracing
+
+functions:
+  apiv1:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          method: ANY
+          path: v1/{proxy+}
+          cors: true
+          authorizer: ${file(./serverless-authorizer.yml)}
+          #integration: lambda
+
+  apiv2:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          method: ANY
+          path: v2/{proxy+}
+          cors: true
+
+  apiv3:
+    runtime: go1.x
+    handler: backend_aws_lambda
+    events:
+      - http:
+          method: ANY
+          path: v3/{proxy+}
+          cors: true
+    package:
+      individually: true
+      include:
+        - ./backend_aws_lambda
+
+  githubinstall:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          method: ANY
+          path: v2/github/installation
+
+  githubactivity:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          method: POST
+          path: v2/github/activity
+
+  salesforceprojects:
+    handler: cla.salesforce.get_projects
+    events:
+      - http:
+          method: ANY
+          path: v1/salesforce/projects
+          cors: true
+
+  salesforceprojectbyID:
+    handler: cla.salesforce.get_project
+    events:
+      - http:
+          method: ANY
+          path: v1/salesforce/project
+          cors: true
+
+  authorizer:
+    handler: auth/bin/authorizer
+    runtime: go1.x
+    cors: true
+
+custom:
+  wsgi:
+    app: cla.routes.__hug_wsgi__
+    pythonBin: python3
+    packRequirements: false
+  dynamodb:
+    stages:
+      - local
+    start:
+      port: 8000
+      migrate: true
+  s3:
+    host: 0.0.0.0
+    port: 8001
+    directory: /tmp
+  allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
+
+resources:
+  Resources:
+    # ApiGatewayRestApi, and GatewayResponse are used to enable Cors on custom authorizer responses.
+    # This let's the client read the HTTP status on error.
+    # see link for more detail
+    # https://serverless.com/blog/cors-api-gateway-survival-guide/#cors-with-custom-authorizers
+    ApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:service}-${self:provider.stage}
+    GatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    FilesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: cla-signature-files-${self:provider.stage}
+        AccessControl: Private
+    LogoBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: cla-project-logo-${self:provider.stage}
+        AccessControl: Private
+    LogoBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: LogoBucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+              - s3:GetObject
+              Resource:
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "LogoBucket"
+                    },
+                    "/*"
+                  ]
+                ]
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-users
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: user_github_id
+            AttributeType: N
+          - AttributeName: user_github_username
+            AttributeType: S
+          - AttributeName: lf_username
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: github-user-index
+            KeySchema:
+            - AttributeName: user_github_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: github-username-index
+            KeySchema:
+            - AttributeName: user_github_username
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: lf-username-index
+            KeySchema:
+            - AttributeName: lf_username
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    SignaturesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-signatures
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: signature_id
+            AttributeType: S
+          - AttributeName: signature_project_id
+            AttributeType: S
+          - AttributeName: signature_reference_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: signature_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: project-signature-index
+            KeySchema:
+            - AttributeName: signature_project_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: reference-signature-index
+            KeySchema:
+            - AttributeName: signature_reference_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    CompaniesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-companies
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: company_id
+            AttributeType: S
+          - AttributeName: company_external_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: company_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: external-company-index
+            KeySchema:
+            - AttributeName: company_external_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    ProjectsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-projects
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: project_id
+            AttributeType: S
+          - AttributeName: project_external_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: project_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: external-project-index
+            KeySchema:
+            - AttributeName: project_external_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    RepositoriesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-repositories
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: repository_id
+            AttributeType: S
+          - AttributeName: repository_external_id
+            AttributeType: S
+          - AttributeName: repository_project_id
+            AttributeType: S
+          - AttributeName: repository_sfdc_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: repository_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: project-repository-index
+            KeySchema:
+            - AttributeName: repository_project_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: external-repository-index
+            KeySchema:
+            - AttributeName: repository_external_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: sfdc-repository-index
+            KeySchema:
+            - AttributeName: repository_sfdc_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    GithubOrgsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-github-orgs
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: organization_name
+            AttributeType: S
+          - AttributeName: organization_sfid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: organization_name
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: github-org-sfid-index
+            KeySchema:
+            - AttributeName: organization_sfid
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    GerritInstancesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-gerrit-instances
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: gerrit_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: gerrit_id
+            KeyType: HASH
+    StoreTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-store
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
+            KeyType: HASH
+        TimeToLiveSpecification:
+            AttributeName: expire
+            Enabled: true
+    UserPermissionsTableNew:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-user-permissions
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: username
+            AttributeType: S
+        KeySchema:
+          - AttributeName: username
+            KeyType: HASH
+    SessionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-session-store
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    CompanyInvitesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-company-invites
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: company_invite_id
+            AttributeType: S
+          - AttributeName: requested_company_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: company_invite_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: requested-company-index
+            KeySchema:
+            - AttributeName: requested_company_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    Cert:
+      Type: AWS::CertificateManager::Certificate
+      Properties:
+        DomainName: api.${env:ROOT_DOMAIN}
+        SubjectAlternativeNames:
+          - api.${env:PRODUCT_DOMAIN}
+        ValidationMethod: DNS
+    CustomRootDomain:
+      Type: AWS::ApiGateway::DomainName
+      Properties: 
+        CertificateArn:
+            Ref: Cert
+        DomainName: api.${env:ROOT_DOMAIN}
+    RootDomainMapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      Properties:
+        DomainName:
+          Ref: CustomRootDomain
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Stage: ${self:provider.stage}
+    CustomProductDomain:
+      Type: AWS::ApiGateway::DomainName
+      Properties: 
+        CertificateArn:
+          Ref: Cert
+        DomainName: api.${env:PRODUCT_DOMAIN}
+    ProductDomainMapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      Properties:
+        DomainName:
+          Ref: CustomProductDomain
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Stage: ${self:provider.stage}

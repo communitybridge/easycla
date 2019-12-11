@@ -29,18 +29,19 @@ export class MyApp {
     public claService: ClaService,
     public authService: AuthService,
     public httpClient: HttpClient,
-    public keycloak: KeycloakService 
+    public keycloak: KeycloakService
   ) {
     this.getDefaults();
     this.initializeApp();
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to 'true', otherwise we're using normal services deployed in each environment
-    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
+    const localServicesMode =
+      (process.env.USE_LOCAL_SERVICES || "false").toLowerCase() === "true";
     // Set true for local debugging using localhost (local ports set in claService)
     this.claService.isLocalTesting(localServicesMode);
 
-    this.claService.setApiUrl(EnvConfig['cla-api-url']);
+    this.claService.setApiUrl(EnvConfig["cla-api-url"]);
     this.claService.setHttp(httpClient);
 
     this.authService.handleAuthentication();
@@ -51,8 +52,7 @@ export class MyApp {
   ngOnInit() {}
 
   initializeApp() {
-    this.platform.ready().then(() => {
-    });
+    this.platform.ready().then(() => {});
   }
 
   openPage(page) {
