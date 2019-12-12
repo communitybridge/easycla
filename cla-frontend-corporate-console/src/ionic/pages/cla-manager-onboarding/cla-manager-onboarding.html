@@ -11,38 +11,90 @@
 
 <ion-content>
   <div class="page-content">
-    <ion-card class="sm-card">
-      <ion-card-title>
-        Welcome to the corporate console for EasyCLA
-      </ion-card-title>
-      <ion-card-content>
-        <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
-          <ion-item>
-            <ion-label stacked>Project Name*</ion-label>
-            <ion-input formControlName="project_name"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Company Name*</ion-label>
-            <ion-input formControlName="compnay_name" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Full Name*</ion-label>
-            <ion-input formControlName="full_name" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>LFID</ion-label>
-            <ion-input formControlName="lfid" disabled="true"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label stacked>Email Address*</ion-label>
-            <ion-input formControlName="email_address" required disabled="true"></ion-input>
-          </ion-item>
-          <ion-row justify-content-center margin-top>
-            <button ion-button type="submit" form="form" ion-button icon-right color="primary" [disabled]="currentlySubmitting">Submit CLA Manager Information </button>
+    <ion-row justify-content-center>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <ion-card class="sm-card">
+          <ion-row justify-content-center *ngIf="loading.companies && loading.projects">
+            <h2>Loading Projects and Companies</h2>
           </ion-row>
-        </form>
-      </ion-card-content>
-    </ion-card>
+          <ion-row justify-content-center *ngIf="loading.companies && loading.projects">
+            <ion-spinner></ion-spinner>
+          </ion-row>
+          <ion-card-content *ngIf="!loading.companies && !loading.projects">
+            <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}" (submit)="submit()">
+              <ion-item>
+                <ion-label stacked>
+                  <h2>Company*</h2>
+                </ion-label>
+                <ion-input formControlName="company_name" [(ngModel)]="company_name" (ionChange)="findCompany($event)" placeholder="Find Company" required></ion-input>
+              </ion-item>
+              <ion-list class="company-dropdown-list" *ngIf="filteredCompanies && filteredCompanies.length > 0">
+                <ion-item *ngFor="let company of filteredCompanies">
+                  <ion-label class="clickable" (click)="setCompanyName(company)">
+                    {{ company.company_name }}
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+              <ion-item>
+                <ion-label color="primary">
+                  Select Project to populate project name*
+                </ion-label>
+                <ion-select (ionChange)="projectSelectChanged($event)" cancelText="Reset" okText="Add Project">
+                  <ion-option *ngFor="let project of allProjects" [value]="project">{{ project.project_name }}</ion-option>
+                </ion-select>
+              </ion-item>
+              <ion-item>
+                <ion-label stacked>
+                  <h2>Project Name*</h2>
+                </ion-label>
+                <ion-input formControlName="project_name" required disabled="true" placeholder="Project Name"></ion-input>
+              </ion-item>
+
+              <ion-item class="project-list" *ngIf="selectedProjects && selectedProjects.length > 0">
+                <ion-row>
+                  <ion-badge margin-right *ngFor="let project of selectedProjects">{{project.project_name}}</ion-badge>
+                </ion-row>
+              </ion-item>
+              <ion-item>
+                <ion-label stacked>
+                  <h2>Full Name*</h2>
+                </ion-label>
+                <ion-input formControlName="full_name" required></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label stacked>
+                  <h2>LFID</h2>
+                </ion-label>
+                <ion-input formControlName="lfid" disabled="true"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label stacked>
+                  <h2>Email Address*</h2>
+                </ion-label>
+                <ion-input formControlName="email_address" required disabled="true"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label stacked>
+                  <h2>Reason for request*</h2>
+                </ion-label>
+                <ion-input formControlName="reason_for_request"></ion-input>
+              </ion-item>
+              <ion-row justify-content-center margin-top>
+
+              </ion-row>
+              <ion-row justify-content-center margin-top>
+                <button ion-button type="submit" form="form" ion-button icon-right color="primary" [disabled]="!form.valid">
+                  <span *ngIf="!currentlySubmitting">Submit</span>
+                  <ion-spinner *ngIf="currentlySubmitting"></ion-spinner>
+                </button>
+              </ion-row>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
   </div>
   <!-- <cla-footer></cla-footer> -->
 </ion-content>
