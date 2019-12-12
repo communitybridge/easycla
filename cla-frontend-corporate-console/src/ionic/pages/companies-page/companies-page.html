@@ -17,20 +17,15 @@
             Welcome to the corporate console for EasyCLA
           </ion-card-title>
           <div ion-card-subtitle>
-            <ul>
-              <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
-                below to submit information.
-              </li>
-            </ul>
             <ion-row justify-content-center>
-              <button ion-button (click)="openCLAOnboardingForm()">Input CLA Manager Information</button>
+              <ul>
+                <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
+                  below to submit information.
+                </li>
+              </ul>
             </ion-row>
-            <ul>
-              <li>Setup additional CLA Managers for your company (in case you want a separate CLA Manager for your projects)
-              </li>
-            </ul>
             <ion-row justify-content-center>
-              <button ion-button (click)="openCompanyModal()">Request CLA Admin Access</button>
+              <button ion-button (click)="openCLAOnboardingForm()">Request CLA Manager Access</button>
             </ion-row>
           </div>
         </ion-card-header>
