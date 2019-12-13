@@ -4,7 +4,7 @@ The Contributor License Agreement \(CLA\) service of the Linux Foundation lets p
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
 
-This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started).
+This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](getting-started/README.md).
 
 ## Third-party Services
 
@@ -41,7 +41,3 @@ This project’s source code is licensed under the MIT License. A copy of the li
 The project includes source code from keycloak, which is licensed under the Apache License, version 2.0 \(Apache-2.0\), a copy of which is available in LICENSE-keycloak.
 
 This project’s documentation is licensed under the Creative Commons Attribution 4.0 International License \(CC-BY-4.0\). A copy of the license is available in LICENSE-docs.
-
-
-
-
