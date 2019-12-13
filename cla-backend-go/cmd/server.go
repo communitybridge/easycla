@@ -147,7 +147,7 @@ func server(localMode bool) http.Handler {
 	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
-	onboardService := onboard.NewService(onboardRepo)
+	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))

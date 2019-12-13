@@ -275,6 +275,34 @@ paths:
       tags:
         - onboard
 
+  /onboard/notification:
+    post:
+      summary: Onboard Send Notification/Message
+      description: Onboard Send Notification/Message
+      operationId: sendNotification
+      security: []
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/onboard-notification-request'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/onboard-notification-response'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - onboard
+
   /signatures/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -1405,6 +1433,40 @@ definitions:
       - company_name
       - user_full_name
       - user_email
+
+  onboard-notification-request:
+    type: object
+    x-nullable: false
+    title: Onboard Notification Request Model
+    description: Onboard Notification Request Model
+    properties:
+      sender_email:
+        type: string
+      recipient_emails:
+        type: array
+        description: A list of recipient email addresses
+        items:
+          type: string
+      subject:
+        type: string
+      email_body:
+        type: string
+    required:
+      - sender_email
+      - recipient_emails
+      - subject
+      - email_body
+
+  onboard-notification-response:
+    type: object
+    x-nullable: false
+    title: Onboard Notification Response Model
+    description: Onboard Notification Response Model
+    properties:
+      message:
+        type: string
+    required:
+      - message
 
   gh-org-whitelist:
     type: object
