@@ -2,6 +2,17 @@
 
 
 [[projects]]
+  digest = "1:5aee3f679dffe98fded9b7f0fec919192bcef98dc136a162c6caed7d48645e6f"
+  name = "github.com/LF-Engineering/lfx-models"
+  packages = [
+    "models/email",
+    "models/event",
+  ]
+  pruneopts = "UT"
+  revision = "ff7dc4cdab214e5f5bde9427b8915a34d4ec868c"
+  version = "v0.2.6"
+
+[[projects]]
   digest = "1:a2682518d905d662d984ef9959984ef87cecb777d379bfa9d9fe40e78069b3e4"
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
@@ -40,7 +51,7 @@
   version = "v1.13.3"
 
 [[projects]]
-  digest = "1:f7c17ed665aeabb7ead5372462d321cd153ff885c7cc961e9f9fd1d5209799f4"
+  digest = "1:52c48258f8151c5991f48e082e28c6893744b853b04e0425bea6bd32ea06ae4d"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -89,6 +100,7 @@
     "service/s3/s3iface",
     "service/s3/s3manager",
     "service/ses",
+    "service/sns",
     "service/ssm",
     "service/sts",
     "service/sts/stsiface",
@@ -683,6 +695,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/LF-Engineering/lfx-models/models/email",
+    "github.com/LF-Engineering/lfx-models/models/event",
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
@@ -693,6 +707,7 @@
     "github.com/aws/aws-sdk-go/service/dynamodb/expression",
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
     "github.com/aws/aws-sdk-go/service/ses",
+    "github.com/aws/aws-sdk-go/service/sns",
     "github.com/aws/aws-sdk-go/service/ssm",
     "github.com/awslabs/aws-lambda-go-api-proxy/httpadapter",
     "github.com/aymerick/raymond",
