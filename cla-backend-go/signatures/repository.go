@@ -1099,7 +1099,11 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 				if userErr != nil {
 					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
 				} else {
-					signatureACL = append(signatureACL, *userModel)
+					if userModel == nil {
+						log.Warnf("User looking for username is null: %s for signature: %s", userName, dbSignature.SignatureID)
+					} else {
+						signatureACL = append(signatureACL, *userModel)
+					}
 				}
 			}
 
