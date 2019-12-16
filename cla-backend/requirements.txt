@@ -14,5 +14,5 @@ python-jose==3.0.1
 python-dateutil==2.8.0
 requests_oauthlib==1.2.0
 Werkzeug==0.15.5
-mysql-connector-python==8.0.1
+mysql-connector-python==8.0.16
 
