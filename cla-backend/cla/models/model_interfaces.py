@@ -6,7 +6,7 @@ Holds the model interfaces that all storage models must implement.
 """
 
 
-class Project(object): # pylint: disable=too-many-public-methods
+class Project(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Project model.
     """
@@ -746,8 +746,6 @@ class Repository(object):
         """
         raise NotImplementedError()
 
-
-
     def all(self, ids=None):
         """
         Fetches all repositories in the CLA system.
@@ -760,7 +758,7 @@ class Repository(object):
         raise NotImplementedError()
 
 
-class Signature(object): # pylint: disable=too-many-public-methods
+class Signature(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Signature model.
     """
@@ -1064,10 +1062,14 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_signatures_by_reference(self, reference_id, reference_type, # pylint: disable=too-many-arguments
-                                    project_id=None,
-                                    signature_signed=None,
-                                    signature_approved=None):
+    def get_signatures_by_reference(
+        self,
+        reference_id,
+        reference_type,  # pylint: disable=too-many-arguments
+        project_id=None,
+        signature_signed=None,
+        signature_approved=None,
+    ):
         """
         Simple abstraction around the supported ORMs to get a user's or
         orgnanization's signatures.
@@ -1091,9 +1093,7 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_signatures_by_project(self, project_id,
-                                  signature_signed=None,
-                                  signature_approved=None):
+    def get_signatures_by_project(self, project_id, signature_signed=None, signature_approved=None):
         """
         Simple abstraction around the supported ORMs to get a project's signatures.
 
@@ -1135,7 +1135,7 @@ class Signature(object): # pylint: disable=too-many-public-methods
         raise NotImplementedError()
 
 
-class Company(object): # pylint: disable=too-many-public-methods
+class Company(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Company model.
     """
@@ -1207,10 +1207,7 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_signatures(self,
-                               project_id=None,
-                               signature_signed=None,
-                               signature_approved=None):
+    def get_company_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
         """
         Simple abstraction around the supported ORMs to fetch signatures for
         an company.
@@ -1616,6 +1613,7 @@ class Document(object):
         """
         raise NotImplementedError()
 
+
 class DocumentTab(object):
     """
     Interface to a Document tab.
@@ -1858,6 +1856,7 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
+
 class Gerrit(object):
     """
     Interface to the Gerrit model.
@@ -1902,6 +1901,7 @@ class Gerrit(object):
         :rtype: [cla.models.model_interfaces.Gerrit]
         """
         raise NotImplementedError()
+
 
 class UserPermissions(object):
     """
@@ -1959,6 +1959,7 @@ class CompanyInvite(object):
     """
     Interface to the CompanyInvite model.
     """
+
     def to_dict(self):
         raise NotImplementedError()
 
@@ -1970,6 +1971,7 @@ class CompanyInvite(object):
 
     def delete(self):
         raise NotImplementedError()
+
 
 class Event(object):
     """
@@ -2063,7 +2065,7 @@ class Event(object):
 
         raise NotImplementedError()
 
-    def get_events(self,event_id=None,event_type=None):
+    def get_events(self, event_id=None, event_type=None):
 
         raise NotImplementedError()
 
@@ -2071,9 +2073,9 @@ class Event(object):
 
         raise NotImplementedError()
 
-    def set_event_user_id (self, user_id):
+    def set_event_user_id(self, user_id):
 
-        raise NotImplementedError ()
+        raise NotImplementedError()
 
     def set_event_type(self, event_type):
 
@@ -2105,15 +2107,3 @@ class Event(object):
         """
 
         raise NotImplementedError()
-
-
-
-
-
-
-
-
-
-
-
-
