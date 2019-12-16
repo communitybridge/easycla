@@ -1346,6 +1346,25 @@ export class ClaService {
   }
 
   /**
+   * Sends an notification to the specified recipients.
+   *
+   * @param sender the sender of the message
+   * @param subject the subject of the message
+   * @param recipients the list of recipients
+   * @param messageBody the message body
+   */
+  sendNotification(sender: string, subject: string, recipients: string[], messageBody: string) {
+    const url: URL = this.getV3Endpoint(`/v3/onboard/notification`);
+    const payload = {
+      "sender_email": sender,
+      "subject": subject,
+      "recipient_emails": recipients,
+      "email_body": messageBody,
+    };
+    return this.http.post(url, payload)
+  }
+
+  /**
    * Handle service error is a common routine to handle HTTP response errors
    * @param error the error
    */
