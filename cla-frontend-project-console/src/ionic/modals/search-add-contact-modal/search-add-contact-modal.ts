@@ -12,10 +12,7 @@ import { SortService } from '../../services/sort.service';
 @Component({
   selector: 'search-add-contact-modal',
   templateUrl: 'search-add-contact-modal.html',
-  providers: [
-    CincoService,
-    SortService,
-  ]
+  providers: [CincoService, SortService]
 })
 export class SearchAddContactModal {
   projectId: string;
@@ -35,7 +32,7 @@ export class SearchAddContactModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
     private cincoService: CincoService,
-    private sortService: SortService,
+    private sortService: SortService
   ) {
     this.getDefaults();
     this.projectId = this.navParams.get('projectId');
@@ -45,25 +42,25 @@ export class SearchAddContactModal {
 
   getDefaults() {
     this.loading = {
-      contacts: true,
-    }
+      contacts: true
+    };
     this.orgContactRoles = {};
     this.sort = {
       type: {
         arrayProp: 'type',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       name: {
         arrayProp: 'givenName',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       email: {
         arrayProp: 'email',
         sortType: 'text',
-        sort: null,
-      },
+        sort: null
+      }
     };
   }
 
@@ -74,8 +71,8 @@ export class SearchAddContactModal {
   }
 
   getOrganizationContacts(orgId) {
-    this.cincoService.getOrganizationContacts(orgId).subscribe(response => {
-      if(response) {
+    this.cincoService.getOrganizationContacts(orgId).subscribe((response) => {
+      if (response) {
         this.organizationContacts = response;
         this.loading.contacts = false;
       }
@@ -83,8 +80,8 @@ export class SearchAddContactModal {
   }
 
   getOrgContactRoles() {
-    this.cincoService.getOrganizationContactTypes().subscribe(response => {
-      if(response) {
+    this.cincoService.getOrganizationContactTypes().subscribe((response) => {
+      if (response) {
         this.orgContactRoles = response;
       }
     });
@@ -100,9 +97,9 @@ export class SearchAddContactModal {
       projectId: this.projectId,
       memberId: this.memberId,
       org: this.org,
-      contact: contact,
+      contact: contact
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       let orgId = this.org.id;
       this.getOrganizationContacts(orgId);
@@ -110,16 +107,9 @@ export class SearchAddContactModal {
     modal.present();
   }
 
-  filterContactsByEmail() {
-
-  }
+  filterContactsByEmail() {}
 
   sortContacts(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.organizationContacts,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.organizationContacts);
   }
-
 }

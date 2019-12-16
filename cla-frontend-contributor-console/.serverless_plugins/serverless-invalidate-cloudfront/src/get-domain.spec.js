@@ -30,8 +30,8 @@ describe('getDomain', () => {
     };
   });
 
-  it('gets a domain name from a distribution name', done => {
-    getDomain('dist1', aws, cloudfront).then(name => {
+  it('gets a domain name from a distribution name', (done) => {
+    getDomain('dist1', aws, cloudfront).then((name) => {
       expect(name).toBe('www.somedomain.com');
       done();
     });

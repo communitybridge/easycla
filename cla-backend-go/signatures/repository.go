@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -422,11 +423,32 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
+	indexName := "project-signature-index"
+
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
 
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+
+	if params.SearchTerm != nil && params.SearchField != nil {
+		if *params.FullMatch {
+			indexName = "reference-signature-search-index"
+
+			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
+
+			filter := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
+			builder = builder.WithFilter(filter)
+		} else {
+			filter := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField)))
+			builder = builder.WithFilter(filter)
+		}
+	}
+
+	builder = builder.WithKeyCondition(condition)
+
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	expr, err := builder.Build()
 	if err != nil {
 		log.Warnf("error building expression for project signature query, projectID: %s, error: %v",
 			params.ProjectID, err)
@@ -439,9 +461,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(tableName),
-		Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
-		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
+		Limit:                     aws.Int64(pageSize),   // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String(indexName), // Name of a secondary index to scan
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -1010,6 +1033,8 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 		SignatureDocumentMajorVersion string   `json:"signature_document_major_version"`
 		SignatureDocumentMinorVersion string   `json:"signature_document_minor_version"`
 		SignatureReferenceID          string   `json:"signature_reference_id"`
+		SignatureReferenceName        string   `json:"signature_reference_name"`
+		SignatureReferenceNameLower   string   `json:"signature_reference_name_lower"`
 		SignatureProjectID            string   `json:"signature_project_id"`
 		SignatureReferenceType        string   `json:"signature_reference_type"`
 		SignatureType                 string   `json:"signature_type"`
@@ -1070,36 +1095,42 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 
 			var signatureACL []models.User
 			for _, userName := range dbSignature.SignatureACL {
-				userModel, userErr := repo.usersRepo.GetUserByUserName(userName)
+				userModel, userErr := repo.usersRepo.GetUserByUserName(userName, true)
 				if userErr != nil {
 					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
 				} else {
-					signatureACL = append(signatureACL, *userModel)
+					if userModel == nil {
+						log.Warnf("User looking for username is null: %s for signature: %s", userName, dbSignature.SignatureID)
+					} else {
+						signatureACL = append(signatureACL, *userModel)
+					}
 				}
 			}
 
 			signatures = append(signatures, models.Signature{
-				SignatureID:            dbSignature.SignatureID,
-				CompanyName:            companyName,
-				SignatureCreated:       dbSignature.DateCreated,
-				SignatureModified:      dbSignature.DateModified,
-				SignatureType:          dbSignature.SignatureType,
-				SignatureReferenceID:   dbSignature.SignatureReferenceID,
-				SignatureSigned:        dbSignature.SignatureSigned,
-				SignatureApproved:      dbSignature.SignatureApproved,
-				Version:                dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
-				SignatureReferenceType: dbSignature.SignatureReferenceType,
-				ProjectID:              dbSignature.SignatureProjectID,
-				Created:                dbSignature.DateCreated,
-				Modified:               dbSignature.DateModified,
-				UserName:               userName,
-				UserLFID:               userLFID,
-				UserGHID:               userGHID,
-				EmailWhitelist:         dbSignature.EmailWhitelist,
-				DomainWhitelist:        dbSignature.DomainWhitelist,
-				GithubWhitelist:        dbSignature.GitHubWhitelist,
-				GithubOrgWhitelist:     dbSignature.GitHubOrgWhitelist,
-				SignatureACL:           signatureACL,
+				SignatureID:                 dbSignature.SignatureID,
+				CompanyName:                 companyName,
+				SignatureCreated:            dbSignature.DateCreated,
+				SignatureModified:           dbSignature.DateModified,
+				SignatureType:               dbSignature.SignatureType,
+				SignatureReferenceID:        dbSignature.SignatureReferenceID,
+				SignatureReferenceName:      dbSignature.SignatureReferenceName,
+				SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
+				SignatureSigned:             dbSignature.SignatureSigned,
+				SignatureApproved:           dbSignature.SignatureApproved,
+				Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
+				SignatureReferenceType:      dbSignature.SignatureReferenceType,
+				ProjectID:                   dbSignature.SignatureProjectID,
+				Created:                     dbSignature.DateCreated,
+				Modified:                    dbSignature.DateModified,
+				UserName:                    userName,
+				UserLFID:                    userLFID,
+				UserGHID:                    userGHID,
+				EmailWhitelist:              dbSignature.EmailWhitelist,
+				DomainWhitelist:             dbSignature.DomainWhitelist,
+				GithubWhitelist:             dbSignature.GitHubWhitelist,
+				GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
+				SignatureACL:                signatureACL,
 			})
 		}(dbSignature)
 	}
@@ -1136,6 +1167,8 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("signature_document_major_version"),
 		expression.Name("signature_document_minor_version"),
 		expression.Name("signature_reference_id"),
+		expression.Name("signature_reference_name"),       // Added to support simplified UX queries
+		expression.Name("signature_reference_name_lower"), // Added to support case insensitive UX queries
 		expression.Name("signature_project_id"),
 		expression.Name("signature_reference_type"),       // user or company
 		expression.Name("signature_signed"),               // T/F
@@ -1147,3 +1180,14 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("github_org_whitelist"),
 	)
 }
+
+// func buildUsers(items []*dynamodb.AttributeValue) []models.User {
+// 	var users []models.User
+// 	for _, user := range items {
+// 		users = append(users, models.User{
+// 			UserID: user.S,
+// 		})
+// 	}
+
+// 	return users
+// }

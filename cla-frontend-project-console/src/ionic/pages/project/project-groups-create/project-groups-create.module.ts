@@ -10,9 +10,7 @@ import { SectionHeaderComponentModule } from '../../../components/section-header
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 
 @NgModule({
-  declarations: [
-    ProjectGroupsCreatePage,
-  ],
+  declarations: [ProjectGroupsCreatePage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
@@ -20,8 +18,6 @@ import { ProjectNavigationComponentModule } from '../../../components/project-na
     ProjectNavigationComponentModule,
     IonicPageModule.forChild(ProjectGroupsCreatePage)
   ],
-  entryComponents: [
-    ProjectGroupsCreatePage,
-  ]
+  entryComponents: [ProjectGroupsCreatePage]
 })
 export class ProjectGroupsCreatePageModule {}

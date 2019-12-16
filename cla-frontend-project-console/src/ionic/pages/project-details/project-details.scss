@@ -1,14 +1,13 @@
 project-details {
-
-  ion-header[name=project-details-header] {
+  ion-header[name='project-details-header'] {
     background-color: #d8d8d8;
   }
 
-  ion-icon[name="image"]{
+  ion-icon[name='image'] {
     font-size: 180px;
   }
 
-  ion-content[name=project-details-content]{
+  ion-content[name='project-details-content'] {
     background-color: #fff;
   }
 
@@ -16,12 +15,12 @@ project-details {
     background-color: #fff !important;
   }
 
-  div[name=logo-placeholder] {
+  div[name='logo-placeholder'] {
     border: 1px solid #f3f3f3;
     width: 350px;
   }
 
-  div[name=change-placeholder] {
+  div[name='change-placeholder'] {
     background-color: #a6a6a6;
     border: 1px solid #a6a6a6;
     color: #fff;
@@ -30,7 +29,6 @@ project-details {
   }
 
   .change-link {
-    cursor:pointer;
+    cursor: pointer;
   }
-
 }

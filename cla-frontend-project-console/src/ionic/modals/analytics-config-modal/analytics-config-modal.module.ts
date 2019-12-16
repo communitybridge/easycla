@@ -8,16 +8,12 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    AnalyticsConfigModal
-  ],
+  declarations: [AnalyticsConfigModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(AnalyticsConfigModal)
   ],
-  entryComponents: [
-    AnalyticsConfigModal
-  ]
+  entryComponents: [AnalyticsConfigModal]
 })
 export class AnalyticsConfigModalModule {}

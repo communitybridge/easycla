@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {Events, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { Events, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla-configure-github-repositories-modal'
@@ -37,7 +37,7 @@ export class ClaConfigureGithubRepositoriesModal {
     this.loading = {
       repositories: true,
       activateSpinner: false
-    }
+    };
   }
 
   ngOnInit() {
@@ -45,8 +45,9 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   getOrgRepositories() {
-    this.claService.getProjectConfigurationAndRepos(this.claProjectId)
-      .subscribe(data => this.checkAssignedRepositories(data));
+    this.claService
+      .getProjectConfigurationAndRepos(this.claProjectId)
+      .subscribe((data) => this.checkAssignedRepositories(data));
   }
 
   checkAssignedRepositories(data) {
@@ -54,9 +55,9 @@ export class ClaConfigureGithubRepositoriesModal {
     //console.log(data);
     this.assignedRepositories = data['repositories'];
     this.orgAndRepositories = data['orgs_and_repos']
-      .map(organization => {
+      .map((organization) => {
         this.loading.activateSpinner = false;
-        organization.repositories.map(repository => {
+        organization.repositories.map((repository) => {
           repository.status = 'free';
           repository.repository_organization_name = organization.organization_name;
 
@@ -72,8 +73,11 @@ export class ClaConfigureGithubRepositoriesModal {
         });
 
         return organization;
-      }).sort((a, b) => {return a.organization_name.trim().localeCompare(b.organization_name.trim())});
-    this.loading.repositories = false
+      })
+      .sort((a, b) => {
+        return a.organization_name.trim().localeCompare(b.organization_name.trim());
+      });
+    this.loading.repositories = false;
   }
 
   dismiss() {
@@ -85,7 +89,7 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   isTaken(repository) {
-    return this.assignedRepositories.some(assignedRepository => {
+    return this.assignedRepositories.some((assignedRepository) => {
       if (String(assignedRepository.repository_external_id) === String(repository.repository_github_id)) {
         repository.repository_project_id = assignedRepository.repository_project_id;
         repository.repository_id = assignedRepository.repository_id;
@@ -96,7 +100,7 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   assignRepository(repository) {
-    const payload = {...repository};
+    const payload = { ...repository };
     delete payload.status;
     this.loading.activateSpinner = true;
 
@@ -104,14 +108,12 @@ export class ClaConfigureGithubRepositoriesModal {
     payload.repository_external_id = payload.repository_github_id;
     delete payload.repository_github_id;
 
-    this.claService.postProjectRepository(payload)
-      .subscribe(() => this.getOrgRepositories())
+    this.claService.postProjectRepository(payload).subscribe(() => this.getOrgRepositories());
   }
 
   removeRepository(repository) {
     this.loading.activateSpinner = true;
-    this.claService.removeProjectRepository(repository.repository_id)
-      .subscribe(() => this.getOrgRepositories())
+    this.claService.removeProjectRepository(repository.repository_id).subscribe(() => this.getOrgRepositories());
   }
 
   /**

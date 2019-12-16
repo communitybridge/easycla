@@ -44,7 +44,7 @@ describe('invalidateDistributions', () => {
     };
     promise = invalidateDistributions(aws, distributions, cloudfront, cli);
   });
-  it('calls createInvalidation with the correct distribution id', done => {
+  it('calls createInvalidation with the correct distribution id', (done) => {
     promise.then(() => {
       expect(cloudfront.createInvalidation).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -55,7 +55,7 @@ describe('invalidateDistributions', () => {
       done();
     });
   });
-  it('calls createInvalidation with the correct paths', done => {
+  it('calls createInvalidation with the correct paths', (done) => {
     promise.then(() => {
       expect(cloudfront.createInvalidation).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -71,7 +71,7 @@ describe('invalidateDistributions', () => {
       done();
     });
   });
-  it('rejects distributions without paths', done => {
+  it('rejects distributions without paths', (done) => {
     distributions = {
       dist1: {}
     };

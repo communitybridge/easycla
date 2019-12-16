@@ -7,15 +7,8 @@ import { ClaEmployeeRequestAccessModal } from './cla-employee-request-access-mod
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 
 @NgModule({
-  declarations: [
-    ClaEmployeeRequestAccessModal,
-  ],
-  imports: [
-    LoadingSpinnerComponentModule,
-    IonicPageModule.forChild(ClaEmployeeRequestAccessModal)
-  ],
-  entryComponents: [
-    ClaEmployeeRequestAccessModal,
-  ]
+  declarations: [ClaEmployeeRequestAccessModal],
+  imports: [LoadingSpinnerComponentModule, IonicPageModule.forChild(ClaEmployeeRequestAccessModal)],
+  entryComponents: [ClaEmployeeRequestAccessModal]
 })
 export class ClaEmployeeRequestAccessModalModule {}

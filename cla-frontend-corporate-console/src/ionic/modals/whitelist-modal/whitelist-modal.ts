@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {IonicPage, NavParams, ViewController} from "ionic-angular";
+import { Component } from '@angular/core';
+import { IonicPage, NavParams, ViewController } from 'ionic-angular';
 import {
   AbstractControl,
   AsyncValidatorFn,
@@ -11,17 +11,17 @@ import {
   FormGroup,
   ValidationErrors,
   ValidatorFn
-} from "@angular/forms";
-import {ClaService} from "../../services/cla.service";
-import {ClaSignatureModel} from "../../models/cla-signature";
-import {Observable} from "rxjs";
+} from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { ClaSignatureModel } from '../../models/cla-signature';
+import { Observable } from 'rxjs';
 
 @IonicPage({
-  segment: "whitelist-modal"
+  segment: 'whitelist-modal'
 })
 @Component({
-  selector: "whitelist-modal",
-  templateUrl: "whitelist-modal.html"
+  selector: 'whitelist-modal',
+  templateUrl: 'whitelist-modal.html'
 })
 export class WhitelistModal {
   form: FormGroup;
@@ -47,7 +47,7 @@ export class WhitelistModal {
   }
 
   getDefaults() {
-    this.type = this.navParams.get("type"); // ['email' | 'domain' | 'github']
+    this.type = this.navParams.get('type'); // ['email' | 'domain' | 'github']
     this.companyName = this.navParams.get('companyName');
     this.projectName = this.navParams.get('projectName');
     this.projectId = this.navParams.get('projectId');
@@ -106,7 +106,7 @@ export class WhitelistModal {
     // to 'this'
     return (control: AbstractControl): ValidationErrors | null => {
       if (control.value == null || control.value === '') {
-        return null
+        return null;
       }
 
       // Create a new array from the original - add the new value being entered on the form
@@ -121,7 +121,7 @@ export class WhitelistModal {
         this.message.error = 'Duplicate Entry: ' + control.value;
         return {
           duplicate: control.value
-        }
+        };
       }
 
       // Test the regex pattern
@@ -135,7 +135,7 @@ export class WhitelistModal {
       // Default is to pas
       this.message.error = null;
       return null;
-    }
+    };
   }
 
   /**
@@ -167,10 +167,7 @@ export class WhitelistModal {
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
       this.formBuilder.group({
-        whitelistItem: [
-          item,
-          [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]
-        ]
+        whitelistItem: [item, [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]]
       })
     );
   }
@@ -183,10 +180,7 @@ export class WhitelistModal {
     ctrl.insert(
       0,
       this.formBuilder.group({
-        whitelistItem: [
-          '',
-          [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]
-        ]
+        whitelistItem: ['', [this.myFormValidator(this.extractWhitelist(), this.getValidationRegExp(this.type))]]
       })
     );
   }
@@ -224,9 +218,9 @@ export class WhitelistModal {
     signature.signature_id = this.signatureId;
 
     // ['email' | 'domain' | 'github' | 'githubOrg']
-    if (this.type === "domain") {
+    if (this.type === 'domain') {
       signature.domain_whitelist = this.extractWhitelist();
-    } else if (this.type === "email") {
+    } else if (this.type === 'email') {
       //email
       signature.email_whitelist = this.extractWhitelist();
     } else if (this.type === 'github') {
@@ -238,11 +232,11 @@ export class WhitelistModal {
     }
 
     this.claService.putSignature(signature).subscribe(
-      response => {
+      (response) => {
         this.currentlySubmitting = false;
         this.dismiss();
       },
-      error => {
+      (error) => {
         this.currentlySubmitting = false;
       }
     );
@@ -282,7 +276,7 @@ export class WhitelistModal {
     } else if (this.type === 'githubOrg') {
       return 'GitHub Org';
     } else {
-      return "Unknown";
+      return 'Unknown';
     }
   }
 }

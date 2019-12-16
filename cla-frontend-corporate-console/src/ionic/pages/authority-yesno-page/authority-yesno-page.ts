@@ -1,21 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  IonicPage,
-  ModalController
-} from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
+import { Component } from '@angular/core';
+import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
-  segment: "project/:projectId/yesno"
+  segment: 'project/:projectId/yesno'
 })
 @Component({
-  selector: "authority-yesno-page",
-  templateUrl: "authority-yesno-page.html"
+  selector: 'authority-yesno-page',
+  templateUrl: 'authority-yesno-page.html'
 })
 export class AuthorityYesnoPage {
   projectId: string;
@@ -30,13 +25,13 @@ export class AuthorityYesnoPage {
     private claService: ClaService
   ) {
     this.getDefaults();
-    this.projectId = navParams.get("projectId");
-    this.company = navParams.get("company");
+    this.projectId = navParams.get('projectId');
+    this.company = navParams.get('company');
   }
 
   getDefaults() {
     this.project = {
-      project_name: ""
+      project_name: ''
     };
   }
 
@@ -45,28 +40,25 @@ export class AuthorityYesnoPage {
   }
 
   getProject(projectId) {
-    this.claService.getProject(projectId).subscribe(response => {
+    this.claService.getProject(projectId).subscribe((response) => {
       this.project = response;
     });
   }
 
   openClaCorporatePage() {
-    this.navCtrl.push("ClaCorporatePage", {
+    this.navCtrl.push('ClaCorporatePage', {
       projectId: this.projectId,
       company: this.company
     });
   }
-
 
   openCollectAuthorityEmailModal() {
     let modal = this.modalCtrl.create('CollectAuthorityEmailModal', {
       projectId: this.projectId,
       companyId: this.company.company_id,
       projectName: this.project.project_name,
-      companyName: this.company.company_name,
+      companyName: this.company.company_name
     });
     modal.present();
   }
-
-
 }

@@ -10,14 +10,14 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'project/:projectId/files'
 // })
 @Component({
   selector: 'project-files',
-  templateUrl: 'project-files.html',
+  templateUrl: 'project-files.html'
 })
 export class ProjectFilesPage {
   projectId: string;
@@ -29,19 +29,13 @@ export class ProjectFilesPage {
     private sortService: SortService,
     public modalCtrl: ModalController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.projectId = navParams.get('projectId');
     this.getDefaults();
   }
 
-  ngOnInit() {
+  ngOnInit() {}
 
-  }
-
-  getDefaults() {
-
-  }
-
-
+  getDefaults() {}
 }

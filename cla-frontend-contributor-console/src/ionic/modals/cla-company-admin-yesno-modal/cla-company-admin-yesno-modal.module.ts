@@ -6,15 +6,11 @@ import { IonicPageModule } from 'ionic-angular';
 import { ClaCompanyAdminYesnoModal } from './cla-company-admin-yesno-modal';
 
 @NgModule({
-  declarations: [
-    ClaCompanyAdminYesnoModal,
-  ],
+  declarations: [ClaCompanyAdminYesnoModal],
   imports: [
     // ClipboardModule,
     IonicPageModule.forChild(ClaCompanyAdminYesnoModal)
   ],
-  entryComponents: [
-    ClaCompanyAdminYesnoModal,
-  ]
+  entryComponents: [ClaCompanyAdminYesnoModal]
 })
 export class ClaCompanyAdminYesnoModalModule {}

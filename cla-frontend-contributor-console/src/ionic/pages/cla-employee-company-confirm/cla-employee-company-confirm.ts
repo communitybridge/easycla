@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
+import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CheckboxValidator } from  '../../validators/checkbox';
+import { CheckboxValidator } from '../../validators/checkbox';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -39,7 +39,7 @@ export class ClaEmployeeCompanyConfirmPage {
     private modalCtrl: ModalController,
     public navParams: NavParams,
     private formBuilder: FormBuilder,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.projectId = navParams.get('projectId');
     this.repositoryId = navParams.get('repositoryId');
@@ -50,19 +50,19 @@ export class ClaEmployeeCompanyConfirmPage {
     this.getDefaults();
 
     this.form = formBuilder.group({
-      agree:[false, Validators.compose([CheckboxValidator.isChecked])],
+      agree: [false, Validators.compose([CheckboxValidator.isChecked])]
     });
   }
 
   getDefaults() {
     this.project = {
-      project_name: '',
+      project_name: ''
     };
     this.company = {
-      company_name: '',
+      company_name: ''
     };
     this.user = {
-      user_name: '',
+      user_name: ''
     };
     this.errorMessage = null;
     this.currentlySubmitting = false;
@@ -75,19 +75,19 @@ export class ClaEmployeeCompanyConfirmPage {
   }
 
   getUser(userId) {
-    this.claService.getUser(userId).subscribe(response => {
+    this.claService.getUser(userId).subscribe((response) => {
       this.user = response;
     });
   }
 
   getProject(projectId) {
-    this.claService.getProject(projectId).subscribe(response => {
+    this.claService.getProject(projectId).subscribe((response) => {
       this.project = response;
     });
   }
 
   getCompany(companyId) {
-    this.claService.getCompany(companyId).subscribe(response => {
+    this.claService.getCompany(companyId).subscribe((response) => {
       this.company = response;
     });
   }
@@ -108,9 +108,9 @@ export class ClaEmployeeCompanyConfirmPage {
       project_id: this.projectId,
       company_id: this.companyId,
       user_id: this.userId,
-      return_url_type: this.signingType, //"Gerrit" / "Github"
+      return_url_type: this.signingType //"Gerrit" / "Github"
     };
-    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe(response => {
+    this.claService.postEmployeeSignatureRequest(signatureRequest).subscribe((response) => {
       this.currentlySubmitting = false;
 
       let errors = response.hasOwnProperty('errors');
@@ -155,8 +155,7 @@ export class ClaEmployeeCompanyConfirmPage {
       projectId: this.projectId,
       repositoryId: this.repositoryId,
       userId: this.userId,
-      companyId: this.companyId,
+      companyId: this.companyId
     });
   }
-
 }

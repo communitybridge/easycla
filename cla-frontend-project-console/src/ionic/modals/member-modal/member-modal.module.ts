@@ -6,14 +6,8 @@ import { IonicPageModule } from 'ionic-angular';
 import { MemberModal } from './member-modal';
 
 @NgModule({
-  declarations: [
-    MemberModal,
-  ],
-  imports: [
-    IonicPageModule.forChild(MemberModal),
-  ],
-  entryComponents: [
-    MemberModal,
-  ]
+  declarations: [MemberModal],
+  imports: [IonicPageModule.forChild(MemberModal)],
+  entryComponents: [MemberModal]
 })
 export class MemberModalModule {}

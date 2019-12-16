@@ -1,10 +1,10 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component,} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company'
@@ -33,7 +33,7 @@ export class ClaSelectCompanyModal {
     private modalCtrl: ModalController,
     public alertCtrl: AlertController,
     public formBuilder: FormBuilder,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
@@ -41,7 +41,7 @@ export class ClaSelectCompanyModal {
     this.getDefaults();
     this.form = formBuilder.group({
       // provider: ['', Validators.required],
-      search: ['', Validators.compose([Validators.required])/*, this.urlCheck.bind(this)*/],
+      search: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
     });
   }
 
@@ -63,7 +63,7 @@ export class ClaSelectCompanyModal {
 
   getCompanies() {
     this.loading.companies = true;
-    this.claService.getAllCompanies().subscribe(response => {
+    this.claService.getAllCompanies().subscribe((response) => {
       this.loading.companies = false;
       if (response) {
         // Cleanup - Remove any companies that don't have a name
@@ -73,7 +73,7 @@ export class ClaSelectCompanyModal {
 
         // Reset our filtered search
         this.form.value.search = '';
-        this.companiesFiltered = this.companies
+        this.companiesFiltered = this.companies;
       }
     });
   }
@@ -92,7 +92,7 @@ export class ClaSelectCompanyModal {
       user_id: this.userId
     };
 
-    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe(response => {
+    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe((response) => {
       /*
       Before an employee begins the signing process, ensure that
       1. The given project, company, and user exists
@@ -104,7 +104,6 @@ export class ClaSelectCompanyModal {
       let errors = response.hasOwnProperty('errors');
       this.selectCompanyModalActive = false;
       if (errors) {
-
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
           this.openClaSendClaManagerEmailModal(company);
@@ -115,7 +114,6 @@ export class ClaSelectCompanyModal {
           this.openClaEmployeeCompanyTroubleshootPage(company);
           return;
         }
-
       } else {
         // No Errors, expect normal signature response
         this.signature = response;
@@ -125,7 +123,7 @@ export class ClaSelectCompanyModal {
           repositoryId: this.repositoryId,
           userId: this.userId,
           companyId: company.company_id,
-          signingType: "Github"
+          signingType: 'Github'
         });
       }
     });
@@ -151,7 +149,6 @@ export class ClaSelectCompanyModal {
     this.dismiss();
   }
 
-
   openClaEmployeeCompanyTroubleshootPage(company) {
     this.navCtrl.push('ClaEmployeeCompanyTroubleshootPage', {
       projectId: this.projectId,
@@ -169,7 +166,7 @@ export class ClaSelectCompanyModal {
     const searchTerm = this.form.value.search;
     // console.log('Search term:' + searchTerm);
     if (searchTerm === '') {
-      this.companiesFiltered = this.companies
+      this.companiesFiltered = this.companies;
     } else {
       this.companiesFiltered = this.companies.filter((a) => {
         return a.company_name.toLowerCase().includes(searchTerm.toLowerCase());

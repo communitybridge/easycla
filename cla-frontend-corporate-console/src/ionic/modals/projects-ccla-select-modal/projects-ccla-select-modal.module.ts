@@ -4,18 +4,11 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { ProjectsCclaSelectModal } from './projects-ccla-select-modal';
-import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module'
+import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 
 @NgModule({
-  declarations: [
-    ProjectsCclaSelectModal,
-  ],
-  imports: [
-    IonicPageModule.forChild(ProjectsCclaSelectModal),
-    LoadingSpinnerComponentModule
-  ],
-  entryComponents: [
-    ProjectsCclaSelectModal,
-  ]
+  declarations: [ProjectsCclaSelectModal],
+  imports: [IonicPageModule.forChild(ProjectsCclaSelectModal), LoadingSpinnerComponentModule],
+  entryComponents: [ProjectsCclaSelectModal]
 })
 export class ProjectsCclaSelectModalModule {}

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 export class ProjectModel {
-
   // This project definition is based on CINCO project class
   id: string;
   name: string;
@@ -20,16 +19,14 @@ export class ProjectModel {
   emailAliasType: string;
   address: {
     address: {
-      administrativeArea: string,
-      country: string,
-      localityName: string,
-      postalCode: string,
-      thoroughfare: string
-    },
-    type: string
-  }
+      administrativeArea: string;
+      country: string;
+      localityName: string;
+      postalCode: string;
+      thoroughfare: string;
+    };
+    type: string;
+  };
 
-  constructor() {
-  }
-
+  constructor() {}
 }

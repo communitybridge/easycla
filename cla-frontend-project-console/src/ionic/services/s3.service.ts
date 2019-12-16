@@ -8,18 +8,13 @@ import 'rxjs/Rx';
 
 @Injectable()
 export class S3Service {
-
-  constructor(public http: Http) {
-
-  }
+  constructor(public http: Http) {}
 
   public setHttp(http: any) {
     this.http = http; // allow configuration for alternate http library
   }
 
   uploadToS3(url, file, contentType) {
-    return this.http.put(url, file, contentType)
-      .map((res) => res);
+    return this.http.put(url, file, contentType).map((res) => res);
   }
-
 }

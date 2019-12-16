@@ -2,7 +2,7 @@ project-user-management-modal {
   .project-user-management-modal-wrapper {
     height: 100%;
   }
-  .toolbar{
+  .toolbar {
     padding: 1rem 1rem 1rem 2rem;
   }
   .selected-show {
@@ -18,7 +18,7 @@ project-user-management-modal {
   }
   .footer-bordered {
     background-color: transparent;
-    border-top:2px solid #f5f5f5;
+    border-top: 2px solid #f5f5f5;
     &:before {
       display: none;
     }
@@ -63,8 +63,6 @@ project-user-management-modal {
       top: 1.2rem;
     }
     .selected-actions {
-
     }
   }
-
 }

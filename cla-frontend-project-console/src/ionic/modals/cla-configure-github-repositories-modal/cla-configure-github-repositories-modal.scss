@@ -1,5 +1,4 @@
 cla-configure-github-repositories-modal {
-
   .org-group {
     display: flex;
     align-items: center;
@@ -24,7 +23,7 @@ cla-configure-github-repositories-modal {
       color: #7b7b7b;
 
       &.disabled {
-        opacity: .5;
+        opacity: 0.5;
       }
 
       &.assigned {

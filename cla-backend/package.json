@@ -8,7 +8,8 @@
     "serverless-dynamodb-local": "^0.2.38",
     "serverless-python-requirements": "^4.2.5",
     "serverless-s3-local": "^0.3.17",
-    "serverless-wsgi": "^1.5.2"
+    "serverless-wsgi": "^1.5.2",
+    "serverless-finch": "^2.3.2"
   },
   "scripts": {
     "sls": "../node_modules/serverless/bin/serverless",

@@ -7,10 +7,9 @@ import { RolesService } from '../../services/roles.service';
 
 @Component({
   selector: 'project-navigation',
-  templateUrl: 'project-navigation.html',
+  templateUrl: 'project-navigation.html'
 })
 export class ProjectNavigationComponent implements AfterViewChecked {
-
   userRoles: any;
   navItems: any;
 
@@ -28,11 +27,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   @ViewChild('scrollLeft') scrollLeft: ElementRef;
   @ViewChild('scrollRight') scrollRight: ElementRef;
 
-  constructor (
-    private navCtrl: NavController,
-    private rolesService: RolesService,
-    private viewCtrl: ViewController,
-  ) {
+  constructor(private navCtrl: NavController, private rolesService: RolesService, private viewCtrl: ViewController) {
     this.context;
     this.scrollChange = 40;
     this.getDefaults();
@@ -43,16 +38,15 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   }
 
   ngOnInit() {
-    this.scrollArea.nativeElement.onscroll = (function() {
+    this.scrollArea.nativeElement.onscroll = function() {
       this.checkScroll();
-    }).bind(this);
+    }.bind(this);
 
     this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.generateNavItems();
     });
   }
-
 
   ngOnDestroy() {
     // remove scroll listener
@@ -72,15 +66,15 @@ export class ProjectNavigationComponent implements AfterViewChecked {
     let scrollElement = this.scrollArea.nativeElement;
     let scrollOffset = scrollElement.scrollLeft;
     if (scrollOffset <= 0) {
-      this.scrollLeft.nativeElement.classList.add("disabled");
+      this.scrollLeft.nativeElement.classList.add('disabled');
     } else {
-      this.scrollLeft.nativeElement.classList.remove("disabled");
+      this.scrollLeft.nativeElement.classList.remove('disabled');
     }
     let maxScrollOffset = scrollElement.scrollWidth - scrollElement.clientWidth;
     if (scrollOffset >= maxScrollOffset) {
-      this.scrollRight.nativeElement.classList.add("disabled");
+      this.scrollRight.nativeElement.classList.add('disabled');
     } else {
-      this.scrollRight.nativeElement.classList.remove("disabled");
+      this.scrollRight.nativeElement.classList.remove('disabled');
     }
   }
 
@@ -103,14 +97,19 @@ export class ProjectNavigationComponent implements AfterViewChecked {
         projectId: this.projectId
       });
     } else {
-      this.navCtrl.push(item.page, {
-        projectId: this.projectId,
-      },
-      {
-        animate: false,
-      }).then(() => {
-        this.navCtrl.remove(index);
-      });
+      this.navCtrl
+        .push(
+          item.page,
+          {
+            projectId: this.projectId
+          },
+          {
+            animate: false
+          }
+        )
+        .then(() => {
+          this.navCtrl.remove(index);
+        });
     }
   }
 
@@ -162,11 +161,10 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       //   access: this.userRoles.isAdmin,
       // },
       {
-        label: "CLA",
-        page: "ProjectClaPage",
-        access: this.userRoles.isAdmin,
-      },
+        label: 'CLA',
+        page: 'ProjectClaPage',
+        access: this.userRoles.isAdmin
+      }
     ];
   }
-
 }

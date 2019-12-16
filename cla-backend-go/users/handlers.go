@@ -42,7 +42,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	// Get User by name handler
 	api.UsersGetUserByUserNameHandler = users.GetUserByUserNameHandlerFunc(func(params users.GetUserByUserNameParams, claUser *user.CLAUser) middleware.Responder {
 		log.Debugf("GetUserByUserNameHandlerFunc - claUser: %+v", claUser)
-		userModel, err := service.GetUserByUserName(params.UserName)
+		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {
 			log.Warnf("error retrieving user for user name: '%s', error: %+v", params.UserName, err)
 			return users.NewGetUserByUserNameBadRequest().WithPayload(errorResponse(err))
@@ -54,6 +54,25 @@ func Configure(api *operations.ClaAPI, service Service) {
 		}
 
 		return users.NewGetUserByUserNameOK().WithPayload(userModel)
+	})
+
+	// Get User by name handler
+	api.UsersSearchUsersHandler = users.SearchUsersHandlerFunc(func(params users.SearchUsersParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("SearchUsersHandlerFunc - claUser: %+v", claUser)
+		userModel, err := service.SearchUsers(*params.SearchField, *params.SearchTerm, false)
+
+		if err != nil {
+			log.Warnf("error retrieving user for user with name: '%s', error: %+v", *params.SearchTerm, err)
+			return users.NewSearchUsersBadRequest().WithPayload(errorResponse(err))
+		}
+
+		if userModel == nil {
+			log.Warnf("Get User By User Name - '%s' was not found", *params.SearchTerm)
+			return users.NewSearchUsersNotFound()
+		}
+
+		return users.NewSearchUsersOK().WithPayload(userModel)
+
 	})
 }
 

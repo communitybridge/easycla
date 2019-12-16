@@ -2,7 +2,9 @@ cla-contract-config-modal {
   .activate-spinner {
     margin-left: 5rem;
   }
-  p, ion-label, input {
+  p,
+  ion-label,
+  input {
     color: #7b7b7b;
   }
 
@@ -30,8 +32,11 @@ cla-contract-config-modal {
   ion-icon.icon-md {
     font-size: 18px !important;
   }
+}
 
-  
+input {
+  width: 100%;
+  padding: 8px;
 }
 
 .signature-select .select-md {
@@ -64,5 +69,8 @@ ion-modal .title-wrapper {
   border-radius: 1px;
 }
 
-
-
+ion-segment-button {
+  .label-md {
+    margin: 0;
+  }
+}
