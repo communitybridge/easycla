@@ -1,20 +1,18 @@
 all-invoices {
-  h1{
-    color: #8c8c8c
+  h1 {
+    color: #8c8c8c;
   }
 
   .main-headers {
     color: rgba(0, 0, 0, 0.54);
     font-size: 24px;
-    font-family: "Roboto" !important;
-    src: url("../assets/fonts/roboto-light.ttf");
+    font-family: 'Roboto' !important;
+    src: url('../assets/fonts/roboto-light.ttf');
   }
 
   ion-datetime {
-    color:#000 !important;
+    color: #000 !important;
     background: none !important;
     opacity: 1 !important;
   }
-
-
 }

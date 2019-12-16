@@ -1,21 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from "@angular/core";
-import {
-  NavController,
-  NavParams,
-  IonicPage,
-  ModalController
-} from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
+import { Component } from '@angular/core';
+import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
-  segment: "cla/project/:projectId/user/:userId/individual"
+  segment: 'cla/project/:projectId/user/:userId/individual'
 })
 @Component({
-  selector: "cla-individual",
-  templateUrl: "cla-individual.html"
+  selector: 'cla-individual',
+  templateUrl: 'cla-individual.html'
 })
 export class ClaIndividualPage {
   projectId: string;
@@ -36,16 +31,16 @@ export class ClaIndividualPage {
     private claService: ClaService
   ) {
     this.getDefaults();
-    this.projectId = navParams.get("projectId");
-    this.userId = navParams.get("userId");
+    this.projectId = navParams.get('projectId');
+    this.userId = navParams.get('userId');
   }
 
   getDefaults() {
     this.project = {
-      project_name: ""
+      project_name: ''
     };
     this.signature = {
-      sign_url: ""
+      sign_url: ''
     };
   }
 
@@ -56,20 +51,20 @@ export class ClaIndividualPage {
   }
 
   getUser(userId) {
-    this.claService.getUser(userId).subscribe(response => {
+    this.claService.getUser(userId).subscribe((response) => {
       this.user = response;
     });
   }
 
   getProject(projectId) {
-    this.claService.getProject(projectId).subscribe(response => {
+    this.claService.getProject(projectId).subscribe((response) => {
       this.project = response;
     });
   }
 
   getUserSignatureIntent(userId) {
     this.loadingSignature = true;
-    this.claService.getUserSignatureIntent(userId).subscribe(response => {
+    this.claService.getUserSignatureIntent(userId).subscribe((response) => {
       this.signatureIntent = response;
       if (this.signatureIntent !== null) {
         this.postSignatureRequest();
@@ -85,12 +80,12 @@ export class ClaIndividualPage {
       project_id: this.projectId,
       user_id: this.userId,
       // TODO: Switch this to intermediary loading screen as docusign postback has delay
-      return_url_type: "Github",
+      return_url_type: 'Github',
       return_url: this.signatureIntent.return_url
     };
 
     this.claService.postIndividualSignatureRequest(signatureRequest).subscribe(
-      response => {
+      (response) => {
         // returns {
         //   user_id:
         //   signature_id:
@@ -104,17 +99,14 @@ export class ClaIndividualPage {
           this.signature = response;
         }
       },
-      err => {
+      (err) => {
         this.error = err;
       }
     );
   }
 
   createTicket() {
-    window.open(
-      "https://jira.linuxfoundation.org/servicedesk/customer/portal/4",
-      "_blank"
-    );
+    window.open('https://jira.linuxfoundation.org/servicedesk/customer/portal/4', '_blank');
   }
 
   openClaAgreement() {
@@ -122,6 +114,6 @@ export class ClaIndividualPage {
       // Can't open agreement if we don't have a sign_url yet
       return;
     }
-    window.open(this.signature.sign_url, "_blank");
+    window.open(this.signature.sign_url, '_blank');
   }
 }

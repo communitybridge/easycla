@@ -65,11 +65,11 @@ function invalidateDistributions(aws, distributions, cloudfront, cli) {
 
   return aws
     .request('CloudFormation', 'describeStackResources', { StackName: stackName })
-    .then(resp => {
+    .then((resp) => {
       return matchDistributions(distributions, resp.StackResources);
     })
-    .then(distributions => {
-      const promises = distributions.map(pair => invalidateDistribution(pair, cloudfront, cli));
+    .then((distributions) => {
+      const promises = distributions.map((pair) => invalidateDistribution(pair, cloudfront, cli));
       return Promise.all(promises);
     });
 }

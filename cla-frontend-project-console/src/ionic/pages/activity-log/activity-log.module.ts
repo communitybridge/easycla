@@ -8,13 +8,7 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    ActivityLogPage
-  ],
-  imports: [
-    LoadingSpinnerComponentModule,
-    LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ActivityLogPage)
-  ],
+  declarations: [ActivityLogPage],
+  imports: [LoadingSpinnerComponentModule, LoadingDisplayDirectiveModule, IonicPageModule.forChild(ActivityLogPage)]
 })
 export class ActivityLogPageModule {}

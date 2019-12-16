@@ -83,7 +83,7 @@ export class AddCompanyModal {
       company_manager_user_name: this.userName
     };
     this.claService.postCompany(company).subscribe(
-      response => {
+      (response) => {
         this.currentlySubmitting = false;
         this.dismiss();
       },
@@ -107,7 +107,7 @@ export class AddCompanyModal {
         this.loading.submit = false;
         this.dismiss();
       },
-      exception => {
+      (exception) => {
         this.loading.submit = false;
         console.log('Exception while calling: sendInviteRequestEmail() for company ID: ' + this.existingCompanyId);
         console.log(exception);
@@ -148,7 +148,7 @@ export class AddCompanyModal {
   }
 
   getAllCompanies() {
-    this.claService.getAllCompanies().subscribe(response => {
+    this.claService.getAllCompanies().subscribe((response) => {
       this.companies = response;
     });
   }
@@ -161,18 +161,18 @@ export class AddCompanyModal {
     if (companyName.length > 0) {
       this.companySet = false;
       this.filteredCompanies = this.companies
-        .map(company => {
+        .map((company) => {
           let formattedCompany;
           if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
             formattedCompany = company.company_name.replace(
               new RegExp(companyName, 'gi'),
-              match => '<span class="highlightText">' + match + '</span>'
+              (match) => '<span class="highlightText">' + match + '</span>'
             );
           }
           company.filteredCompany = formattedCompany;
           return company;
         })
-        .filter(company => company.filteredCompany);
+        .filter((company) => company.filteredCompany);
     }
 
     if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
@@ -218,10 +218,10 @@ export class AddCompanyModal {
     if (this.authService.isAuthenticated()) {
       this.authService
         .getIdToken()
-        .then(token => {
+        .then((token) => {
           return this.authService.parseIdToken(token);
         })
-        .then(tokenParsed => {
+        .then((tokenParsed) => {
           if (tokenParsed && tokenParsed['email']) {
             this.userEmail = tokenParsed['email'];
           }
@@ -229,7 +229,7 @@ export class AddCompanyModal {
             this.userName = tokenParsed['name'];
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(JSON.stringify(error));
           return;
         });

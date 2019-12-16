@@ -69,14 +69,14 @@ export class CompanyPage {
   }
 
   getCompany() {
-    this.claService.getCompany(this.companyId).subscribe(response => {
+    this.claService.getCompany(this.companyId).subscribe((response) => {
       this.company = response;
       this.getUser(this.company.company_manager_id);
     });
   }
 
   getUser(userId) {
-    this.claService.getUser(userId).subscribe(response => {
+    this.claService.getUser(userId).subscribe((response) => {
       this.manager = response;
     });
   }
@@ -91,12 +91,12 @@ export class CompanyPage {
     this.rows = [];
 
     this.claService.getCompanySignatures(this.companyId).subscribe(
-      response => {
+      (response) => {
         //console.log('Company signatures:');
         //console.log(response);
         if (response.resultCount > 0) {
           //console.log('Filtering Company signatures...');
-          this.companySignatures = response.signatures.filter(signature => signature.signatureSigned === true);
+          this.companySignatures = response.signatures.filter((signature) => signature.signatureSigned === true);
           //console.log('Filtered Company signatures: ' + this.companySignatures.length);
           //console.log('Loading projects...');
           for (let signature of this.companySignatures) {
@@ -106,7 +106,7 @@ export class CompanyPage {
         this.loading.companySignatures = false;
         this.loading.projects = false;
       },
-      exception => {
+      (exception) => {
         this.loading.companySignatures = false;
         this.loading.projects = false;
       }
@@ -115,7 +115,7 @@ export class CompanyPage {
 
   getProject(projectId) {
     //console.log('Loading project: ' + projectId);
-    this.claService.getProject(projectId).subscribe(response => {
+    this.claService.getProject(projectId).subscribe((response) => {
       //console.log('Loaded project: ');
       //console.log(response);
       this.projects.push(response);
@@ -153,7 +153,7 @@ export class CompanyPage {
     let modal = this.modalCtrl.create('EditCompanyModal', {
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -165,7 +165,7 @@ export class CompanyPage {
       type: 'email',
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -177,7 +177,7 @@ export class CompanyPage {
       type: 'domain',
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -188,7 +188,7 @@ export class CompanyPage {
     let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -196,7 +196,7 @@ export class CompanyPage {
   }
 
   getInvites() {
-    this.claService.getPendingInvites(this.companyId).subscribe(response => {
+    this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
       this.loading.invites = false;
     });
@@ -207,7 +207,7 @@ export class CompanyPage {
       inviteId: invite.inviteId,
       userLFID: invite.userLFID
     };
-    this.claService.acceptCompanyInvite(this.companyId, data).subscribe(response => {
+    this.claService.acceptCompanyInvite(this.companyId, data).subscribe((response) => {
       this.getInvites();
     });
   }
@@ -217,7 +217,7 @@ export class CompanyPage {
       inviteId: invite.inviteId,
       userLFID: invite.userLFID
     };
-    this.claService.declineCompanyInvite(this.companyId, data).subscribe(response => {
+    this.claService.declineCompanyInvite(this.companyId, data).subscribe((response) => {
       this.getInvites();
     });
   }

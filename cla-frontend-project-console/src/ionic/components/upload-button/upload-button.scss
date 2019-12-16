@@ -26,7 +26,6 @@
 //   }
 // }
 
-
 .file_list {
   &-item_inner {
     @extend .item-inner;
@@ -36,7 +35,6 @@
     @extend .input-wrapper;
   }
   &-label {
-
   }
   &-input {
     // position: static;
@@ -56,7 +54,7 @@
     border: 1px solid grey;
     margin-right: 8px;
     margin-bottom: 8px;
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
   }
   &-icon {
     line-height: 1;

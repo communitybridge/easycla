@@ -8,15 +8,11 @@ import { ClaNewCompanyModal } from './cla-new-company-modal';
 // import { ClipboardModule } from 'ngx-clipboard';
 
 @NgModule({
-  declarations: [
-    ClaNewCompanyModal,
-  ],
+  declarations: [ClaNewCompanyModal],
   imports: [
     // ClipboardModule,
     IonicPageModule.forChild(ClaNewCompanyModal)
   ],
-  entryComponents: [
-    ClaNewCompanyModal,
-  ]
+  entryComponents: [ClaNewCompanyModal]
 })
 export class ClaNewCompanyModalModule {}

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage, ModalController, } from 'ionic-angular';
+import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company/:companyId/contact/sent'
@@ -20,12 +20,7 @@ export class ClaMessageSentPage {
   project: any;
   company: any;
 
-  constructor(
-    public navCtrl: NavController,
-    private modalCtrl: ModalController,
-    public navParams: NavParams,
-  ) {
-
+  constructor(public navCtrl: NavController, private modalCtrl: ModalController, public navParams: NavParams) {
     this.getDefaults();
     this.projectId = navParams.get('projectId');
     this.repositoryId = navParams.get('repositoryId');
@@ -33,11 +28,9 @@ export class ClaMessageSentPage {
     this.companyId = navParams.get('companyId');
   }
 
-  getDefaults(){
+  getDefaults() {}
 
-  }
-
-  ngOnInit(){
+  ngOnInit() {
     this.getProject();
     this.getCompany();
   }
@@ -46,14 +39,14 @@ export class ClaMessageSentPage {
     this.project = {
       id: '0000000001',
       name: 'Project Name',
-      logoRef: 'https://dummyimage.com/225x102/d8d8d8/242424.png&text=Project+Logo',
+      logoRef: 'https://dummyimage.com/225x102/d8d8d8/242424.png&text=Project+Logo'
     };
   }
 
   getCompany() {
     this.company = {
       name: 'Company Name',
-      id: '0000000001',
+      id: '0000000001'
     };
   }
 
@@ -62,8 +55,7 @@ export class ClaMessageSentPage {
     this.navCtrl.push('ClaIndividualPage', {
       projectId: this.projectId,
       repositoryId: this.repositoryId,
-      userId: this.userId,
+      userId: this.userId
     });
   }
-
 }
