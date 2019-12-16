@@ -31,6 +31,7 @@ export class AddCompanyModal {
   addNewCompany: boolean = false;
   enableJoinButton: boolean = false;
   existingCompanyId: string;
+  mode: string = 'add';
   loading: any;
 
   constructor(
@@ -46,6 +47,7 @@ export class AddCompanyModal {
 
   getDefaults() {
     this.company = this.navParams.get('company');
+    this.mode = this.navParams.get('mode') || 'add';
     this.companies = [];
     this.filteredCompanies = [];
     this.loading = {
@@ -70,11 +72,7 @@ export class AddCompanyModal {
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (this.addNewCompany) {
-      this.addCompany();
-    } else {
-      this.updateCompany();
-    }
+    this.addCompany();
   }
 
   addCompany() {
@@ -105,7 +103,7 @@ export class AddCompanyModal {
     const userEmail = localStorage.getItem('user_email');
     const userName = localStorage.getItem('user_name');
     this.claService.sendInviteRequestEmail(this.existingCompanyId, userId, userEmail, userName).subscribe(
-      (response) => {
+      () => {
         this.loading.submit = false;
         this.dismiss();
       },
@@ -113,26 +111,6 @@ export class AddCompanyModal {
         this.loading.submit = false;
         console.log('Exception while calling: sendInviteRequestEmail() for company ID: ' + this.existingCompanyId);
         console.log(exception);
-      }
-    );
-  }
-
-  updateCompany() {
-    let company = {
-      company_id: this.company.company_id,
-      company_name: this.companyName
-    };
-    this.claService.putCompany(company).subscribe(
-      (response) => {
-        this.currentlySubmitting = false;
-        this.dismiss();
-      },
-      (err: any) => {
-        if (err.status === 409) {
-          let errJSON = err.json();
-          this.companyExistAlert(errJSON.company_id);
-        }
-        this.currentlySubmitting = false;
       }
     );
   }
