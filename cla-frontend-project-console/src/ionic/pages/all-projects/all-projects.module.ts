@@ -6,20 +6,16 @@ import { IonicPageModule } from 'ionic-angular';
 import { AllProjectsPage } from './all-projects';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { LayoutModule } from "../../layout/layout.module";
+import { LayoutModule } from '../../layout/layout.module';
 
 @NgModule({
-  declarations: [
-    AllProjectsPage,
-  ],
+  declarations: [AllProjectsPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(AllProjectsPage),
     LayoutModule
   ],
-  entryComponents: [
-    AllProjectsPage
-  ]
+  entryComponents: [AllProjectsPage]
 })
 export class AllProjectsPageModule {}

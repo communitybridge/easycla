@@ -8,7 +8,6 @@ import { Input, Component } from '@angular/core';
   templateUrl: 'loading-spinner.html'
 })
 export class LoadingSpinnerComponent {
-
   /**
    * The text used for the upload label
    */
@@ -18,5 +17,4 @@ export class LoadingSpinnerComponent {
   constructor() {
     this.loading = true;
   }
-
 }

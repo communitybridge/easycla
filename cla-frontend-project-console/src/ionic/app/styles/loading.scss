@@ -8,15 +8,15 @@
     // display: block;
     opacity: 1;
     animation-name: loadingDisplayFadeIn;
-    animation-duration: .8s;
+    animation-duration: 0.8s;
   }
 }
 
 @keyframes loadingDisplayFadeIn {
   0% {
-      opacity: 0;
+    opacity: 0;
   }
   100% {
-      opacity: 1;
+    opacity: 1;
   }
 }

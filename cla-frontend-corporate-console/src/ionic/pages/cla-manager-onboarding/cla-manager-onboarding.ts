@@ -1,19 +1,15 @@
-import { Component } from "@angular/core";
-import { IonicPage, ModalController, NavController, AlertController } from "ionic-angular";
-import { ClaService } from "../../services/cla.service";
-import { RolesService } from "../../services/roles.service";
-import { Restricted } from "../../decorators/restricted";
-import { ColumnMode, SelectionType, SortType } from "@swimlane/ngx-datatable";
+import { Component } from '@angular/core';
+import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { RolesService } from '../../services/roles.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from "../../validators/email";
-
+import { EmailValidator } from '../../validators/email';
 
 @IonicPage()
 @Component({
   selector: 'page-cla-manager-onboarding',
-  templateUrl: 'cla-manager-onboarding.html',
+  templateUrl: 'cla-manager-onboarding.html'
 })
-
 export class ClaManagerOnboardingPage {
   projectId: any;
   companyId: any;
@@ -28,20 +24,19 @@ export class ClaManagerOnboardingPage {
   userName: string;
 
   manager: string;
-  formErrors: any[]
+  formErrors: any[];
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   formSuccessfullySubmitted: boolean = false;
   claManagerApproved: boolean = false;
 
-  searchTerm: string = "";
-  searchProject: string = "";
+  searchTerm: string = '';
+  searchProject: string = '';
   filteredCompanies: any;
   searching: boolean;
   foundCompay: boolean;
   allProjects: any;
-
 
   constructor(
     public navCtrl: NavController,
@@ -49,7 +44,6 @@ export class ClaManagerOnboardingPage {
     private formBuilder: FormBuilder,
     private rolesService: RolesService, // for @Restricted
     public alertCtrl: AlertController
-
   ) {
     this.form = formBuilder.group({
       project_name: ['', Validators.compose([Validators.required])],
@@ -65,18 +59,18 @@ export class ClaManagerOnboardingPage {
   ngOnInit() {
     this.getDefaults();
     this.getAllCompanies();
-    this.getProjects()
+    this.getProjects();
   }
 
   getDefaults() {
     this.loading = {
       companies: true,
-      projects: true,
+      projects: true
     };
     this.searching = false;
-    this.userId = localStorage.getItem("userid");
-    this.userEmail = localStorage.getItem("user_email");
-    this.userName = localStorage.getItem("user_name");
+    this.userId = localStorage.getItem('userid');
+    this.userEmail = localStorage.getItem('user_email');
+    this.userName = localStorage.getItem('user_name');
     this.setUserDetails();
     this.foundCompay = true;
     this.foundProject = true;
@@ -92,13 +86,12 @@ export class ClaManagerOnboardingPage {
       if (response) {
         this.currentlySubmitting = false;
         if (response.signatures) {
-          this.initialManagerAlreadyExists('gjg')
-        }
-        else {
+          this.initialManagerAlreadyExists('gjg');
+        } else {
           this.sendEmailToLFAdmin();
         }
       }
-    })
+    });
   }
 
   initialManagerAlreadyExists(claManager) {
@@ -108,9 +101,9 @@ export class ClaManagerOnboardingPage {
         {
           text: 'Ok',
           handler: () => {
-            this.navCtrl.push("CompaniesPage");
+            this.navCtrl.push('CompaniesPage');
           }
-        },
+        }
       ]
     });
     alert.present();
@@ -123,24 +116,22 @@ export class ClaManagerOnboardingPage {
         {
           text: 'Ok',
           handler: () => {
-            this.navCtrl.push("CompaniesPage");
+            this.navCtrl.push('CompaniesPage');
           }
-        },
+        }
       ]
     });
     alert.present();
-    // TODO: send email 
+    // TODO: send email
   }
 
-  sendEmailToInitialCLAManager(emailAddress, lfid, projectName, reason, claManager) {
-
-  }
+  sendEmailToInitialCLAManager(emailAddress, lfid, projectName, reason, claManager) {}
 
   getAllCompanies() {
     if (!this.companies) {
       this.loading.companies = true;
     }
-    this.claService.getAllCompanies().subscribe(response => {
+    this.claService.getAllCompanies().subscribe((response) => {
       if (response) {
         this.loading.companies = false;
         // Cleanup - Remove any companies that don't have a name
@@ -155,11 +146,14 @@ export class ClaManagerOnboardingPage {
     if (!this.allProjects) {
       this.loading.projects = true;
     }
-    this.claService.getProjects().subscribe(response => {
-      if (response) {
-        this.allProjects = this.sortProjects(response);
-      }
-    }, (error) => error);
+    this.claService.getProjects().subscribe(
+      (response) => {
+        if (response) {
+          this.allProjects = this.sortProjects(response);
+        }
+      },
+      (error) => error
+    );
   }
 
   sortProjects(projects) {
@@ -181,28 +175,34 @@ export class ClaManagerOnboardingPage {
     }
     if (projectName.length > 0 && this.allProjects) {
       this.loading.projects = false;
-      return this.allProjects && this.allProjects.map((project) => {
-        let formattedProject;
-        if (project.project_name.toLowerCase().includes(projectName.toLowerCase())) {
-          formattedProject = project.project_name.replace(new RegExp(projectName, "gi"), match => '<span class="highlightText">' + match + '</span>')
-        }
-        project.filteredProject = formattedProject;
-        return project;
-      }).filter(project => project.filteredProject)
+      return (
+        this.allProjects &&
+        this.allProjects
+          .map((project) => {
+            let formattedProject;
+            if (project.project_name.toLowerCase().includes(projectName.toLowerCase())) {
+              formattedProject = project.project_name.replace(
+                new RegExp(projectName, 'gi'),
+                (match) => '<span class="highlightText">' + match + '</span>'
+              );
+            }
+            project.filteredProject = formattedProject;
+            return project;
+          })
+          .filter((project) => project.filteredProject)
+      );
     }
   }
 
   setFilteredProjects() {
     this.getProjects();
-    this.filteredProjects = this.searchProjects(this.searchProject)
+    this.filteredProjects = this.searchProjects(this.searchProject);
     if (this.searchProject.length > 3 && this.filteredProjects.length === 0) {
-      this.foundProject = false
-    }
-    else {
-      this.foundProject = true
+      this.foundProject = false;
+    } else {
+      this.foundProject = true;
     }
   }
-
 
   findCompany(event) {
     this.getAllCompanies();
@@ -213,48 +213,54 @@ export class ClaManagerOnboardingPage {
     }
     if (companyName.length > 0 && this.companies) {
       this.searching = false;
-      this.filteredCompanies = this.companies && this.companies.map((company) => {
-        let formattedCompany;
-        if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
-          formattedCompany = company.company_name.replace(new RegExp(companyName, "gi"), match => '<span class="highlightText">' + match + '</span>')
-        }
-        company.filteredCompany = formattedCompany;
-        return company;
-      }).filter(company => company.filteredCompany);
+      this.filteredCompanies =
+        this.companies &&
+        this.companies
+          .map((company) => {
+            let formattedCompany;
+            if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
+              formattedCompany = company.company_name.replace(
+                new RegExp(companyName, 'gi'),
+                (match) => '<span class="highlightText">' + match + '</span>'
+              );
+            }
+            company.filteredCompany = formattedCompany;
+            return company;
+          })
+          .filter((company) => company.filteredCompany);
     }
   }
 
   setFilteredCompanies() {
     this.getAllCompanies();
-    this.filteredCompanies = this.findCompany(this.searchTerm)
+    this.filteredCompanies = this.findCompany(this.searchTerm);
     if (this.searchTerm.length > 3 && this.filteredCompanies.length === 0) {
-      this.foundCompay = false
-    }
-    else {
-      this.foundCompay = true
+      this.foundCompay = false;
+    } else {
+      this.foundCompay = true;
     }
   }
 
   setCompanyName(company) {
     this.searchTerm = company.company_name;
-    this.form.controls['company_name'].setValue(this.searchTerm)
+    this.form.controls['company_name'].setValue(this.searchTerm);
     this.filteredCompanies = [];
-    this.companyId = company.company_id
+    this.companyId = company.company_id;
   }
 
   setProjectName(project) {
     this.searchProject = project.project_name;
-    this.form.controls['project_name'].setValue(this.searchProject)
+    this.form.controls['project_name'].setValue(this.searchProject);
   }
 
   setUserDetails() {
     this.form.controls['lfid'].setValue(this.userId);
-    this.form.controls['email_address'].setValue(this.userEmail)
+    this.form.controls['email_address'].setValue(this.userEmail);
     this.form.controls['full_name'].setValue(this.userName);
   }
 
   projectSelectChanged(value) {
-    this.form.controls['project_name'].setValue(value.project_name)
+    this.form.controls['project_name'].setValue(value.project_name);
     this.projectId = value.project_id;
   }
 }

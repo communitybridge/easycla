@@ -11,9 +11,7 @@ import { SortService } from '../../services/sort.service';
 @Component({
   selector: 'memberships-modal',
   templateUrl: 'memberships-modal.html',
-  providers: [
-    SortService,
-  ]
+  providers: [SortService]
 })
 export class MembershipsModal {
   orgName: string;
@@ -26,39 +24,37 @@ export class MembershipsModal {
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
-    private sortService: SortService,
+    private sortService: SortService
   ) {
     this.orgName = navParams.get('orgName');
     this.memberships = navParams.get('memberships');
     this.getDefaults();
   }
 
-  ngOnInit() {
-
-  }
+  ngOnInit() {}
 
   getDefaults() {
     this.sort = {
       project: {
         arrayProp: 'projectName',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       class: {
         arrayProp: 'product',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       status: {
         arrayProp: 'invoices[0].status',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       renewal: {
         arrayProp: 'renewalDate',
         sortType: 'date',
-        sort: null,
-      },
+        sort: null
+      }
     };
   }
 
@@ -68,16 +64,11 @@ export class MembershipsModal {
 
   openProjectPage(projectId) {
     this.navCtrl.push('ProjectPage', {
-      projectId: projectId,
+      projectId: projectId
     });
   }
 
   sortProjects(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.memberships,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.memberships);
   }
-
 }

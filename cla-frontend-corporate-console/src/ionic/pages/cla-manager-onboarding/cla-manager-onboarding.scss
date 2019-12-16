@@ -1,5 +1,4 @@
 page-cla-manager-onboarding {
-  
   .page-content {
     min-height: calc(100vh - 200px);
 
@@ -36,13 +35,11 @@ page-cla-manager-onboarding {
   }
 
   .project-list {
-
     .item-inner {
       overflow: scroll;
       padding: 2rem;
     }
   }
-
 
   .company-dropdown-list {
     color: black;
@@ -65,10 +62,10 @@ page-cla-manager-onboarding {
   ul {
     list-style: none; /* Remove default bullets */
   }
-  
+
   ul li::before {
-    content: "\2022";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
-    color: #4C79B6; /* Change the color */
+    content: '\2022'; /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: #4c79b6; /* Change the color */
     font-weight: bold; /* If you want it to be bold */
     display: inline-block; /* Needed to add space between the bullet and the text */
     width: 1em; /* Also needed for space (tweak if needed) */
@@ -76,10 +73,10 @@ page-cla-manager-onboarding {
   }
 
   .cta-button {
-    background-color: #4C79B6;
+    background-color: #4c79b6;
 
     a {
-      color: #4C79B6;
+      color: #4c79b6;
     }
   }
   a {
@@ -87,9 +84,8 @@ page-cla-manager-onboarding {
   }
 }
 
-
 .cla-header {
-  border-bottom: 10px solid #4C79B6;
+  border-bottom: 10px solid #4c79b6;
 
   .toolbar {
     color: #7b7b7b;
@@ -123,16 +119,16 @@ ion-card-title {
   justify-content: space-between;
 }
 
-span[title="Joined"] {
+span[title='Joined'] {
   color: green;
   font-weight: bold;
 }
 
-span[title="Pending Approval"] {
-  color: #4C79B6;
+span[title='Pending Approval'] {
+  color: #4c79b6;
   font-weight: bold;
 }
 
-span[title="rejeted"] {
+span[title='rejeted'] {
   color: red;
 }

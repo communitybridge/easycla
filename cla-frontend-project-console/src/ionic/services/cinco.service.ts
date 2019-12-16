@@ -1,16 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
-import { ProjectModel } from "../models/project-model";
-import { Observable } from "rxjs/Observable";
-import "rxjs/add/observable/of";
-import "rxjs/Rx";
+import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
+import { ProjectModel } from '../models/project-model';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/Rx';
 
 @Injectable()
 export class CincoService {
-  cincoApiUrl: string = "";
+  cincoApiUrl: string = '';
 
   constructor(public http: Http) {}
 
@@ -24,63 +24,63 @@ export class CincoService {
 
   // tow mock project.
   linux = {
-    id: "1",
-    name: "Mock Linux project",
-    description: "This is a mock Linux project description.",
-    managers: "Mock managers.",
+    id: '1',
+    name: 'Mock Linux project',
+    description: 'This is a mock Linux project description.',
+    managers: 'Mock managers.',
     members: [],
-    status: "Mock status.Active",
-    category: "Mock category.OS",
-    sector: "Mock sector.OS",
-    url: "https://linux.url.com",
-    startDate: "Mock start date",
-    logoRef: "https://logo.url.com",
-    agreementRef: "Mock agreementRef",
-    mailingListType: "Mock mail list type",
-    emailAliasType: "Mock email alias type",
+    status: 'Mock status.Active',
+    category: 'Mock category.OS',
+    sector: 'Mock sector.OS',
+    url: 'https://linux.url.com',
+    startDate: 'Mock start date',
+    logoRef: 'https://logo.url.com',
+    agreementRef: 'Mock agreementRef',
+    mailingListType: 'Mock mail list type',
+    emailAliasType: 'Mock email alias type',
     address: {
       address: {
-        administrativeArea: "Mock admin area",
-        country: "Mock country.US",
-        localityName: "Mock localityName",
-        postalCode: "Mock postalCode",
-        thoroughfare: "Mock thoroughfare"
+        administrativeArea: 'Mock admin area',
+        country: 'Mock country.US',
+        localityName: 'Mock localityName',
+        postalCode: 'Mock postalCode',
+        thoroughfare: 'Mock thoroughfare'
       },
-      type: "Mock type"
+      type: 'Mock type'
     },
     config: {
-      logoRef: "https://logo.url.com",
+      logoRef: 'https://logo.url.com',
       programManagers: []
     }
   };
 
   hyperledger = {
-    id: "2",
-    name: "Mock Hyperledger project",
-    description: "This is a mock hyperledger project description.",
-    managers: "Mock managers.",
+    id: '2',
+    name: 'Mock Hyperledger project',
+    description: 'This is a mock hyperledger project description.',
+    managers: 'Mock managers.',
     members: [],
-    status: "Mock status.Active",
-    category: "Mock category.Blockchain",
-    sector: "Mock sector.Blockchain",
-    url: "https://linux.url.com",
-    startDate: "Mock start date",
-    logoRef: "https://logo.url.com",
-    agreementRef: "Mock agreementRef",
-    mailingListType: "Mock mail list type",
-    emailAliasType: "Mock email alias type",
+    status: 'Mock status.Active',
+    category: 'Mock category.Blockchain',
+    sector: 'Mock sector.Blockchain',
+    url: 'https://linux.url.com',
+    startDate: 'Mock start date',
+    logoRef: 'https://logo.url.com',
+    agreementRef: 'Mock agreementRef',
+    mailingListType: 'Mock mail list type',
+    emailAliasType: 'Mock email alias type',
     address: {
       address: {
-        administrativeArea: "Mock admin area",
-        country: "Mock country.US",
-        localityName: "Mock localityName",
-        postalCode: "Mock postalCode",
-        thoroughfare: "Mock thoroughfare"
+        administrativeArea: 'Mock admin area',
+        country: 'Mock country.US',
+        localityName: 'Mock localityName',
+        postalCode: 'Mock postalCode',
+        thoroughfare: 'Mock thoroughfare'
       },
-      type: "Mock type"
+      type: 'Mock type'
     },
     config: {
-      logoRef: "https://logo.url.com",
+      logoRef: 'https://logo.url.com',
       programManagers: []
     }
   };
@@ -99,35 +99,29 @@ export class CincoService {
    **/
 
   getProjectStatuses() {
-    return this.http
-      .get(this.cincoApiUrl + "/project/status")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/status').map((res) => res.json());
   }
 
   getProjectCategories() {
-    return this.http
-      .get(this.cincoApiUrl + "/project/categories")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/categories').map((res) => res.json());
   }
 
   getProjectSectors() {
-    return this.http
-      .get(this.cincoApiUrl + "/project/sectors")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/sectors').map((res) => res.json());
   }
 
   getMyProjects() {
-    return this.http.get(this.cincoApiUrl + "/project").map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project').map((res) => res.json());
   }
 
   getEvents() {
-    return this.http.get(this.cincoApiUrl + "/events").map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/events').map((res) => res.json());
   }
 
   getAllProjects() {
     return this.http
-      .get(this.cincoApiUrl + "/project") // CINCO changes
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/project') // CINCO changes
+      .map((res) => res.json());
   }
 
   getAllMockProjects() {
@@ -142,21 +136,19 @@ export class CincoService {
 
   getProject(projectId, getMembers) {
     if (getMembers) {
-      projectId = projectId + "?members=true";
+      projectId = projectId + '?members=true';
     }
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId)
-      .map(res => {
-        let project = res.json();
-        if (project.config.logoRef) {
-          project.config.logoRef += "?" + new Date().getTime();
-        }
-        return project;
-      });
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId).map((res) => {
+      let project = res.json();
+      if (project.config.logoRef) {
+        project.config.logoRef += '?' + new Date().getTime();
+      }
+      return project;
+    });
   }
 
   getMockProject(projectId, getMembers) {
-    if (projectId.toString() == "1") {
+    if (projectId.toString() == '1') {
       return Observable.of(this.linux);
     } else {
       return Observable.of(this.hyperledger);
@@ -164,39 +156,27 @@ export class CincoService {
   }
 
   editProject(projectId, editProject) {
-    return this.http
-      .put(this.cincoApiUrl + "/project/" + projectId, editProject)
-      .map(res => res.json());
+    return this.http.put(this.cincoApiUrl + '/project/' + projectId, editProject).map((res) => res.json());
   }
 
   getProjectConfig(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/config")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/config').map((res) => res.json());
   }
 
   editProjectConfig(projectId, updatedConfig) {
     return this.http
-      .patch(
-        this.cincoApiUrl + "/projects/" + projectId + "/config",
-        updatedConfig
-      )
-      .map(res => res.json());
+      .patch(this.cincoApiUrl + '/projects/' + projectId + '/config', updatedConfig)
+      .map((res) => res.json());
   }
 
   updateProjectManagers(projectId, updatedManagers) {
     return this.http
-      .put(
-        this.cincoApiUrl + "/project/" + projectId + "/managers",
-        updatedManagers
-      )
-      .map(res => res.json());
+      .put(this.cincoApiUrl + '/project/' + projectId + '/managers', updatedManagers)
+      .map((res) => res.json());
   }
 
   getProjectLogos(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/logos")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/logos').map((res) => res.json());
   }
 
   /**
@@ -205,9 +185,7 @@ export class CincoService {
    * The expiresOn property is an ISO-8601 timestamp indicating the last millisecond the URL will be valid to issue a GET request to.
    **/
   getProjectDocuments(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/documents")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/documents').map((res) => res.json());
   }
 
   /**
@@ -222,12 +200,8 @@ export class CincoService {
    **/
   obtainLogoS3URL(projectId, classifier, image) {
     return this.http
-      .put(
-        this.cincoApiUrl + "/project/" + projectId + "/logos/" + classifier,
-        image,
-        image.contentType
-      )
-      .map(res => res.json());
+      .put(this.cincoApiUrl + '/project/' + projectId + '/logos/' + classifier, image, image.contentType)
+      .map((res) => res.json());
   }
 
   /**
@@ -243,18 +217,8 @@ export class CincoService {
    **/
   obtainDocumentS3URL(projectId, classifier, file, filename, contentType) {
     return this.http
-      .put(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/documents/" +
-          classifier +
-          "/" +
-          filename,
-        file,
-        contentType
-      )
-      .map(res => res.json());
+      .put(this.cincoApiUrl + '/project/' + projectId + '/documents/' + classifier + '/' + filename, file, contentType)
+      .map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -266,109 +230,64 @@ export class CincoService {
 
   createMainProjectGroup(projectId) {
     return this.http
-      .post(
-        this.cincoApiUrl + "/project/" + projectId + "/mailing/groups",
-        null
-      )
-      .map(res => res.json());
+      .post(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups', null)
+      .map((res) => res.json());
   }
 
   associateMainProjectGroup(projectId, groupId) {
     return this.http
-      .put(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/mailing/groups" +
-          groupId,
-        null
-      )
-      .map(res => res.json());
+      .put(this.cincoApiUrl + '/project/' + projectId + '/mailing/groups' + groupId, null)
+      .map((res) => res.json());
   }
 
   getAllProjectGroups(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/mailing/lists")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists').map((res) => res.json());
   }
 
   getGroupPrivacy(projectId) {
     // Retrieve privacy groups enum list in general, no project specific.
     return this.http
-      .get(
-        this.cincoApiUrl + "/project/" + projectId + "/mailing/lists/privacy"
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/privacy')
+      .map((res) => res.json());
   }
 
   createProjectGroup(projectId, group) {
     return this.http
-      .post(
-        this.cincoApiUrl + "/project/" + projectId + "/mailing/lists",
-        group
-      )
-      .map(res => res.json());
+      .post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists', group)
+      .map((res) => res.json());
   }
 
   getProjectGroup(projectId, groupId) {
     return this.http
-      .get(
-        this.cincoApiUrl + "/project/" + projectId + "/mailing/lists/" + groupId
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId)
+      .map((res) => res.json());
   }
 
   removeProjectGroup(projectId, groupName) {
     return this.http
-      .delete(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/mailing/lists/" +
-          groupName
-      )
-      .map(res => res.json());
+      .delete(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName)
+      .map((res) => res.json());
   }
 
   getAllGroupParticipants(projectId, groupId) {
     return this.http
-      .get(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/mailing/lists/" +
-          groupId +
-          "/participants"
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants')
+      .map((res) => res.json());
   }
 
   addGroupParticipant(projectId, groupId, participant) {
     return this.http
-      .post(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/mailing/lists/" +
-          groupId +
-          "/participants",
-        participant
-      )
-      .map(res => res.json());
+      .post(this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupId + '/participants', participant)
+      .map((res) => res.json());
   }
 
   removeGroupParticipant(projectId, groupName, participant) {
     return this.http
       .post(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/mailing/lists/" +
-          groupName +
-          "/participants/remove",
+        this.cincoApiUrl + '/project/' + projectId + '/mailing/lists/' + groupName + '/participants/remove',
         participant
       )
-      .map(res => res.json());
+      .map((res) => res.json());
   }
   //////////////////////////////////////////////////////////////////////////////
 
@@ -378,15 +297,11 @@ export class CincoService {
    **/
 
   getProjectMembers(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/members")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/members').map((res) => res.json());
   }
 
   getMember(projectId, memberId) {
-    return this.http
-      .get(this.cincoApiUrl + "/project/" + projectId + "/members/" + memberId)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId).map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -397,70 +312,52 @@ export class CincoService {
    **/
 
   getMemberContactRoles() {
-    return this.http
-      .get(this.cincoApiUrl + "/project/members/contacts/types")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/project/members/contacts/types').map((res) => res.json());
   }
 
   getMemberContacts(projectId, memberId) {
     return this.http
-      .get(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/members/" +
-          memberId +
-          "/contacts"
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts')
+      .map((res) => res.json());
   }
 
   addMemberContact(projectId, memberId, contactId, newContact) {
     return this.http
-      .post(
-        this.cincoApiUrl +
-          "/project/" +
-          projectId +
-          "/members/" +
-          memberId +
-          "/contacts/" +
-          contactId,
-        newContact
-      )
-      .map(res => res.json());
+      .post(this.cincoApiUrl + '/project/' + projectId + '/members/' + memberId + '/contacts/' + contactId, newContact)
+      .map((res) => res.json());
   }
 
   removeMemberContact(projectId, memberId, contactId, roleId) {
     return this.http
       .delete(
         this.cincoApiUrl +
-          "/project/" +
+          '/project/' +
           projectId +
-          "/members/" +
+          '/members/' +
           memberId +
-          "/contacts/" +
+          '/contacts/' +
           contactId +
-          "/roles/" +
+          '/roles/' +
           roleId
       )
-      .map(res => res.json());
+      .map((res) => res.json());
   }
 
   updateMemberContact(projectId, memberId, contactId, roleId, updatedContact) {
     return this.http
       .put(
         this.cincoApiUrl +
-          "/project/" +
+          '/project/' +
           projectId +
-          "/members/" +
+          '/members/' +
           memberId +
-          "/contacts/" +
+          '/contacts/' +
           contactId +
-          "/roles/" +
+          '/roles/' +
           roleId,
         updatedContact
       )
-      .map(res => res.json());
+      .map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -471,49 +368,29 @@ export class CincoService {
    **/
 
   getOrganizationContactTypes() {
-    return this.http
-      .get(this.cincoApiUrl + "/organizations/contacts/types")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/organizations/contacts/types').map((res) => res.json());
   }
 
   getOrganizationContacts(organizationId) {
-    return this.http
-      .get(this.cincoApiUrl + "/organizations/" + organizationId + "/contacts")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/organizations/' + organizationId + '/contacts').map((res) => res.json());
   }
 
   createOrganizationContact(organizationId, newContact) {
     return this.http
-      .post(
-        this.cincoApiUrl + "/organizations/" + organizationId + "/contacts",
-        newContact
-      )
-      .map(res => res.json());
+      .post(this.cincoApiUrl + '/organizations/' + organizationId + '/contacts', newContact)
+      .map((res) => res.json());
   }
 
   getOrganizationContact(organizationId, contactId) {
     return this.http
-      .get(
-        this.cincoApiUrl +
-          "/organizations/" +
-          organizationId +
-          "/contacts/" +
-          contactId
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/organizations/' + organizationId + '/contacts/' + contactId)
+      .map((res) => res.json());
   }
 
   updateOrganizationContact(organizationId, contactId, contact) {
     return this.http
-      .put(
-        this.cincoApiUrl +
-          "/organizations/" +
-          organizationId +
-          "/contacts/" +
-          contactId,
-        contact
-      )
-      .map(res => res.json());
+      .put(this.cincoApiUrl + '/organizations/' + organizationId + '/contacts/' + contactId, contact)
+      .map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -525,13 +402,8 @@ export class CincoService {
 
   getOrganizationProjectMemberships(organizationId) {
     return this.http
-      .get(
-        this.cincoApiUrl +
-          "/organizations/" +
-          organizationId +
-          "/project_members"
-      )
-      .map(res => res.json());
+      .get(this.cincoApiUrl + '/organizations/' + organizationId + '/project_members')
+      .map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -542,61 +414,43 @@ export class CincoService {
    **/
 
   searchUser(username) {
-    return this.http
-      .get(this.cincoApiUrl + "/user/search/username/" + username)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/user/search/username/' + username).map((res) => res.json());
   }
 
   searchUserTerm(term) {
-    return this.http
-      .get(this.cincoApiUrl + "/user/search/" + term)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/user/search/' + term).map((res) => res.json());
   }
 
   getCurrentUser() {
-    return this.http.get(this.cincoApiUrl + "/user").map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/user').map((res) => res.json());
   }
 
   createUser(user) {
-    return this.http
-      .post(this.cincoApiUrl + "/user", user)
-      .map(res => res.json());
+    return this.http.post(this.cincoApiUrl + '/user', user).map((res) => res.json());
   }
 
   removeUser(userId) {
-    return this.http
-      .delete(this.cincoApiUrl + "/user/" + userId)
-      .map(res => res.json());
+    return this.http.delete(this.cincoApiUrl + '/user/' + userId).map((res) => res.json());
   }
 
   getUser(userId) {
-    return this.http
-      .get(this.cincoApiUrl + "/user/" + userId)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/user/' + userId).map((res) => res.json());
   }
 
   getUserRoles() {
-    return this.http
-      .get(this.cincoApiUrl + "/user/roles")
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/user/roles').map((res) => res.json());
   }
 
   updateUser(userId, user) {
-    return this.http
-      .put(this.cincoApiUrl + "/user/" + userId, user)
-      .map(res => res.json());
+    return this.http.put(this.cincoApiUrl + '/user/' + userId, user).map((res) => res.json());
   }
 
   addUserRole(userId, role) {
-    return this.http
-      .put(this.cincoApiUrl + "/user/" + userId + "/role/" + role, null)
-      .map(res => res.json());
+    return this.http.put(this.cincoApiUrl + '/user/' + userId + '/role/' + role, null).map((res) => res.json());
   }
 
   removeUserRole(userId, role) {
-    return this.http
-      .delete(this.cincoApiUrl + "/user/" + userId + "/role/" + role)
-      .map(res => res.json());
+    return this.http.delete(this.cincoApiUrl + '/user/' + userId + '/role/' + role).map((res) => res.json());
   }
 
   /**
@@ -610,21 +464,15 @@ export class CincoService {
   // }
 
   getEventsForProject(projectId) {
-    return this.http
-      .get(this.cincoApiUrl + "/events/projects/" + projectId)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/events/projects/' + projectId).map((res) => res.json());
   }
 
   getEventsForOrg(orgId) {
-    return this.http
-      .get(this.cincoApiUrl + "/events/organizations/" + orgId)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/events/organizations/' + orgId).map((res) => res.json());
   }
 
   getEventsForUser(userId) {
-    return this.http
-      .get(this.cincoApiUrl + "/events/users/" + userId)
-      .map(res => res.json());
+    return this.http.get(this.cincoApiUrl + '/events/users/' + userId).map((res) => res.json());
   }
 
   //////////////////////////////////////////////////////////////////////////////

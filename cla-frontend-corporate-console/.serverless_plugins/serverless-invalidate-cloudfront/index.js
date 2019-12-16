@@ -59,7 +59,7 @@ class InvalidateCloudfront {
     });
     const dist = this.options.distribution;
 
-    return getDomain(dist, aws, cloudfront).then(domain => {
+    return getDomain(dist, aws, cloudfront).then((domain) => {
       console.log(domain);
     });
   }

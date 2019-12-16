@@ -1,17 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ElementRef, ViewChild, } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/admin-yesno'
-
 })
 @Component({
   selector: 'cla-company-admin-yesno-modal',
-  templateUrl: 'cla-company-admin-yesno-modal.html',
+  templateUrl: 'cla-company-admin-yesno-modal.html'
 })
 export class ClaCompanyAdminYesnoModal {
   projectId: string;
@@ -23,12 +22,11 @@ export class ClaCompanyAdminYesnoModal {
 
   @ViewChild('textArea') textArea: ElementRef;
 
-
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    public modalCtrl: ModalController,
+    public modalCtrl: ModalController
   ) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
@@ -40,10 +38,8 @@ export class ClaCompanyAdminYesnoModal {
     this.consoleLink = EnvConfig['corp-console-link'];
   }
 
-  ngOnInit() {
+  ngOnInit() {}
 
-  }
-  
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -56,10 +52,9 @@ export class ClaCompanyAdminYesnoModal {
     let modal = this.modalCtrl.create('ClaCompanyAdminSendEmailModal', {
       projectId: this.projectId,
       userId: this.userId,
-      authenticated: this.authenticated,
+      authenticated: this.authenticated
     });
     modal.present();
     this.dismiss();
   }
-
 }

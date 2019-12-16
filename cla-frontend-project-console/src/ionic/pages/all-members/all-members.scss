@@ -6,7 +6,7 @@ all-members {
       position: relative;
       max-width: none;
       &::after {
-        content: "";
+        content: '';
         display: block;
         border-bottom: 1px solid white;
         position: absolute;
@@ -19,9 +19,8 @@ all-members {
   }
 
   ion-datetime {
-    color:#000 !important;
+    color: #000 !important;
     background: none !important;
     opacity: 1 !important;
   }
-
 }

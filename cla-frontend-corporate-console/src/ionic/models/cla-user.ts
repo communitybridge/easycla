@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 export class ClaUserModel {
-
   // This model is based on CLA User class
   date_created: string;
   date_modified: string;
@@ -15,8 +14,5 @@ export class ClaUserModel {
   user_name: string;
   version: string;
 
-  constructor() {
-
-  }
-
+  constructor() {}
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 export class ClaSignatureModel {
-
   // This model is based on CLA Signature class
   date_created: string;
   date_modified: string;
@@ -26,6 +25,5 @@ export class ClaSignatureModel {
   github_whitelist: Array<string>;
   github_org_whitelist: Array<string>;
 
-  constructor() {
-  }
+  constructor() {}
 }

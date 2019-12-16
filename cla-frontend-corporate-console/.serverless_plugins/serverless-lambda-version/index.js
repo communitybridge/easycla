@@ -16,10 +16,10 @@ class LambdaArn {
     const compiledResources = this.serverless.service.provider.compiledCloudFormationTemplate.Resources;
     const lambdaArns = this.getResourcesWLambdaAssoc(resources);
 
-    _.forEach(lambdaArns, value => {
+    _.forEach(lambdaArns, (value) => {
       const associations = value.Properties.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations;
 
-      _.forEach(associations, association => {
+      _.forEach(associations, (association) => {
         const arn = association.LambdaFunctionARN;
         const versionRef = this.getArnAndVersion(compiledResources, arn);
         if (arn && versionRef) {
@@ -50,7 +50,7 @@ class LambdaArn {
   getResourcesWLambdaAssoc(resources) {
     const eventTypes = ['viewer-request', 'origin-request', 'origin-response', 'viewer-response'];
     return eventTypes
-      .map(eventType => this.getResourcesWLambdaAssocOfType(resources, eventType))
+      .map((eventType) => this.getResourcesWLambdaAssocOfType(resources, eventType))
       .reduce((previous, current) => ({ ...previous, ...current }), {});
   }
 

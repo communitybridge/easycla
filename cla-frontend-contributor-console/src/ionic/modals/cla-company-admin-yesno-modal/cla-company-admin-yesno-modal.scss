@@ -1,5 +1,4 @@
 cla-company-admin-yesno-modal {
-
   .content-container {
     max-width: 500px;
     margin: 0 auto;
@@ -8,7 +7,7 @@ cla-company-admin-yesno-modal {
   .clearfix {
     padding-top: 1px;
     &::after {
-      content: "";
+      content: '';
       display: block;
       clear: both;
     }

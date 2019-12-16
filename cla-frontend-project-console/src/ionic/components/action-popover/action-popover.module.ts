@@ -6,14 +6,8 @@ import { ActionPopoverComponent } from './action-popover';
 import { IonicPageModule } from 'ionic-angular';
 
 @NgModule({
-  declarations: [
-    ActionPopoverComponent,
-  ],
-  imports: [
-    IonicPageModule.forChild(ActionPopoverComponent),
-  ],
-  entryComponents: [
-    ActionPopoverComponent,
-  ]
+  declarations: [ActionPopoverComponent],
+  imports: [IonicPageModule.forChild(ActionPopoverComponent)],
+  entryComponents: [ActionPopoverComponent]
 })
 export class ActionPopoverComponentModule {}

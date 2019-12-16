@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ElementRef, ViewChild, } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
 import { EnvConfig } from '../../services/cla.env.utils';
 
@@ -10,7 +10,7 @@ import { EnvConfig } from '../../services/cla.env.utils';
 })
 @Component({
   selector: 'cla-new-company-modal',
-  templateUrl: 'cla-new-company-modal.html',
+  templateUrl: 'cla-new-company-modal.html'
 })
 export class ClaNewCompanyModal {
   projectId: string;
@@ -21,12 +21,7 @@ export class ClaNewCompanyModal {
 
   @ViewChild('textArea') textArea: ElementRef;
 
-
-  constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
-    public viewCtrl: ViewController,
-  ) {
+  constructor(public navCtrl: NavController, public navParams: NavParams, public viewCtrl: ViewController) {
     this.projectId = navParams.get('projectId');
     this.userId = navParams.get('userId');
     this.getDefaults();
@@ -36,9 +31,7 @@ export class ClaNewCompanyModal {
     this.consoleLink = EnvConfig['corp-console-link'];
   }
 
-  ngOnInit() {
-
-  }
+  ngOnInit() {}
 
   dismiss() {
     this.viewCtrl.dismiss();
@@ -60,5 +53,4 @@ export class ClaNewCompanyModal {
       console.log('Exception thrown attempting to copy to clipboard');
     }
   }
-
 }

@@ -6,12 +6,12 @@ import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angu
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CincoService } from '../../../services/cinco.service';
 import { KeycloakService } from '../../../services/keycloak/keycloak.service';
-import { DomSanitizer} from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'project/:projectId/groups/create'
@@ -20,9 +20,7 @@ import { Restricted } from '../../../decorators/restricted';
   selector: 'project-groups-create',
   templateUrl: 'project-groups-create.html'
 })
-
 export class ProjectGroupsCreatePage {
-
   projectId: string;
   keysGetter;
   projectPrivacy;
@@ -47,23 +45,25 @@ export class ProjectGroupsCreatePage {
     public navParams: NavParams,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
-    private domSanitizer : DomSanitizer,
+    private domSanitizer: DomSanitizer,
     public modalCtrl: ModalController,
     public rolesService: RolesService,
-    private formBuilder: FormBuilder,
+    private formBuilder: FormBuilder
   ) {
     this.projectId = navParams.get('projectId');
 
     this.form = formBuilder.group({
-      groupName:[this.groupName, Validators.compose([Validators.minLength(3), Validators.pattern(/^\S*$/), Validators.required])],
-      groupDescription:[this.groupDescription, Validators.compose([Validators.minLength(9), Validators.required])],
-      groupPrivacy:[this.groupPrivacy, Validators.compose([Validators.required])],
+      groupName: [
+        this.groupName,
+        Validators.compose([Validators.minLength(3), Validators.pattern(/^\S*$/), Validators.required])
+      ],
+      groupDescription: [this.groupDescription, Validators.compose([Validators.minLength(9), Validators.required])],
+      groupPrivacy: [this.groupPrivacy, Validators.compose([Validators.required])],
       approveMembers: [this.approveMembers],
       restrictPosts: [this.restrictPosts],
       approvePosts: [this.approvePosts],
       allowUnsubscribed: [this.allowUnsubscribed]
     });
-
   }
 
   ngOnInit() {
@@ -78,14 +78,14 @@ export class ProjectGroupsCreatePage {
   }
 
   getProjectConfig(projectId) {
-    this.cincoService.getProjectConfig(projectId).subscribe(response => {
+    this.cincoService.getProjectConfig(projectId).subscribe((response) => {
       if (response) {
         console.log(response);
         if (!response.mailingGroup) {
-          console.log("no mailingGroup");
-          console.log("creating a new mailingGroup");
-          this.cincoService.createMainProjectGroup(this.projectId).subscribe(response => {
-            console.log("new mailingGroup");
+          console.log('no mailingGroup');
+          console.log('creating a new mailingGroup');
+          this.cincoService.createMainProjectGroup(this.projectId).subscribe((response) => {
+            console.log('new mailingGroup');
             console.log(response);
           });
         }
@@ -94,7 +94,7 @@ export class ProjectGroupsCreatePage {
   }
 
   getProjectGroups() {
-    this.cincoService.getAllProjectGroups(this.projectId).subscribe(response => {
+    this.cincoService.getAllProjectGroups(this.projectId).subscribe((response) => {
       this.projectGroups = response;
       console.log(response);
     });
@@ -108,16 +108,16 @@ export class ProjectGroupsCreatePage {
     // });
     this.groupPrivacy = [
       {
-        value: "sub_group_privacy_none",
-        description: "Group listed and archive publicly viewable"
+        value: 'sub_group_privacy_none',
+        description: 'Group listed and archive publicly viewable'
       },
       {
-        value: "sub_group_privacy_archives",
-        description: "Group listed and archive privately viewable by members"
+        value: 'sub_group_privacy_archives',
+        description: 'Group listed and archive privately viewable by members'
       },
       {
-        value: "sub_group_privacy_unlisted",
-        description: "Group hidden and archive privately viewable by members"
+        value: 'sub_group_privacy_unlisted',
+        description: 'Group hidden and archive privately viewable by members'
       }
     ];
   }
@@ -146,7 +146,7 @@ export class ProjectGroupsCreatePage {
       restrict_posts: this.form.value.restrictPosts
     };
     console.log(this.group);
-    this.cincoService.createProjectGroup(this.projectId, this.group).subscribe(response => {
+    this.cincoService.createProjectGroup(this.projectId, this.group).subscribe((response) => {
       this.currentlySubmitting = false;
       this.navCtrl.setRoot('ProjectGroupsPage', {
         projectId: this.projectId
@@ -159,5 +159,4 @@ export class ProjectGroupsCreatePage {
       projectId: this.projectId
     });
   }
-
 }

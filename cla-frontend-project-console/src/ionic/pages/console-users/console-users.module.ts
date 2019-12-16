@@ -8,16 +8,8 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    ConsoleUsersPage,
-  ],
-  imports: [
-    LoadingSpinnerComponentModule,
-    LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ConsoleUsersPage)
-  ],
-  entryComponents: [
-    ConsoleUsersPage,
-  ],
+  declarations: [ConsoleUsersPage],
+  imports: [LoadingSpinnerComponentModule, LoadingDisplayDirectiveModule, IonicPageModule.forChild(ConsoleUsersPage)],
+  entryComponents: [ConsoleUsersPage]
 })
 export class ConsoleUsersPageModule {}

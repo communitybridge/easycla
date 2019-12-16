@@ -1,16 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {Events, IonicPage, ModalController, NavController, NavParams, ViewController,} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { Events, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla-contract-companies-modal'
 })
 @Component({
   selector: 'cla-contract-companies-modal',
-  templateUrl: 'cla-contract-companies-modal.html',
+  templateUrl: 'cla-contract-companies-modal.html'
 })
 export class ClaContractCompaniesModal {
   loading: any;
@@ -24,7 +24,8 @@ export class ClaContractCompaniesModal {
     public viewCtrl: ViewController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    public events: Events) {
+    public events: Events
+  ) {
     this.getDefaults();
 
     events.subscribe('modal:close', () => {
@@ -41,13 +42,13 @@ export class ClaContractCompaniesModal {
     this.companies = [];
     this.loading = {
       initial: true,
-      companies: true,
-    }
+      companies: true
+    };
   }
 
   getProjectCompanies() {
     this.loading.companies = true;
-    this.claService.getProjectCompanies(this.claProjectId).subscribe(companies => {
+    this.claService.getProjectCompanies(this.claProjectId).subscribe((companies) => {
       this.loading.initial = false;
       this.loading.companies = false;
       this.companies = companies;
