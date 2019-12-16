@@ -1,15 +1,14 @@
-@import "./table";
-@import "./modal";
-@import "./footer";
+@import './table';
+@import './modal';
+@import './footer';
 
 ion-icon {
   color: color($colors, gray);
 }
 
-ion-icon[name="menu"] {
+ion-icon[name='menu'] {
   color: color($colors, white);
 }
-
 
 .toolbar {
   background-color: color($colors, white);
@@ -48,7 +47,7 @@ ion-content .scroll-content > header {
   position: relative;
   background-color: #fff;
   &:after {
-    content: "";
+    content: '';
     @extend .header-md::after;
   }
 }

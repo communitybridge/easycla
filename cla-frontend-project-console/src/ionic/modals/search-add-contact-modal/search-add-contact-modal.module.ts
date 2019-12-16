@@ -9,17 +9,13 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 
 @NgModule({
-  declarations: [
-    SearchAddContactModal,
-  ],
+  declarations: [SearchAddContactModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
     IonicPageModule.forChild(SearchAddContactModal)
   ],
-  entryComponents: [
-    SearchAddContactModal,
-  ]
+  entryComponents: [SearchAddContactModal]
 })
 export class SearchAddContactModalModule {}

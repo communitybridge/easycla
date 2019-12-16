@@ -1,5 +1,4 @@
 contact-update-modal {
-
   .field-notice {
     font-size: 1.2rem;
     color: #999;
@@ -15,11 +14,10 @@ contact-update-modal {
     ion-icon {
       position: relative;
       top: 12px;
-      opacity: .3;
+      opacity: 0.3;
       &[item-left] + .item-inner {
         margin-left: 0;
       }
     }
   }
-
 }

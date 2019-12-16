@@ -1,19 +1,19 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {AlertController, IonicPage, NavParams, ViewController} from "ionic-angular";
-import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {ClaService} from "../../services/cla.service";
-import {ClaCompanyModel} from "../../models/cla-company";
-import {AuthService} from "../../services/auth.service";
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
-  segment: "add-company-modal"
+  segment: 'add-company-modal'
 })
 @Component({
-  selector: "add-company-modal",
-  templateUrl: "add-company-modal.html"
+  selector: 'add-company-modal',
+  templateUrl: 'add-company-modal.html'
 })
 export class AddCompanyModal {
   form: FormGroup;
@@ -33,7 +33,6 @@ export class AddCompanyModal {
   existingCompanyId: string;
   loading: any;
 
-
   constructor(
     public navParams: NavParams,
     public viewCtrl: ViewController,
@@ -46,11 +45,11 @@ export class AddCompanyModal {
   }
 
   getDefaults() {
-    this.company = this.navParams.get("company");
+    this.company = this.navParams.get('company');
     this.companies = [];
     this.filteredCompanies = [];
     this.loading = {
-      submit: false,
+      submit: false
     };
 
     this.form = this.formBuilder.group({
@@ -86,14 +85,14 @@ export class AddCompanyModal {
       company_manager_user_name: this.userName
     };
     this.claService.postCompany(company).subscribe(
-      response => {
+      (response) => {
         this.currentlySubmitting = false;
         this.dismiss();
       },
       (err: any) => {
         if (err.status === 409) {
           let errJSON = err.json();
-          this.companyExistAlert(errJSON.company_id)
+          this.companyExistAlert(errJSON.company_id);
         }
         this.currentlySubmitting = false;
       }
@@ -102,21 +101,20 @@ export class AddCompanyModal {
 
   joinCompany() {
     this.loading.submit = true;
-    const userId = localStorage.getItem("userid");
-    const userEmail = localStorage.getItem("user_email");
-    const userName = localStorage.getItem("user_name");
-    this.claService.sendInviteRequestEmail(this.existingCompanyId, userId, userEmail, userName)
-      .subscribe(
-        response => {
-          this.loading.submit = false;
-          this.dismiss();
-        },
-        exception => {
-          this.loading.submit = false;
-          console.log("Exception while calling: sendInviteRequestEmail() for company ID: " +
-            this.existingCompanyId);
-          console.log(exception);
-        });
+    const userId = localStorage.getItem('userid');
+    const userEmail = localStorage.getItem('user_email');
+    const userName = localStorage.getItem('user_name');
+    this.claService.sendInviteRequestEmail(this.existingCompanyId, userId, userEmail, userName).subscribe(
+      (response) => {
+        this.loading.submit = false;
+        this.dismiss();
+      },
+      (exception) => {
+        this.loading.submit = false;
+        console.log('Exception while calling: sendInviteRequestEmail() for company ID: ' + this.existingCompanyId);
+        console.log(exception);
+      }
+    );
   }
 
   updateCompany() {
@@ -125,14 +123,14 @@ export class AddCompanyModal {
       company_name: this.companyName
     };
     this.claService.putCompany(company).subscribe(
-      response => {
+      (response) => {
         this.currentlySubmitting = false;
         this.dismiss();
       },
       (err: any) => {
         if (err.status === 409) {
           let errJSON = err.json();
-          this.companyExistAlert(errJSON.company_id)
+          this.companyExistAlert(errJSON.company_id);
         }
         this.currentlySubmitting = false;
       }
@@ -151,10 +149,11 @@ export class AddCompanyModal {
         {
           text: 'Request',
           handler: () => {
-            const userId = localStorage.getItem("userid");
-            const userEmail = localStorage.getItem("user_email");
-            const userName = localStorage.getItem("user_name");
-            this.claService.sendInviteRequestEmail(company_id, userId, userEmail, userName)
+            const userId = localStorage.getItem('userid');
+            const userEmail = localStorage.getItem('user_email');
+            const userName = localStorage.getItem('user_name');
+            this.claService
+              .sendInviteRequestEmail(company_id, userId, userEmail, userName)
               .subscribe(() => this.dismiss());
           }
         },
@@ -172,8 +171,8 @@ export class AddCompanyModal {
 
   getAllCompanies() {
     this.claService.getAllCompanies().subscribe((response) => {
-      this.companies = response
-    })
+      this.companies = response;
+    });
   }
 
   findCompany(event) {
@@ -183,14 +182,19 @@ export class AddCompanyModal {
     let companyName = event.value.replace(/[^\w-]+/g, '');
     if (companyName.length > 0) {
       this.companySet = false;
-      this.filteredCompanies = this.companies.map((company) => {
-        let formattedCompany;
-        if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
-          formattedCompany = company.company_name.replace(new RegExp(companyName, "gi"), match => '<span class="highlightText">' + match + '</span>')
-        }
-        company.filteredCompany = formattedCompany;
-        return company;
-      }).filter(company => company.filteredCompany);
+      this.filteredCompanies = this.companies
+        .map((company) => {
+          let formattedCompany;
+          if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
+            formattedCompany = company.company_name.replace(
+              new RegExp(companyName, 'gi'),
+              (match) => '<span class="highlightText">' + match + '</span>'
+            );
+          }
+          company.filteredCompany = formattedCompany;
+          return company;
+        })
+        .filter((company) => company.filteredCompany);
     }
 
     if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
@@ -209,7 +213,7 @@ export class AddCompanyModal {
   }
 
   addButtonDisabled(): boolean {
-    return false
+    return false;
   }
 
   joinButtonDisabled(): boolean {
@@ -234,19 +238,20 @@ export class AddCompanyModal {
 
   private updateUserInfoBasedLFID() {
     if (this.authService.isAuthenticated()) {
-      this.authService.getIdToken()
-        .then(token => {
+      this.authService
+        .getIdToken()
+        .then((token) => {
           return this.authService.parseIdToken(token);
         })
-        .then(tokenParsed => {
-          if (tokenParsed && tokenParsed["email"]) {
-            this.userEmail = tokenParsed["email"];
+        .then((tokenParsed) => {
+          if (tokenParsed && tokenParsed['email']) {
+            this.userEmail = tokenParsed['email'];
           }
-          if (tokenParsed && tokenParsed["name"]) {
-            this.userName = tokenParsed["name"];
+          if (tokenParsed && tokenParsed['name']) {
+            this.userName = tokenParsed['name'];
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(JSON.stringify(error));
           return;
         });

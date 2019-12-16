@@ -1,23 +1,23 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component, ViewChild} from "@angular/core";
-import {App, Nav, Platform} from "ionic-angular";
-import {StatusBar} from "@ionic-native/status-bar";
-import {SplashScreen} from "@ionic-native/splash-screen";
+import { Component, ViewChild } from '@angular/core';
+import { App, Nav, Platform } from 'ionic-angular';
+import { StatusBar } from '@ionic-native/status-bar';
+import { SplashScreen } from '@ionic-native/splash-screen';
 
-import {CincoService} from "../services/cinco.service";
-import {KeycloakService} from "../services/keycloak/keycloak.service";
-import {RolesService} from "../services/roles.service";
-import {ClaService} from "../services/cla.service";
-import {HttpClient} from "../services/http-client";
+import { CincoService } from '../services/cinco.service';
+import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { RolesService } from '../services/roles.service';
+import { ClaService } from '../services/cla.service';
+import { HttpClient } from '../services/http-client';
 
-import {AuthService} from "../services/auth.service";
-import {AuthPage} from "../pages/auth/auth";
-import {EnvConfig} from "../services/cla.env.utils";
+import { AuthService } from '../services/auth.service';
+import { AuthPage } from '../pages/auth/auth';
+import { EnvConfig } from '../services/cla.env.utils';
 
 @Component({
-  templateUrl: "app.html"
+  templateUrl: 'app.html'
 })
 export class MyApp {
   @ViewChild(Nav) nav: Nav;
@@ -51,14 +51,14 @@ export class MyApp {
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to 'true', otherwise we're using normal services deployed in each environment
-    const localServicesMode = ((process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true');
+    const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';
     // Set true for local debugging using localhost (local ports set in claService)
     this.claService.isLocalTesting(localServicesMode);
 
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
     // here to check authentication state
-    this.authService.handleAuthentication()
+    this.authService.handleAuthentication();
   }
 
   getDefaults() {
@@ -68,7 +68,7 @@ export class MyApp {
   }
 
   ngOnInit() {
-    this.rolesService.getUserRolesPromise().then(userRoles => {
+    this.rolesService.getUserRolesPromise().then((userRoles) => {
       this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
@@ -95,14 +95,14 @@ export class MyApp {
   regeneratePagesMenu() {
     this.pages = [
       {
-        title: "All Companies",
+        title: 'All Companies',
         access: true,
-        component: "CompaniesPage"
+        component: 'CompaniesPage'
       },
       {
-        title: "Sign Out",
+        title: 'Sign Out',
         access: true,
-        component: "LogoutPage"
+        component: 'LogoutPage'
       }
     ];
   }

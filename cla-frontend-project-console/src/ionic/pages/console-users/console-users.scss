@@ -6,7 +6,7 @@ console-users {
       position: relative;
       max-width: none;
       &::after {
-        content: "";
+        content: '';
         display: block;
         border-bottom: 1px solid white;
         position: absolute;

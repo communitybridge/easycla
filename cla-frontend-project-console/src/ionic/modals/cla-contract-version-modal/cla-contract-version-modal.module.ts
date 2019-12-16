@@ -6,20 +6,16 @@ import { IonicPageModule } from 'ionic-angular';
 import { ClaContractVersionModal } from './cla-contract-version-modal';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { ModalHeaderComponentModule } from "../../components/modal-header/modal-header.module";
+import { ModalHeaderComponentModule } from '../../components/modal-header/modal-header.module';
 
 @NgModule({
-  declarations: [
-    ClaContractVersionModal
-  ],
+  declarations: [ClaContractVersionModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     ModalHeaderComponentModule,
     IonicPageModule.forChild(ClaContractVersionModal)
   ],
-  entryComponents: [
-    ClaContractVersionModal
-  ]
+  entryComponents: [ClaContractVersionModal]
 })
 export class ClaContractVersionModalModule {}

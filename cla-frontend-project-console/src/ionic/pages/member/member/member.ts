@@ -11,14 +11,14 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 // @IonicPage({
 //   segment: 'project/:projectId/member/:memberId'
 // })
 @Component({
   selector: 'member',
-  templateUrl: 'member.html',
+  templateUrl: 'member.html'
 })
 export class MemberPage {
   projectId: any;
@@ -54,26 +54,26 @@ export class MemberPage {
     this.loading = {
       member: true,
       projects: true,
-      contacts: true,
+      contacts: true
     };
     this.member = {
       id: this.memberId,
-      projectId: "",
-      projectName: "",
+      projectId: '',
+      projectName: '',
       org: {
-        id: "",
-        name: "",
-        parent: "",
-        logoRef: "",
-        url: "",
-        addresses: ""
+        id: '',
+        name: '',
+        parent: '',
+        logoRef: '',
+        url: '',
+        addresses: ''
       },
-      product: "",
-      tier: "",
-      annualDues: "",
-      startDate: "",
-      renewalDate: "",
-      invoices: [""]
+      product: '',
+      tier: '',
+      annualDues: '',
+      startDate: '',
+      renewalDate: '',
+      invoices: ['']
     };
 
     this.memberContactRoles = {};
@@ -83,20 +83,20 @@ export class MemberPage {
         arrayProp: 'type',
         prop: 'role',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       name: {
         arrayProp: 'contact.givenName',
         prop: 'name',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       email: {
         arrayProp: 'contact.email',
         prop: 'email',
         sortType: 'text',
-        sort: null,
-      },
+        sort: null
+      }
     };
   }
 
@@ -112,16 +112,16 @@ export class MemberPage {
   }
 
   getMemberContactRoles() {
-    this.cincoService.getMemberContactRoles().subscribe(response => {
-      if(response) {
+    this.cincoService.getMemberContactRoles().subscribe((response) => {
+      if (response) {
         this.memberContactRoles = response;
       }
     });
   }
 
   getMember(projectId, memberId) {
-    this.cincoService.getMember(projectId, memberId).subscribe(response => {
-      if(response) {
+    this.cincoService.getMember(projectId, memberId).subscribe((response) => {
+      if (response) {
         this.member = response;
         this.loading.member = false;
       }
@@ -129,8 +129,8 @@ export class MemberPage {
   }
 
   getMemberContacts(projectId, memberId) {
-    this.cincoService.getMemberContacts(projectId, memberId).subscribe(response => {
-      if(response) {
+    this.cincoService.getMemberContacts(projectId, memberId).subscribe((response) => {
+      if (response) {
         this.memberContacts = response;
       }
       this.loading.contacts = false;
@@ -141,9 +141,9 @@ export class MemberPage {
     let modal = this.modalCtrl.create('SearchAddContactModal', {
       projectId: this.projectId,
       memberId: this.memberId,
-      org: this.member.org,
+      org: this.member.org
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getMemberContacts(this.projectId, this.memberId);
     });
@@ -155,9 +155,9 @@ export class MemberPage {
       projectId: this.projectId,
       memberId: this.member.id,
       org: this.member.org,
-      contact: contact,
+      contact: contact
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getMemberContacts(this.projectId, this.memberId);
     });
@@ -166,16 +166,11 @@ export class MemberPage {
 
   openProjectPage(projectId) {
     this.navCtrl.push('ProjectPage', {
-      projectId: projectId,
+      projectId: projectId
     });
   }
 
   sortContacts(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.memberContacts,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.memberContacts);
   }
-
 }

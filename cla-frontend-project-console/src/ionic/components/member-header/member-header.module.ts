@@ -8,16 +8,8 @@ import { LoadingSpinnerComponentModule } from '../loading-spinner/loading-spinne
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    MemberHeaderComponent,
-  ],
-  imports: [
-    IonicModule,
-    LoadingSpinnerComponentModule,
-    LoadingDisplayDirectiveModule,
-  ],
-  exports: [
-    MemberHeaderComponent,
-  ]
+  declarations: [MemberHeaderComponent],
+  imports: [IonicModule, LoadingSpinnerComponentModule, LoadingDisplayDirectiveModule],
+  exports: [MemberHeaderComponent]
 })
 export class MemberHeaderComponentModule {}

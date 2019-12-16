@@ -12,10 +12,10 @@ project-analytics {
   .double-height {
     height: 710px;
   }
-  .issues-tile{
+  .issues-tile {
     text-align: center;
   }
-  .issues-tile-index{
+  .issues-tile-index {
     font-size: 24px;
     font-weight: 500;
     font-style: normal;
@@ -26,18 +26,18 @@ project-analytics {
     color: #1cb2e4;
     margin-top: 10px;
   }
-  .issues-tile-index-separator{
-    margin-left:auto;
-    margin-right:auto;
-    display:block;
+  .issues-tile-index-separator {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
     width: 0px;
     height: 54px;
     border: solid 1px #1cb2e4;
   }
   .contributors-tile-index-separator {
-    margin-left:auto;
-    margin-right:auto;
-    display:block;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
     max-width: 250px;
     height: 1px;
     border: solid 1px #1cb2e4;
@@ -65,7 +65,7 @@ project-analytics {
     text-align: left;
     color: #1cb2e4;
   }
-  .contributor-icon{
+  .contributor-icon {
     font-size: 50px;
     vertical-align: middle;
     margin-bottom: 30px;
@@ -74,22 +74,22 @@ project-analytics {
   .contributor-data {
     color: #1cb2e4;
   }
-  .row{
+  .row {
     align-items: center;
   }
-  .progress-cla-bar{
+  .progress-cla-bar {
     background-color: #ebebeb;
     height: 25px;
     width: 100%;
     overflow: hidden;
   }
-  .progress-one{
+  .progress-one {
     background-color: #044d74;
     height: 25px;
     float: left;
     width: 40%;
   }
-  .progress-two{
+  .progress-two {
     background-color: #1cb2e4;
     height: 25px;
     float: left;
@@ -112,13 +112,13 @@ project-analytics {
   }
   .pipeline-content {
     text-align: center;
-    margin-left:auto;
-    margin-right:auto;
+    margin-left: auto;
+    margin-right: auto;
   }
   .pipeline-chart {
     text-align: center;
-    margin-left:auto;
-    margin-right:auto;
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 10px;
     margin-bottom: 15px;
     max-width: 300px;
@@ -131,8 +131,8 @@ project-analytics {
     font-weight: 300;
     line-height: 1;
     bottom: 60px;
-    margin-left:auto;
-    margin-right:auto;
+    margin-left: auto;
+    margin-right: auto;
     display: block;
     font-size: 42px;
     font-weight: 500;
@@ -165,7 +165,7 @@ project-analytics {
   }
   .selected-table-row {
     font-size: 16px;
-    font-weight:bold;
+    font-weight: bold;
   }
   .hover-table-row {
     background: #ccc;
@@ -186,5 +186,4 @@ project-analytics {
   .row-number-cell {
     text-align: center;
   }
-
 }

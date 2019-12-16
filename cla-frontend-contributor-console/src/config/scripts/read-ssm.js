@@ -12,7 +12,9 @@ const AWS = require('aws-sdk');
  * @returns {Promise<{ [key:string]: string}>}
  */
 async function retrieveSSMValues(variables, stage, region, profile) {
-  const scopedVariables = variables.map(param => { return `cla-${param}-${stage}` });
+  const scopedVariables = variables.map((param) => {
+    return `cla-${param}-${stage}`;
+  });
 
   const result = await requestSSMParameters(scopedVariables, stage, region, profile);
   const parameters = result.Parameters;
@@ -22,14 +24,14 @@ async function retrieveSSMValues(variables, stage, region, profile) {
   }
   const scopedParams = createParameterMap(parameters, stage);
   var params = {};
-  Object.keys(scopedParams).forEach(key => {
+  Object.keys(scopedParams).forEach((key) => {
     var param = scopedParams[key];
     key = key.replace('cla-', '');
     key = key.replace(`-${stage}`, '');
     params[key] = param;
   });
 
-  variables.forEach(variable => {
+  variables.forEach((variable) => {
     if (params[variable] === undefined) {
       throw new Error(`Missing SSM parameter with name ${variable}`);
     }
@@ -61,8 +63,8 @@ function requestSSMParameters(variables, stage, region, profile) {
  */
 function createParameterMap(parameters, stage) {
   const params = parameters
-    .filter(param => param.Name.endsWith(`-${stage}`))
-    .map(param => {
+    .filter((param) => param.Name.endsWith(`-${stage}`))
+    .map((param) => {
       const output = {};
       output[param.Name] = param.Value;
       return output;

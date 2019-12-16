@@ -11,9 +11,7 @@ import { MemberHeaderComponentModule } from '../../../components/member-header/m
 import { MemberNavigationComponentModule } from '../../../components/member-navigation/member-navigation.module';
 
 @NgModule({
-  declarations: [
-    MemberDetailsPage,
-  ],
+  declarations: [MemberDetailsPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
@@ -22,8 +20,6 @@ import { MemberNavigationComponentModule } from '../../../components/member-navi
     MemberNavigationComponentModule,
     IonicPageModule.forChild(MemberDetailsPage)
   ],
-  entryComponents: [
-    MemberDetailsPage,
-  ]
+  entryComponents: [MemberDetailsPage]
 })
 export class MemberDetailsPageModule {}

@@ -8,12 +8,10 @@ import { Input, Component } from '@angular/core';
   templateUrl: 'data-table.html'
 })
 export class DataTableComponent {
-  
   @Input('signatures')
   private signatures: any[] = [];
 
   constructor() {
     this.signatures;
   }
-
 }

@@ -39,7 +39,7 @@ member-navigation {
 
     &__link {
       padding: 0 12px;
-      opacity: .65;
+      opacity: 0.65;
       font-weight: 500;
       font-size: 13px;
       text-transform: uppercase;
@@ -58,7 +58,7 @@ member-navigation {
 
     &__link.active {
       opacity: 1;
-      border-bottom-color: #18FFFF;
+      border-bottom-color: #18ffff;
     }
 
     .scrollindicator {
@@ -74,11 +74,11 @@ member-navigation {
       user-select: none;
     }
     .scrollindicator.disabled {
-      opacity: .12;
+      opacity: 0.12;
       cursor: default;
     }
     .scrollindicator--right {
-      right:0;
+      right: 0;
     }
     .scrollindicator--left {
       left: 0;

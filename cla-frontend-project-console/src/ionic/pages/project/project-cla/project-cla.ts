@@ -78,31 +78,31 @@ export class ProjectClaPage {
 
   getClaProjects() {
     this.loading.claProjects = true;
-    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe(projects => {
+    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((projects) => {
       this.claProjects = this.sortClaProjects(projects);
       this.loading.claProjects = false;
 
-      this.claProjects.map(project => {
-        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe(githubOrganizations => {
+      this.claProjects.map((project) => {
+        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
           project.githubOrganizations = githubOrganizations;
         });
       });
 
       // Get Github Organizations
       this.loading.orgs = true;
-      this.claService.getOrganizations(this.sfdcProjectId).subscribe(organizations => {
+      this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
         this.githubOrganizations = organizations;
         this.loading.orgs = false;
 
         for (let organization of organizations) {
-          this.claService.getGithubGetNamespace(organization.organization_name).subscribe(providerInfo => {
+          this.claService.getGithubGetNamespace(organization.organization_name).subscribe((providerInfo) => {
             organization.providerInfo = providerInfo;
           });
 
           if (organization.organization_installation_id) {
             this.claService
               .getGithubOrganizationRepositories(organization.organization_name)
-              .subscribe(repositories => {
+              .subscribe((repositories) => {
                 organization.repositories = repositories;
               });
           }
@@ -111,7 +111,7 @@ export class ProjectClaPage {
 
       for (let project of projects) {
         //Get Gerrit Instances
-        this.claService.getGerritInstance(project.project_id).subscribe(gerrits => {
+        this.claService.getGerritInstance(project.project_id).subscribe((gerrits) => {
           project.gerrits = gerrits;
         });
       }
@@ -133,7 +133,7 @@ export class ProjectClaPage {
         projectId: this.sfdcProjectId
       });
     }
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       this.getClaProjects();
     });
     modal.present();
@@ -151,7 +151,7 @@ export class ProjectClaPage {
       claProjectId: claProjectId,
       documentType: documentType
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       this.getClaProjects();
     });
     modal.present();
@@ -172,7 +172,7 @@ export class ProjectClaPage {
     // modal.onDidDismiss(data => {
     //   this.getClaProjects();
     // });
-    modal.present().catch(error => {
+    modal.present().catch((error) => {
       console.log('Error opening signatures modal view, error: ' + error);
     });
   }
@@ -190,7 +190,7 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaOrganizationProviderModal', {
       claProjectId: claProjectId
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       if (data) {
         this.openClaOrganizationAppModal();
         this.getClaProjects();
@@ -203,7 +203,7 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaConfigureGithubRepositoriesModal', {
       claProjectId: claProjectId
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       this.getClaProjects();
     });
     modal.present();
@@ -213,7 +213,7 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaGerritModal', {
       projectId: projectId
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       this.getClaProjects();
     });
     modal.present();
@@ -221,7 +221,7 @@ export class ProjectClaPage {
 
   openClaOrganizationAppModal() {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       this.getClaProjects();
     });
     modal.present();
@@ -243,7 +243,7 @@ export class ProjectClaPage {
   searchProjects(name: string, projects: any) {
     let found = false;
 
-    projects.forEach(project => {
+    projects.forEach((project) => {
       if (project.project_name.search(name) !== -1) {
         found = true;
       }
@@ -284,13 +284,13 @@ export class ProjectClaPage {
   }
 
   deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(organization.organization_name).subscribe(response => {
+    this.claService.deleteGithubOrganization(organization.organization_name).subscribe((response) => {
       this.getClaProjects();
     });
   }
 
   deleteGerritInstance(gerrit) {
-    this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe(response => {
+    this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
       this.getClaProjects();
     });
   }
