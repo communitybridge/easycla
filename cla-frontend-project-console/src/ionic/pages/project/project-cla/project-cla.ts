@@ -82,13 +82,8 @@ export class ProjectClaPage {
       this.claProjects = this.sortClaProjects(projects);
       this.loading.claProjects = false;
 
-<<<<<<< HEAD
       this.claProjects.map((project) => {
         this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
-=======
-      this.claProjects.map(project => {
-        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe(githubOrganizations => {
->>>>>>> master
           project.githubOrganizations = githubOrganizations;
         });
       });
@@ -100,22 +95,14 @@ export class ProjectClaPage {
         this.loading.orgs = false;
 
         for (let organization of organizations) {
-<<<<<<< HEAD
           this.claService.getGithubGetNamespace(organization.organization_name).subscribe((providerInfo) => {
-=======
-          this.claService.getGithubGetNamespace(organization.organization_name).subscribe(providerInfo => {
->>>>>>> master
             organization.providerInfo = providerInfo;
           });
 
           if (organization.organization_installation_id) {
             this.claService
               .getGithubOrganizationRepositories(organization.organization_name)
-<<<<<<< HEAD
               .subscribe((repositories) => {
-=======
-              .subscribe(repositories => {
->>>>>>> master
                 organization.repositories = repositories;
               });
           }
@@ -185,7 +172,7 @@ export class ProjectClaPage {
     // modal.onDidDismiss(data => {
     //   this.getClaProjects();
     // });
-    modal.present().catch(error => {
+    modal.present().catch((error) => {
       console.log('Error opening signatures modal view, error: ' + error);
     });
   }
@@ -234,11 +221,7 @@ export class ProjectClaPage {
 
   openClaOrganizationAppModal() {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
-<<<<<<< HEAD
     modal.onDidDismiss((data) => {
-=======
-    modal.onDidDismiss(data => {
->>>>>>> master
       this.getClaProjects();
     });
     modal.present();
@@ -260,7 +243,7 @@ export class ProjectClaPage {
   searchProjects(name: string, projects: any) {
     let found = false;
 
-    projects.forEach(project => {
+    projects.forEach((project) => {
       if (project.project_name.search(name) !== -1) {
         found = true;
       }
@@ -301,21 +284,13 @@ export class ProjectClaPage {
   }
 
   deleteClaGithubOrganization(organization) {
-<<<<<<< HEAD
     this.claService.deleteGithubOrganization(organization.organization_name).subscribe((response) => {
-=======
-    this.claService.deleteGithubOrganization(organization.organization_name).subscribe(response => {
->>>>>>> master
       this.getClaProjects();
     });
   }
 
   deleteGerritInstance(gerrit) {
-<<<<<<< HEAD
     this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
-=======
-    this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe(response => {
->>>>>>> master
       this.getClaProjects();
     });
   }
