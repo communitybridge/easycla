@@ -3,7 +3,7 @@ import { IonicPage, NavController, AlertController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from '../../services/roles.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
+import { EmailValidator } from "../../validators/email";
 import { getNotificationURL, generatePrimaryCLAManagerEmail, generateNoPrimaryCLAManagerEmail, generateNoCompanyEmail } from '../../services/notification.utils';
 import { EnvConfig } from "../../services/cla.env.utils";
 
@@ -181,9 +181,9 @@ export class ClaManagerOnboardingPage {
         {
           text: 'Ok',
           handler: () => {
-            this.navCtrl.push('CompaniesPage');
+            this.navCtrl.push("CompaniesPage");
           }
-        }
+        },
       ]
     });
     alert.present();
