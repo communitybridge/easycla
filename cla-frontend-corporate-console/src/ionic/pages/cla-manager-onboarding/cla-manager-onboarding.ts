@@ -123,7 +123,7 @@ export class ClaManagerOnboardingPage {
          
           const emailBody = generatePrimaryCLAManagerEmail(claManager, user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink )
           // const claManager = response.signatures[0].signatureACL[0].emails[0];
-          this.claService.sendNotification(
+          return this.claService.sendNotification(
             sender_email,
             'CLA: Request of Access for Corporate CLA Manager',
             [this.userEmail],
@@ -135,7 +135,7 @@ export class ClaManagerOnboardingPage {
         else {
           const sender_email = getNotificationURL();
           const emailBody = generateNoPrimaryCLAManagerEmail(user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink)
-          this.claService.sendNotification(
+          return this.claService.sendNotification(
             sender_email,
             'CLA: Request of Access for Primary Corporate CLA Manager',
             [this.userEmail],
