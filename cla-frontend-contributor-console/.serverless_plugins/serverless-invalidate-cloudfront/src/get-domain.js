@@ -6,7 +6,7 @@ function getNameFromDistributionInfo(distributionId, cloudfront) {
   return cloudfront
     .getDistribution(params, (data, err) => {})
     .promise()
-    .then(data => {
+    .then((data) => {
       if (!data.DomainName) {
         throw Error('GetDomain: No domain name found');
       }
@@ -24,9 +24,9 @@ function getNameFromDistributionInfo(distributionId, cloudfront) {
 function getDomain(distributionName, aws, cloudfront) {
   const stackName = aws.naming.getStackName();
 
-  return aws.request('CloudFormation', 'describeStackResources', { StackName: stackName }).then(resp => {
+  return aws.request('CloudFormation', 'describeStackResources', { StackName: stackName }).then((resp) => {
     const stackResources = resp.StackResources;
-    const resource = stackResources.find(r => r.LogicalResourceId === distributionName);
+    const resource = stackResources.find((r) => r.LogicalResourceId === distributionName);
     if (resource === undefined) {
       throw Error(`Unable to find distribution matching '${name}'.`);
     }

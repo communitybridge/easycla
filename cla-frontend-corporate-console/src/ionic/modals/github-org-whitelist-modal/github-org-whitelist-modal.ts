@@ -1,9 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {Events, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { Events, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'github-org-whitelist-modal'
@@ -41,23 +41,24 @@ export class GithubOrgWhitelistModal {
 
   getGitHubOrgWhiteList() {
     //console.log('getGitHubOrgWhiteList - using signature id: ' + this.signatureId);
-    this.claService.getGithubOrganizationWhitelistEntries(this.signatureId)
-      .subscribe(organizations => {
-        this.organizations = organizations;
-      });
+    this.claService.getGithubOrganizationWhitelistEntries(this.signatureId).subscribe((organizations) => {
+      this.organizations = organizations;
+    });
   }
 
   addGitHubOrgWhiteList(organizationId) {
     //console.log('addGitHubOrgWhiteList - using signature id: ' + this.signatureId +
     //  ' with organization id: ' + organizationId);
-    this.claService.addGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
+    this.claService
+      .addGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
       .subscribe(() => this.getGitHubOrgWhiteList());
   }
 
   removeGitHubOrgWhiteList(organizationId) {
     //console.log('removeGitHubOrgWhiteList - using signature id: ' + this.signatureId +
     //  ' with organization id: ' + organizationId);
-    this.claService.removeGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
+    this.claService
+      .removeGithubOrganizationWhitelistEntry(this.signatureId, organizationId)
       .subscribe(() => this.getGitHubOrgWhiteList());
   }
 

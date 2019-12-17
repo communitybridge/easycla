@@ -1,5 +1,4 @@
 company-page {
-  
   .page-content {
     min-height: calc(100vh - 200px);
     padding: 10px 10px;
@@ -18,7 +17,7 @@ company-page {
   }
 
   ion-header {
-    border-bottom: 40px solid #4C79B6;
+    border-bottom: 40px solid #4c79b6;
 
     .toolbar {
       color: #7b7b7b;
@@ -40,12 +39,13 @@ company-page {
       left: calc(50% - 20px);
     }
   }
-  
+
   th .clickable {
     text-align: center;
   }
-  
-  table.invites .invites th, .invites td{
+
+  table.invites .invites th,
+  .invites td {
     vertical-align: center;
     text-align: center;
   }
@@ -53,5 +53,4 @@ company-page {
   ion-footer {
     position: relative;
   }
-
 }

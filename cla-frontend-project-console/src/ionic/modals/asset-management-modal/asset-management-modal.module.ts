@@ -8,16 +8,12 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    AssetManagementModal
-  ],
+  declarations: [AssetManagementModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(AssetManagementModal)
   ],
-  entryComponents: [
-    AssetManagementModal
-  ]
+  entryComponents: [AssetManagementModal]
 })
 export class AssetManagementModalModule {}

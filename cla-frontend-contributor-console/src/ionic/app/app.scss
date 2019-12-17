@@ -17,10 +17,10 @@
 //@import url('https://fonts.googleapis.com/css?family=Lato');
 //@import url('https://fonts.googleapis.com/css?family=Open+Sans');
 //@import url('https://fonts.googleapis.com/css?family=Work+Sans');
-@import "../assets/fonts/lato-font.scss";
-@import "../assets/fonts/open-sans-font.scss";
-@import "../assets/fonts/work-sans-font.scss";
-@import "../theme/styles.scss";
+@import '../assets/fonts/lato-font.scss';
+@import '../assets/fonts/open-sans-font.scss';
+@import '../assets/fonts/work-sans-font.scss';
+@import '../theme/styles.scss';
 
 body ion-app.ios {
   font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
@@ -42,11 +42,11 @@ body ion-app.wp {
   padding-right: 0;
 }
 
-ion-icon{
+ion-icon {
   color: color($colors, gray);
 }
 
-ion-icon[name=menu] {
+ion-icon[name='menu'] {
   color: color($colors, white);
 }
 
@@ -57,10 +57,9 @@ ion-icon[name=menu] {
   }
 }
 
-.item-md.item-block .item-inner{
+.item-md.item-block .item-inner {
   padding-right: 0;
 }
-
 
 .card-md .item-md.item-block .item-inner {
   border-bottom: 1px solid #dedede;
@@ -71,7 +70,7 @@ ion-icon[name=menu] {
   padding: 0;
 }
 
-.md ion-footer .toolbar:last-child{
+.md ion-footer .toolbar:last-child {
   padding-bottom: 1rem;
 }
 
@@ -83,5 +82,5 @@ ion-icon[name=menu] {
 }
 
 .row .col .card {
-  min-height: calc( 100% - 20px )
+  min-height: calc(100% - 20px);
 }

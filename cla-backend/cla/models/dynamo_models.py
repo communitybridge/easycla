@@ -2770,6 +2770,15 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
     def delete(self):
         self.model.delete()
 
+    def all(self):
+        user_permissions = self.model.scan()
+        ret = []
+        for user_permission in user_permissions:
+            permission = UserPermissions()
+            permission.model = user_permission
+            ret.append(permission)
+        return ret
+
 
 class CompanyInviteModel(BaseModel):
     """

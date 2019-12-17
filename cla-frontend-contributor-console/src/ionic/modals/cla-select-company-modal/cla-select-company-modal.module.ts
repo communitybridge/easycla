@@ -8,16 +8,12 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 
 @NgModule({
-  declarations: [
-    ClaSelectCompanyModal,
-  ],
+  declarations: [ClaSelectCompanyModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(ClaSelectCompanyModal)
   ],
-  entryComponents: [
-    ClaSelectCompanyModal,
-  ]
+  entryComponents: [ClaSelectCompanyModal]
 })
 export class ClaSelectCompanyModalModule {}

@@ -7,12 +7,10 @@ import { ProjectPage } from './project-page';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
-import { LayoutModule } from "../../layout/layout.module";
+import { LayoutModule } from '../../layout/layout.module';
 
 @NgModule({
-  declarations: [
-    ProjectPage,
-  ],
+  declarations: [ProjectPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
@@ -20,8 +18,6 @@ import { LayoutModule } from "../../layout/layout.module";
     IonicPageModule.forChild(ProjectPage),
     LayoutModule
   ],
-  entryComponents: [
-    ProjectPage,
-  ]
+  entryComponents: [ProjectPage]
 })
 export class ProjectPageModule {}

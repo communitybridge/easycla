@@ -1,5 +1,4 @@
 project-members {
-
   .circle-alert,
   .circle-notice,
   .circle-null {
@@ -8,7 +7,7 @@ project-members {
     height: 1.25rem;
     border-radius: 100%;
     position: relative;
-    top: .2rem;
+    top: 0.2rem;
   }
 
   .circle-alert {
@@ -24,9 +23,8 @@ project-members {
   }
 
   ion-datetime {
-    color:#000 !important;
+    color: #000 !important;
     background: none !important;
     opacity: 1 !important;
   }
-
 }

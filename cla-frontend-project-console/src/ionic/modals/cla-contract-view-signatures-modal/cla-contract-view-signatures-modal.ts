@@ -198,7 +198,7 @@ export class ClaContractViewSignaturesModal {
         this.searchField.value,
         this.fullMatch.value
       )
-      .subscribe(response => {
+      .subscribe((response) => {
         this.data = response;
 
         // Pagination Logic - add the key used to render this page to our previous keys
@@ -304,7 +304,7 @@ export class ClaContractViewSignaturesModal {
       ev: ev
     });
 
-    popover.onDidDismiss(popoverData => {
+    popover.onDidDismiss((popoverData) => {
       if (popoverData) {
         this.popoverResponse(popoverData);
       }
@@ -341,7 +341,7 @@ export class ClaContractViewSignaturesModal {
     } else {
       return (
         signatures &&
-        signatures.map(signature => {
+        signatures.map((signature) => {
           let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
           return {
             /**

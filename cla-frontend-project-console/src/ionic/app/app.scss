@@ -1,6 +1,5 @@
 // http://ionicframework.com/docs/v2/theming/
 
-
 // App Global Sass
 // --------------------------------------------------
 // Put style rules here that you want to apply globally. These
@@ -16,13 +15,13 @@
 // automatically applied to the <body> element in the app.
 
 //@import url('https://fonts.googleapis.com/css?family=Lato');
-@import "../assets/fonts/lato-font.scss";
-@import "../assets/fonts/open-sans-font.scss";
-@import "../assets/fonts/work-sans-font.scss";
-@import "../assets/_bootstrap.scss";
-@import "../assets/_marterial.scss";
+@import '../assets/fonts/lato-font.scss';
+@import '../assets/fonts/open-sans-font.scss';
+@import '../assets/fonts/work-sans-font.scss';
+@import '../assets/_bootstrap.scss';
+@import '../assets/_marterial.scss';
 
-@import "ionic.globals";
+@import 'ionic.globals';
 
 body ion-app.ios {
   font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
@@ -44,11 +43,11 @@ body ion-app.wp {
   padding-right: 0;
 }
 
-ion-icon{
+ion-icon {
   color: color($colors, gray);
 }
 
-ion-icon[name=menu] {
+ion-icon[name='menu'] {
   color: color($colors, white);
 }
 
@@ -68,11 +67,11 @@ ion-icon[name=menu] {
   }
 }
 
-.item-md.item-block .item-inner{
+.item-md.item-block .item-inner {
   padding-right: 0;
 }
 
-.item.item-md{
+.item.item-md {
   padding-left: 0;
   .checkbox-md {
     margin: 6px 15px 9px 0px;
@@ -104,7 +103,7 @@ ion-icon[name=menu] {
 }
 
 .content-md hr {
-  width:100%;
+  width: 100%;
 }
 
 ion-content .scroll-content > header {
@@ -115,7 +114,7 @@ ion-content .scroll-content > header {
   position: relative;
   background-color: #fff;
   &:after {
-    content: "";
+    content: '';
     @extend .header-md::after;
   }
 }
@@ -133,14 +132,14 @@ ion-content .scroll-content > header {
 }
 
 .vertical-rule-right::after {
-    content: "";
-    display: block;
-    border-right: 1px solid rgba(0, 0, 0, .1);
-    height: 80%;
-    position: absolute;
-    width: 0;
-    right: -1px;
-    top: 10%;
+  content: '';
+  display: block;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  height: 80%;
+  position: absolute;
+  width: 0;
+  right: -1px;
+  top: 10%;
 }
 
 .button[icon-only][round] {
@@ -153,14 +152,14 @@ ion-content .scroll-content > header {
 
 .table > tbody > tr > td.actions-cell {
   text-align: right;
-  padding-top: .6rem;
+  padding-top: 0.6rem;
 }
 
 .toolbar-title-md {
   padding: 0;
 }
 
-.md ion-footer .toolbar:last-child{
+.md ion-footer .toolbar:last-child {
   padding-bottom: 1rem;
 }
 
@@ -172,10 +171,10 @@ ion-content .scroll-content > header {
 }
 
 .row .col .card {
-  min-height: calc( 100% - 20px )
+  min-height: calc(100% - 20px);
 }
 
-.alert-md .alert-wrapper{
+.alert-md .alert-wrapper {
   @media screen and (max-width: 520px) {
     max-width: none;
     min-width: 100%;
@@ -191,4 +190,3 @@ ion-content .scroll-content > header {
 @import './styles/table';
 @import './styles/modal';
 @import '../theme/footer';
-

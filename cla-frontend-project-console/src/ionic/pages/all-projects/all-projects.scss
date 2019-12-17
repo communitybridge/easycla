@@ -29,7 +29,7 @@ all-projects {
   }
 
   ion-header {
-    border-bottom: 40px solid #4C79B6;
+    border-bottom: 40px solid #4c79b6;
   }
 
   .page-content {
@@ -46,7 +46,7 @@ all-projects {
   }
 
   .content {
-    background-color: #F1F3F3;
+    background-color: #f1f3f3;
   }
 
   ion-card {
@@ -54,7 +54,7 @@ all-projects {
     height: 270px;
     box-shadow: none !important; // Todo: Move this to a global scss file
 
-    &.card{
+    &.card {
       margin-left: 0;
       margin-right: 0;
     }
@@ -72,7 +72,7 @@ all-projects {
     .manager {
       &::after {
         display: inline;
-        content: ", ";
+        content: ', ';
       }
       &:last-child::after {
         content: none;
