@@ -9,8 +9,10 @@ pydocusign==2.2
 pygithub==1.43.8
 pylint==1.5.2
 pynamodb==3.4.1
+pytest==5.0.1
 python-jose==3.0.1
 python-dateutil==2.8.0
 requests_oauthlib==1.2.0
 Werkzeug==0.15.5
 mysql-connector-python==8.0.16
+
