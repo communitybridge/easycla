@@ -20,7 +20,7 @@ import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
-    GitHubOrg, Gerrit, UserPermissions
+    GitHubOrg, Gerrit, UserPermissions, CompanyInvite
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -98,7 +98,8 @@ def get_database_models(conf=None):
     if conf['DATABASE'] == 'DynamoDB':
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
-                'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions}
+                'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions,
+                'CompanyInvites': CompanyInvite}
     else:
         raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
 
@@ -113,6 +114,28 @@ def get_user_instance(conf=None) -> User:
     :rtype: cla.models.model_interfaces.User
     """
     return get_database_models(conf)['User']()
+
+def get_user_permissions_instance(conf=None) -> UserPermissions:
+    """
+    Helper function to get a database UserPermissions model instance based on CLA configuration
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A UserPermissions model instance based on configuration specified
+    :rtype: cla.models.model_interfaces.UserPermissions
+    """
+    return get_database_models(conf)['UserPermissions']()
+
+def get_company_invites_instance(conf=None):
+    """
+    Helper function to get a database CompanyInvites model instance based on CLA configuration
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A CompanyInvites model instance based on configuration specified
+    :rtype: cla.models.model_interfaces.CompanyInvite
+    """
+    return get_database_models(conf)['CompanyInvites']()
 
 
 def get_signature_instance(conf=None) -> Signature:

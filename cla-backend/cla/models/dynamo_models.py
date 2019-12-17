@@ -1368,7 +1368,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         github_username = self.get_user_github_username()
         github_id = self.get_user_github_id()
 
-        # TODO: DAD - 
+        # TODO: DAD -
         # Since usernames can be changed, if we have the github_id already - let's
         # lookup the username by id to see if they have changed their username
         # if the username is different, then we should reset the field to the
@@ -1924,9 +1924,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                               format(signature_model.signature_reference_type, reference_type))
                 continue
 
-            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present. 
+            # Skip signatures that are not an employee CCLA if user_ccla_company_id is present.
             # if user_ccla_company_id and signature_user_ccla_company_id are both none
-            # it loads the ICLA signatures for a user. 
+            # it loads the ICLA signatures for a user.
             if signature_model.signature_user_ccla_company_id != user_ccla_company_id:
                 cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
                               'user_ccla_company_id values do not match: {} versus {}'.
@@ -1940,8 +1940,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                               format(signature_model.signature_project_id, project_id))
                 continue
 
-            # SKip signatures that do not have the same signed flags 
-            # e.g. retrieving only signed / approved signatures 
+            # SKip signatures that do not have the same signed flags
+            # e.g. retrieving only signed / approved signatures
             if signature_signed is not None and signature_model.signature_signed != signature_signed:
                 cla.log.debug('Signatures.get_signatures_by_reference() - skipping signature - '
                               'signature_signed values do not match: {} versus {}'.
@@ -2029,7 +2029,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_projects_by_company_signed(self, company_id):
         # Query returns all the signatures that the company has signed a CCLA for.
-        # Loop through the signatures and retrieve only the project IDs referenced by the signatures. 
+        # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
         signature_generator = self.model.signature_reference_index. \
             query(company_id, SignatureModel.signature_signed == True)
         project_ids = []
@@ -2308,7 +2308,7 @@ class Store(key_value_store_interface.KeyValueStore):
 
 class GitHubOrgModel(BaseModel):
     """
-    Represents a Github Organization in the database. 
+    Represents a Github Organization in the database.
     Company_id, project_id are deprecated now that organizations are under an SFDC ID.
     """
 
@@ -2585,12 +2585,21 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
     def delete(self):
         self.model.delete()
 
+    def all(self):
+        user_permissions = self.model.scan()
+        ret = []
+        for user_permission in user_permissions:
+            permission = UserPermissions()
+            permission.model = user_permission
+            ret.append(permission)
+        return ret
+
 
 class CompanyInviteModel(BaseModel):
     """
     Represents company invites in the database.
-    
-    Note that this model is utilized in the Go backend from the 'accesslist' package. 
+
+    Note that this model is utilized in the Go backend from the 'accesslist' package.
     """
 
     class Meta:
@@ -2648,3 +2657,12 @@ class CompanyInvite(model_interfaces.CompanyInvite):
 
     def delete(self):
         self.model.delete()
+
+    def all(self):
+        comp_invitations = self.model.scan()
+        ret = []
+        for invitation in comp_invitations:
+            inv = CompanyInvite()
+            inv.model = invitation
+            ret.append(inv)
+        return ret
