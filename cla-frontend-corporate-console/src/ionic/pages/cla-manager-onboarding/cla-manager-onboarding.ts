@@ -108,7 +108,7 @@ export class ClaManagerOnboardingPage {
             [this.userEmail],
             emailBody
           ).subscribe((response) => {
-            this.managerAlreadyExists(this.form.value.company_name);
+            this.companyDoesNotEXist();
           })
         }
 
@@ -124,7 +124,7 @@ export class ClaManagerOnboardingPage {
             [this.userEmail],
             emailBody
           ).subscribe((response) => {
-            this.companyDoesNotEXist();
+            this.managerAlreadyExists(this.form.value.company_name);
           })
         }
         else {
@@ -188,8 +188,6 @@ export class ClaManagerOnboardingPage {
     });
     alert.present();
   }
-
-  sendEmailToInitialCLAManager(emailAddress, lfid, projectName, reason, claManager) {}
 
   getAllCompanies() {
     if (!this.companies) {
