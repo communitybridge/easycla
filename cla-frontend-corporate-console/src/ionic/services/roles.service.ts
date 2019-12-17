@@ -1,10 +1,10 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from "@angular/core";
-import { Observable } from "rxjs/Observable";
-import { KeycloakService } from "./keycloak/keycloak.service";
-import { AuthService } from "./auth.service";
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { KeycloakService } from './keycloak/keycloak.service';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class RolesService {
@@ -15,13 +15,10 @@ export class RolesService {
   public getData: any;
   private rolesFetched: boolean;
 
-  private LF_USERNAME_CLAIM = "https://sso.linuxfoundation.org/claims/username";
-  private CLA_PROJECT_ADMIN = "cla-system-admin";
+  private LF_USERNAME_CLAIM = 'https://sso.linuxfoundation.org/claims/username';
+  private CLA_PROJECT_ADMIN = 'cla-system-admin';
 
-  constructor(
-    private keycloak: KeycloakService,
-    private authService: AuthService
-  ) {
+  constructor(private keycloak: KeycloakService, private authService: AuthService) {
     this.rolesFetched = false;
     this.userRoleDefaults = {
       isAuthenticated: this.authService.isAuthenticated(),
@@ -49,10 +46,10 @@ export class RolesService {
     if (this.authService.isAuthenticated()) {
       return this.authService
         .getIdToken()
-        .then(token => {
+        .then((token) => {
           return this.authService.parseIdToken(token);
         })
-        .then(tokenParsed => {
+        .then((tokenParsed) => {
           if (tokenParsed && tokenParsed[this.LF_USERNAME_CLAIM]) {
             this.userRoles = {
               isAuthenticated: this.authService.isAuthenticated(),
@@ -70,7 +67,7 @@ export class RolesService {
 
           return this.userRoleDefaults;
         })
-        .catch(error => {
+        .catch((error) => {
           return Promise.resolve(this.userRoleDefaults);
         });
     } else {

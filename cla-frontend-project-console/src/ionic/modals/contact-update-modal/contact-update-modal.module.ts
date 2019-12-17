@@ -9,17 +9,13 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
 import { UploadButtonComponentModule } from '../../components/upload-button/upload-button.module';
 
 @NgModule({
-  declarations: [
-    ContactUpdateModal,
-  ],
+  declarations: [ContactUpdateModal],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     UploadButtonComponentModule,
-    IonicPageModule.forChild(ContactUpdateModal),
+    IonicPageModule.forChild(ContactUpdateModal)
   ],
-  entryComponents: [
-    ContactUpdateModal,
-  ]
+  entryComponents: [ContactUpdateModal]
 })
 export class ContactUpdateModalModule {}

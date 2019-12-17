@@ -22,10 +22,9 @@
         </ion-row>
       </ion-grid>
     </header>
-    <loading-spinner [loading]="(loading.individualDoc || loading.corporateDoc)"></loading-spinner>
-    <ion-grid [loading-display]="(loading.individualDoc || loading.corporateDoc)">
+    <ion-grid>
       <ion-row justify-content-center>
-        <ion-col *ngIf="hasCorporateCla" col-12 col-md-6>
+        <ion-col col-12 col-md-6>
           <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
             <ion-card-content>
               <ion-card-title>
@@ -33,7 +32,8 @@
                 <span>Corporate</span>
               </ion-card-title>
               <p>Select this if you are contributing code as an employee.</p>
-              <p *ngIf="isCFFProject()"><b>CFF Contributors</b>: If you're contributing to a Cloud Foundry repository and were previously
+              <p *ngIf="isCFFProject()"><b>CFF Contributors</b>: If you're contributing to a Cloud Foundry repository
+                and were previously
                 covered, please click here and select <b>"CFF Migration"</b> as your company from the pop-up that
                 appears.</p>
             </ion-card-content>
@@ -41,7 +41,7 @@
         </ion-col>
       </ion-row>
       <ion-row justify-content-center>
-        <ion-col *ngIf="hasIndividualCla" col-12 col-md-6>
+        <ion-col col-12 col-md-6>
           <ion-card class="clickable" (click)="openClaIndividualPage()">
             <ion-card-content>
               <ion-card-title>

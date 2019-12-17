@@ -37,10 +37,10 @@ function matchDistributions(distributions, stackResources, stackName) {
   }
 
   return Object.keys(distributions)
-    .map(distributionName => {
+    .map((distributionName) => {
       const distribution = distributions[distributionName];
 
-      const resource = stackResources.find(r => r.LogicalResourceId === distributionName);
+      const resource = stackResources.find((r) => r.LogicalResourceId === distributionName);
 
       if (!resource) {
         throw new Error(
@@ -49,15 +49,13 @@ function matchDistributions(distributions, stackResources, stackName) {
       }
       if (resource.ResourceType !== CLOUDFRONT_TYPE) {
         throw new Error(
-          `InvalidateCloudfront: Stack '${stackName}' had resource with logical name '${distributionName}', but was of incorrect type '${
-            resource.ResourceType
-          }'`
+          `InvalidateCloudfront: Stack '${stackName}' had resource with logical name '${distributionName}', but was of incorrect type '${resource.ResourceType}'`
         );
       }
       const distributionId = resource.PhysicalResourceId;
       return { distributionId, distribution, name: distributionName };
     })
-    .filter(pair => pair !== undefined);
+    .filter((pair) => pair !== undefined);
 }
 
 module.exports = matchDistributions;

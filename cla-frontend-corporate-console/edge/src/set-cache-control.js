@@ -6,7 +6,7 @@
  * @param {string} assignment
  */
 function splitAssignmentPair(assignment) {
-  const parts = assignment.split('=').map(value => value.trim());
+  const parts = assignment.split('=').map((value) => value.trim());
 
   const obj = {};
   if (parts.length == 1) {
@@ -24,7 +24,7 @@ function splitAssignmentPair(assignment) {
 function splitHeaderValue(headerValue) {
   return headerValue
     .split(',')
-    .map(value => splitAssignmentPair(value))
+    .map((value) => splitAssignmentPair(value))
     .reduce((previous, current) => Object.assign(previous, current), {});
 }
 

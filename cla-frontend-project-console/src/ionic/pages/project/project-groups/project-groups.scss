@@ -1,5 +1,4 @@
 project-groups {
-
   .vertical-align {
     height: 100%;
     display: block;
@@ -14,7 +13,7 @@ project-groups {
     background-color: #fff !important;
   }
 
-  button{
+  button {
     text-transform: none !important;
   }
 
@@ -25,7 +24,7 @@ project-groups {
       position: relative;
       max-width: none;
       &::after {
-        content: "";
+        content: '';
         display: block;
         border-bottom: 1px solid white;
         position: absolute;
@@ -60,16 +59,15 @@ project-groups {
     background-color: rgba(0, 0, 0, 0.12) !important;
   }
 
-  .input-box{
+  .input-box {
     border: 1px solid gray;
     padding-bottom: 10px;
     padding-right: 10px;
     height: 48px;
-    font-size: 14px !important; 
+    font-size: 14px !important;
   }
 
-  .add-button{
+  .add-button {
     height: 48px;
   }
-
 }

@@ -11,14 +11,14 @@ import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
-  roles: ['isAuthenticated', 'isPmcUser'],
+  roles: ['isAuthenticated', 'isPmcUser']
 })
 @IonicPage({
   segment: 'cla-contracts-contributors/:claProjectId'
 })
 @Component({
   selector: 'cla-contracts-contributors',
-  templateUrl: 'cla-contracts-contributors.html',
+  templateUrl: 'cla-contracts-contributors.html'
 })
 export class ClaContractsContributorsPage {
   selectedProject: any;
@@ -36,7 +36,7 @@ export class ClaContractsContributorsPage {
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
     private keycloak: KeycloakService,
-    public rolesService: RolesService,
+    public rolesService: RolesService
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.getDefaults();
@@ -48,50 +48,51 @@ export class ClaContractsContributorsPage {
 
   getDefaults() {
     this.loading = {
-      signatures: true,
+      signatures: true
     };
     this.sort = {
       signatureType: {
         arrayProp: 'signatureType',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       name: {
         arrayProp: 'referenceEntity.user_name',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       company: {
         arrayProp: 'signature_user_ccla_company_id',
         sortType: 'text',
-        sort: null,
+        sort: null
       },
       githubId: {
         arrayProp: 'referenceEntity.user_github_id',
         sortType: 'number',
-        sort: null,
+        sort: null
       },
       version: {
         arrayProp: 'documentVersion',
         sortType: 'semver',
-        sort: null,
+        sort: null
       },
       date: {
         arrayProp: 'date_modified',
         sortType: 'date',
-        sort: null,
-      },
+        sort: null
+      }
     };
     this.signatures = [];
   }
 
-  getSignatures(lastScannedKey="") {
+  getSignatures(lastScannedKey = '') {
     this.claService.getProjectSignatures(this.claProjectId, lastScannedKey).subscribe((signatures) => {
-      let userSignatures = signatures.filter(item => item.signature_reference_type == 'user')
+      let userSignatures = signatures.filter((item) => item.signature_reference_type == 'user');
       for (let signature of userSignatures) {
         // extend fields
         // create singular version field
-        signature.documentVersion = signature.signature_document_major_version + '.' + signature.signature_document_minor_version;
+        signature.documentVersion =
+          signature.signature_document_major_version + '.' + signature.signature_document_minor_version;
         // create simplified signature type
         signature.signatureType = this.determineSignatureType(signature);
         // embed reference_entity
@@ -99,7 +100,7 @@ export class ClaContractsContributorsPage {
         //       by ID, and will only run new GET if we haven't already gotten user.
         //       This value must still be set in the signature object however for
         //       array sorting purposes.
-        this.claService.getUser(signature.signature_reference_id).subscribe(user => {
+        this.claService.getUser(signature.signature_reference_id).subscribe((user) => {
           user.name = user.user_name;
           signature.referenceEntity = user;
         });
@@ -117,11 +118,7 @@ export class ClaContractsContributorsPage {
   }
 
   sortMembers(prop) {
-    this.sortService.toggleSort(
-      this.sort,
-      prop,
-      this.signatures,
-    );
+    this.sortService.toggleSort(this.sort, prop, this.signatures);
   }
 
   signaturePopover(ev, signature) {
@@ -131,29 +128,26 @@ export class ClaContractsContributorsPage {
           label: 'Details',
           callback: 'signatureDetails',
           callbackData: {
-            signature: signature,
+            signature: signature
           }
         },
         {
           label: 'CLA',
           callback: 'signatureCla',
           callbackData: {
-            signature: signature,
+            signature: signature
           }
-        },
+        }
       ]
     };
-    let popover = this.popoverCtrl.create(
-      'ActionPopoverComponent',
-      actions,
-    );
+    let popover = this.popoverCtrl.create('ActionPopoverComponent', actions);
 
     popover.present({
       ev: ev
     });
 
     popover.onDidDismiss((popoverData) => {
-      if(popoverData) {
+      if (popoverData) {
         this.popoverResponse(popoverData);
       }
     });
@@ -165,7 +159,7 @@ export class ClaContractsContributorsPage {
    */
   popoverResponse(popoverData) {
     let callback = popoverData.callback;
-    if(this[callback]) {
+    if (this[callback]) {
       this[callback](popoverData.callbackData);
     }
   }
@@ -177,5 +171,4 @@ export class ClaContractsContributorsPage {
   signatureCla(data) {
     console.log('signature cla');
   }
-
 }

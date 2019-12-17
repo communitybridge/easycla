@@ -9,9 +9,9 @@ account-settings {
   }
 
   ion-select.ng-invalid.ng-touched:not(.input-has-focus),
-  form.submit-attempt ion-select.ng-invalid:not(.input-has-focus){
+  form.submit-attempt ion-select.ng-invalid:not(.input-has-focus) {
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       width: 100%;
       bottom: 0;

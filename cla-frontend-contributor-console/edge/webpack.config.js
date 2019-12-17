@@ -6,7 +6,7 @@ const path = require('path');
 
 const GetSecurityHeaders = require('./security-headers.js');
 
-module.exports = env => {
+module.exports = (env) => {
   const securityHeaders = GetSecurityHeaders(env, false);
 
   return {

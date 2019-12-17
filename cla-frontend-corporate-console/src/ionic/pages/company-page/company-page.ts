@@ -1,24 +1,24 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from "@angular/core";
-import {IonicPage, ModalController, NavController, NavParams} from "ionic-angular";
-import {ClaService} from "../../services/cla.service";
-import {ClaCompanyModel} from "../../models/cla-company";
-import {ClaUserModel} from "../../models/cla-user";
-import {RolesService} from "../../services/roles.service";
-import {Restricted} from "../../decorators/restricted";
-import {ColumnMode, SelectionType, SortType} from "@swimlane/ngx-datatable";
+import { Component } from '@angular/core';
+import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { ClaUserModel } from '../../models/cla-user';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Restricted({
-  roles: ["isAuthenticated"]
+  roles: ['isAuthenticated']
 })
 @IonicPage({
-  segment: "company/:companyId"
+  segment: 'company/:companyId'
 })
 @Component({
-  selector: "company-page",
-  templateUrl: "company-page.html"
+  selector: 'company-page',
+  templateUrl: 'company-page.html'
 })
 export class CompanyPage {
   companyId: string;
@@ -45,7 +45,7 @@ export class CompanyPage {
     public modalCtrl: ModalController,
     private rolesService: RolesService // for @Restricted
   ) {
-    this.companyId = navParams.get("companyId");
+    this.companyId = navParams.get('companyId');
     this.getDefaults();
   }
 
@@ -53,16 +53,13 @@ export class CompanyPage {
     this.loading = {
       companySignatures: true,
       invites: true,
-      projects: true,
+      projects: true
     };
     this.company = new ClaCompanyModel();
     this.projects = [];
 
     this.data = {};
-    this.columns = [
-      {prop: 'ProjectName'},
-      {prop: 'ProjectManagers'},
-    ];
+    this.columns = [{ prop: 'ProjectName' }, { prop: 'ProjectManagers' }];
   }
 
   ngOnInit() {
@@ -72,14 +69,14 @@ export class CompanyPage {
   }
 
   getCompany() {
-    this.claService.getCompany(this.companyId).subscribe(response => {
+    this.claService.getCompany(this.companyId).subscribe((response) => {
       this.company = response;
       this.getUser(this.company.company_manager_id);
     });
   }
 
   getUser(userId) {
-    this.claService.getUser(userId).subscribe(response => {
+    this.claService.getUser(userId).subscribe((response) => {
       this.manager = response;
     });
   }
@@ -93,14 +90,13 @@ export class CompanyPage {
     this.projects = [];
     this.rows = [];
 
-    this.claService.getCompanySignatures(this.companyId).subscribe(response => {
+    this.claService.getCompanySignatures(this.companyId).subscribe(
+      (response) => {
         //console.log('Company signatures:');
         //console.log(response);
         if (response.resultCount > 0) {
           //console.log('Filtering Company signatures...');
-          this.companySignatures = response.signatures.filter(signature =>
-            signature.signatureSigned === true
-          );
+          this.companySignatures = response.signatures.filter((signature) => signature.signatureSigned === true);
           //console.log('Filtered Company signatures: ' + this.companySignatures.length);
           //console.log('Loading projects...');
           for (let signature of this.companySignatures) {
@@ -110,15 +106,16 @@ export class CompanyPage {
         this.loading.companySignatures = false;
         this.loading.projects = false;
       },
-      exception => {
+      (exception) => {
         this.loading.companySignatures = false;
         this.loading.projects = false;
-      });
+      }
+    );
   }
 
   getProject(projectId) {
     //console.log('Loading project: ' + projectId);
-    this.claService.getProject(projectId).subscribe(response => {
+    this.claService.getProject(projectId).subscribe((response) => {
       //console.log('Loaded project: ');
       //console.log(response);
       this.projects.push(response);
@@ -134,7 +131,7 @@ export class CompanyPage {
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
-        ProjectManagers: project.project_acl,
+        ProjectManagers: project.project_acl
       });
     }
 
@@ -146,17 +143,17 @@ export class CompanyPage {
   }
 
   openProjectPage(projectId) {
-    this.navCtrl.push("ProjectPage", {
+    this.navCtrl.push('ProjectPage', {
       companyId: this.companyId,
       projectId: projectId
     });
   }
 
   openCompanyModal() {
-    let modal = this.modalCtrl.create("AddCompanyModal", {
+    let modal = this.modalCtrl.create('EditCompanyModal', {
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -164,11 +161,11 @@ export class CompanyPage {
   }
 
   openWhitelistEmailModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "email",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'email',
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -176,11 +173,11 @@ export class CompanyPage {
   }
 
   openWhitelistDomainModal() {
-    let modal = this.modalCtrl.create("WhitelistModal", {
-      type: "domain",
+    let modal = this.modalCtrl.create('WhitelistModal', {
+      type: 'domain',
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -188,10 +185,10 @@ export class CompanyPage {
   }
 
   openProjectsCclaSelectModal() {
-    let modal = this.modalCtrl.create("ProjectsCclaSelectModal", {
+    let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
       company: this.company
     });
-    modal.onDidDismiss(data => {
+    modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
@@ -199,7 +196,7 @@ export class CompanyPage {
   }
 
   getInvites() {
-    this.claService.getPendingInvites(this.companyId).subscribe(response => {
+    this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
       this.loading.invites = false;
     });
@@ -210,9 +207,9 @@ export class CompanyPage {
       inviteId: invite.inviteId,
       userLFID: invite.userLFID
     };
-    this.claService.acceptCompanyInvite(this.companyId, data).subscribe(response => {
+    this.claService.acceptCompanyInvite(this.companyId, data).subscribe((response) => {
       this.getInvites();
-    })
+    });
   }
 
   declineCompanyInvite(invite) {
@@ -220,8 +217,8 @@ export class CompanyPage {
       inviteId: invite.inviteId,
       userLFID: invite.userLFID
     };
-    this.claService.declineCompanyInvite(this.companyId, data).subscribe(response => {
+    this.claService.declineCompanyInvite(this.companyId, data).subscribe((response) => {
       this.getInvites();
-    })
+    });
   }
 }

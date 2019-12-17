@@ -3,14 +3,14 @@
 
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, ModalController } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service'
+import { CincoService } from '../../services/cinco.service';
 
 @IonicPage({
   segment: 'cla-corporate-member-options-modal'
 })
 @Component({
   selector: 'cla-corporate-member-options-modal',
-  templateUrl: 'cla-corporate-member-options-modal.html',
+  templateUrl: 'cla-corporate-member-options-modal.html'
 })
 export class ClaCorporateMemberOptionsModal {
   members: any;
@@ -20,17 +20,14 @@ export class ClaCorporateMemberOptionsModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private cincoService: CincoService,
-    public modalCtrl: ModalController,
+    public modalCtrl: ModalController
   ) {
     this.getDefaults();
   }
 
-  ngOnInit() {
+  ngOnInit() {}
 
-  }
-
-  getDefaults() {
-  }
+  getDefaults() {}
 
   openClaCorporateWhitelistModal() {
     let modal = this.modalCtrl.create('ClaCorporateWhitelistModal');
@@ -41,7 +38,4 @@ export class ClaCorporateMemberOptionsModal {
   dismiss() {
     this.viewCtrl.dismiss();
   }
-
-
-
 }

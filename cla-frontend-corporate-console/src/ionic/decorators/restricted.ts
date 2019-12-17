@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 export function Restricted(restrictions: any) {
-
-  return function (target: Function) {
-    target.prototype.ionViewCanEnter = function () {
+  return function(target: Function) {
+    target.prototype.ionViewCanEnter = function() {
       if (restrictions.roles) {
         if (!this.rolesService) {
           console.warn('[WARNING] this.rolesService is not defined for ' + target.prototype.constructor.name);
@@ -41,11 +40,10 @@ export function Restricted(restrictions: any) {
             return false;
           }
         });
-      } else { // no other restrictions implemented yet
+      } else {
+        // no other restrictions implemented yet
         return true;
       }
-    }
-
+    };
   };
-
 }

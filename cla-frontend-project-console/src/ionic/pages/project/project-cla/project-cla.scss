@@ -4,8 +4,8 @@ body {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-  }
-  
+}
+
 .button-md-secondary {
   box-shadow: none;
 }
@@ -13,7 +13,7 @@ body {
 .button-md-light {
   box-shadow: none;
   background-color: transparent;
-  color: #4C79B6;
+  color: #4c79b6;
 }
 
 ion-icon.icon-md {
@@ -43,7 +43,7 @@ project-cla {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-  
+
   .navbar-logo {
     width: 100px;
     position: absolute;
@@ -52,7 +52,7 @@ project-cla {
   }
 
   ion-header {
-    border-bottom: 40px solid #4C79B6;
+    border-bottom: 40px solid #4c79b6;
   }
 
   .page-content {
@@ -97,7 +97,8 @@ project-cla {
     }
   }
 
-  .contract-card, .organization-card {
+  .contract-card,
+  .organization-card {
     h1 {
       color: #7b7b7b;
     }
@@ -127,7 +128,7 @@ project-cla {
   }
 
   .content {
-    background-color: #F1F3F3;
+    background-color: #f1f3f3;
   }
 
   ion-grid.project-grid {
@@ -248,4 +249,8 @@ h2 {
     color: #db4e4e !important;
     cursor: pointer;
   }
+}
+
+.align-items-center {
+  text-align: center;
 }

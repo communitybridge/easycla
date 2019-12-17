@@ -5,17 +5,17 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
-import { EmailValidator } from  '../../validators/email';
+import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
 import { EnvConfig } from '../../services/cla.env.utils';
-import { CompanyPage } from "../../pages/company-page/company-page";
+import { CompanyPage } from '../../pages/company-page/company-page';
 
 @IonicPage({
   segment: 'cla/project/:projectId/collect-authority-email'
 })
 @Component({
   selector: 'collect-authority-email-modal',
-  templateUrl: 'collect-authority-email-modal.html',
+  templateUrl: 'collect-authority-email-modal.html'
 })
 export class CollectAuthorityEmailModal {
   projectId: string;
@@ -24,7 +24,7 @@ export class CollectAuthorityEmailModal {
   signingType: string;
 
   projectName: string;
-  companyName: string; 
+  companyName: string;
 
   form: FormGroup;
   submitAttempt: boolean = false;
@@ -38,7 +38,7 @@ export class CollectAuthorityEmailModal {
     public alertCtrl: AlertController,
     private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
-    private claService: ClaService,
+    private claService: ClaService
   ) {
     this.getDefaults();
     this.projectName = navParams.get('projectName');
@@ -47,16 +47,14 @@ export class CollectAuthorityEmailModal {
     this.companyId = navParams.get('companyId');
     this.signingType = navParams.get('signingType');
     this.form = formBuilder.group({
-      authorityemail:['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      authorityname:[''],
+      authorityemail: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      authorityname: ['']
     });
   }
 
-  getDefaults() {
-  }
+  getDefaults() {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   dismiss() {
     this.viewCtrl.dismiss();
@@ -73,7 +71,8 @@ export class CollectAuthorityEmailModal {
           handler: () => {
             this.navCtrl.pop();
           }
-        }]
+        }
+      ]
     });
     alert.present();
   }
@@ -88,21 +87,18 @@ export class CollectAuthorityEmailModal {
     let emailRequest = {
       project_id: this.projectId,
       company_id: this.companyId,
-      send_as_email: true, 
-      authority_name: this.form.value.authorityname, 
-      authority_email: this.form.value.authorityemail, 
+      send_as_email: true,
+      authority_name: this.form.value.authorityname,
+      authority_email: this.form.value.authorityemail
     };
-    
-    this.claService
-      .postCorporateSignatureRequest(emailRequest)
-      .subscribe(response => {
-        if (response.errors) {
-          //TODO: CREATE error message
-          console.log(response.errors); 
-        }
-        this.emailSent();
-        this.dismiss();
-      });
-  }
 
+    this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
+      if (response.errors) {
+        //TODO: CREATE error message
+        console.log(response.errors);
+      }
+      this.emailSent();
+      this.dismiss();
+    });
+  }
 }

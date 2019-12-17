@@ -1,0 +1,134 @@
+page-cla-manager-onboarding {
+  .page-content {
+    min-height: calc(100vh - 200px);
+
+    ion-label {
+      color: dark;
+    }
+
+    ion-input {
+      border-bottom: 0.5px solid map-get($colors, primary);
+    }
+
+    ion-card-title {
+      justify-content: center;
+    }
+
+    .sm-card {
+      width: 50vw;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 3rem;
+    }
+  }
+  .scroll-content {
+    margin-top: 96px;
+  }
+
+  .select-text {
+    display: none;
+  }
+
+  ion-badge {
+    margin-bottom: 2rem;
+    margin-top: 2rem;
+  }
+
+  .project-list {
+    .item-inner {
+      overflow: scroll;
+      padding: 2rem;
+    }
+  }
+
+  .company-dropdown-list {
+    color: black;
+    margin: 0.2rem 0;
+    max-height: 250px;
+    overflow: scroll;
+    width: 100%;
+    z-index: 2;
+
+    .item {
+      border: 1px solid #dedede;
+      padding: 0.5rem 1rem;
+      font-size: 15px;
+    }
+  }
+
+  ion-footer {
+    position: relative;
+  }
+  ul {
+    list-style: none; /* Remove default bullets */
+  }
+
+  ul li::before {
+    content: '\2022'; /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: #4c79b6; /* Change the color */
+    font-weight: bold; /* If you want it to be bold */
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em; /* Also needed for space (tweak if needed) */
+    margin-left: -1em; /* Also needed for space (tweak if needed) */
+  }
+
+  .cta-button {
+    background-color: #4c79b6;
+
+    a {
+      color: #4c79b6;
+    }
+  }
+  a {
+    font-weight: bold;
+  }
+}
+
+.cla-header {
+  border-bottom: 10px solid #4c79b6;
+
+  .toolbar {
+    color: #7b7b7b;
+    background-color: white;
+    padding: 4px 25px;
+
+    ion-icon {
+      color: #7b7b7b;
+      line-height: 6px;
+
+      &:before {
+        font-size: 19px;
+      }
+    }
+  }
+
+  .navbar-logo {
+    width: 100px;
+    position: absolute;
+    left: calc(50% - 20px);
+  }
+}
+
+.card-md {
+  box-shadow: none !important;
+  padding: 30px;
+}
+
+ion-card-title {
+  display: flex !important;
+  justify-content: space-between;
+}
+
+span[title='Joined'] {
+  color: green;
+  font-weight: bold;
+}
+
+span[title='Pending Approval'] {
+  color: #4c79b6;
+  font-weight: bold;
+}
+
+span[title='rejeted'] {
+  color: red;
+}

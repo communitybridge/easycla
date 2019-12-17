@@ -6,7 +6,7 @@ activity-log {
       position: relative;
       max-width: none;
       &::after {
-        content: "";
+        content: '';
         display: block;
         border-bottom: 1px solid white;
         position: absolute;
@@ -40,6 +40,4 @@ activity-log {
   .tabular-body .tabular-row:hover > ion-col {
     background-color: rgba(0, 0, 0, 0.12);
   }
-
-
 }

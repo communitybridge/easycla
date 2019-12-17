@@ -7,16 +7,16 @@ login-page {
     position: relative;
     padding: 4px 25px;
 
-    background: url("../assets/img/cb_bg8.jpg") no-repeat center center fixed #000;
+    background: url('../assets/img/cb_bg8.jpg') no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
-    
+
     &:before {
-      background: linear-gradient(90deg,#003366 0%,rgba(255,255,255,0.2) 100%);
+      background: linear-gradient(90deg, #003366 0%, rgba(255, 255, 255, 0.2) 100%);
       opacity: 0.8;
-      content: "";
+      content: '';
       display: block;
       position: absolute;
       top: 0;
@@ -111,15 +111,15 @@ login-page {
       font-size: 20px;
     }
   }
-  
+
   .cla-list::before {
     font-family: 'IconsMind';
-    content: "\ee5e";
+    content: '\ee5e';
     margin: 0px 5px 0px -15px;
     color: #0099ee;
     list-style-type: none;
   }
-  
+
   .cla-list {
     margin-bottom: 15px;
     list-style: none;

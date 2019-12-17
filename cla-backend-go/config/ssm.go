@@ -120,5 +120,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 		return Config{}, err
 	}
 
+	config.SNSEventTopicARN, err = getSSMString(ssmClient, fmt.Sprintf("cla-sns-event-topic-arn-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+
 	return config, nil
 }

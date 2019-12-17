@@ -43,6 +43,9 @@ type Config struct {
 	AllowedOrigins               []string `json:"-"`
 
 	CorporateConsoleURL string `json:"corporateConsoleURL"`
+
+	// SNSEventTopic the topic ARN for events
+	SNSEventTopicARN string `json:"snsEventTopicARN"`
 }
 
 // Auth0 model

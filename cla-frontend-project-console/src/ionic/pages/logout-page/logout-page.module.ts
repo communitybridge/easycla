@@ -6,20 +6,16 @@ import { IonicPageModule } from 'ionic-angular';
 import { LogoutPage } from './logout-page';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
-import { LayoutModule } from "../../layout/layout.module";
+import { LayoutModule } from '../../layout/layout.module';
 
 @NgModule({
-  declarations: [
-    LogoutPage,
-  ],
+  declarations: [LogoutPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     LayoutModule,
-    IonicPageModule.forChild(LogoutPage),
+    IonicPageModule.forChild(LogoutPage)
   ],
-  entryComponents: [
-    LogoutPage
-  ]
+  entryComponents: [LogoutPage]
 })
 export class LogoutPageModule {}

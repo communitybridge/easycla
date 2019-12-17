@@ -17,16 +17,15 @@ import xml.etree.ElementTree as ET
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
-import pydocusign  # type: ignore
-from pydocusign.exceptions import DocuSignException  # type: ignore
-
 import cla
+import pydocusign  # type: ignore
 from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
     Document
 from cla.models.s3_storage import S3Storage
+from pydocusign.exceptions import DocuSignException  # type: ignore
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -202,7 +201,12 @@ class DocuSign(signing_service_interface.SigningService):
         except DoesNotExist as err:
             cla.log.warning('Individual Signature - project individual document does NOT exist for: {}'.
                             format(request_info))
-            return {'errors': {'project_id': str(err)}}
+            return {'errors': {'project_id': project_id, 'message': str(err)}}
+
+        # If the CCLA/ICLA template is missing (not created in the project console), we won't have a document
+        # return an error
+        if not document:
+            return {'errors': {'project_id': project_id, 'message': 'missing template document'}}
 
         cla.log.debug('Individual Signature - creating default individual values for user: {}'.format(user))
         default_cla_values = create_default_individual_values(user)
@@ -669,6 +673,11 @@ class DocuSign(signing_service_interface.SigningService):
         found_authority = False
         if authority_name is not None:
             for manager in managers:
+                if manager.get_user_name() is None:
+                    cla.log.warning(f'Manager name {manager} is missing the user name value. '
+                                    f'Unable to compare with provided authority_name={authority_name}. '
+                                    'Skipping this manager.')
+                    continue
                 if manager.get_user_name().lower() == authority_name.lower():
                     found_authority = True
                     cla.log.debug(f'Authority name {authority_name} provided is in the '

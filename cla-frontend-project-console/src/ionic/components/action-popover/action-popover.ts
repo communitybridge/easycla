@@ -8,25 +8,22 @@ import { IonicPage, NavParams, ViewController } from 'ionic-angular';
 @Component({
   template: `
     <ion-list class="action-popover">
-      <button ion-item *ngFor="let item of popoverItems; let index = index;" (click)='popoverAction(index)'>
+      <button ion-item *ngFor="let item of popoverItems; let index = index" (click)="popoverAction(index)">
         {{ item.label }}
       </button>
     </ion-list>
   `
 })
 export class ActionPopoverComponent {
-
   popoverItems: any;
 
   @Output() popoverNotice: EventEmitter<{}> = new EventEmitter<{}>();
 
-  constructor(private navParams: NavParams, private viewCtrl: ViewController) {
-
-  }
+  constructor(private navParams: NavParams, private viewCtrl: ViewController) {}
 
   ngOnInit() {
     if (this.navParams.data) {
-      this.popoverItems = this.navParams.data.items
+      this.popoverItems = this.navParams.data.items;
     }
   }
 
@@ -38,5 +35,4 @@ export class ActionPopoverComponent {
       callbackData: callbackData
     });
   }
-
 }
