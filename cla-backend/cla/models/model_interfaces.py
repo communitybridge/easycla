@@ -6,7 +6,7 @@ Holds the model interfaces that all storage models must implement.
 """
 
 
-class Project(object): # pylint: disable=too-many-public-methods
+class Project(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Project model.
     """
@@ -418,8 +418,8 @@ class User(object):
         """
         Getter for the user's Linux Foundation Username.
         """
-        
-        raise NotImplementedError() 
+
+        raise NotImplementedError()
 
     def get_lf_sub(self):
         raise NotImplementedError()
@@ -502,11 +502,11 @@ class User(object):
     def set_lf_username(self, lf_username):
         """
         Setter for the user's Linux Foundation Username.
-        :param lf_username: The user's LF Username. 
+        :param lf_username: The user's LF Username.
         :type lf_username: string
         """
-        
-        raise NotImplementedError() 
+
+        raise NotImplementedError()
 
     def set_lf_sub(self, sub):
         raise NotImplementedError()
@@ -735,18 +735,16 @@ class Repository(object):
         :type repository_type: string
         """
         raise NotImplementedError()
-    
+
     def get_repositories_by_organization(self, organization_name):
 
         """
         Loads all repositories configured under this organization.
 
-        :param organization_name: The organization name 
+        :param organization_name: The organization name
         :type organization_name: string
         """
         raise NotImplementedError()
-
-
 
     def all(self, ids=None):
         """
@@ -760,7 +758,7 @@ class Repository(object):
         raise NotImplementedError()
 
 
-class Signature(object): # pylint: disable=too-many-public-methods
+class Signature(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Signature model.
     """
@@ -1064,10 +1062,14 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_signatures_by_reference(self, reference_id, reference_type, # pylint: disable=too-many-arguments
-                                    project_id=None,
-                                    signature_signed=None,
-                                    signature_approved=None):
+    def get_signatures_by_reference(
+        self,
+        reference_id,
+        reference_type,  # pylint: disable=too-many-arguments
+        project_id=None,
+        signature_signed=None,
+        signature_approved=None,
+    ):
         """
         Simple abstraction around the supported ORMs to get a user's or
         orgnanization's signatures.
@@ -1091,9 +1093,7 @@ class Signature(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_signatures_by_project(self, project_id,
-                                  signature_signed=None,
-                                  signature_approved=None):
+    def get_signatures_by_project(self, project_id, signature_signed=None, signature_approved=None):
         """
         Simple abstraction around the supported ORMs to get a project's signatures.
 
@@ -1135,7 +1135,7 @@ class Signature(object): # pylint: disable=too-many-public-methods
         raise NotImplementedError()
 
 
-class Company(object): # pylint: disable=too-many-public-methods
+class Company(object):  # pylint: disable=too-many-public-methods
     """
     Interface to the Company model.
     """
@@ -1207,10 +1207,7 @@ class Company(object): # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_signatures(self,
-                               project_id=None,
-                               signature_signed=None,
-                               signature_approved=None):
+    def get_company_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
         """
         Simple abstraction around the supported ORMs to fetch signatures for
         an company.
@@ -1616,6 +1613,7 @@ class Document(object):
         """
         raise NotImplementedError()
 
+
 class DocumentTab(object):
     """
     Interface to a Document tab.
@@ -1858,6 +1856,7 @@ class GitHubOrg(object):
         """
         raise NotImplementedError()
 
+
 class Gerrit(object):
     """
     Interface to the Gerrit model.
@@ -1903,6 +1902,7 @@ class Gerrit(object):
         """
         raise NotImplementedError()
 
+
 class UserPermissions(object):
     """
     Interface to the UserPermissions model.
@@ -1944,7 +1944,7 @@ class UserPermissions(object):
         Gets all gerrit instances by a project ID.
         """
         raise NotImplementedError()
-    
+
     def all(self):
         """
         Fetches all github organizations in the CLA system.
@@ -1954,11 +1954,12 @@ class UserPermissions(object):
         """
         raise NotImplementedError()
 
-    
+
 class CompanyInvite(object):
     """
     Interface to the CompanyInvite model.
     """
+
     def to_dict(self):
         raise NotImplementedError()
 
@@ -1970,4 +1971,139 @@ class CompanyInvite(object):
 
     def delete(self):
         raise NotImplementedError()
-    
+
+
+class Event(object):
+    """
+    Interface to the Event model
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        "rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model
+        """
+        raise NotImplementedError()
+
+    def load(self, event_id):
+        """
+        Simple abstraction around the supported ORMs to load a model
+        Populates the current object.
+
+        :param event_id: The ID of the event to load
+        :type event_id: string
+        """
+        raise NotImplementedError()
+
+    def get_event_id(self):
+        """
+        Getter for events' ID
+
+        :return: The events ID.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_event_user_id(self):
+        """
+        Getter for the event's user ID
+
+        :return: The users ID
+
+        """
+
+        raise NotImplementedError()
+
+    def get_event_type(self):
+        """
+        Getter for event type
+
+        :return: The events ID.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_event_project_id(self):
+        """
+        Getter for the event's project ID.
+
+        :return: The events user ID.
+        :rtype: string
+        """
+
+        raise NotImplementedError()
+
+    def get_event_company_id(self):
+        """
+        Getter for the event's project ID
+
+        :return: the events project ID.
+        :rtype: string
+        """
+
+        raise NotImplementedError()
+
+    def get_event_time(self):
+        """
+        Getter for the event time
+
+        :return: the event time
+        :rtype: string
+        """
+
+        raise NotImplementedError()
+
+    def get_event_data(self):
+
+        raise NotImplementedError()
+
+    def get_events(self, event_id=None, event_type=None):
+
+        raise NotImplementedError()
+
+    def set_event_id(self, event_id):
+
+        raise NotImplementedError()
+
+    def set_event_user_id(self, user_id):
+
+        raise NotImplementedError()
+
+    def set_event_type(self, event_type):
+
+        raise NotImplementedError()
+
+    def set_event_project_id(self, event_project_id):
+
+        raise NotImplementedError()
+
+    def set_event_company_id(self, company_id):
+
+        raise NotImplementedError()
+
+    def set_event_data(self, event_data):
+
+        raise NotImplementedError()
+
+    def set_event_time(self, event_time):
+
+        raise NotImplementedError()
+
+    def all(self, ids=None):
+        """
+        Fetches all events in the CLA system
+
+        :param ids: List of event IDs to retrieve
+        :type ids: None or [string]
+        :return: A list of event objects.
+        """
+
+        raise NotImplementedError()
