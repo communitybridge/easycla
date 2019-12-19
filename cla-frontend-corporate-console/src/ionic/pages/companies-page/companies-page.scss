@@ -10,6 +10,11 @@ companies-page {
       border-bottom: 0.5px solid map-get($colors, primary);
     }
 
+    ion-card-title {
+      justify-content: center;
+      color: #4c79b6;
+    }
+
     .sm-card {
       width: 80vw;
       margin-left: auto;
@@ -43,15 +48,18 @@ companies-page {
     margin-left: -1em; /* Also needed for space (tweak if needed) */
   }
 
-  .cta-button {
-    background-color: #4c79b6;
-
-    a {
-      color: #4c79b6;
-    }
-  }
   a {
     font-weight: bold;
+  }
+}
+
+.cta-button {
+  background-color: #4c79b6;
+  text-transform: capitalize;
+  font-size: 16px;
+
+  a {
+    color: #4c79b6;
   }
 }
 
