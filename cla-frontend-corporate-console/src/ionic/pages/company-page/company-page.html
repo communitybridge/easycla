@@ -13,12 +13,12 @@
     <header>
       <ion-grid>
         <ion-row>
-          <ion-col col-12>
+          <!-- <ion-col col-12>
             <h1 text-center>
               {{ company.company_name }}
               <ion-icon class="clickable" name="md-create" item-right (click)="openCompanyModal()"></ion-icon>
             </h1>
-          </ion-col>
+          </ion-col> -->
         </ion-row>
       </ion-grid>
     </header>
@@ -27,12 +27,26 @@
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card>
+            <ion-card-title>
+              <h2>There are several options available to you:</h2>
+            </ion-card-title>
             <ion-card-content>
-              <ion-card-title>
+              <p>Signing a corporate CLA</p>
+              <p>If you are a CLA signatory, you can sign CCLA documents on behalf of your company by</p>
+              <ul>
+                <li>
+                  <b>Step 1</b> - Clicking "Sign New CLA" button</li>
+                <li>
+                  <b>Step 2</b> -Selecting the project you are interested in </li>
+                <li>
+                  <b>Step 3</b> -Continue the e-signing process by clicking "Submit" </li>
+              </ul>
+
+              <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
-                  New CLA
+                  Sign New CLA
                 </button>
-              </ion-card-title>
+              </ion-row>
             </ion-card-content>
           </ion-card>
         </ion-col>
@@ -62,8 +76,10 @@
                       <div *ngIf="!loading.projects && rows && rows.length > 0">
                         <ngx-datatable class='material clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
                           [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
-                          <ngx-datatable-column name="Projects" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="Managers" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Project Name" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="CLA Manager" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Whitelists" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Pending Requests" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
                         </ngx-datatable>
                       </div>
                     </div>
@@ -83,7 +99,8 @@
           <ion-card *ngIf="invites">
             <ion-card-content>
               <ion-card-title>
-                <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated by EasyCLA.</p>
+                <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated
+                  by EasyCLA.</p>
               </ion-card-title>
               <ion-card-title>
                 <h1>Pending Invites</h1>
@@ -119,10 +136,10 @@
                           <span>{{invite.userLFID}}</span>
                         </td>
                         <td data-title="Actions">
-                          <button ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                          <button clear ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
                             Accept
                           </button>
-                          <button ion-button (click)="declineCompanyInvite(invite)" color="danger">
+                          <button clear ion-button (click)="declineCompanyInvite(invite)" color="danger">
                             Decline
                           </button>
                         </td>
