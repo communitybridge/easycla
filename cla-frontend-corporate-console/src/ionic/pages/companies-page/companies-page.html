@@ -14,7 +14,7 @@
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
-            Welcome to the corporate console for EasyCLA
+            Welcome to the Corporate console for EasyCLA
           </ion-card-title>
           <div ion-card-subtitle>
             <ion-row justify-content-center>
@@ -25,7 +25,7 @@
               </ul>
             </ion-row>
             <ion-row justify-content-center>
-              <button ion-button (click)="openCLAOnboardingForm()">Request CLA Manager Access</button>
+              <button class="cta-button" ion-button>Request CLA Manager Access</button>
             </ion-row>
           </div>
         </ion-card-header>
@@ -42,13 +42,15 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
-            <h2>*Click on Sign CLA & Whitelist to administer</h2>
+            <h2>*Click on Sign CLA & Whitelist to proceed once you have been approved as a CLA Manager</h2>
           <loading-spinner [loading]="loading.companies"></loading-spinner>
           <div *ngIf="!loading.companies && rows && rows.length > 0">
             <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
               [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
               <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
               </ngx-datatable-column>
+              <ngx-datatable-column name="Project" prop="ProjectName" [sortable]="true">
+                </ngx-datatable-column>
               <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
               </ngx-datatable-column>
               <ngx-datatable-column name="Action" sortable="false" prop="CompanyID">
