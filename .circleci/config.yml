@@ -7,7 +7,7 @@ environment:
 
 jobs:
   # Builds
-  buildBackend:
+  buildBackend: &buildBackendAnchor
     docker:
       - image: circleci/python:3.7.4-node
     steps:
@@ -23,10 +23,11 @@ jobs:
           name: Install awscli
           command: sudo apt-get install -y awscli
       - run:
-          name: make setup
+          name: Setup Backend
           command: |
             cd cla-backend
-            make setup_circle
+            yarn install
+            sudo pip install -r requirements.txt
       - run:
           name: lint
           command: |
@@ -40,7 +41,28 @@ jobs:
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
             python3 -m unittest -v cla/test_*.py
 
-  buildGoBackend:
+  buildBackendDev:
+    <<: *buildBackendAnchor
+    environment:
+      STAGE: dev
+
+  buildNightlyBackendDev:
+    <<: *buildBackendAnchor
+    environment:
+      CI_NIGHTLY: true
+      STAGE: dev
+
+  buildBackendStaging:
+    <<: *buildBackendAnchor
+    environment:
+      STAGE: staging
+
+  buildBackendProd:
+    <<: *buildBackendAnchor
+    environment:
+      STAGE: prod
+
+  buildGoBackend: &buildGoBackendAnchor
     docker:
       - image: circleci/golang:1.13
     working_directory: /go/src/github.com/communitybridge/easycla/
@@ -80,12 +102,168 @@ jobs:
           command: |
             cd cla-backend-go
             make lint
+      - run:
+          name: Move Binary
+          command: |
+            mv cla-backend-go ~/cla-backend-go
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - cla-backend-go/backend_aws_lambda
 
-  buildUIProject: &buildUIAnchor
+  buildGoBackendDev:
+    <<: *buildGoBackendAnchor
+    environment:
+      STAGE: dev
+
+  buildNightlyGoBackendDev:
+    <<: *buildGoBackendAnchor
+    environment:
+      CI_NIGHTLY: true
+      STAGE: dev
+
+  buildGoBackendStaging:
+    <<: *buildGoBackendAnchor
+    environment:
+      STAGE: staging
+
+  buildGoBackendProd:
+    <<: *buildGoBackendAnchor
+    environment:
+      STAGE: prod
+
+  # Deploys
+  deployBackend: &deployBackendAnchor
+    docker:
+      - image: circleci/python:3.7.4-node
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Setup AWS key
+          command: |
+            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
+      - run:
+          name: Install AWS Profile
+          command: |
+            echo "Installing Profile '${AWS_PROFILE}'..."
+            mkdir -p ~/.aws
+            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run:
+          name: Deploy
+          command: |
+            echo "Using AWS profile: ${AWS_PROFILE}"
+            echo "Stage is: ${STAGE}"
+
+            # Copy over the go backend binary to the common cla-backend folder (they share a single serverless.yml config)
+            cp ~/cla-backend-go/backend_aws_lambda ~/cla-backend/
+            cd ~/cla-backend
+            yarn install
+
+            if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
+            if [[ ! -f serverless-authorizer.yml ]]; then echo "Missing serverless-authorizer.yml file. Exiting..."; exit 1; fi
+            yarn sls deploy --force --stage ${STAGE} --region us-east-1
+      - run:
+          name: Service Check
+          command: |
+            sudo apt-get install -y curl
+            v2_url=''
+            v3_url=''
+            if [[ "${STAGE}" == "prod" ]]; then
+              v2_url=https://api.lfcla.com/v2/health
+              v3_url=https://api.lfcla.com/v3/ops/health
+            else
+              v2_url=https://api.${STAGE}.lfcla.com/v2/health
+              v3_url=https://api.${STAGE}.lfcla.com/v3/ops/health
+            fi
+
+            echo "Validating v2 backend using endpoint: ${v2_url}"
+            curl --fail -XGET ${v2_url}
+            exit_code=$?
+            if [[ ${exit_coe} -eq 0 ]]; then
+              echo "Successful response from endpoint: ${v2_url}"
+            else
+              echo "Failed to get a successful response from endpoint: ${v2_url}"
+              exit ${exit_code}
+            fi
+
+            echo "Validating v3 backend using endpoint: ${v3_url}"
+            curl --fail -XGET ${v3_url}
+            exit_code=$?
+            if [[ ${exit_coe} -eq 0 ]]; then
+              echo "Successful response from endpoint: ${v3_url}"
+            else
+              echo "Failed to get a successful response from endpoint: ${v3_url}"
+              exit ${exit_code}
+            fi
+
+  deployBackendDev:
+    <<: *deployBackendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployNightlyBackendDev:
+    <<: *deployBackendAnchor
+    environment:
+      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployBackendStaging:
+    <<: *deployBackendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: staging
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
+
+  deployBackendProd:
+    <<: *deployBackendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: prod
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
+
+  buildFrontend: &buildFrontendAnchor
     docker:
       - image: circleci/node:8-browsers
     steps:
       - checkout
+      - run:
+          name: Setup AWS key
+          command: |
+            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
+      - run:
+          name: Install AWS Profile
+          command: |
+            echo "PROJECT_DIR=${PROJECT_DIR}"
+            echo "Installing Profile '${AWS_PROFILE}'..."
+            mkdir -p ~/.aws
+            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
       - run:
           name: Install Top Level Dependencies
           command: yarn install
@@ -93,6 +271,7 @@ jobs:
           name: Install UI Dependencies
           command: |
             pushd $PROJECT_DIR
+            echo "Running yarn install in folder: `pwd`. This will run yarn install in several places - see output below."
             yarn install-frontend
             popd
       - run:
@@ -100,9 +279,11 @@ jobs:
           command: |
             echo "Building src..."
             pushd $PROJECT_DIR/src
-            # Dummy JSON config to allow build to run
-            echo "{}" > config/cla-env-config.json
-            yarn install
+            echo "AWS_PROFILE=${AWS_PROFILE}"
+            echo "AWS_REGION=${AWS_REGION}"
+            ls ~/.aws
+            cat ${BASH_ENV}
+            yarn prebuild:${STAGE}
             yarn build
             popd
       - run:
@@ -110,46 +291,628 @@ jobs:
           command: |
             echo "Building edge..."
             pushd $PROJECT_DIR/edge
-            yarn install
             yarn build
             popd
 
-  buildProjectManagementConsole:
-    <<: *buildUIAnchor
+  # Build Project Management Console
+  buildProjectConsoleDev:
+    <<: *buildFrontendAnchor
     environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
       PROJECT_DIR: cla-frontend-project-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
 
-  buildCorporateManagementConsole:
-    <<: *buildUIAnchor
+  # Build Corporate Console
+  buildCorporateConsoleDev:
+    <<: *buildFrontendAnchor
     environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
       PROJECT_DIR: cla-frontend-corporate-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
 
-  buildContributorConsole:
-    <<: *buildUIAnchor
+  # Build Contributor Console
+  buildContributorConsoleDev:
+    <<: *buildFrontendAnchor
     environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
       PROJECT_DIR: cla-frontend-contributor-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployFrontend: &deployFrontendAnchor
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run:
+          name: Setup AWS key
+          command: |
+            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
+      - run:
+          name: Install AWS Profile
+          command: |
+            echo "PROJECT_DIR=${PROJECT_DIR}"
+            echo "Installing Profile '${AWS_PROFILE}'..."
+            mkdir -p ~/.aws
+            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run:
+          name: Install Top Level Dependencies
+          command: yarn install
+      - run:
+          name: Install UI Dependencies
+          command: |
+            pushd $PROJECT_DIR
+            echo "Running yarn install in folder: `pwd`. This will run yarn install in several places - see output below."
+            yarn install-frontend
+            popd
+      - run:
+          name: Build UI Source
+          command: |
+            echo "Building src..."
+            pushd $PROJECT_DIR/src
+            yarn build
+            popd
+      - run:
+          name: Build Edge Source
+          command: |
+            echo "Building edge..."
+            pushd $PROJECT_DIR/edge
+            yarn build
+            popd
+      - run:
+          name: Deploy
+          command: |
+            echo "Deploying $PROJECT_DIR..."
+            pushd $PROJECT_DIR
+            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
+            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+            popd
+
+  # Project Management Console
+  deployProjectManagementConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-project-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployNightlyProjectManagementConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-project-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployProjectManagementConsoleStaging:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: staging
+      PROJECT_DIR: cla-frontend-project-console
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
+
+  deployProjectManagementConsoleProd:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: prod
+      PROJECT_DIR: cla-frontend-project-console
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
+
+  # Corporate Console
+  deployCorporateConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-corporate-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployNightlyCorporateConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-corporate-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployCorporateConsoleStaging:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: staging
+      PROJECT_DIR: cla-frontend-corporate-console
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
+
+  deployCorporateConsoleProd:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: prod
+      PROJECT_DIR: cla-frontend-corporate-console
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
+
+  # Contributor Console
+  deployContributorConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-contributor-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployNightlyContributorConsoleDev:
+    <<: *deployFrontendAnchor
+    environment:
+      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-frontend-contributor-console
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployContributorConsoleStaging:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: staging
+      PROJECT_DIR: cla-frontend-contributor-console
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
+
+  deployContributorConsoleProd:
+    <<: *deployFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: prod
+      PROJECT_DIR: cla-frontend-contributor-console
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
+
+  deployLandingFrontend: &deployLandingFrontendAnchor
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run:
+          name: Setup AWS key
+          command: |
+            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
+      - run:
+          name: Install AWS Profile
+          command: |
+            echo "PROJECT_DIR=${PROJECT_DIR}"
+            echo "Installing Profile '${AWS_PROFILE}'..."
+            mkdir -p ~/.aws
+            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run:
+          name: Deploy
+          command: |
+            echo "Using AWS profile: ${AWS_PROFILE}"
+            echo "Stage is: ${STAGE}"
+            echo "PROJECT_DIR=${PROJECT_DIR}"
+
+            pushd easycla
+            echo "Installing serverless..."
+            yarn install
+            popd
+
+            # Run the deploy scripts
+            pushd easycla/${PROJECT_DIR}
+            echo "Current directory is: `pwd`"
+            echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
+            yarn prebuild:${STAGE}
+            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
+            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+
+          no_output_timeout: 1.5h
+
+  # Landing Page
+  deployLandingFrontendDev:
+    <<: *deployLandingFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-next
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployNightlyLandingFrontendDev:
+    <<: *deployLandingFrontendAnchor
+    environment:
+      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: dev
+      PROJECT_DIR: cla-next
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
+
+  deployLandingFrontendStaging:
+    <<: *deployLandingFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: staging
+      PROJECT_DIR: cla-next
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
+
+  deployLandingFrontendProd:
+    <<: *deployLandingFrontendAnchor
+    environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
+      STAGE: prod
+      PROJECT_DIR: cla-next
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
+
+  functionalTests: &functionalTests
+    docker:
+      - image: circleci/python:3.7.4-node
+    steps:
+      - checkout
+      - run:
+          name: setup
+          command: |
+            cd tests/rest
+            sudo pip3 install -r requirements.freeze.txt
+      - run:
+          name: functional-tests
+          halt_build_on_fail: false  # for now, we will pass all functional tests
+          command: |
+            echo "Running functional tests for stage: ${STAGE}"
+            cd tests/rest
+            #lfx-login -u ${AUTH_USERNAME} -p ${AUTH_PASSWORD}
+            # Now ${AUTH_TOKEN} will be set which is used by tavern-cli configuration
+            tavern-ci test_project_management_console.tavern.yaml --alluredir=allure_result_folder -v || true
+
+  functionalTestsDev:
+    <<: *functionalTests
+    environment:
+      AUTH_USERNAME: ''
+      AUTH_PASSWORD: ''
+      API_URL: 'https://api.dev.lfcla.com'
+      STAGE: dev
 
 workflows:
   version: 2.1
-  build:
+  # Cron builds
+  nightly:
+    triggers:
+      - schedule:
+          # All times are UTC - run at midnight PDT
+          cron: "0 7 * * *"
+          filters:
+            branches:
+              only:
+                - master
     jobs:
-      - buildBackend:
+      - buildNightlyBackendDev:
           filters:
             tags:
               only: /.*/
-      - buildGoBackend:
+      - buildNightlyGoBackendDev:
           filters:
             tags:
               only: /.*/
-      - buildProjectManagementConsole:
+      - deployNightlyBackendDev:
+          requires:
+            - buildNightlyBackendDev
+            - buildNightlyGoBackendDev
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployNightlyProjectManagementConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployNightlyCorporateConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployNightlyContributorConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployNightlyLandingFrontendDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+
+  build_and_deploy:
+   jobs:
+      - buildBackendDev:
           filters:
             tags:
               only: /.*/
-      - buildCorporateManagementConsole:
+      - buildGoBackendDev:
           filters:
             tags:
               only: /.*/
-      - buildContributorConsole:
+      - buildProjectConsoleDev:
           filters:
             tags:
               only: /.*/
+      - buildCorporateConsoleDev:
+          filters:
+            tags:
+              only: /.*/
+      - buildContributorConsoleDev:
+          filters:
+            tags:
+              only: /.*/
+      # Deploy Dev
+      - deployBackendDev:
+          requires:
+            - buildBackendDev
+            - buildGoBackendDev
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployProjectManagementConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployCorporateConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployContributorConsoleDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - deployLandingFrontendDev:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - functionalTestsDev:
+          requires:
+            - deployBackendDev
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+
+      # Deploy Staging
+      - buildBackendStaging:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - buildGoBackendStaging:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - approve_staging:
+          type: approval
+          requires:
+            - buildBackendStaging
+            - buildGoBackendStaging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployBackendStaging:
+          requires:
+            - approve_staging
+            - buildBackendStaging
+            - buildGoBackendStaging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployProjectManagementConsoleStaging:
+          requires:
+            - approve_staging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployCorporateConsoleStaging:
+          requires:
+            - approve_staging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployContributorConsoleStaging:
+          requires:
+            - approve_staging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployLandingFrontendStaging:
+          requires:
+            - approve_staging
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+
+      # Deploy Prod
+      - buildBackendProd:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - buildGoBackendProd:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - approve_prod:
+          type: approval
+          requires:
+            - buildBackendProd
+            - buildGoBackendProd
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployBackendProd:
+          requires:
+            - approve_prod
+            - buildBackendProd
+            - buildGoBackendProd
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployProjectManagementConsoleProd:
+          requires:
+            - approve_prod
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployCorporateConsoleProd:
+          requires:
+            - approve_prod
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployContributorConsoleProd:
+          requires:
+            - approve_prod
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
+      - deployLandingFrontendProd:
+          requires:
+            - approve_prod
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+(\.\d+)?(\.\d+)?$/
