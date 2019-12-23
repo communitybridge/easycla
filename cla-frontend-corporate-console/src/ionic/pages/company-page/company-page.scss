@@ -16,6 +16,22 @@ company-page {
     right: 15px;
   }
 
+  .card-md h2 {
+    font-size: 18px;
+  }
+
+  .card-md p {
+    font-size: 18px;
+  }
+
+  .card-md li {
+    font-size: 14px;
+  }
+
+  li + li {
+    margin-top: 2rem;
+  }
+
   ion-header {
     border-bottom: 40px solid #4c79b6;
 
@@ -38,6 +54,20 @@ company-page {
       position: absolute;
       left: calc(50% - 20px);
     }
+  }
+
+
+  ul {
+    list-style: none; /* Remove default bullets */
+  }
+
+  ul li::before {
+    content: '\2022'; /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: #4c79b6; /* Change the color */
+    font-weight: bold; /* If you want it to be bold */
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em; /* Also needed for space (tweak if needed) */
+    margin-left: -1em; /* Also needed for space (tweak if needed) */
   }
 
   th .clickable {
