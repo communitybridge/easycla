@@ -197,7 +197,8 @@ paths:
     get:
       summary: Get CLA Manager Request by LFID
       description: Get CLA Manager Request by LFID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getCLAManagerRequestsByLFID
       parameters:
         - name: lf_id
@@ -225,7 +226,8 @@ paths:
     delete:
       summary: Deletes a CLA Manager Request by request id
       description: Deletes CLA Manager Request by request id
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: deleteCLAManagerRequestsByRequestID
       parameters:
         - name: request_id
@@ -251,7 +253,8 @@ paths:
     post:
       summary: CLA Manager Request
       description: CLA Manager Request
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: createCLAManagerRequest
       parameters:
         - name: body
@@ -280,7 +283,8 @@ paths:
       summary: Onboard Send Notification/Message
       description: Onboard Send Notification/Message
       operationId: sendNotification
-      security: []
+      security:
+        - OauthSecurity: []
       parameters:
         - name: body
           in: body
@@ -307,7 +311,8 @@ paths:
     get:
       summary: Get the signature by ID
       description: Returns a list of signatures when provided the signature ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getSignatures
       parameters:
         - name: signatureID
@@ -339,7 +344,8 @@ paths:
     get:
       summary: Get project signatures
       description: Returns a list of project signature models when provided the project ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getProjectSignatures
       parameters:
         - name: projectID
@@ -374,7 +380,8 @@ paths:
     get:
       summary: Get project company signatures
       description: Returns a list of project signature models when provided the project ID and company ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getProjectCompanySignatures
       parameters:
         - name: projectID
@@ -411,7 +418,8 @@ paths:
     get:
       summary: Get company signatures
       description: Returns a list of company signatures when provided the company ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getCompanySignatures
       parameters:
         - name: companyID
@@ -443,7 +451,8 @@ paths:
     get:
       summary: Get user signatures
       description: Returns a list of user signatures when provided the user ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getUserSignatures
       parameters:
         - name: userID
@@ -475,7 +484,8 @@ paths:
     get:
       summary: Get project company signatures for the employees
       description: Returns a list of employee project signature models when provided the project ID and company ID
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getProjectCompanyEmployeeSignatures
       parameters:
         - name: projectID
@@ -511,7 +521,8 @@ paths:
   /signatures/{signatureID}/gh-org-whitelist:
     get:
       summary: Signature Update
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getGitHubOrgWhitelist
       parameters:
         - name: signatureID
@@ -535,7 +546,8 @@ paths:
         - signatures
     delete:
       summary: Signature Update
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: deleteGitHubOrgWhitelist
       parameters:
         - name: signatureID
@@ -563,7 +575,8 @@ paths:
         - signatures
     post:
       summary: Signature Update
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: addGitHubOrgWhitelist
       parameters:
         - name: signatureID
@@ -593,7 +606,8 @@ paths:
   /project:
     get:
       summary: Get Project IDs based on PM
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getProjects
       responses:
         '200':
@@ -619,7 +633,8 @@ paths:
         required: true
     get:
       summary: Get Project by ID from SFDC
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getProjectById
       responses:
         '200':
@@ -643,7 +658,8 @@ paths:
         required: true
     get:
       summary: Get contract groups
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getContractGroups
       tags:
         - contractGroup
@@ -662,7 +678,8 @@ paths:
           $ref: '#/responses/forbidden'
     post:
       summary: Create new Contract Group
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: createContractGroup
       parameters:
         - in: body
@@ -691,7 +708,8 @@ paths:
         required: true
     post:
       summary: Create new Contract Template
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: createContractTemplate
       parameters:
         - in: body
@@ -721,7 +739,8 @@ paths:
         required: true
     post:
       summary: Adds a GitHub instance to the contract group
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: addGitHubOrg
       parameters:
         - in: body
@@ -755,7 +774,8 @@ paths:
         required: true
     post:
       summary: Adds a Gerrit instance to the contract group
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: addGerritInstance
       parameters:
         - in: body
@@ -793,7 +813,8 @@ paths:
         required: true
     delete:
       summary: Delete a Gerrit Instance
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: deleteGerritInstance
       responses:
         '204':
@@ -819,7 +840,8 @@ paths:
         required: true
     get:
       summary: Get Contract Group Signatures
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getContractGroupSignatures
       responses:
         '200':
@@ -1177,7 +1199,8 @@ paths:
   /template:
     get:
       summary: Get Available Templates
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: getTemplates
       responses:
         '200':
@@ -1203,7 +1226,8 @@ paths:
         required: true
     post:
       summary: Create contract template for CLA Group
-      security: []
+      security:
+        - OauthSecurity: []
       operationId: createCLAGroupTemplate
       parameters:
         - in: body

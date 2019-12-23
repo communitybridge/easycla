@@ -7,6 +7,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/contract_group"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -14,7 +15,7 @@ import (
 // Configure sets up the middleware handlers for the contract group service
 func Configure(api *operations.ClaAPI, service Service) {
 	//Create a Contract Group
-	api.ContractGroupCreateContractGroupHandler = contract_group.CreateContractGroupHandlerFunc(func(contractGroup contract_group.CreateContractGroupParams) middleware.Responder {
+	api.ContractGroupCreateContractGroupHandler = contract_group.CreateContractGroupHandlerFunc(func(contractGroup contract_group.CreateContractGroupParams, claUser *user.CLAUser) middleware.Responder {
 
 		contract, err := service.CreateContractGroup(contractGroup.HTTPRequest.Context(), contractGroup.ProjectSfdcID, contractGroup.Body)
 		if err != nil {
@@ -25,7 +26,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Get Contract Group by Project ID
-	api.ContractGroupGetContractGroupsHandler = contract_group.GetContractGroupsHandlerFunc(func(params contract_group.GetContractGroupsParams) middleware.Responder {
+	api.ContractGroupGetContractGroupsHandler = contract_group.GetContractGroupsHandlerFunc(func(params contract_group.GetContractGroupsParams, claUser *user.CLAUser) middleware.Responder {
 
 		contractGroups, err := service.GetContractGroups(params.HTTPRequest.Context(), params.ProjectSfdcID)
 		if err != nil {
@@ -36,7 +37,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Create Contract Template
-	api.ContractGroupCreateContractTemplateHandler = contract_group.CreateContractTemplateHandlerFunc(func(params contract_group.CreateContractTemplateParams) middleware.Responder {
+	api.ContractGroupCreateContractTemplateHandler = contract_group.CreateContractTemplateHandlerFunc(func(params contract_group.CreateContractTemplateParams, claUser *user.CLAUser) middleware.Responder {
 
 		contractTemplate, err := service.CreateContractTemplate(params.HTTPRequest.Context(), params.Body, params.ContractGroupID)
 		if err != nil {
@@ -47,7 +48,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Adding Github Org name
-	api.ContractGroupAddGitHubOrgHandler = contract_group.AddGitHubOrgHandlerFunc(func(params contract_group.AddGitHubOrgParams) middleware.Responder {
+	api.ContractGroupAddGitHubOrgHandler = contract_group.AddGitHubOrgHandlerFunc(func(params contract_group.AddGitHubOrgParams, claUser *user.CLAUser) middleware.Responder {
 
 		githubOrg, err := service.CreateGitHubOrganization(params.HTTPRequest.Context(), params.ContractGroupID, params.Body)
 		if err != nil {
@@ -58,7 +59,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Adding Gerrit Instance
-	api.ContractGroupAddGerritInstanceHandler = contract_group.AddGerritInstanceHandlerFunc(func(gerritInstance contract_group.AddGerritInstanceParams) middleware.Responder {
+	api.ContractGroupAddGerritInstanceHandler = contract_group.AddGerritInstanceHandlerFunc(func(gerritInstance contract_group.AddGerritInstanceParams, claUser *user.CLAUser) middleware.Responder {
 
 		gerritInstanceResponse, err := service.CreateGerritInstance(gerritInstance.HTTPRequest.Context(), gerritInstance.ProjectSfdcID, gerritInstance.ContractGroupID, userID, gerritInstance.Body)
 		if err != nil {
@@ -69,7 +70,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Deleting Gerrit Instance
-	api.ContractGroupDeleteGerritInstanceHandler = contract_group.DeleteGerritInstanceHandlerFunc(func(gerritInstance contract_group.DeleteGerritInstanceParams) middleware.Responder {
+	api.ContractGroupDeleteGerritInstanceHandler = contract_group.DeleteGerritInstanceHandlerFunc(func(gerritInstance contract_group.DeleteGerritInstanceParams, claUser *user.CLAUser) middleware.Responder {
 
 		err := service.DeleteGerritInstance(gerritInstance.HTTPRequest.Context(), gerritInstance.ProjectSfdcID, gerritInstance.ContractGroupID, gerritInstance.GerritInstanceID)
 		if err != nil {
@@ -80,7 +81,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	//Getting Contract Group Signatures
-	api.ContractGroupGetContractGroupSignaturesHandler = contract_group.GetContractGroupSignaturesHandlerFunc(func(params contract_group.GetContractGroupSignaturesParams) middleware.Responder {
+	api.ContractGroupGetContractGroupSignaturesHandler = contract_group.GetContractGroupSignaturesHandlerFunc(func(params contract_group.GetContractGroupSignaturesParams, claUser *user.CLAUser) middleware.Responder {
 
 		contractGroupSignatures, err := service.GetContractGroupSignatures(params.HTTPRequest.Context(), params.ProjectSfdcID, params.ContractGroupID)
 		if err != nil {
