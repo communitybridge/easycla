@@ -7,6 +7,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -14,7 +15,7 @@ import (
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.ClaAPI, service service) {
 	//Get Project By ID
-	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams) middleware.Responder {
+	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
 
 		projects, err := service.GetProjects(params.HTTPRequest.Context())
 		if err != nil {
@@ -25,7 +26,7 @@ func Configure(api *operations.ClaAPI, service service) {
 	})
 
 	//Get Project By ID
-	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams) middleware.Responder {
+	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 
 		sfdcProject, err := service.GetProjectByID(projectParams.HTTPRequest.Context(), projectParams.ProjectSfdcID)
 		if err != nil {
