@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, ViewController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from '../../services/roles.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -48,15 +48,14 @@ export class ClaManagerOnboardingPage {
     private claService: ClaService,
     private formBuilder: FormBuilder,
     private rolesService: RolesService, // for @Restricted
-    public alertCtrl: AlertController
+    public alertCtrl: AlertController,
+    public viewCtrl: ViewController,
   ) {
     this.form = formBuilder.group({
       project_name: ['', Validators.compose([Validators.required])],
       company_name: ['', Validators.compose([Validators.required])],
       full_name: ['', Validators.compose([Validators.required])],
-      lfid: ['', Validators.compose([Validators.required])],
       email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      reason_for_request: ['']
     });
     this.formErrors = [];
   }
@@ -93,14 +92,14 @@ export class ClaManagerOnboardingPage {
         const user = {
           userName: this.userName,
           userEmail: this.userEmail,
-          lfid: this.form.value.lfid,
+          lfid: '',
         }
         this.currentlySubmitting = false;
 
         if (!this.companyFound) {
           const sender_email = getNotificationURL();
           generateNoCompanyEmail
-          const emailBody =  generateNoCompanyEmail(this.form.value.company_name)
+          const emailBody = generateNoCompanyEmail(this.form.value.company_name)
           // const claManager = response.signatures[0].signatureACL[0].emails[0];
           return this.claService.sendNotification(
             sender_email,
@@ -115,8 +114,8 @@ export class ClaManagerOnboardingPage {
         else if (response.signatures !== null && this.companyFound) {
           const sender_email = getNotificationURL();
           const claManager = response.signatures[0].signatureACL[0].username
-         
-          const emailBody = generatePrimaryCLAManagerEmail(claManager, user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink )
+
+          const emailBody = generatePrimaryCLAManagerEmail(claManager, user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink)
           // const claManager = response.signatures[0].signatureACL[0].emails[0];
           return this.claService.sendNotification(
             sender_email,
@@ -138,7 +137,7 @@ export class ClaManagerOnboardingPage {
           ).subscribe((response) => {
             this.sendEmailToLFAdmin();
           })
-          
+
         }
       }
     });
@@ -293,6 +292,22 @@ export class ClaManagerOnboardingPage {
     }
   }
 
+  findProject(event) {
+    this.getProjects();
+    this.filteredProjects = [];
+    let projectName = event.value.replace(/[^\w-]+/g, '');
+
+    if (!this.allProjects) {
+      this.searching = true;
+    }
+    if (projectName.length > 0 && this.allProjects) {
+      this.searching = false;
+      this.filteredProjects = this.allProjects.filter((project) => {
+        return project.project_name.toLowerCase().includes(projectName.toLowerCase());
+      });
+    }
+  }
+
   setFilteredCompanies() {
     this.getAllCompanies();
     this.filteredCompanies = this.findCompany(this.searchTerm);
@@ -317,7 +332,6 @@ export class ClaManagerOnboardingPage {
   }
 
   setUserDetails() {
-    this.form.controls['lfid'].setValue(this.userId);
     this.form.controls['email_address'].setValue(this.userEmail);
     this.form.controls['full_name'].setValue(this.userName);
   }
@@ -325,5 +339,9 @@ export class ClaManagerOnboardingPage {
   projectSelectChanged(value) {
     this.form.controls['project_name'].setValue(value.project_name);
     this.projectId = value.project_id;
+  }
+
+  dismiss() {
+    this.viewCtrl.dismiss();
   }
 }

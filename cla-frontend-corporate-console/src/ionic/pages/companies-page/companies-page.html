@@ -18,14 +18,11 @@
           </ion-card-title>
           <div ion-card-subtitle>
             <ion-row justify-content-center>
-              <ul>
-                <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
-                  below to submit information.
-                </li>
-              </ul>
+              <h3>For setting up corporate CLA Manager for a company or to add a new CLA Manager to an existing company click
+                on the button below to get started</h3>
             </ion-row>
-            <ion-row justify-content-center>
-              <button class="cta-button" ion-button>Request CLA Manager Access</button>
+            <ion-row justify-content-center margin-top>
+              <button class="cta-button" ion-button text-bold (click)="openRequestManagerModal()">Get Started</button>
             </ion-row>
           </div>
         </ion-card-header>
@@ -42,7 +39,10 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
+          <ion-row justify-content-center>
             <h2>*Click on Sign CLA & Whitelist to proceed once you have been approved as a CLA Manager</h2>
+          </ion-row>
+
           <loading-spinner [loading]="loading.companies"></loading-spinner>
           <div *ngIf="!loading.companies && rows && rows.length > 0">
             <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
@@ -50,7 +50,7 @@
               <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
               </ngx-datatable-column>
               <ngx-datatable-column name="Project" prop="ProjectName" [sortable]="true">
-                </ngx-datatable-column>
+              </ngx-datatable-column>
               <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
               </ngx-datatable-column>
               <ngx-datatable-column name="Action" sortable="false" prop="CompanyID">
