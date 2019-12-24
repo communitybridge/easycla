@@ -83,6 +83,11 @@ provider:
           ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
     - Effect: Allow
       Action:
+        - sns:Publish
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action:
         - dynamodb:Query
         - dynamodb:DeleteItem
         - dynamodb:UpdateItem
