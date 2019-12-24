@@ -367,6 +367,10 @@ jobs:
           command: |
             echo "Building src..."
             pushd $PROJECT_DIR/src
+            echo "Current directory is: `pwd`"
+            echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
+            yarn prebuild:${STAGE}
+            echo "Running build: `yarn build`..."
             yarn build
             popd
       - run:
