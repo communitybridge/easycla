@@ -1,0 +1,631 @@
+test_name: Get LF Auth0 ID id_token
+includes:
+  - !include common.yaml
+
+stages:
+  - name: get id_token from auth0
+    request:
+      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
+      method: POST
+      headers:
+        content-type: "application/x-www-form-urlencoded"
+      data:
+        audience: "{tavern.env_vars.AUTH0_AUDIENCE}"
+        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
+        grant_type: http://auth0.com/oauth/grant-type/password-realm
+        password: "{tavern.env_vars.AUTH0_PASSWORD}"
+        realm: Username-Password-Authentication
+        scope: access:api openid profile email
+        username: "{tavern.env_vars.AUTH0_USERNAME}"
+    response:
+      save:
+        body:
+          auth0_id_token: "id_token"
+
+---
+test_name: All projects homepage /v1/salesforce/projects
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Salesforce endpoint with no auth
+    request:
+      url: "{api_url}/v1/salesforce/projects"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Salesforce endpoint
+    request:
+      url: "{api_url}/v1/salesforce/projects"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      save:
+        body:
+          sf_proj_id: "[0].id"
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: True
+            sequence:
+            - type: map
+              mapping:
+                name:
+                  type: str
+                  required: False
+                id:
+                  type: str
+                  required: True
+                description:
+                  type: str
+                  required: False
+                logoUrl:
+                  type: str
+                  required: False
+
+---
+test_name: "Projects detail page: SF project info /v1/salesforce/project?id=<sf_proj_id>"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Salesforce project info using external id with no auth
+    request:
+      url: "{api_url}/v1/salesforce/project?id={sf_proj_id:s}"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Salesforce project info by external id
+    request:
+      url: "{api_url}/v1/salesforce/project?id={sf_proj_id:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              name:
+                type: str
+                required: False
+              id:
+                type: str
+                required: True
+              description:
+                type: str
+                required: False
+              logoUrl:
+                type: str
+                required: False
+
+---
+
+
+test_name: "Projects detail page: Github orgs for a project by SF_id info v1/sfdc/<sf_proj_id>/github/organizations"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Github orgs list using sf_proj_id with no auth
+    request:
+       
+      url: "{api_url}/v1/sfdc/{sf_proj_id:s}/github/organizations"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Github orgs list using sf_proj_id
+    request:
+      url: "{api_url}/v1/sfdc/{sf_proj_id:s}/github/organizations"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: True
+            sequence:
+            - type: map
+              mapping:
+                date_created:
+                  type: timestamp
+                  required: False
+                date_modified:
+                  type: timestamp
+                  required: False
+                organization_company_id:
+                  type: any
+                  required: False
+                organization_installation_id:
+                  type: str
+                  required: False
+                organization_name:
+                  type: str
+                  required: True
+                organization_project_id:
+                  type: any
+                  required: False
+                organization_sfid:
+                  type: str
+                  required: False
+                version:
+                  type: str
+                  required: True
+
+---
+
+test_name: "Project detail page: CLA groups list"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Project SF detail with no auth
+    request:
+      url: "{api_url}/v1/project/external/{sf_proj_id:s}"
+      method: GET
+    response:
+      status_code: 401
+
+  - name:  Project SF detail
+    request:
+      url: "{api_url}/v1/project/external/{sf_proj_id:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: True
+            sequence:
+            - type: map
+              mapping:
+                date_created:
+                  type: str
+                  required: False
+                date_modified:
+                  type: str
+                  required: False
+                project_name:
+                  type: str
+                  required: False
+                version:
+                  type: str
+                  required: False
+                logoUrl:
+                  type: str
+                  required: False
+                project_external_id:
+                  type: str
+                  required: False
+                project_ccla_enabled:
+                  type: bool
+                  required: False
+                project_ccla_requires_icla_signature:
+                  type: bool
+                  required: False
+                project_icla_enabled:
+                  type: bool
+                  required: False
+                project_corporate_documents:
+                  type: any
+                  required: False
+                project_individual_documents:
+                  type: any
+                  required: False
+                project_acl:
+                  type: seq
+                  required: False
+                  sequence:
+                    - type: str
+                project_id:
+                  type: str
+                  required: True
+                  
+---
+
+test_name: Connect Github Organization
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Get Github Organizations for a project with no auth
+    request:
+      url: "{api_url}/v1/github/organizations"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Get Github Organizations for a project
+    request:
+      url: "{api_url}/v1/github/organizations"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: True
+            sequence:
+            - type: map
+              mapping:
+                date_created:
+                  type: timestamp
+                  required: True
+                date_modified:
+                  type: timestamp
+                  required: True
+                organization_company_id:
+                  type: str
+                  required: False
+                organization_installation_id:
+                  type: str
+                  required: False
+                organization_name:
+                  type: str
+                  required: True
+                organization_project_id:
+                  type: str
+                  required: False
+                organization_sfid:
+                  type: str
+                  required: True
+                version:
+                  type: str
+                  required: True
+
+  - name: Add Github Organization No auth
+    request:
+      url: "{api_url}/v1/github/organizations"
+      method: POST
+      json:
+        organization_sfid: "{sf_proj_id:s}"
+        organization_name: "{github_org_name}"
+    response:
+      status_code: 401
+
+
+  - name: Add Github Organization
+    request:
+      url: "{api_url}/v1/github/organizations"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json:
+        organization_sfid: "{sf_proj_id:s}"
+        organization_name: "{github_org_name}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              date_created:
+                type: str
+                required: True
+              date_modified:
+                type: str
+                required: True
+              organization_company_id:
+                type: str
+                required: False
+              organization_installation_id:
+                type: str
+                required: False
+              organization_name:
+                type: str
+                required: True
+              organization_project_id:
+                type: str
+                required: False
+              organization_sfid:
+                type: str
+                required: True
+              version:
+                type: str
+                required: True
+
+
+---
+
+
+
+test_name: "Simulate Github app install event webhook"
+includes:
+  - !include common.yaml
+
+
+stages:
+
+  - name: "Github app install event"
+    request:
+      url: "{api_url}/v2/github/activity"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json: !include data/github-app-installation-staging.json
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            required: True
+            type: map
+            mapping:
+              status:
+                type: str
+                required: True
+
+---
+
+
+
+test_name: "Create CLA group/ project"
+includes:
+  - !include common.yaml
+
+
+stages:
+
+  - name: "Create CLA group/ project"
+    request:
+      url: "{api_url}/v1/project"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json:
+        project_external_id: "{sf_proj_id:s}"
+        project_name: "CLA group name QA"
+        project_ccla_enabled: True
+        project_ccla_requires_icla_signature: True
+        project_icla_enabled: True
+    response:
+      status_code: 200
+      save:
+        body:
+          project_id: "project_id"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            required: True
+            type: map
+            mapping:
+              date_created:
+                type: timestamp
+                required: False
+              date_modified:
+                type: timestamp
+                required: False
+              project_name:
+                type: str
+                required: False
+              version:
+                type: str
+                required: False
+              logoUrl:
+                type: str
+                required: False
+              project_external_id:
+                type: str
+                required: False
+              project_ccla_enabled:
+                type: bool
+                required: False
+              project_ccla_requires_icla_signature:
+                type: bool
+                required: False
+              project_icla_enabled:
+                type: bool
+                required: False
+              project_corporate_documents:
+                type: any
+                required: False
+              project_individual_documents:
+                type: any
+                required: False
+              project_acl:
+                type: seq
+                required: False
+                sequence:
+                  - type: str
+              project_id:
+                type: str
+                required: True
+
+---
+
+
+test_name: Template endpoint get v3/template 
+includes:
+  - !include common.yaml
+
+stages:
+  - name: Get Template endpoint v3/template no auth
+    request:
+      url: "{api_url}/v3/template"
+      method: GET
+    response:
+      status_code: 200
+
+  - name: Get Github Organizations for a project
+    request:
+      url: "{api_url}/v3/template"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      save:
+        body:
+          tempalte_id: "[0].ID"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: True
+            sequence:
+            - type: map
+              mapping:
+                ID:
+                  type: str
+                  required: True
+                Name:
+                  type: str
+                  required: True
+                cclaFields:
+                  type: seq
+                  required: True
+                  sequence:
+                  - type: any
+                description:
+                  type: str
+                  required: True
+                iclaFields:
+                  type: seq
+                  required: True
+                  sequence:
+                  - type: any
+                metaFields:
+                  type: seq
+                  required: True
+                  sequence:
+                  - type: any
+
+
+---
+
+test_name: Configure Apache style template 
+includes:
+  - !include common.yaml
+
+stages:
+
+
+  - name: Get apache template config
+    request:
+      url: "{api_url}/v3/clagroup/{project_id:s}/template"
+
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json:
+        templateID: "{tempalte_id:s}"
+        metaFields:
+        - description: Project's Full Name.
+          name: Project Name
+          templateVariable: PROJECT_NAME
+          value: Project FullName OCt 31
+        - description: The Full Entity Name of the Project.
+          name: Project Entity Name
+          templateVariable: PROJECT_ENTITY_NAME
+          value: Project Entity Name Oct31
+        - description: 'The E-Mail Address of the Person managing the CLA. '
+          name: Contact Email Address
+          templateVariable: CONTACT_EMAIL
+          value: manikantanr+oct31@biarca.com
+
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            required: True
+            type: map
+            mapping:
+              corporatePDFURL:
+                type: str
+                required: False
+              individualPDFURL:
+                type: str
+                required: False
+
+---
+
+
+test_name: Delete Github Organization
+includes:
+  - !include common.yaml
+
+# marks:
+#   - skip
+
+stages:
+
+  - name: Delete Github Organization
+    request:
+      url: "{api_url}/v1/github/organizations/{github_org_name}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              success:
+                type: bool
+                required: True
+
+                  
+
+---
+
+test_name: Delete CLA group project
+includes:
+  - !include common.yaml
+
+# marks:
+#   - skip
+
+stages:
+  - name: "Delete CLA group/ project"
+    request:
+      url: "{api_url}/v1/project/{project_id:s}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              success:
+                type: bool
+                required: True
