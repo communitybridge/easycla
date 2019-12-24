@@ -136,7 +136,6 @@ jobs:
   deployBackend: &deployBackendAnchor
     docker:
       - image: circleci/python:3.7.4-node
-    working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - attach_workspace:
           at: ~/
@@ -163,10 +162,10 @@ jobs:
             ls ~/
             ls ~/cla-backend-go/
             # Copy over the go backend binary to the common cla-backend folder (they share a single serverless.yml config)
-            cp ~/cla-backend-go/backend_aws_lambda /go/src/github.com/communitybridge/easycla/cla-backend/
+            cp ~/cla-backend-go/backend_aws_lambda ~/easycla/cla-backend/
 
-            ls /go/src/github.com/communitybridge/easycla/cla-backend/
-            cd cla-backend
+            ls ~/easycla/cla-backend/
+            pushd easycla/cla-backend
             yarn install
 
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
