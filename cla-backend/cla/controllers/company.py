@@ -59,7 +59,7 @@ def get_company(company_id):
     company = Company()
     try:
         company.load(company_id=str(company_id))
-        
+
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
@@ -70,7 +70,8 @@ def create_company(auth_user,
                    company_manager_id=None,
                    company_manager_user_name=None,
                    company_manager_user_email=None,
-                   user_id=None):
+                   user_id=None,
+                   response=None):
     """
     Creates an company and returns the newly created company in dict format.
 
@@ -91,6 +92,7 @@ def create_company(auth_user,
     for company in get_companies():
         if company.get("company_name") == company_name:
             cla.log.error({"error": "Company already exists"})
+            response.status = HTTP_409
             return {"status_code": HTTP_409,
                     "data": {"error":"Company already exists.",
                             "company_id": company.get("company_id")}
@@ -103,7 +105,7 @@ def create_company(auth_user,
     company.set_company_acl(manager.get_lf_username())
 
     company.save()
-
+    
     return {"status_code": HTTP_200,
             "data": company.to_dict()
             }
