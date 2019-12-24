@@ -565,16 +565,14 @@ jobs:
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
 
-            pushd easycla
             echo "Installing serverless..."
             yarn install
-            popd
 
             # Run the deploy scripts
-            pushd easycla/${PROJECT_DIR}
+            pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
-            yarn prebuild:${STAGE}
+            yarn prebuild:${STAGE} 
             echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
             yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
 
