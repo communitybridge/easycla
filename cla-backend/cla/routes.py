@@ -747,12 +747,12 @@ def get_unsigned_projects_for_company(company_id: hug.types.text):
                         'company_manager_id': 'user-id'}",
 )
 def post_company(
-    response,
     auth_user: check_auth,
     company_name: hug.types.text,
     company_manager_user_name=None,
     company_manager_user_email=None,
     company_manager_id=None,
+    response=None
 ):
     """
     POST: /company
@@ -769,6 +769,7 @@ def post_company(
         company_manager_id=company_manager_id,
         company_manager_user_name=company_manager_user_name,
         company_manager_user_email=company_manager_user_email,
+        response=response,
     )
 
     response.status = create_resp.get("status_code")
