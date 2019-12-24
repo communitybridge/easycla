@@ -33,6 +33,9 @@ setup_deploy:
 clean:
 	rm -rf ./gen ./bin
 
+clean-all: clean
+	rm -rf vendor
+
 swagger: clean
 	mkdir gen
 	swagger -q generate server -t gen -f swagger/cla.yaml --exclude-main -A cla -P user.CLAUser

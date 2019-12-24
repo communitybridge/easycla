@@ -61,10 +61,6 @@ export class CompaniesPage {
     this.getDefaults();
   }
 
-  openCLAOnboardingForm() {
-    // this.navCtrl.push('ClaManagerOnboardingPage');
-  }
-
   approveCLAManager() {
     this.claManagerApproved = true;
   }
@@ -198,5 +194,15 @@ export class CompaniesPage {
       });
     }
     return rows;
+  }
+
+  openRequestManagerModal() {
+    let modal = this.modalCtrl.create('ClaManagerOnboardingPage', {
+
+    });
+    modal.dismiss((data) => {
+      // A refresh of data anytime the modal is dismissed
+    });
+    modal.present();
   }
 }

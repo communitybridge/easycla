@@ -1,0 +1,4 @@
+tavern
+pytest-tldr
+pytest-sugar
+allure-pytest
