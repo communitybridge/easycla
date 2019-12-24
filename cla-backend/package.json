@@ -3,16 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "author": "The Linux Foundation",
-  "devDependencies": {
-    "request": "^2.88.0",
-    "serverless-dynamodb-local": "^0.2.38",
-    "serverless-python-requirements": "^4.2.5",
-    "serverless-s3-local": "^0.3.17",
-    "serverless-wsgi": "^1.5.2",
-    "serverless-finch": "^2.3.2"
-  },
   "scripts": {
-    "sls": "../node_modules/serverless/bin/serverless",
+    "sls": "./node_modules/serverless/bin/serverless",
     "serve:dev": "./node_modules/serverless/bin/serverless wsgi serve -s 'dev'",
     "serve:staging": "./node_modules/serverless/bin/serverless wsgi serve -s 'staging'",
     "serve:prod": "./node_modules/serverless/bin/serverless wsgi serve -s 'prod'",
@@ -20,13 +12,22 @@
     "add:user": "sh dev.sh add:user",
     "start:lambda": "sh dev.sh start:lambda",
     "start:dynamodb": "sh dev.sh start:dynamodb",
-    "start:s3": "sh dev.sh start:s3"
+    "start:s3": "sh dev.sh start:s3",
+    "deploy:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s dev -r us-east-1 --verbose",
+    "package": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s dev -r us-east-1 --verbose"
   },
   "dependencies": {
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
+    "request": "^2.88.0",
     "serverless": "^1.54.0",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-finch": "^2.3.2",
+    "serverless-layers": "^1.4.3",
+    "serverless-plugin-tracing": "^2.0.0",
     "serverless-pseudo-parameters": "^2.5.0",
-    "serverless-plugin-tracing": "^2.0.0"
+    "serverless-python-requirements": "^4.2.5",
+    "serverless-s3-local": "^0.3.17",
+    "serverless-wsgi": "^1.5.2"
   }
 }
