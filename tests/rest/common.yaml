@@ -1,0 +1,9 @@
+---
+name: Common config
+description: Variables used in YAML files
+
+variables:
+  api_url: "{tavern.env_vars.API_URL}"
+  github_org_name : "cla-{tavern.env_vars.STAGE}-tavern-org"
+  google_account_username: "manikantanr"
+  google_account_domain_name: "biarca.com"
