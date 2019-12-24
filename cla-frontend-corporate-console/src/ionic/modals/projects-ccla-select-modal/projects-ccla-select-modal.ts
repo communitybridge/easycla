@@ -15,6 +15,7 @@ import { ClaCompanyModel } from '../../models/cla-company';
   templateUrl: 'projects-ccla-select-modal.html'
 })
 export class ProjectsCclaSelectModal {
+  projectId: any;
   form: FormGroup;
   projects: any;
   projectsFiltered: any;
@@ -66,7 +67,6 @@ export class ProjectsCclaSelectModal {
    */
   onSearch() {
     const searchTerm = this.form.value.search;
-    // console.log('Search term:' + searchTerm);
     if (searchTerm === '') {
       this.projectsFiltered = this.projects;
     } else {
@@ -77,8 +77,14 @@ export class ProjectsCclaSelectModal {
   }
 
   selectProject(project) {
+    this.form.controls['search'].setValue(project.project_name);
+    this.projectId = project.project_id
+    
+  }
+
+  submit() {
     this.navCtrl.push('AuthorityYesnoPage', {
-      projectId: project.project_id,
+      projectId: this.projectId ,
       company: this.company
     });
 
