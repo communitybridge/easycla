@@ -170,10 +170,10 @@ jobs:
             ls -alF ~/
             ls -alF ~/cla-backend-go/
             # Copy over the go backend binary to the common cla-backend folder (they share a single serverless.yml config)
-            cp ~/cla-backend-go/backend_aws_lambda ~/easycla/cla-backend/
+            cp ~/cla-backend-go/backend_aws_lambda ~/project/cla-backend/
 
-            ls -alF ~/easycla/cla-backend/
-            pushd easycla/cla-backend
+            ls -alF ~/project/cla-backend/
+            pushd ~project/cla-backend
             yarn install
 
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
