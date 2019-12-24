@@ -34,8 +34,9 @@ fi
 
 echo "Running top-level build and export in folder: `pwd`"
 yarn install
-yarn run build
-yarn run export
+yarn prebuild:${STAGE}
+yarn build
+yarn export
 
 echo 'Building Edge Function'
 cd edge
