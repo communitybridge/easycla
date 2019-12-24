@@ -10,6 +10,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/savaki/dynastore"
@@ -19,7 +20,7 @@ import (
 func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *dynastore.Store) {
 
 	// Retrieve GitHub Whitelist Entries
-	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams) middleware.Responder {
+	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %v", err)
@@ -43,7 +44,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Add GitHub Whitelist Entries
-	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams) middleware.Responder {
+	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %v", err)
@@ -67,7 +68,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Delete GitHub Whitelist Entries
-	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams) middleware.Responder {
+	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -92,7 +93,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Signatures
-	api.SignaturesGetSignaturesHandler = signatures.GetSignaturesHandlerFunc(func(params signatures.GetSignaturesParams) middleware.Responder {
+	api.SignaturesGetSignaturesHandler = signatures.GetSignaturesHandlerFunc(func(params signatures.GetSignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		signatureList, err := service.GetSignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving user signatures for signatureID: %s, error: %v", params.SignatureID, err)
@@ -103,7 +104,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Project Signatures
-	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams) middleware.Responder {
+	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		projectSignatures, err := service.GetProjectSignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for projectID: %s, error: %v",
@@ -115,7 +116,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Project Company Signatures
-	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams) middleware.Responder {
+	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		projectSignatures, err := service.GetProjectCompanySignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
@@ -127,7 +128,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Employee Project Company Signatures
-	api.SignaturesGetProjectCompanyEmployeeSignaturesHandler = signatures.GetProjectCompanyEmployeeSignaturesHandlerFunc(func(params signatures.GetProjectCompanyEmployeeSignaturesParams) middleware.Responder {
+	api.SignaturesGetProjectCompanyEmployeeSignaturesHandler = signatures.GetProjectCompanyEmployeeSignaturesHandlerFunc(func(params signatures.GetProjectCompanyEmployeeSignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		projectSignatures, err := service.GetProjectCompanyEmployeeSignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving employee project signatures for project: %s, company: %s, error: %+v",
@@ -139,7 +140,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Company Signatures
-	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams) middleware.Responder {
+	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		companySignatures, err := service.GetCompanySignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving company signatures for companyID: %s, error: %v", params.CompanyID, err)
@@ -150,7 +151,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get User Signatures
-	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams) middleware.Responder {
+	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams, claUser *user.CLAUser) middleware.Responder {
 		userSignatures, err := service.GetUserSignatures(params.HTTPRequest.Context(), params)
 		if err != nil {
 			log.Warnf("error retrieving user signatures for userID: %s, error: %v", params.UserID, err)
