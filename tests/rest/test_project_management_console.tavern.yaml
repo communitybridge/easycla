@@ -236,6 +236,11 @@ stages:
                   required: False
                   sequence:
                     - type: str
+                project_member_documents:
+                  type: seq
+                  required: False
+                  sequence:
+                    - type: any
                 project_id:
                   type: str
                   required: True
@@ -458,6 +463,11 @@ stages:
               project_id:
                 type: str
                 required: True
+              project_member_documents:
+                type: seq
+                required: False
+                sequence:
+                  - type: any
 
 ---
 
@@ -472,7 +482,7 @@ stages:
       url: "{api_url}/v3/template"
       method: GET
     response:
-      status_code: 200
+      status_code: 401
 
   - name: Get Github Organizations for a project
     request:
