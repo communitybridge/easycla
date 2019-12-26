@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/template"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -15,7 +16,7 @@ import (
 // Configure API call
 func Configure(api *operations.ClaAPI, service Service) {
 	// Retrieve a list of available templates
-	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams) middleware.Responder {
+	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams, claUser *user.CLAUser) middleware.Responder {
 
 		templates, err := service.GetTemplates(params.HTTPRequest.Context())
 		if err != nil {
@@ -24,7 +25,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 		return template.NewGetTemplatesOK().WithPayload(templates)
 	})
 
-	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams) middleware.Responder {
+	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams, claUser *user.CLAUser) middleware.Responder {
 		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, &params.Body)
 		if err != nil {
 			log.Warnf("Error generating pdfs from templates, error: %v", err)
