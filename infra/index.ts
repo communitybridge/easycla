@@ -179,6 +179,7 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'user_github_id', type: 'S' },
         { name: 'user_github_username', type: 'S' },
         { name: 'lf_username', type: 'S' },
+        { name: 'user_external_id', type: 'S' },
       ],
       hashKey: 'user_id',
       readCapacity: 0,
@@ -196,6 +197,13 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'github-user-index',
           hashKey: 'user_github_id',
+          projectionType: 'ALL',
+          readCapacity: 0,
+          writeCapacity: 0,
+        },
+        {
+          name: 'github-user-external-id-index',
+          hashKey: 'user_external_id',
           projectionType: 'ALL',
           readCapacity: 0,
           writeCapacity: 0,
@@ -257,23 +265,17 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'signature_id', type: 'S' },
         { name: 'signature_project_id', type: 'S' },
+        { name: 'signature_project_external_id', type: 'S' },
         { name: 'signature_reference_id', type: 'S' },
         { name: 'signature_user_ccla_company_id', type: 'S' },
-        { name: 'signature_reference_name_lower', type: 'S' },
         { name: 'signature_company_signatory_id', type: 'S' },
+        { name: 'signature_reference_name_lower', type: 'S' },
         { name: 'signature_company_initial_manager_id', type: 'S' },
       ],
       hashKey: 'signature_id',
       readCapacity: 1,
       writeCapacity: 1,
       globalSecondaryIndexes: [
-        {
-          name: 'signature-company-signatory-index',
-          hashKey: 'signature_company_signatory_id',
-          projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
-        },
         {
           name: 'project-signature-index',
           hashKey: 'signature_project_id',
@@ -291,6 +293,20 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'signature-user-ccla-company-index',
           hashKey: 'signature_user_ccla_company_id',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1,
+        },
+        {
+          name: 'project-signature-external-id-index',
+          hashKey: 'signature_project_external_id',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1,
+        },
+        {
+          name: 'signature-company-signatory-index',
+          hashKey: 'signature_company_signatory_id',
           projectionType: 'ALL',
           readCapacity: 1,
           writeCapacity: 1,
@@ -336,7 +352,7 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
-      readCapacity: 1,
+      readCapacity: 2,
       writeCapacity: 1,
       globalSecondaryIndexes: [
         {
