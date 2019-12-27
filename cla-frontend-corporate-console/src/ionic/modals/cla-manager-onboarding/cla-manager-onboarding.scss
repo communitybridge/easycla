@@ -1,4 +1,5 @@
 page-cla-manager-onboarding {
+    min-height: 700px !important;
     ion-label {
       color: dark;
     }
@@ -134,4 +135,8 @@ span[title='rejeted'] {
 
 .disclaimer {
   margin-top: 3rem;
+}
+
+p.danger {
+  color: red;
 }
