@@ -3,10 +3,10 @@
     <ion-title>
       <ion-row>
         <ion-col>
-            <span> Request CLA Manager Request</span>
+          <span> Request CLA Manager Request</span>
         </ion-col>
         <ion-col *ngIf="loading.companies || loading.projects">
-            <ion-spinner></ion-spinner>
+          <ion-spinner></ion-spinner>
         </ion-col>
       </ion-row>
     </ion-title>
@@ -76,12 +76,11 @@
             <ion-row margin-top>
               <p class="disclaimer">
                 <b>Note:</b> Once you select the company from the approved list and the project for which you want to be a CLA
-                Manager your request will be sent to your company's primary CLA Manager.
-
+                Manager your request will be sent to your company's initial CLA Manager for approval.
                 <br />
-                <br /> If you do not see your company in "Company Name" field please type it you will be added as a CLA Manager
-                for that company
               </p>
+              <p class="danger">If you do not see your company in "Company Name" field please type it you will be added as a CLA Manager for
+                that company</p>
             </ion-row>
           </ion-col>
 
