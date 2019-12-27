@@ -119,7 +119,7 @@ includes:
 stages:
   - name: Github orgs list using sf_proj_id with no auth
     request:
-       
+
       url: "{api_url}/v1/sfdc/{sf_proj_id:s}/github/organizations"
       method: GET
     response:
@@ -244,7 +244,7 @@ stages:
                 project_id:
                   type: str
                   required: True
-                  
+
 ---
 
 test_name: Connect Github Organization
@@ -472,7 +472,7 @@ stages:
 ---
 
 
-test_name: Template endpoint get v3/template 
+test_name: Template endpoint get v3/template
 includes:
   - !include common.yaml
 
@@ -532,7 +532,7 @@ stages:
 
 ---
 
-test_name: Configure Apache style template 
+test_name: Configure Apache style template
 includes:
   - !include common.yaml
 
@@ -609,7 +609,7 @@ stages:
                 type: bool
                 required: True
 
-                  
+
 
 ---
 
@@ -639,3 +639,30 @@ stages:
               success:
                 type: bool
                 required: True
+
+---
+
+test_name: Check Duplicate Company
+includes:
+    - !include common.yaml
+
+stages:
+  - name: Create company with unique name
+    request:
+      url: "{api_url}/v1/company"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json: !include data/company.json
+    response:
+      status_code: 200
+
+  - name: Create company with duplicate name
+    request:
+      url: "{api_url}/v1/company"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_id_token:s}"
+      json: !include data/company_duplicate.json
+    response:
+      status_code: 409
