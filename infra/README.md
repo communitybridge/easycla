@@ -3,19 +3,82 @@
 This folder contains a number of infrastructure support routines for
 deploying EasyCLA to various AWS environments.
 
+By default, we established a Pulumi account with a Community Bridge
+organization.  This is where the state files are backed up/stored.
+
+This directory contains a set of deployment routines which were migrated away
+from the normal CI/CD serverless deployment via CircleCI due to complicated
+update refresh process involving DynamoDB schema updates. In our case we
+needed to update/add additional DynamoDB columns and indices over time. By
+rule, you can't update multiple Global Secondary Indexes at the same time. By
+extracting the DynamoDB table management and handling it separately via
+Pulumi, we were able to iteratively update the the table definitions from the
+command line to slowly converge on the desired state (rather than via CI/CD
+which involves tagging a release for STAGING and PROD, then CI fails,
+re-tag/re-run/re-tag, CI partially works, then fails, etc. etc.).
+
+We chose Pulumi since it was simple, easy, and written in a language that
+most of the team members understood (rather than learning a new DSL).
+
 ## Prerequisites
 
 - AWS Account Details and Credentials
 - [Pulumi](https://www.pulumi.com/) installed, see the
   [getting started guide](https://www.pulumi.com/docs/get-started/).
+- Access to the Pulumi Community Bridge organization (where the state files
+  are stored)
+
+## Pulumi Stack List
+
+We have a stack for each environment.
+
+```bash
+pulumi stack ls
+NAME                     LAST UPDATE  RESOURCE COUNT  URL
+communitybridge/dev      2 hours ago  18              https://app.pulumi.com/communitybridge/easycla/dev
+communitybridge/prod*    in progress  18              https://app.pulumi.com/communitybridge/easycla/prod
+communitybridge/staging  2 hours ago  18              https://app.pulumi.com/communitybridge/easycla/staging
+```
+
+## Importing from AWS
+
+If you have an infrastructure already deployed and managed by other means
+(manual, terraform, cloud formation, serverless, or other pulumi setup), you
+can simply import the existing resources into your owen Pulumi Stack
+configuration. This is common when you switch from one management
+tool/deployment to another.
+
+In order to "build up your stack" from existing resources, we recommend the
+following approach - which is what we did to manage the existing DynamoDB
+tables and indices from an existing deployment:
+
+1. Comment out all the resource creation in the `index.ts` file.
+1. Selectively enable each resource one at a time with the `import` clause
+   flag enabled
+1. If there is an error importing, review the "details" which will show you
+   the delta and adjust the settings to match the previously provisioned
+   resource. They need to match to get a successful import.
+1. Once the resource is imported, disable the import flag and adjust the
+   resource attributes to match your desired state.  Repeat this step
+   until the resource is exactly like you want it.  Sometime this will be
+   required multiple times for DynamoDB tables/indices since AWS only
+   allows one Global Secondary Index update to run at a time.
+1. Repeat for the other resources one at a time. Once a resource is
+   loaded into the stack you shouldn't need to touch it again unless
+   you need to make subsequent changes.
 
 ## Pulumi Deploy
 
 ```bash
 pulumi up
+
+# with sync/refresh
+pulumi up -r
 ```
 
 ## Pulumi Destroy / Remove
+
+Make sure you back up your data before doing this!!
 
 ```bash
 pulumi destroy
