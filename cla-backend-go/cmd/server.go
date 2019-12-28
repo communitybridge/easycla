@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/version"
+
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -164,7 +166,7 @@ func server(localMode bool) http.Handler {
 	signatures.Configure(api, signaturesService, sessionStore)
 	onboard.Configure(api, onboardService)
 	docs.Configure(api)
-
+	version.Configure(api, Version, Commit, Branch, BuildDate)
 	company.Configure(api, companyService, usersService, companyUserValidation)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
