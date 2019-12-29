@@ -26,6 +26,19 @@ tags:
   - name: services
 
 paths:
+  /ops/version:
+    get:
+      summary: API Version Information
+      security: []
+      operationId: getVersion
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/version'
+      tags:
+        - version
+
   /ops/health:
     get:
       summary: API Health Check
@@ -1358,6 +1371,26 @@ parameters:
     pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
 
 definitions:
+  version:
+    type: object
+    x-nullable: false
+    title: Version
+    description: Version Information
+    properties:
+      version:
+        type: string
+      commit:
+        type: string
+      branch:
+        type: string
+      buildDate:
+        type: string
+    required:
+      - version
+      - commit
+      - branch
+      - buildDate
+
   user:
     type: object
     x-nullable: false

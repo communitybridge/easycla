@@ -83,3 +83,52 @@ Make sure you back up your data before doing this!!
 ```bash
 pulumi destroy
 ```
+
+## Backup Files from S3 to Local
+
+Occasionally, there is a need to backup and restore data from a S3 bucket.
+This section describes the backup procedure going from S3 to a local folder.
+
+The AWS CLI makes working with files in S3 very easy. However, the file
+globbing available on most Unix/Linux systems is not quite as easy to use
+with the AWS CLI. S3 doesn’t have folders, but it does use the concept of
+folders by using the "/" character in S3 object keys as a folder delimiter.
+
+To copy all objects in an S3 bucket to your local machine simply use the aws
+s3 cp command with the `--recursive` option.
+
+For example `aws s3 cp s3://my-s3-bucket/ ./ --recursive` will copy all
+files from the "my-s3-bucket" bucket to the current working directory on
+your local machine. If there are folders represented in the object keys (keys
+containing "/" characters), they will be downloaded as separate directories
+in the target location.
+
+1. First, establish your AWS credentials for the environment
+1. Then run the copy command with the `--recursive` flag
+
+Example:
+
+```bash
+mkdir ./cla-project-logo-staging
+aws s3 cp s3://cla-project-logo-staging/ ./cla-project-logo-staging --recursive
+mkdir ./cla-signature-files-staging
+aws s3 cp s3://cla-signature-files-staging/ ./cla-signature-files-staging --recursive
+```
+
+## Restore Files From Local to S3
+
+Occasionally, there is a need to backup and restore data from a S3 bucket.
+This section describes the restore procedure going from a local folder to a
+S3 bucket.
+
+1. First, establish your AWS credentials for the environment
+1. Then run the copy command with the `--recursive` flag
+
+```bash
+aws s3 mb s3://cla-project-logo-staging
+aws s3 cp cla-project-logo-staging/ s3://cla-project-logo-staging/ --recursive
+aws s3 mb s3://cla-signature-files-staging
+aws s3 cp cla-signature-files-staging/ s3://cla-signature-files-staging/ --recursive
+```
+
+[Full instructions](https://aws.amazon.com/getting-started/tutorials/backup-to-s3-cli/)
