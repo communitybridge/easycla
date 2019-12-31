@@ -415,6 +415,16 @@ func (repo repository) GetSignatures(params signatures.GetSignaturesParams, page
 	}, nil
 }
 
+func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
+	if !(*filterAdded) {
+		*filterAdded = true
+		filter = cond
+	} else {
+		filter = filter.And(cond)
+	}
+	return filter
+}
+
 // GetProjectSignatures returns a list of signatures for the specified project
 func (repo repository) GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
@@ -429,22 +439,37 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
 
 	builder := expression.NewBuilder().WithProjection(buildProjection())
+	var filter expression.ConditionBuilder
+	var filterAdded bool
 
-	if params.SearchTerm != nil && params.SearchField != nil {
-		if *params.FullMatch {
-			indexName = "reference-signature-search-index"
+	if params.SearchField != nil {
+		searchFieldExpression := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
+		filter = addConditionToFilter(filter, searchFieldExpression, &filterAdded)
+	}
 
-			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
-
-			filter := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
-			builder = builder.WithFilter(filter)
-		} else {
-			filter := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm)).
-				And(expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField)))
-			builder = builder.WithFilter(filter)
+	if params.SignatureType != nil {
+		signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
+		filter = addConditionToFilter(filter, signatureTypeExpression, &filterAdded)
+		if *params.SignatureType == "ccla" {
+			signatureReferenceIDExpression := expression.Name("signature_reference_id").AttributeExists()
+			signatureUserCclaCompanyIDExpression := expression.Name("signature_user_ccla_company_id").AttributeNotExists()
+			filter = addConditionToFilter(filter, signatureReferenceIDExpression, &filterAdded)
+			filter = addConditionToFilter(filter, signatureUserCclaCompanyIDExpression, &filterAdded)
 		}
 	}
 
+	if params.SearchTerm != nil {
+		if *params.FullMatch {
+			indexName = "reference-signature-search-index"
+			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
+		} else {
+			searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
+			filter = addConditionToFilter(filter, searchTermExpression, &filterAdded)
+		}
+	}
+	if filterAdded {
+		builder = builder.WithFilter(filter)
+	}
 	builder = builder.WithKeyCondition(condition)
 
 	// Use the nice builder to create the expression

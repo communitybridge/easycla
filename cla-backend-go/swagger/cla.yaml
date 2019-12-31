@@ -373,6 +373,7 @@ paths:
         - $ref: '#/parameters/searchTerm'
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/fullMatch'
+        - $ref: '#/parameters/signatureType'
         - $ref: '#/parameters/lfid'
         - $ref: '#/parameters/ghid'
       responses:
@@ -1347,6 +1348,12 @@ parameters:
     type: boolean
     default: false
     required: false
+  signatureType:
+    name: signatureType
+    in: query
+    type: string
+    required: false
+    enum: [ccla,cla]
   lfid:
     name: lfid
     description: The optional LFID filter
