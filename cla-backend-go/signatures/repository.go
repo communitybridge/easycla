@@ -429,22 +429,46 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
 
 	builder := expression.NewBuilder().WithProjection(buildProjection())
+	var filter expression.ConditionBuilder
+	var addedFilter bool
 
-	if params.SearchTerm != nil && params.SearchField != nil {
-		if *params.FullMatch {
-			indexName = "reference-signature-search-index"
-
-			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
-
-			filter := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
-			builder = builder.WithFilter(filter)
+	if params.SearchField != nil {
+		searchFieldExpression := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
+		if !addedFilter {
+			addedFilter = true
+			filter = searchFieldExpression
 		} else {
-			filter := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm)).
-				And(expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField)))
-			builder = builder.WithFilter(filter)
+			filter = filter.And(searchFieldExpression)
 		}
 	}
 
+	if params.SignatureType != nil {
+		signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
+		if !addedFilter {
+			addedFilter = true
+			filter = signatureTypeExpression
+		} else {
+			filter = filter.And(signatureTypeExpression)
+		}
+	}
+
+	if params.SearchTerm != nil {
+		if *params.FullMatch {
+			indexName = "reference-signature-search-index"
+			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
+		} else {
+			searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
+			if !addedFilter {
+				addedFilter = true
+				filter = searchTermExpression
+			} else {
+				filter = filter.And(searchTermExpression)
+			}
+		}
+	}
+	if addedFilter {
+		builder = builder.WithFilter(filter)
+	}
 	builder = builder.WithKeyCondition(condition)
 
 	// Use the nice builder to create the expression
