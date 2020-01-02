@@ -97,6 +97,54 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+class SignatureProjectExternalIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying signatures by project external ID
+    """
+
+    class Meta:
+        """ Meta class for Signature Project External Index """
+
+        index_name = "project-signature-external-id-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index
+    signature_project_external_id = UnicodeAttribute(hash_key=True)
+
+class SignatureCompanySignatoryIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying signatures by signature company signatory ID
+    """
+
+    class Meta:
+        """ Meta class for Signature Company Signatory Index """
+
+        index_name = "signature-company-signatory-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+
+    signature_company_signatory_id = UnicodeAttribute(hash_key=True)
+
+class SignatureCompanyInitialManagerIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying signatures by signature company initial manager ID
+    """
+
+    class Meta:
+        """ Meta class for Signature Company Initial Manager Index """
+
+        index_name = "signature-company-initial-manager-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+
+    signature_company_initial_manager_id = UnicodeAttribute(hash_key=True)
+
+
 
 class GitHubUsernameIndex(GlobalSecondaryIndex):
     """
@@ -221,6 +269,8 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     company_external_id = UnicodeAttribute(hash_key=True)
 
 
+
+
 class GithubOrgSFIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying github organizations by a Salesforce ID.
@@ -319,6 +369,21 @@ class EventUserIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     user_id_index = UnicodeAttribute(hash_key=True)
+
+class GithubUserExternalIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying users by a user external ID.
+    """
+
+    class Meta:
+        """Meta class for github user external ID index"""
+
+        index_name = "github-user-external-id-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+
+    user_external_id = UnicodeAttribute(hash_key=True)
 
 
 class BaseModel(Model):
@@ -1074,8 +1139,8 @@ class UserModel(BaseModel):
         read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
 
     user_id = UnicodeAttribute(hash_key=True)
-    user_external_id = UnicodeAttribute(null=True)
     # User Emails are specifically GitHub Emails
+    user_external_id = UnicodeAttribute()
     user_emails = UnicodeSetAttribute(default=set())
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
@@ -1084,6 +1149,7 @@ class UserModel(BaseModel):
     user_github_username_index = GitHubUsernameIndex()
     user_ldap_id = UnicodeAttribute(null=True)
     user_github_id_index = GitHubUserIndex()
+    github_user_external_id_index = GithubUserExternalIndex()
     note = UnicodeAttribute(null=True)
     lf_email = UnicodeAttribute(null=True)
     lf_username = UnicodeAttribute(null=True)
@@ -1125,7 +1191,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return (
             "id: {}, username: {}, gh id: {}, gh username: {}, "
             "lf email: {}, emails: {}, ldap id: {}, lf username: {}, "
-            "user company id: {}, note: {}"
+            "user company id: {}, note: {}, user external id: {}"
         ).format(
             self.model.user_id,
             self.model.user_github_username,
@@ -1137,6 +1203,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             self.model.lf_username,
             self.model.user_company_id,
             self.model.note,
+            self.model.user_external_id
         )
 
     def to_dict(self):
@@ -1191,7 +1258,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         return self.model.lf_username
 
     def get_user_external_id(self):
-        return self.model.user_id
+        return self.model.user_external_id
 
     def get_lf_email(self):
         return self.model.lf_email
@@ -1771,6 +1838,17 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     # Callback type refers to either Gerrit or GitHub
     signature_return_url_type = UnicodeAttribute(null=True)
     note = UnicodeAttribute(null=True)
+    signature_project_external_id = UnicodeAttribute(null=True)
+    signature_company_signatory_id = UnicodeAttribute(null=True)
+    signature_company_signatory_name = UnicodeAttribute(null=True)
+    signature_company_signatory_email = UnicodeAttribute(null=True)
+    signature_company_initial_manager_id = UnicodeAttribute(null=True)
+    signature_company_initial_manager_name = UnicodeAttribute(null=True)
+    signature_company_initial_manager_email = UnicodeAttribute(null=True)
+    signature_company_secondary_manager_list = JSONAttribute(null=True)
+    signature_company_signatory_index = SignatureCompanySignatoryIndex()
+    signature_company_initial_manager_index = SignatureCompanyInitialManagerIndex()
+    project_signature_external_id_index = SignatureProjectExternalIndex()
 
     # whitelists are only used by CCLAs
     domain_whitelist = ListAttribute(null=True)
@@ -1809,6 +1887,14 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         github_whitelist=None,
         github_org_whitelist=None,
         note=None,
+        signature_project_external_id=None,
+        signature_company_signatory_id=None,
+        signature_company_signatory_name=None,
+        signature_company_signatory_email=None,
+        signature_company_initial_manager_id=None,
+        signature_company_initial_manager_name=None,
+        signature_company_initial_manager_email=None,
+        signature_company_secondary_manager_list=None
     ):
         super(Signature).__init__()
         self.model = SignatureModel()
@@ -1837,6 +1923,13 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.github_whitelist = github_whitelist
         self.model.github_org_whitelist = github_org_whitelist
         self.model.note = note
+        self.model.signature_project_external_id = signature_project_external_id
+        self.model.signature_company_signatory_id = signature_company_signatory_id
+        self.model.signature_company_signatory_email = signature_company_signatory_email
+        self.model.signature_company_initial_manager_id = signature_company_initial_manager_id
+        self.model.signature_company_initial_manager_name = signature_company_initial_manager_name
+        self.model.signature_company_initial_manager_email = signature_company_initial_manager_email
+        self.model.signature_company_secondary_manager_list = signature_company_secondary_manager_list
 
     def __str__(self):
         return (
@@ -1844,7 +1937,10 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             "reference type: {}, "
             "user cla company id: {}, signed: {}, approved: {}, domain whitelist: {}, "
             "email whitelist: {}, github user whitelist: {}, github domain whitelist: {}, "
-            "note: {}"
+            "note: {},signature project external id: {}, signature company signatory id: {}, "
+            "signature company signatory name: {}, signature company signatory email: {},"
+            "signature company initial manager id: {}, signature company initial manager name: {},"
+            "signature company initial manager email: {}, signature company secondary manager list: {}"
         ).format(
             self.model.signature_id,
             self.model.signature_project_id,
@@ -1860,6 +1956,14 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.github_whitelist,
             self.model.github_org_whitelist,
             self.model.note,
+            self.model.signature_project_external_id,
+            self.model.signature_company_signatory_id,
+            self.model.signature_company_signatory_name,
+            self.model.signature_company_signatory_email,
+            self.model.signature_company_initial_manager_id,
+            self.model.signature_company_initial_manager_name,
+            self.model.signature_company_initial_manager_email,
+            self.model.signature_company_secondary_manager_list
         )
 
     def to_dict(self):
@@ -1951,6 +2055,30 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_note(self):
         return self.model.note
 
+    def get_signature_company_signatory_id(self):
+        return self.model.signature_company_signatory_id
+
+    def get_signature_company_signatory_name(self):
+        return self.model.signature_company_signatory_name
+
+    def get_signature_company_signatory_email(self):
+        return self.model.signature_company_signatory_email
+
+    def get_signature_company_initial_manager_id(self):
+        return self.model.signature_company_initial_manager_id
+
+    def get_signature_company_initial_manager_name(self):
+        return self.model.signature_company_initial_manager_name
+
+    def get_signature_company_initial_manager_email(self):
+        return self.model.signature_company_initial_manager_email
+
+    def get_signature_company_secondary_manager_list(self):
+        return self.model.signature_company_secondary_manager_list
+
+    def get_signature_project_external_id(self):
+        return self.model.signature_project_external_id
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2006,6 +2134,27 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def set_signature_envelope_id(self, signature_envelope_id):
         self.model.signature_envelope_id = signature_envelope_id
 
+    def set_signature_company_signatory_id(self, signature_company_signatory_id):
+        self.model.signature_company_signatory_id = signature_company_signatory_id
+
+    def set_signature_company_signatory_name(self, signature_company_signatory_name):
+        self.model.signature_company_signatory_name = signature_company_signatory_name
+
+    def set_signature_company_signatory_email(self, signature_company_signatory_email):
+        self.model.signature_company_signatory_email = signature_company_signatory_email
+
+    def set_signature_company_initial_manager_id(self, signature_company_initial_manager_id):
+        self.model.signature_company_initial_manager_id = signature_company_initial_manager_id
+
+    def set_signature_company_initial_manager_name(self, signature_company_initial_manager_name):
+        self.model.signature_company_initial_manager_name = signature_company_initial_manager_name
+
+    def set_signature_company_initial_manager_email(self, signature_company_initial_manager_email):
+        self.model.signature_company_initial_manager_email = signature_company_initial_manager_email
+
+    def set_signature_company_secondary_manager_list(self, signature_company_secondary_manager_list):
+        self.model.signature_company_secondary_manager_list = signature_company_secondary_manager_list
+
     # Remove leading and trailing whitespace for all items before setting whitelist
 
     def set_domain_whitelist(self, domain_whitelist):
@@ -2022,6 +2171,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_note(self, note):
         self.model.note = note
+
+    def set_signature_project_external_id(self, signature_project_external_id):
+        self.model.signature_project_external_id = signature_project_external_id
 
     def add_signature_acl(self, username):
         self.model.signature_acl.add(username)
