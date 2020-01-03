@@ -25,19 +25,19 @@ provider:
         - s3:PutObjectAcl
       Resource:
         - Fn::Join:
-            - "/"
-            - - Fn::GetAtt: FilesBucket.Arn
-              - "*"
+          - "/"
+          - - Fn::GetAtt: FilesBucket.Arn
+            - '*'
         - Fn::Join:
-            - "/"
-            - - Fn::GetAtt: LogoBucket.Arn
-              - "*"
+          - "/"
+          - - Fn::GetAtt: LogoBucket.Arn
+            - '*'
     - Effect: Allow
       Action:
         - ssm:GetParameter
       Resource:
         Fn::Join:
-          - ""
+          - ''
           - - "arn:aws:ssm:${self:provider.region}:"
             - Ref: AWS::AccountId
             - ":parameter/cla-*"
@@ -46,10 +46,6 @@ provider:
         - ses:SendEmail
         - ses:SendRawEmail
       Resource:
-        - "*"
-      Condition:
-        StringEquals:
-          ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
         - '*'
       Condition:
         StringEquals:
@@ -76,101 +72,110 @@ provider:
         - Fn::GetAtt: UserPermissionsTableNew.Arn
         - Fn::GetAtt: SessionTable.Arn
         - Fn::GetAtt: CompanyInvitesTable.Arn
+        - Fn::GetAtt: EventsTable.Arn
+        - Fn::GetAtt: CLAManagerRequestsTable.Arn
     - Effect: Allow
       Action:
         - dynamodb:Query
       Resource:
         - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - UsersTable
-                  - Arn
-              - index
-              - github-user-index
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - github-user-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - github-username-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - UsersTable
+              - Arn
+            - index
+            - lf-username-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - SignaturesTable
+              - Arn
+            - index
+            - reference-signature-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - SignaturesTable
+              - Arn
+            - index
+            - project-signature-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - CompaniesTable
+              - Arn
+            - index
+            - external-company-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - ProjectsTable
+              - Arn
+            - index
+            - external-project-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - project-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - external-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - RepositoriesTable
+              - Arn
+            - index
+            - sfdc-repository-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - GithubOrgsTable
+              - Arn
+            - index
+            - github-org-sfid-index
+        - Fn::Join:
+          - "/"
+          - - Fn::GetAtt:
+              - CompanyInvitesTable
+              - Arn
+            - index
+            - requested-company-index
         - Fn::Join:
             - "/"
             - - Fn::GetAtt:
-                  - UsersTable
+                  - EventsTable
                   - Arn
               - index
-              - github-username-index
+              - event-type-index
         - Fn::Join:
             - "/"
             - - Fn::GetAtt:
-                  - UsersTable
+                  - EventsTable
                   - Arn
               - index
-              - lf-username-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - SignaturesTable
-                  - Arn
-              - index
-              - reference-signature-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - SignaturesTable
-                  - Arn
-              - index
-              - project-signature-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - SignaturesTable
-                  - Arn
-              - index
-              - project-signature-reference-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - CompaniesTable
-                  - Arn
-              - index
-              - external-company-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - ProjectsTable
-                  - Arn
-              - index
-              - external-project-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - RepositoriesTable
-                  - Arn
-              - index
-              - project-repository-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - RepositoriesTable
-                  - Arn
-              - index
-              - external-repository-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - RepositoriesTable
-                  - Arn
-              - index
-              - sfdc-repository-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - GithubOrgsTable
-                  - Arn
-              - index
-              - github-org-sfid-index
-        - Fn::Join:
-            - "/"
-            - - Fn::GetAtt:
-                  - CompanyInvitesTable
-                  - Arn
-              - index
-              - requested-company-index
+              - user-id-index
 
   environment:
     STAGE: ${self:provider.stage}
@@ -180,7 +185,7 @@ provider:
     GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
     GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
     GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
-    GH_STATUS_CTX_NAME: "EasyCLA"
+    GH_STATUS_CTX_NAME: 'EasyCLA'
     GH_ORG_VALIDATION: true
     COMPANY_USER_VALIDATION: true
     AUTH0_DOMAIN: ${file(./env.json):auth0-domain, ssm:/cla-auth0-domain-${opt:stage}~true}
@@ -243,7 +248,7 @@ functions:
       - http:
           method: ANY
           path: v3/{proxy+}
-          cors: true
+          #cors: true
     package:
       individually: true
       include:
@@ -312,14 +317,14 @@ resources:
       Properties:
         Name: ${self:service}-${self:provider.stage}
     GatewayResponse:
-      Type: "AWS::ApiGateway::GatewayResponse"
+      Type: 'AWS::ApiGateway::GatewayResponse'
       Properties:
         ResponseParameters:
           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
           gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
         ResponseType: DEFAULT_4XX
         RestApiId:
-          Ref: "ApiGatewayRestApi"
+          Ref: 'ApiGatewayRestApi'
     FilesBucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -341,16 +346,24 @@ resources:
               Effect: Allow
               Principal: "*"
               Action:
-                - s3:GetObject
+              - s3:GetObject
               Resource:
-                Fn::Join: ["", ["arn:aws:s3:::", { "Ref": "LogoBucket" }, "/*"]]
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "LogoBucket"
+                    },
+                    "/*"
+                  ]
+                ]
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: cla-${self:provider.stage}-users
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: user_id
             AttributeType: S
@@ -366,8 +379,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: github-user-index
             KeySchema:
-              - AttributeName: user_github_id
-                KeyType: HASH
+            - AttributeName: user_github_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -375,8 +388,8 @@ resources:
               WriteCapacityUnits: 1
           - IndexName: github-username-index
             KeySchema:
-              - AttributeName: user_github_username
-                KeyType: HASH
+            - AttributeName: user_github_username
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -384,8 +397,8 @@ resources:
               WriteCapacityUnits: 1
           - IndexName: lf-username-index
             KeySchema:
-              - AttributeName: lf_username
-                KeyType: HASH
+            - AttributeName: lf_username
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -396,14 +409,14 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-signatures
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: signature_id
             AttributeType: S
           - AttributeName: signature_project_id
             AttributeType: S
-          - AttributeName: signature_reference_name_lower
+          - AttributeName: signature_reference_id
             AttributeType: S
         KeySchema:
           - AttributeName: signature_id
@@ -411,8 +424,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: project-signature-index
             KeySchema:
-              - AttributeName: signature_project_id
-                KeyType: HASH
+            - AttributeName: signature_project_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -420,19 +433,8 @@ resources:
               WriteCapacityUnits: 1
           - IndexName: reference-signature-index
             KeySchema:
-              - AttributeName: signature_reference_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-            ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
-          - IndexName: reference-signature-search-index
-            KeySchema:
-              - AttributeName: signature_reference_id
-                KeyType: HASH
-              - AttributeName: signature_reference_name_lower
-                KeyType: RANGE
+            - AttributeName: signature_reference_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -443,8 +445,6 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-companies
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
         AttributeDefinitions:
@@ -458,8 +458,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: external-company-index
             KeySchema:
-              - AttributeName: company_external_id
-                KeyType: HASH
+            - AttributeName: company_external_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -470,8 +470,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-projects
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: project_id
             AttributeType: S
@@ -483,8 +483,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: external-project-index
             KeySchema:
-              - AttributeName: project_external_id
-                KeyType: HASH
+            - AttributeName: project_external_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -495,8 +495,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-repositories
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: repository_id
             AttributeType: S
@@ -512,8 +512,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: project-repository-index
             KeySchema:
-              - AttributeName: repository_project_id
-                KeyType: HASH
+            - AttributeName: repository_project_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -521,8 +521,8 @@ resources:
               WriteCapacityUnits: 1
           - IndexName: external-repository-index
             KeySchema:
-              - AttributeName: repository_external_id
-                KeyType: HASH
+            - AttributeName: repository_external_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -530,8 +530,8 @@ resources:
               WriteCapacityUnits: 1
           - IndexName: sfdc-repository-index
             KeySchema:
-              - AttributeName: repository_sfdc_id
-                KeyType: HASH
+            - AttributeName: repository_sfdc_id
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -542,8 +542,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-github-orgs
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: organization_name
             AttributeType: S
@@ -555,8 +555,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: github-org-sfid-index
             KeySchema:
-              - AttributeName: organization_sfid
-                KeyType: HASH
+            - AttributeName: organization_sfid
+              KeyType: HASH
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
@@ -567,8 +567,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-gerrit-instances
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: gerrit_id
             AttributeType: S
@@ -580,8 +580,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-store
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: key
             AttributeType: S
@@ -589,15 +589,15 @@ resources:
           - AttributeName: key
             KeyType: HASH
         TimeToLiveSpecification:
-          AttributeName: expire
-          Enabled: true
+            AttributeName: expire
+            Enabled: true
     UserPermissionsTableNew:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: cla-${self:provider.stage}-user-permissions
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: username
             AttributeType: S
@@ -609,8 +609,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-session-store
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -622,8 +622,8 @@ resources:
       Properties:
         TableName: cla-${self:provider.stage}-company-invites
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         AttributeDefinitions:
           - AttributeName: company_invite_id
             AttributeType: S
@@ -635,7 +635,70 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: requested-company-index
             KeySchema:
-              - AttributeName: requested_company_id
+            - AttributeName: requested_company_id
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    EventsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-events
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: event_id
+            AttributeType: S
+          - AttributeName: event_type
+            AttributeType: S
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: event-type-index
+            KeySchema:
+              - AttributeName: event_type
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+          - IndexName: user-id-index
+            KeySchema:
+              - AttributeName: user_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+
+    # Table to hold the CLA Manager Requests
+    CLAManagerRequestsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cla-${self:provider.stage}-cla-manager-onboard-requests
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: request_id
+            AttributeType: S
+          - AttributeName: lf_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: request_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: cla-manager-requests-lfid-index
+            KeySchema:
+              - AttributeName: lf_id
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
@@ -651,9 +714,9 @@ resources:
         ValidationMethod: DNS
     CustomRootDomain:
       Type: AWS::ApiGateway::DomainName
-      Properties:
+      Properties: 
         CertificateArn:
-          Ref: Cert
+            Ref: Cert
         DomainName: api.${env:ROOT_DOMAIN}
     RootDomainMapping:
       Type: AWS::ApiGateway::BasePathMapping
@@ -665,7 +728,7 @@ resources:
         Stage: ${self:provider.stage}
     CustomProductDomain:
       Type: AWS::ApiGateway::DomainName
-      Properties:
+      Properties: 
         CertificateArn:
           Ref: Cert
         DomainName: api.${env:PRODUCT_DOMAIN}
