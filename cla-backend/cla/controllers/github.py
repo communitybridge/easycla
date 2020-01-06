@@ -17,7 +17,7 @@ from cla.auth import AuthUser
 from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import UserPermissions, Repository
+from cla.models.dynamo_models import UserPermissions, Repository, Project
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
 
 
@@ -207,12 +207,13 @@ def get_github_activity_action(body: dict) -> Optional[str]:
         return None
 
 
-def activity(body):
+def activity(event_type, body):
     """
     Processes the GitHub activity event.
     :param body: the webhook body payload
     :type body: dict
     """
+    cla.log.debug('github.activity - received github activity event of type %s',event_type)
     cla.log.debug('github.activity - received github activity event, '
                   f'action: {get_github_activity_action(body)}...')
 
@@ -221,7 +222,7 @@ def activity(body):
         cla.log.debug(f'github.activity - body: {json.dumps(body)}')
 
     # GitHub Application Installation Event
-    if 'installation' in body:
+    if event_type == 'installation':
         cla.log.debug('github.activity - processing github installation activity callback...')
 
         # New Installations
@@ -255,7 +256,7 @@ def activity(body):
             pass
 
     # GitHub Pull Request Event
-    if 'pull_request' in body:
+    if event_type == 'pull_request':
         cla.log.debug('github.activity - processing github pull_request activity callback...')
 
         # New PR opened
@@ -264,6 +265,33 @@ def activity(body):
             service = cla.utils.get_repository_service('github')
             result = service.received_activity(body)
             return result
+
+    if event_type == 'installation_repositories':
+        cla.log.debug('github.activity - processing github installation_repositories activity callback...')
+        project_repos = {}
+        if body['action'] == 'removed':
+            repository_removed = body['repositories_removed']
+            for repo in repository_removed:
+                repository_external_id = repo['id']
+                cla.log.debug('=== repo ext id %d', repository_external_id)
+                ghrepo = Repository().get_repository_by_external_id(repository_external_id,'github')
+                cla.log.debug('=== got ghrepo {}'.format(ghrepo))
+                if ghrepo is not None:
+                    project_id = ghrepo.get_repository_project_id()
+                    cla.log.debug('=== project id of ghrepo %s', project_id)
+                    if project_id in project_repos:
+                        project_repos[project_id].append(ghrepo.get_repository_url)
+                    else:
+                        project_repos[project_id] = [ghrepo.get_repository_url()]
+
+            cla.log.debug('=== actionable info {}'.format(project_repos))
+            for project_id in project_repos:
+                managers = cla.controllers.project.get_project_managers("",project_id,enable_auth = False)
+                cla.log.debug("send email to")
+                cla.log.debug(managers)
+                cla.log.debug("for repositories")
+                cla.log.debug(project_repos[project_id])
+        return
 
     cla.log.debug('github.activity - ignoring github activity event, '
                   f'action: {get_github_activity_action(body)}...')
