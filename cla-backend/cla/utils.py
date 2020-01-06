@@ -672,7 +672,7 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
                                                                str(change_request_id))
 
 
-def get_comment_badge(repository_type, all_signed, sign_url):
+def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False):
     """
     Returns the CLA badge that will appear on the change request comment (PR for 'github', merge
     request for 'gitlab', etc)
@@ -690,7 +690,10 @@ def get_comment_badge(repository_type, all_signed, sign_url):
         badge_url = '{}/cla-signed.png'.format(CLA_LOGO_URL)
         badge_hyperlink = 'https://lfcla.com'
     else:
-        badge_url = '{}/cla-notsigned.png'.format(CLA_LOGO_URL)
+        if missing_user_id:
+            badge_url = "{}/cla-missing-id.png".format(CLA_LOGO_URL)
+        else:
+            badge_url = "{}/cla-notsigned.png".format(CLA_LOGO_URL)
         badge_hyperlink = sign_url
     return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
 
@@ -734,13 +737,15 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     :type signed: [(string, string)]
     :param missing: The list of commit hashes and authors that have not signed for this
         change request.
-    :type missing: [(string, string)]
+    :type missing: [(string, list)]
     """
     num_missing = len(missing)
+    missing_ids = list(filter(lambda x: x[1][0] is None, missing))
+    no_user_id = len(missing_ids) > 0
     sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
-    badge = get_comment_badge(repository_type, all_signed, sign_url)
+    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
     return badge + '<br />' + comment
 
 
@@ -756,12 +761,12 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     :param signed: List of tuples containing the commit and author name of signers.
     :type signed: [(string, string)]
     :param missing: List of tuples containing the commit and author name of not-signed users.
-    :type missing: [(string, string)]
+    :type missing: [(string, list)]
     """
-    cla.log.info('Getting comment body for repository type: %s', repository_type)
-    failed = ':x:'
-    success = ':white_check_mark:'
-    committers_comment = ''
+    cla.log.info("Getting comment body for repository type: %s", repository_type)
+    failed = ":x:"
+    success = ":white_check_mark:"
+    committers_comment = ""
     num_signed = len(signed)
     num_missing = len(missing)
 
@@ -770,39 +775,61 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         committers = {}
         for commit, author in signed:
             if author is None:
-                author = 'Unknown'
+                author = "Unknown"
             if author not in committers:
                 committers[author] = []
             committers[author].append(commit)
         # Print author commit information.
-        committers_comment += '<ul>'
+        committers_comment += "<ul>"
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>' + success + '  ' + author + \
-                                  ' (' + ", ".join(commit_hashes) + ')</li>'
-        committers_comment += '</ul>'
+            committers_comment += "<li>" + success + "  " + author + " (" + ", ".join(commit_hashes) + ")</li>"
+        committers_comment += "</ul>"
 
     if num_missing > 0:
-        support_url = 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4'
-        text = ('One or more committers are not authorized under a signed CLA as indicated below. '
-                f'[Please click here to be authorized]({sign_url}). For further assistance with '
-                f'EasyCLA, [please submit a support request ticket]({support_url}).')
+        support_url = "https://jira.linuxfoundation.org/servicedesk/customer/portal/4"
         # Group commits by author.
         committers = {}
+        # Consider the case where github Id does not exist
         for commit, author in missing:
-            if author is None:
-                author = 'Unknown'
-            if author not in committers:
-                committers[author] = []
-            committers[author].append(commit)
+            if author[0] is None:
+                author[1] = "Unknown"
+            if author[1] not in committers:
+                committers[author[1]] = []
+            committers[author[1]].append(commit)
         # Print author commit information.
-        committers_comment += '<ul>'
+        committers_comment += "<ul>"
+        github_help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
         for author, commit_hashes in committers.items():
-            committers_comment += '<li>[' + failed + '](' + sign_url + ')  ' + \
-                                  author + ' (' + ", ".join(commit_hashes) + ')</li>'
-        committers_comment += '</ul>'
-        return text + committers_comment
+            if author == "Unknown":
+                committers_comment += (
+                    f"<li>"
+                    + failed
+                    + "The commit ("
+                    + " ,".join(commit_hashes)
+                    + ") is missing the User's ID,preventing the EasyCLA check.[Consult GitHub Help]("
+                    + github_help_url
+                    + ") to resolve."
+                    + "</li>"
+                )
+            else:
+                committers_comment += (
+                    "<li>["
+                    + failed
+                    + "]("
+                    + sign_url
+                    + ")  "
+                    + author
+                    + " The commit ("
+                    + " ,".join(commit_hashes)
+                    + ") is not authorized under a signed CLA. "
+                    + f"[Please click here to be authorized]({sign_url}). For further assistance with "
+                    + f"EasyCLA, [please submit a support request ticket]({support_url})."
+                    + "</li>"
+                )
+        committers_comment += "</ul>"
+        return committers_comment
 
-    text = 'The committers are authorized under a signed CLA.'
+    text = "The committers are authorized under a signed CLA."
     return text + committers_comment
 
 
