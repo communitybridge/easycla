@@ -882,5 +882,11 @@ export class ClaService {
     return this.http.securedGet(this.claApiUrl + '/v1/project/' + projectId + '/gerrits').map((res) => res.json());
   }
 
+  getReleaseVersion() {
+    const url: URL = this.getV3Endpoint('/v3/ops/version');
+    return this.http.get(url).map((res) => res.json());
+  }
+
+
   //////////////////////////////////////////////////////////////////////////////
 }
