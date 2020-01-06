@@ -6,189 +6,275 @@ Copyright The Linux Foundation and each contributor to CommunityBridge.
 
 SPDX-License-Identifier: CC-BY-4.0
 
-### Backend
+## Building and Running the Python Backend
 
-#### cla-backend
+These are the steps for setting up a local dev environment for the python
+backend (work in progress).
 
-**Dependencies**
+### Install Python
 
-* Python 3.6.5
-* virtualenv
-* Serverless 1.32.0
-* nodejs \(npm\)
+You will need to install a local Python 3.6+ runtime - Python 3.7 will work now
+that we've updated the `hug` library. 
 
-**Setup**
-
-Create a virtual environment and install dependencies
+One easy way to install a Python runtime on a Mac is via the `pipenv` tool.
+Here, we'll use it to install a specific version of Python.  There are other
+apporaches to installing Python. Feel free to add your preferred approach to the
+information below.
 
 ```bash
-# project root
-yarn install
+brew install pipenv
+```
+
+To create a new Python installation using `pipenv`, specify the specific version
+using the `--python VERSION` flag, like so:
+
+```bash
+pipenv --python 3.7
+```
+
+When given a Python version, like this, Pipenv will automatically scan your
+system for a Python that matches that given version and download one if
+necessary.
+
+### Configure the Virtual Environment
+
+You can use `pipenv` or any other tool to configure a local sandbox for testing.
+We prefer to use `virtualenv`.
+
+```bash
+pip3 install virtualenv
+```
+
+Now setup the virtual env using python 3.6+:
+
+```bash
+# Check your version and grab the appropriate path
+python --version
+which python
+
+# Setup the virtual env
 cd cla-backend
-make setup
+virtualenv --python=/usr/local/Cellar/python3/3.7.4/bin/python3 .venv
 ```
 
-**Local Installation**
-
-The local development environment makes use of three plugins for the Serverless framework that emulate the AWS services locally. `serverless-wsgi` emulates AWS λ and API Gateway, `serverless-dynamodb-local` emulates DynamoDb and `serverless-s3-local` emulates S3. These plugins leverage Serverless in the same way as our deployment infrastructure.
-
-**Plugins**
-
-* [`serverless-wsgi`](https://www.npmjs.com/package/serverless-wsgi)
-* [`serverless-dynamodb-local`](https://www.npmjs.com/package/serverless-dynamodb-local)
-* [`serverless-s3-local`](https://www.npmjs.com/package/serverless-s3-local)
-
-**Run Locally**
-
-1. Make sure Python3.6, python3-pip and `virtualenv` are installed on build
-
-   machine. It appears Hug isn't fully compatible with Python3.7. \[More info
-
-   here\]\([https://github.com/timothycrosley/hug/issues/631](https://github.com/timothycrosley/hug/issues/631)\)
-
-2. Run `export AWS_PROFILE=lf_dev` to set your AWS profile.
-3. \(optional\) If you wish to override backend env vars, configure them in
-
-   `env.json` using the env var names specified in `serverless.yml`.
-
-4. Run `make setup` \(This only needs to be run once.\)
-5. Run `make run_dynamo`
-6. Run `make run_s3`
-7. Run `make run_lambda`
-8. Run \`make add\_project\_manager\_permission username=
-
-   project\_sfdc\_id= bearer\_token= base\_url=[http://localhost:5000\`](http://localhost:5000`)
-
-   to add configure your user for the Project Management Console.
-
-#### cla-backend-go
-
-#### Dependencies
-
-* Golang 1.13
-* [dep](https://github.com/golang/dep)
-
-**Build And Run**
-
-Create a config file name `env.json` that contains the config entries specified in the [config struct](https://github.com/communitybridge/easycla/tree/9d90365534e45b86032affe9fbdcaab3f4cd16a2/cla-backend-go/config/config.go).
-
-Run the following commands:
+This will create a `.venv` folder in the `cla-backend` project folder. We'll
+want to load the sandbox environment by using:
 
 ```bash
-cd cla-backend-go
-make setup # Only needed on initial setup
-make swagger
-make build
-./cla server --config env.json
+source .venv/bin/activate
 ```
 
-### Frontend
+### Install the Requirements
 
-**Requirements**
-
-* Ionic ^3.20.0
-* @ionic/app-scripts ^3.2.0
-* Node ^8.11.1 at least 6.0 required.
-
-#### Install Top Level Dependencies
+If not already done, load the virtual environment. Then we can install the
+required modules:
 
 ```bash
-# Top level - project root
+source .venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+This will install the dependencies in the `.venv` path.
+
+### Setup Environment Variables
+
+We'll need a few run-time environment variables to communicate with AWS.
+
+- `AWS_REGION` - the AWS region, normally this should be set to `us-east-1`
+- `AWS_ACCESS_KEY_ID` - AWS key, used to authenticate to AWS for DynamoDB and SSM
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key, used to authenticate to AWS for DynamoDB and SSM
+- `PRODUCT_DOMAIN` - e.g. `export PRODUCT_DOMAIN=dev.lfcla.com`
+- `ROOT_DOMAIN` - e.g. `export ROOT_DOMAIN=lfcla.dev.platform.linuxfoundation.org`
+
+Optional environment variables:
+
+- `PORT` - optional, the HTTP port when running in local mode. The default is 5000.
+- `STAGE` - optional, specifies the environment stage. The default is typically `dev`.
+
+For testing locally, you'll want to point to the dev environment or stand up a
+local DynamoDB and S3 instance. Generally, we run the backend services and UI
+locally and simply point to the DEV environment. The `STAGE` environment
+variable controls where we point. Make sure you export/provide/setup the AWS
+properties in order to connect.
+
+## Run the Python Backend
+
+```bash
+cd cla-backend
 yarn install
-
-# Project Management Console
-cd cla-frontend-project-console
-make setup
-
-# Corporate Console
-cd cla-frontend-corporate-console
-make setup
-
-# Contributor Console
-cd cla-frontend-contributor-console
-make setup
-
-# or simply...
-for i in cla-frontend-project-console cla-frontend-corporate-console cla-frontend-contributor-console; do
-    pushd ${i} && yarn install-frontend; popd;
-done
 ```
 
-## CLA Landing Page
-
-**Requirements**
-
-* Next
-
-cd cla-next yarn install yarn dev to run locally yarn build && yarn start to run in production
-
-#### Config variables provision
-
-Due to Ionic custom webpack limitations, in order to provision config variables, we leverage `pre-build` process to trigger variable provision scripts before executing build. For each CLA console, at `./src/package.json`, to find which script is executed at `pre-build` process for each stage. All provision scripts can be found under `./src/config/scripts`.
-
-There are two ways to provision config values. The first way is to use a script to download the values from a running environment \(such as `DEV`, `STAGING`, or `PROD`, for example\) or build the file manually. Overall, both approaches should result in a config file named `./src/config/cla-env-config.json`. This file should NOT be version controlled.
-
-Using the script approach, we can fetch the configuration values from the `DEV` environment for the project management console by doing:
+This will install the `serverless` tool and plugins.
 
 ```bash
-# First, make sure your have your AWS profile setup and established
-# Note: AWS MFA/assumed role from the command line doesn't seem to work with the node.js lib
-export AWS_PROFILE=<your_aws_profile>
-cd cla-frontend-project-console/src
-# The following target is defined in the `cla-frontend-project-console/package.json` file
-yarn prebuild:dev
-```
+# If using local DynamoDB and local S3:
+node_modules/serverless/bin/serverless wsgi serve -s 'local' 
 
-This will generate the `cla-frontend-project-console/src/config/cla-env-config.json` file for running in the `DEV` environment.
+# If pointing to a DEV cluster:
+node_modules/serverless/bin/serverless wsgi serve -s 'dev' 
 
-If the build is against qa/staging/prod stages \(`qa`, `staging` and `prod`\), the AWS [parameter store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html) should be used to provision these values by using a script. Go to AWS parameter store and make sure provision property values with name convention `{variable name}-{stage name}`. The values for each console needs are listed as following:
-
-* CLA management console - cla-frontend-project-console
-
-```javascript
-{
-  "auth0-clientId":"auth0_client_id",
-  "auth0-domain":"linuxfoundation.auth0.com",
-  "cla-api-url":"http://cla_api_endpoint",
-  "cinco-api-url":"https://cinco_api_endpoint",
-  "analytics-api-url":"https://analytics_api_endpoint",
-  "gh-app-public-link":"https://github_app_public_link"
-}
-```
-
-* CLA corporate console - cla-frontend-corporate-console
-
-```javascript
-{
-  "auth0-clientId":"auth0_client_id",
-  "auth0-domain":"linuxfoundation.auth0.com",
-  "cla-api-url":"http://cla_api_endpoint",
-  "cinco-api-url":"https://cinco_api_endpoint"
-}
-```
-
-* CLA contributor console - cla-frontend-contributor-console
-
-```javascript
-{
-  "auth0-clientId":"auth0_client_id",
-  "auth0-domain":"linuxfoundation.auth0.com",
-  "cla-api-url":"http://cla_api_endpoint",
-  "corp-console-link":"https://corporate_console_link"
-}
-```
-
-If the build is supposed to be a dev build hosted on a developer local machine, directly create or edit \(if it already exists\) the `cla-env-config.json` configuration file and adjust the config variables as needed.
-
-To run the UI in local mode, run:
-
-> Note: typically auth0 needs to be configured to support the localhost:8100 callback - many testing environments only support this in the DEV environment.
-
-```bash
-# For dev
+# Alternatively, you can simply run:
 yarn serve:dev
-
-# For staging
-yarn serve:staging
 ```
 
+To test:
+
+```bash
+# Health Check
+open http://localhost:5000/v2/health
+
+# Get User by ID
+open http://localhost:5000/v2/user/<some_uuid_from_users_table>
+```
+
+## Building and Running the Go Backend
+
+### Install Go
+
+Follow the [Go Getting Started](https://golang.org/doc/install) guide to install the tool.
+
+After installation, you should have something similar to:
+
+```bash
+# After the GO installation, you should have GOROOT set
+echo $GOROOT
+/usr/local/opt/go/libexec
+
+# And go should be in your path
+go version
+go version go1.13.5 darwin/amd64
+```
+
+### Setup Project Folders
+
+To build the go stuff, the go tool is very specific on paths. If this isn't
+correct, some of the build targets, such as `swagger` will fail with a
+nondescript error message. Generally:
+
+```bash
+# GOPATH also should be set, depends on where your code would generally be located
+echo $GOPATH
+# response would be something like this:
+/Users/<my-os-user-id>/projects/go
+
+# if `GOPATH` is not set, you will need to explictly set it:
+export GOPATH=$HOME/projects/go # or wherever your go projects will be located
+# most sane people set this in their `~/.bashrc` or `~/.zshrc` file so they
+# don't have to remember to set it again
+
+# If the `GOPATH` variable is NOT set, run: export GOPATH=<your_go_path>
+# Inside of this folder you should traditionally have `src`, `bin`, and `pkg` folders
+# To recreate them, run (needed for the first-time setup only):
+pushd $GOPATH && mkdir -p src bin pkg && popd
+
+# If you have code checked out in a different path than the GOPATH (as in the
+# case of CLA, probably), you will need to establish a soft link to point where
+# you checked out the public easycla source - this must follow the EasyCLA go path
+# structure (e.g. the directory path of the source code on disk must match the
+# code import paths). To create the path structure, run:
+mkdir -p $GOPATH/src/github.com/communitybridge
+pushd $GOPATH/src/github.com/communitybridge
+ln -s <path_to_where_you_really_have_easycla_checked_out>/easycla easycla
+popd
+
+# Confirm everything:
+ls -la $GOPATH/src/github.com/communitybridge/easycla
+# Should see something like:
+lrwxr-xr-x  1 ddeal  staff  29 Jul  7 14:48 /Users/ddeal/projects/go/src/github.com/communitybridge/easycla@ -> /Users/ddeal/projects/easycla
+```
+
+### Building Go Source
+
+```bash
+# Navigate to the go source code and build it - you must be in this path/directory
+pushd $GOPATH/src/github.com/communitybridge/easycla/cla-backend-go
+
+# First time only, you will need to install the dev tools.  Simply run:
+make setup
+
+# Once the tools are installed, you can run a clean build with all
+# the bells and whistles. This will:
+# - remove the old binary
+# - generate go code based on the swagger specification (includes data models and API stuff)
+# - download external dependencies
+# - formats the code (should be already formatted) - run this before you checkin code - the linter will catch violations
+# - build the code - use `build` or `build-mac` based on your platform
+# - test will run unit tests
+# - lint will run lint checks (do this before checking in code to avoid CI/CD catching the violations later)
+
+# Linux only:
+make clean swagger swagger-validate deps fmt build test lint
+
+# Mac only:
+make clean swagger swagger-validate deps fmt build-mac test lint
+# or use the 'all' target (mac only)
+make all
+
+# After the above, you should have the binary now:
+ls -lhF cla
+-rwxr-xr-x  1 ddeal  staff    36M Jul 18 10:57 cla*
+
+# Type is based on your OS
+file cla
+cla: Mach-O 64-bit executable x86_64
+```
+
+### Setup the Environment
+
+To run the Go backend, it requires a few environment variables to be set:
+
+- `AWS_REGION` - the AWS region, normally this should be set to `us-east-1`
+- `AWS_ACCESS_KEY_ID` - AWS key, used to authenticate to AWS for DynamoDB and SSM
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key, used to authenticate to AWS for DynamoDB and SSM
+
+Optional environment settings:
+
+- `PORT` - optional, the HTTP port when running in local mode. The default is 8080.
+- `STAGE` - optional, specifies the environment stage. The default is `dev`.
+- `GH_ORG_VALIDATION` - set to `false` to test locally which will by-pass the GH auth checks and
+   allow local functional tests (e.g. with cURL or Postman) - default is enabled/true
+
+### Running
+
+First build and setup the environment.  Then simply run it:
+
+```bash
+./cla
+```
+
+You should see the typical diagnostic details on startup indicating that it
+started without errors. To confirm, connect to the health service using a
+browser, curl or PostMan:
+
+```bash
+open http://localhost:8080/v3/ops/health
+```
+
+## Testing UI Locally
+
+If testing in local mode, set the `USE_LOCAL_SERVICES=true` environment variable
+and review the localhost values in the `cla.service.ts` implementation for each
+console. Update the ports as necessary.
+
+For example, to test the corporate console:
+
+```bash
+cd cla-frontend-corporate-console
+yarn install-frontend
+
+# move to the source folder
+cd src
+
+# Ensure the AWS environment is setup
+export AWS_PROFILE=cla-dev-profile
+export AWS_REGION=us-east-1
+
+# To use local services, set the following value.
+# You will need to have the go and python backend up and running locally,
+# otherwise it will use the DEV, STAGING, or PROD environment services based on
+# the STAGE environment variable and the specific yarn target that you invoke.
+export USE_LOCAL_SERVICES=true
+
+# Run locally (code changes auto-deploy) - dev environment settings
+yarn serve:dev
+```
