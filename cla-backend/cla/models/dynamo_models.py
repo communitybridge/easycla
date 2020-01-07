@@ -1140,7 +1140,7 @@ class UserModel(BaseModel):
 
     user_id = UnicodeAttribute(hash_key=True)
     # User Emails are specifically GitHub Emails
-    user_external_id = UnicodeAttribute()
+    user_external_id = UnicodeAttribute(null=True)
     user_emails = UnicodeSetAttribute(default=set())
     user_name = UnicodeAttribute(null=True)
     user_company_id = UnicodeAttribute(null=True)
