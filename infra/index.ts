@@ -313,7 +313,8 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         },
         {
           name: 'reference-signature-search-index',
-          hashKey: 'signature_reference_name_lower',
+          hashKey: 'signature_project_id',
+          rangeKey: 'signature_reference_name_lower',
           projectionType: 'ALL',
           readCapacity: 1,
           writeCapacity: 1,
