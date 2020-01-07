@@ -18,7 +18,7 @@ from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import UserPermissions, Repository, Project
-from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client
+from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service
 
 
 def get_organizations():
@@ -252,7 +252,18 @@ def activity(event_type, body):
             else:
                 cla.log.info('github.activity - Organization already enrolled: %s', existing['organization_name'])
                 return {'status': 'Organization already enrolled in the CLA system'}
-        else:  # TODO: Handle action == 'deleted'
+        elif 'action' in body and body['action'] == 'deleted':
+            cla.log.debug('github.activity - processing github installation activity [deleted] callback...')
+            org_name = get_org_name_from_installation_event(body)
+            if org_name is None:
+                cla.log.warning('Unable to determine organization name from the github installation event '
+                                f'with action: {body["action"]}'
+                                f'event body: {json.dumps(body)}')
+                return {'status', f'GitHub installation {body["action"]} event malformed.'}
+            repositories = Repository().get_repositories_by_organization(org_name)
+            notify_project_managers(repositories)
+            return
+        else:
             pass
 
     # GitHub Pull Request Event
@@ -268,34 +279,66 @@ def activity(event_type, body):
 
     if event_type == 'installation_repositories':
         cla.log.debug('github.activity - processing github installation_repositories activity callback...')
-        project_repos = {}
         if body['action'] == 'removed':
             repository_removed = body['repositories_removed']
+            repositories = []
             for repo in repository_removed:
                 repository_external_id = repo['id']
-                cla.log.debug('=== repo ext id %d', repository_external_id)
                 ghrepo = Repository().get_repository_by_external_id(repository_external_id,'github')
-                cla.log.debug('=== got ghrepo {}'.format(ghrepo))
                 if ghrepo is not None:
-                    project_id = ghrepo.get_repository_project_id()
-                    cla.log.debug('=== project id of ghrepo %s', project_id)
-                    if project_id in project_repos:
-                        project_repos[project_id].append(ghrepo.get_repository_url)
-                    else:
-                        project_repos[project_id] = [ghrepo.get_repository_url()]
-
-            cla.log.debug('=== actionable info {}'.format(project_repos))
-            for project_id in project_repos:
-                managers = cla.controllers.project.get_project_managers("",project_id,enable_auth = False)
-                cla.log.debug("send email to")
-                cla.log.debug(managers)
-                cla.log.debug("for repositories")
-                cla.log.debug(project_repos[project_id])
+                    repositories.append(ghrepo)
+            notify_project_managers(repositories)
         return
 
     cla.log.debug('github.activity - ignoring github activity event, '
                   f'action: {get_github_activity_action(body)}...')
 
+def notify_project_managers(repositories):
+    if repositories is None:
+        return
+    project_repos = {}
+    for ghrepo in repositories:
+        project_id = ghrepo.get_repository_project_id()
+        if project_id in project_repos:
+            project_repos[project_id].append(ghrepo.get_repository_url)
+        else:
+            project_repos[project_id] = [ghrepo.get_repository_url()]
+    for project_id in project_repos:
+        managers = cla.controllers.project.get_project_managers("",project_id,enable_auth = False)
+        project = cla.controllers.project.get_project(project_id)
+        repositories = project_repos[project_id]
+        subject, body, recipients = unable_to_do_cla_check_email_content(managers, project["project_name"], repositories)
+        cla.log.debug("sending mail to %s\n with subject:%s\n body: %s\n",recipients,subject,body)
+        #get_email_service().send(subject, body, recipients)
+
+def unable_to_do_cla_check_email_content(managers, project_name, repositories):
+    """Helper function to get unable to do cla check email subject, body"""
+    subject = 'EasyCLA is unable to check PRs'
+
+    body = """
+    Hi,
+
+    EasyCLA is unable to check pull requests on following repositories due to permissions issue. Please contact the repository admin/owner to enable CLA checks.
+
+    Project: %s """ \
+    % (project_name)
+
+    body = body + """
+    Repositories: """
+    for repo in repositories:
+        body = body + "\n        - " + repo
+
+    body = body + """
+    Steps:
+        1. Go into the "Settings" tab of the GitHub Organization
+        2. Click on "Integration & services" verticle navigation
+        3. Then click "Configure" associated with the EasyCLA App
+        4. Finally, click the "All Repositories" radio button option"""
+
+    recipients = []
+    for manager in managers:
+        recipients.append(manager["email"])
+    return subject, body, recipients
 
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
