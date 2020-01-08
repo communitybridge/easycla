@@ -320,6 +320,14 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 1,
         },
         {
+          name: 'signature-project-id-type-index',
+          hashKey: 'signature_project_id',
+          rangeKey: 'signature_type',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1,
+        },
+        {
           name: 'signature-company-initial-manager-index',
           hashKey: 'signature_company_initial_manager_id',
           projectionType: 'ALL',

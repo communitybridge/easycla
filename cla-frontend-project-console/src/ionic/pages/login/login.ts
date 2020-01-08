@@ -8,11 +8,11 @@ import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
   name: 'LoginPage',
-  segment: 'login'
+  segment: 'login',
 })
 @Component({
   selector: 'login',
-  templateUrl: 'login.html'
+  templateUrl: 'login.html',
 })
 export class LoginPage {
   userRoles: any;
@@ -22,7 +22,7 @@ export class LoginPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     public rolesService: RolesService,
-    public authService: AuthService
+    public authService: AuthService,
   ) {
     //this.authService.logout();
     this.userRoles = this.rolesService.userRoles;
