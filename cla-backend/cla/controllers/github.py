@@ -300,7 +300,7 @@ def notify_project_managers(repositories):
     for ghrepo in repositories:
         project_id = ghrepo.get_repository_project_id()
         if project_id in project_repos:
-            project_repos[project_id].append(ghrepo.get_repository_url)
+            project_repos[project_id].append(ghrepo.get_repository_url())
         else:
             project_repos[project_id] = [ghrepo.get_repository_url()]
     for project_id in project_repos:
