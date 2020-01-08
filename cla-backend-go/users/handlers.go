@@ -17,7 +17,6 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("AddUserHandlerFunc - claUser: %+v", claUser)
 		userModel, err := service.CreateUser(&params.Body)
 		if err != nil {
 			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
@@ -29,7 +28,6 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Get User by ID handler
 	api.UsersGetUserHandler = users.GetUserHandlerFunc(func(params users.GetUserParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("GetUserHandlerFunc - claUser: %+v", claUser)
 		userModel, err := service.GetUser(params.UserID)
 		if err != nil {
 			log.Warnf("error retrieving user for user_id: %s, error: %+v", params.UserID, err)
@@ -41,7 +39,6 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Get User by name handler
 	api.UsersGetUserByUserNameHandler = users.GetUserByUserNameHandlerFunc(func(params users.GetUserByUserNameParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("GetUserByUserNameHandlerFunc - claUser: %+v", claUser)
 		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {
 			log.Warnf("error retrieving user for user name: '%s', error: %+v", params.UserName, err)
@@ -58,9 +55,22 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Get User by name handler
 	api.UsersSearchUsersHandler = users.SearchUsersHandlerFunc(func(params users.SearchUsersParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("SearchUsersHandlerFunc - claUser: %+v", claUser)
-		userModel, err := service.SearchUsers(*params.SearchField, *params.SearchTerm, false)
+		// No required params? Return empty result
+		if params.SearchField == nil || params.SearchTerm == nil {
+			return users.NewSearchUsersBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: "Missing searchField and/or searchTerm parameters",
+			})
+		}
 
+		// Were we passed the full match flag? If so, use it.
+		var fullMatch = false
+		if params.FullMatch != nil {
+			fullMatch = *params.FullMatch
+		}
+
+		// Perform the search
+		userModel, err := service.SearchUsers(*params.SearchField, *params.SearchTerm, fullMatch)
 		if err != nil {
 			log.Warnf("error retrieving user for user with name: '%s', error: %+v", *params.SearchTerm, err)
 			return users.NewSearchUsersBadRequest().WithPayload(errorResponse(err))

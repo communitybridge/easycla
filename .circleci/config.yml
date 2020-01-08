@@ -39,7 +39,7 @@ jobs:
           command: |
             cd cla-backend
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
-            python3 -m unittest -v cla/test_*.py
+            python3 -m unittest -v cla/test_*.py && pytest -vv cla/tests/unit/test_model.py
 
   buildBackendDev:
     <<: *buildBackendAnchor
@@ -592,7 +592,7 @@ jobs:
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
-            yarn prebuild:${STAGE} 
+            yarn prebuild:${STAGE}
             echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
             yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
 
