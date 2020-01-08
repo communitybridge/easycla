@@ -1,5 +1,7 @@
 # Introduction to EasyCLA
 
+[![CircleCI](https://circleci.com/gh/communitybridge/easycla.svg?style=svg)](https://circleci.com/gh/communitybridge/easycla)
+
 The Contributor License Agreement \(CLA\) service of the Linux Foundation lets project contributors read, sign, and submit contributor license agreements easily.
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
