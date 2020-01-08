@@ -47,21 +47,6 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
-// DBUser data model
-type DBUser struct {
-	UserID             string   `json:"user_id"`
-	LFEmail            string   `json:"lf_email"`
-	LFUsername         string   `json:"lf_username"`
-	DateCreated        string   `json:"date_created"`
-	DateModified       string   `json:"date_modified"`
-	UserName           string   `json:"user_name"`
-	Version            string   `json:"version"`
-	UserEmails         []string `json:"user_emails"`
-	UserGithubID       string   `json:"user_github_id"`
-	UserCompanyID      string   `json:"user_company_id"`
-	UserGithubUsername string   `json:"user_github_username"`
-}
-
 func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	putStartTime := time.Now()
 
@@ -144,8 +129,6 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 }
 
 func (repo repository) GetUser(userID string) (*models.User, error) {
-	queryStartTime := time.Now()
-
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	// This is the key we want to match
@@ -168,10 +151,7 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
-		//IndexName:                 aws.String(fmt.Sprintf("cla-%s-users", repo.stage)),
 	}
-
-	//log.Debugf("Running user query using queryInput: %+v", queryInput)
 
 	// Make the DynamoDB Query API call
 	result, err := repo.dynamoDBClient.Query(queryInput)
@@ -179,10 +159,6 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 		log.Warnf("Error retrieving user by user_id: %s, error: %+v", userID, err)
 		return nil, err
 	}
-
-	//log.Debugf("Result count : %d", *result.Count)
-	//log.Debugf("Scanned count: %d", *result.ScannedCount)
-	//log.Debugf("Result: %+v", *result)
 
 	// The user model
 	var dbUserModels []DBUser
@@ -193,21 +169,16 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 		return nil, err
 	}
 
-	log.Debugf("GetUser by ID query took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(dbUserModels))
-
 	if len(dbUserModels) == 0 {
 		return nil, nil
 	} else if len(dbUserModels) > 1 {
 		log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
 	}
 
-	//log.Debugf("%+v", dbUserModels[0])
 	return convertDBUserModel(dbUserModels[0]), nil
 }
 
 func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
@@ -260,13 +231,11 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 		IndexName:                 aws.String(indexName),
 	}
 
-	log.Debugf("Running user query using queryInput: %+v", queryInput)
-
 	var lastEvaluatedKey string
-	// The user model
+	// The database user model
 	var dbUserModels []DBUser
 
-	// Loop until we have all the records
+	// Loop until we find a match or exhausted all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
 		result, err := repo.dynamoDBClient.Query(queryInput)
@@ -281,15 +250,14 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 			return nil, err
 		}
 
-		log.Debugf("GetUser by User Name '%s' query took: %v resulting in %d results",
-			userName, utils.FmtDuration(time.Since(queryStartTime)), len(dbUserModels))
-
 		if len(dbUserModels) == 1 {
 			return convertDBUserModel(dbUserModels[0]), nil
 		} else if len(dbUserModels) > 1 {
 			log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
 			return convertDBUserModel(dbUserModels[0]), nil
 		}
+
+		// Didn't find a match so far...need to keep looking via the next page of data
 
 		// If we have another page of results...
 		if result.LastEvaluatedKey["user_id"] != nil {
@@ -308,7 +276,6 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 }
 
 func (repo repository) SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error) {
-	log.Debugf("Starting Search User")
 	// Sorry, no results if empty search field or search term
 	if strings.TrimSpace(searchTerm) == "" || strings.TrimSpace(searchField) == "" {
 		return &models.Users{
@@ -319,8 +286,6 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 			TotalCount:     0,
 		}, nil
 	}
-
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
@@ -375,9 +340,6 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 		// Add to our response model list
 		users = append(users, userList...)
 
-		log.Debugf("User search scan took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		if results.LastEvaluatedKey["user_id"] != nil {
 			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
 			lastEvaluatedKey = *results.LastEvaluatedKey["user_id"].S
@@ -403,9 +365,6 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 	}
 
 	totalCount := *describeTableResult.Table.ItemCount
-
-	log.Debugf("Total user search took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(users))
 
 	return &models.Users{
 		ResultCount:    int64(len(users)),
@@ -449,31 +408,23 @@ func buildUserProjection() expression.ProjectionBuilder {
 	)
 }
 
-// buildDBUserModels converts the response model into a response data model
+// buildDBUserModels converts the database model into a service response data model
 func buildDBUserModels(results *dynamodb.ScanOutput) ([]models.User, error) {
 	var users []models.User
 
-	type ItemSignature struct {
-		UserID       string `json:"user_id"`
-		DateCreated  string `json:"date_created"`
-		DateModified string `json:"date_modified"`
-	}
-
 	// The DB company model
-	var dbUsers []ItemSignature
+	var dbUsers []DBUser
 
+	// Decode the database scan output into a database model
 	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbUsers)
 	if err != nil {
 		log.Warnf("error unmarshalling users from database, error: %v", err)
 		return nil, err
 	}
 
+	// Covert the database models to a list of API response models
 	for _, dbUser := range dbUsers {
-		users = append(users, models.User{
-			UserID:       dbUser.UserID,
-			DateCreated:  dbUser.DateCreated,
-			DateModified: dbUser.DateModified,
-		})
+		users = append(users, *convertDBUserModel(dbUser))
 	}
 
 	return users, nil
