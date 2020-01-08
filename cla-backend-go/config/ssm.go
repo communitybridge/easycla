@@ -34,6 +34,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 
 	ssmClient := ssm.New(awsSession)
 
+	// TODO: DAD - optimization: fetch the SSM values in parallel
+
 	// Auth0
 	auth0Domain, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-domain-%s", stage))
 	if err != nil {
