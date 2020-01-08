@@ -179,14 +179,15 @@ export class CompaniesPage {
     );
   }
 
-  viewCompany(company) {
+  viewCompany(companyId) {
     this.navCtrl.setRoot('CompanyPage', {
-      companyId: company.CompanyID
+      companyId: companyId
     });
   }
 
   onSelect(event) {
     let company = event.selected[0];
+    console.log(company, 'company')
     if (company.Status === 'Joined') {
       this.viewCompany(company.CompanyID);
     }
