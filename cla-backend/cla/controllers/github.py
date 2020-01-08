@@ -309,32 +309,33 @@ def notify_project_managers(repositories):
         repositories = project_repos[project_id]
         subject, body, recipients = unable_to_do_cla_check_email_content(managers, project["project_name"], repositories)
         cla.log.debug("sending mail to %s\n with subject:%s\n body: %s\n",recipients,subject,body)
-        #get_email_service().send(subject, body, recipients)
+        get_email_service().send(subject, body, recipients)
 
 def unable_to_do_cla_check_email_content(managers, project_name, repositories):
-    """Helper function to get unable to do cla check email subject, body"""
+    """Helper function to get unable to do cla check email subject, body, recipients"""
     subject = 'EasyCLA is unable to check PRs'
+    pronoun = "this repository"
+    if len(repositories) > 1:
+        pronoun = "these repositories"
 
+    repo_string = "\n    • ".join(repositories)
     body = """
-    Hi,
+Project Manager for {},
 
-    EasyCLA is unable to check pull requests on following repositories due to permissions issue. Please contact the repository admin/owner to enable CLA checks.
+EasyCLA is unable to check PRs on {} due to permissions issue.
+    • {}
 
-    Project: %s """ \
-    % (project_name)
+Please contact the repository admin/owner to enable CLA checks.
 
-    body = body + """
-    Repositories: """
-    for repo in repositories:
-        body = body + "\n        - " + repo
+Provide the Owner/Admin the following instructions:
+    • Go into the "Settings" tab of the GitHub Organization
+    • Click on "Integration & services" vertical navigation
+    • Then click "Configure" associated with the EasyCLA App
+    • Finally, click the "All Repositories" radio button option
 
-    body = body + """
-    Steps:
-        1. Go into the "Settings" tab of the GitHub Organization
-        2. Click on "Integration & services" verticle navigation
-        3. Then click "Configure" associated with the EasyCLA App
-        4. Finally, click the "All Repositories" radio button option"""
-
+Thanks,
+EasyCLA Support Team""".format(project_name, pronoun, repo_string)
+    body = '<p>' + body.replace('\n', '<br>')+ '</p>'
     recipients = []
     for manager in managers:
         recipients.append(manager["email"])
