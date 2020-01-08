@@ -21,12 +21,14 @@ import { EmailValidator } from '../../validators/email';
   templateUrl: 'companies-page.html'
 })
 export class CompaniesPage {
+  hasCompanyId: boolean = false;
   loading: any;
   companies: any;
 
   userId: string;
   userEmail: string;
   userName: string;
+  companyId: string;
 
   manager: string;
   columns: any[];
@@ -69,12 +71,15 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
+    this.hasCompanyId = false;
     this.userId = localStorage.getItem('userid');
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
     this.setUserDetails();
     this.companies = [];
     this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }, { prop: 'ProjectName' }];
+
+    this.getUserByUserId();
   }
 
   ngOnInit() {
@@ -95,6 +100,12 @@ export class CompaniesPage {
       this.getCompanies();
     });
     modal.present();
+  }
+
+  getUserByUserId() {
+    this.userId && this.claService.getUserByUserName(this.userId).subscribe((user) => {
+      this.companyId = user.companyID
+    })
   }
 
   getSignedCLAs() {}

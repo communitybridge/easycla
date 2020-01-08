@@ -10,7 +10,7 @@
 
 <ion-content>
   <div class="page-content">
-    <ion-row>
+    <ion-row *ngIf="hasCompanyId">
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
@@ -60,8 +60,6 @@
             <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
               [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
               <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Project" prop="ProjectName" [sortable]="true">
               </ngx-datatable-column>
               <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
               </ngx-datatable-column>

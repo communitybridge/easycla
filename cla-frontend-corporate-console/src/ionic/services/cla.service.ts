@@ -112,10 +112,14 @@ export class ClaService {
    * GET /v3/users/{userId}
    **/
   getUserByUserId(userId) {
+    console.log(userId, 'userIduserId')
     const url: URL = this.getV3Endpoint('/v3/users/' + userId);
     return this.http
       .getWithCreds(url)
-      .map((res) => res.json())
+      .map((res) => {
+        console.log(res, 'res')
+        return res.json()
+      })
       .catch(this.handleServiceError);
   }
 
@@ -126,7 +130,10 @@ export class ClaService {
     const url: URL = this.getV3Endpoint('/v3/users/username/' + userName);
     return this.http
       .getWithCreds(url)
-      .map((res) => res.json())
+      .map((res) => {
+        console.log(res.json(), 'resss')
+        return res.json()
+      })
       .catch((err) => this.handleServiceError(err));
   }
 
