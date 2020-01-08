@@ -171,6 +171,7 @@ provider:
     LF_GROUP_CLIENT_SECRET: ${file(./env.json):lf-group-client-secret, ssm:/cla-lf-group-client-secret-${opt:stage}}
     LF_GROUP_REFRESH_TOKEN: ${file(./env.json):lf-group-refresh-token, ssm:/cla-lf-group-refresh-token-${opt:stage}}
     LF_GROUP_CLIENT_URL: ${file(./env.json):lf-group-client-url, ssm:/cla-lf-group-client-url-${opt:stage}}
+    SNS_EVENT_TOPIC_ARN: ${file(./env.json):sns-event-topic-arn, ssm:/cla-sns-event-topic-arn-${opt:stage}}
     DOCRAPTOR_TEST_MODE: ${file(./env.json):docraptor-test-mode}
 
 plugins:

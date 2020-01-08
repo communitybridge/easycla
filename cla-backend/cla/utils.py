@@ -253,6 +253,8 @@ def get_email_service(conf=None, initialize=True):
         from cla.models.smtp_models import MockSMTP as email
     elif email_service == 'SES':
         from cla.models.ses_models import SES as email
+    elif email_service == 'SNS':
+        from cla.models.sns_email_models import SNS as email
     elif email_service == 'MockSES':
         from cla.models.ses_models import MockSES as email
     else:

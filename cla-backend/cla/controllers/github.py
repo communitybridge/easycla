@@ -308,7 +308,6 @@ def notify_project_managers(repositories):
         project = cla.controllers.project.get_project(project_id)
         repositories = project_repos[project_id]
         subject, body, recipients = unable_to_do_cla_check_email_content(managers, project["project_name"], repositories)
-        cla.log.debug("sending mail to %s\n with subject:%s\n body: %s\n",recipients,subject,body)
         get_email_service().send(subject, body, recipients)
 
 def unable_to_do_cla_check_email_content(managers, project_name, repositories):
