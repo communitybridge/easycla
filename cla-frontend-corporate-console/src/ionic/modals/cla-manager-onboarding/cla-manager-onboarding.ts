@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController, ViewController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from '../../services/roles.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
+import { EmailValidator } from "../../validators/email";
+import { getNotificationURL, generatePrimaryCLAManagerEmail, generateNoPrimaryCLAManagerEmail, generateNoCompanyEmail } from '../../services/notification.utils';
+import { EnvConfig } from "../../services/cla.env.utils";
+
 
 @IonicPage()
 @Component({
@@ -18,6 +21,7 @@ export class ClaManagerOnboardingPage {
   filteredProjects: any;
   loading: any;
   companies: any;
+  companyFound: boolean = false;
 
   userId: string;
   userEmail: string;
@@ -37,21 +41,21 @@ export class ClaManagerOnboardingPage {
   searching: boolean;
   foundCompay: boolean;
   allProjects: any;
+  consoleLink: string
 
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
     private formBuilder: FormBuilder,
     private rolesService: RolesService, // for @Restricted
-    public alertCtrl: AlertController
+    public alertCtrl: AlertController,
+    public viewCtrl: ViewController,
   ) {
     this.form = formBuilder.group({
       project_name: ['', Validators.compose([Validators.required])],
       company_name: ['', Validators.compose([Validators.required])],
       full_name: ['', Validators.compose([Validators.required])],
-      lfid: ['', Validators.compose([Validators.required])],
       email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      reason_for_request: ['']
     });
     this.formErrors = [];
   }
@@ -75,6 +79,7 @@ export class ClaManagerOnboardingPage {
     this.foundCompay = true;
     this.foundProject = true;
     this.filteredCompanies = [];
+    this.consoleLink = EnvConfig['corp-console-link'];
   }
 
   submit() {
@@ -84,19 +89,78 @@ export class ClaManagerOnboardingPage {
 
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe((response) => {
       if (response) {
+        const user = {
+          userName: this.userName,
+          userEmail: this.userEmail,
+          lfid: '',
+        }
         this.currentlySubmitting = false;
-        if (response.signatures) {
-          this.initialManagerAlreadyExists('gjg');
-        } else {
-          this.sendEmailToLFAdmin();
+
+        if (!this.companyFound) {
+          const sender_email = getNotificationURL();
+          generateNoCompanyEmail
+          const emailBody = generateNoCompanyEmail(this.form.value.company_name)
+          // const claManager = response.signatures[0].signatureACL[0].emails[0];
+          return this.claService.sendNotification(
+            sender_email,
+            'CLA: Request of Access for Corporate CLA Manager',
+            [this.userEmail],
+            emailBody
+          ).subscribe((response) => {
+            this.companyDoesNotEXist();
+          })
+        }
+
+        else if (response.signatures !== null && this.companyFound) {
+          const sender_email = getNotificationURL();
+          const claManager = response.signatures[0].signatureACL[0].username
+
+          const emailBody = generatePrimaryCLAManagerEmail(claManager, user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink)
+          // const claManager = response.signatures[0].signatureACL[0].emails[0];
+          return this.claService.sendNotification(
+            sender_email,
+            'CLA: Request of Access for Corporate CLA Manager',
+            [this.userEmail],
+            emailBody
+          ).subscribe((response) => {
+            this.managerAlreadyExists(this.form.value.company_name);
+          })
+        }
+        else {
+          const sender_email = getNotificationURL();
+          const emailBody = generateNoPrimaryCLAManagerEmail(user, this.form.value.company_name, this.form.value.project_name, this.form.value.reason_for_request, this.consoleLink)
+          return this.claService.sendNotification(
+            sender_email,
+            'CLA: Request of Access for Primary Corporate CLA Manager',
+            [this.userEmail],
+            emailBody
+          ).subscribe((response) => {
+            this.sendEmailToLFAdmin();
+          })
+
         }
       }
     });
   }
 
-  initialManagerAlreadyExists(claManager) {
+  companyDoesNotEXist() {
     let alert = this.alertCtrl.create({
-      title: 'Your request will be sent to the Primary CLA Manager for approval',
+      title: `Your request has been sent to Linux Foundation Administrator to add your company and then add you as an Initial CLA Manager`,
+      buttons: [
+        {
+          text: 'Ok',
+          handler: () => {
+            this.navCtrl.push("CompaniesPage");
+          }
+        },
+      ]
+    });
+    alert.present();
+  }
+
+  managerAlreadyExists(companyName) {
+    let alert = this.alertCtrl.create({
+      title: `There is already an initial CLA Manager for this project from ${companyName} company. Your request has been sent to initial CLA Manager to add you as a CLA Manager`,
       buttons: [
         {
           text: 'Ok',
@@ -111,21 +175,18 @@ export class ClaManagerOnboardingPage {
 
   sendEmailToLFAdmin() {
     let alert = this.alertCtrl.create({
-      title: 'An email has been sent to admin@lfcla.com with all the information provided in the form',
+      title: 'Your request has been sent to Linux Foundation Administrator to add you as an Initial CLA Manager',
       buttons: [
         {
           text: 'Ok',
           handler: () => {
-            this.navCtrl.push('CompaniesPage');
+            this.navCtrl.push("CompaniesPage");
           }
-        }
+        },
       ]
     });
     alert.present();
-    // TODO: send email
   }
-
-  sendEmailToInitialCLAManager(emailAddress, lfid, projectName, reason, claManager) {}
 
   getAllCompanies() {
     if (!this.companies) {
@@ -231,6 +292,22 @@ export class ClaManagerOnboardingPage {
     }
   }
 
+  findProject(event) {
+    this.getProjects();
+    this.filteredProjects = [];
+    let projectName = event.value.replace(/[^\w-]+/g, '');
+
+    if (!this.allProjects) {
+      this.searching = true;
+    }
+    if (projectName.length > 0 && this.allProjects) {
+      this.searching = false;
+      this.filteredProjects = this.allProjects.filter((project) => {
+        return project.project_name.toLowerCase().includes(projectName.toLowerCase());
+      });
+    }
+  }
+
   setFilteredCompanies() {
     this.getAllCompanies();
     this.filteredCompanies = this.findCompany(this.searchTerm);
@@ -242,6 +319,7 @@ export class ClaManagerOnboardingPage {
   }
 
   setCompanyName(company) {
+    this.companyFound = true;
     this.searchTerm = company.company_name;
     this.form.controls['company_name'].setValue(this.searchTerm);
     this.filteredCompanies = [];
@@ -254,7 +332,6 @@ export class ClaManagerOnboardingPage {
   }
 
   setUserDetails() {
-    this.form.controls['lfid'].setValue(this.userId);
     this.form.controls['email_address'].setValue(this.userEmail);
     this.form.controls['full_name'].setValue(this.userName);
   }
@@ -262,5 +339,9 @@ export class ClaManagerOnboardingPage {
   projectSelectChanged(value) {
     this.form.controls['project_name'].setValue(value.project_name);
     this.projectId = value.project_id;
+  }
+
+  dismiss() {
+    this.viewCtrl.dismiss();
   }
 }

@@ -20,17 +20,6 @@
                   <input ion-input type="text" placeholder="Enter manager or company name..."
                     formControlName="search" />
                 </ion-col>
-                <ion-col col-2>
-                  <ion-segment (ionChange)="searchField = $event.value" color="primary" mode="ios"
-                    formControlName="searchField" layout="icon-start">
-                    <ion-segment-button value="company">
-                      <ion-label>Company</ion-label>
-                    </ion-segment-button>
-                    <ion-segment-button value="manager">
-                      <ion-label>Manager</ion-label>
-                    </ion-segment-button>
-                  </ion-segment>
-                </ion-col>
                 <ion-col col-auto>
                   <ion-item>
                     <ion-label>Full Match</ion-label>

@@ -1,7 +1,5 @@
 page-cla-manager-onboarding {
-  .page-content {
-    min-height: calc(100vh - 200px);
-
+    // min-height: 700px !important;
     ion-label {
       color: dark;
     }
@@ -14,13 +12,6 @@ page-cla-manager-onboarding {
       justify-content: center;
     }
 
-    .sm-card {
-      width: 50vw;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 3rem;
-    }
-  }
   .scroll-content {
     margin-top: 96px;
   }
@@ -41,6 +32,17 @@ page-cla-manager-onboarding {
     }
   }
 
+  ion-label {
+    color: #4c79b6 !important;
+    font-weight: bold;
+    font-size: 14px;
+    padding-bottom: 1rem;
+  }
+
+  ion-label.clickable {
+    color: black !important;
+  }
+
   .company-dropdown-list {
     color: black;
     margin: 0.2rem 0;
@@ -48,6 +50,7 @@ page-cla-manager-onboarding {
     overflow: scroll;
     width: 100%;
     z-index: 2;
+    position: absolute;
 
     .item {
       border: 1px solid #dedede;
@@ -56,9 +59,6 @@ page-cla-manager-onboarding {
     }
   }
 
-  ion-footer {
-    position: relative;
-  }
   ul {
     list-style: none; /* Remove default bullets */
   }
@@ -111,7 +111,7 @@ page-cla-manager-onboarding {
 
 .card-md {
   box-shadow: none !important;
-  padding: 30px;
+  padding: 0px !important;
 }
 
 ion-card-title {
@@ -130,5 +130,13 @@ span[title='Pending Approval'] {
 }
 
 span[title='rejeted'] {
+  color: red;
+}
+
+.disclaimer {
+  margin-top: 3rem;
+}
+
+p.danger {
   color: red;
 }

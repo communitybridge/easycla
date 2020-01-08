@@ -150,7 +150,7 @@ export class CompanyPage {
   }
 
   openCompanyModal() {
-    let modal = this.modalCtrl.create('AddCompanyModal', {
+    let modal = this.modalCtrl.create('EditCompanyModal', {
       company: this.company
     });
     modal.onDidDismiss((data) => {

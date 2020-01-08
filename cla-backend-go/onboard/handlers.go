@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/user"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -19,7 +21,7 @@ import (
 // Configure sets the response handlers for the onboarding API calls
 func Configure(api *operations.ClaAPI, service Service) {
 	api.OnboardCreateCLAManagerRequestHandler = onboard.CreateCLAManagerRequestHandlerFunc(
-		func(params onboard.CreateCLAManagerRequestParams) middleware.Responder {
+		func(params onboard.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 			responseModel, err := service.CreateCLAManagerRequest(
 				*params.Body.LfID,
 				*params.Body.ProjectName,
@@ -40,7 +42,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 		})
 
 	api.OnboardGetCLAManagerRequestsByLFIDHandler = onboard.GetCLAManagerRequestsByLFIDHandlerFunc(
-		func(params onboard.GetCLAManagerRequestsByLFIDParams) middleware.Responder {
+		func(params onboard.GetCLAManagerRequestsByLFIDParams, claUser *user.CLAUser) middleware.Responder {
 			responseModels, err := service.GetCLAManagerRequestsByLFID(params.LfID)
 
 			if err != nil {
@@ -65,7 +67,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 		})
 
 	api.OnboardDeleteCLAManagerRequestsByRequestIDHandler = onboard.DeleteCLAManagerRequestsByRequestIDHandlerFunc(
-		func(params onboard.DeleteCLAManagerRequestsByRequestIDParams) middleware.Responder {
+		func(params onboard.DeleteCLAManagerRequestsByRequestIDParams, claUser *user.CLAUser) middleware.Responder {
 			err := service.DeleteCLAManagerRequestsByRequestID(params.RequestID)
 
 			if err != nil {
@@ -82,7 +84,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	api.OnboardSendNotificationHandler = onboard.SendNotificationHandlerFunc(
 		//func(params onboard.SendNotificationParams, user *user.CLAUser) middleware.Responder {
-		func(params onboard.SendNotificationParams) middleware.Responder {
+		func(params onboard.SendNotificationParams, claUser *user.CLAUser) middleware.Responder {
 			/*
 				// Check the user details
 				if user == nil {

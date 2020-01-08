@@ -61,10 +61,6 @@ export class CompaniesPage {
     this.getDefaults();
   }
 
-  openCLAOnboardingForm() {
-    this.navCtrl.push('ClaManagerOnboardingPage');
-  }
-
   approveCLAManager() {
     this.claManagerApproved = true;
   }
@@ -78,7 +74,7 @@ export class CompaniesPage {
     this.userName = localStorage.getItem('user_name');
     this.setUserDetails();
     this.companies = [];
-    this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }];
+    this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }, { prop: 'ProjectName' }];
   }
 
   ngOnInit() {
@@ -157,6 +153,7 @@ export class CompaniesPage {
         this.loading.companies = false;
         if (companies['companies-with-invites']) {
           this.rows = this.mapCompanies(companies['companies-with-invites']);
+          // console.log(this.rows, 'this is rows')
         } else {
           this.rows = [];
         }
@@ -192,9 +189,20 @@ export class CompaniesPage {
       rows.push({
         CompanyID: company.companyID,
         CompanyName: company.companyName,
-        Status: company.status
+        Status: company.status,
+        ProjectName: ''
       });
     }
     return rows;
+  }
+
+  openRequestManagerModal() {
+    let modal = this.modalCtrl.create('ClaManagerOnboardingPage', {
+
+    });
+    modal.dismiss((data) => {
+      // A refresh of data anytime the modal is dismissed
+    });
+    modal.present();
   }
 }

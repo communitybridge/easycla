@@ -10,7 +10,7 @@ import {
   NavController,
   NavParams,
   PopoverController,
-  ViewController
+  ViewController,
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { SortService } from '../../services/sort.service';
@@ -20,11 +20,11 @@ import { ColumnMode, SortType } from '@swimlane/ngx-datatable';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({
-  segment: 'cla-contract-view-companies-signatures-modal'
+  segment: 'cla-contract-view-companies-signatures-modal',
 })
 @Component({
   selector: 'cla-contract-view-companies-signatures-modal',
-  templateUrl: 'cla-contract-view-companies-signatures-modal.html'
+  templateUrl: 'cla-contract-view-companies-signatures-modal.html',
 })
 export class ClaContractViewCompaniesSignaturesModal {
   @ViewChild('companiesTable') table: any;
@@ -67,7 +67,7 @@ export class ClaContractViewCompaniesSignaturesModal {
     private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.claProjectName = this.navParams.get('claProjectName');
@@ -76,7 +76,7 @@ export class ClaContractViewCompaniesSignaturesModal {
     this.form = this.formBuilder.group({
       search: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
       searchField: ['company'],
-      fullMatch: [false]
+      fullMatch: [false],
     });
 
     events.subscribe('modal:close', () => {
@@ -102,7 +102,7 @@ export class ClaContractViewCompaniesSignaturesModal {
 
   getDefaults() {
     this.page = {
-      pageNumber: 0
+      pageNumber: 0,
     };
 
     // Pagination initialization
@@ -111,7 +111,7 @@ export class ClaContractViewCompaniesSignaturesModal {
 
     this.data = {};
     this.loading = {
-      signatures: true
+      signatures: true,
     };
 
     this.filteredData = this.rows;
@@ -147,7 +147,8 @@ export class ClaContractViewCompaniesSignaturesModal {
         lastKeyScanned,
         this.searchString,
         this.searchField.value,
-        this.fullMatch.value
+        'ccla',
+        this.fullMatch.value,
       )
       .subscribe((response) => {
         this.data = response;
@@ -241,22 +242,22 @@ export class ClaContractViewCompaniesSignaturesModal {
           label: 'Details',
           callback: 'signatureDetails',
           callbackData: {
-            signature: signature
-          }
+            signature: signature,
+          },
         },
         {
           label: 'CLA',
           callback: 'signatureCla',
           callbackData: {
-            signature: signature
-          }
-        }
-      ]
+            signature: signature,
+          },
+        },
+      ],
     };
     let popover = this.popoverCtrl.create('ActionPopoverComponent', actions);
 
     popover.present({
-      ev: ev
+      ev: ev,
     });
 
     popover.onDidDismiss((popoverData) => {
@@ -309,7 +310,7 @@ export class ClaContractViewCompaniesSignaturesModal {
             Company: signature.companyName && signature.companyName,
             Managers: signature.signatureACL,
             Version: `v${signature.version}`,
-            Date: date
+            Date: date,
           };
         })
       );

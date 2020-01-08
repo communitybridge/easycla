@@ -14,18 +14,27 @@
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
-            Welcome to the corporate console for EasyCLA
+            Welcome to the Corporate console for EasyCLA
           </ion-card-title>
           <div ion-card-subtitle>
-            <ion-row justify-content-center>
-              <ul>
-                <li>Set up primary CLA Manager for your company. If you have already done this, you are all set. If not, click
-                  below to submit information.
-                </li>
-              </ul>
+            <ion-row >
+              <h3 margin-top>For setting up corporate CLA Manager for a new company or add a new CLA Manager to an existing company, click
+                the button below to get started.
+              </h3>
+              <h3 margin-top>
+                Once you select the company and project for which you want to be a CLA Manager your request will be sent to your company’s
+                initial CLA Manager for approval.
+              </h3>
+              <h3 margin-top>
+                If you don’t see your company in “Company Name” field please type it. You can type it and you will be added as a CLA Manager
+                for that company
+              </h3>
+              <h3 margin-top>
+                If you do not see your project in "Project Name" filed please type it. The project will be added to the database.
+              </h3>
             </ion-row>
-            <ion-row justify-content-center>
-              <button ion-button (click)="openCLAOnboardingForm()">Request CLA Manager Access</button>
+            <ion-row justify-content-center margin-top>
+              <button class="cta-button" ion-button text-bold (click)="openRequestManagerModal()">Get Started</button>
             </ion-row>
           </div>
         </ion-card-header>
@@ -42,12 +51,17 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
-            <h2>*Click on Sign CLA & Whitelist to administer</h2>
+          <ion-row justify-content-center>
+            <h2>*Click on Sign CLA & Whitelist to proceed once you have been approved as a CLA Manager</h2>
+          </ion-row>
+
           <loading-spinner [loading]="loading.companies"></loading-spinner>
           <div *ngIf="!loading.companies && rows && rows.length > 0">
             <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
               [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
               <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Project" prop="ProjectName" [sortable]="true">
               </ngx-datatable-column>
               <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
               </ngx-datatable-column>

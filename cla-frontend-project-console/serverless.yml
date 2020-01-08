@@ -1,0 +1,214 @@
+service: cla-frontend-pmc
+
+# Only package lambda@edge function.
+package:
+  exclude:
+    - "**"
+  include:
+    - edge/dist/*
+
+provider:
+  name: aws
+  runtime: nodejs8.10 # https://aws.amazon.com/about-aws/whats-new/2018/05/lambda-at-edge-adds-support-for-node-js-v8-10/
+  region: us-east-1 # Region can't be configurable, lambda@edge is us-east-1 only.
+  deploymentBucket:
+    serverSideEncryption: AES256 # Make sure items are uploaded encrypted.
+  role: EdgeRole
+
+  tracing:
+    apiGateway: true
+    lambda: true
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+
+plugins:
+  # Serverless Finch does s3 uploading. Called with 'sls client deploy'.
+  # Also allows bucket removal with 'sls client remove'.
+  - serverless-finch
+  # Automatically versions and updates the lambda@edge function.
+  - serverless-lambda-version
+  # Automatically invalidates cloudfront after frontend bucket is deployed
+  - serverless-cloudfront-invalidate
+  - serverless-plugin-tracing
+
+custom:
+  project: ${file(../project-vars.yml):projectIdentifier}
+  client: # Configurations for serverless finch.
+    bucketName: ${self:custom.project}-${opt:stage}-${self:service}
+    distributionFolder: src/www
+    indexDocument: index.html
+    # Because our application is a Single Page Application, we always want our index
+    # documents to handle 404/403 urls.
+    errorDocument: index.html
+  cloudfrontInvalidate:
+    distributionIdKey: 'CloudfrontDistributionId'
+    items: # one or more paths required
+      - '/*'
+
+functions:
+  # Configure a lambda@edge handler. Lambda@edge is a function that adds http headers to
+  # cloudfront requests. We use it to enforce HTTP security best practices.
+  clientEdge:
+    handler: edge/dist/index.handler
+    memorySize: 128 # This is the maximum memory size for lambda@edge functions
+    timeout: 1 # This is the maximum execution time for lambda@edge functions
+
+resources:
+  Resources:
+    # The bucket the website is uploaded to. We make sure to turn on AES256 encryption, which
+    # is best practice.
+    WebsiteDeploymentBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: AES256
+        BucketName: ${self:custom.project}-${opt:stage}-${self:service}
+    # Policy that only exposes bucket to cloudfront with proper
+    # Origin Access Identity
+    WebsiteDeploymentBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: WebsiteDeploymentBucket
+        PolicyDocument:
+          Statement:
+            - Action:
+                - "s3:GetObject"
+              Effect: Allow
+              Resource:
+                "Fn::Join":
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: WebsiteDeploymentBucket
+                    - "/*"
+              Principal:
+                AWS:
+                  "Fn::Join":
+                    - " "
+                    - - "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity"
+                      - Ref: WebsiteOriginAccessIdentity
+    WebsiteOriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: "CloudFrontOriginAccessIdentity for ${self:service}-${self:provider.stage}"
+    # The cloudfront distribution wraps around our static website S3 bucket. Using a CDN to host our SPA is good
+    # practice, and also lets us set custom headers using lambda@edge.
+    CloudfrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      DependsOn:
+        - WebsiteDeploymentBucket
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          Aliases:
+            - project.${env:PRODUCT_DOMAIN}
+            - project.${env:ROOT_DOMAIN}
+          ViewerCertificate:
+            AcmCertificateArn:
+              Ref: Cert
+            SslSupportMethod: sni-only
+          Origins:
+            - DomainName: { "Fn::GetAtt": [ WebsiteDeploymentBucket, DomainName ] }
+              Id:
+                Ref: WebsiteDeploymentBucket
+              S3OriginConfig:
+                OriginAccessIdentity:
+                  "Fn::Join":
+                    - ""
+                    - - "origin-access-identity/cloudfront/"
+                      - Ref: WebsiteOriginAccessIdentity
+          # Routes besides / will result in S3 serving a 403
+          # Redirect all routes back to the SPA where routes should
+          # be handled
+          CustomErrorResponses:
+            -
+              ErrorCode: 403
+              ErrorCachingMinTTL: 1
+              ResponseCode: 200
+              ResponsePagePath: '/index.html'
+          HttpVersion: http2
+          DefaultRootObject: index.html
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+            # Links our lambda@edge function, (which adds HTTPS our security headers), to the cloudfront distribution.
+            LambdaFunctionAssociations:
+              - EventType: 'viewer-response'
+                # Cloudfront requires a lambda@edge arn in the format
+                # 'arn:aws:lambda:${region}:${accountNumber}:function:${lambdaName}:${explicitVersion}'
+                # We use the serverless-lambda-version plugin to automatically update this every time there is a change.
+                LambdaFunctionARN: ClientEdgeLambdaFunction
+            Compress: true # Turns on gzipping
+            MaxTTL: 31536000 # Can keep the file in the cloudfront cache for a maximum of a year.
+            MinTTL: 0
+            DefaultTTL: 86400 # Defaults to a day if no Cache-Control header is set.
+            TargetOriginId:
+              Ref: WebsiteDeploymentBucket
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          PriceClass: PriceClass_100 # Cheapest class, only hosts content at North American cloudfront locations.
+    # Severless usually generates our roles out of the box, but lambda@edge support is lacking, so we have to create
+    # our own. This role can assume the edgelambda.amazonaws.com role, (the lambda won't run without it).
+    EdgeRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.project}-${opt:stage}-pmc-edge-role
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+                  - edgelambda.amazonaws.com # This is the important part of this role.
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: LogGroupPolicy # Permissions to access Lambda@edge log groups.
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:DescribeLogGroups
+                    - logs:DescribeLogStreams
+                    - logs:PutLogEvents
+                    - logs:GetLogEvents
+                    - logs:FilterLogEvents
+                  Resource:
+                    - "Fn::Join":
+                      - ":"
+                      - - arn:aws:logs
+                        - "Ref": "AWS::Region"
+                        - "Ref": "AWS::AccountId"
+                        - log-group
+                        - "*"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+    Cert:
+      Type: AWS::CertificateManager::Certificate
+      Properties:
+        DomainName: project.${env:ROOT_DOMAIN}
+        SubjectAlternativeNames:
+          - project.${env:PRODUCT_DOMAIN}
+        ValidationMethod: DNS
+  Outputs:
+    CloudfrontDistributionId:
+      Value:
+        Ref: CloudfrontDistribution

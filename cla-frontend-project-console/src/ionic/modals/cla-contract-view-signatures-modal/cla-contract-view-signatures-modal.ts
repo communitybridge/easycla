@@ -10,7 +10,7 @@ import {
   NavController,
   NavParams,
   PopoverController,
-  ViewController
+  ViewController,
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { SortService } from '../../services/sort.service';
@@ -20,11 +20,11 @@ import { ColumnMode, SortType } from '@swimlane/ngx-datatable';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({
-  segment: 'cla-contract-view-signatures-modal'
+  segment: 'cla-contract-view-signatures-modal',
 })
 @Component({
   selector: 'cla-contract-view-signatures-modal',
-  templateUrl: 'cla-contract-view-signatures-modal.html'
+  templateUrl: 'cla-contract-view-signatures-modal.html',
 })
 export class ClaContractViewSignaturesModal {
   selectedProject: any;
@@ -64,7 +64,7 @@ export class ClaContractViewSignaturesModal {
     private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.claProjectName = this.navParams.get('claProjectName');
@@ -73,7 +73,7 @@ export class ClaContractViewSignaturesModal {
     this.form = this.formBuilder.group({
       search: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
       searchField: ['user'],
-      fullMatch: [false]
+      fullMatch: [false],
     });
 
     events.subscribe('modal:close', () => {
@@ -99,7 +99,7 @@ export class ClaContractViewSignaturesModal {
 
   getDefaults() {
     this.page = {
-      pageNumber: 0
+      pageNumber: 0,
     };
 
     // Pagination initialization
@@ -108,7 +108,7 @@ export class ClaContractViewSignaturesModal {
 
     this.data = {};
     this.loading = {
-      signatures: true
+      signatures: true,
     };
 
     /*
@@ -159,7 +159,7 @@ export class ClaContractViewSignaturesModal {
       { prop: 'GitHubID' },
       { prop: 'LFID' },
       { prop: 'Version' },
-      { prop: 'Date' }
+      { prop: 'Date' },
     ];
   }
 
@@ -196,7 +196,8 @@ export class ClaContractViewSignaturesModal {
         lastKeyScanned,
         this.searchString,
         this.searchField.value,
-        this.fullMatch.value
+        null,
+        this.fullMatch.value,
       )
       .subscribe((response) => {
         this.data = response;
@@ -286,22 +287,22 @@ export class ClaContractViewSignaturesModal {
           label: 'Details',
           callback: 'signatureDetails',
           callbackData: {
-            signature: signature
-          }
+            signature: signature,
+          },
         },
         {
           label: 'CLA',
           callback: 'signatureCla',
           callbackData: {
-            signature: signature
-          }
-        }
-      ]
+            signature: signature,
+          },
+        },
+      ],
     };
     let popover = this.popoverCtrl.create('ActionPopoverComponent', actions);
 
     popover.present({
-      ev: ev
+      ev: ev,
     });
 
     popover.onDidDismiss((popoverData) => {
@@ -357,7 +358,7 @@ export class ClaContractViewSignaturesModal {
             GitHubID: signature.userGHID && signature.userGHID,
             LFID: signature.userLFID && signature.userLFID,
             Version: `v${signature.version}`,
-            Date: date
+            Date: date,
           };
         })
       );

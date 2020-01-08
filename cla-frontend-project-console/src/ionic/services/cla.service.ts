@@ -393,13 +393,25 @@ export class ClaService {
    * @param pageSize the optional page size - default is 50
    * @param nextKey the next key used when asking for the next page of results
    */
-  getProjectSignaturesV3(projectId, pageSize = 50, nextKey = '', searchTerm = '', searchField = '', fullMatch = false) {
+  getProjectSignaturesV3(
+    projectId,
+    pageSize = 50,
+    nextKey = '',
+    searchTerm = '',
+    searchField = '',
+    signatureType = '',
+    fullMatch = false,
+  ) {
     let path: string = '/v3/signatures/project/' + projectId + '?pageSize=' + pageSize;
-    if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {
+    if (nextKey !== null && nextKey !== '' && nextKey.trim().length > 0) {
       path += `&nextKey=${nextKey}`;
     }
 
-    if (searchTerm != null && searchTerm !== '' && searchTerm.trim().length > 0) {
+    if (signatureType) {
+      path += `&signatureType=${signatureType}`;
+    }
+
+    if (searchTerm !== null && searchTerm !== '' && searchTerm.trim().length > 0) {
       path += `&searchTerm=${searchTerm}&searchField=${searchField}`;
 
       if (fullMatch) {
@@ -706,7 +718,7 @@ export class ClaService {
    */
   deleteProjectDocumentRevision(projectId, documentType, majorVersion, minorVersion) {
     const url: URL = this.getV1Endpoint(
-      '/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion
+      '/v1/project/' + projectId + '/document/' + documentType + '/' + majorVersion + '/' + minorVersion,
     );
     return this.http.delete(url).map((res) => res.json());
   }
@@ -716,7 +728,7 @@ export class ClaService {
    */
   getProjectDocumentRevisionPdf(projectId, documentType, majorVersion, minorVersion) {
     const url: URL = this.getV1Endpoint(
-      '/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion
+      '/v1/project/' + projectId + '/document/' + documentType + '/pdf/' + majorVersion + '/' + minorVersion,
     );
     return this.http.get(url).map((res) => {
       return res._body;
@@ -774,7 +786,7 @@ export class ClaService {
    */
   postSigned(installationId, githubRepositoryId, changeRequestId) {
     const url: URL = this.getV1Endpoint(
-      '/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId
+      '/v1/signed/' + installationId + '/' + githubRepositoryId + '/' + changeRequestId,
     );
     return this.http.post(url).map((res) => res.json());
   }
@@ -799,7 +811,7 @@ export class ClaService {
         '/' +
         githubRepositoryId +
         '/' +
-        changeRequestId
+        changeRequestId,
     );
     return this.http.get(url).map((res) => res.json());
   }
@@ -940,7 +952,7 @@ export class ClaService {
 
   addProjectLogoFromS3(project) {
     let objLogoUrl = {
-      logoRef: `${this.s3LogoUrl}/${project.id}.png`
+      logoRef: `${this.s3LogoUrl}/${project.id}.png`,
     };
     return { ...project, ...objLogoUrl };
   }

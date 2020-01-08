@@ -10,12 +10,20 @@ companies-page {
       border-bottom: 0.5px solid map-get($colors, primary);
     }
 
+    ion-card-title {
+      justify-content: center;
+      color: #4c79b6;
+    }
+
     .sm-card {
-      width: 80vw;
+      width: 90vw;
       margin-left: auto;
       margin-right: auto;
       margin-top: 3rem;
-      border-top: 2px solid #4c79b6;
+
+      h3 {
+        font-size: 16px;
+      }
     }
   }
   .scroll-content {
@@ -43,16 +51,25 @@ companies-page {
     margin-left: -1em; /* Also needed for space (tweak if needed) */
   }
 
-  .cta-button {
-    background-color: #4c79b6;
-
-    a {
-      color: #4c79b6;
-    }
-  }
   a {
     font-weight: bold;
   }
+}
+
+.cta-button {
+  background-color: #4c79b6;
+  text-transform: capitalize;
+  padding: 1.5rem 5rem;
+  font-size: 16px;
+  font-weight: 500;
+
+  a {
+    color: #4c79b6;
+  }
+}
+
+span a {
+  text-decoration: underline;
 }
 
 .cla-header {
