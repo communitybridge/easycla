@@ -28,20 +28,11 @@
         <ion-col col-12 col-md-8>
           <ion-card>
             <ion-card-title>
-              <h2>There are several options available to you:</h2>
+              <h2>Sign New CLA</h2>
             </ion-card-title>
             <ion-card-content>
-              <p>Signing a corporate CLA</p>
-              <p>If you are a CLA signatory, you can sign CCLA documents on behalf of your company by</p>
-              <ul>
-                <li>
-                  <b>Step 1</b> - Clicking "Sign New CLA" button</li>
-                <li>
-                  <b>Step 2</b> -Selecting the project you are interested in </li>
-                <li>
-                  <b>Step 3</b> -Continue the e-signing process by clicking "Submit" </li>
-              </ul>
-
+              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your company, click "Sign New CLA" below</p>
+              
               <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
                   Sign New CLA
@@ -58,7 +49,7 @@
         <ion-col col-12 col-md-8>
           <ion-card>
             <ion-card-title>
-              <h1>Signed CLAs</h1>
+              <h1>Projects with Signed CLAs</h1>
             </ion-card-title>
             <ion-card-title>
               <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
@@ -97,14 +88,15 @@
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
+              <ion-card-title>
+                  <h1>Pending CLA Managers Requests</h1>
+                </ion-card-title>
             <ion-card-content>
               <ion-card-title>
                 <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated
                   by EasyCLA.</p>
               </ion-card-title>
-              <ion-card-title>
-                <h1>Pending Invites</h1>
-              </ion-card-title>
+             
               <ion-list>
                 <ion-row>
                   <table class="table table-hover invites">
