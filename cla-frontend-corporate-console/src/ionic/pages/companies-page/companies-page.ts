@@ -44,6 +44,8 @@ export class CompaniesPage {
   SelectionType = SelectionType;
   SortType = SortType;
 
+  newUser: boolean
+
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
@@ -164,7 +166,7 @@ export class CompaniesPage {
         this.loading.companies = false;
         if (companies['companies-with-invites']) {
           this.rows = this.mapCompanies(companies['companies-with-invites']);
-          // console.log(this.rows, 'this is rows')
+          console.log(this.rows, 'this is rows')
         } else {
           this.rows = [];
         }
@@ -177,9 +179,9 @@ export class CompaniesPage {
     );
   }
 
-  viewCompany(companyId) {
+  viewCompany(company) {
     this.navCtrl.setRoot('CompanyPage', {
-      companyId: companyId
+      companyId: company.CompanyID
     });
   }
 
@@ -205,6 +207,16 @@ export class CompaniesPage {
       });
     }
     return rows;
+  }
+
+  openSelectCompany() {
+    let modal = this.modalCtrl.create('AddCompanyModal', {
+
+    });
+    modal.dismiss((data) => {
+      // A refresh of data anytime the modal is dismissed
+    });
+    modal.present();
   }
 
   openRequestManagerModal() {

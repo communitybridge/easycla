@@ -10,14 +10,15 @@
 
 <ion-content>
   <div class="page-content">
-    <ion-row *ngIf="hasCompanyId">
+
+    <ion-row *ngIf="newUser && hasCompanyId">
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
             Welcome to the Corporate console for EasyCLA
           </ion-card-title>
           <div ion-card-subtitle>
-            <ion-row >
+            <ion-row>
               <h3 margin-top>For setting up corporate CLA Manager for a new company or add a new CLA Manager to an existing company, click
                 the button below to get started.
               </h3>
@@ -43,42 +44,55 @@
       </ion-card>
     </ion-row>
 
-    <ion-row>
+    <ion-row *ngIf="!newUser && !hasCompanyId">
       <ion-card class="sm-card">
         <ion-card-header>
-          <ion-card-title>
-            Companies
+          <ion-card-title class="center-card-title">
+            Associate yourself with a company in Easy CLA
           </ion-card-title>
         </ion-card-header>
+        <ion-row justify-content-center margin-top>
+          <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
+        </ion-row>
+
         <ion-card-content>
-          <ion-row justify-content-center>
-            <h2>*Click on Sign CLA & Whitelist to proceed once you have been approved as a CLA Manager</h2>
-          </ion-row>
+          <ion-card-header>
+            <ion-card-title>
+              Companies you are Associated with in EasyCLA
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-row justify-content-center>
+              <h2>*Click on Company Name to proceed to next screen</h2>
+            </ion-row>
 
-          <loading-spinner [loading]="loading.companies"></loading-spinner>
-          <div *ngIf="!loading.companies && rows && rows.length > 0">
-            <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
-              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
-              <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Action" sortable="false" prop="CompanyID">
+            <loading-spinner [loading]="loading.companies"></loading-spinner>
+            <div *ngIf="!loading.companies && rows && rows.length > 0">
+              <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
+                [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
+                <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
+                </ngx-datatable-column>
+                <ngx-datatable-column name="Action" sortable="false" prop="CompanyID">
 
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span *ngIf="row['Status'] === 'Pending Approval'">
-                    <p>After approval you can perform action</p>
-                  </span>
-                  <span *ngIf="row['Status'] === 'Joined'">
-                    <a>Sign CLA & Whitelist</a>
-                  </span>
-                </ng-template>
-              </ngx-datatable-column>
-            </ngx-datatable>
-          </div>
+                  <ng-template let-row="row" ngx-datatable-cell-template>
+                    <span *ngIf="row['Status'] === 'Pending Approval'">
+                      <p>After approval you can perform action</p>
+                    </span>
+                    <span *ngIf="row['Status'] === 'Joined'">
+                      <a>Sign CLA & Whitelist</a>
+                    </span>
+                  </ng-template>
+                </ngx-datatable-column>
+              </ngx-datatable>
+            </div>
+          </ion-card-content>
         </ion-card-content>
+
       </ion-card>
     </ion-row>
+
   </div>
   <cla-footer></cla-footer>
 </ion-content>
