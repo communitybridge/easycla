@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
   Events,
@@ -20,19 +20,22 @@ import { ColumnMode, SortType } from '@swimlane/ngx-datatable';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({
-  segment: 'cla-contract-view-signatures-modal',
+  segment: 'cla-contract-view-companies-signatures-modal',
 })
 @Component({
-  selector: 'cla-contract-view-signatures-modal',
-  templateUrl: 'cla-contract-view-signatures-modal.html',
+  selector: 'cla-contract-view-companies-signatures-modal',
+  templateUrl: 'cla-contract-view-companies-signatures-modal.html',
 })
-export class ClaContractViewSignaturesModal {
+export class ClaContractViewCompaniesSignaturesModal {
+  @ViewChild('companiesTable') table: any;
+
   selectedProject: any;
   claProjectId: string;
   claProjectName: string;
 
   ColumnMode = ColumnMode;
   SortType = SortType;
+  expanded = {};
 
   loading: any;
   //sort: any;
@@ -40,7 +43,7 @@ export class ClaContractViewSignaturesModal {
   rows: any[];
 
   form: FormGroup;
-  searchString: string;
+  searchString: string = '';
 
   companies: any[];
   users: any[];
@@ -72,7 +75,7 @@ export class ClaContractViewSignaturesModal {
 
     this.form = this.formBuilder.group({
       search: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
-      searchField: ['user'],
+      searchField: ['company'],
       fullMatch: [false],
     });
 
@@ -111,60 +114,8 @@ export class ClaContractViewSignaturesModal {
       signatures: true,
     };
 
-    /*
-    this.sort = {
-      Type: {
-        arrayProp: 'Type',
-        sortType: 'text',
-        sort: null,
-      },
-      Name: {
-        arrayProp: 'Name',
-        sortType: 'text',
-        sort: null,
-      },
-      Company: {
-        arrayProp: 'Company',
-        sortType: 'text',
-        sort: null,
-      },
-      GitHubID: {
-        arrayProp: 'GitHubID',
-        sortType: 'number',
-        sort: null,
-      },
-      LFID: {
-        arrayProp: 'LFID',
-        sortType: 'number',
-        sort: null,
-      },
-      Version: {
-        arrayProp: 'documentVersion',
-        sortType: 'semver',
-        sort: null,
-      },
-      Date: {
-        arrayProp: 'Date',
-        sortType: 'date',
-        sort: null,
-      },
-    };
-     */
-
     this.filteredData = this.rows;
-    this.columns = [
-      { prop: 'Type' },
-      { prop: 'Name' },
-      { prop: 'Company' },
-      { prop: 'GitHubID' },
-      { prop: 'LFID' },
-      { prop: 'Version' },
-      { prop: 'Date' },
-    ];
-  }
-
-  async getUser(signatureReferenceId) {
-    return await this.claService.getUser(signatureReferenceId).toPromise();
+    this.columns = [{ prop: 'Company' }, { prop: 'Version' }, { prop: 'Date' }];
   }
 
   async getCompany(referenceId) {
@@ -196,7 +147,7 @@ export class ClaContractViewSignaturesModal {
         lastKeyScanned,
         this.searchString,
         this.searchField.value,
-        null,
+        'ccla',
         this.fullMatch.value,
       )
       .subscribe((response) => {
@@ -217,6 +168,10 @@ export class ClaContractViewSignaturesModal {
         this.rows = this.mapSignatures(this.data.signatures);
         this.loading.signatures = false;
       });
+  }
+
+  toggleExpandRow(row) {
+    this.table.rowDetail.toggleExpandRow(row);
   }
 
   getNextPage() {
@@ -352,11 +307,8 @@ export class ClaContractViewSignaturesModal {
              * | CCLA (employee icon)   | user           | cla            | not empty    |
              * | CCLA (company icon)    | company        | ccla           | not empty    |
              */
-            Type: this.getSignatureType(signature),
-            Name: signature.userName && signature.userName,
             Company: signature.companyName && signature.companyName,
-            GitHubID: signature.userGHID && signature.userGHID,
-            LFID: signature.userLFID && signature.userLFID,
+            Managers: signature.signatureACL,
             Version: `v${signature.version}`,
             Date: date,
           };

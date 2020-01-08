@@ -14,7 +14,7 @@ export class AuthService {
     clientID: EnvConfig['auth0-clientId'],
     domain: EnvConfig['auth0-domain'],
     responseType: 'token id_token',
-    redirectUri: getAuthURLFromWindow()
+    redirectUri: getAuthURLFromWindow(),
   });
 
   // constructor(public router: Router) {} Right now haven't figure out how ionic does routing
@@ -68,7 +68,7 @@ export class AuthService {
     // This library seems to want the options to be `redirectUri`, but the API docs say to use: `returnTo`
     // `returnTo` works
     this.auth0.logout({
-      returnTo: redirectUri + '/#/login'
+      returnTo: redirectUri + '/#/login',
     });
   }
 
@@ -84,7 +84,7 @@ export class AuthService {
       if (this.isAuthenticated() && localStorage.getItem('id_token')) {
         resolve(localStorage.getItem('id_token'));
       } else {
-        return reject('Id token not found. Please login.');
+        reject('Id token not found. Please login.');
       }
     });
   }
@@ -94,7 +94,7 @@ export class AuthService {
       try {
         resolve(jwt_decode(token));
       } catch (error) {
-        return reject(error);
+        reject(error);
       }
     });
   }
