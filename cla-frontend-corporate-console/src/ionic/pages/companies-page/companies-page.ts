@@ -187,7 +187,6 @@ export class CompaniesPage {
 
   onSelect(event) {
     let company = event.selected[0];
-    console.log(company, 'company')
     if (company.Status === 'Joined') {
       this.viewCompany(company.CompanyID);
     }
