@@ -448,8 +448,13 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	}
 
 	if params.SignatureType != nil {
-		signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
-		filter = addConditionToFilter(filter, signatureTypeExpression, &filterAdded)
+		if params.SearchTerm == nil {
+			indexName = "signature-project-id-type-index"
+			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
+		} else {
+			signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
+			filter = addConditionToFilter(filter, signatureTypeExpression, &filterAdded)
+		}
 		if *params.SignatureType == "ccla" {
 			signatureReferenceIDExpression := expression.Name("signature_reference_id").AttributeExists()
 			signatureUserCclaCompanyIDExpression := expression.Name("signature_user_ccla_company_id").AttributeNotExists()

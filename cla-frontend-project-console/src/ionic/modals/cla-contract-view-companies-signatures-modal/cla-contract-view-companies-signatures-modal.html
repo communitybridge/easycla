@@ -1,0 +1,94 @@
+<ion-header>
+  <modal-header>
+    <ion-row class="align-items-center">
+      <ion-col col-2>
+        <div>View Signatures: {{claProjectName}}</div>
+      </ion-col>
+    </ion-row>
+  </modal-header>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <ion-row>
+      <ion-col col-12>
+        <div class="table-responsive-vertical">
+          <div>
+            <form [formGroup]="form">
+              <ion-row align-items-start align-items-center>
+                <ion-col col-3>
+                  <input ion-input type="text" placeholder="Enter manager or company name..."
+                    formControlName="search" />
+                </ion-col>
+                <ion-col col-auto>
+                  <ion-item>
+                    <ion-label>Full Match</ion-label>
+                    <ion-toggle color="primary" (ionChange)="fullMatch = $event.value" formControlName="fullMatch">
+                    </ion-toggle>
+                  </ion-item>
+                </ion-col>
+                <ion-col>
+                  <button ion-button (click)="filterDatatable()" [disabled]="loading.signatures">Search</button>
+                  <button ion-button (click)="resetFilter()">Reset</button>
+                </ion-col>
+
+              </ion-row>
+            </form>
+          </div>
+          <loading-spinner [loading]="loading.signatures"></loading-spinner>
+          <div *ngIf="!loading.signatures && rows && rows.length === 0" class="empty-signatures">
+            <h2>No Signatures</h2>
+          </div>
+          <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
+            <ngx-datatable #companiesTable class='material' [headerHeight]="50" [rows]="rows" rowHeight="auto"
+              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (sort)="sortMembers($event)">
+              <!-- Row Detail Template -->
+              <ngx-datatable-row-detail rowHeight="auto" #companyDetailRow>
+                <ng-template let-row="row" let-expanded="expanded" ngx-datatable-row-detail-template>
+                  <div style="padding-left:35px;">
+                    <h6>Managers</h6>
+                    <ngx-datatable [rows]="row.Managers" columnMode="force">
+                      <ngx-datatable-column name="Name" prop="username"></ngx-datatable-column>
+                      <ngx-datatable-column name="Email" prop="lfEmail"></ngx-datatable-column>
+                      <ngx-datatable-column name="Username/LFID" prop="lfUsername"></ngx-datatable-column>
+                    </ngx-datatable>
+                  </div>
+                </ng-template>
+              </ngx-datatable-row-detail>
+              <!-- Column Templates -->
+              <ngx-datatable-column [width]="50" [resizeable]="false" [sortable]="false" [draggable]="false"
+                [canAutoResize]="false">
+                <ng-template let-row="row" let-expanded="expanded" ngx-datatable-cell-template>
+                  <a href="javascript:void(0)" title="Expand/Collapse Row" (click)="toggleExpandRow(row)">
+                    <ion-icon name="ios-arrow-forward" *ngIf="!expanded"></ion-icon>
+                    <ion-icon name="ios-arrow-down" *ngIf="expanded"></ion-icon>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Company" prop="Company" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="Version" prop="Version" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+              <ngx-datatable-column name="Date Signed" prop="Date" [sortable]="true" [draggable]="true"
+                [resizeable]="true"></ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
+<ion-footer class="transparent">
+  <ion-row class="align-items-center">
+    <ion-col col-12 class="pagination-buttons">
+      <ion-buttons>
+        <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()"
+          (click)="getPreviousPage()">Prev</button>
+        <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()"
+          (click)="getNextPage()">Next</button>
+      </ion-buttons>
+    </ion-col>
+
+  </ion-row>
+</ion-footer>

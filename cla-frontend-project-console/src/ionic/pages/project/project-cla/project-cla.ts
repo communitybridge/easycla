@@ -177,6 +177,22 @@ export class ProjectClaPage {
     });
   }
 
+  openClaViewCompaniesModal(project_id: string, project_name: string) {
+    let modal = this.modalCtrl.create(
+      'ClaContractViewCompaniesSignaturesModal',
+      {
+        claProjectId: project_id,
+        claProjectName: project_name
+      },
+      {
+        cssClass: 'medium'
+      }
+    );
+    modal.present().catch((error) => {
+      console.log('Error opening signatures modal view, error: ' + error);
+    });
+  }
+
   openClaContractVersionModal(claProjectId, documentType, documents) {
     let modal = this.modalCtrl.create('ClaContractVersionModal', {
       claProjectId: claProjectId,
