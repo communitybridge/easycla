@@ -28,7 +28,7 @@ export class RolesService {
       isStaffDirect: false,
       isDirectorDirect: false,
       isExec: false,
-      isAdmin: false
+      isAdmin: false,
     };
     this.userRoles = this.userRoleDefaults;
   }
@@ -59,7 +59,7 @@ export class RolesService {
               isStaffDirect: false,
               isDirectorDirect: false,
               isExec: false,
-              isAdmin: false
+              isAdmin: false,
             };
 
             return this.userRoles;
