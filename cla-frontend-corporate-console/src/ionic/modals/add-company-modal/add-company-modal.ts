@@ -56,8 +56,8 @@ export class AddCompanyModal {
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
-      userEmail: [this.userEmail, Validators.compose([Validators.required])],
-      userName: [this.userName, Validators.compose([Validators.required])]
+      // userEmail: [this.userEmail, Validators.compose([Validators.required])],
+      // userName: [this.userName, Validators.compose([Validators.required])]
     });
   }
 
