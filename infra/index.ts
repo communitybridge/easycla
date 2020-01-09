@@ -1,7 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import * as awsx from '@pulumi/awsx';
-import { PrivateAcl, PublicReadAcl } from '@pulumi/aws/s3';
+import {PrivateAcl, PublicReadAcl} from '@pulumi/aws/s3';
 
 const accountID = aws.getCallerIdentity().accountId;
 const stackName = pulumi.getStack();
@@ -79,7 +78,7 @@ function buildLogoBucket(importResources: boolean): aws.s3.Bucket {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-project-logo-' + stage } : {},
+    importResources ? {import: 'cla-project-logo-' + stage} : {},
   );
 }
 
@@ -123,7 +122,7 @@ function buildSignatureFilesBucket(importResources: boolean): aws.s3.Bucket {
       acl: PrivateAcl,
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-signature-files-' + stage } : {},
+    importResources ? {import: 'cla-signature-files-' + stage} : {},
   );
 }
 
@@ -140,8 +139,8 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-projects',
       attributes: [
-        { name: 'project_id', type: 'S' },
-        { name: 'project_external_id', type: 'S' },
+        {name: 'project_id', type: 'S'},
+        {name: 'project_external_id', type: 'S'},
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -158,7 +157,7 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-projects' } : {},
+    importResources ? {import: 'cla-' + stage + '-projects'} : {},
   );
 }
 
@@ -175,11 +174,11 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-users',
       attributes: [
-        { name: 'user_id', type: 'S' },
-        { name: 'user_github_id', type: 'S' },
-        { name: 'user_github_username', type: 'S' },
-        { name: 'lf_username', type: 'S' },
-        { name: 'user_external_id', type: 'S' },
+        {name: 'user_id', type: 'S'},
+        {name: 'user_github_id', type: 'S'},
+        {name: 'user_github_username', type: 'S'},
+        {name: 'lf_username', type: 'S'},
+        {name: 'user_external_id', type: 'S'},
       ],
       hashKey: 'user_id',
       readCapacity: 0,
@@ -193,7 +192,7 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: 0,
           writeCapacity: 0,
         },
-        { name: 'lf-username-index', hashKey: 'lf_username', projectionType: 'ALL', readCapacity: 0, writeCapacity: 0 },
+        {name: 'lf-username-index', hashKey: 'lf_username', projectionType: 'ALL', readCapacity: 0, writeCapacity: 0},
         {
           name: 'github-user-index',
           hashKey: 'user_github_id',
@@ -211,7 +210,7 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-users' } : {},
+    importResources ? {import: 'cla-' + stage + '-users'} : {},
   );
 }
 
@@ -228,8 +227,8 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-companies',
       attributes: [
-        { name: 'company_id', type: 'S' },
-        { name: 'company_external_id', type: 'S' },
+        {name: 'company_id', type: 'S'},
+        {name: 'company_external_id', type: 'S'},
       ],
       hashKey: 'company_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -246,7 +245,7 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-companies' } : {},
+    importResources ? {import: 'cla-' + stage + '-companies'} : {},
   );
 }
 
@@ -263,14 +262,15 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-signatures',
       attributes: [
-        { name: 'signature_id', type: 'S' },
-        { name: 'signature_project_id', type: 'S' },
-        { name: 'signature_project_external_id', type: 'S' },
-        { name: 'signature_reference_id', type: 'S' },
-        { name: 'signature_user_ccla_company_id', type: 'S' },
-        { name: 'signature_company_signatory_id', type: 'S' },
-        { name: 'signature_reference_name_lower', type: 'S' },
-        { name: 'signature_company_initial_manager_id', type: 'S' },
+        {name: 'signature_id', type: 'S'},
+        {name: 'signature_type', type: 'S'},
+        {name: 'signature_project_id', type: 'S'},
+        {name: 'signature_project_external_id', type: 'S'},
+        {name: 'signature_reference_id', type: 'S'},
+        {name: 'signature_user_ccla_company_id', type: 'S'},
+        {name: 'signature_company_signatory_id', type: 'S'},
+        {name: 'signature_reference_name_lower', type: 'S'},
+        {name: 'signature_company_initial_manager_id', type: 'S'},
       ],
       hashKey: 'signature_id',
       readCapacity: 1,
@@ -337,7 +337,7 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-signatures' } : {},
+    importResources ? {import: 'cla-' + stage + '-signatures'} : {},
   );
 }
 
@@ -354,10 +354,10 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-repositories',
       attributes: [
-        { name: 'repository_id', type: 'S' },
-        { name: 'repository_external_id', type: 'S' },
-        { name: 'repository_project_id', type: 'S' },
-        { name: 'repository_sfdc_id', type: 'S' },
+        {name: 'repository_id', type: 'S'},
+        {name: 'repository_external_id', type: 'S'},
+        {name: 'repository_project_id', type: 'S'},
+        {name: 'repository_sfdc_id', type: 'S'},
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
@@ -388,7 +388,7 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-repositories' } : {},
+    importResources ? {import: 'cla-' + stage + '-repositories'} : {},
   );
 }
 
@@ -405,8 +405,8 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-github-orgs',
       attributes: [
-        { name: 'organization_name', type: 'S' },
-        { name: 'organization_sfid', type: 'S' },
+        {name: 'organization_name', type: 'S'},
+        {name: 'organization_sfid', type: 'S'},
       ],
       hashKey: 'organization_name',
       billingMode: 'PROVISIONED',
@@ -423,7 +423,7 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-github-orgs' } : {},
+    importResources ? {import: 'cla-' + stage + '-github-orgs'} : {},
   );
 }
 
@@ -439,14 +439,14 @@ function buildGerritInstancesTable(importResources: boolean): aws.dynamodb.Table
     'cla-' + stage + '-gerrit-instances',
     {
       name: 'cla-' + stage + '-gerrit-instances',
-      attributes: [{ name: 'gerrit_id', type: 'S' }],
+      attributes: [{name: 'gerrit_id', type: 'S'}],
       hashKey: 'gerrit_id',
       billingMode: 'PROVISIONED',
       readCapacity: 1,
       writeCapacity: 1,
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-gerrit-instances' } : {},
+    importResources ? {import: 'cla-' + stage + '-gerrit-instances'} : {},
   );
 }
 
@@ -462,13 +462,13 @@ function buildUserPermissionsTable(importResources: boolean): aws.dynamodb.Table
     'cla-' + stage + '-user-permissions',
     {
       name: 'cla-' + stage + '-user-permissions',
-      attributes: [{ name: 'username', type: 'S' }],
+      attributes: [{name: 'username', type: 'S'}],
       hashKey: 'username',
       readCapacity: 1,
       writeCapacity: 1,
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-user-permissions' } : {},
+    importResources ? {import: 'cla-' + stage + '-user-permissions'} : {},
   );
 }
 
@@ -481,8 +481,8 @@ function buildCompanyInvitesTable(importResources: boolean): aws.dynamodb.Table 
     {
       name: 'cla-' + stage + '-company-invites',
       attributes: [
-        { name: 'company_invite_id', type: 'S' },
-        { name: 'requested_company_id', type: 'S' },
+        {name: 'company_invite_id', type: 'S'},
+        {name: 'requested_company_id', type: 'S'},
       ],
       hashKey: 'company_invite_id',
       readCapacity: 1,
@@ -498,7 +498,7 @@ function buildCompanyInvitesTable(importResources: boolean): aws.dynamodb.Table 
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-company-invites' } : {},
+    importResources ? {import: 'cla-' + stage + '-company-invites'} : {},
   );
 }
 
@@ -515,8 +515,8 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
     {
       name: 'cla-' + stage + '-cla-manager-requests',
       attributes: [
-        { name: 'request_id', type: 'S' },
-        { name: 'lf_id', type: 'S' },
+        {name: 'request_id', type: 'S'},
+        {name: 'lf_id', type: 'S'},
       ],
       hashKey: 'request_id',
       readCapacity: 1,
@@ -532,7 +532,7 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-manager-requests' } : {},
+    importResources ? {import: 'cla-' + stage + '-manager-requests'} : {},
   );
 }
 
@@ -548,7 +548,7 @@ function buildStoreTable(importResources: boolean): aws.dynamodb.Table {
     'cla-' + stage + '-store',
     {
       name: 'cla-' + stage + '-store',
-      attributes: [{ name: 'key', type: 'S' }],
+      attributes: [{name: 'key', type: 'S'}],
       hashKey: 'key',
       readCapacity: 5,
       writeCapacity: 2,
@@ -558,7 +558,7 @@ function buildStoreTable(importResources: boolean): aws.dynamodb.Table {
       },
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-store' } : {},
+    importResources ? {import: 'cla-' + stage + '-store'} : {},
   );
 }
 
@@ -574,7 +574,7 @@ function buildSessionStoreTable(importResources: boolean): aws.dynamodb.Table {
     'cla-' + stage + '-session-store',
     {
       name: 'cla-' + stage + '-session-store',
-      attributes: [{ name: 'id', type: 'S' }],
+      attributes: [{name: 'id', type: 'S'}],
       hashKey: 'id',
       readCapacity: 5,
       writeCapacity: 2,
@@ -584,7 +584,7 @@ function buildSessionStoreTable(importResources: boolean): aws.dynamodb.Table {
       },
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-session-store' } : {},
+    importResources ? {import: 'cla-' + stage + '-session-store'} : {},
   );
 }
 
@@ -601,20 +601,20 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-events',
       attributes: [
-        { name: 'event_id', type: 'S' },
-        { name: 'event_type', type: 'S' },
-        { name: 'user_id', type: 'S' },
+        {name: 'event_id', type: 'S'},
+        {name: 'event_type', type: 'S'},
+        {name: 'user_id', type: 'S'},
       ],
       hashKey: 'event_id',
       readCapacity: 1,
       writeCapacity: 1,
       globalSecondaryIndexes: [
-        { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        {name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1},
+        {name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1},
       ],
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-events' } : {},
+    importResources ? {import: 'cla-' + stage + '-events'} : {},
   );
 }
 
