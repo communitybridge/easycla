@@ -1980,6 +1980,25 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
 
+    def get_ccla_signatures_by_company_project(self, company_id, project_id):
+        signature_generator = self.model.signature_reference_index.query(
+            company_id, filter_condition=(SignatureModel.signature_reference_type == 'company') &
+                                         (SignatureModel.signature_project_id == project_id) &
+                                         (SignatureModel.signature_type == 'ccla') &
+                                         (SignatureModel.signature_user_ccla_company_id.does_not_exist())
+        )
+        signatures = []
+        for signature_model in signature_generator:
+            if signature_model.signature_user_ccla_company_id is None and \
+                    signature_model.signature_reference_type == 'company' and \
+                    signature_model.signature_type == 'ccla':
+                signature = Signature()
+                signature.model = signature_model
+                signatures.append(signature)
+        cla.log.info(f'Returning %d signatures for project_id: %s and company_id: %s',
+                     len(signatures), project_id, company_id)
+        return signatures
+
     def get_employee_signatures_by_company_project(self, company_id, project_id):
         signature_generator = self.model.signature_project_index.query(project_id,
                                                                        SignatureModel.signature_user_ccla_company_id == company_id)

@@ -15,7 +15,7 @@
     "preserve:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
     "preserve:prod": "STAGE_ENV=prod node ./src/config/scripts/prefetch-ssm.js",
     "sls": "../node_modules/serverless/bin/serverless",
-    "deploy": "./deploy-landing-frontend.sh",
+    "deploy": "../scripts/deploy-landing-frontend.sh",
     "test": "jest"
   },
   "dependencies": {
@@ -32,10 +32,10 @@
     "node-sass": "^4.12.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "serve": "^11.1.0"
-  },
-  "devDependencies": {
+    "serve": "^11.1.0",
     "serverless-cloudfront-invalidate": "^1.2.1",
-    "serverless-finch": "^2.3.2"
+    "serverless-finch": "^2.3.2",
+    "serverless-plugin-tracing": "^2.0.0",
+    "serverless-pseudo-parameters": "^2.5.0"
   }
 }
