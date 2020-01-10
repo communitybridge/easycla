@@ -32,10 +32,10 @@ if [ -z "${REGION}" ]; then
   exit 1
 fi
 
-echo 'Building Distribution'
-cd src
-npm run build:${STAGE}
-cd ../
+#echo 'Building Distribution'
+#cd src
+#npm run build:${STAGE}
+#cd ../
 
 echo 'Building Edge Function'
 cd edge
