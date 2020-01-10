@@ -376,10 +376,14 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug(f'User exists for: {request_info}')
 
         # Ensure the company actually has a CCLA with this project.
-        ccla_signatures = Signature().get_signatures_by_project(
-            project_id,
-            signature_reference_type='company',
-            signature_reference_id=company.get_company_id()
+        # ccla_signatures = Signature().get_signatures_by_project(
+        #    project_id,
+        #    signature_reference_type='company',
+        #    signature_reference_id=company.get_company_id()
+        # )
+        ccla_signatures = Signature().get_ccla_signatures_by_company_project(
+            company_id=company.get_company_id(),
+            project_id=project_id
         )
         if len(ccla_signatures) < 1:
             cla.log.warning(f'Company does not have CCLA for: {request_info}')
