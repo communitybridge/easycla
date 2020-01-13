@@ -1210,6 +1210,108 @@ paths:
       tags:
         - company
 
+  /company/{companyID}/ccla_whitelist_requests/{projectID}:
+    post:
+      summary: create ccla whitelist request for given project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: addCclaWhitelistRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/ccla-whitelist-request-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/{companyID}/ccla_whitelist_requests/{projectID}/{requestID}:
+    delete:
+      summary: Delete CCLA whitelist request
+      security:
+        - OauthSecurity:
+            - company
+      operationId: deleteCclaWhitelistRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/{companyID}/ccla_whitelist_requests:
+    get:
+      summary: get ccla whitelist requests for given project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: listCclaWhitelistRequests
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: query
+          type: string
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ccla-whitelist-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /template:
     get:
       summary: Get Available Templates
@@ -1999,6 +2101,63 @@ definitions:
         type: string
       signed:
         type: boolean
+
+  ccla-whitelist-request-input:
+    type: object
+    x-nullable: false
+    title: Ccla whitelist request input
+    description: Ccla whitelist request input
+    properties:
+      userId:
+        type: string
+
+  ccla-whitelist-request-list:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/ccla-whitelist-request'
+
+
+  ccla-whitelist-request:
+    type: object
+    x-nullable: false
+    title: Ccla whitelist request
+    description: Ccla whitelist request
+    properties:
+      requestId:
+        type: string
+      requestStatus:
+        type: string
+      companyId:
+        type: string
+      companyName:
+        type: string
+      projectId:
+        type: string
+      projectName:
+        type: string
+      dateCreated:
+        type: string
+      dateModified:
+        type: string
+      version:
+        type: string
+      userId:
+        type: string
+      userName:
+        type: string
+      userEmails:
+        type: array
+        items:
+          type: string
+      userGithubUsername:
+        type: string
+      userGithubId:
+        type: string
+      userExternalId:
+        type: string
 
   template:
     type: object
