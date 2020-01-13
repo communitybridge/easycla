@@ -45,6 +45,7 @@ const claManagerRequestsTable = buildCLAManagerRequestsTable(importResources);
 const storeTable = buildStoreTable(importResources);
 const sessionStoreTable = buildSessionStoreTable(importResources);
 const eventsTable = buildEventsTable(importResources);
+const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
 
 /**
  * Build the Logo S3 Bucket.
@@ -618,6 +619,35 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
   );
 }
 
+/**
+ * CclaWhitelistRequests Table
+ *
+ * @param importResources flag to indicate if we should import the resources
+ * into our stack from the provider (rather than creating it for the first
+ * time).
+ */
+function buildCclaWhitelistRequestsTable(importResources: boolean): aws.dynamodb.Table {
+  return new aws.dynamodb.Table(
+    'cla-' + stage + '-ccla-whitelist-requests',
+    {
+      name: 'cla-' + stage + '-ccla-whitelist-requests',
+      attributes: [
+        {name: 'request_id', type: 'S'},
+        {name: 'company_id', type: 'S'},
+        {name: 'project_id', type: 'S'},
+      ],
+      hashKey: 'request_id',
+      readCapacity: 1,
+      writeCapacity: 1,
+      globalSecondaryIndexes: [
+        {name: 'company_id-project_id-index', hashKey: 'company_id',  rangeKey: "project_id", projectionType: 'ALL', readCapacity: 1, writeCapacity: 1},
+      ],
+      tags: defaultTags,
+    },
+    importResources ? {import: 'cla-' + stage + '-ccla-whitelist-requests'} : {},
+  );
+}
+
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;
@@ -650,3 +680,5 @@ export const sessionStoreTableName = sessionStoreTable.name;
 export const sessionStoreTableARN = sessionStoreTable.arn;
 export const eventsTableName = eventsTable.name;
 export const eventsTableARN = eventsTable.arn;
+export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
+export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
