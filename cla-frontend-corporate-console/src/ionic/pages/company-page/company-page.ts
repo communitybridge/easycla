@@ -59,7 +59,7 @@ export class CompanyPage {
     this.projects = [];
 
     this.data = {};
-    this.columns = [{ prop: 'ProjectName' }, { prop: 'ProjectManagers' }];
+    this.columns = [{ prop: 'ProjectName' }, { prop: 'ProjectManagers' }, { prop: 'Status'}, {prop: 'PendingRequets'}];
   }
 
   ngOnInit() {
@@ -131,7 +131,9 @@ export class CompanyPage {
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
-        ProjectManagers: project.project_acl
+        ProjectManagers: project.project_acl,
+        Status: '-',
+        PendingRequests: '-',
       });
     }
 
