@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -9,23 +10,26 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+// Project data model
 type Project struct {
-	DateCreated                      string   `json:"date_created"`
-	DateModified                     string   `json:"date_modified"`
-	ProjectAcl                       []string `json:"project_acl"`
-	ProjectCclaEnabled               bool     `json:"project_ccla_enabled"`
-	ProjectCclaRequiresIclaSignature bool     `json:"project_ccla_requires_icla_signature"`
-	ProjectExternalID                string   `json:"project_external_id"`
-	ProjectIclaEnabled               bool     `json:"project_icla_enabled"`
-	ProjectID                        string   `json:"project_id"`
-	ProjectName                      string   `json:"project_name"`
-	Version                          string   `json:"version"`
+	DateCreated                      string   `dynamodbav:"date_created"`
+	DateModified                     string   `dynamodbav:"date_modified"`
+	ProjectExternalID                string   `dynamodbav:"project_external_id"`
+	ProjectID                        string   `dynamodbav:"project_id"`
+	ProjectName                      string   `dynamodbav:"project_name"`
+	Version                          string   `dynamodbav:"version"`
+	ProjectCclaEnabled               bool     `dynamodbav:"project_ccla_enabled"`
+	ProjectCclaRequiresIclaSignature bool     `dynamodbav:"project_ccla_requires_icla_signature"`
+	ProjectIclaEnabled               bool     `dynamodbav:"project_icla_enabled"`
+	ProjectACL                       []string `dynamodbav:"project_acl"`
 }
 
+// DynamoRepository defines functions of Project repository
 type DynamoRepository interface {
 	GetProject(projectID string) (*Project, error)
 }
 
+// NewDynamoRepository creates instance of project repository
 func NewDynamoRepository(awsSession *session.Session, stage string) DynamoRepository {
 	return &repo{
 		stage:          stage,

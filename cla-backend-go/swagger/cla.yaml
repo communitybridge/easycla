@@ -1268,8 +1268,6 @@ paths:
       responses:
         '200':
           description: 'Success'
-          schema:
-            type: object
         '400':
           $ref: '#/responses/invalid-request'
         '401':
