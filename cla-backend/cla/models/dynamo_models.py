@@ -1484,6 +1484,32 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         return latest
 
+    def preprocess_pattern(self,emails,patterns) -> bool:
+        """
+        Helper function that preprocesses given emails against patterns
+
+        :param emails: User emails to be checked
+        :type emails: list
+        :return: True if at least one email is matched against pattern else False
+        :rtype: bool
+        """
+        for pattern in patterns:
+            if pattern.startswith("*."):
+                pattern = pattern.replace("*.", ".*")
+            elif pattern.startswith("*"):
+                pattern = pattern.replace("*", ".*")
+            elif pattern.startswith("."):
+                pattern = pattern.replace(".", ".*")
+
+            preprocessed_pattern = "^.*@" + pattern + "$"
+            pat = re.compile(preprocessed_pattern)
+            for email in emails:
+                if pat.match(email) != None:
+                    self.log_debug("found user email in email whitelist pattern")
+                    return True
+        return False
+
+
     # Accepts a Signature object
     def is_whitelisted(self, ccla_signature) -> bool:
         """
@@ -1524,25 +1550,11 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             f"is_whitelisted - testing user email domains: {emails} with "
             f"whitelist domain values in database: {patterns}"
         )
-
         if patterns is not None:
-            for pattern in patterns:
-                if pattern.startswith("*."):
-                    pattern = pattern.replace("*.", ".*\.")
-                elif pattern.startswith("*"):
-                    pattern = pattern.replace("*", ".*\.")
-                elif pattern.startswith("."):
-                    pattern = pattern.replace(".", ".*\.")
-
-                preprocessed_pattern = "^.*@" + pattern + "$"
-                # TODO: DAD - let's make it case insensitive
-                pat = re.compile(preprocessed_pattern)
-                for email in emails:
-                    if pat.match(email) != None:
-                        self.log_debug("found user email in email whitelist pattern")
-                        return True
-                    else:
-                        self.log_debug(f"Did not match email: {email} with domain: {preprocessed_pattern}")
+            if self.preprocess_pattern(emails, patterns):
+                return True
+            else:
+                self.log_debug(f"Did not match email: {email} with domain: {preprocessed_pattern}")
         else:
             cla.log.debug(
                 "is_whitelisted - no domain whitelist patterns defined in the database"
