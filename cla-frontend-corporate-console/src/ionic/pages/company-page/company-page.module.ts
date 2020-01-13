@@ -10,6 +10,7 @@ import { SortingDisplayComponentModule } from '../../components/sorting-display/
 import { LayoutModule } from '../../layout/layout.module';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { GetHelpComponentModule } from '../../components/get-help/get-help.module'; 
 
 @NgModule({
   declarations: [CompanyPage],
@@ -22,7 +23,8 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
     NgxDatatableModule,
     IonicPageModule.forChild(CompanyPage),
     NgxDatatableModule,
-    NgxDatatableModule
+    NgxDatatableModule,
+    GetHelpComponentModule
   ],
   entryComponents: [CompanyPage]
 })
