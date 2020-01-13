@@ -38,7 +38,7 @@
 <ion-footer class="footer-bordered">
   <ion-toolbar>
     <ion-buttons end>
-      <button ion-button icon-right color="light" (click)="submit()">
+      <button ion-button icon-right color="light" (click)="submit()" [disabled]="submitDisabled">
         Submit
       </button>
       <button ion-button icon-right color="light" (click)="dismiss()">

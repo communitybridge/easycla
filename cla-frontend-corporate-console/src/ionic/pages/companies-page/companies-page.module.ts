@@ -9,12 +9,14 @@ import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/
 import { LayoutModule } from '../../layout/layout.module';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { NgxPaginationModule } from 'ngx-pagination';
+import { GetHelpComponentModule } from '../../components/get-help/get-help.module'; 
 
 @NgModule({
   declarations: [CompaniesPage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
+    GetHelpComponentModule,
     IonicPageModule.forChild(CompaniesPage),
     LayoutModule,
     NgxDatatableModule,
