@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+
 	"github.com/communitybridge/easycla/cla-backend-go/version"
 
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
@@ -142,11 +144,12 @@ func server(localMode bool) http.Handler {
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 	onboardRepo := onboard.NewRepository(awsSession, stage)
+	projectRepo := project.NewDynamoRepository(awsSession, stage)
 
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
-	whitelistService := whitelist.NewService(whitelistRepo, http.DefaultClient)
+	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
