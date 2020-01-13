@@ -1,6 +1,7 @@
 package project
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -8,6 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/labstack/gommon/log"
+)
+
+var (
+	ErrProjectDoesNotExist = errors.New("project does not exist")
 )
 
 // Project data model
@@ -56,6 +61,9 @@ func (repo *repo) GetProject(projectID string) (*Project, error) {
 	if err != nil {
 		log.Warnf("Error retrieving project having ID : %s, error: %v", projectID, err)
 		return nil, err
+	}
+	if len(result.Item) == 0 {
+		return nil, ErrProjectDoesNotExist
 	}
 	var project Project
 	err = dynamodbattribute.UnmarshalMap(result.Item, &project)

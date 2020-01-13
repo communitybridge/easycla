@@ -37,7 +37,7 @@ type Repository interface {
 
 	AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) error
 	DeleteCclaWhitelistRequest(requestID string) error
-	ListCclaWhitelistRequest(companyID string, projectID *string) (*models.CclaWhitelistRequestList, error)
+	ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error)
 }
 
 type repository struct {
@@ -325,7 +325,17 @@ func (repo repository) DeleteCclaWhitelistRequest(requestID string) error {
 	return nil
 }
 
-func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *string) (*models.CclaWhitelistRequestList, error) {
+func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
+	if !(*filterAdded) {
+		*filterAdded = true
+		filter = cond
+	} else {
+		filter = filter.And(cond)
+	}
+	return filter
+}
+
+func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error) {
 	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
 
 	indexName := "company_id-project_id-index"
@@ -334,13 +344,24 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *str
 
 	builder := expression.NewBuilder().WithProjection(buildProjection())
 
-	if projectID != nil {
-		filterExpression := expression.Name("project_id").Equal(expression.Value(projectID))
-		builder = builder.WithFilter(filterExpression).WithKeyCondition(condition)
-	} else {
-		builder = builder.WithKeyCondition(condition)
+	var filter expression.ConditionBuilder
+	var filterAdded bool
+
+	if userID != nil {
+		userFilterExpression := expression.Name("user_id").Equal(expression.Value(userID))
+		filter = addConditionToFilter(filter, userFilterExpression, &filterAdded)
 	}
 
+	if projectID != nil {
+		projectExpression := expression.Key("project_id").Equal(expression.Value(projectID))
+		condition = condition.And(projectExpression)
+	}
+
+	if filterAdded {
+		builder = builder.WithFilter(filter)
+	}
+
+	builder = builder.WithKeyCondition(condition)
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
 	if err != nil {

@@ -21,6 +21,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// errors
+var (
+	ErrCclaWhitelistRequestAlreadyExists = errors.New("CCLA whiltelist request already exist")
+)
+
 type service struct {
 	repo        Repository
 	userRepo    users.Repository
@@ -146,6 +151,13 @@ func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, claGro
 }
 
 func (s service) AddCclaWhitelistRequest(companyID string, projectID string, args models.CclaWhitelistRequestInput) error {
+	list, err := s.repo.ListCclaWhitelistRequest(companyID, &projectID, &args.UserID)
+	if err != nil {
+		return err
+	}
+	if len(list.List) > 0 {
+		return ErrCclaWhitelistRequestAlreadyExists
+	}
 	company, err := s.companyRepo.GetCompany(companyID)
 	if err != nil {
 		return err
@@ -158,6 +170,9 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 	if err != nil {
 		return err
 	}
+	if user == nil {
+		return errors.New("Invalid user")
+	}
 	return s.repo.AddCclaWhitelistRequest(company, project, user)
 }
 
@@ -166,5 +181,5 @@ func (s service) DeleteCclaWhitelistRequest(requestID string) error {
 }
 
 func (s service) ListCclaWhitelistRequest(companyID string, projectID *string) (*models.CclaWhitelistRequestList, error) {
-	return s.repo.ListCclaWhitelistRequest(companyID, projectID)
+	return s.repo.ListCclaWhitelistRequest(companyID, projectID, nil)
 }
