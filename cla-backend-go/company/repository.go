@@ -4,6 +4,7 @@
 package company
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,6 +28,11 @@ import (
 
 const (
 	dateTimeFormat = "2006-01-02T15:04:05.000000+0000"
+)
+
+// errors
+var (
+	ErrCompanyDoesNotExist = errors.New("company does not exist")
 )
 
 // RepositoryService interface methods
@@ -98,6 +104,9 @@ func (repo repository) GetCompany(companyID string) (Company, error) {
 		return Company{}, err
 	}
 
+	if len(companyTableData.Item) == 0 {
+		return Company{}, ErrCompanyDoesNotExist
+	}
 	log.Debugf("Get company query took: %v", utils.FmtDuration(time.Since(queryStartTime)))
 
 	company := Company{}
