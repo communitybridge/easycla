@@ -5,6 +5,7 @@ package health
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -36,19 +37,25 @@ func New(version, commit, branch, buildDate string) Service {
 // HealthCheck API call returns the current health of the service
 func (s Service) HealthCheck(ctx context.Context, in health.HealthCheckParams) (*models.Health, error) {
 
-	t := time.Now()
-	duration := time.Since(t)
-	hs := models.HealthStatus{TimeStamp: time.Now().UTC().Format(time.RFC3339), Healthy: true, Name: "CLA", Duration: duration.String()}
+	// General health
+	hs := models.HealthStatus{
+		TimeStamp: time.Now().UTC().Format(time.RFC3339),
+		Healthy:   true,
+		Name:      "CLA",
+		Duration:  time.Since(time.Now()).String(),
+	}
 
-	// Do a quick check to see if we have a database connection
-	dynamoNow := time.Now()
-	dynamoAlive := isDynamoAlive()
-	dynamoDuration := time.Since(dynamoNow)
-	dy := models.HealthStatus{TimeStamp: time.Now().UTC().Format(time.RFC3339), Healthy: dynamoAlive, Name: "CLA - Dynamodb", Duration: dynamoDuration.String()}
+	var allStatus []*models.HealthStatus
+	allStatus = append(allStatus, &hs)
+	allStatus = append(allStatus, getDynamoTableStatus()...)
 
 	var status = "healthy"
-	if !dynamoAlive {
-		status = "not healthy"
+	for _, item := range allStatus {
+		// If any of our dynamodb tables are not healthy, then overall we are not healthy
+		if !item.Healthy {
+			status = "not healthy"
+			break
+		}
 	}
 
 	response := models.Health{
@@ -58,17 +65,59 @@ func (s Service) HealthCheck(ctx context.Context, in health.HealthCheckParams) (
 		Githash:        s.commit,
 		Branch:         s.branch,
 		BuildTimeStamp: s.buildDate,
-		Healths: []*models.HealthStatus{
-			&hs,
-			&dy,
-		},
+		Healths:        allStatus,
 	}
 
 	return &response, nil
 }
 
-// isDynamoAlive runs a check to see if we have connectivity to the database - returns true if successful, false otherwise
-func isDynamoAlive() bool {
+// getDynamoTableStatus queries the dynamodb tables and reports if it is healthy
+func getDynamoTableStatus() []*models.HealthStatus {
+	var allStatus []*models.HealthStatus
+
+	tableNames := []string{
+		"cla-" + ini.GetStage() + "-ccla-whitelist-requests",
+		"cla-" + ini.GetStage() + "-companies",
+		"cla-" + ini.GetStage() + "-company-invites",
+		"cla-" + ini.GetStage() + "-events",
+		"cla-" + ini.GetStage() + "-gerrit-instances",
+		"cla-" + ini.GetStage() + "-github-orgs",
+		"cla-" + ini.GetStage() + "-projects",
+		"cla-" + ini.GetStage() + "-repositories",
+		"cla-" + ini.GetStage() + "-session-store",
+		"cla-" + ini.GetStage() + "-signatures",
+		"cla-" + ini.GetStage() + "-store",
+		"cla-" + ini.GetStage() + "-user-permissions",
+		"cla-" + ini.GetStage() + "-users",
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(tableNames))
+
+	for _, tableName := range tableNames {
+		go func(tableName string) {
+			defer wg.Done()
+
+			// Do a quick check to see if we have a database connection
+			dynamoNow := time.Now()
+			dynamoAlive := isDynamoAlive(tableName)
+			dynamoDuration := time.Since(dynamoNow)
+			dy := models.HealthStatus{TimeStamp: time.Now().UTC().Format(time.RFC3339),
+				Healthy:  dynamoAlive,
+				Name:     "EasyCLA - Dynamodb - " + tableName,
+				Duration: dynamoDuration.String()}
+
+			allStatus = append(allStatus, &dy)
+		}(tableName)
+	}
+
+	wg.Wait()
+
+	return allStatus
+}
+
+// isDynamoAlive runs a check to see if we have connectivity to the database for the given table - returns true if successful, false otherwise
+func isDynamoAlive(tableName string) bool {
 	// Grab the AWS session
 	awsSession, err := ini.GetAWSSession()
 	if err != nil {
@@ -76,10 +125,7 @@ func isDynamoAlive() bool {
 		return false
 	}
 
-	// Known table that we can query
-	tableName := "cla-" + ini.GetStage() + "-projects"
-
-	// Create a client and make a query - don't wory about the result - just check the error response
+	// Create a client and make a query - don't worry about the result - just check the error response
 	dynamoDBClient := dynamodb.New(awsSession)
 	_, err = dynamoDBClient.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: &tableName,
