@@ -1,13 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
-import { AuthService } from './auth.service';
+import {Injectable} from '@angular/core';
+import {Http} from '@angular/http';
+import {AuthService} from './auth.service';
 
 import 'rxjs/Rx';
 import 'rxjs/add/operator/catch';
-import { Observable } from 'rxjs';
+import {Observable} from 'rxjs';
 
 @Injectable()
 export class ClaService {
@@ -117,8 +117,8 @@ export class ClaService {
     return this.http
       .getWithCreds(url)
       .map((res) => {
-        console.log(res, 'res')
-        return res.json()
+        console.log(res, 'res');
+        return res.json();
       })
       .catch(this.handleServiceError);
   }
@@ -168,6 +168,24 @@ export class ClaService {
     const url: URL = this.getV3Endpoint('/v3/users');
     return this.http
       .post(url, user)
+      .map((res) => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
+   * PUT /v3/user
+   **/
+  updateUserV3(user) {
+    /*
+      {
+        "lfUsername": "<some-username>",
+        "lfEmail": "<some-updated-value>",
+        "companyID": "<some-updated-value>"
+      }
+     */
+    const url: URL = this.getV3Endpoint('/v3/users');
+    return this.http
+      .putWithCreds(url, user)
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -650,6 +668,17 @@ export class ClaService {
   }
 
   /**
+   * GET /v3/company Returns all the companies
+   */
+  getAllV3Companies() {
+    const url: URL = this.getV3Endpoint('/v3/company');
+    return this.http
+      .get(url)
+      .map((res) => res.json())
+      .catch((error) => this.handleServiceError(error));
+  }
+
+  /**
    * POST /v1/company
    */
   postCompany(company) {
@@ -731,7 +760,7 @@ export class ClaService {
   postProjectManager(projectId, payload) {
     const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/manager');
     return this.http
-      .post(url, { lfid: payload.managerLFID })
+      .post(url, {lfid: payload.managerLFID})
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -764,7 +793,7 @@ export class ClaService {
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
     return this.http
-      .post(url, { lfid: payload.managerLFID })
+      .post(url, {lfid: payload.managerLFID})
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -1032,13 +1061,13 @@ export class ClaService {
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
     const url: URL = this.getV2Endpoint(
       '/v2/repository-provider/' +
-        provider +
-        '/sign/' +
-        installationId +
-        '/' +
-        githubRepositoryId +
-        '/' +
-        changeRequestId
+      provider +
+      '/sign/' +
+      installationId +
+      '/' +
+      githubRepositoryId +
+      '/' +
+      changeRequestId
     );
     return this.http
       .get(url)
@@ -1222,12 +1251,12 @@ export class ClaService {
     if (this.localTesting) {
       window.location.assign(
         this.v3ClaAPIURLLocal +
-          `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
+        `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
       );
     } else {
       window.location.assign(
         this.claApiUrl +
-          `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
+        `/v3/github/login?callback=https://${window.location.host}/#/company/${companyID}/project/${corporateClaID}/orgwhitelist`
       );
     }
   }
@@ -1253,7 +1282,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = { organization_id: organizationId };
+    const data = {organization_id: organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -1263,7 +1292,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = { organization_id: organizationId };
+    const data = {organization_id: organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }
@@ -1273,7 +1302,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = { id: organizationId };
+    const data = {id: organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -1283,7 +1312,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = { id: organizationId };
+    const data = {id: organizationId};
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }

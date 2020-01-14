@@ -10,6 +10,8 @@ import (
 // Service interface for users
 type Service interface {
 	CreateUser(user *models.User) (*models.User, error)
+	Save(user *models.UserUpdate) (*models.User, error)
+	Delete(userID string) error
 	GetUser(userID string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	SearchUsers(field string, searchTerm string, fullMatch bool) (*models.Users, error)
@@ -34,6 +36,16 @@ func (s service) CreateUser(user *models.User) (*models.User, error) {
 	}
 
 	return userModel, nil
+}
+
+// Save saves/updates the user record
+func (s service) Save(user *models.UserUpdate) (*models.User, error) {
+	return s.repo.Save(user)
+}
+
+// Delete deletes the user record
+func (s service) Delete(userID string) error {
+	return s.repo.Delete(userID)
 }
 
 // GetUser attempts to locate the user by the user id field
