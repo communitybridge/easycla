@@ -6,7 +6,9 @@
     <ion-title>CLA Corporate Console</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
+  <get-help></get-help>
 </ion-header>
+
 
 <ion-content>
   <div class="page-content">
@@ -69,7 +71,7 @@
 
         <ion-card-content>
           <ion-card-header>
-            <ion-card-title>
+            <ion-card-title class="text-black">
               Companies you are Associated with in EasyCLA
             </ion-card-title>
           </ion-card-header>
@@ -98,7 +100,21 @@
                     </span>
                   </ng-template>
                 </ngx-datatable-column>
-              </ngx-datatable>
+              </ngx-datatable> -->
+
+              <ion-list></ion-list>
+
+              <ion-row justify-content-center>
+                  <ion-list *ngIf="!loading.companies && rows && rows.length > 0">
+                      <ion-item *ngFor="let company of rows">
+                        <ion-label class="clickable" (click)="viewCompany(company.CompanyID)">
+                          <a href="javascript:void(0);">{{ company.CompanyName }}</a>
+                        </ion-label>
+                      </ion-item>
+                    </ion-list>
+              </ion-row>
+
+              
             </div>
           </ion-card-content>
         </ion-card-content>

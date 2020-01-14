@@ -185,6 +185,7 @@ export class CompaniesPage {
     });
   }
 
+
   onSelect(event) {
     let company = event.selected[0];
     if (company.Status === 'Joined') {
