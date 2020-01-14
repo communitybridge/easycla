@@ -20,6 +20,20 @@ import (
 // Configure sets up the middleware handlers
 func Configure(api *operations.ClaAPI, service Service, usersService users.Service, companyUserValidation bool) {
 
+	api.CompanyGetCompaniesHandler = company.GetCompaniesHandlerFunc(func(params company.GetCompaniesParams, claUser *user.CLAUser) middleware.Responder {
+		companiesModel, err := service.GetCompanies()
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query all companies, error: %v", err)
+			log.Warnf(msg)
+			return company.NewGetCompaniesBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		return company.NewGetCompaniesOK().WithPayload(companiesModel)
+	})
+
 	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams, claUser *user.CLAUser) middleware.Responder {
 		companyModel, err := service.GetCompany(params.CompanyID)
 		if err != nil {

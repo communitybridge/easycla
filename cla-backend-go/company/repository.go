@@ -37,6 +37,7 @@ var (
 
 // RepositoryService interface methods
 type RepositoryService interface {
+	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
@@ -82,10 +83,84 @@ func NewRepository(awsSession *session.Session, stage string) RepositoryService 
 	}
 }
 
+// GetCompanies retrieves all the companies
+func (repo repository) GetCompanies() (*models.Companies, error) {
+	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithProjection(buildCompanyProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for get all companies scan error: %v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	var lastEvaluatedKey string
+	var companies []models.Company
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
+		if dbErr != nil {
+			log.Warnf("error retrieving get all companies, error: %v", dbErr)
+			return nil, dbErr
+		}
+
+		// Convert the list of DB models to a list of response models
+		companyList, modelErr := buildCompanyModels(results)
+		if modelErr != nil {
+			log.Warnf("error retrieving get all companies, error: %v", modelErr)
+			return nil, modelErr
+		}
+
+		// Add to our response model list
+		companies = append(companies, companyList...)
+
+		if results.LastEvaluatedKey["company_id"] != nil {
+			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
+			lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"company_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	// How many total records do we have - may not be up-to-date as this value is updated only periodically
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total company record count, error: %v", err)
+		return nil, err
+	}
+
+	totalCount := *describeTableResult.Table.ItemCount
+
+	return &models.Companies{
+		ResultCount:    int64(len(companies)),
+		TotalCount:     totalCount,
+		LastKeyScanned: lastEvaluatedKey,
+		Companies:      companies,
+	}, nil
+}
+
 // GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(companyID string) (Company, error) {
-
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 

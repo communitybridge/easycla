@@ -145,6 +145,32 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - users
+    delete:
+      summary: Delete user by ID
+      description: Deletes a user when provided the user ID
+      security:
+        - OauthSecurity:
+            - user
+      operationId: deleteUser
+      parameters:
+        - name: userID
+          description: the user ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '204':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - users
 
   /users:
     post:
@@ -173,6 +199,32 @@ paths:
           $ref: '#/responses/forbidden'
         '409':
           $ref: '#/responses/conflict'
+      tags:
+        - users
+    put:
+      summary: Update user
+      description: Updates a new user record
+      security:
+        - OauthSecurity:
+            - user
+      operationId: updateUser
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/user-update'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/user'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
       tags:
         - users
 
@@ -870,6 +922,30 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - contractGroup
+
+  /company:
+    get:
+      summary: Get all companies
+      description: Returns a list of companies
+      security:
+        - OauthSecurity:
+            - company
+      operationId: getCompanies
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
 
   /company/{companyID}:
     get:
@@ -1586,6 +1662,8 @@ definitions:
     properties:
       userID:
         type: string
+      userExternalID:
+        type: string
       username:
         type: string
       dateCreated:
@@ -1602,7 +1680,41 @@ definitions:
         type: string
       githubUsername:
         type: string
+      admin:
+        type: boolean
       version:
+        type: string
+      note:
+        type: string
+      emails:
+        type: array
+        items:
+          type: string
+
+  user-update:
+    type: object
+    title: User
+    description: User update model
+    properties:
+      userID:
+        type: string
+      userExternalID:
+        type: string
+      username:
+        type: string
+      lfEmail:
+        type: string
+      lfUsername:
+        type: string
+      companyID:
+        type: string
+      githubID:
+        type: string
+      githubUsername:
+        type: string
+      admin:
+        type: boolean
+      note:
         type: string
       emails:
         type: array
