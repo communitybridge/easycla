@@ -28,6 +28,8 @@ import (
 // Repository interface defines the functions for the users service
 type Repository interface {
 	CreateUser(user *models.User) (*models.User, error)
+	Save(user *models.UserUpdate) (*models.User, error)
+	Delete(userID string) error
 	GetUser(userID string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error)
@@ -47,6 +49,7 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
+// CreateUser creates a new user
 func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	putStartTime := time.Now()
 
@@ -65,6 +68,24 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 		},
 	}
 
+	attributes["admin"] = &dynamodb.AttributeValue{
+		BOOL: aws.Bool(user.Admin),
+	}
+	if user.UserExternalID != "" {
+		attributes["user_external_id"] = &dynamodb.AttributeValue{
+			S: aws.String(user.UserExternalID),
+		}
+	}
+	if user.GithubID != "" {
+		attributes["user_github_id"] = &dynamodb.AttributeValue{
+			S: aws.String(user.GithubID),
+		}
+	}
+	if user.GithubUsername != "" {
+		attributes["user_github_username"] = &dynamodb.AttributeValue{
+			S: aws.String(user.GithubUsername),
+		}
+	}
 	if user.LfEmail != "" {
 		attributes["lf_email"] = &dynamodb.AttributeValue{
 			S: aws.String(user.LfEmail),
@@ -79,6 +100,15 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 		attributes["user_name"] = &dynamodb.AttributeValue{
 			S: aws.String(user.Username),
 		}
+	}
+	attributes["date_created"] = &dynamodb.AttributeValue{
+		S: aws.String(time.Now().UTC().Format(time.RFC3339)),
+	}
+	attributes["date_modified"] = &dynamodb.AttributeValue{
+		S: aws.String(time.Now().UTC().Format(time.RFC3339)),
+	}
+	attributes["version"] = &dynamodb.AttributeValue{
+		S: aws.String("v1"),
 	}
 
 	// Build the put request
@@ -128,6 +158,101 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	return userModel, err
 }
 
+// Save saves the user model to the data store
+func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	log.Debugf("Save User - looking up user by username: %s", user.LfUsername)
+	oldUserModel, err := repo.GetUserByUserName(user.LfUsername, true)
+	if err != nil || oldUserModel == nil {
+		log.Warnf("Error fetching existing user record: %+v, error: %v", user, err)
+		return nil, err
+	}
+
+	log.Debugf("Found user by username: %+v", oldUserModel)
+
+	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
+	addReturnValues := "ALL_NEW" // nolint
+
+	updatedDateTime := time.Now().UTC()
+	expressionAttributeNames := map[string]*string{}
+	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
+	updateExpression := "SET "
+
+	if user.LfEmail != "" {
+		log.Debugf("Save User - adding lf_email: %s", user.LfEmail)
+		expressionAttributeNames["#E"] = aws.String("lf_email")
+		expressionAttributeValues[":e"] = &dynamodb.AttributeValue{S: aws.String(user.LfEmail)}
+		updateExpression = updateExpression + " #E = :e, "
+	}
+
+	if user.CompanyID != "" {
+		log.Debugf("Save User - adding user_company_id: %s", user.CompanyID)
+		expressionAttributeNames["#C"] = aws.String("user_company_id")
+		expressionAttributeValues[":c"] = &dynamodb.AttributeValue{S: aws.String(user.CompanyID)}
+		updateExpression = updateExpression + " #C = :c, "
+	}
+
+	log.Debugf("Save User - adding date_modified: %s", updatedDateTime.Format(time.RFC3339))
+	expressionAttributeNames["#D"] = aws.String("date_modified")
+	expressionAttributeValues[":d"] = &dynamodb.AttributeValue{S: aws.String(updatedDateTime.Format(time.RFC3339))}
+	updateExpression = updateExpression + " #D = :d "
+
+	// Update dynamoDB table
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"user_id": {
+				S: aws.String(oldUserModel.UserID),
+			},
+		},
+		ExpressionAttributeNames:  expressionAttributeNames,
+		ExpressionAttributeValues: expressionAttributeValues,
+		UpdateExpression:          &updateExpression,
+		ReturnValues:              &addReturnValues,
+	}
+
+	_, err = repo.dynamoDBClient.UpdateItem(input)
+	if err != nil {
+		log.Warnf("Error updating user record: %+v, error: %v", user, err)
+		return nil, err
+	}
+
+	log.Debugf("Save User - looking up saved user by username: %s", user.LfUsername)
+	newUserModel, err := repo.GetUserByUserName(user.LfUsername, true)
+	if err != nil || newUserModel == nil {
+		log.Warnf("Error fetching updated user record: %+v, error: %v", user, err)
+		return nil, err
+	}
+
+	log.Debugf("Returning updated user: %+v", newUserModel)
+	return newUserModel, err
+}
+
+// Delete deletes the specified user
+func (repo repository) Delete(userID string) error {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"user_id": {
+				S: aws.String(userID),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err := repo.dynamoDBClient.DeleteItem(input)
+	if err != nil {
+		log.Warnf("Unable to delete user by user id: %s, error: %v", userID, err)
+		return err
+	}
+
+	return nil
+}
+
+// GetUser retrieves the specified user using the user id
 func (repo repository) GetUser(userID string) (*models.User, error) {
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
@@ -379,6 +504,8 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 func convertDBUserModel(user DBUser) *models.User {
 	return &models.User{
 		UserID:         user.UserID,
+		UserExternalID: user.UserExternalID,
+		Admin:          user.Admin,
 		LfEmail:        user.LFEmail,
 		LfUsername:     user.LFUsername,
 		DateCreated:    user.DateCreated,
@@ -389,6 +516,7 @@ func convertDBUserModel(user DBUser) *models.User {
 		GithubID:       user.UserGithubID,
 		CompanyID:      user.UserCompanyID,
 		GithubUsername: user.UserGithubUsername,
+		Note:           user.Note,
 	}
 }
 
@@ -396,15 +524,19 @@ func buildUserProjection() expression.ProjectionBuilder {
 	// These are the columns we want returned
 	return expression.NamesList(
 		expression.Name("user_id"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
+		expression.Name("user_external_id"),
+		expression.Name("user_company_id"),
+		expression.Name("admin"),
 		expression.Name("lf_email"),
 		expression.Name("lf_username"),
-		expression.Name("user_emails"),
 		expression.Name("user_name"),
-		expression.Name("user_company_id"),
+		expression.Name("user_emails"),
 		expression.Name("user_github_username"),
 		expression.Name("user_github_id"),
+		expression.Name("date_created"),
+		expression.Name("date_modified"),
+		expression.Name("version"),
+		expression.Name("note"),
 	)
 }
 

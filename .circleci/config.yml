@@ -40,6 +40,7 @@ jobs:
             cd cla-backend
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
             python3 -m unittest -v cla/test_*.py && pytest -vv cla/tests/unit/test_model.py
+            pytest -vv cla/tests/unit/test_email_whitelist.py
 
   buildBackendDev:
     <<: *buildBackendAnchor
@@ -813,13 +814,13 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - buildGoBackendStaging:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - approve_staging:
           type: approval
           requires:
@@ -829,7 +830,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployBackendStaging:
           requires:
             - approve_staging
@@ -839,7 +840,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployProjectManagementConsoleStaging:
           requires:
             - approve_staging
@@ -847,7 +848,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployCorporateConsoleStaging:
           requires:
             - approve_staging
@@ -855,7 +856,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployContributorConsoleStaging:
           requires:
             - approve_staging
@@ -863,7 +864,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployLandingFrontendStaging:
           requires:
             - approve_staging
@@ -871,7 +872,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
 
       # Deploy Prod
       - buildBackendProd:
@@ -879,13 +880,13 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - buildGoBackendProd:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - approve_prod:
           type: approval
           requires:
@@ -895,7 +896,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployBackendProd:
           requires:
             - approve_prod
@@ -905,7 +906,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployProjectManagementConsoleProd:
           requires:
             - approve_prod
@@ -913,7 +914,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployCorporateConsoleProd:
           requires:
             - approve_prod
@@ -921,7 +922,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployContributorConsoleProd:
           requires:
             - approve_prod
@@ -929,7 +930,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
       - deployLandingFrontendProd:
           requires:
             - approve_prod
@@ -937,4 +938,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+(\.\d+)?(\.\d+)?$/
+              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/

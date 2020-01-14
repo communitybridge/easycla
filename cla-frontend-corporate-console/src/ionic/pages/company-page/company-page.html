@@ -6,6 +6,7 @@
     <ion-title>Company</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
+  <get-help></get-help>
 </ion-header>
 
 <ion-content headerspacing>
@@ -55,6 +56,12 @@
               <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
                 company click "Manage Whitelist" for the project interest</p>
             </ion-card-title>
+
+            <ion-card-title>
+                <p>
+                    "Requesr Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
+                  </p>
+            </ion-card-title>
             <ion-card-content>
               <ion-grid [loading-display]="loading.projects">
                 <ion-row>
@@ -69,8 +76,9 @@
                           [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
                           <ngx-datatable-column name="Project Name" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="CLA Manager" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Status" prop="Status" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="Whitelists" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="Pending Requests" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Pending Requests" prop="PendingRequets" [sortable]="true"></ngx-datatable-column>
                         </ngx-datatable>
                       </div>
                     </div>

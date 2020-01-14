@@ -1,12 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service';
-import { ClaCompanyModel } from '../../models/cla-company';
-import { AuthService } from '../../services/auth.service';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {ClaService} from '../../services/cla.service';
+import {ClaCompanyModel} from '../../models/cla-company';
+import {AuthService} from '../../services/auth.service';
 
 @IonicPage({
   segment: 'add-company-modal'
@@ -23,6 +23,7 @@ export class AddCompanyModal {
   company: ClaCompanyModel;
   companyName: string;
   userEmail: string;
+  userId: string;
   userName: string;
   companies: any[];
   filteredCompanies: any[];
@@ -46,6 +47,8 @@ export class AddCompanyModal {
   }
 
   getDefaults() {
+    this.userName = localStorage.getItem('user_name');
+    this.userId = localStorage.getItem('userid');
     this.company = this.navParams.get('company');
     this.mode = this.navParams.get('mode') || 'add';
     this.companies = [];
@@ -99,24 +102,28 @@ export class AddCompanyModal {
 
   joinCompany() {
     this.loading.submit = true;
-    const userId = localStorage.getItem('userid');
-    const userEmail = localStorage.getItem('user_email');
-    const userName = localStorage.getItem('user_name');
-    this.claService.sendInviteRequestEmail(this.existingCompanyId, userId, userEmail, userName).subscribe(
+    const user = {
+      'lfUsername': this.userId, // required
+      // Additional fields that should be updated - API only allow a few fields to be updated
+      'companyID': this.existingCompanyId,
+    };
+
+    this.claService.updateUserV3(user).subscribe(
       () => {
         this.loading.submit = false;
         this.dismiss();
       },
       (exception) => {
         this.loading.submit = false;
-        console.log('Exception while calling: sendInviteRequestEmail() for company ID: ' + this.existingCompanyId);
+        console.log('Exception while calling: updateUserV3() for user ' + this.userName +
+          ' and company ID: ' + this.existingCompanyId);
         console.log(exception);
       }
     );
   }
 
   dismiss() {
-    this.viewCtrl.dismiss();
+    this.viewCtrl.dismiss(this.existingCompanyId);
   }
 
   companyExistAlert(company_id) {
@@ -148,8 +155,8 @@ export class AddCompanyModal {
   }
 
   getAllCompanies() {
-    this.claService.getAllCompanies().subscribe((response) => {
-      this.companies = response;
+    this.claService.getAllV3Companies().subscribe((response) => {
+      this.companies = response.companies;
     });
   }
 
@@ -163,8 +170,8 @@ export class AddCompanyModal {
       this.filteredCompanies = this.companies
         .map((company) => {
           let formattedCompany;
-          if (company.company_name.toLowerCase().includes(companyName.toLowerCase())) {
-            formattedCompany = company.company_name.replace(
+          if (company.companyName.toLowerCase().includes(companyName.toLowerCase())) {
+            formattedCompany = company.companyName.replace(
               new RegExp(companyName, 'gi'),
               (match) => '<span class="highlightText">' + match + '</span>'
             );
@@ -175,16 +182,25 @@ export class AddCompanyModal {
         .filter((company) => company.filteredCompany);
     }
 
+    console.log('Company Name:' + companyName);
+    console.log('Filtered Companies Length:' + this.filteredCompanies.length);
+
+    /* Not working as desired
     if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
       this.addNewCompany = true;
       this.joinExistingCompany = false;
+    }
+     */
+    if (companyName.length >= 2) {
+      this.addNewCompany = false;
+      this.joinExistingCompany = true;
     }
   }
 
   setCompanyName(company) {
     this.companySet = true;
-    this.companyName = company.company_name;
-    this.existingCompanyId = company.company_id;
+    this.companyName = company.companyName;
+    this.existingCompanyId = company.companyID;
     this.addNewCompany = false;
     this.joinExistingCompany = true;
     this.enableJoinButton = true;

@@ -6,6 +6,8 @@ const accountID = aws.getCallerIdentity().accountId;
 const stackName = pulumi.getStack();
 const stage = pulumi.getStack();
 const region = aws.getRegion().name;
+// Enable point in time recover on the production databases
+const pointInTimeRecoveryEnabled = (stage == 'prod');
 
 // Set to true if you want pulumi to import an existing resources in AWS into
 // the current stack. This is typically done the first time only and once it is
@@ -13,16 +15,22 @@ const region = aws.getRegion().name;
 // control of pulumi.
 const importResources = false;
 
-console.log('Pulumi stack name is : ' + stackName);
-console.log('Account ID is        : ' + accountID);
-console.log('STAGE is             : ' + stage);
-console.log('Region is            : ' + aws.getRegion().name);
+console.log('Pulumi project name is  : ' + pulumi.getProject());
+console.log('Pulumi stack name is    : ' + stackName);
+console.log('Account ID is           : ' + accountID);
+console.log('STAGE is                : ' + stage);
+console.log('Region is               : ' + aws.getRegion().name);
+console.log('Point In Time Recovery: : ' + pointInTimeRecoveryEnabled);
 
 const defaultTags = {
   Product: 'EasyCLA',
   ManagedBy: 'Pulumi',
   PulumiStack: pulumi.getStack(),
   STAGE: stage,
+  ServiceType: 'EasyCLA',
+  Service: 'Database',
+  ServiceRole: 'Backend',
+  Owner: 'David Deal',
 };
 
 const cfTags = {
@@ -156,6 +164,9 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 0,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-projects'} : {},
@@ -209,6 +220,9 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 0,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-users'} : {},
@@ -244,6 +258,9 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 0,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-companies'} : {},
@@ -336,6 +353,9 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 1,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-signatures'} : {},
@@ -387,6 +407,9 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 1,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-repositories'} : {},
@@ -422,6 +445,9 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
           writeCapacity: 1,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-github-orgs'} : {},
@@ -445,6 +471,9 @@ function buildGerritInstancesTable(importResources: boolean): aws.dynamodb.Table
       billingMode: 'PROVISIONED',
       readCapacity: 1,
       writeCapacity: 1,
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-gerrit-instances'} : {},
@@ -467,6 +496,9 @@ function buildUserPermissionsTable(importResources: boolean): aws.dynamodb.Table
       hashKey: 'username',
       readCapacity: 1,
       writeCapacity: 1,
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-user-permissions'} : {},
@@ -497,6 +529,9 @@ function buildCompanyInvitesTable(importResources: boolean): aws.dynamodb.Table 
           writeCapacity: 1,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-company-invites'} : {},
@@ -531,6 +566,9 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
           writeCapacity: 1,
         },
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-manager-requests'} : {},
@@ -557,6 +595,9 @@ function buildStoreTable(importResources: boolean): aws.dynamodb.Table {
         attributeName: 'expire',
         enabled: true,
       },
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-store'} : {},
@@ -582,6 +623,9 @@ function buildSessionStoreTable(importResources: boolean): aws.dynamodb.Table {
       ttl: {
         attributeName: 'expire',
         enabled: true,
+      },
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
       },
       tags: defaultTags,
     },
@@ -613,6 +657,9 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         {name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1},
         {name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1},
       ],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
       tags: defaultTags,
     },
     importResources ? {import: 'cla-' + stage + '-events'} : {},

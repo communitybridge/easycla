@@ -15,6 +15,7 @@ import { ClaCompanyModel } from '../../models/cla-company';
   templateUrl: 'projects-ccla-select-modal.html'
 })
 export class ProjectsCclaSelectModal {
+  submitDisabled: boolean;
   projectId: any;
   form: FormGroup;
   projects: any;
@@ -38,6 +39,7 @@ export class ProjectsCclaSelectModal {
 
   getDefaults() {
     this.loading = true;
+    this.submitDisabled = true;
     this.company = this.navParams.get('company');
   }
 
@@ -77,6 +79,7 @@ export class ProjectsCclaSelectModal {
   }
 
   selectProject(project) {
+    this.submitDisabled = false
     this.form.controls['search'].setValue(project.project_name);
     this.projectId = project.project_id
     
