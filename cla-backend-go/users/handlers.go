@@ -4,6 +4,8 @@
 package users
 
 import (
+	"fmt"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/users"
@@ -17,6 +19,12 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.UserID == "" || params.Body.UserID == "" {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user: %s not authorized to update user: %s", claUser.UserID, params.Body.UserID)))
+		}
+
 		userModel, err := service.CreateUser(&params.Body)
 		if err != nil {
 			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
@@ -26,8 +34,63 @@ func Configure(api *operations.ClaAPI, service Service) {
 		return users.NewAddUserOK().WithPayload(userModel)
 	})
 
+	// Save/Update User Handler
+	api.UsersUpdateUserHandler = users.UpdateUserHandlerFunc(func(params users.UpdateUserParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.LFUsername != params.Body.LfUsername {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user: %s not authorized to update user: %s", claUser.LFUsername, params.Body.LfUsername)))
+		}
+
+		userModel, err := service.Save(params.Body)
+		if err != nil {
+			log.Warnf("error updating user from user request with body: %+v, error: %+v", params.Body, err)
+			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+		}
+
+		return users.NewUpdateUserOK().WithPayload(userModel)
+	})
+
+	// Delete User Handler
+	api.UsersDeleteUserHandler = users.DeleteUserHandlerFunc(func(params users.DeleteUserParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.UserID == "" || params.UserID == "" {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user: %s not authorized to delete user: %s", claUser.UserID, params.UserID)))
+		}
+
+		// Let's lookup the authenticated user in our database - we need to see if they have admin access
+		claUserModel, err := service.GetUser(claUser.UserID)
+		if err != nil || claUserModel == nil {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("error looking up current user permissions to determine if delete is allowed, id: %s, error: %+v",
+					params.UserID, err)))
+		}
+
+		// Should be an admin to delete
+		if !claUserModel.Admin {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user with id: %s is not authorized to delete users - must be admin",
+					params.UserID)))
+		}
+
+		err = service.Delete(params.UserID)
+		if err != nil {
+			log.Warnf("error deleting user from user table with id: %s, error: %+v", params.UserID, err)
+			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+		}
+
+		return users.NewDeleteUserNoContent()
+	})
+
 	// Get User by ID handler
 	api.UsersGetUserHandler = users.GetUserHandlerFunc(func(params users.GetUserParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.UserID == "" || params.UserID == "" {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user %+v not authorized to get users", claUser)))
+		}
+
 		userModel, err := service.GetUser(params.UserID)
 		if err != nil {
 			log.Warnf("error retrieving user for user_id: %s, error: %+v", params.UserID, err)
@@ -39,6 +102,11 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Get User by name handler
 	api.UsersGetUserByUserNameHandler = users.GetUserByUserNameHandlerFunc(func(params users.GetUserByUserNameParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.UserID == "" {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user %+v not authorized to get users", claUser)))
+		}
 		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {
 			log.Warnf("error retrieving user for user name: '%s', error: %+v", params.UserName, err)
@@ -55,6 +123,12 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Get User by name handler
 	api.UsersSearchUsersHandler = users.SearchUsersHandlerFunc(func(params users.SearchUsersParams, claUser *user.CLAUser) middleware.Responder {
+		// Make sure we have good non-empty parameters
+		if claUser.UserID == "" {
+			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("user %+v not authorized to get users", claUser)))
+		}
+
 		// No required params? Return empty result
 		if params.SearchField == nil || params.SearchTerm == nil {
 			return users.NewSearchUsersBadRequest().WithPayload(&models.ErrorResponse{

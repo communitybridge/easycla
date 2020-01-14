@@ -71,6 +71,12 @@ export class HttpClient {
     );
   }
 
+  putWithCreds(url, data, contentType: string = 'application/json') {
+    return Observable.fromPromise(this.buildAuthHeaders(contentType)).switchMap((headers) =>
+      this.http.put(url, data, {headers: headers, withCredentials: true})
+    );
+  }
+
   patch(url, data, contentType: string = 'application/json') {
     return Observable.fromPromise(this.buildAuthHeaders(contentType)).switchMap((headers) =>
       this.http.patch(url, data, { headers: headers })

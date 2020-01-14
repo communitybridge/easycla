@@ -13,7 +13,20 @@
 <ion-content>
   <div class="page-content">
 
-    <ion-row *ngIf="newUser && hasCompanyId">
+    <ion-row *ngIf="!hasCompanyId">
+      <ion-card class="sm-card">
+        <ion-card-header>
+          <ion-card-title class="center-card-title">
+            Associate yourself with a company in Easy CLA
+          </ion-card-title>
+        </ion-card-header>
+        <ion-row justify-content-center margin-top>
+          <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
+        </ion-row>
+      </ion-card>
+    </ion-row>
+
+    <ion-row *ngIf="hasCompanyId">
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
@@ -21,19 +34,20 @@
           </ion-card-title>
           <div ion-card-subtitle>
             <ion-row>
-              <h3 margin-top>For setting up corporate CLA Manager for a new company or add a new CLA Manager to an existing company, click
-                the button below to get started.
+              <h3 margin-top>For setting up corporate CLA Manager for a new company or add a new CLA Manager to an
+                existing company, click the button below to get started.
               </h3>
               <h3 margin-top>
-                Once you select the company and project for which you want to be a CLA Manager your request will be sent to your company’s
-                initial CLA Manager for approval.
+                Once you select the company and project for which you want to be a CLA Manager your request will be sent
+                to your company’s initial CLA Manager for approval.
               </h3>
               <h3 margin-top>
-                If you don’t see your company in “Company Name” field please type it. You can type it and you will be added as a CLA Manager
-                for that company
+                If you don’t see your company in “Company Name” field please type it. You can type it and you will be
+                added as a CLA Manager for that company
               </h3>
               <h3 margin-top>
-                If you do not see your project in "Project Name" filed please type it. The project will be added to the database.
+                If you do not see your project in "Project Name" filed please type it. The project will be added to the
+                database.
               </h3>
             </ion-row>
             <ion-row justify-content-center margin-top>
@@ -44,9 +58,7 @@
         <ion-card-content>
         </ion-card-content>
       </ion-card>
-    </ion-row>
 
-    <ion-row *ngIf="!newUser && !hasCompanyId">
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
@@ -70,8 +82,9 @@
 
             <loading-spinner [loading]="loading.companies"></loading-spinner>
             <div *ngIf="!loading.companies && rows && rows.length > 0">
-              <!-- <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
-                [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
+              <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50"
+                             [rowHeight]="'auto'" [selectionType]="SelectionType.single"
+                             [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
                 <ngx-datatable-column name="Company Name" prop="CompanyName" [sortable]="true">
                 </ngx-datatable-column>
                 <ngx-datatable-column name="Status" prop="Status" [sortable]="true">
@@ -105,10 +118,8 @@
             </div>
           </ion-card-content>
         </ion-card-content>
-
       </ion-card>
     </ion-row>
-
   </div>
   <cla-footer></cla-footer>
 </ion-content>

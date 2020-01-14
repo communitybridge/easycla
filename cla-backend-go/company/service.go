@@ -34,6 +34,7 @@ const (
 
 // Service interface defining the public functions
 type Service interface { // nolint
+	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string) (*models.Companies, error)
@@ -59,6 +60,11 @@ func NewService(repo RepositoryService, awsSession *session.Session, senderEmail
 		senderEmailAddress:  senderEmailAddress,
 		corporateConsoleURL: corporateConsoleURL,
 	}
+}
+
+// GetCompanies returns all the companies
+func (s service) GetCompanies() (*models.Companies, error) {
+	return s.repo.GetCompanies()
 }
 
 // GetCompany returns the company associated with the company ID
