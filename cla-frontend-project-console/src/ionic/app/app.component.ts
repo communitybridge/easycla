@@ -1,6 +1,6 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
-
+import {Http} from '@angular/http';
 import { Component, ViewChild } from '@angular/core';
 import { Nav, Platform, App, Events } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
@@ -47,6 +47,7 @@ export class MyApp {
     private rolesService: RolesService,
     public claService: ClaService,
     public s3service: S3Service,
+    public http: Http,
     public httpClient: HttpClient,
     public authService: AuthService,
     public events: Events
@@ -58,7 +59,7 @@ export class MyApp {
     this.s3service.setHttp(httpClient);
 
     // manually create new httpClient with keycloakHttp
-    let kcHttpClient = new HttpClient(keycloakHttp);
+    let kcHttpClient = new HttpClient(http, keycloak, authService);
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to 'true', otherwise we're using normal services deployed in each environment
