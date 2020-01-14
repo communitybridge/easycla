@@ -80,11 +80,21 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 
 	api.CompanyAddCclaWhitelistRequestHandler = company.AddCclaWhitelistRequestHandlerFunc(
 		func(params company.AddCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
-			err := service.AddCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.Body)
+			requestID, err := service.AddCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.Body)
 			if err != nil {
 				return company.NewAddCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
-
+			createEvent(service.eventsService,
+				CclaWhitelistRequestAdded,
+				params.CompanyID,
+				params.ProjectID,
+				claUser.UserID,
+				&CclaWhitelistRequestAddedData{
+					CompanyID: params.CompanyID,
+					ProjectID: params.ProjectID,
+					UserID:    params.Body.UserID,
+					RequestID: requestID,
+				})
 			return company.NewAddCclaWhitelistRequestOK()
 		})
 
@@ -94,7 +104,16 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 			if err != nil {
 				return company.NewDeleteCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
-
+			createEvent(service.eventsService,
+				CclaWhitelistRequestDeleted,
+				params.CompanyID,
+				params.ProjectID,
+				claUser.UserID,
+				&CclaWhitelistRequestDeletedData{
+					CompanyID: params.CompanyID,
+					ProjectID: params.ProjectID,
+					RequestID: params.RequestID,
+				})
 			return company.NewDeleteCclaWhitelistRequestOK()
 		})
 
