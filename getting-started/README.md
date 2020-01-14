@@ -22,10 +22,6 @@ This high-level diagram shows the different flows and roles that EasyCLA support
 
 ![CLA Diagram](../.gitbook/assets/cla_diagram_v8.png)
 
-The following diagram illustrates the EasyCLA release process:
-
-![Release Process](../.gitbook/assets/easycla_software_development_and_release_process.png)
-
 ## EasyCLA Architechture
 
 The following diagram explains the EasyCLA architecture. 
