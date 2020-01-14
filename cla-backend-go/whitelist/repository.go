@@ -35,7 +35,7 @@ type Repository interface {
 	AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID string) error
 	GetGithubOrganizationsFromWhitelist(claGroupID string) ([]models.GithubOrg, error)
 
-	AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) error
+	AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) (string, error)
 	DeleteCclaWhitelistRequest(requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error)
 }
@@ -242,11 +242,11 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(CLAGroupID string) ([
 	return orgs, nil
 }
 
-func (repo repository) AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) error {
+func (repo repository) AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) (string, error) {
 	requestID, err := uuid.NewV4()
 	if err != nil {
 		log.Warnf("Unable to generate a UUID for a whitelist request, error: %v", err)
-		return err
+		return "", err
 	}
 
 	currentTime := currentTime()
@@ -301,10 +301,10 @@ func (repo repository) AddCclaWhitelistRequest(company company.Company, project 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new ccla whitelist request, error: %v", err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return requestID.String(), nil
 }
 
 func (repo repository) DeleteCclaWhitelistRequest(requestID string) error {
