@@ -6,7 +6,9 @@ package users
 // DBUser data model
 type DBUser struct {
 	UserID             string   `json:"user_id"`
+	UserExternalID     string   `json:"user_external_id"`
 	LFEmail            string   `json:"lf_email"`
+	Admin              bool     `json:"admin"`
 	LFUsername         string   `json:"lf_username"`
 	DateCreated        string   `json:"date_created"`
 	DateModified       string   `json:"date_modified"`
@@ -16,4 +18,5 @@ type DBUser struct {
 	UserGithubID       string   `json:"user_github_id"`
 	UserCompanyID      string   `json:"user_company_id"`
 	UserGithubUsername string   `json:"user_github_username"`
+	Note               string   `json:"note"`
 }

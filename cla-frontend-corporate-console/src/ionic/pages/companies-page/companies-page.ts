@@ -1,14 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { IonicPage, ModalController, NavController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
-import { Restricted } from '../../decorators/restricted';
-import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
+import {Component} from '@angular/core';
+import {IonicPage, ModalController, NavController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
+import {RolesService} from '../../services/roles.service';
+import {Restricted} from '../../decorators/restricted';
+import {ColumnMode, SelectionType, SortType} from '@swimlane/ngx-datatable';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {EmailValidator} from '../../validators/email';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -44,8 +44,6 @@ export class CompaniesPage {
   SelectionType = SelectionType;
   SortType = SortType;
 
-  newUser: boolean
-
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
@@ -79,14 +77,13 @@ export class CompaniesPage {
     this.userName = localStorage.getItem('user_name');
     this.setUserDetails();
     this.companies = [];
-    this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }, { prop: 'ProjectName' }];
-
-    this.getUserByUserId();
+    this.columns = [{prop: 'CompanyName'}, {prop: 'Status'}, {prop: 'Action'}, {prop: 'CompanyID'}, {prop: 'ProjectName'}];
   }
 
   ngOnInit() {
     this.getCompanies();
     this.getSignedCLAs();
+    this.getUserByUserId();
   }
 
   setUserDetails() {
@@ -99,20 +96,24 @@ export class CompaniesPage {
     let modal = this.modalCtrl.create('AddCompanyModal', {});
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
-      this.getCompanies();
     });
     modal.present();
   }
 
   getUserByUserId() {
     this.userId && this.claService.getUserByUserName(this.userId).subscribe((user) => {
-      this.companyId = user.companyID
+      if (user.companyID != null) {
+        this.companyId = user.companyID;
+        this.hasCompanyId = true
+      }
     })
   }
 
-  getSignedCLAs() {}
+  getSignedCLAs() {
+  }
 
-  getPendingInvites() {}
+  getPendingInvites() {
+  }
 
   /**
    * Get the list of companies for this user - if any
@@ -166,7 +167,6 @@ export class CompaniesPage {
         this.loading.companies = false;
         if (companies['companies-with-invites']) {
           this.rows = this.mapCompanies(companies['companies-with-invites']);
-          console.log(this.rows, 'this is rows')
         } else {
           this.rows = [];
         }
@@ -210,21 +210,23 @@ export class CompaniesPage {
   }
 
   openSelectCompany() {
-    let modal = this.modalCtrl.create('AddCompanyModal', {
-
-    });
-    modal.dismiss((data) => {
+    let modal = this.modalCtrl.create('AddCompanyModal', {});
+    modal.onDidDismiss((data) => {
+      console.log('AddCompanyModel dismissed with data: ' + data);
       // A refresh of data anytime the modal is dismissed
+      if (data) {
+        this.getUserByUserId();
+      }
     });
     modal.present();
   }
 
   openRequestManagerModal() {
-    let modal = this.modalCtrl.create('ClaManagerOnboardingPage', {
-
-    });
+    let modal = this.modalCtrl.create('ClaManagerOnboardingPage', {});
     modal.dismiss((data) => {
       // A refresh of data anytime the modal is dismissed
+
+
     });
     modal.present();
   }

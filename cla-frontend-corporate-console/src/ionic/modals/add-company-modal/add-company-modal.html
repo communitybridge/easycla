@@ -26,7 +26,7 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Select Company:</ion-label>
-            <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName" (ionChange)="findCompany($event)"></ion-input>
+            <ion-input name="companyName" formControlName="companyName" [(ngModel)]="companyName" (ionChange)="findCompany($event)" placeholder="Type company name to start search"></ion-input>
           </ion-item>
           <ion-row *ngIf="filteredCompanies.length > 0 && !companySet">
             <ion-list class="company-dropdown-list" lines="none">
