@@ -1939,33 +1939,23 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                                   signature_approved=None, signature_type=None,
                                   signature_reference_type=None, signature_reference_id=None,
                                   signature_user_ccla_company_id=None):
-        # TODO: Need to optimize this on the DB end.
-        cla.log.info('Loading signature by project for project_id: %s', project_id)
-        signature_generator = self.model.signature_project_index.query(project_id)
+        cla.log.info("Loading signature by project for project_id: %s", project_id)
+        signature_generator = self.model.signature_project_index.query(
+            project_id, filter_condition=(SignatureModel.signature_reference_type == signature_reference_type) &
+                                         (SignatureModel.signature_reference_id == signature_reference_id) &
+                                         (SignatureModel.signature_type == signature_type) &
+                                         (SignatureModel.signature_user_ccla_company_id == signature_user_ccla_company_id) &
+                                         (SignatureModel.signature_signed == signature_signed) &
+                                         (SignatureModel.signature_approved == signature_approved)
+        )
+
         cla.log.info('Loaded signature by project for project_id: %s', project_id)
         signatures = []
         for signature_model in signature_generator:
-            if signature_signed is not None and \
-                    signature_model.signature_signed != signature_signed:
-                continue
-            if signature_approved is not None and \
-                    signature_model.signature_approved != signature_approved:
-                continue
-            if signature_type is not None and \
-                    signature_model.signature_type != signature_type:
-                continue
-            if signature_reference_type is not None and \
-                    signature_model.signature_reference_type != signature_reference_type:
-                continue
-            if signature_reference_id is not None and \
-                    signature_model.signature_reference_id != signature_reference_id:
-                continue
-            if signature_user_ccla_company_id is not None and \
-                    signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id:
-                continue
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
+
         cla.log.info('Returning %d signatures for project_id: %s', len(signatures), project_id)
         return signatures
 
@@ -1985,7 +1975,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             company_id, filter_condition=(SignatureModel.signature_reference_type == 'company') &
                                          (SignatureModel.signature_project_id == project_id) &
                                          (SignatureModel.signature_type == 'ccla') &
-                                         (SignatureModel.signature_user_ccla_company_id.does_not_exist())
+                                         (SignatureModel.signature_user_ccla_company_id.does_not_exist()) &
+                                         (SignatureModel.signature_signed == True) &
+                                         (SignatureModel.signature_approved == True)
         )
         signatures = []
         for signature_model in signature_generator:
@@ -2009,6 +2001,37 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signatures.append(signature)
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
+
+    def get_employee_signature_by_company_project(self, company_id, project_id, user_id) -> Optional[Signature]:
+        """
+        Returns the employee signature for the specified user associated with
+        the project/company. Returns None if no employee signature exists for
+        this set of query parameters.
+        """
+        signature_generator = self.model.signature_reference_index.query(
+            user_id, filter_condition=(SignatureModel.signature_reference_type == 'user') &
+                                         (SignatureModel.signature_project_id == project_id) &
+                                         (SignatureModel.signature_type == 'cla') &
+                                         (SignatureModel.signature_user_ccla_company_id == company_id) &
+                                         (SignatureModel.signature_signed == True) &
+                                         (SignatureModel.signature_approved == True)
+        )
+
+        signatures = []
+        for signature_model in signature_generator:
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+
+        # No employee signatures were found that were signed/approved
+        if len(signatures) == 0:
+            return None
+
+        # Oops, we found more than 1?? This isn't good - maybe we simply return the first one?
+        if len(signatures) > 1:
+            cla.log.warning("Why do we have more than one employee signature for this user? - Will return the first one only.")
+
+        return signatures[0]
 
     def get_employee_signatures_by_company_project_model(self, company_id, project_id) -> List[Signature]:
         signature_generator = self.model.signature_project_index.query(
