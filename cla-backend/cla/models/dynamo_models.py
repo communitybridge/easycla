@@ -12,7 +12,10 @@ import re
 import uuid
 from typing import Optional, List
 
+import cla
 import dateutil.parser
+from cla.models import model_interfaces, key_value_store_interface
+from cla.models.model_interfaces import User, Signature
 from pynamodb.attributes import (
     UTCDateTimeAttribute,
     UnicodeSetAttribute,
@@ -23,13 +26,9 @@ from pynamodb.attributes import (
     JSONAttribute,
     MapAttribute,
 )
-from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.expressions.condition import Condition
+from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.models import Model
-
-import cla
-from cla.models import model_interfaces, key_value_store_interface
-from cla.models.model_interfaces import User, Signature
 
 stage = os.environ.get("STAGE", "")
 cla_logo_url = os.environ.get("CLA_BUCKET_LOGO_URL", "")
@@ -97,6 +96,7 @@ class GitHubUserIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index.
     user_github_id = NumberAttribute(hash_key=True)
 
+
 class SignatureProjectExternalIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by project external ID
@@ -114,6 +114,7 @@ class SignatureProjectExternalIndex(GlobalSecondaryIndex):
     # This attribute is the hash key for the index
     signature_project_external_id = UnicodeAttribute(hash_key=True)
 
+
 class SignatureCompanySignatoryIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by signature company signatory ID
@@ -129,6 +130,7 @@ class SignatureCompanySignatoryIndex(GlobalSecondaryIndex):
 
     signature_company_signatory_id = UnicodeAttribute(hash_key=True)
 
+
 class SignatureCompanyInitialManagerIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by signature company initial manager ID
@@ -143,7 +145,6 @@ class SignatureCompanyInitialManagerIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     signature_company_initial_manager_id = UnicodeAttribute(hash_key=True)
-
 
 
 class GitHubUsernameIndex(GlobalSecondaryIndex):
@@ -269,8 +270,6 @@ class ExternalCompanyIndex(GlobalSecondaryIndex):
     company_external_id = UnicodeAttribute(hash_key=True)
 
 
-
-
 class GithubOrgSFIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying github organizations by a Salesforce ID.
@@ -370,6 +369,7 @@ class EventUserIndex(GlobalSecondaryIndex):
 
     user_id_index = UnicodeAttribute(hash_key=True)
 
+
 class GithubUserExternalIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying users by a user external ID.
@@ -439,21 +439,21 @@ class DocumentTab(model_interfaces.DocumentTab):
     """
 
     def __init__(
-        self,  # pylint: disable=too-many-arguments
-        document_tab_type=None,
-        document_tab_id=None,
-        document_tab_name=None,
-        document_tab_page=None,
-        document_tab_position_x=None,
-        document_tab_position_y=None,
-        document_tab_width=None,
-        document_tab_height=None,
-        document_tab_is_locked=False,
-        document_tab_is_required=True,
-        document_tab_anchor_string=None,
-        document_tab_anchor_ignore_if_not_present=True,
-        document_tab_anchor_x_offset=None,
-        document_tab_anchor_y_offset=None,
+            self,  # pylint: disable=too-many-arguments
+            document_tab_type=None,
+            document_tab_id=None,
+            document_tab_name=None,
+            document_tab_page=None,
+            document_tab_position_x=None,
+            document_tab_position_y=None,
+            document_tab_width=None,
+            document_tab_height=None,
+            document_tab_is_locked=False,
+            document_tab_is_required=True,
+            document_tab_anchor_string=None,
+            document_tab_anchor_ignore_if_not_present=True,
+            document_tab_anchor_x_offset=None,
+            document_tab_anchor_y_offset=None,
     ):
         super().__init__()
         self.model = DocumentTabModel()
@@ -607,18 +607,18 @@ class Document(model_interfaces.Document):
     """
 
     def __init__(
-        self,  # pylint: disable=too-many-arguments
-        document_name=None,
-        document_file_id=None,
-        document_content_type=None,
-        document_content=None,
-        document_major_version=None,
-        document_minor_version=None,
-        document_author_name=None,
-        document_creation_date=None,
-        document_preamble=None,
-        document_legal_entity_name=None,
-        document_s3_url=None,
+            self,  # pylint: disable=too-many-arguments
+            document_name=None,
+            document_file_id=None,
+            document_content_type=None,
+            document_content=None,
+            document_major_version=None,
+            document_minor_version=None,
+            document_author_name=None,
+            document_creation_date=None,
+            document_preamble=None,
+            document_legal_entity_name=None,
+            document_s3_url=None,
     ):
         super().__init__()
         self.model = DocumentModel()
@@ -816,14 +816,14 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
     """
 
     def __init__(
-        self,
-        project_id=None,
-        project_external_id=None,
-        project_name=None,
-        project_icla_enabled=True,
-        project_ccla_enabled=True,
-        project_ccla_requires_icla_signature=False,
-        project_acl=None,
+            self,
+            project_id=None,
+            project_external_id=None,
+            project_name=None,
+            project_icla_enabled=True,
+            project_ccla_enabled=True,
+            project_ccla_requires_icla_signature=False,
+            project_acl=None,
     ):
         super(Project).__init__()
         self.model = ProjectModel()
@@ -1163,16 +1163,16 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     """
 
     def __init__(
-        self,
-        user_email=None,
-        user_external_id=None,
-        user_github_id=None,
-        user_github_username=None,
-        user_ldap_id=None,
-        lf_username=None,
-        lf_sub=None,
-        user_company_id=None,
-        note=None,
+            self,
+            user_email=None,
+            user_external_id=None,
+            user_github_id=None,
+            user_github_username=None,
+            user_ldap_id=None,
+            lf_username=None,
+            lf_sub=None,
+            user_company_id=None,
+            note=None,
     ):
         super(User).__init__()
         self.model = UserModel()
@@ -1418,7 +1418,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             return None
 
     def get_user_signatures(
-        self, project_id=None, company_id=None, signature_signed=None, signature_approved=None,
+            self, project_id=None, company_id=None, signature_signed=None, signature_approved=None,
     ):
         cla.log.debug(
             "get_user_signatures with params - "
@@ -1462,8 +1462,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
                 latest = signature
             elif (
-                signature.get_signature_document_major_version() == latest.get_signature_document_major_version()
-                and signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version()
+                    signature.get_signature_document_major_version() == latest.get_signature_document_major_version()
+                    and signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version()
             ):
                 latest = signature
 
@@ -1687,15 +1687,15 @@ class Repository(model_interfaces.Repository):
     """
 
     def __init__(
-        self,
-        repository_id=None,
-        repository_project_id=None,  # pylint: disable=too-many-arguments
-        repository_name=None,
-        repository_type=None,
-        repository_url=None,
-        repository_organization_name=None,
-        repository_external_id=None,
-        repository_sfdc_id=None,
+            self,
+            repository_id=None,
+            repository_project_id=None,  # pylint: disable=too-many-arguments
+            repository_name=None,
+            repository_type=None,
+            repository_url=None,
+            repository_organization_name=None,
+            repository_external_id=None,
+            repository_sfdc_id=None,
     ):
         super(Repository).__init__()
         self.model = RepositoryModel()
@@ -1875,38 +1875,38 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     """
 
     def __init__(
-        self,  # pylint: disable=too-many-arguments
-        signature_id=None,
-        signature_external_id=None,
-        signature_project_id=None,
-        signature_document_minor_version=None,
-        signature_document_major_version=None,
-        signature_reference_id=None,
-        signature_reference_name=None,
-        signature_reference_type="user",
-        signature_type=None,
-        signature_signed=False,
-        signature_approved=False,
-        signature_sign_url=None,
-        signature_return_url=None,
-        signature_callback_url=None,
-        signature_user_ccla_company_id=None,
-        signature_acl=None,
-        signature_return_url_type=None,
-        signature_envelope_id=None,
-        domain_whitelist=None,
-        email_whitelist=None,
-        github_whitelist=None,
-        github_org_whitelist=None,
-        note=None,
-        signature_project_external_id=None,
-        signature_company_signatory_id=None,
-        signature_company_signatory_name=None,
-        signature_company_signatory_email=None,
-        signature_company_initial_manager_id=None,
-        signature_company_initial_manager_name=None,
-        signature_company_initial_manager_email=None,
-        signature_company_secondary_manager_list=None
+            self,  # pylint: disable=too-many-arguments
+            signature_id=None,
+            signature_external_id=None,
+            signature_project_id=None,
+            signature_document_minor_version=None,
+            signature_document_major_version=None,
+            signature_reference_id=None,
+            signature_reference_name=None,
+            signature_reference_type="user",
+            signature_type=None,
+            signature_signed=False,
+            signature_approved=False,
+            signature_sign_url=None,
+            signature_return_url=None,
+            signature_callback_url=None,
+            signature_user_ccla_company_id=None,
+            signature_acl=None,
+            signature_return_url_type=None,
+            signature_envelope_id=None,
+            domain_whitelist=None,
+            email_whitelist=None,
+            github_whitelist=None,
+            github_org_whitelist=None,
+            note=None,
+            signature_project_external_id=None,
+            signature_company_signatory_id=None,
+            signature_company_signatory_name=None,
+            signature_company_signatory_email=None,
+            signature_company_initial_manager_id=None,
+            signature_company_initial_manager_name=None,
+            signature_company_initial_manager_email=None,
+            signature_company_secondary_manager_list=None
     ):
         super(Signature).__init__()
         self.model = SignatureModel()
@@ -2195,13 +2195,13 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_acl.remove(username)
 
     def get_signatures_by_reference(
-        self,  # pylint: disable=too-many-arguments
-        reference_id,
-        reference_type,
-        project_id=None,
-        user_ccla_company_id=None,
-        signature_signed=None,
-        signature_approved=None,
+            self,  # pylint: disable=too-many-arguments
+            reference_id,
+            reference_type,
+            project_id=None,
+            user_ccla_company_id=None,
+            signature_signed=None,
+            signature_approved=None,
     ):
         # TODO: Optimize this query to use filters properly.
         # cla.log.debug('Signatures.get_signatures_by_reference() - reference_id: {}, reference_type: {}'
@@ -2278,14 +2278,14 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return signatures
 
     def get_signatures_by_project(
-        self,
-        project_id,
-        signature_signed=None,
-        signature_approved=None,
-        signature_type=None,
-        signature_reference_type=None,
-        signature_reference_id=None,
-        signature_user_ccla_company_id=None,
+            self,
+            project_id,
+            signature_signed=None,
+            signature_approved=None,
+            signature_type=None,
+            signature_reference_type=None,
+            signature_reference_id=None,
+            signature_user_ccla_company_id=None,
     ):
         # TODO: Need to optimize this on the DB end.
         cla.log.info("Loading signature by project for project_id: %s", project_id)
@@ -2299,21 +2299,20 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                 continue
             if signature_type is not None and signature_model.signature_type != signature_type:
                 continue
-            if (
-                signature_reference_type is not None
-                and signature_model.signature_reference_type != signature_reference_type
-            ):
+            if signature_reference_type is not None \
+                    and signature_model.signature_reference_type != signature_reference_type:
                 continue
             if signature_reference_id is not None and signature_model.signature_reference_id != signature_reference_id:
                 continue
-            if (
-                signature_user_ccla_company_id is not None
-                and signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id
-            ):
+            if signature_user_ccla_company_id is not None and \
+                    signature_model.signature_user_ccla_company_id != signature_user_ccla_company_id:
                 continue
+
+            # Fell through the filters, so we have a match
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
+
         cla.log.info("Returning %d signatures for project_id: %s", len(signatures), project_id)
         return signatures
 
@@ -2329,6 +2328,22 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         signatures_dict = [signature_model.to_dict() for signature_model in signatures]
         return signatures_dict
 
+    def get_ccla_signatures_by_company_project(self, company_id, project_id):
+        signature_generator = self.model.signature_reference_index.query(
+            company_id, filter_condition=(SignatureModel.signature_reference_type == 'company') &
+                                         (SignatureModel.signature_project_id == project_id) &
+                                         (SignatureModel.signature_type == 'ccla') &
+                                         (SignatureModel.signature_user_ccla_company_id.does_not_exist())
+        )
+        signatures = []
+        for signature_model in signature_generator:
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
+        cla.log.info(f'Returning %d signatures for project_id: %s and company_id: %s',
+                     len(signatures), project_id, company_id)
+        return signatures
+
     def get_employee_signatures_by_company_project(self, company_id, project_id):
         signature_generator = self.model.signature_project_index.query(
             project_id, SignatureModel.signature_user_ccla_company_id == company_id
@@ -2338,8 +2353,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
-        signatures_dict = [signature_model.to_dict() for signature_model in signatures]
-        return signatures_dict
+        return signatures
 
     def get_employee_signatures_by_company_project_model(self, company_id, project_id) -> List[Signature]:
         signature_generator = self.model.signature_project_index.query(
@@ -2414,12 +2428,12 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
     """
 
     def __init__(
-        self,  # pylint: disable=too-many-arguments
-        company_id=None,
-        company_external_id=None,
-        company_manager_id=None,
-        company_name=None,
-        company_acl=None,
+            self,  # pylint: disable=too-many-arguments
+            company_id=None,
+            company_external_id=None,
+            company_manager_id=None,
+            company_name=None,
+            company_acl=None,
     ):
         super(Company).__init__()
         self.model = CompanyModel()
@@ -2495,7 +2509,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         return self.get_managers_by_company_acl(self.get_company_acl())
 
     def get_company_signatures(
-        self, project_id=None, signature_signed=None, signature_approved=None,  # pylint: disable=arguments-differ
+            self, project_id=None, signature_signed=None, signature_approved=None,  # pylint: disable=arguments-differ
     ):
         return Signature().get_signatures_by_reference(
             self.get_company_id(),
@@ -2524,8 +2538,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             elif signature.get_signature_document_major_version() > latest.get_signature_document_major_version():
                 latest = signature
             elif (
-                signature.get_signature_document_major_version() == latest.get_signature_document_major_version()
-                and signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version()
+                    signature.get_signature_document_major_version() == latest.get_signature_document_major_version()
+                    and signature.get_signature_document_minor_version() > latest.get_signature_document_minor_version()
             ):
                 latest = signature
 
@@ -2669,7 +2683,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     """
 
     def __init__(
-        self, organization_name=None, organization_installation_id=None, organization_sfid=None,
+            self, organization_name=None, organization_installation_id=None, organization_sfid=None,
     ):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
@@ -2783,13 +2797,13 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
     """
 
     def __init__(
-        self,
-        gerrit_id=None,
-        gerrit_name=None,
-        project_id=None,
-        gerrit_url=None,
-        group_id_icla=None,
-        group_id_ccla=None,
+            self,
+            gerrit_id=None,
+            gerrit_name=None,
+            project_id=None,
+            gerrit_url=None,
+            group_id_icla=None,
+            group_id_ccla=None,
     ):
         super(Gerrit).__init__()
         self.model = GerritModel()
@@ -3037,14 +3051,14 @@ class Event(model_interfaces.Event):
     """
 
     def __init__(
-        self,
-        event_id=None,
-        event_type=None,
-        user_id=None,
-        event_project_id=None,
-        event_company_id=None,
-        event_time=None,
-        event_data=None,
+            self,
+            event_id=None,
+            event_type=None,
+            user_id=None,
+            event_project_id=None,
+            event_company_id=None,
+            event_time=None,
+            event_data=None,
     ):
 
         super(Event).__init__()
