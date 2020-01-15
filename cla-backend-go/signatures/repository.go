@@ -148,7 +148,7 @@ func (repo repository) getSignatureCount(tableName string, filter expression.Con
 	var count int64
 
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildSignatureIDProjection()).Build()
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		log.Warnf("error building expression for signature scan, error: %v", err)
 		return count, err
@@ -156,12 +156,12 @@ func (repo repository) getSignatureCount(tableName string, filter expression.Con
 
 	// Assemble the query input parameters
 	scanInput := &dynamodb.ScanInput{
+		Select:                    aws.String("COUNT"),
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
-		//KeyConditionExpression:    expr.KeyCondition(),
-		FilterExpression:     expr.Filter(),
-		ProjectionExpression: expr.Projection(),
-		TableName:            aws.String(tableName),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
 	}
 
 	var lastEvaluatedKey string
@@ -174,7 +174,7 @@ func (repo repository) getSignatureCount(tableName string, filter expression.Con
 			return count, errQuery
 		}
 
-		count += int64(len(results.Items))
+		count += *results.Count
 
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
@@ -1338,22 +1338,3 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("github_org_whitelist"),
 	)
 }
-
-// buildSignatureIDProject is a helper function to build a common set of projection/columns for the query
-func buildSignatureIDProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("signature_id"),
-	)
-}
-
-// func buildUsers(items []*dynamodb.AttributeValue) []models.User {
-// 	var users []models.User
-// 	for _, user := range items {
-// 		users = append(users, models.User{
-// 			UserID: user.S,
-// 		})
-// 	}
-
-// 	return users
-// }
