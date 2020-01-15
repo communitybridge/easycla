@@ -32,8 +32,9 @@
               <h2>Sign New CLA</h2>
             </ion-card-title>
             <ion-card-content>
-              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your company, click "Sign New CLA" below</p>
-              
+              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your company,
+                click "Sign New CLA" below</p>
+
               <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
                   Sign New CLA
@@ -58,9 +59,9 @@
             </ion-card-title>
 
             <ion-card-title>
-                <p>
-                    "Requesr Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
-                  </p>
+              <p>
+                "Requesr Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
+              </p>
             </ion-card-title>
             <ion-card-content>
               <ion-grid [loading-display]="loading.projects">
@@ -77,7 +78,13 @@
                           <ngx-datatable-column name="Project Name" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="CLA Manager" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="Status" prop="Status" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="Whitelists" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Whitelists" sortable="false" prop="Whitelist">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                              <span>
+                                <a>Manage Whitelist</a>
+                              </span>
+                            </ng-template>
+                          </ngx-datatable-column>
                           <ngx-datatable-column name="Pending Requests" prop="PendingRequets" [sortable]="true"></ngx-datatable-column>
                         </ngx-datatable>
                       </div>
@@ -96,15 +103,15 @@
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
-              <ion-card-title>
-                  <h1>Pending CLA Managers Requests</h1>
-                </ion-card-title>
+            <ion-card-title>
+              <h1>Pending CLA Managers Requests</h1>
+            </ion-card-title>
             <ion-card-content>
               <ion-card-title>
                 <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated
                   by EasyCLA.</p>
               </ion-card-title>
-             
+
               <ion-list>
                 <ion-row>
                   <table class="table table-hover invites">
