@@ -59,7 +59,13 @@ export class CompanyPage {
     this.projects = [];
 
     this.data = {};
-    this.columns = [{ prop: 'ProjectName' }, { prop: 'ProjectManagers' }, { prop: 'Status'}, {prop: 'PendingRequets'}];
+    this.columns = [
+      { prop: 'ProjectName' }, 
+      { prop: 'ProjectManagers' }, 
+      { prop: 'Status'}, 
+      {prop: 'PendingRequets'},
+      {prop: 'WhiteList'}
+    ];
   }
 
   ngOnInit() {
@@ -128,12 +134,14 @@ export class CompanyPage {
   mapProjects(projects) {
     let rows = [];
     for (let project of projects) {
+      console.log(project, 'this is projecr')
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
         ProjectManagers: project.project_acl,
         Status: '-',
         PendingRequests: '-',
+        WhiteList: ''
       });
     }
 
