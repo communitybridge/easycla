@@ -91,12 +91,13 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		totalCount = *describeTableResult.Table.ItemCount
 	}(tableName)
 
+	// CCLA Count
 	go func(tableName string) {
 		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
+		count, err := repo.getSignatureCount(tableName, "signature-type-index",
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+				expression.Name("signature_reference_type").Equal(expression.Value("company"))),
+			expression.Key("signature_type").Equal(expression.Value("ccla")))
 		if err != nil {
 			log.Warnf("error retrieving CCLA signature total record count, error: %v", err)
 			return
@@ -104,12 +105,13 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		cclaCount = count
 	}(tableName)
 
+	// Employee Count
 	go func(tableName string) {
 		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
+		count, err := repo.getSignatureCount(tableName, "signature-type-index",
 			expression.Name("signature_user_ccla_company_id").AttributeExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_reference_type").Equal(expression.Value("user"))),
+			expression.Key("signature_type").Equal(expression.Value("cla")))
 		if err != nil {
 			log.Warnf("error retrieving employee signature total record count, error: %v", err)
 			return
@@ -117,12 +119,13 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		employeeCount = count
 	}(tableName)
 
+	// ICLA Count
 	go func(tableName string) {
 		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
+		count, err := repo.getSignatureCount(tableName, "signature-type-index",
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_reference_type").Equal(expression.Value("user"))),
+			expression.Key("signature_type").Equal(expression.Value("cla")))
 		if err != nil {
 			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
 			return
@@ -144,45 +147,42 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 	return &metrics, nil
 }
 
-func (repo repository) getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error) {
+func (repo repository) getSignatureCount(tableName string, indexName string, filter expression.ConditionBuilder, condition expression.KeyConditionBuilder) (int64, error) {
 	var count int64
 
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildSignatureIDProjection()).Build()
+	expr, err := expression.NewBuilder().WithFilter(filter).WithKeyCondition(condition).Build()
 	if err != nil {
 		log.Warnf("error building expression for signature scan, error: %v", err)
 		return count, err
 	}
 
 	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
+	queryInput := &dynamodb.QueryInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
-		//KeyConditionExpression:    expr.KeyCondition(),
-		FilterExpression:     expr.Filter(),
-		ProjectionExpression: expr.Projection(),
-		TableName:            aws.String(tableName),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		Select:                    aws.String("COUNT"),
+		IndexName:                 aws.String(indexName),
 	}
 
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
-		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
 			log.Warnf("error retrieving signatures, error: %v", errQuery)
 			return count, errQuery
 		}
 
-		count += int64(len(results.Items))
+		count += *results.Count
 
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
