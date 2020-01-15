@@ -21,6 +21,7 @@ import (
 
 // SignatureService interface
 type SignatureService interface {
+	GetMetrics() (*models.SignatureMetrics, error)
 	GetSignatures(ctx context.Context, params signatures.GetSignaturesParams) (*models.Signatures, error)
 	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
 	GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
@@ -44,6 +45,11 @@ func NewService(repo SignatureRepository, githubOrgValidation bool) SignatureSer
 		repo,
 		githubOrgValidation,
 	}
+}
+
+// GetMetrics returns signature metrics
+func (s service) GetMetrics() (*models.SignatureMetrics, error) {
+	return s.repo.GetMetrics()
 }
 
 // GetSignatures returns the list of signatures associated with the specified signature ID
