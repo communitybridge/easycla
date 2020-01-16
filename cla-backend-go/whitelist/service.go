@@ -9,6 +9,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+
+	"github.com/communitybridge/easycla/cla-backend-go/company"
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -17,16 +23,29 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// errors
+var (
+	ErrCclaWhitelistRequestAlreadyExists = errors.New("CCLA whiltelist request already exist")
+)
+
 type service struct {
-	repo       Repository
-	httpClient *http.Client
+	repo          Repository
+	userRepo      users.Repository
+	companyRepo   company.RepositoryService
+	projectRepo   project.DynamoRepository
+	eventsService events.Service
+	httpClient    *http.Client
 }
 
 // NewService creates a new whitelist service
-func NewService(repo Repository, httpClient *http.Client) service {
+func NewService(repo Repository, userRepo users.Repository, companyRepo company.RepositoryService, projectRepo project.DynamoRepository, eventsService events.Service, httpClient *http.Client) service {
 	return service{
-		repo:       repo,
-		httpClient: httpClient,
+		repo:          repo,
+		userRepo:      userRepo,
+		companyRepo:   companyRepo,
+		projectRepo:   projectRepo,
+		eventsService: eventsService,
+		httpClient:    httpClient,
 	}
 }
 
@@ -133,4 +152,38 @@ func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, claGro
 	}
 
 	return orgIds, nil
+}
+
+func (s service) AddCclaWhitelistRequest(companyID string, projectID string, args models.CclaWhitelistRequestInput) (string, error) {
+	list, err := s.repo.ListCclaWhitelistRequest(companyID, &projectID, &args.UserID)
+	if err != nil {
+		return "", err
+	}
+	if len(list.List) > 0 {
+		return "", ErrCclaWhitelistRequestAlreadyExists
+	}
+	company, err := s.companyRepo.GetCompany(companyID)
+	if err != nil {
+		return "", err
+	}
+	project, err := s.projectRepo.GetProject(projectID)
+	if err != nil {
+		return "", err
+	}
+	user, err := s.userRepo.GetUser(args.UserID)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("invalid user")
+	}
+	return s.repo.AddCclaWhitelistRequest(company, project, user)
+}
+
+func (s service) DeleteCclaWhitelistRequest(requestID string) error {
+	return s.repo.DeleteCclaWhitelistRequest(requestID)
+}
+
+func (s service) ListCclaWhitelistRequest(companyID string, projectID *string) (*models.CclaWhitelistRequestList, error) {
+	return s.repo.ListCclaWhitelistRequest(companyID, projectID, nil)
 }
