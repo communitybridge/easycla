@@ -175,7 +175,7 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 		return "", err
 	}
 	if user == nil {
-		return "", errors.New("Invalid user")
+		return "", errors.New("invalid user")
 	}
 	return s.repo.AddCclaWhitelistRequest(company, project, user)
 }

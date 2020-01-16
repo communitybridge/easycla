@@ -13,7 +13,7 @@ type Event struct {
 	EventData      string `dynamodbav:"event_data"`
 }
 
-func (e *Event) toEvent() *models.Event {
+func (e *Event) toEvent() *models.Event { //nolint
 	return &models.Event{
 		EventCompanyID: e.EventCompanyID,
 		EventData:      e.EventData,

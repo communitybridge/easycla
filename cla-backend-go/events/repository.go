@@ -20,8 +20,8 @@ import (
 
 // errors
 var (
-	ErrUserIDRequired    = errors.New("UserID cannot be empty")
-	ErrEventTypeRequired = errors.New("EventType cannot be empty")
+	ErrUserIDRequired    = errors.New("UserID cannot be empty")    //nolint
+	ErrEventTypeRequired = errors.New("EventType cannot be empty") //nolint
 )
 
 // Repository interface defines methods of event repository service

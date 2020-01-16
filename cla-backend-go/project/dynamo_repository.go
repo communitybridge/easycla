@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+// errors
 var (
 	ErrProjectDoesNotExist = errors.New("project does not exist")
 )
