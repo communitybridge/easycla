@@ -6,7 +6,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
-from falcon import HTTP_401
+from falcon import HTTP_401,HTTP_400
 from hug.middleware import LogMiddleware
 
 import cla
