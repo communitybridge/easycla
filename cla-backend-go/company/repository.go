@@ -163,6 +163,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 func (repo repository) GetCompany(companyID string) (Company, error) {
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	queryStartTime := time.Now()
 
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
