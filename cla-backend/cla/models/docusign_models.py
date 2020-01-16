@@ -435,46 +435,41 @@ class DocuSign(signing_service_interface.SigningService):
 
     def request_employee_signature(self, project_id, company_id, user_id, return_url=None):
 
-        request_info = 'project: {project_id}, company: {company_id}, user: {user_id} with return_url: {return_url}'.format(
-            project_id=project_id, company_id=company_id, user_id=user_id, return_url=return_url)
-        cla.log.info('Processing request_employee_signature request with {}'.format(request_info))
+        request_info = f'project: {project_id}, company: {company_id}, user: {user_id} with return_url: {return_url}'
+        cla.log.info(f'Processing request_employee_signature request with {request_info}')
 
         check_and_prepare_signature = self.check_and_prepare_employee_signature(project_id, company_id, user_id)
-        # Check if there are any errors while preparing the signature. 
+        # Check if there are any errors while preparing the signature.
         if 'errors' in check_and_prepare_signature:
-            cla.log.warning('Error in check_and_prepare_signature with: {} - signatures: {}'.format(request_info,
-                                                                                                    check_and_prepare_signature))
+            cla.log.warning(f'Error in check_and_prepare_signature with: {request_info} - '
+                            f'signatures: {check_and_prepare_signature}')
             return check_and_prepare_signature
 
-        # Ensure user hasn't already signed this signature.
-        employee_signatures = Signature().get_signatures_by_project(
-            project_id,
-            signature_reference_type='user',
-            signature_reference_id=user_id,
-            signature_user_ccla_company_id=company_id
-        )
-        # Return existing signature if employee already signed it. 
-        if len(employee_signatures) > 0:
-            cla.log.info('Employee has signed for: {} - signatures: {}'.format(request_info, employee_signatures))
-            return employee_signatures[0].to_dict()
+        employee_signature = Signature().get_employee_signature_by_company_project(
+            company_id=company_id, project_id=project_id, user_id=user_id)
+        # Return existing signature if employee has signed it
+        if employee_signature is not None:
+            cla.log.info(f'Employee has signed for company: {company_id}, '
+                         f'request_info: {request_info} - signature: {employee_signature}')
+            return employee_signature.to_dict()
 
-        cla.log.info('Employee has NOT signed it for: {}'.format(request_info))
+        cla.log.info(f'Employee has NOT signed it for: {request_info}')
 
         # Requires us to know where the user came from.
         signature_metadata = cla.utils.get_active_signature_metadata(user_id)
         if return_url is None:
-            cla.log.info('No return URL for: {}'.format(request_info))
+            cla.log.info(f'No return URL for: {request_info}')
             return_url = cla.utils.get_active_signature_return_url(user_id, signature_metadata)
-            cla.log.info('Set return URL for: {} to: {}'.format(request_info, return_url))
+            cla.log.info(f'Set return URL for: {request_info} to: {return_url}')
 
         # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
         project = Project()
         project.load(project_id)
-        cla.log.info('Loaded project details for: {}'.format(request_info))
+        cla.log.info(f'Loaded project details for: {request_info}')
 
         # Get project's latest corporate document to get major/minor version numbers.
         last_document = project.get_latest_corporate_document()
-        cla.log.info('Loaded last project document details for: {}'.format(request_info))
+        cla.log.info(f'Loaded last project document details for: {request_info}')
 
         # return_url may still be empty at this point - the console will deal with it
         new_signature = Signature(signature_id=str(uuid.uuid4()),
@@ -488,16 +483,16 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_approved=True,
                                   signature_return_url=return_url,
                                   signature_user_ccla_company_id=company_id)
-        cla.log.info('Created new signature document for: {} - signature: {}'.format(request_info, new_signature))
+        cla.log.info(f'Created new signature document for: {request_info} - signature: {new_signature}')
 
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
         user = User()
         user.load(str(user_id))
-        new_signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
+        new_signature.set_signature_acl(f'github:{user.get_user_github_id()}')
 
         # Save signature
         new_signature.save()
-        cla.log.info('Set and saved signature for: {}'.format(request_info))
+        cla.log.info(f'Set and saved signature for: {request_info}')
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
@@ -517,47 +512,43 @@ class DocuSign(signing_service_interface.SigningService):
         else:
             cla.log.info('Project requires ICLA signature from employee - PR has been left unchanged')
 
-        cla.log.info('Returning new signature for: {} - signature: {}'.format(request_info, new_signature))
+        cla.log.info(f'Returning new signature for: {request_info} - signature: {new_signature}')
         return new_signature.to_dict()
 
     def request_employee_signature_gerrit(self, project_id, company_id, user_id, return_url=None):
 
-        request_info = 'project: {project_id}, company: {company_id}, user: {user_id} with return_url: {return_url}'.format(
-            project_id=project_id, company_id=company_id, user_id=user_id, return_url=return_url)
-        cla.log.info('Processing request_employee_signature_gerrit request with {}'.format(request_info))
+        request_info = f'project: {project_id}, company: {company_id}, user: {user_id} with return_url: {return_url}'
+        cla.log.info(f'Processing request_employee_signature_gerrit request with {request_info}')
 
         check_and_prepare_signature = self.check_and_prepare_employee_signature(project_id, company_id, user_id)
         # Check if there are any errors while preparing the signature. 
         if 'errors' in check_and_prepare_signature:
-            cla.log.warning('Error in request_employee_signature_gerrit with: {} - signatures: {}'.format(request_info,
-                                                                                                          check_and_prepare_signature))
+            cla.log.warning(f'Error in request_employee_signature_gerrit with: {request_info} - '
+                            f'signatures: {check_and_prepare_signature}')
             return check_and_prepare_signature
 
         # Ensure user hasn't already signed this signature.
-        employee_signatures = Signature().get_signatures_by_project(
-            project_id,
-            signature_reference_type='user',
-            signature_reference_id=user_id,
-            signature_user_ccla_company_id=company_id
-        )
-        # Return existing signature if employee already signed it. 
-        if len(employee_signatures) > 0:
-            cla.log.info('Employee has signed for: {} - signatures: {}'.format(request_info, employee_signatures))
-            return employee_signatures[0].to_dict()
+        employee_signature = Signature().get_employee_signature_by_company_project(
+            company_id=company_id, project_id=project_id, user_id=user_id)
+        # Return existing signature if employee has signed it
+        if employee_signature is not None:
+            cla.log.info(f'Employee has signed for company: {company_id}, '
+                         f'request_info: {request_info} - signature: {employee_signature}')
+            return employee_signature.to_dict()
 
-        cla.log.info('Employee has NOT signed it for: {}'.format(request_info))
+        cla.log.info(f'Employee has NOT signed it for: {request_info}')
 
         # Retrieve Gerrits by Project reference ID
         try:
             gerrits = Gerrit().get_gerrit_by_project_id(project_id)
         except DoesNotExist as err:
-            cla.log.error('Cannot load Gerrit instance for: %s', request_info)
+            cla.log.error(f'Cannot load Gerrit instance for: {request_info}')
             return {'errors': {'missing_gerrit': str(err)}}
 
         # project has already been checked from check_and_prepare_employee_signature. Load project with project ID.
         project = Project()
         project.load(project_id)
-        cla.log.info('Loaded project for: %s', request_info)
+        cla.log.info(f'Loaded project for: {request_info}')
 
         # Get project's latest corporate document to get major/minor version numbers. 
         last_document = project.get_latest_corporate_document()
@@ -581,7 +572,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
-        cla.log.info('Loaded user, set signature ACL, and saved for: %s', request_info)
+        cla.log.info(f'Set and saved signature for: {request_info}')
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.

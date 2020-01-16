@@ -5,6 +5,9 @@
     </ion-title>
 
     <loading-spinner [loading]="loading.submit"></loading-spinner>
+    <ion-col *ngIf="loading.companies">
+      <ion-spinner></ion-spinner>
+    </ion-col>
 
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -62,8 +65,10 @@
       </ion-row>
       <ion-row margin-top>
         <span>
-            <b>Note:</b>
-        </span><p class="danger">If you do not see your company in "Select Company", you should try other variations of the company name (e.g. acronyms or full spelling). If your company still does not appear, you may need to type in your company and select Submit.
+          <b>Note:</b>
+        </span>
+        <p class="danger">If you do not see your company in "Select Company", you should try other variations of the company name (e.g. acronyms
+          or full spelling). If your company still does not appear, you may need to type in your company and select Submit.
         </p>
       </ion-row>
     </ion-grid>
@@ -76,12 +81,12 @@
       <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
         Cancel
       </button>
-      <button *ngIf="addNewCompany" form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
-        Add
-      </button>
+      <!-- <button *ngIf="addNewCompany" form="form" type="submit" ion-button icon-right color="primary" [disabled]="currentlySubmitting">
+        Submit
+      </button> -->
       <button *ngIf="joinExistingCompany" (click)="joinCompany()" ion-button icon-right [color]="joinButtonColorDisabled()" [disabled]="currentlySubmitting || joinButtonDisabled()
       ">
-        Join
+        Submit
       </button>
     </ion-buttons>
   </ion-toolbar>

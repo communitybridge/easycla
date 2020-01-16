@@ -34,6 +34,7 @@ export class AddCompanyModal {
   existingCompanyId: string;
   mode: string = 'add';
   loading: any;
+  searching: boolean;
 
   constructor(
     public navParams: NavParams,
@@ -47,6 +48,7 @@ export class AddCompanyModal {
   }
 
   getDefaults() {
+    this.searching = false;
     this.userName = localStorage.getItem('user_name');
     this.userId = localStorage.getItem('userid');
     this.company = this.navParams.get('company');
@@ -54,7 +56,8 @@ export class AddCompanyModal {
     this.companies = [];
     this.filteredCompanies = [];
     this.loading = {
-      submit: false
+      submit: false,
+      companies: true
     };
 
     this.form = this.formBuilder.group({
@@ -154,18 +157,29 @@ export class AddCompanyModal {
     alert.present();
   }
 
+  
   getAllCompanies() {
+    if (!this.companies) {
+      this.loading.companies = true;
+    }
     this.claService.getAllV3Companies().subscribe((response) => {
+      this.loading.companies = false;
       this.companies = response.companies;
     });
   }
 
   findCompany(event) {
-    this.companies.length >= 0 && this.getAllCompanies();
+    this.getAllCompanies();
     this.filteredCompanies = [];
+    // console.log(event,this.companies, 'this is even')
+    if (!this.companies) {
+      this.searching = true;
+    }
+    this.companies.length >= 0 && this.getAllCompanies();
     // Remove all non-alpha numeric, -, _ values
     let companyName = event.value.replace(/[^\w-]+/g, '');
-    if (companyName.length > 0) {
+    if (companyName.length > 0 && this.companies) {
+      this.searching = false;
       this.companySet = false;
       this.filteredCompanies = this.companies
         .map((company) => {
@@ -175,6 +189,9 @@ export class AddCompanyModal {
               new RegExp(companyName, 'gi'),
               (match) => '<span class="highlightText">' + match + '</span>'
             );
+          }
+          if (formattedCompany === undefined && companyName.length > 4) {
+            this.enableJoinButton = true
           }
           company.filteredCompany = formattedCompany;
           return company;

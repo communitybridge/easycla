@@ -19,6 +19,17 @@ import (
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *dynastore.Store) {
 
+	// Get Signatures
+	api.SignaturesGetSignatureMetricsHandler = signatures.GetSignatureMetricsHandlerFunc(func(params signatures.GetSignatureMetricsParams, claUser *user.CLAUser) middleware.Responder {
+		metrics, err := service.GetMetrics()
+		if err != nil {
+			log.Warnf("error retrieving signature metrics, error: %v", err)
+			return signatures.NewGetSignatureMetricsBadRequest().WithPayload(errorResponse(err))
+		}
+
+		return signatures.NewGetSignatureMetricsOK().WithPayload(metrics)
+	})
+
 	// Retrieve GitHub Whitelist Entries
 	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)

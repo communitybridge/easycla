@@ -372,6 +372,27 @@ paths:
       tags:
         - onboard
 
+  /signatures/metrics:
+    get:
+      summary: Get signature metrics
+      description: Returns signature metrics
+      security:
+        - OauthSecurity: []
+      operationId: getSignatureMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
   /signatures/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -2144,6 +2165,29 @@ definitions:
         type: string
         description: The company record update date/time
         format: date-time
+
+  signature-metrics:
+    type: object
+    x-nullable: false
+    title: Signatures
+    description: Signature Metrics
+    properties:
+      count:
+        type: integer
+        format: int64
+        x-omitempty: false
+      cclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      employeeCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      iclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
 
   signatures:
     type: object
