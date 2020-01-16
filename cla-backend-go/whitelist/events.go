@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
@@ -14,6 +15,7 @@ const (
 	CclaWhitelistRequestDeleted = "ccla_whitelist_request_deleted"
 )
 
+// CclaWhitelistRequestAddedData is event data for event ccla_whitelist_request_added
 type CclaWhitelistRequestAddedData struct {
 	CompanyID string `json:"company_id"`
 	ProjectID string `json:"project_id"`
@@ -21,23 +23,29 @@ type CclaWhitelistRequestAddedData struct {
 	RequestID string `json:"request_id"`
 }
 
+// CclaWhitelistRequestDeletedData is event data for event ccla_whitelist_request_deleted
 type CclaWhitelistRequestDeletedData struct {
 	CompanyID string `json:"company_id"`
 	ProjectID string `json:"project_id"`
 	RequestID string `json:"request_id"`
 }
 
-func createEvent(eventService events.Service, eventType string, companyID string, projectID string, userID string, data interface{}) error {
+func createEvent(eventService events.Service, eventType string, companyID string, projectID string, userID string, data interface{}) {
 	b, err := json.Marshal(data)
 	if err != nil {
-		return err
+		log.Debugf("unable to log event. error = %s", err.Error())
+		return
 	}
-	err = eventService.CreateEvent(models.Event{
+	event := models.Event{
 		EventCompanyID: companyID,
 		EventData:      string(b),
 		EventProjectID: projectID,
 		EventType:      eventType,
 		UserID:         userID,
-	})
-	return err
+	}
+	err = eventService.CreateEvent(event)
+	if err != nil {
+		log.Debugf("unable to log event. event = %#v . error = %s", event, err.Error())
+		return
+	}
 }
