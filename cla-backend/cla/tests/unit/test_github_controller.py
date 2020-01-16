@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: MIT
 import logging
 import unittest
+from unittest.mock import Mock
 
 import cla
-from cla.controllers.github import get_org_name_from_installation_event, get_github_activity_action
+from cla.controllers.github import get_org_name_from_installation_event, get_github_activity_action, notify_project_managers
+from cla.controllers.repository import Repository
+from cla.models.ses_models import MockSES
 
 
 class TestGitHubController(unittest.TestCase):
@@ -664,6 +667,69 @@ class TestGitHubController(unittest.TestCase):
 
     def test_get_github_activity_action_2(self) -> None:
         self.assertEqual('deleted', get_github_activity_action(self.example_3), 'GitHub Event Deleted Action')
+
+    def test_notify_cla_managers(self):
+        r1 = Repository()
+        r1.set_repository_project_id('project_1')
+        r1.set_repository_url('github.com/repo1')
+        r2 = Repository()
+        r2.set_repository_project_id('project_1')
+        r2.set_repository_url('github.com/repo2')
+        r3 = Repository()
+        r3.set_repository_project_id('project_2')
+        r3.set_repository_url('github.com/repo3')
+        repositories = [r1,r2,r3]
+
+        cla.controllers.project.get_project_managers = Mock(side_effect=mock_get_project_managers)
+        cla.controllers.project.get_project = Mock(side_effect=mock_get_project)
+        sesClient = MockSES()
+        cla.controllers.github.get_email_service = Mock()
+        cla.controllers.github.get_email_service.return_value = sesClient
+
+        notify_project_managers(repositories)
+
+        cla.controllers.project.get_project.assert_any_call('project_1')
+        cla.controllers.project.get_project.assert_called_with('project_2')
+
+        cla.controllers.project.get_project_managers.assert_any_call('','project_1', enable_auth=False)
+        cla.controllers.project.get_project_managers.assert_called_with('','project_2', enable_auth=False)
+
+        self.assertEqual(len(sesClient.emails_sent), 2)
+        msg1 = sesClient.emails_sent[0]
+        self.assertEqual(msg1['Subject'],'EasyCLA is unable to check PRs')
+        self.assertEqual(msg1['To'],['pm1@linuxfoundation.org','pm2@linuxfoundation.org'])
+        msg2 = sesClient.emails_sent[1]
+        self.assertEqual(msg2['Subject'],'EasyCLA is unable to check PRs')
+        self.assertEqual(msg2['To'],['pm3@linuxfoundation.org'])
+
+def mock_get_project_managers(username, project_id, enable_auth):
+    if project_id == 'project_1':
+        return [{
+                'name': 'project manager1',
+                'email': 'pm1@linuxfoundation.org',
+                'lfid': 'pm1'
+            },
+            {
+                'name': 'project manager2',
+                'email': 'pm2@linuxfoundation.org',
+                'lfid': 'pm2'
+            }]
+    if project_id == 'project_2':
+        return [{
+            'name': 'project manager3',
+            'email': 'pm3@linuxfoundation.org',
+            'lfid': 'pm3'
+        }]
+
+def mock_get_project(project_id, user_id=None):
+    if project_id == 'project_1':
+        return {
+            "project_name" : 'Kubernetes'
+        }
+    if project_id == 'project_2':
+        return {
+            "project_name" : 'Prometheus'
+        }
 
 
 if __name__ == '__main__':
