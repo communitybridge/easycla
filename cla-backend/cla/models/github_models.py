@@ -290,7 +290,7 @@ class GitHub(repository_service_interface.RepositoryService):
                             f'repository {github_repository_id} - returning')
             return
 
-        # Get Github Organization name that the repository is configured to. 
+        # Get Github Organization name that the repository is configured to.
         organization_name = repository.get_repository_organization_name()
         cla.log.debug('PR: {}, determined github organization is: {}'.
                       format(pull_request.number, organization_name))
@@ -317,7 +317,7 @@ class GitHub(repository_service_interface.RepositoryService):
                           format(pull_request.number, github_repository_id))
             return
 
-        # Retrieve project ID from the repository. 
+        # Retrieve project ID from the repository.
         project_id = repository.get_repository_project_id()
 
         # Find users who have signed and who have not signed.
@@ -594,12 +594,12 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
                     return
 
             # Didn't find a signed signature for this project - add to our missing bucket list
-            missing.append((commit_sha, author_username))
+            missing.append((commit_sha, list(author_info)))
 
         else:
             cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email not found'.
                           format(author_id, author_username, author_email))
-            missing.append((commit_sha, author_username))
+            missing.append((commit_sha, list(author_info)))
     else:
         cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id}')
         for user in users:
@@ -612,7 +612,7 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
                 return
 
         # Didn't find a signed signature for this project - add to our missing bucket list
-        missing.append((commit_sha, author_username))
+        missing.append((commit_sha, list(author_info)))
 
 
 def get_pull_request_commit_authors(pull_request):
@@ -636,7 +636,6 @@ def get_pull_request_commit_authors(pull_request):
     commit_authors = []
     for commit in pull_request.get_commits():
         cla.log.debug('Processing commit while looking for authors, commit: {}'.format(commit.sha))
-
         # Note: we can get the author info in two different ways:
         if commit.author is not None:
             # commit.author is a github.NamedUser.NamedUser type object
