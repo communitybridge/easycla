@@ -59,6 +59,24 @@ def delete_database():
         if table.exists():
             table.delete_table()
 
+def create_filter(attributes, model):
+    """
+    Helper function that creates filter condition based on available attributes
+    :param attributes: attributes consisting of model attributes and values
+    :rtype attributes: dict
+    :param model: Model instance that handles filtering
+    :rtype model: pynamodb.models.Model
+    """
+    filter_condition = None
+    for key, value in attributes.items():
+        if not value:
+            continue
+        condition = getattr(model, key) == value
+        filter_condition = (
+            condition if not isinstance(filter_condition, Condition) else filter_condition & condition
+        )
+    return filter_condition
+
 
 class GitHubUserIndex(GlobalSecondaryIndex):
     """
@@ -1939,18 +1957,24 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
                                   signature_approved=None, signature_type=None,
                                   signature_reference_type=None, signature_reference_id=None,
                                   signature_user_ccla_company_id=None):
+        signature_attributes = {
+            "signature_signed": signature_signed,
+            "signature_approved": signature_approved,
+            "signature_type": signature_type,
+            "signature_reference_type": signature_reference_type,
+            "signature_reference_id": signature_reference_id,
+            "signature_user_ccla_company_id": signature_user_ccla_company_id
+        }
+
+        filter_condition = create_filter(signature_attributes, SignatureModel)
         cla.log.info("Loading signature by project for project_id: %s", project_id)
         signature_generator = self.model.signature_project_index.query(
-            project_id, filter_condition=(SignatureModel.signature_reference_type == signature_reference_type) &
-                                         (SignatureModel.signature_reference_id == signature_reference_id) &
-                                         (SignatureModel.signature_type == signature_type) &
-                                         (SignatureModel.signature_user_ccla_company_id == signature_user_ccla_company_id) &
-                                         (SignatureModel.signature_signed == signature_signed) &
-                                         (SignatureModel.signature_approved == signature_approved)
+            project_id, filter_condition=filter_condition
         )
 
         cla.log.info('Loaded signature by project for project_id: %s', project_id)
         signatures = []
+
         for signature_model in signature_generator:
             signature = Signature()
             signature.model = signature_model
@@ -1971,22 +1995,25 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return signatures_dict
 
     def get_ccla_signatures_by_company_project(self, company_id, project_id):
+        signature_attributes = {
+            "signature_signed": True,
+            "signature_approved": True,
+            "signature_type": 'ccla',
+            "signature_reference_type": 'company',
+            "signature_project_id": project_id,
+        }
+
+        filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_reference_index.query(
-            company_id, filter_condition=(SignatureModel.signature_reference_type == 'company') &
-                                         (SignatureModel.signature_project_id == project_id) &
-                                         (SignatureModel.signature_type == 'ccla') &
-                                         (SignatureModel.signature_user_ccla_company_id.does_not_exist()) &
-                                         (SignatureModel.signature_signed == True) &
-                                         (SignatureModel.signature_approved == True)
+            company_id, filter_condition=filter_condition & (SignatureModel.signature_user_ccla_company_id.does_not_exist())
         )
+
         signatures = []
+
         for signature_model in signature_generator:
-            if signature_model.signature_user_ccla_company_id is None and \
-                    signature_model.signature_reference_type == 'company' and \
-                    signature_model.signature_type == 'ccla':
-                signature = Signature()
-                signature.model = signature_model
-                signatures.append(signature)
+            signature = Signature()
+            signature.model = signature_model
+            signatures.append(signature)
         cla.log.info(f'Returning %d signatures for project_id: %s and company_id: %s',
                      len(signatures), project_id, company_id)
         return signatures
@@ -2008,13 +2035,18 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         the project/company. Returns None if no employee signature exists for
         this set of query parameters.
         """
+        signature_attributes = {
+            "signature_signed": True,
+            "signature_approved": True,
+            "signature_type": 'cla',
+            "signature_reference_type": 'user',
+            "signature_project_id": project_id,
+            "signature_user_ccla_company_id": company_id
+        }
+
+        filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_reference_index.query(
-            user_id, filter_condition=(SignatureModel.signature_reference_type == 'user') &
-                                         (SignatureModel.signature_project_id == project_id) &
-                                         (SignatureModel.signature_type == 'cla') &
-                                         (SignatureModel.signature_user_ccla_company_id == company_id) &
-                                         (SignatureModel.signature_signed == True) &
-                                         (SignatureModel.signature_approved == True)
+            user_id, filter_condition=filter_condition
         )
 
         signatures = []
@@ -2034,9 +2066,21 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return signatures[0]
 
     def get_employee_signatures_by_company_project_model(self, company_id, project_id) -> List[Signature]:
+        signature_attributes = {
+            "signature_signed": True,
+            "signature_approved": True,
+            "signature_type": 'cla',
+            "signature_reference_type": 'user',
+            "signature_user_ccla_company_id": company_id
+        }
+
+        filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_project_index.query(
-            project_id, SignatureModel.signature_user_ccla_company_id == company_id)
+            project_id, filter_condition=filter_condition
+        )
+
         signatures = []
+
         for signature_model in signature_generator:
             signature = Signature()
             signature.model = signature_model
