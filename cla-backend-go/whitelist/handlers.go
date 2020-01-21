@@ -77,6 +77,56 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 
 			return company.NewDeleteGithubOrganizationFromClaOK()
 		})
+
+	api.CompanyAddCclaWhitelistRequestHandler = company.AddCclaWhitelistRequestHandlerFunc(
+		func(params company.AddCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
+			requestID, err := service.AddCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.Body)
+			if err != nil {
+				return company.NewAddCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
+			}
+			createEvent(service.eventsService,
+				CclaWhitelistRequestAdded,
+				params.CompanyID,
+				params.ProjectID,
+				claUser.UserID,
+				&CclaWhitelistRequestAddedData{
+					CompanyID: params.CompanyID,
+					ProjectID: params.ProjectID,
+					UserID:    params.Body.UserID,
+					RequestID: requestID,
+				})
+			return company.NewAddCclaWhitelistRequestOK()
+		})
+
+	api.CompanyDeleteCclaWhitelistRequestHandler = company.DeleteCclaWhitelistRequestHandlerFunc(
+		func(params company.DeleteCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
+			err := service.DeleteCclaWhitelistRequest(params.RequestID)
+			if err != nil {
+				return company.NewDeleteCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
+			}
+			createEvent(service.eventsService,
+				CclaWhitelistRequestDeleted,
+				params.CompanyID,
+				params.ProjectID,
+				claUser.UserID,
+				&CclaWhitelistRequestDeletedData{
+					CompanyID: params.CompanyID,
+					ProjectID: params.ProjectID,
+					RequestID: params.RequestID,
+				})
+			return company.NewDeleteCclaWhitelistRequestOK()
+		})
+
+	api.CompanyListCclaWhitelistRequestsHandler = company.ListCclaWhitelistRequestsHandlerFunc(
+		func(params company.ListCclaWhitelistRequestsParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.ListCclaWhitelistRequest(params.CompanyID, params.ProjectID)
+			if err != nil {
+				return company.NewListCclaWhitelistRequestsBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return company.NewListCclaWhitelistRequestsOK().WithPayload(result)
+		})
+
 }
 
 type codedResponse interface {

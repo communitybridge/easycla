@@ -6,7 +6,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
-from falcon import HTTP_401
+from falcon import HTTP_401,HTTP_400
 from hug.middleware import LogMiddleware
 
 import cla
@@ -876,7 +876,7 @@ def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
     GET: /project/{project_id}/managers
     Returns the CLA project managers.
     """
-    return cla.controllers.project.get_project_managers(auth_user.username, project_id)
+    return cla.controllers.project.get_project_managers(auth_user.username, project_id, enable_auth = True)
 
 
 @hug.post("/project/{project_id}/manager", versions=1)
@@ -1590,7 +1590,12 @@ def github_app_activity(body, request, response):
     # valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request.stream.read())
     # cla.log.info(valid_request)
     # if valid_request:
-    return cla.controllers.github.activity(body)
+    event_type = request.headers.get('X-GITHUB-EVENT')
+    if event_type is None:
+         response.status = HTTP_400
+         return {'status': 'Invalid request'}
+
+    return cla.controllers.github.activity(event_type, body)
     # else:
     #     response.status = HTTP_403
     #     return {'status': 'Not Authorized'}

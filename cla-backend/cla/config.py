@@ -73,7 +73,7 @@ GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
 GITHUB_OAUTH_TOKEN = os.environ.get('GITHUB_OAUTH_TOKEN', '')
 
 # Email Service.
-EMAIL_SERVICE = 'SES'  #: Email service to use for notification emails.
+EMAIL_SERVICE = 'SNS'  #: Email service to use for notification emails.
 EMAIL_ON_SIGNATURE_APPROVED = True  #: Whether to email the user when signature has been approved.
 
 # SMTP Configuration.
