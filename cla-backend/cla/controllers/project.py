@@ -71,8 +71,7 @@ def get_project(project_id, user_id=None):
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
 
-
-def get_project_managers(username, project_id):
+def get_project_managers(username, project_id, enable_auth):
     """
     Returns the CLA project managers from the project's ID
     :param username: The LF username
@@ -88,7 +87,7 @@ def get_project_managers(username, project_id):
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
 
-    if username not in project.get_project_acl():
+    if enable_auth is True and username not in project.get_project_acl():
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
 
     # Generate managers dict

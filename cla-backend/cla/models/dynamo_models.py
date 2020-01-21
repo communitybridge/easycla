@@ -2295,10 +2295,17 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             #              'adding signature to signature list: {}'.format(signature))
         return signatures
 
-    def get_signatures_by_project(self, project_id, signature_signed=None,
-                                  signature_approved=None, signature_type=None,
-                                  signature_reference_type=None, signature_reference_id=None,
-                                  signature_user_ccla_company_id=None):
+    def get_signatures_by_project(
+            self,
+            project_id,
+            signature_signed=None,
+            signature_approved=None,
+            signature_type=None,
+            signature_reference_type=None,
+            signature_reference_id=None,
+            signature_user_ccla_company_id=None,
+    ):
+
         signature_attributes = {
             "signature_signed": signature_signed,
             "signature_approved": signature_approved,
@@ -2308,12 +2315,14 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             "signature_user_ccla_company_id": signature_user_ccla_company_id
         }
         filter_condition = create_filter(signature_attributes, SignatureModel)
+
         cla.log.info("Loading signature by project for project_id: %s", project_id)
         signature_generator = self.model.signature_project_index.query(
             project_id, filter_condition=filter_condition
         )
         cla.log.info('Loaded signature by project for project_id: %s', project_id)
         signatures = []
+
         for signature_model in signature_generator:
             signature = Signature()
             signature.model = signature_model

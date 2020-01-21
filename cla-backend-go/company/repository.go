@@ -4,6 +4,7 @@
 package company
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,6 +28,11 @@ import (
 
 const (
 	dateTimeFormat = "2006-01-02T15:04:05.000000+0000"
+)
+
+// errors
+var (
+	ErrCompanyDoesNotExist = errors.New("company does not exist")
 )
 
 // RepositoryService interface methods
@@ -157,6 +163,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 func (repo repository) GetCompany(companyID string) (Company, error) {
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	queryStartTime := time.Now()
 
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -172,6 +179,11 @@ func (repo repository) GetCompany(companyID string) (Company, error) {
 		log.Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
 		return Company{}, err
 	}
+
+	if len(companyTableData.Item) == 0 {
+		return Company{}, ErrCompanyDoesNotExist
+	}
+	log.Debugf("Get company query took: %v", utils.FmtDuration(time.Since(queryStartTime)))
 
 	company := Company{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &company)
