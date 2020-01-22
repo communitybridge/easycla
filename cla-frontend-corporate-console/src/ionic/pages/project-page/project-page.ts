@@ -24,6 +24,7 @@ import { WhitelistModal } from '../../modals/whitelist-modal/whitelist-modal';
   templateUrl: 'project-page.html'
 })
 export class ProjectPage {
+  noPendingRequests: boolean;
   cclaSignature: any;
   employeeSignatures: any[];
   //githubOrgWhitelist: any[] = [];
@@ -36,6 +37,7 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
+  pendingRequests: any[]
 
   project: any;
   users: any;
@@ -59,7 +61,9 @@ export class ProjectPage {
   }
 
   getDefaults() {
-    this.loading = {};
+    this.loading = {
+      requests: false
+    };
     this.users = {};
     this.sort = {
       date: {
@@ -68,6 +72,7 @@ export class ProjectPage {
         sort: null
       }
     };
+
     this.company = new ClaCompanyModel();
     this.cclaSignature = new ClaSignatureModel();
   }
@@ -75,6 +80,7 @@ export class ProjectPage {
   ngOnInit() {
     this.getProject();
     this.getCompany();
+    this.listPendingRequests()
   }
 
   getProject() {
@@ -180,9 +186,9 @@ export class ProjectPage {
         this.loading.signatures = false;
         console.log(
           'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-            this.companyId +
-            ' and project ID: ' +
-            this.projectId
+          this.companyId +
+          ' and project ID: ' +
+          this.projectId
         );
         console.log(exception);
       }
@@ -210,9 +216,9 @@ export class ProjectPage {
         this.loading.acknowledgements = false;
         console.log(
           'Exception while calling: getEmployeeProjectSignatures() for company ID: ' +
-            this.companyId +
-            ' and project ID: ' +
-            this.projectId
+          this.companyId +
+          ' and project ID: ' +
+          this.projectId
         );
         console.log(exception);
       }
@@ -304,7 +310,7 @@ export class ProjectPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => {}
+          handler: () => { }
         },
         {
           text: 'Delete',
@@ -333,6 +339,73 @@ export class ProjectPage {
     });
     modal.present();
   }
+
+  listPendingRequests() {
+    this.claService.listCCLAWhitelistRequest('0ddf9b60-b692-4cf4-9476-cb9de25e3cce').subscribe((request) => {
+      if (request.list.length == 0) {
+        this.noPendingRequests = true
+      }
+      else {
+        this.pendingRequests = request.list
+        this.noPendingRequests = false
+      }
+      this.loading.request = true
+    })
+  }
+
+  accept() {
+    let alert = this.alertCtrl.create({
+      subTitle: `Accept Request`,
+      message: `Are you sure you want to accept this request?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => { }
+        },
+        {
+          text: 'Delete',
+          handler: () => {
+            this.acceptPendingRequest()
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+  decline() {
+    let alert = this.alertCtrl.create({
+      subTitle: `Decline Request`,
+      message: `Are you sure you want to decline this request?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => { }
+        },
+        {
+          text: 'Delete',
+          handler: () => {
+
+          }
+        }
+      ]
+    });
+    alert.present();
+    alert.present();
+  }
+
+  acceptPendingRequest() {
+
+  }
+
+  declinePendingRequest() {
+
+  }
+
 
   /*
   openGithubOrgWhitelistModal() {
