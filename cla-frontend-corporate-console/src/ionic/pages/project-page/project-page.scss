@@ -1,6 +1,14 @@
 project-page {
+  .page-content {
+    min-height: calc(100vh - 200px);
+    padding: 10px 10px;
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
+    }
+  }
   .scroll-content {
-    padding: 60px 45px !important;
+    margin-top: 96px !important;
   }
 
   .manager {
@@ -39,6 +47,31 @@ project-page {
     }
   }
 
+  ion-header {
+    border-bottom: 0px solid #4c79b6;
+
+    .toolbar {
+      color: #7b7b7b;
+      background-color: white;
+
+      ion-icon {
+        color: #7b7b7b;
+        line-height: 6px;
+
+        &:before {
+          font-size: 19px;
+        }
+      }
+    }
+
+    .navbar-logo {
+      width: 100px;
+      position: absolute;
+      left: calc(50% - 20px);
+    }
+  }
+
+
   .delete-btn {
     font-size: 12px;
     color: #db4e4e;
@@ -57,5 +90,9 @@ project-page {
   button.clickable,
   button.fab {
     background-color: #4c79b6 !important;
+  }
+
+  ion-footer {
+    position: relative;
   }
 }
