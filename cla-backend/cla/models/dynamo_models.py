@@ -1554,7 +1554,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             if self.preprocess_pattern(emails, patterns):
                 return True
             else:
-                self.log_debug(f"Did not match email: {email} with domain: {preprocessed_pattern}")
+                self.log_debug(f"Did not match email: {emails} with domain: {patterns}")
         else:
             cla.log.debug(
                 "is_whitelisted - no domain whitelist patterns defined in the database"
