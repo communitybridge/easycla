@@ -1315,12 +1315,35 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         return latest
 
+    def preprocess_pattern(self,emails,patterns) -> bool:
+        """
+        Helper function that preprocesses given emails against patterns
+        :param emails: User emails to be checked
+        :type emails: list
+        :return: True if at least one email is matched against pattern else False
+        :rtype: bool
+        """
+        for pattern in patterns:
+            if pattern.startswith("*."):
+                pattern = pattern.replace("*.", ".*")
+            elif pattern.startswith("*"):
+                pattern = pattern.replace("*", ".*")
+            elif pattern.startswith("."):
+                pattern = pattern.replace(".", ".*")
+
+            preprocessed_pattern = "^.*@" + pattern + "$"
+            pat = re.compile(preprocessed_pattern)
+            for email in emails:
+                if pat.match(email) != None:
+                    self.log_debug("found user email in email whitelist pattern")
+                    return True
+        return False
+
     # Accepts a Signature object
     def is_whitelisted(self, ccla_signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
         addresses are whitelisted for a particular ccla signature.
-
         :param ccla_signature: The ccla signature to check against.
         :type ccla_signature: cla.models.Signature
         :return: True if at least one email is whitelisted, False otherwise.
@@ -1331,12 +1354,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         if len(emails) > 0:
             # remove leading and trailing whitespace before checking emails
             emails = [email.strip() for email in emails]
-
         # First, we check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
         cla.log.debug(f'is_whitelisted - testing user emails: {emails} with '
                       f'CCLA whitelist emails: {whitelist}')
-
         if whitelist is not None:
             for email in emails:
                 # Case insensitive match
@@ -1345,103 +1366,88 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                     return True
         else:
             cla.log.debug(f'is_whitelisted - no email whitelist match for user: {self}')
-
         # Secondly, let's check domain whitelist
         # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
         # so that sub-domains are not allowed.
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
         patterns = ccla_signature.get_domain_whitelist()
-        cla.log.debug(f'is_whitelisted - testing user email domains: {emails} with '
-                      f'whitelist domain values in database: {patterns}')
-
+        cla.log.debug( f'is_whitelisted - testing user email domains: {emails} with '
+                       f'whitelist domain values in database: {patterns}'
+        )
         if patterns is not None:
-            for pattern in patterns:
-                if pattern.startswith('*.'):
-                    pattern = pattern.replace('*.', '.*\.')
-                elif pattern.startswith('*'):
-                    pattern = pattern.replace('*', '.*\.')
-                elif pattern.startswith('.'):
-                    pattern = pattern.replace('.', '.*\.')
-
-                preprocessed_pattern = '^.*@' + pattern + '$'
-                # TODO: DAD - let's make it case insensitive
-                pat = re.compile(preprocessed_pattern)
-                for email in emails:
-                    if pat.match(email) != None:
-                        self.log_debug('found user email in email whitelist pattern')
-                        return True
-                    else:
-                        self.log_debug(f'Did not match email: {email} with domain: {preprocessed_pattern}')
+            if self.preprocess_pattern(emails, patterns):
+                return True
+            else:
+                self.log_debug(f'Did not match email: {emails} with domain: {patterns}')
         else:
-            cla.log.debug('is_whitelisted - no domain whitelist patterns defined in the database'
-                          '- skipping domain whitelist check')
-
+            cla.log.debug(
+                "is_whitelisted - no domain whitelist patterns defined in the database"
+                "- skipping domain whitelist check"
+            )
         # Third and Forth, check github whitelists
         github_username = self.get_user_github_username()
         github_id = self.get_user_github_id()
-
-        # TODO: DAD - 
+        # TODO: DAD -
         # Since usernames can be changed, if we have the github_id already - let's
         # lookup the username by id to see if they have changed their username
         # if the username is different, then we should reset the field to the
         # new value - this will potentially change the github username whitelist
         # since the old username is already in the list
-
         # Attempt to fetch the github username based on the github id
         if github_username is None and github_id is not None:
             github_username = cla.utils.lookup_user_github_username(github_id)
             if github_username is not None:
-                cla.log.debug(f'Updating user record - adding github username: {github_username}')
+                cla.log.debug(f"Updating user record - adding github username: {github_username}")
                 self.set_user_github_username(github_username)
                 self.save()
-
         # Attempt to fetch the github id based on the github username
         if github_id is None and github_username is not None:
             github_username = github_username.strip()
             github_id = cla.utils.lookup_user_github_id(github_username)
             if github_id is not None:
-                cla.log.debug(f'Updating user record - adding github id: {github_id}')
+                cla.log.debug(f"Updating user record - adding github id: {github_id}")
                 self.set_user_github_id(github_id)
                 self.save()
-
         # GitHub username whitelist
         if github_username is not None:
             # remove leading and trailing whitespace from github username
             github_username = github_username.strip()
             github_whitelist = ccla_signature.get_github_whitelist()
-            cla.log.debug(f'is_whitelisted - testing user github username: {github_username} with '
-                          f'CCLA github whitelist: {github_whitelist}')
-
+            cla.log.debug(
+                f"is_whitelisted - testing user github username: {github_username} with "
+                f"CCLA github whitelist: {github_whitelist}"
+            )
             if github_whitelist is not None:
                 # case insensitive search
                 if github_username.lower() in (s.lower() for s in github_whitelist):
-                    self.log_debug('found github username in github whitelist')
+                    self.log_debug("found github username in github whitelist")
                     return True
         else:
-            cla.log.debug('is_whitelisted - users github_username is not defined '
-                          '- skipping github username whitelist check')
-
+            cla.log.debug(
+                "is_whitelisted - users github_username is not defined " "- skipping github username whitelist check"
+            )
         # Check github org whitelist
         if github_username is not None:
             github_orgs = cla.utils.lookup_github_organizations(github_username)
-            if 'error' not in github_orgs:
+            if "error" not in github_orgs:
                 # Fetch the list of orgs this user is part of
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
-                cla.log.debug(f'is_whitelisted - testing user github orgs: {github_orgs} with '
-                              f'CCLA github org whitelist values: {github_org_whitelist}')
-
+                cla.log.debug(
+                    f"is_whitelisted - testing user github orgs: {github_orgs} with "
+                    f"CCLA github org whitelist values: {github_org_whitelist}"
+                )
                 if github_org_whitelist is not None:
                     for dynamo_github_org in github_org_whitelist:
                         # case insensitive search
                         if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
-                            self.log_debug('found matching github org for user')
+                            self.log_debug("found matching github org for user")
                             return True
         else:
-            cla.log.debug('is_whitelisted - users github_username is not defined '
-                          '- skipping github org whitelist check')
-
-        self.log_debug('unable to find user in any whitelist')
+            cla.log.debug(
+                "is_whitelisted - users github_username is not defined " "- skipping github org whitelist check"
+            )
+        self.log_debug("unable to find user in any whitelist")
         return False
 
     def get_users_by_company(self, company_id):

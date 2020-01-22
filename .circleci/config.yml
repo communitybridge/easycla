@@ -35,11 +35,11 @@ jobs:
             # Lint will always pass for now - need to continue addressing lint issues
             pylint cla/*.py || true
       - run:
-          name: test
+          name: pytest-test
           command: |
             cd cla-backend
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
-            python3 -m unittest
+            pytest "cla/tests" -p no:warnings --cov="cla"
 
   buildBackendDev:
     <<: *buildBackendAnchor
