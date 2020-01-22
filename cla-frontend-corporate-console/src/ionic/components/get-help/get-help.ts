@@ -15,8 +15,6 @@ export class GetHelpComponent {
   text: string;
 
   constructor() {
-    console.log('Hello GetHelpComponent Component');
-    this.text = 'Hello World';
   }
 
 }

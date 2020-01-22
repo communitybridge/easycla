@@ -1,4 +1,4 @@
-<ion-header class="cla-header">
+<ion-header>
   <ion-navbar>
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
@@ -6,154 +6,232 @@
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
+  <get-help></get-help>
 </ion-header>
 
-<ion-content padding headerspacing>
+<ion-content headerspacing>
+  <div class="page-content">
 
-  <loading-spinner [loading]="loading.signatures"></loading-spinner>
 
-  <header>
+
     <ion-grid>
       <ion-row justify-content-center>
-        <ion-col col-12 col-md-3>
-          <h3>
-            Domain Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let domain of cclaSignature.domainWhitelist">
-                {{ domain }}
-              </ion-item>
-            </ion-list>
-          </div>
+        <ion-card>
+          <ion-card-content>
+            <ion-row>
+              <ion-col col-12 col-md-3>
+                <h3>
+                  Domain Whitelist
+                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
+                </h3>
+                <div class="list-container">
+                  <ion-list>
+                    <ion-item *ngFor="let domain of cclaSignature.domainWhitelist">
+                      {{ domain }}
+                    </ion-item>
+                  </ion-list>
+                </div>
+              </ion-col>
+              <ion-col col-12 col-md-3>
+                <h3>
+                  Email Whitelist
+                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
+                </h3>
+                <div class="list-container">
+                  <ion-list>
+                    <ion-item *ngFor="let email of cclaSignature.emailWhitelist">
+                      {{ email }}
+                    </ion-item>
+                  </ion-list>
+                </div>
+              </ion-col>
+              <ion-col col-12 col-md-3>
+                <h3>
+                  GitHub Whitelist
+                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
+                </h3>
+                <div class="list-container">
+                  <ion-list>
+                    <ion-item *ngFor="let username of cclaSignature.githubWhitelist">
+                      {{ username }}
+                    </ion-item>
+                  </ion-list>
+                </div>
+              </ion-col>
+              <ion-col col-12 col-md-3>
+                <h3>
+                  GitHub Org Whitelist
+                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
+                </h3>
+                <div class="list-container">
+                  <ion-list>
+                    <ion-item *ngFor="let org of cclaSignature.githubOrgWhitelist">
+                      {{ org }}
+                    </ion-item>
+                  </ion-list>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+      </ion-row>
+    </ion-grid>
+
+
+
+    <ion-grid [loading-display]="loading.requests">
+      <ion-row justify-content-center>
+        <ion-col>
+          <ion-card>
+
+            <ion-card-content>
+              <ion-card-title>
+                Pending Whitelist Request
+              </ion-card-title>
+
+              <ion-row>
+                <ion-row justify-content-center *ngIf="noPendingRequests">
+                  <h2>No Pending Requests</h2>
+                </ion-row>
+                <table class="table" *ngIf="!noPendingRequests && loading.request">
+                  <thead>
+                    <tr>
+                      <th class="clickable">
+                        Github / Gerrit ID
+                      </th>
+                      <th class="clickable">
+                        Name
+                      </th>
+                      <th class="clickable">
+                        Email ID
+                      </th>
+                      <th class="clickable">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    <tr *ngFor="let request of pendingRequests">
+                      <td data-title="Github">
+                        <span>{{ request.userGithubUsername}}</span>
+                      </td>
+
+                      <td data-title="Name">
+                        <span>{{ request.userName}}</span>
+                      </td>
+
+                      <td data-title="Email">
+                        <ion-list>
+                          <ion-item *ngFor="let email of request.userEmails">
+                            {{ email }}
+                          </ion-item>
+                        </ion-list>
+                      </td>
+
+                      <td data-title="Actions">
+                        <button clear ion-button color="secondary" (click)="accept()">
+                          Accept
+                        </button>
+                        <button clear ion-button color="danger" (click)="decline()">
+                          Decline
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </ion-row>
+            </ion-card-content>
+          </ion-card>
         </ion-col>
-        <ion-col col-12 col-md-3>
-          <h3>
-            Email Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let email of cclaSignature.emailWhitelist">
-                {{ email }}
-              </ion-item>
-            </ion-list>
-          </div>
+      </ion-row>
+    </ion-grid>
+
+    <ion-grid [loading-display]="loading.signatures">
+      <ion-row justify-content-center>
+        <ion-col col-4>
+          <ion-card>
+            <ion-card-content class="managers-card">
+              <ion-card-title>
+                CLA Managers
+              </ion-card-title>
+              <loading-spinner [loading]="loading.managers"></loading-spinner>
+              <ion-list>
+                <ion-item *ngIf="managersRestricted">
+                  <p>Only Company Admins can view and update this list.</p>
+                </ion-item>
+                <ion-item *ngFor="let manager of managers">
+                  <div class="manager">
+                    <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                    <div class="manager-details" *ngIf="manager.email">
+                      <div class="manager-name">
+                        <span>{{ manager.name }}</span>
+                        <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      </div>
+                      <h4>{{ manager.email }}</h4>
+                    </div>
+
+                    <div class="manager-details" *ngIf="!manager.email">
+                      <div class="manager-name">
+                        <span>{{ manager.lfid }}</span>
+                        <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      </div>
+                      <h4 class="error-message">The user has not signed in.</h4>
+                    </div>
+                  </div>
+                </ion-item>
+              </ion-list>
+              <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
+                <ion-icon name="add"></ion-icon>
+              </button>
+            </ion-card-content>
+          </ion-card>
         </ion-col>
-        <ion-col col-12 col-md-3>
-          <h3>
-            GitHub Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let username of cclaSignature.githubWhitelist">
-                {{ username }}
-              </ion-item>
-            </ion-list>
-          </div>
-        </ion-col>
-        <ion-col col-12 col-md-3>
-          <h3>
-            GitHub Org Whitelist
-            <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
-          </h3>
-          <div class="list-container">
-            <ion-list>
-              <ion-item *ngFor="let org of cclaSignature.githubOrgWhitelist">
-                {{ org }}
-              </ion-item>
-            </ion-list>
+        <ion-col col-12 col-md-8>
+          <div class="table-responsive-vertical">
+            <h2>{{ company.company_name }} Employee Acknowledgements</h2>
+            <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th class="clickable">
+                    LFID/GHID
+                  </th>
+                  <th class="clickable">
+                    Name
+                  </th>
+                  <th class="clickable">
+                    Agreement
+                  </th>
+                  <th class="clickable" (click)="sortMembers('date')">
+                    Date
+                    <sorting-display [sorting]='sort.date.sort'></sorting-display>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let signature of employeeSignatures">
+                  <td data-title="ID">
+                    {{ signature.userLFID }}/{{ signature.userGHID }}
+                  </td>
+                  <td data-title="Name">
+                    {{ signature.userName }}
+                  </td>
+                  <td data-title="Agreement">
+                    v{{ signature.version}}
+                  </td>
+                  <td data-title="Date">
+                    {{ signature.modified | date:'medium' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </ion-col>
       </ion-row>
     </ion-grid>
-  </header>
+  </div>
+  <cla-footer></cla-footer>
 
-  <ion-grid [loading-display]="loading.signatures">
-    <ion-row justify-content-center>
-      <ion-col col-4>
-        <ion-card>
-          <ion-card-content class="managers-card">
-            <ion-card-title>
-              CLA Managers
-            </ion-card-title>
-            <loading-spinner [loading]="loading.managers"></loading-spinner>
-            <ion-list>
-              <ion-item *ngIf="managersRestricted">
-                <p>Only Company Admins can view and update this list.</p>
-              </ion-item>
-              <ion-item *ngFor="let manager of managers">
-                <div class="manager">
-                  <ion-icon name="person" item-left class="icon-md"></ion-icon>
-                  <div class="manager-details" *ngIf="manager.email">
-                    <div class="manager-name">
-                      <span>{{ manager.name }}</span>
-                      <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
-                    </div>
-                    <h4>{{ manager.email }}</h4>
-                  </div>
 
-                  <div class="manager-details" *ngIf="!manager.email">
-                    <div class="manager-name">
-                      <span>{{ manager.lfid }}</span>
-                      <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
-                    </div>
-                    <h4 class="error-message">The user has not signed in.</h4>
-                  </div>
-                </div>
-              </ion-item>
-            </ion-list>
-            <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
-              <ion-icon name="add"></ion-icon>
-            </button>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col col-12 col-md-8>
-        <div class="table-responsive-vertical">
-          <h2>{{ company.company_name }} Employee Acknowledgements</h2>
-          <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
-          <table class="table table-hover">
-            <thead>
-            <tr>
-              <th class="clickable">
-                LFID/GHID
-              </th>
-              <th class="clickable">
-                Name
-              </th>
-              <th class="clickable">
-                Agreement
-              </th>
-              <th class="clickable" (click)="sortMembers('date')">
-                Date
-                <sorting-display [sorting]='sort.date.sort'></sorting-display>
-              </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let signature of employeeSignatures">
-              <td data-title="ID">
-                {{ signature.userLFID }}/{{ signature.userGHID }}
-              </td>
-              <td data-title="Name">
-                {{ signature.userName }}
-              </td>
-              <td data-title="Agreement">
-                v{{ signature.version}}
-              </td>
-              <td data-title="Date">
-                {{ signature.modified | date:'medium' }}
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
 </ion-content>
-
-<cla-footer></cla-footer>
