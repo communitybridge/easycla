@@ -338,7 +338,7 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error) {
 	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
 
-	indexName := "company_id-project_id-index"
+	indexName := "company-id-project-id-index"
 
 	condition := expression.Key("company_id").Equal(expression.Value(companyID))
 

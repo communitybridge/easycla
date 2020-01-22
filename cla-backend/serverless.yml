@@ -97,6 +97,7 @@ provider:
         - dynamodb:DescribeTable
         - dynamodb:BatchGetItem
       Resource:
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-ccla-whitelist-requests"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-company-invites"
@@ -114,6 +115,7 @@ provider:
       Action:
         - dynamodb:Query
       Resource:
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-ccla-whitelist-requests/company-id-project-id-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-user-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-username-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-username-index"
@@ -274,30 +276,6 @@ resources:
         ResponseType: DEFAULT_4XX
         RestApiId:
           Ref: 'ApiGatewayRestApi'
-    #FilesBucket:
-    #  Type: AWS::S3::Bucket
-    #  Properties:
-    #    BucketName: cla-signature-files-${self:provider.stage}
-    #    AccessControl: Private
-    #LogoBucket:
-    #  Type: AWS::S3::Bucket
-    #  Properties:
-    #    BucketName: cla-project-logo-${self:provider.stage}
-    #    AccessControl: Private
-    #LogoBucketPolicy:
-    #  Type: AWS::S3::BucketPolicy
-    #  Properties:
-    #    Bucket:
-    #      Ref: LogoBucket
-    #    PolicyDocument:
-    #      Statement:
-    #        - Sid: PublicReadGetObject
-    #          Effect: Allow
-    #          Principal: "*"
-    #          Action:
-    #            - s3:GetObject
-    #          Resource:
-    #            Fn::Join: ["", ["arn:aws:s3:::", { "Ref": "LogoBucket" }, "/*"]]
 
     Cert:
       Type: AWS::CertificateManager::Certificate
