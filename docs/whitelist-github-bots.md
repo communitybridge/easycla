@@ -6,5 +6,5 @@ Once you have completed the steps to add the bot to your whitelist, the bot shou
 
 ![Edit GitHub Bot Whitelist](../docs/imgs/cla_add_github.png)
 
-Refer [GitHub Bot Whitelist](whitelist-contributors.md)
+Refer [GitHub Bot Whitelist](../getting-started/ccla-managers-and-ccla-signatories/whitelist-contributors.md)
 
