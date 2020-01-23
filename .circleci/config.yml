@@ -45,7 +45,10 @@ jobs:
       - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
       - run:
           name: Install awscli
           command: sudo apt-get install -y awscli
@@ -175,7 +178,10 @@ jobs:
       - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
       - run:
           name: Setup AWS key
           command: |
@@ -299,7 +305,6 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
-      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - run:
           name: Setup AWS key
           command: |
@@ -314,11 +319,12 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-10
       - run:
           name: Install Top Level Dependencies
           command: |
-            node --version
+            echo "Node version is: $(node --version)"
             echo "Running top level install..."
             yarn install
       - *install-node-8
@@ -393,8 +399,6 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
-      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
-      - *install-node-8
       - run:
           name: Setup AWS key
           command: |
@@ -409,9 +413,15 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Install UI Dependencies
           command: |
@@ -615,16 +625,21 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
+      - run:
+          name: Install Top Level Dependencies
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Deploy
           command: |
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
-
-            echo "Installing serverless..."
-            yarn install
-
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
