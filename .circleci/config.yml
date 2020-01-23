@@ -5,6 +5,31 @@ version: 2.1
 environment:
   BASH_ENV: ~/.bashrc
 
+step-library:
+  - &install-node-8
+    run:
+      name: Install node 8
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
+        echo "Installing node v8.17.0..."
+        nvm install v8.17.0
+        nvm alias default v8.17.0
+        echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
+
+  - &install-node-10
+    run:
+      name: Install node 10
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
+        echo "Installing node v12.14.1..."
+        nvm install v12.14.1
+        nvm alias default v12.14.1
+        echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
+
 jobs:
   # Builds
   buildBackend: &buildBackendAnchor
@@ -16,6 +41,8 @@ jobs:
           fingerprints:
             - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
             - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
           command: yarn install
@@ -144,6 +171,8 @@ jobs:
           fingerprints:
             - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
             - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
           command: yarn install
@@ -270,6 +299,7 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - run:
           name: Setup AWS key
           command: |
@@ -284,9 +314,14 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            node --version
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Install UI Dependencies
           command: |
@@ -358,6 +393,8 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-8
       - run:
           name: Setup AWS key
           command: |
