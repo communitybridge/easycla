@@ -35,7 +35,7 @@ jobs:
             # Lint will always pass for now - need to continue addressing lint issues
             pylint cla/*.py || true
       - run:
-          name: pytest-test
+          name: test
           command: |
             cd cla-backend
             export GITHUB_OAUTH_TOKEN=${GITHUB_OAUTH_TOKEN}
@@ -594,7 +594,7 @@ jobs:
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
             yarn prebuild:${STAGE}
             echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
-            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+            SLS_DEBUG=* yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
 
           no_output_timeout: 1.5h
 
