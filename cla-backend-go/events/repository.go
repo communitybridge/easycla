@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/labstack/gommon/log"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/gofrs/uuid"
 
@@ -27,7 +31,7 @@ var (
 // Repository interface defines methods of event repository service
 type Repository interface {
 	CreateEvent(event *models.Event) error
-	SearchEvents(ctx context.Context, params *events.SearchEventsParams) (*models.EventList, error)
+	SearchEvents(ctx context.Context, params *events.SearchEventsParams, pageSize int64) (*models.EventList, error)
 }
 
 // repository data model
@@ -99,7 +103,175 @@ func (r *repository) CreateEvent(event *models.Event) error {
 	return nil
 }
 
+func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
+	if !(*filterAdded) {
+		*filterAdded = true
+		filter = cond
+	} else {
+		filter = filter.And(cond)
+	}
+	return filter
+}
+
+func createSearchEventFilter(pk string, sk string, params *events.SearchEventsParams) *expression.ConditionBuilder {
+	var filter expression.ConditionBuilder
+	var filterAdded bool
+	if params.ProjectID != nil && "event_project_id" != pk && "event_project_id" != sk {
+		filterExpression := expression.Name("event_project_id").Equal(expression.Value(params.ProjectID))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.CompanyID != nil && "event_company_id" != pk && "event_company_id" != sk {
+		filterExpression := expression.Name("event_company_id").Equal(expression.Value(params.CompanyID))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.UserID != nil && "user_id" != pk && "user_id" != sk {
+		filterExpression := expression.Name("user_id").Equal(expression.Value(params.UserID))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.EventType != nil && "event_type" != pk && "event_type" != sk {
+		filterExpression := expression.Name("event_type").Equal(expression.Value(params.EventType))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.After != nil && "event_time" != pk && "event_time" != sk {
+		filterExpression := expression.Name("event_time").GreaterThanEqual(expression.Value(params.After))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.Before != nil && "event_time" != pk && "event_time" != sk {
+		filterExpression := expression.Name("event_time").LessThanEqual(expression.Value(params.Before))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if filterAdded {
+		return &filter
+	}
+	return nil
+}
+
+func addTimeExpression(keyCond expression.KeyConditionBuilder, params *events.SearchEventsParams) expression.KeyConditionBuilder {
+	if params.Before != nil && params.After != nil {
+		exp := expression.Key("event_time").Between(expression.Value(params.After), expression.Value(params.Before))
+		return keyCond.And(exp)
+	}
+	if params.After != nil {
+		exp := expression.Key("event_time").GreaterThanEqual(expression.Value(params.After))
+		return keyCond.And(exp)
+	}
+	if params.Before != nil {
+		exp := expression.Key("event_time").LessThanEqual(expression.Value(params.Before))
+		return keyCond.And(exp)
+	}
+	return keyCond
+}
+
 // SearchEvents returns list of events matching with filter criteria.
-func (r *repository) SearchEvents(ctx context.Context, params *events.SearchEventsParams) (*models.EventList, error) {
-	return &models.EventList{}, nil
+func (r *repository) SearchEvents(ctx context.Context, params *events.SearchEventsParams, pageSize int64) (*models.EventList, error) {
+	if params.ProjectID == nil && params.CompanyID == nil && params.EventType == nil && params.UserID == nil {
+		return nil, errors.New("invalid request.")
+	}
+	var condition expression.KeyConditionBuilder
+	var indexName, pk, sk string
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-events", r.stage)
+
+	switch {
+	case params.CompanyID != nil:
+		// search by companyID
+		indexName = "event-company-id-event-time-index"
+		condition = expression.Key("event_company_id").Equal(expression.Value(params.CompanyID))
+		pk = "event_company_id"
+		condition = addTimeExpression(condition, params)
+		sk = "event_time"
+	case params.ProjectID != nil:
+		// search by projectID
+		indexName = "event-project-id-event-time-index"
+		condition = expression.Key("event_project_id").Equal(expression.Value(params.ProjectID))
+		pk = "event_project_id"
+		condition = addTimeExpression(condition, params)
+		sk = "event_time"
+	case params.UserID != nil:
+		// search by userID
+		condition = expression.Key("user_id").Equal(expression.Value(params.UserID))
+		indexName = "user-id-index"
+		pk = "user_id"
+	case params.EventType != nil:
+		// serach by eventType
+		indexName = "event-type-index"
+		condition = expression.Key("event_type").Equal(expression.Value(params.EventType))
+		pk = "event_type"
+	}
+	filter := createSearchEventFilter(pk, sk, params)
+	if filter != nil {
+		builder = builder.WithFilter(*filter)
+	}
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	input := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		Limit:                     aws.Int64(pageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
+	}
+	if params.SortOrder != nil && *params.SortOrder == "desc" {
+		input.ScanIndexForward = aws.Bool(false)
+	}
+
+	if params.NextKey != nil {
+		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+		// The primary key of the first item that this operation will evaluate.
+		// and the query key (if not the same)
+		input.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: params.NextKey,
+			},
+		}
+	}
+
+	log.Debugf("query = %s", input.String())
+	queryOutput, err := r.dynamoDBClient.Query(input)
+	if err != nil {
+		return nil, err
+	}
+	log.Debugf("last_evaluated_key = %#v", queryOutput.LastEvaluatedKey)
+	return buildEventListModels(queryOutput)
+}
+
+func buildEventListModels(results *dynamodb.QueryOutput) (*models.EventList, error) {
+	var out models.EventList
+	out.Events = make([]*models.Event, 0)
+
+	var items []Event
+
+	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &items)
+	if err != nil {
+		log.Warnf("error unmarshalling events from database, error: %v",
+			err)
+		return nil, err
+	}
+	for _, e := range items {
+		out.Events = append(out.Events, e.toEvent())
+	}
+	return &out, nil
+}
+
+func buildProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("event_id"),
+		expression.Name("event_type"),
+		expression.Name("user_id"),
+		expression.Name("event_project_id"),
+		expression.Name("event_company_id"),
+		expression.Name("event_time"),
+		expression.Name("event_data"),
+	)
 }

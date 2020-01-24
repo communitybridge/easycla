@@ -1506,14 +1506,12 @@ paths:
     get:
       summary: search events
       security:
-        - OauthSecurity:
-            - admin
+        - OauthSecurity: []
       description: Returns list of events matching with search criteria
       operationId: searchEvents
       parameters:
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/events_order_by'
         - $ref: '#/parameters/sortOrder'
         - $ref: '#/parameters/eventType'
         - $ref: '#/parameters/userID'
@@ -1527,7 +1525,6 @@ paths:
         '200':
           description: Success
           schema:
-            type: object
             $ref: '#/definitions/event-list'
         '400':
           $ref: '#/responses/invalid-request'
@@ -1611,12 +1608,6 @@ parameters:
     required: false
     # UUID v4 regex
     pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
-  events_order_by:
-    name: order_by
-    description: The field to order by, default sort order is ascending
-    in: query
-    type: string
-    enum: [event_time,project_id,company_id,user_id,event_type]
   sortOrder:
     name: sortOrder
     in: query
