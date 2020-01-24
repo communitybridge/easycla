@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -33,6 +35,7 @@ type Project struct {
 // DynamoRepository defines functions of Project repository
 type DynamoRepository interface {
 	GetProject(projectID string) (*Project, error)
+	GetMetrics() (*models.ProjectMetrics, error)
 }
 
 // NewDynamoRepository creates instance of project repository
@@ -72,4 +75,19 @@ func (repo *repo) GetProject(projectID string) (*Project, error) {
 		return nil, err
 	}
 	return &project, nil
+}
+func (repo repo) GetMetrics() (*models.ProjectMetrics, error) {
+	var out models.ProjectMetrics
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of projects, error: %v", err)
+		return nil, err
+	}
+
+	out.TotalCount = *describeTableResult.Table.ItemCount
+	return &out, nil
 }

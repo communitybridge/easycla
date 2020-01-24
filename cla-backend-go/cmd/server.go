@@ -10,6 +10,10 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+
+	"github.com/communitybridge/easycla/cla-backend-go/metrics"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
@@ -148,6 +152,7 @@ func server(localMode bool) http.Handler {
 	onboardRepo := onboard.NewRepository(awsSession, stage)
 	projectRepo := project.NewDynamoRepository(awsSession, stage)
 	eventsRepo := events.NewRepository(awsSession, stage)
+	repositoriesRepo := repositories.NewRepository(awsSession, stage)
 
 	eventsService := events.NewService(eventsRepo)
 	usersService := users.NewService(usersRepo)
@@ -158,6 +163,7 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
+	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -175,6 +181,7 @@ func server(localMode bool) http.Handler {
 	docs.Configure(api)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
 	company.Configure(api, companyService, usersService, companyUserValidation)
+	metrics.Configure(api, metricsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
