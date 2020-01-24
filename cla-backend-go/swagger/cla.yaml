@@ -1543,10 +1543,10 @@ parameters:
     name: pageSize
     description: The maximum number of results per page, value must be a positive integer value
     in: query
-    type: string
+    type: integer
     required: false
-    pattern: '^[1-9][\d]*$'
-    default: '10'
+    minimum: 0
+    exclusiveMinimum: true
   companyName:
     name: companyName
     description: The optional company name filter
