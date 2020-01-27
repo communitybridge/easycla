@@ -1506,14 +1506,12 @@ paths:
     get:
       summary: search events
       security:
-        - OauthSecurity:
-            - admin
+        - OauthSecurity: []
       description: Returns list of events matching with search criteria
       operationId: searchEvents
       parameters:
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/events_order_by'
         - $ref: '#/parameters/sortOrder'
         - $ref: '#/parameters/eventType'
         - $ref: '#/parameters/userID'
@@ -1521,13 +1519,15 @@ paths:
         - $ref: '#/parameters/projectID'
         - $ref: '#/parameters/before'
         - $ref: '#/parameters/after'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/searchTerm'
       produces:
         - application/json
       responses:
         '200':
           description: Success
           schema:
-            type: object
             $ref: '#/definitions/event-list'
         '400':
           $ref: '#/responses/invalid-request'
@@ -1546,10 +1546,10 @@ parameters:
     name: pageSize
     description: The maximum number of results per page, value must be a positive integer value
     in: query
-    type: string
+    type: integer
     required: false
-    pattern: '^[1-9][\d]*$'
-    default: '10'
+    minimum: 0
+    exclusiveMinimum: true
   companyName:
     name: companyName
     description: The optional company name filter
@@ -1610,13 +1610,7 @@ parameters:
     type: string
     required: false
     # UUID v4 regex
-    pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
-  events_order_by:
-    name: order_by
-    description: The field to order by, default sort order is ascending
-    in: query
-    type: string
-    enum: [event_time,project_id,company_id,user_id,event_type]
+    # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
   sortOrder:
     name: sortOrder
     in: query
@@ -2521,6 +2515,8 @@ definitions:
   event-list:
     type: object
     properties:
+      NextKey:
+        type: string
       Events:
         type: array
         items:
@@ -2539,15 +2535,27 @@ definitions:
       UserID:
         type: string
         description: id of the user who created this event
+      UserName:
+        type: string
+        description: name of the user
       EventProjectID:
         type: string
         description: id of the SFID project
+      EventProjectName:
+        type: string
+        description: name of the project
+      EventCompanyName:
+        type: string
+        description: name of the company
       EventCompanyID:
         type: string
         description: id od the organization/company
       EventTime:
         type: string
-        description: time of the event in epoch format.
+        description: time of the event.
+      EventTimeEpoch:
+        type: integer
+        description: time of the event in epoch.
       EventData:
         type: string
         description: data related to the event

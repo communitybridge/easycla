@@ -27,5 +27,10 @@ func (s *service) CreateEvent(event models.Event) error {
 }
 
 func (s *service) SearchEvents(ctx context.Context, params *events.SearchEventsParams) (*models.EventList, error) {
-	return s.repo.SearchEvents(ctx, params)
+	const defaultPageSize int64 = 50
+	var pageSize = defaultPageSize
+	if params.PageSize != nil {
+		pageSize = *params.PageSize
+	}
+	return s.repo.SearchEvents(ctx, params, pageSize)
 }
