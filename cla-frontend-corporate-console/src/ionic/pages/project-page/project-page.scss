@@ -49,10 +49,12 @@ project-page {
 
   ion-header {
     border-bottom: 0px solid #4c79b6;
+    height: 100px;
 
     .toolbar {
       color: #7b7b7b;
       background-color: white;
+      height: 100px;
 
       ion-icon {
         color: #7b7b7b;
@@ -65,9 +67,11 @@ project-page {
     }
 
     .navbar-logo {
-      width: 100px;
+      width: 300px;
       position: absolute;
+      margin: -30px 0 -18px -138px;
       left: calc(50% - 20px);
+      padding: 1rem;
     }
   }
 
