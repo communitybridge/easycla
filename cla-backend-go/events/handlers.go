@@ -4,6 +4,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -14,6 +15,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 		func(params events.SearchEventsParams, claUser *user.CLAUser) middleware.Responder {
 			result, err := service.SearchEvents(params.HTTPRequest.Context(), &params)
 			if err != nil {
+				log.Debugf("error retrieving events, error: %s", err.Error())
 				return events.NewSearchEventsBadRequest().WithPayload(errorResponse(err))
 			}
 			return events.NewSearchEventsOK().WithPayload(result)
