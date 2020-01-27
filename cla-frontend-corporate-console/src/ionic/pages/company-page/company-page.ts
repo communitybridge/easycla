@@ -131,16 +131,21 @@ export class CompanyPage {
     });
   }
 
+  getPendingCLARequestsForAProject(projectId) {
+    this.claService.getProjectPendingRequests(this.companyId, projectId).subscribe((res) => {
+      console.log(res, 'ghghghghghg')
+    })
+  }
+
   mapProjects(projects) {
     let rows = [];
     for (let project of projects) {
-      console.log(project, 'this is projecr')
+      this.getPendingCLARequestsForAProject(project.project_id)
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
         ProjectManagers: project.project_acl,
-        Status: '-',
-        PendingRequests: '-',
+        PendingRequests: 4,
         WhiteList: ''
       });
     }

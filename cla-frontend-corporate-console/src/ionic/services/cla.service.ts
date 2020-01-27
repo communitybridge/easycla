@@ -1533,12 +1533,17 @@ export class ClaService {
   }
 
   deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla_whitelist_requests/{projectID}/{requestID}`);
+    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}`);
     return this.http.delete(url).map((res) => res.json())
   }
 
   listCCLAWhitelistRequest(companyId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests`);
+    return this.http.get(url).map((res) => res.json())
+  }
+
+  getProjectPendingRequests(companyId: string, projectId: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests?projectID=${projectId}`);
     return this.http.get(url).map((res) => res.json())
   }
 

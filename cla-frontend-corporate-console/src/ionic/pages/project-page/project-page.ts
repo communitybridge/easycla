@@ -341,7 +341,8 @@ export class ProjectPage {
   }
 
   listPendingRequests() {
-    this.claService.listCCLAWhitelistRequest('0ddf9b60-b692-4cf4-9476-cb9de25e3cce').subscribe((request) => {
+    this.claService.listCCLAWhitelistRequest(this.companyId).subscribe((request) => {
+      console.log(request, 'this is requeststststst')
       if (request.list.length == 0) {
         this.noPendingRequests = true
       }

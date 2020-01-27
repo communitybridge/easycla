@@ -4,7 +4,9 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <picture class="d-inline-block">
+      <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    </picture>
   </ion-navbar>
   <get-help></get-help>
 </ion-header>
@@ -12,8 +14,18 @@
 <ion-content headerspacing>
   <div class="page-content">
 
-
-
+      <header>
+          <ion-grid>
+            <ion-row>
+              <!-- <ion-col col-12>
+                <h1 text-center>
+                  {{ company.company_name }}
+                  <ion-icon class="clickable" name="md-create" item-right (click)="openCompanyModal()"></ion-icon>
+                </h1>
+              </ion-col> -->
+            </ion-row>
+          </ion-grid>
+        </header>
     <ion-grid>
       <ion-row justify-content-center>
         <ion-card>
