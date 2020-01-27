@@ -5,6 +5,31 @@ version: 2.1
 environment:
   BASH_ENV: ~/.bashrc
 
+step-library:
+  - &install-node-8
+    run:
+      name: Install node 8
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
+        echo "Installing node v8.17.0..."
+        nvm install v8.17.0
+        nvm alias default v8.17.0
+        echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
+
+  - &install-node-10
+    run:
+      name: Install node 10
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
+        echo "Installing node v12.14.1..."
+        nvm install v12.14.1
+        nvm alias default v12.14.1
+        echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
+
 jobs:
   # Builds
   buildBackend: &buildBackendAnchor
@@ -16,9 +41,14 @@ jobs:
           fingerprints:
             - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
             - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
       - run:
           name: Install awscli
           command: sudo apt-get install -y awscli
@@ -144,9 +174,14 @@ jobs:
           fingerprints:
             - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
             - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
       - run:
           name: Setup AWS key
           command: |
@@ -284,9 +319,15 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Install UI Dependencies
           command: |
@@ -372,9 +413,15 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
       - run:
           name: Install Top Level Dependencies
-          command: yarn install
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Install UI Dependencies
           command: |
@@ -578,16 +625,21 @@ jobs:
             printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-10
+      - run:
+          name: Install Top Level Dependencies
+          command: |
+            echo "Node version is: $(node --version)"
+            echo "Running top level install..."
+            yarn install
+      - *install-node-8
       - run:
           name: Deploy
           command: |
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
-
-            echo "Installing serverless..."
-            yarn install
-
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
@@ -678,64 +730,6 @@ jobs:
 
 workflows:
   version: 2.1
-  # Cron builds
-  nightly:
-    triggers:
-      - schedule:
-          # All times are UTC - run at midnight PDT
-          cron: "0 7 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - buildNightlyBackendDev:
-          filters:
-            tags:
-              only: /.*/
-      - buildNightlyGoBackendDev:
-          filters:
-            tags:
-              only: /.*/
-      - deployNightlyBackendDev:
-          requires:
-            - buildNightlyBackendDev
-            - buildNightlyGoBackendDev
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only:
-                - master
-      - deployNightlyProjectManagementConsoleDev:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only:
-                - master
-      - deployNightlyCorporateConsoleDev:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only:
-                - master
-      - deployNightlyContributorConsoleDev:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only:
-                - master
-      - deployNightlyLandingFrontendDev:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only:
-                - master
-
   build_and_deploy:
    jobs:
       - buildBackendDev:
@@ -758,6 +752,7 @@ workflows:
           filters:
             tags:
               only: /.*/
+
       # Deploy Dev
       - deployBackendDev:
           requires:
@@ -813,13 +808,15 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - buildGoBackendStaging:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - approve_staging:
           type: approval
           requires:
@@ -829,7 +826,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployBackendStaging:
           requires:
             - approve_staging
@@ -839,7 +837,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployProjectManagementConsoleStaging:
           requires:
             - approve_staging
@@ -847,7 +846,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployCorporateConsoleStaging:
           requires:
             - approve_staging
@@ -855,7 +855,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployContributorConsoleStaging:
           requires:
             - approve_staging
@@ -863,7 +864,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployLandingFrontendStaging:
           requires:
             - approve_staging
@@ -871,7 +873,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
 
       # Deploy Prod
       - buildBackendProd:
@@ -879,13 +882,15 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - buildGoBackendProd:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - approve_prod:
           type: approval
           requires:
@@ -895,7 +900,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployBackendProd:
           requires:
             - approve_prod
@@ -905,7 +911,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployProjectManagementConsoleProd:
           requires:
             - approve_prod
@@ -913,7 +920,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployCorporateConsoleProd:
           requires:
             - approve_prod
@@ -921,7 +929,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployContributorConsoleProd:
           requires:
             - approve_prod
@@ -929,7 +938,8 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
       - deployLandingFrontendProd:
           requires:
             - approve_prod
@@ -937,4 +947,5 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\.?([^-\s]+)$/
+              # see semver examples https://regex101.com/r/Ly7O1x/201/
+              only: /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
