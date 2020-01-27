@@ -2,8 +2,11 @@ package events
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -53,7 +56,7 @@ func currentTime() string {
 }
 
 // Create event will create event in database.
-func (r *repository) CreateEvent(event *models.Event) error {
+func (repo *repository) CreateEvent(event *models.Event) error {
 	if event.UserID == "" {
 		return ErrUserIDRequired
 	}
@@ -85,7 +88,7 @@ func (r *repository) CreateEvent(event *models.Event) error {
 				S: aws.String(event.EventData),
 			},
 		},
-		TableName: aws.String(fmt.Sprintf("cla-%s-events", r.stage)),
+		TableName: aws.String(fmt.Sprintf("cla-%s-events", repo.stage)),
 	}
 	if event.EventCompanyID != "" {
 		input.Item["event_company_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventCompanyID)}
@@ -94,7 +97,7 @@ func (r *repository) CreateEvent(event *models.Event) error {
 		input.Item["event_project_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventProjectID)}
 	}
 
-	_, err = r.dynamoDBClient.PutItem(input)
+	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new event, error: %v", err)
 		return err
@@ -116,28 +119,40 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 func createSearchEventFilter(pk string, sk string, params *events.SearchEventsParams) *expression.ConditionBuilder {
 	var filter expression.ConditionBuilder
 	var filterAdded bool
-	if params.ProjectID != nil && "event_project_id" != pk && "event_project_id" != sk {
+	if params.ProjectID != nil && "event_project_id" != pk && "event_project_id" != sk { //nolint
 		filterExpression := expression.Name("event_project_id").Equal(expression.Value(params.ProjectID))
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
-	if params.CompanyID != nil && "event_company_id" != pk && "event_company_id" != sk {
+	if params.CompanyID != nil && "event_company_id" != pk && "event_company_id" != sk { //nolint
 		filterExpression := expression.Name("event_company_id").Equal(expression.Value(params.CompanyID))
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
-	if params.UserID != nil && "user_id" != pk && "user_id" != sk {
+	if params.UserID != nil && "user_id" != pk && "user_id" != sk { //nolint
 		filterExpression := expression.Name("user_id").Equal(expression.Value(params.UserID))
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
-	if params.EventType != nil && "event_type" != pk && "event_type" != sk {
+	if params.EventType != nil && "event_type" != pk && "event_type" != sk { //nolint
 		filterExpression := expression.Name("event_type").Equal(expression.Value(params.EventType))
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
-	if params.After != nil && "event_time" != pk && "event_time" != sk {
-		filterExpression := expression.Name("event_time").GreaterThanEqual(expression.Value(params.After))
+	if params.After != nil && "event_time_epoch" != pk && "event_time_epoch" != sk { //nolint
+		filterExpression := expression.Name("event_time_epoch").GreaterThanEqual(expression.Value(params.After))
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
-	if params.Before != nil && "event_time" != pk && "event_time" != sk {
-		filterExpression := expression.Name("event_time").LessThanEqual(expression.Value(params.Before))
+	if params.Before != nil && "event_time_epoch" != pk && "event_time_epoch" != sk { //nolint
+		filterExpression := expression.Name("event_time_epoch").LessThanEqual(expression.Value(params.Before))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.UserName != nil && "user_name_lower" != pk && "user_name_lower" != sk { //nolint
+		filterExpression := expression.Name("user_name_lower").Contains(strings.ToLower(*params.UserName))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.CompanyName != nil && "event_company_name_lower" != pk && "event_company_name_lower" != sk { //nolint
+		filterExpression := expression.Name("event_company_name_lower").Contains(strings.ToLower(*params.CompanyName))
+		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
+	}
+	if params.SearchTerm != nil {
+		filterExpression := expression.Name("event_data").Contains(*params.SearchTerm)
 		filter = addConditionToFilter(filter, filterExpression, &filterAdded)
 	}
 	if filterAdded {
@@ -148,56 +163,39 @@ func createSearchEventFilter(pk string, sk string, params *events.SearchEventsPa
 
 func addTimeExpression(keyCond expression.KeyConditionBuilder, params *events.SearchEventsParams) expression.KeyConditionBuilder {
 	if params.Before != nil && params.After != nil {
-		exp := expression.Key("event_time").Between(expression.Value(params.After), expression.Value(params.Before))
+		exp := expression.Key("event_time_epoch").Between(expression.Value(params.After), expression.Value(params.Before))
 		return keyCond.And(exp)
 	}
 	if params.After != nil {
-		exp := expression.Key("event_time").GreaterThanEqual(expression.Value(params.After))
+		exp := expression.Key("event_time_epoch").GreaterThanEqual(expression.Value(params.After))
 		return keyCond.And(exp)
 	}
 	if params.Before != nil {
-		exp := expression.Key("event_time").LessThanEqual(expression.Value(params.Before))
+		exp := expression.Key("event_time_epoch").LessThanEqual(expression.Value(params.Before))
 		return keyCond.And(exp)
 	}
 	return keyCond
 }
 
 // SearchEvents returns list of events matching with filter criteria.
-func (r *repository) SearchEvents(ctx context.Context, params *events.SearchEventsParams, pageSize int64) (*models.EventList, error) {
-	if params.ProjectID == nil && params.CompanyID == nil && params.EventType == nil && params.UserID == nil {
-		return nil, errors.New("invalid request.")
+func (repo *repository) SearchEvents(ctx context.Context, params *events.SearchEventsParams, pageSize int64) (*models.EventList, error) {
+	if params.ProjectID == nil {
+		return nil, errors.New("invalid request. projectID is compulsory")
 	}
 	var condition expression.KeyConditionBuilder
 	var indexName, pk, sk string
 	builder := expression.NewBuilder().WithProjection(buildProjection())
 	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-events", r.stage)
+	tableName := fmt.Sprintf("cla-%s-events", repo.stage)
 
 	switch {
-	case params.CompanyID != nil:
-		// search by companyID
-		indexName = "event-company-id-event-time-index"
-		condition = expression.Key("event_company_id").Equal(expression.Value(params.CompanyID))
-		pk = "event_company_id"
-		condition = addTimeExpression(condition, params)
-		sk = "event_time"
 	case params.ProjectID != nil:
 		// search by projectID
-		indexName = "event-project-id-event-time-index"
+		indexName = "event-project-id-event-time-epoch-index"
 		condition = expression.Key("event_project_id").Equal(expression.Value(params.ProjectID))
 		pk = "event_project_id"
 		condition = addTimeExpression(condition, params)
-		sk = "event_time"
-	case params.UserID != nil:
-		// search by userID
-		condition = expression.Key("user_id").Equal(expression.Value(params.UserID))
-		indexName = "user-id-index"
-		pk = "user_id"
-	case params.EventType != nil:
-		// serach by eventType
-		indexName = "event-type-index"
-		condition = expression.Key("event_type").Equal(expression.Value(params.EventType))
-		pk = "event_type"
+		sk = "event_time_epoch"
 	}
 	filter := createSearchEventFilter(pk, sk, params)
 	if filter != nil {
@@ -211,7 +209,7 @@ func (r *repository) SearchEvents(ctx context.Context, params *events.SearchEven
 		return nil, err
 	}
 	// Assemble the query input parameters
-	input := &dynamodb.QueryInput{
+	queryInput := &dynamodb.QueryInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
@@ -222,32 +220,77 @@ func (r *repository) SearchEvents(ctx context.Context, params *events.SearchEven
 		Limit:                     aws.Int64(pageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 	if params.SortOrder != nil && *params.SortOrder == "desc" {
-		input.ScanIndexForward = aws.Bool(false)
+		queryInput.ScanIndexForward = aws.Bool(false)
 	}
 
 	if params.NextKey != nil {
 		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
-		// The primary key of the first item that this operation will evaluate.
-		// and the query key (if not the same)
-		input.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-			"signature_id": {
-				S: params.NextKey,
-			},
+		queryInput.ExclusiveStartKey, err = fromString(*params.NextKey)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	log.Debugf("query = %s", input.String())
-	queryOutput, err := r.dynamoDBClient.Query(input)
+	var lastEvaluatedKey string
+	events := make([]*models.Event, 0)
+
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving events. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		eventsList, modelErr := buildEventListModels(results)
+		if modelErr != nil {
+			return nil, modelErr
+		}
+
+		events = append(events, eventsList...)
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		}
+		lastEvaluatedKey, err = toString(results.LastEvaluatedKey)
+		if err != nil {
+			return nil, err
+		}
+		if int64(len(events)) >= pageSize {
+			break
+		}
+	}
+
+	return &models.EventList{
+		Events:  events,
+		NextKey: lastEvaluatedKey,
+	}, nil
+}
+
+func toString(in map[string]*dynamodb.AttributeValue) (string, error) {
+	if len(in) == 0 {
+		return "", nil
+	}
+	b, err := json.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
+}
+
+func fromString(str string) (map[string]*dynamodb.AttributeValue, error) {
+	sDec, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("last_evaluated_key = %#v", queryOutput.LastEvaluatedKey)
-	return buildEventListModels(queryOutput)
+	var m map[string]*dynamodb.AttributeValue
+	err = json.Unmarshal(sDec, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
-func buildEventListModels(results *dynamodb.QueryOutput) (*models.EventList, error) {
-	var out models.EventList
-	out.Events = make([]*models.Event, 0)
+func buildEventListModels(results *dynamodb.QueryOutput) ([]*models.Event, error) {
+	events := make([]*models.Event, 0)
 
 	var items []Event
 
@@ -258,9 +301,9 @@ func buildEventListModels(results *dynamodb.QueryOutput) (*models.EventList, err
 		return nil, err
 	}
 	for _, e := range items {
-		out.Events = append(out.Events, e.toEvent())
+		events = append(events, e.toEvent())
 	}
-	return &out, nil
+	return events, nil
 }
 
 func buildProjection() expression.ProjectionBuilder {
@@ -269,9 +312,13 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("event_id"),
 		expression.Name("event_type"),
 		expression.Name("user_id"),
+		expression.Name("user_name"),
 		expression.Name("event_project_id"),
+		expression.Name("event_project_name"),
 		expression.Name("event_company_id"),
+		expression.Name("event_company_name"),
 		expression.Name("event_time"),
+		expression.Name("event_time_epoch"),
 		expression.Name("event_data"),
 	)
 }
