@@ -1519,6 +1519,9 @@ paths:
         - $ref: '#/parameters/projectID'
         - $ref: '#/parameters/before'
         - $ref: '#/parameters/after'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/searchTerm'
       produces:
         - application/json
       responses:
@@ -1607,7 +1610,7 @@ parameters:
     type: string
     required: false
     # UUID v4 regex
-    pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+    # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
   sortOrder:
     name: sortOrder
     in: query
@@ -2512,6 +2515,8 @@ definitions:
   event-list:
     type: object
     properties:
+      NextKey:
+        type: string
       Events:
         type: array
         items:
@@ -2530,15 +2535,27 @@ definitions:
       UserID:
         type: string
         description: id of the user who created this event
+      UserName:
+        type: string
+        description: name of the user
       EventProjectID:
         type: string
         description: id of the SFID project
+      EventProjectName:
+        type: string
+        description: name of the project
+      EventCompanyName:
+        type: string
+        description: name of the company
       EventCompanyID:
         type: string
         description: id od the organization/company
       EventTime:
         type: string
-        description: time of the event in epoch format.
+        description: time of the event.
+      EventTimeEpoch:
+        type: integer
+        description: time of the event in epoch.
       EventData:
         type: string
         description: data related to the event
