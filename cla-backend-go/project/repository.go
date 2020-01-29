@@ -37,6 +37,7 @@ type DBProjectModel struct {
 
 // Repository defines functions of Project repository
 type Repository interface {
+	GetMetrics() (*models.ProjectMetrics, error)
 	GetProject(projectID string) (*models.Project, error)
 	GetProjects() ([]models.Project, error)
 	buildProjectModel(dbModel DBProjectModel) *models.Project
@@ -56,6 +57,24 @@ type repo struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
+// GetMetrics returns the metrics for the projects
+func (repo repo) GetMetrics() (*models.ProjectMetrics, error) {
+	var out models.ProjectMetrics
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of projects, error: %v", err)
+		return nil, err
+	}
+
+	out.TotalCount = *describeTableResult.Table.ItemCount
+	return &out, nil
+}
+
+// GetProject returns the project model associated for the specified projectID
 func (repo *repo) GetProject(projectID string) (*models.Project, error) {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -143,7 +162,7 @@ func (repo *repo) GetProjects() ([]models.Project, error) {
 
 // buildProjectModels converts the database response model into an API response data model
 func (repo *repo) buildProjectModels(results *dynamodb.ScanOutput) ([]models.Project, error) {
-	var projects []models.Project
+	var projects = make([]models.Project, *results.Count)
 
 	// The DB project model
 	var dbProjects []DBProjectModel
