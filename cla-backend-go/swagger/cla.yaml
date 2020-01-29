@@ -1571,6 +1571,27 @@ paths:
       tags:
         - events
 
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Returns metrics
+      security:
+        - OauthSecurity: []
+      operationId: getMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
 # Common parameters
 parameters:
   pageSize:
@@ -2214,6 +2235,67 @@ definitions:
         type: string
         description: The company record update date/time
         format: date-time
+
+  metrics:
+    type: object
+    x-nullable: false
+    title: Metrics
+    description: All Metrics
+    properties:
+      projects:
+        $ref: '#/definitions/project-metrics'
+      companies:
+        $ref: '#/definitions/companies-metrics'
+      repositories:
+        $ref: '#/definitions/repository-metrics'
+      users:
+        $ref: '#/definitions/user-metrics'
+      signatures:
+        $ref: '#/definitions/signature-metrics'
+
+  project-metrics:
+    type: object
+    x-nullable: false
+    title: ProjectMetrics
+    description: Project Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  companies-metrics:
+    type: object
+    x-nullable: false
+    title: CompaniesMetrics
+    description: Companies Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  repository-metrics:
+    type: object
+    x-nullable: false
+    title: RepositoryMetrics
+    description: Repository Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  user-metrics:
+    type: object
+    x-nullable: false
+    title: UserMetrics
+    description: User Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
 
   signature-metrics:
     type: object
