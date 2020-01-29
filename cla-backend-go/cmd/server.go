@@ -10,11 +10,12 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/docs"
+	"github.com/communitybridge/easycla/cla-backend-go/version"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
-
-	"github.com/communitybridge/easycla/cla-backend-go/version"
 
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
 
@@ -29,7 +30,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
-	"github.com/communitybridge/easycla/cla-backend-go/docs"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
@@ -139,6 +139,7 @@ func server(localMode bool) http.Handler {
 		logrus.Panic(err)
 	}
 
+	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
 	usersRepo := users.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
@@ -149,11 +150,13 @@ func server(localMode bool) http.Handler {
 	projectRepo := project.NewDynamoRepository(awsSession, stage)
 	eventsRepo := events.NewRepository(awsSession, stage)
 
+	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
+	projectService := project.NewService(projectRepo)
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
-	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, eventsService, http.DefaultClient)
+	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
@@ -164,17 +167,19 @@ func server(localMode bool) http.Handler {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
 	}
 
+	// Setup our API handlers
 	api.OauthSecurityAuth = authorizer.SecurityAuth
-	users.Configure(api, usersService)
+	users.Configure(api, usersService, eventsService)
+	project.Configure(api, projectService)
 	health.Configure(api, healthService)
-	template.Configure(api, templateService)
+	template.Configure(api, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
-	whitelist.Configure(api, whitelistService, sessionStore)
-	signatures.Configure(api, signaturesService, sessionStore)
-	onboard.Configure(api, onboardService)
+	signatures.Configure(api, signaturesService, sessionStore, eventsService)
+	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
+	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
+	onboard.Configure(api, onboardService, eventsService)
 	docs.Configure(api)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
-	company.Configure(api, companyService, usersService, companyUserValidation)
 	events.Configure(api, eventsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)

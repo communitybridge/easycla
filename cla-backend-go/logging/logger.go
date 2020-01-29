@@ -30,7 +30,6 @@ func init() {
 	logFormat := os.Getenv("LOG_FORMAT")
 	// default log format is text
 	if logFormat == "" {
-		fmt.Printf("Logging format not defined - setting value to default: '%s'\n", logFormatDefault)
 		logFormat = logFormatDefault
 	}
 	if logFormat != logFormatJSON && logFormat != logFormatText {
@@ -77,8 +76,6 @@ func init() {
 	case "trace":
 		logger.SetLevel(logrus.TraceLevel)
 	}
-
-	fmt.Printf("Logging configured with level: %s, format: %s\n", logger.GetLevel(), logFormat)
 }
 
 // GetLogger returns an instance of our logger
