@@ -27,6 +27,7 @@ import (
 
 // Repository interface defines the functions for the users service
 type Repository interface {
+	GetMetrics() (*models.UserMetrics, error)
 	CreateUser(user *models.User) (*models.User, error)
 	Save(user *models.UserUpdate) (*models.User, error)
 	Delete(userID string) error
@@ -560,4 +561,20 @@ func buildDBUserModels(results *dynamodb.ScanOutput) ([]models.User, error) {
 	}
 
 	return users, nil
+}
+
+func (repo repository) GetMetrics() (*models.UserMetrics, error) {
+	var out models.UserMetrics
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of users, error: %v", err)
+		return nil, err
+	}
+
+	out.TotalCount = *describeTableResult.Table.ItemCount
+	return &out, nil
 }
