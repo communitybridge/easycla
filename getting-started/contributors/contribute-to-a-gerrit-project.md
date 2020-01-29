@@ -18,7 +18,7 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
    ![Gerrit Warning Link](../../.gitbook/assets/cla-gerrit-sign-a-cla.png)
 
-3. Navigate to the Gerrit instance of your project— https://gerrit.<your project>.org, for example, if you are contrinuting to OPNFV project, navigate to https://gerrit.opnfv.org
+3. Navigate to the Gerrit instance of your project. For example, if you are contrinuting to OPNFV project, navigate to https://gerrit.opnfv.org
   
 4. Log in using your LFID.
 
