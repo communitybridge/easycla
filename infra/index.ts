@@ -627,6 +627,7 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
       globalSecondaryIndexes: [
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
         { name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        { name: 'event-project-id-event-time-epoch-index', hashKey: 'event_project_id', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,

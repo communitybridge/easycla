@@ -182,6 +182,7 @@ func server(localMode bool) http.Handler {
 	version.Configure(api, Version, Commit, Branch, BuildDate)
 	company.Configure(api, companyService, usersService, companyUserValidation)
 	metrics.Configure(api, metricsService)
+	events.Configure(api, eventsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
