@@ -13,11 +13,11 @@ import (
 )
 
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.ClaAPI, service service) {
+func Configure(api *operations.ClaAPI, service Service) {
 	//Get Project By ID
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
 
-		projects, err := service.GetProjects(params.HTTPRequest.Context())
+		projects, err := service.GetProjects()
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
 		}
@@ -28,7 +28,7 @@ func Configure(api *operations.ClaAPI, service service) {
 	//Get Project By ID
 	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 
-		sfdcProject, err := service.GetProjectByID(projectParams.HTTPRequest.Context(), projectParams.ProjectSfdcID)
+		sfdcProject, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
