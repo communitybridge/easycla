@@ -619,14 +619,16 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'event_id', type: 'S' },
         { name: 'event_type', type: 'S' },
-        { name: 'user_id', type: 'S' },
+        { name: 'event_user_id', type: 'S' },
+        { name: 'event_project_id', type: 'S' },
+        { name: 'event_time_epoch', type: 'N' },
       ],
       hashKey: 'event_id',
       readCapacity: 1,
       writeCapacity: 1,
       globalSecondaryIndexes: [
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        { name: 'event-user-id-index', hashKey: 'event_user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
         { name: 'event-project-id-event-time-epoch-index', hashKey: 'event_project_id', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
       ],
       pointInTimeRecovery: {

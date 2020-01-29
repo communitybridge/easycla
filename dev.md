@@ -6,6 +6,25 @@ Copyright The Linux Foundation and each contributor to CommunityBridge.
 
 SPDX-License-Identifier: CC-BY-4.0
 
+## Prerequisites
+
+- Go 1.13
+- Python
+- Node 8/12
+
+## Node Setup
+
+The frontend UI still requires an older version of nodejs - version 8. This is
+due to compatibility issues with the Angular and Ionic toolchain. Use node
+version 8.x for the frontend package installation and build/deploy commands.
+For all other folders which use node, use version 12.x+.  The serverless
+library picks up a newer version of semver which requires node 10+.
+
+In order to quickly switch between node versions, use
+[Node Version Manager - nvm](https://github.com/nvm-sh/nvm). The CircleCI
+build configuration uses this approach to switch between node versions
+within the build.
+
 ## Building and Running the Python Backend
 
 These are the steps for setting up a local dev environment for the python
@@ -100,6 +119,7 @@ properties in order to connect.
 ## Run the Python Backend
 
 ```bash
+# ok to use node v12+
 cd cla-backend
 yarn install
 ```
@@ -114,6 +134,7 @@ node_modules/serverless/bin/serverless wsgi serve -s 'local'
 node_modules/serverless/bin/serverless wsgi serve -s 'dev' 
 
 # Alternatively, you can simply run:
+# ok to use node v12+
 yarn serve:dev
 ```
 
@@ -260,6 +281,7 @@ For example, to test the corporate console:
 
 ```bash
 cd cla-frontend-corporate-console
+# use node 8
 yarn install-frontend
 
 # move to the source folder
@@ -276,5 +298,6 @@ export AWS_REGION=us-east-1
 export USE_LOCAL_SERVICES=true
 
 # Run locally (code changes auto-deploy) - dev environment settings
+# use node 8
 yarn serve:dev
 ```

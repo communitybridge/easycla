@@ -3,7 +3,7 @@ package events
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
+	eventOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/go-openapi/runtime/middleware"
@@ -11,14 +11,14 @@ import (
 
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service Service) {
-	api.EventsSearchEventsHandler = events.SearchEventsHandlerFunc(
-		func(params events.SearchEventsParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.SearchEvents(params.HTTPRequest.Context(), &params)
+	api.EventsSearchEventsHandler = eventOps.SearchEventsHandlerFunc(
+		func(params eventOps.SearchEventsParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.SearchEvents(&params)
 			if err != nil {
 				log.Debugf("error retrieving events, error: %s", err.Error())
-				return events.NewSearchEventsBadRequest().WithPayload(errorResponse(err))
+				return eventOps.NewSearchEventsBadRequest().WithPayload(errorResponse(err))
 			}
-			return events.NewSearchEventsOK().WithPayload(result)
+			return eventOps.NewSearchEventsOK().WithPayload(result)
 		})
 }
 
