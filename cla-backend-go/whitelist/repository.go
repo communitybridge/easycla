@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
-	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/gofrs/uuid"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -35,7 +34,7 @@ type Repository interface {
 	AddGithubOrganizationToWhitelist(claGroupID, githubOrganizationID string) error
 	GetGithubOrganizationsFromWhitelist(claGroupID string) ([]models.GithubOrg, error)
 
-	AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) (string, error)
+	AddCclaWhitelistRequest(company company.Company, project *models.Project, user *models.User) (string, error)
 	DeleteCclaWhitelistRequest(requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error)
 }
@@ -242,7 +241,7 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(CLAGroupID string) ([
 	return orgs, nil
 }
 
-func (repo repository) AddCclaWhitelistRequest(company company.Company, project *project.Project, user *models.User) (string, error) {
+func (repo repository) AddCclaWhitelistRequest(company company.Company, project *models.Project, user *models.User) (string, error) {
 	requestID, err := uuid.NewV4()
 	if err != nil {
 		log.Warnf("Unable to generate a UUID for a whitelist request, error: %v", err)

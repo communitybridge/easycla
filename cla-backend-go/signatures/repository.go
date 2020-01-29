@@ -37,6 +37,7 @@ type SignatureRepository interface {
 	AddGithubOrganizationToWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
 
+	GetSignature(signatureID string) (*models.Signature, error)
 	GetSignatures(params signatures.GetSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
@@ -435,10 +436,60 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 
 }
 
-// GetSignatures returns a list of signatures for the specified sigature ID
-func (repo repository) GetSignatures(params signatures.GetSignaturesParams, pageSize int64) (*models.Signatures, error) {
+// GetSignature returns the signature for the specified signature id
+func (repo repository) GetSignature(signatureID string) (*models.Signature, error) {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
-	queryStartTime := time.Now()
+	// This is the key we want to match
+	condition := expression.Key("signature_id").Equal(expression.Value(signatureID))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for signature ID query, signatureID: %s, error: %v",
+			signatureID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	// Make the DynamoDB Query API call
+	results, queryErr := repo.dynamoDBClient.Query(queryInput)
+	if queryErr != nil {
+		log.Warnf("error retrieving signature ID: %s, error: %v", signatureID, queryErr)
+		return nil, queryErr
+	}
+
+	// No match, didn't find it
+	if *results.Count == 0 {
+		return nil, nil
+	}
+
+	// Convert the list of DB models to a list of response models - should have zero or 1 given that we query by ID
+	signatureList, modelErr := repo.buildProjectSignatureModels(results, "")
+	if modelErr != nil {
+		log.Warnf("error converting DB model to response model for signature: %s, error: %v",
+			signatureID, modelErr)
+		return nil, modelErr
+	}
+
+	if len(signatureList) == 0 {
+		return nil, nil
+	}
+
+	return &signatureList[0], nil
+}
+
+// GetSignatures returns a list of signatures for the specified signature ID
+func (repo repository) GetSignatures(params signatures.GetSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -490,9 +541,6 @@ func (repo repository) GetSignatures(params signatures.GetSignaturesParams, page
 				params.SignatureID, queryErr)
 			return nil, queryErr
 		}
-
-		log.Debugf("Signature query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, "")
@@ -1181,28 +1229,6 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 // buildProjectSignatureModels converts the response model into a response data model
 func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]models.Signature, error) {
 	var signatures []models.Signature
-
-	type ItemSignature struct {
-		SignatureID                   string   `json:"signature_id"`
-		DateCreated                   string   `json:"date_created"`
-		DateModified                  string   `json:"date_modified"`
-		SignatureApproved             bool     `json:"signature_approved"`
-		SignatureSigned               bool     `json:"signature_signed"`
-		SignatureDocumentMajorVersion string   `json:"signature_document_major_version"`
-		SignatureDocumentMinorVersion string   `json:"signature_document_minor_version"`
-		SignatureReferenceID          string   `json:"signature_reference_id"`
-		SignatureReferenceName        string   `json:"signature_reference_name"`
-		SignatureReferenceNameLower   string   `json:"signature_reference_name_lower"`
-		SignatureProjectID            string   `json:"signature_project_id"`
-		SignatureReferenceType        string   `json:"signature_reference_type"`
-		SignatureType                 string   `json:"signature_type"`
-		SignatureUserCompanyID        string   `json:"signature_user_ccla_company_id"`
-		EmailWhitelist                []string `json:"email_whitelist"`
-		DomainWhitelist               []string `json:"domain_whitelist"`
-		GitHubWhitelist               []string `json:"github_whitelist"`
-		GitHubOrgWhitelist            []string `json:"github_org_whitelist"`
-		SignatureACL                  []string `json:"signature_acl"`
-	}
 
 	// The DB signature model
 	var dbSignature []ItemSignature
