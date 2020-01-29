@@ -18,7 +18,11 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
    ![Gerrit Warning Link](../../.gitbook/assets/cla-gerrit-sign-a-cla.png)
 
-3. Go to the URL in the message [https://,gerrit.linuxfoundation.org/infra/settings/\#Agreements](https://,gerrit.linuxfoundation.org/infra/settings/#Agreements) or navigate to **Settings** and click **Agreements**:
+3. Navigate to the Gerrit instance of your project. For example, if you are contrinuting to OPNFV project, navigate to https://gerrit.opnfv.org
+  
+4. Log in using your LFID.
+
+5. Navigate to **Settings**— the gear icon on the upper right corner, and click **Agreements** from the menu on the left:
 
    ![Gerrit Agreements](../../.gitbook/assets/cla-gerrit-agreements-option.png)
 
