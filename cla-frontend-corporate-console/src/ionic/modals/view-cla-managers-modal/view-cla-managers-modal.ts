@@ -16,12 +16,6 @@ import { ClaCompanyModel } from '../../models/cla-company';
   templateUrl: 'view-cla-managers-modal.html'
 })
 export class ViewCLAManagerModal {
-  form: FormGroup;
-  submitAttempt: boolean = false;
-
-  signatureId: string;
-  managerLFID: string;
-
   managers: any;
 
   constructor(
@@ -30,8 +24,11 @@ export class ViewCLAManagerModal {
     public formBuilder: FormBuilder,
     private claService: ClaService
   ) {
-   
-    console.log(this.managers, 'managersmanagersmanagersmanagers')
+    this.getDefaults()
+  }
+
+  getDefaults() {
+    this.managers = this.navParams.get('managers');
   }
 
   dismiss(data = false) {

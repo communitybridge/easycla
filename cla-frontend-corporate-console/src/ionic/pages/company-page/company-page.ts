@@ -163,8 +163,9 @@ export class CompanyPage {
   }
 
   viewCLAManager(managers) {
-
-    let modal = this.modalCtrl.create('ViewCLAManagerModal', {managers: managers});
+    let modal = this.modalCtrl.create('ViewCLAManagerModal', {
+      managers
+    });
     modal.onDidDismiss((data) => {
       console.log('ViewCLAManagerModal dismissed with data: ' + data);
       // A refresh of data anytime the modal is dismissed
