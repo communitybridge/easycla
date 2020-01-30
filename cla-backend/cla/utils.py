@@ -609,7 +609,18 @@ def user_signed_project_signature(user: User, project_id: str, latest_major_vers
 
         # Don't check the version for employee signatures.
         if signature is not None:
-            ccla_pass = user_ccla_check(user, project_id, signature)
+            #Verify if user has been whitelisted: https://github.com/communitybridge/easycla/issues/332
+            if user.is_whitelisted(signature):
+                ccla_pass = user_ccla_check(user, project_id, signature)
+            else:
+                # Delete user signatures due to user failing whitelist checks
+                cla.log.debug('user not whitelisted- deleting signatures for '
+                              f'user: {user}, project_id: {project_id}, company_id: {company_id}')
+                user_signatures = user.get_user_signatures(
+                    project_id=project_id, company_id=company_id, signature_approved=True, signature_signed=True
+                )
+                for signature in user_signatures:
+                    signature.delete()
     else:
         cla.log.debug(f'User: {user} is NOT associated with a company - unable to check for a CCLA.')
 

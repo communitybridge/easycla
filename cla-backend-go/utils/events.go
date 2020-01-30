@@ -13,6 +13,18 @@ import (
 	"github.com/google/uuid"
 )
 
+// Service interface defines methods of event service
+type Service interface {
+}
+
+type service struct {
+}
+
+// NewService creates new instance of event service
+func NewService() Service {
+	return &service{}
+}
+
 // CreateEventWrapper creates a new event with the specified event type
 func CreateEventWrapper(eventType string) *event.Event {
 	now := time.Now().UTC()
