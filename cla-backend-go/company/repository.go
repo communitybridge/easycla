@@ -37,6 +37,7 @@ var (
 
 // RepositoryService interface methods
 type RepositoryService interface {
+	GetMetrics() (*models.CompaniesMetrics, error)
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
@@ -816,4 +817,19 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	}
 
 	return nil
+}
+func (repo repository) GetMetrics() (*models.CompaniesMetrics, error) {
+	var out models.CompaniesMetrics
+	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of companies, error: %v", err)
+		return nil, err
+	}
+
+	out.TotalCount = *describeTableResult.Table.ItemCount
+	return &out, nil
 }

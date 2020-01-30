@@ -393,6 +393,37 @@ paths:
       tags:
         - signatures
 
+  /signatures/id/{signatureID}:
+    get:
+      summary: Get the signature by ID
+      description: Returns the signature when provided the signature ID
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getSignature
+      parameters:
+        - name: signatureID
+          description: the signature ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - signatures
+
+  # DD: This query makes no sense - why do we need all the extra parameters when we have the signature id?
   /signatures/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -1506,14 +1537,12 @@ paths:
     get:
       summary: search events
       security:
-        - OauthSecurity:
-            - admin
+        - OauthSecurity: []
       description: Returns list of events matching with search criteria
       operationId: searchEvents
       parameters:
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/events_order_by'
         - $ref: '#/parameters/sortOrder'
         - $ref: '#/parameters/eventType'
         - $ref: '#/parameters/userID'
@@ -1521,13 +1550,15 @@ paths:
         - $ref: '#/parameters/projectID'
         - $ref: '#/parameters/before'
         - $ref: '#/parameters/after'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/searchTerm'
       produces:
         - application/json
       responses:
         '200':
           description: Success
           schema:
-            type: object
             $ref: '#/definitions/event-list'
         '400':
           $ref: '#/responses/invalid-request'
@@ -1540,16 +1571,37 @@ paths:
       tags:
         - events
 
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Returns metrics
+      security:
+        - OauthSecurity: []
+      operationId: getMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
 # Common parameters
 parameters:
   pageSize:
     name: pageSize
     description: The maximum number of results per page, value must be a positive integer value
     in: query
-    type: string
+    type: integer
     required: false
-    pattern: '^[1-9][\d]*$'
-    default: '10'
+    minimum: 0
+    exclusiveMinimum: true
   companyName:
     name: companyName
     description: The optional company name filter
@@ -1610,13 +1662,7 @@ parameters:
     type: string
     required: false
     # UUID v4 regex
-    pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
-  events_order_by:
-    name: order_by
-    description: The field to order by, default sort order is ascending
-    in: query
-    type: string
-    enum: [event_time,project_id,company_id,user_id,event_type]
+    # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
   sortOrder:
     name: sortOrder
     in: query
@@ -1904,15 +1950,39 @@ definitions:
     type: object
     x-nullable: false
     title: Project
-    description: Project object that gets returned
+    description: Project data model
     properties:
-      sfdcId:
+      projectID:
+        description: the project internal ID
         type: string
-      name:
+      projectExternalID:
+        description: the project external ID
         type: string
-      description:
+      projectName:
+        description: the project name
         type: string
-      logoUrl:
+      projectACL:
+        type: array
+        description: A list of user ID's authorized to make changes to the project
+        items:
+          type: string
+      projectCCLAEnabled:
+        description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
+        type: boolean
+      projectICLAEnabled:
+        description: Flag to indicate if the Individual Contributor License Agreement is enabled
+        type: boolean
+      projectCCLARequiresICLA:
+        description: Flag to indicate if the CCLA configuration also requires an ICLA
+        type: boolean
+      dateCreated:
+        description: Date/time the record was created
+        type: string
+      dateModified:
+        description: Date/time the record was last modified
+        type: string
+      version:
+        description: Record version
         type: string
 
   contract-group:
@@ -2165,6 +2235,67 @@ definitions:
         type: string
         description: The company record update date/time
         format: date-time
+
+  metrics:
+    type: object
+    x-nullable: false
+    title: Metrics
+    description: All Metrics
+    properties:
+      projects:
+        $ref: '#/definitions/project-metrics'
+      companies:
+        $ref: '#/definitions/companies-metrics'
+      repositories:
+        $ref: '#/definitions/repository-metrics'
+      users:
+        $ref: '#/definitions/user-metrics'
+      signatures:
+        $ref: '#/definitions/signature-metrics'
+
+  project-metrics:
+    type: object
+    x-nullable: false
+    title: ProjectMetrics
+    description: Project Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  companies-metrics:
+    type: object
+    x-nullable: false
+    title: CompaniesMetrics
+    description: Companies Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  repository-metrics:
+    type: object
+    x-nullable: false
+    title: RepositoryMetrics
+    description: Repository Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+
+  user-metrics:
+    type: object
+    x-nullable: false
+    title: UserMetrics
+    description: User Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
 
   signature-metrics:
     type: object
@@ -2521,6 +2652,8 @@ definitions:
   event-list:
     type: object
     properties:
+      NextKey:
+        type: string
       Events:
         type: array
         items:
@@ -2539,15 +2672,27 @@ definitions:
       UserID:
         type: string
         description: id of the user who created this event
+      UserName:
+        type: string
+        description: name of the user
       EventProjectID:
         type: string
         description: id of the SFID project
+      EventProjectName:
+        type: string
+        description: name of the project
+      EventCompanyName:
+        type: string
+        description: name of the company
       EventCompanyID:
         type: string
         description: id od the organization/company
       EventTime:
         type: string
-        description: time of the event in epoch format.
+        description: time of the event.
+      EventTimeEpoch:
+        type: integer
+        description: time of the event in epoch.
       EventData:
         type: string
         description: data related to the event

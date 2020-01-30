@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 
@@ -22,16 +21,17 @@ import (
 // SignatureService interface
 type SignatureService interface {
 	GetMetrics() (*models.SignatureMetrics, error)
-	GetSignatures(ctx context.Context, params signatures.GetSignaturesParams) (*models.Signatures, error)
-	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
-	GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
-	GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
-	GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
-	GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error)
+	GetSignature(signatureID string) (*models.Signature, error)
+	GetSignatures(params signatures.GetSignaturesParams) (*models.Signatures, error)
+	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
+	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
+	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
+	GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
+	GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error)
 
-	GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
-	AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
-	DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
+	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+	DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 }
 
 type service struct {
@@ -52,32 +52,19 @@ func (s service) GetMetrics() (*models.SignatureMetrics, error) {
 	return s.repo.GetMetrics()
 }
 
-// GetSignatures returns the list of signatures associated with the specified signature ID
-func (s service) GetSignatures(ctx context.Context, params signatures.GetSignaturesParams) (*models.Signatures, error) {
+// GetSignature returns the signature associated with the specified signature ID
+func (s service) GetSignature(signatureID string) (*models.Signature, error) {
+	return s.repo.GetSignature(signatureID)
+}
 
-	// Grab and convert the page size, if defined
+// GetSignatures returns the list of signatures associated with the specified signature ID
+func (s service) GetSignatures(params signatures.GetSignaturesParams) (*models.Signatures, error) {
+
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	signatureList, err := s.repo.GetSignatures(params, pageSize)
 	if err != nil {
@@ -88,31 +75,13 @@ func (s service) GetSignatures(ctx context.Context, params signatures.GetSignatu
 }
 
 // GetProjectSignatures returns the list of signatures associated with the specified project
-func (s service) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error) {
 
-	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	projectSignatures, err := s.repo.GetProjectSignatures(params, pageSize)
 	if err != nil {
@@ -123,31 +92,13 @@ func (s service) GetProjectSignatures(ctx context.Context, params signatures.Get
 }
 
 // GetProjectCompanySignatures returns the list of signatures associated with the specified project
-func (s service) GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
 
-	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	projectSignatures, err := s.repo.GetProjectCompanySignatures(params, pageSize)
 	if err != nil {
@@ -158,31 +109,13 @@ func (s service) GetProjectCompanySignatures(ctx context.Context, params signatu
 }
 
 // GetProjectCompanyEmployeeSignatures returns the list of employee signatures associated with the specified project
-func (s service) GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error) {
 
-	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	projectSignatures, err := s.repo.GetProjectCompanyEmployeeSignatures(params, pageSize)
 	if err != nil {
@@ -193,31 +126,13 @@ func (s service) GetProjectCompanyEmployeeSignatures(ctx context.Context, params
 }
 
 // GetCompanySignatures returns the list of signatures associated with the specified company
-func (s service) GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
+func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
 
-	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	companySignatures, err := s.repo.GetCompanySignatures(params, pageSize)
 	if err != nil {
@@ -228,31 +143,13 @@ func (s service) GetCompanySignatures(ctx context.Context, params signatures.Get
 }
 
 // GetUserSignatures returns the list of user signatures associated with the specified user
-func (s service) GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error) {
+func (s service) GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error) {
 
-	// Grab and convert the page size, if defined
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-
-	// If we have a value...attempt to parse it
 	if params.PageSize != nil {
-		//log.Debugf("page size is not null: %s", *params.PageSize)
-		var err error
-		pageSize, err = strconv.ParseInt(*params.PageSize, 10, 64)
-		if err != nil {
-			log.Warnf("error parsing pageSize parameter to int64 - using default size of %d - error: %v",
-				defaultPageSize, err)
-		}
-
-		// Make sure it's positive
-		if pageSize < 1 {
-			log.Warnf("invalid page size of %d - must be a positive value - using default size of %d",
-				pageSize, defaultPageSize)
-			pageSize = defaultPageSize
-		}
+		pageSize = *params.PageSize
 	}
-
-	// log.Debugf("PageSize: %v", pageSize)
 
 	userSignatures, err := s.repo.GetUserSignatures(params, pageSize)
 	if err != nil {
@@ -263,7 +160,7 @@ func (s service) GetUserSignatures(ctx context.Context, params signatures.GetUse
 }
 
 // GetGithubOrganizationsFromWhitelist retrieves the organization from the whitelist
-func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error) {
 
 	if signatureID == "" {
 		msg := fmt.Sprintf("unable to get GitHub organizations whitelist - signature ID is nil")
@@ -290,14 +187,14 @@ func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, signat
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)
-		tc := oauth2.NewClient(ctx, ts)
+		tc := oauth2.NewClient(context.Background(), ts)
 		client := githubpkg.NewClient(tc)
 
 		opt := &githubpkg.ListOptions{
 			PerPage: 100,
 		}
 
-		orgs, _, err := client.Organizations.List(ctx, "", opt)
+		orgs, _, err := client.Organizations.List(context.Background(), "", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -316,7 +213,7 @@ func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, signat
 }
 
 // AddGithubOrganizationToWhitelist adds the GH organization to the whitelist
-func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
 	organizationID := whiteListParams.OrganizationID
 
 	if signatureID == "" {
@@ -347,7 +244,7 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, signature
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)
-		tc := oauth2.NewClient(ctx, ts)
+		tc := oauth2.NewClient(context.Background(), ts)
 		client := githubpkg.NewClient(tc)
 
 		opt := &githubpkg.ListOptions{
@@ -355,7 +252,7 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, signature
 		}
 
 		log.Debugf("querying for user's github organizations...")
-		orgs, _, err := client.Organizations.List(ctx, "", opt)
+		orgs, _, err := client.Organizations.List(context.Background(), "", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +283,7 @@ func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, signature
 }
 
 // DeleteGithubOrganizationFromWhitelist deletes the specified GH organization from the whitelist
-func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
 
 	// Extract the payload values
 	organizationID := whiteListParams.OrganizationID
@@ -419,7 +316,7 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, sign
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)
-		tc := oauth2.NewClient(ctx, ts)
+		tc := oauth2.NewClient(context.Background(), ts)
 		client := githubpkg.NewClient(tc)
 
 		opt := &githubpkg.ListOptions{
@@ -427,7 +324,7 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, sign
 		}
 
 		log.Debugf("querying for user's github organizations...")
-		orgs, _, err := client.Organizations.List(ctx, "", opt)
+		orgs, _, err := client.Organizations.List(context.Background(), "", opt)
 		if err != nil {
 			return nil, err
 		}

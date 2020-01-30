@@ -153,15 +153,11 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
-      readCapacity: 0,
-      writeCapacity: 0,
       globalSecondaryIndexes: [
         {
           name: 'external-project-index',
           hashKey: 'project_external_id',
           projectionType: 'ALL',
-          readCapacity: 0,
-          writeCapacity: 0,
         },
       ],
       pointInTimeRecovery: {
@@ -193,16 +189,12 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'user_external_id', type: 'S' },
       ],
       hashKey: 'user_id',
-      readCapacity: 0,
-      writeCapacity: 0,
       billingMode: 'PAY_PER_REQUEST',
       globalSecondaryIndexes: [
         {
           name: 'github-username-index',
           hashKey: 'user_github_username',
           projectionType: 'ALL',
-          readCapacity: 0,
-          writeCapacity: 0,
         },
         { name: 'lf-username-index', hashKey: 'lf_username', projectionType: 'ALL', readCapacity: 0, writeCapacity: 0 },
         {
@@ -247,15 +239,11 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'company_id',
       billingMode: 'PAY_PER_REQUEST',
-      readCapacity: 0,
-      writeCapacity: 0,
       globalSecondaryIndexes: [
         {
           name: 'external-company-index',
           hashKey: 'company_external_id',
           projectionType: 'ALL',
-          readCapacity: 0,
-          writeCapacity: 0,
         },
       ],
       pointInTimeRecovery: {
@@ -291,66 +279,49 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'signature_company_initial_manager_id', type: 'S' },
       ],
       hashKey: 'signature_id',
-      readCapacity: 1,
-      writeCapacity: 1,
+      billingMode: 'PAY_PER_REQUEST',
       globalSecondaryIndexes: [
         {
           name: 'project-signature-index',
           hashKey: 'signature_project_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'reference-signature-index',
           hashKey: 'signature_reference_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'signature-user-ccla-company-index',
           hashKey: 'signature_user_ccla_company_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'project-signature-external-id-index',
           hashKey: 'signature_project_external_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'signature-company-signatory-index',
           hashKey: 'signature_company_signatory_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'reference-signature-search-index',
           hashKey: 'signature_project_id',
           rangeKey: 'signature_reference_name_lower',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'signature-project-id-type-index',
           hashKey: 'signature_project_id',
           rangeKey: 'signature_type',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
         {
           name: 'signature-company-initial-manager-index',
           hashKey: 'signature_company_initial_manager_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
         },
       ],
       pointInTimeRecovery: {
@@ -648,14 +619,17 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'event_id', type: 'S' },
         { name: 'event_type', type: 'S' },
-        { name: 'user_id', type: 'S' },
+        { name: 'event_user_id', type: 'S' },
+        { name: 'event_project_id', type: 'S' },
+        { name: 'event_time_epoch', type: 'N' },
       ],
       hashKey: 'event_id',
       readCapacity: 1,
       writeCapacity: 1,
       globalSecondaryIndexes: [
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'user-id-index', hashKey: 'user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        { name: 'event-user-id-index', hashKey: 'event_user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        { name: 'event-project-id-event-time-epoch-index', hashKey: 'event_project_id', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,

@@ -1,6 +1,6 @@
 {
-  "name": "project",
-  "version": "0.0.0",
+  "name": "easycla",
+  "version": "1.0.0",
   "license": "MIT",
   "scripts": {
     "install-frontend": "./scripts/install-frontend.sh",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "graceful-fs": "^4.2.2",
-    "serverless": "^1.60.4"
+    "serverless": "^1.62.0"
   },
   "devDependencies": {
     "husky": "^3.1.0",
