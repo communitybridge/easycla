@@ -1,0 +1,37 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <span>View CLA Manager</span>
+    </ion-title>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-row>
+    <ion-searchbar placeholder="Search Manager">
+    </ion-searchbar>
+  </ion-row>
+  <ion-grid class="managers">
+      <ion-row>
+        <ion-label>
+          <b>Managers:</b>
+        </ion-label>
+        <ion-col col-12>
+          <ion-list>
+            <!-- <ion-item ion-item *ngFor="let project of projectsFiltered" (click)="selectProject(project)">
+              <ion-label class="project-name">{{project.project_name}}</ion-label>
+            </ion-item> -->
+          </ion-list>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+</ion-content>
+
+<ion-footer class="footer-bordered">
+
+</ion-footer>
