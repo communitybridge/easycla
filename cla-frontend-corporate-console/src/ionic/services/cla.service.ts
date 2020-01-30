@@ -1542,5 +1542,10 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json())
   }
 
+  getProjectWhitelistRequest(companyId: string, projectId: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests?projectId=${projectId}`);
+    return this.http.get(url).map((res) => res.json())
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 }
