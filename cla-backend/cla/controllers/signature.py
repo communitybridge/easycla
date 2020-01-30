@@ -4,7 +4,7 @@
 """
 Controller related to signature operations.
 """
-
+import copy
 import uuid
 from datetime import datetime
 from typing import List, Optional
@@ -174,6 +174,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     signature = Signature()
     try:  # Try to load the signature to update.
         signature.load(str(signature_id))
+        old_signature = copy.deepcopy(signature)
     except DoesNotExist as err:
         return {'errors': {'signature_id': str(err)}}
     if signature_project_id is not None:
@@ -267,8 +268,66 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
             }}
 
     signature.save()
+    notify_whitelist_change(old_signature,signature)
     return signature.to_dict()
 
+def change_in_list(old_list,new_list,msg_added,msg_deleted):
+    added = list(set(new_list)-set(old_list))
+    deleted = list(set(old_list)-set(new_list))
+    change = []
+    if len(added) > 0:
+        change.append(msg_added.format('\n'.join(added)))
+    if len(deleted) > 0:
+        change.append(msg_deleted.format('\n'.join(deleted)))
+    return change
+
+def notify_whitelist_change(old_signature: Signature, new_signature: Signature):
+    changes = []
+    domain_msg_added = 'following value was added to the domain whitelist \n{}'
+    domain_msg_deleted = 'following value was deleted from the domain whitelist \n{}'
+    domain_changes = change_in_list(old_signature.get_domain_whitelist(), new_signature.get_domain_whitelist(),domain_msg_added,domain_msg_deleted)
+    changes = changes + domain_changes
+
+    email_msg_added = 'following value was added to the email whitelist \n{}'
+    email_msg_deleted = 'following value was deleted from the email whitelist \n{}'
+    email_changes = change_in_list(old_signature.get_email_whitelist(), new_signature.get_email_whitelist(),email_msg_added,email_msg_deleted)
+    changes = changes + email_changes
+
+    github_msg_added = 'following value was added to the github whitelist \n{}'
+    github_msg_deleted = 'following value was deleted from the github whitelist \n{}'
+    github_changes = change_in_list(old_signature.get_github_whitelist(), new_signature.get_github_whitelist(),github_msg_added,github_msg_deleted)
+    changes = changes + github_changes
+
+    github_org_msg_added = 'following value was added to the github organization whitelist \n{}'
+    github_org_msg_deleted = 'following value was deleted from the github organization whitelist \n{}'
+    github_org_changes = change_in_list(old_signature.get_github_org_whitelist(), new_signature.get_github_org_whitelist(),github_org_msg_added,github_org_msg_deleted)
+    changes = changes + github_org_changes
+
+    if len(changes) > 0:
+        cla_managers = new_signature.get_managers()
+        subject,body,recipients = whitelist_change_email_content(cla_managers, changes)
+        if len(recipients) > 0:
+            get_email_service().send(subject, body, recipients)
+
+def whitelist_change_email_content(cla_managers, changes):
+    """Helper function to get whitelist change email subject, body, recipients"""
+    subject = 'EasyCLA whitelist modified'
+    change_string = "\n".join(changes)
+    body = """
+This is the notify that EasyCLA whitelist for your organization was modified. The modification was as follows:
+
+{}
+
+Thanks,
+EasyCLA System
+""".format(change_string)
+    body = '<p>' + body.replace('\n', '<br>')+ '</p>'
+    recipients = []
+    for manager in cla_managers:
+        email = manager.get_user_email()
+        if email is not None:
+            recipients.append(email)
+    return subject, body, recipients
 
 def handle_bots(bot_list: List[str], signature: Signature) -> None:
     cla.log.debug(f'Bots: {bot_list}')
