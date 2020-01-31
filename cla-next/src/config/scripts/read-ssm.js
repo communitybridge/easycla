@@ -1,7 +1,7 @@
-// @ts-check
-
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
+
+// @ts-check
 const AWS = require('aws-sdk');
 
 /**
@@ -12,18 +12,22 @@ const AWS = require('aws-sdk');
  * @returns {Promise<{ [key:string]: string}>}
  */
 async function retrieveSSMValues(variables, stage, region, profile) {
-  const scopedVariables = variables.map(param => { return `cla-${param}-${stage}` });
+  const scopedVariables = variables.map(param => {
+    return `cla-${param}-${stage}`
+  });
 
   const result = await requestSSMParameters(scopedVariables, stage, region, profile);
   const parameters = result.Parameters;
   const error = result.$response.error;
   if (error !== null) {
-    throw new Error(`Couldn't retrieve SSM paramters from AWS with error ${error}`);
+    throw new Error(
+      `Couldn't retrieve SSM parameters for stage ${stage} in region ${region} using profile ${profile} - error ${error}`
+    );
   }
   const scopedParams = createParameterMap(parameters, stage);
-  var params = {};
+  let params = {};
   Object.keys(scopedParams).forEach(key => {
-    var param = scopedParams[key];
+    const param = scopedParams[key];
     key = key.replace('cla-', '');
     key = key.replace(`-${stage}`, '');
     params[key] = param;
@@ -31,7 +35,9 @@ async function retrieveSSMValues(variables, stage, region, profile) {
 
   variables.forEach(variable => {
     if (params[variable] === undefined) {
-      throw new Error(`Missing SSM parameter with name ${variable}`);
+      throw new Error(
+        `Missing SSM parameter with name ${variable} for stage ${stage} in region ${region} using profile ${profile}`,
+      );
     }
   });
   return params;
@@ -43,9 +49,8 @@ async function retrieveSSMValues(variables, stage, region, profile) {
  * @param {string} region
  */
 function requestSSMParameters(variables, stage, region, profile) {
-  var credentials = new AWS.SharedIniFileCredentials({ profile });
-  AWS.config.credentials = credentials;
-  const ssm = new AWS.SSM({ region: region });
+  AWS.config.credentials = new AWS.SharedIniFileCredentials({profile});
+  const ssm = new AWS.SSM({region: region});
 
   const ps = {
     Names: variables,
@@ -60,17 +65,15 @@ function requestSSMParameters(variables, stage, region, profile) {
  * @param {string} stage
  */
 function createParameterMap(parameters, stage) {
-  const params = parameters
-    .filter(param => param.Name.endsWith(`-${stage}`))
+  return parameters.filter(param => param.Name.endsWith(`-${stage}`))
     .map(param => {
       const output = {};
       output[param.Name] = param.Value;
       return output;
     })
     .reduce((prev, current) => {
-      return { ...prev, ...current };
+      return {...prev, ...current};
     }, {});
-  return params;
 }
 
 module.exports = retrieveSSMValues;
