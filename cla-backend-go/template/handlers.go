@@ -35,7 +35,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Create an event - run as a go-routine
-		go eventsService.CreateAuditEvent(
+		eventsService.CreateAuditEvent(
 			events.CreateTemplate,
 			claUser,
 			params.ClaGroupID,

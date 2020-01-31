@@ -5,30 +5,30 @@ package events
 
 const (
 	// CreateUser event type
-	CreateUser = "CreateUser"
+	CreateUser = "Create User"
 	// UpdateUser event type
-	UpdateUser = "UpdateUser"
+	UpdateUser = "Update User"
 	// DeleteUser event type
-	DeleteUser = "DeleteUser"
+	DeleteUser = "Delete User"
 
 	// CreateTemplate event type
-	CreateTemplate = "CreateTemplate"
+	CreateTemplate = "Create Template"
 
 	// AddGithubOrgToWL event type
-	AddGithubOrgToWL = "AddGithubOrganizationToWhitelist"
+	AddGithubOrgToWL = "Add GH Org To WL"
 	// DeleteGithubOrgFromWL event type
-	DeleteGithubOrgFromWL = "DeleteGithubOrganizationFromWhitelist"
+	DeleteGithubOrgFromWL = "Delete GH Org From WL"
 
 	// CreateCCLAWhitelistRequest event type
-	CreateCCLAWhitelistRequest = "CreateCCLAWhitelistRequest"
+	CreateCCLAWhitelistRequest = "Create CCLA WL Request"
 	// DeleteCCLAWhitelistRequest event type
-	DeleteCCLAWhitelistRequest = "DeleteCCLAWhitelistRequest"
+	DeleteCCLAWhitelistRequest = "Delete CCLA WL Request"
 
 	// AddUserToCompanyACL event type
-	AddUserToCompanyACL = "AddUserToCompanyACL"
+	AddUserToCompanyACL = "Add User To Company ACL"
 	// DeleteUserFromCompanyACL event type
-	//DeleteUserFromCompanyACL = "DeleteUserFromCompanyACL"
+	//DeleteUserFromCompanyACL = "Delete User From Company ACL"
 
 	// DeletePendingInvite event type
-	DeletePendingInvite = "DeletePendingInvite"
+	DeletePendingInvite = "Delete Pending Invite"
 )

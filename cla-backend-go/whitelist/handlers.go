@@ -135,7 +135,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 			}
 
 			// Create an event - run as a go-routine
-			go eventsService.CreateAuditEvent(
+			eventsService.CreateAuditEvent(
 				events.CreateCCLAWhitelistRequest,
 				claUser,
 				params.ProjectID,
@@ -155,7 +155,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 			}
 
 			// Create an event - run as a go-routine
-			go eventsService.CreateAuditEvent(
+			eventsService.CreateAuditEvent(
 				events.DeleteCCLAWhitelistRequest,
 				claUser,
 				params.ProjectID,
