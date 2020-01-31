@@ -33,7 +33,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Create an event - run as a go-routine
-		go eventsService.CreateAuditEvent(
+		eventsService.CreateAuditEvent(
 			events.CreateUser,
 			claUser,
 			"", // no project context for creating users
@@ -59,7 +59,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Create an event - run as a go-routine
-		go eventsService.CreateAuditEvent(
+		eventsService.CreateAuditEvent(
 			events.UpdateUser,
 			claUser,
 			"", // no project context for creating users
@@ -100,7 +100,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Create an event - run as a go-routine
-		go eventsService.CreateAuditEvent(
+		eventsService.CreateAuditEvent(
 			events.DeleteUser,
 			claUser,
 			"", // no project context for creating users
