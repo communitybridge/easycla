@@ -2,22 +2,31 @@
 # SPDX-License-Identifier: MIT
 import logging
 import unittest
+from unittest.mock import Mock, patch, MagicMock
 
 from github import Github
 
 import cla
-from cla.models.github_models import get_pull_request_commit_authors
+from cla.models.github_models import get_pull_request_commit_authors, handle_commit_from_user
+from cla.models.dynamo_models import Signature
 
 
 class TestGitHubModels(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        pass
+        cls.mock_user_patcher = patch('cla.models.github_models.cla.utils.get_user_instance')
+        cls.mock_signature_patcher = patch('cla.models.github_models.cla.utils.get_signature_instance')
+        cls.mock_utils_patcher = patch('cla.models.github_models.cla.utils')
+        cls.mock_utils_get = cls.mock_utils_patcher.start()
+        cls.mock_user_get = cls.mock_user_patcher.start()
+        cls.mock_signature_get = cls.mock_signature_patcher.start()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        pass
+        cls.mock_user_patcher.stop()
+        cls.mock_signature_patcher.stop()
+        cls.mock_utils_patcher.stop()
 
     def setUp(self) -> None:
         # Only show critical logging stuff
@@ -68,6 +77,22 @@ class TestGitHubModels(unittest.TestCase):
         # cla.log.info("Result: {}".format(commit_authors))
         # cla.log.info([author_info[1] for commit, author_info in commit_authors])
         # self.assertTrue('snalkar' in [author_info[1] for commit, author_info in commit_authors])
+
+    def test_handle_commit_author_whitelisted(self) -> None:
+        """
+        Test case where commit authors have no signatures but have been whitelisted and should
+        return missing list containing a whitelisted flag
+        """
+        # Mock user not existing and happens to be whitelisted
+        self.mock_user_get.return_value.get_user_by_github_id.return_value = None
+        self.mock_user_get.return_value.get_user_by_email.return_value = None
+        self.mock_signature_get.return_value.get_signatures_by_project.return_value = [Signature()]
+        self.mock_utils_get.return_value.is_whitelisted.return_value = True
+        missing = []
+        signed = []
+        handle_commit_from_user('fake_project_id', 'fake_sha', (123,'foo','foo@gmail.com'), signed, missing)
+        self.assertListEqual(missing,[('fake_sha', [123, 'foo', 'foo@gmail.com', True])])
+        self.assertEqual(signed, [])
 
 
 if __name__ == '__main__':
