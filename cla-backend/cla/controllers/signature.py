@@ -273,6 +273,10 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     return signature.to_dict()
 
 def change_in_list(old_list,new_list,msg_added,msg_deleted):
+    if old_list is None:
+        old_list = []
+    if new_list is None:
+        new_list = []
     added = list(set(new_list)-set(old_list))
     deleted = list(set(old_list)-set(new_list))
     change = []
