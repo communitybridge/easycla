@@ -21,6 +21,7 @@ import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
   templateUrl: 'company-page.html'
 })
 export class CompanyPage {
+  pendingRequests: any;
   companyId: string;
   company: ClaCompanyModel;
   manager: ClaUserModel;
@@ -56,6 +57,7 @@ export class CompanyPage {
       projects: true
     };
     this.company = new ClaCompanyModel();
+    this.pendingRequests = [];
     this.projects = [];
 
     this.data = {};
@@ -134,22 +136,23 @@ export class CompanyPage {
   mapProjects(projects) {
     let rows = [];
     for (let project of projects) {
-      console.log(project, 'this is projecr')
+      this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        this.pendingRequests = res.list
+      })
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
         ProjectManagers: project.project_acl,
         Status: '-',
-        PendingRequests: '-',
-        WhiteList: ''
+        PendingRequests: this.pendingRequests.length,
       });
     }
 
     return rows;
   }
 
-  onSelect(event) {
-    this.openProjectPage(event.selected[0].ProjectID);
+  onSelect(projectId) {
+    this.openProjectPage(projectId);
   }
 
   openProjectPage(projectId) {
@@ -157,6 +160,21 @@ export class CompanyPage {
       companyId: this.companyId,
       projectId: projectId
     });
+  }
+
+  viewCLAManager(managers) {
+    let modal = this.modalCtrl.create('ViewCLAManagerModal', {
+      managers
+    });
+    modal.onDidDismiss((data) => {
+      console.log('ViewCLAManagerModal dismissed with data: ' + data);
+      // A refresh of data anytime the modal is dismissed
+      if (data) {
+        // this.getUserByUserId();
+      }
+    });
+    modal.present();
+
   }
 
   openCompanyModal() {

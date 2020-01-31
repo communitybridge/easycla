@@ -14,12 +14,6 @@
     <header>
       <ion-grid>
         <ion-row>
-          <!-- <ion-col col-12>
-            <h1 text-center>
-              {{ company.company_name }}
-              <ion-icon class="clickable" name="md-create" item-right (click)="openCompanyModal()"></ion-icon>
-            </h1>
-          </ion-col> -->
         </ion-row>
       </ion-grid>
     </header>
@@ -64,20 +58,69 @@
               </p>
             </ion-card-title>
             <ion-card-content>
-              <ion-grid [loading-display]="loading.projects">
+              <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
+                <h2>No Projects</h2>
+              </div>
+              <ion-grid [loading-display]="loading.projects && rows && rows.length > 0">
                 <ion-row>
                   <ion-col col-12>
-                    <div class="table-responsive-vertical">
-                      <loading-spinner [loading]="loading.projects"></loading-spinner>
-                      <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
-                        <h2>No Projects</h2>
-                      </div>
-                      <div *ngIf="!loading.projects && rows && rows.length > 0">
-                        <ngx-datatable class='material clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
+                    <div>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th class="clickable">
+                              Project Name
+                            </th>
+                            <th class="clickable">
+                              Status
+                            </th>
+                            <th class="clickable">
+                              CLA Manager
+                            </th>
+                            <th class="clickable">
+                              Whitelists
+                            </th>
+                            <th class="clickable">
+                              Pending Requests
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+
+                          <tr *ngFor="let row of rows">
+                            <td data-title="Project Name">
+                              <span>{{ row.ProjectName}}</span>
+                            </td>
+
+                            <td data-title="Status">
+                            </td>
+
+                            <td data-title="CLA Manager">
+                              <button clear ion-button color="secondary" (click)="viewCLAManager(row.ProjectManagers)">
+                                View Manager
+                              </button>
+                            </td>
+
+                            <td data-title="Whitelist">
+                              <button clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
+                                Manage Whitelist
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!-- <div *ngIf="!loading.projects && rows && rows.length > 0">
+                        <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
                           [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
                           <ngx-datatable-column name="Project Name" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="CLA Manager" prop="ProjectManagers" [sortable]="true"></ngx-datatable-column>
                           <ngx-datatable-column name="Status" prop="Status" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="CLA Manager" sortable="false" prop="ProjectManagers">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                              <span>
+                                <a>View Manager</a>
+                              </span>
+                            </ng-template>
+                          </ngx-datatable-column>
                           <ngx-datatable-column name="Whitelists" sortable="false" prop="Whitelist">
                             <ng-template let-row="row" ngx-datatable-cell-template>
                               <span>
@@ -85,9 +128,9 @@
                               </span>
                             </ng-template>
                           </ngx-datatable-column>
-                          <ngx-datatable-column name="Pending Requests" prop="PendingRequets" [sortable]="true"></ngx-datatable-column>
+                          <ngx-datatable-column name="Pending Requests" prop="PendingRequests" [sortable]="true"></ngx-datatable-column>
                         </ngx-datatable>
-                      </div>
+                      </div> -->
                     </div>
                   </ion-col>
                 </ion-row>
