@@ -58,14 +58,13 @@
               </p>
             </ion-card-title>
             <ion-card-content>
-              <ion-grid [loading-display]="loading.projects">
+              <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
+                <h2>No Projects</h2>
+              </div>
+              <ion-grid [loading-display]="loading.projects && rows && rows.length > 0">
                 <ion-row>
                   <ion-col col-12>
                     <div>
-                      <loading-spinner [loading]="loading.projects"></loading-spinner>
-                      <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
-                        <h2>No Projects</h2>
-                      </div>
                       <table class="table">
                         <thead>
                           <tr>
