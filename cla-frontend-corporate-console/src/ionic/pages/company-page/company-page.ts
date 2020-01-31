@@ -57,6 +57,7 @@ export class CompanyPage {
       projects: true
     };
     this.company = new ClaCompanyModel();
+    this.pendingRequests = [];
     this.projects = [];
 
     this.data = {};
@@ -135,16 +136,15 @@ export class CompanyPage {
   mapProjects(projects) {
     let rows = [];
     for (let project of projects) {
-      // this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
-      //   this.pendingRequests = res.list
-      // })
+      this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        this.pendingRequests = res.list
+      })
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
         ProjectManagers: project.project_acl,
         Status: '-',
-        // PendingRequests: this.pendingRequests && this.pendingRequests.length,
-        WhiteList: ''
+        PendingRequests: this.pendingRequests.length,
       });
     }
 
