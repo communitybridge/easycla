@@ -599,7 +599,24 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
         else:
             cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email not found'.
                           format(author_id, author_username, author_email))
-            missing.append((commit_sha, list(author_info)))
+            #Check to see if not found user is whitelisted to assist in triaging github comment
+            signatures = cla.utils.get_signature_instance().get_signatures_by_project(project_id)
+            list_author_info = list(author_info)
+            for signature in signatures:
+                if cla.utils.is_whitelisted(
+                                            signature,
+                                            email=author_email,
+                                            github_id=author_id,
+                                            github_username=author_username
+                                            ):
+                    # Append whitelisted flag to the author info list
+                    cla.log.debug(
+                        'Github user(id:{}, user: {}, email {}) is whitelisted but not a CLA user'.
+                        format(author_id, author_username, author_email)
+                    )
+                    list_author_info.append(True)
+                    break
+            missing.append((commit_sha, list_author_info))
     else:
         cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id}')
         for user in users:

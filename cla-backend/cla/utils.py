@@ -685,7 +685,7 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
                                                                str(change_request_id))
 
 
-def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False):
+def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_whitelisted=False):
     """
     Returns the CLA badge that will appear on the change request comment (PR for 'github', merge
     request for 'gitlab', etc)
@@ -697,6 +697,10 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     :type all_signed: boolean
     :param sign_url: The URL for the user to click in order to initiate signing.
     :type sign_url: string
+    :param missing_user_id: Flag to check if github id is missing
+    :type missing_user_id: bool
+    :param is_whitelisted; Flag checking if unregistered cla user is whitelisted
+    :type is_whitelisted: bool
     """
 
     if all_signed:
@@ -705,6 +709,8 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     else:
         if missing_user_id:
             badge_url = "{}/cla-missing-id.png".format(CLA_LOGO_URL)
+        elif is_whitelisted:
+            badge_url = "{}/cla-confirmation-needed.png".format(CLA_LOGO_URL)
         else:
             badge_url = "{}/cla-notsigned.png".format(CLA_LOGO_URL)
         badge_hyperlink = sign_url
@@ -755,10 +761,13 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     num_missing = len(missing)
     missing_ids = list(filter(lambda x: x[1][0] is None, missing))
     no_user_id = len(missing_ids) > 0
+    # check if an unsigned committer has been whitelisted
+    whitelisted_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] == True, missing))
+    whitelisted = len(whitelisted_ids) > 0
     sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
-    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
+    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id, is_whitelisted=whitelisted)
     return badge + '<br />' + comment
 
 
@@ -809,6 +818,10 @@ def get_comment_body(repository_type, sign_url, signed, missing):
             if author[1] not in committers:
                 committers[author[1]] = []
             committers[author[1]].append(commit)
+            #Check case for whitelisted unsigned user
+            if  len(author) == 4:
+                committers[author[1]].append(True)
+
         # Print author commit information.
         committers_comment += "<ul>"
         github_help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
@@ -825,20 +838,35 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                     + "</li>"
                 )
             else:
-                committers_comment += (
-                    "<li>["
-                    + failed
-                    + "]("
-                    + sign_url
-                    + ")  "
-                    + author
-                    + " The commit ("
-                    + " ,".join(commit_hashes)
-                    + ") is not authorized under a signed CLA. "
-                    + f"[Please click here to be authorized]({sign_url}). For further assistance with "
-                    + f"EasyCLA, [please submit a support request ticket]({support_url})."
-                    + "</li>"
-                )
+                if True in commit_hashes:
+                    committers_comment += (
+                        f"<li>"
+                        + author
+                        + "("
+                        + " ,".join(commit_hashes[:-1])
+                        + ")"
+                        + "is whitelisted, but they must confirm "
+                        + "their affiliation with the company that did so."
+                        + f"[Start by clicking here]({sign_url}), click \"Corporate\","
+                        + "select the appropriate company from the list, then confirm "
+                        + "your affiliation on the page that appears."
+                        + "</li>"
+                    )
+                else:
+                    committers_comment += (
+                        "<li>["
+                        + failed
+                        + "]("
+                        + sign_url
+                        + ")  "
+                        + author
+                        + " The commit ("
+                        + " ,".join(commit_hashes)
+                        + ") is not authorized under a signed CLA. "
+                        + f"[Please click here to be authorized]({sign_url}). For further assistance with "
+                        + f"EasyCLA, [please submit a support request ticket]({support_url})."
+                        + "</li>"
+                    )
         committers_comment += "</ul>"
         return committers_comment
 
@@ -1205,6 +1233,94 @@ def update_github_username(github_user: dict, user: User):
                             f'vs db user record: {user.get_user_github_username}) - '
                             f'setting the value to: {github_user["login"]}')
             user.set_user_github_username(github_user['login'])
+
+def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, github_id=None):
+    """
+    Given either email, github username or github id a check is made against ccla signature to
+    check whether a given parameter is whitelisted . This check is vital for a first time user
+    who could have been whitelisted and has not confirmed affiliation
+
+    :param ccla_signature: given signature used to check for ccla whitelists
+    :param email: email that is checked against ccla signature email whitelist
+    :param github_username: A given github username checked against ccla signature github/github-org whitelists
+    :param github_id: A given github id checked against ccla signature github/github-org whitelists
+    """
+
+    if email:
+        #Checking email whitelist
+        whitelist = ccla_signature.get_email_whitelist()
+        cla.log.debug(f'is_whitelisted - testing email: {email} with '
+                      f'CCLA whitelist emails: {whitelist}'
+                      )
+        if whitelist is not None:
+            if email.lower() in (s.lower() for s in whitelist):
+                cla.log.debug('found user email in email whitelist')
+                return True
+
+        #Checking domain whitelist
+        patterns = ccla_signature.get_domain_whitelist()
+        cla.log.debug(
+            f"is_whitelisted - testing user email domain: {email} with "
+            f"whitelist domain values in database: {patterns}"
+        )
+        if patterns is not None:
+            if get_user_instance().preprocess_pattern([email], patterns):
+                return True
+            else:
+                cla.log.debug(f"Did not match email: {email} with domain: {patterns}")
+        else:
+            cla.log.debug(
+                "is_whitelisted - no domain whitelist patterns defined in the database"
+                "- skipping domain whitelist check"
+            )
+    if github_id :
+        github_username = lookup_user_github_username(github_id)
+
+    #Github username whitelist
+    if github_username is not None:
+        # remove leading and trailing whitespace from github username
+        github_username = github_username.strip()
+        github_whitelist = ccla_signature.get_github_whitelist()
+        cla.log.debug(
+            f"is_whitelisted - testing user github username: {github_username} with "
+            f"CCLA github whitelist: {github_whitelist}"
+        )
+
+        if github_whitelist is not None:
+            # case insensitive search
+            if github_username.lower() in (s.lower() for s in github_whitelist):
+                cla.log.debug("found github username in github whitelist")
+                return True
+    else:
+        cla.log.debug(
+            "is_whitelisted - users github_username is not defined " "- skipping github username whitelist check"
+        )
+
+    # Check github org whitelist
+    if github_username is not None:
+        github_orgs = cla.utils.lookup_github_organizations(github_username)
+        if "error" not in github_orgs:
+            # Fetch the list of orgs this user is part of
+            github_org_whitelist = ccla_signature.get_github_org_whitelist()
+            cla.log.debug(
+                f"is_whitelisted - testing user github orgs: {github_orgs} with "
+                f"CCLA github org whitelist values: {github_org_whitelist}"
+            )
+
+            if github_org_whitelist is not None:
+                for dynamo_github_org in github_org_whitelist:
+                    # case insensitive search
+                    if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
+                        cla.log.debug("found matching github org for user")
+                        return True
+    else:
+        cla.log.debug(
+            "is_whitelisted - users github_username is not defined " "- skipping github org whitelist check"
+        )
+
+    cla.log.debug('unavle to find user in any whitelist')
+    return False
+
 
 
 def get_oauth_client():
