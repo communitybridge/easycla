@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
@@ -155,14 +157,15 @@ func server(localMode bool) http.Handler {
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, eventsService, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
-	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
-	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
+	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
+	onboardService := onboard.NewService(onboardRepo, awsSession)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
 	}
+	utils.SetSnsEmailSender(awsSession, configFile.SenderEmailAddress)
 
 	api.OauthSecurityAuth = authorizer.SecurityAuth
 	users.Configure(api, usersService)

@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/go-openapi/strfmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
 )
 
@@ -52,12 +52,10 @@ type Service interface { // nolint
 }
 
 // NewService creates a new company service object
-func NewService(repo RepositoryService, awsSession *session.Session, senderEmailAddress, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
+func NewService(repo RepositoryService, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
 	return service{
 		repo:                repo,
 		userDynamoRepo:      userDynamoRepo,
-		sesClient:           ses.New(awsSession),
-		senderEmailAddress:  senderEmailAddress,
 		corporateConsoleURL: corporateConsoleURL,
 	}
 }
@@ -298,31 +296,9 @@ You have now been granted access to the organization: %s
 
 - Linux Foundation CLA System`, user.Name, companyName, user.LFUsername, user.LFEmail)
 		// The character encoding for the email.
-		CharSet = "UTF-8"
 	)
 
-	input := &ses.SendEmailInput{
-		Destination: &ses.Destination{
-			ToAddresses: []*string{
-				aws.String(Recipient),
-			},
-		},
-		Message: &ses.Message{
-			Body: &ses.Body{
-				Text: &ses.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(TextBody),
-				},
-			},
-			Subject: &ses.Content{
-				Charset: aws.String(CharSet),
-				Data:    aws.String(Subject),
-			},
-		},
-		Source: aws.String(Sender),
-	}
-
-	_, err := s.sesClient.SendEmail(input)
+	err := utils.SendEmail(Sender, Subject, TextBody, []string{Recipient})
 	if err != nil {
 		log.Warnf("Error sending mail, error: %v", err)
 		return err
@@ -374,31 +350,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 
 - Linux Foundation CLA System`, adminUser.Name, company.CompanyName, user.LFUsername, user.LFEmail, s.corporateConsoleURL)
 
-		CharSet := "UTF-8"
-
-		input := &ses.SendEmailInput{
-			Destination: &ses.Destination{
-				CcAddresses: []*string{},
-				ToAddresses: []*string{
-					aws.String(adminUser.LFEmail),
-				},
-			},
-			Message: &ses.Message{
-				Body: &ses.Body{
-					Text: &ses.Content{
-						Charset: aws.String(CharSet),
-						Data:    aws.String(TextBody),
-					},
-				},
-				Subject: &ses.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(Subject),
-				},
-			},
-			Source: aws.String(s.senderEmailAddress),
-		}
-
-		_, err = s.sesClient.SendEmail(input)
+		err = utils.SendEmail(s.senderEmailAddress, Subject, TextBody, []string{adminUser.LFEmail})
 		if err != nil {
 			log.Warnf("Error sending mail, error: %v", err)
 			return err
