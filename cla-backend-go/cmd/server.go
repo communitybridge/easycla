@@ -165,7 +165,7 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
 	}
-	utils.SetSnsEmailSender(awsSession, configFile.SenderEmailAddress)
+	utils.SetSnsEmailSender(awsSession, configFile.SNSEventTopicARN, configFile.SenderEmailAddress)
 
 	api.OauthSecurityAuth = authorizer.SecurityAuth
 	users.Configure(api, usersService)

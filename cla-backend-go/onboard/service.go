@@ -26,7 +26,7 @@ type Service interface { // nolint
 	CreateCLAManagerRequest(lfid, projectName, companyName, userFullName, userEmail string) (*models.OnboardClaManagerRequest, error)
 	GetCLAManagerRequestsByLFID(lfid string) (*models.OnboardClaManagerRequests, error)
 	DeleteCLAManagerRequestsByRequestID(requestID string) error
-	SendNotification(sender *string, recipients []string, subject *string, emailBody *string) error
+	SendNotification(recipients []string, subject *string, emailBody *string) error
 }
 
 // NewService creates a new company service object
@@ -53,8 +53,8 @@ func (s service) DeleteCLAManagerRequestsByRequestID(requestID string) error {
 }
 
 // SendNotification sends the notification to the specified recipients
-func (s service) SendNotification(sender *string, recipients []string, subject *string, emailBody *string) error {
-	err := utils.SendEmail(*sender, *subject, *emailBody, recipients)
+func (s service) SendNotification(recipients []string, subject *string, emailBody *string) error {
+	err := utils.SendEmail(*subject, *emailBody, recipients)
 	if err != nil {
 		log.Warnf("Error publishing message to topic: %s, Error: %v", s.snsEventTopicARN, err)
 		return err

@@ -98,7 +98,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 			*/
 
 			// sender string, recipients []string, subject string, emailBody string
-			err := service.SendNotification(params.Body.SenderEmail, params.Body.RecipientEmails, params.Body.Subject, params.Body.EmailBody)
+			err := service.SendNotification(params.Body.RecipientEmails, params.Body.Subject, params.Body.EmailBody)
 			if err != nil {
 				msg := fmt.Sprintf("Bad Request - unable to send notification to recipients: %+v, error: %+v", params.Body.RecipientEmails, err)
 				log.Warnf(msg)

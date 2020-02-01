@@ -10,31 +10,33 @@ import (
 )
 
 type EmailSender interface {
-	SendEmail(sender string, subject string, body string, recipients []string) error
+	SendEmail(subject string, body string, recipients []string) error
 }
 
 var emailSender EmailSender
 
 type snsEmail struct {
-	snsClient        *sns.SNS
-	snsEventTopicARN string
+	snsClient          *sns.SNS
+	snsEventTopicARN   string
+	senderEmailAddress string
 }
 
-func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string) {
+func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string, senderEmailAddress string) {
 	emailSender = &snsEmail{
-		snsClient:        sns.New(awsSession),
-		snsEventTopicARN: snsEventTopicARN,
+		snsClient:          sns.New(awsSession),
+		snsEventTopicARN:   snsEventTopicARN,
+		senderEmailAddress: senderEmailAddress,
 	}
 }
 
-func (s *snsEmail) SendEmail(sender string, subject string, body string, recipients []string) error {
+func (s *snsEmail) SendEmail(subject string, body string, recipients []string) error {
 	var awsRecipients = make([]*string, len(recipients))
 	for i, recipient := range recipients {
 		awsRecipients[i] = &recipient
 	}
 
 	event := CreateEventWrapper("cla-email-event")
-	event.Data = ToEmailEvent(&sender, recipients, &subject, &body)
+	event.Data = ToEmailEvent(&s.senderEmailAddress, recipients, &subject, &body)
 
 	b, err := event.MarshalBinary()
 	if err != nil {
@@ -58,9 +60,9 @@ func (s *snsEmail) SendEmail(sender string, subject string, body string, recipie
 	return nil
 }
 
-func SendEmail(sender string, subject string, body string, recipients []string) error {
+func SendEmail(subject string, body string, recipients []string) error {
 	if emailSender == nil {
 		return errors.New("Email sender not set")
 	}
-	return emailSender.SendEmail(sender, subject, body, recipients)
+	return emailSender.SendEmail(subject, body, recipients)
 }

@@ -15,15 +15,11 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
-
-	"github.com/aws/aws-sdk-go/service/ses"
 )
 
 type service struct {
 	repo                RepositoryService
 	userDynamoRepo      user.RepositoryService
-	sesClient           *ses.SES
-	senderEmailAddress  string
 	corporateConsoleURL string
 }
 
@@ -47,7 +43,7 @@ type Service interface { // nolint
 	DeletePendingCompanyInviteRequest(InviteID string) error
 
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
-	SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error
+	SendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
 }
 
@@ -266,7 +262,7 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 
 	recipientEmailAddress := userProfile.LFEmail
 
-	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, s.senderEmailAddress, &userProfile)
+	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, &userProfile)
 	if err != nil {
 		return errors.New("failed to send notification email")
 	}
@@ -281,9 +277,8 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 }
 
 // SendApprovalEmail sends the approval email when provided the company name, address and user object
-func (s service) SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error {
+func (s service) SendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error {
 	var (
-		Sender    = senderAddress
 		Recipient = recipientAddress
 		Subject   = "CLA: Approval of Access for Corporate CLA"
 
@@ -298,7 +293,7 @@ You have now been granted access to the organization: %s
 		// The character encoding for the email.
 	)
 
-	err := utils.SendEmail(Sender, Subject, TextBody, []string{Recipient})
+	err := utils.SendEmail(Subject, TextBody, []string{Recipient})
 	if err != nil {
 		log.Warnf("Error sending mail, error: %v", err)
 		return err
@@ -350,7 +345,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 
 - Linux Foundation CLA System`, adminUser.Name, company.CompanyName, user.LFUsername, user.LFEmail, s.corporateConsoleURL)
 
-		err = utils.SendEmail(s.senderEmailAddress, Subject, TextBody, []string{adminUser.LFEmail})
+		err = utils.SendEmail(Subject, TextBody, []string{adminUser.LFEmail})
 		if err != nil {
 			log.Warnf("Error sending mail, error: %v", err)
 			return err
