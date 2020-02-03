@@ -40,7 +40,7 @@
       </ion-row>
     </ion-grid>
 
-    <ion-grid>
+    <ion-grid [loading-display]="loading.projects && loading.companySignatures">
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card>
@@ -58,10 +58,7 @@
               </p>
             </ion-card-title>
             <ion-card-content>
-              <div *ngIf="!loading.projects && rows && rows.length === 0" class="empty-signatures">
-                <h2>No Projects</h2>
-              </div>
-              <ion-grid [loading-display]="loading.projects && rows && rows.length > 0">
+              <ion-grid>
                 <ion-row>
                   <ion-col col-12>
                     <div>
@@ -93,6 +90,7 @@
                             </td>
 
                             <td data-title="Status">
+                              <span [title]="row.Status">{{ row.Status}}</span>
                             </td>
 
                             <td data-title="CLA Manager">
@@ -106,31 +104,13 @@
                                 Manage Whitelist
                               </button>
                             </td>
+
+                            <td data-title="Project Name">
+                              <span>{{ row.PendingRequests}}</span>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
-                      <!-- <div *ngIf="!loading.projects && rows && rows.length > 0">
-                        <ngx-datatable class='bootstrap clickable' [rows]="rows" [columns]="columns" [headerHeight]="50" [rowHeight]="'auto'" [selectionType]="SelectionType.single"
-                          [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (select)="onSelect($event)">
-                          <ngx-datatable-column name="Project Name" prop="ProjectName" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="Status" prop="Status" [sortable]="true"></ngx-datatable-column>
-                          <ngx-datatable-column name="CLA Manager" sortable="false" prop="ProjectManagers">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                              <span>
-                                <a>View Manager</a>
-                              </span>
-                            </ng-template>
-                          </ngx-datatable-column>
-                          <ngx-datatable-column name="Whitelists" sortable="false" prop="Whitelist">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                              <span>
-                                <a>Manage Whitelist</a>
-                              </span>
-                            </ng-template>
-                          </ngx-datatable-column>
-                          <ngx-datatable-column name="Pending Requests" prop="PendingRequests" [sortable]="true"></ngx-datatable-column>
-                        </ngx-datatable>
-                      </div> -->
                     </div>
                   </ion-col>
                 </ion-row>
