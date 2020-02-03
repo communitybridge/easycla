@@ -79,16 +79,4 @@ export class ClaLandingPage {
       this.project = response;
     });
   }
-
-  /**
-   * Returns true if this is a CFF project, returns false otherwise.
-   * We have special instructions on the view for this project.
-   */
-  isCFFProject(): boolean {
-    if (this.project && this.project.project_name) {
-      return this.project.project_name.toLowerCase().includes('Cloud Foundry Foundation'.toLowerCase());
-    } else {
-      return false;
-    }
-  }
 }
