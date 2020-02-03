@@ -832,7 +832,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                     + failed
                     + "The commit ("
                     + " ,".join(commit_hashes)
-                    + ") is missing the User's ID,preventing the EasyCLA check.[Consult GitHub Help]("
+                    + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
                     + github_help_url
                     + ") to resolve."
                     + "</li>"
