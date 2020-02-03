@@ -35,7 +35,7 @@ def test_get_comment_body_no_user_id():
         + FAILED
         + "The commit ("
         + " ,".join([GITHUB_FAKE_SHA, GITHUB_FAKE_SHA_2])
-        + ") is missing the User's ID,preventing the EasyCLA check.[Consult GitHub Help]("
+        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
         + GITHUB_HELP_URL
         + ") to resolve."
         + "</li></ul>"
@@ -76,7 +76,7 @@ def test_get_comment_body_cla_fail_no_user_id_and_user_id():
         + FAILED
         + "The commit ("
         + " ,".join([GITHUB_FAKE_SHA_2])
-        + ") is missing the User's ID,preventing the EasyCLA check.[Consult GitHub Help]("
+        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
         + GITHUB_HELP_URL
         + ") to resolve."
         + "</li></ul>"
