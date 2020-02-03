@@ -101,6 +101,8 @@ export class AddCompanyModal {
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
+        this.getAllCompanies();
+        window.location.reload(true);
         this.dismiss();
       },
       (err: any) => {
@@ -123,7 +125,8 @@ export class AddCompanyModal {
 
     this.claService.updateUserV3(user).subscribe(
       () => {
-        this.loading.submit = false;
+        this.loading.submit = false; 
+        window.location.reload(true);
         this.dismiss();
       },
       (exception) => {
