@@ -43,7 +43,10 @@ custom:
     # Because our application is a Single Page Application, we always want our index
     # documents to handle 404/403 urls.
     errorDocument: index.html
+
+  # CloudFront invalidation plugin configuration
   cloudfrontInvalidate:
+    # Grab the distribution ID key from the output section
     distributionIdKey: 'CloudfrontDistributionId'
     items: # one or more paths required
       - '/*'
