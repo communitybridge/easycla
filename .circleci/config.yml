@@ -455,6 +455,13 @@ jobs:
             echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
             yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
             popd
+      - run:
+          name: Invalidate Cache
+          command: |
+            pushd $PROJECT_DIR
+            echo "Running: yarn sls cloudfrontInvalidate --stage=\"${STAGE}\" --region=\"${AWS_REGION}\" --cloudfront=\"true\""
+            yarn sls cloudfrontInvalidate --stage="${STAGE}" --region="${AWS_REGION}" --cloudfront="true"
+            popd
 
   # Project Management Console
   deployProjectManagementConsoleDev:
