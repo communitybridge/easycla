@@ -4,10 +4,10 @@ EasyCLA handles the process of ensuring that CLA signatures are in place before 
 
 As a contributor, you can easily comply to your legal obligations for a company or contribute individually by doing one or both of the following tasks:
 
-* [Confirm your association with a company that has a signed Corporate Contributor License Agreement](). You wrote code for your employer and are contributing this code to a project on your employer's behalf.
-* [Sign an Individual Contributor License Agreement](). You are contributing code that you wrote on your own behalf \(code that you wrote on your own time, and not for an employer or using your employer’s facilities or equipment\). Remember—you should not submit a contribution under an Individual CLA if that contribution consists of content that belongs to your company. Instead, you should contribute it under a Corporate CLA signed by your company.
+* [Confirm your association with a company that has a signed Corporate Contributor License Agreement](../contributors/contribute-to-a-github-company-project.md). You wrote code for your employer and are contributing this code to a project on your employer's behalf.
+* [Sign an Individual Contributor License Agreement](../contributors/sign-a-cla-as-an-individual-contributor-to-github.md). You are contributing code that you wrote on your own behalf \(code that you wrote on your own time, and not for an employer or using your employer’s facilities or equipment\). Remember—you should not submit a contribution under an Individual CLA if that contribution consists of content that belongs to your company. Instead, you should contribute it under a Corporate CLA signed by your company.
 
-Gerrit contributors, see [Contribute to a Gerrit Project]().
+Gerrit contributors, see [Contribute to a Gerrit Project](../contributors/contribute-to-a-gerrit-project.md).
 
 ## Need a walk-through?
 

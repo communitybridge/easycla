@@ -33,6 +33,12 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 * `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA whitelist
 * `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
 
+## EasyCLA Architechture
+
+The following diagram explains the EasyCLA architecture.
+
+![CLA Architecture](.gitbook/assets/architecture-overview.png)
+
 ## License
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
@@ -42,4 +48,3 @@ This project’s source code is licensed under the MIT License. A copy of the li
 The project includes source code from keycloak, which is licensed under the Apache License, version 2.0 \(Apache-2.0\), a copy of which is available in LICENSE-keycloak.
 
 This project’s documentation is licensed under the Creative Commons Attribution 4.0 International License \(CC-BY-4.0\). A copy of the license is available in LICENSE-docs.
-
