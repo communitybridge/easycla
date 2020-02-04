@@ -37,7 +37,7 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 
 The following diagram explains the EasyCLA architecture.
 
-![CLA Architecture](../.gitbook/assets/architecture-overview.png)
+![CLA Architecture](.gitbook/assets/architecture-overview.png)
 
 ## License
 
