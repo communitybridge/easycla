@@ -2,16 +2,15 @@
 
 Project managers have responsibilities such as managing a project’s GitHub organization or Gerrit instance, members, repositories, and legal aspects like the CLA. You use the CLA Management Console.
 
-Do the following CLA set-up steps after you [sign in to the CLA Management Console](../project-managers/sign-in-to-the-cla-management-console.md):
+Do the following CLA set-up steps after you [sign in to the CLA Management Console](sign-in-to-the-cla-management-console.md):
 
-1. [Install the EasyCLA Application](../project-managers/install-the-easycla-application.md).
-2. [Add a CLA Group](../project-managers/add-a-cla-group.md).
-3. [Add Contributor License Agreements](../project-managers/add-contributor-license-agreements.md).
-4. [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](../project-managers/add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md
-).
+1. [Install the EasyCLA Application](install-the-easycla-application.md).
+2. [Add a CLA Group](add-a-cla-group.md).
+3. [Add Contributor License Agreements](add-contributor-license-agreements.md).
+4. [Add Gerrit Instances to CLA Monitoring or Delete Them From CLA Monitoring](add-gerrit-instances-to-cla-monitoring-or-delete-them-from-cla-monitoring.md).
 
 At any time, you can change the settings to manage your project CLA monitoring, and do other management tasks:
 
-* [View Current and Previous CLA PDFs](../project-managers/view-current-and-previous-cla-pdfs.md)
-* [Manage CLA Group Details](../project-managers/manage-cla-group-details.md)
+* [View Current and Previous CLA PDFs](view-current-and-previous-cla-pdfs.md)
+* [Manage CLA Group Details](manage-cla-group-details.md)
 
