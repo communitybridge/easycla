@@ -39,6 +39,12 @@ The following diagram explains the EasyCLA architecture.
 
 ![CLA Architecture](.gitbook/assets/architecture-overview.png)
 
+## EasyCLA Release Process
+
+The following diagram illustrates the EasyCLA release process:
+
+![CLA Release Process](.gitbook/assets/easycla_software_development_and_release_process.png)
+
 ## License
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
