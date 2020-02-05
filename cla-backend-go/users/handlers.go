@@ -6,6 +6,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/users"
@@ -15,7 +16,7 @@ import (
 )
 
 // Configure setups handlers on api with service
-func Configure(api *operations.ClaAPI, service Service) {
+func Configure(api *operations.ClaAPI, service Service, eventsService events.Service) {
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
@@ -30,6 +31,15 @@ func Configure(api *operations.ClaAPI, service Service) {
 			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
 			return users.NewAddUserBadRequest().WithPayload(errorResponse(err))
 		}
+
+		// Create an event - run as a go-routine
+		eventsService.CreateAuditEvent(
+			events.CreateUser,
+			claUser,
+			"", // no project context for creating users
+			"", // no company context for creating users
+			fmt.Sprintf("%s created a new user %+v", claUser.Name, userModel),
+		)
 
 		return users.NewAddUserOK().WithPayload(userModel)
 	})
@@ -47,6 +57,15 @@ func Configure(api *operations.ClaAPI, service Service) {
 			log.Warnf("error updating user from user request with body: %+v, error: %+v", params.Body, err)
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
 		}
+
+		// Create an event - run as a go-routine
+		eventsService.CreateAuditEvent(
+			events.UpdateUser,
+			claUser,
+			"", // no project context for creating users
+			"", // no company context for creating users
+			fmt.Sprintf("%s updated user %+v", claUser.Name, userModel),
+		)
 
 		return users.NewUpdateUserOK().WithPayload(userModel)
 	})
@@ -80,6 +99,15 @@ func Configure(api *operations.ClaAPI, service Service) {
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
 		}
 
+		// Create an event - run as a go-routine
+		eventsService.CreateAuditEvent(
+			events.DeleteUser,
+			claUser,
+			"", // no project context for creating users
+			"", // no company context for creating users
+			fmt.Sprintf("%s deleted user id: %s", claUser.Name, params.UserID),
+		)
+
 		return users.NewDeleteUserNoContent()
 	})
 
@@ -107,6 +135,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
 				fmt.Errorf("user %+v not authorized to get users", claUser)))
 		}
+
 		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {
 			log.Warnf("error retrieving user for user name: '%s', error: %+v", params.UserName, err)

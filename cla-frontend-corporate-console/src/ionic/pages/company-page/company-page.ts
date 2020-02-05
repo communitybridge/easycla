@@ -21,6 +21,7 @@ import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
   templateUrl: 'company-page.html'
 })
 export class CompanyPage {
+  pendingRequests: any;
   companyId: string;
   company: ClaCompanyModel;
   manager: ClaUserModel;
@@ -37,6 +38,8 @@ export class CompanyPage {
   data: any;
   columns: any[];
   rows: any[];
+  allSignatures: any[];
+  userEmail: string;
 
   constructor(
     public navCtrl: NavController,
@@ -56,7 +59,9 @@ export class CompanyPage {
       projects: true
     };
     this.company = new ClaCompanyModel();
+    this.pendingRequests = [];
     this.projects = [];
+    this.userEmail = localStorage.getItem('user_email');
 
     this.data = {};
     this.columns = [
@@ -98,8 +103,6 @@ export class CompanyPage {
 
     this.claService.getCompanySignatures(this.companyId).subscribe(
       (response) => {
-        //console.log('Company signatures:');
-        //console.log(response);
         if (response.resultCount > 0) {
           //console.log('Filtering Company signatures...');
           this.companySignatures = response.signatures.filter((signature) => signature.signatureSigned === true);
@@ -108,9 +111,11 @@ export class CompanyPage {
           for (let signature of this.companySignatures) {
             this.getProject(signature.projectID);
           }
-        }
-        this.loading.companySignatures = false;
+          this.loading.companySignatures = false;
         this.loading.projects = false;
+        }
+        this.loading.companySignatures = true;
+        this.loading.projects = true;
       },
       (exception) => {
         this.loading.companySignatures = false;
@@ -134,22 +139,23 @@ export class CompanyPage {
   mapProjects(projects) {
     let rows = [];
     for (let project of projects) {
-      console.log(project, 'this is projecr')
+      this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        this.pendingRequests = res.list
+      })
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
         ProjectManagers: project.project_acl,
-        Status: '-',
-        PendingRequests: '-',
-        WhiteList: ''
+        Status: this.getStatus(this.companySignatures),
+        PendingRequests: this.pendingRequests.length,
       });
     }
 
     return rows;
   }
 
-  onSelect(event) {
-    this.openProjectPage(event.selected[0].ProjectID);
+  onSelect(projectId) {
+    this.openProjectPage(projectId);
   }
 
   openProjectPage(projectId) {
@@ -157,6 +163,21 @@ export class CompanyPage {
       companyId: this.companyId,
       projectId: projectId
     });
+  }
+
+  viewCLAManager(managers) {
+    let modal = this.modalCtrl.create('ViewCLAManagerModal', {
+      managers
+    });
+    modal.onDidDismiss((data) => {
+      console.log('ViewCLAManagerModal dismissed with data: ' + data);
+      // A refresh of data anytime the modal is dismissed
+      if (data) {
+        // this.getUserByUserId();
+      }
+    });
+    modal.present();
+
   }
 
   openCompanyModal() {
@@ -208,7 +229,12 @@ export class CompanyPage {
   getInvites() {
     this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
-      this.loading.invites = false;
+      if (this.invites.length > 0) {
+        this.loading.invites = false;
+      }
+      else {
+        this.loading.invites = true;
+      }      
     });
   }
 
@@ -230,5 +256,27 @@ export class CompanyPage {
     this.claService.declineCompanyInvite(this.companyId, data).subscribe((response) => {
       this.getInvites();
     });
+  }
+
+  getStatus(signatures) {
+    for (let i = 0; i < signatures.length; i++) {
+      return (this.checkStatusOfSignature(signatures[i].signatureACL, this.userEmail))
+    }
+  }
+
+  checkStatusOfSignature(signatureACL, userEmail) {
+    for (let i = 0; i < signatureACL.length; i++) {
+      if (signatureACL[i].lfEmail === userEmail) {
+        return 'CLA Manager';
+      }
+    }
+
+    for (let i = 0; i < this.invites.length; i++) {
+      if (this.invites[i].userEmail === userEmail) {
+        return 'Pending';
+      }
+    }
+
+    return 'Request Access'
   }
 }

@@ -13,7 +13,6 @@
   <div class="page-content">
 
 
-
     <ion-grid>
       <ion-row justify-content-center>
         <ion-card>
@@ -22,7 +21,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Domain Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -35,7 +34,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Email Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -48,7 +47,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -61,7 +60,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Org Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>

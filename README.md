@@ -6,7 +6,7 @@ The Contributor License Agreement \(CLA\) service of the Linux Foundation lets p
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
 
-This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](getting-started/README.md).
+This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](getting-started/).
 
 ## Third-party Services
 
@@ -33,12 +33,23 @@ CLA frontend consists of three independent SPA build with [Ionic](https://ionicf
 * `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA whitelist
 * `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
 
+## EasyCLA Architechture
+
+The following diagram explains the EasyCLA architecture.
+
+![CLA Architecture](.gitbook/assets/architecture-overview.png)
+
+## EasyCLA Release Process
+
+The following diagram illustrates the EasyCLA release process:
+
+![CLA Release Process](.gitbook/assets/easycla_software_development_and_release_process.png)
+
 ## License
 
 Copyright The Linux Foundation and each contributor to CommunityBridge.
 
 This project’s source code is licensed under the MIT License. A copy of the license is available in LICENSE.
-
 
 The project includes source code from keycloak, which is licensed under the Apache License, version 2.0 \(Apache-2.0\), a copy of which is available in LICENSE-keycloak.
 
