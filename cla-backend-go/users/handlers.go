@@ -20,11 +20,17 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
+		if claUser.UserID == "" {
+			return users.NewAddUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("UsersAddUserHandler - user %+v not authorized to add users - missing UserID", claUser)))
+		}
+		/* Including this check breaks things...
 		// Make sure we have good non-empty parameters
 		if claUser.UserID == "" || params.Body.UserID == "" {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
 				fmt.Errorf("user: %s not authorized to update user: %s", claUser.UserID, params.Body.UserID)))
 		}
+		*/
 
 		userModel, err := service.CreateUser(&params.Body)
 		if err != nil {
@@ -72,11 +78,17 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Delete User Handler
 	api.UsersDeleteUserHandler = users.DeleteUserHandlerFunc(func(params users.DeleteUserParams, claUser *user.CLAUser) middleware.Responder {
+		if claUser.UserID == "" {
+			return users.NewDeleteUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("UsersDeleteUserHandler - user %+v not authorized to delete users - missing UserID", claUser)))
+		}
+		/* Including this check breaks things...
 		// Make sure we have good non-empty parameters
 		if claUser.UserID == "" || params.UserID == "" {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
 				fmt.Errorf("user: %s not authorized to delete user: %s", claUser.UserID, params.UserID)))
 		}
+		*/
 
 		// Let's lookup the authenticated user in our database - we need to see if they have admin access
 		claUserModel, err := service.GetUser(claUser.UserID)
@@ -113,11 +125,18 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Get User by ID handler
 	api.UsersGetUserHandler = users.GetUserHandlerFunc(func(params users.GetUserParams, claUser *user.CLAUser) middleware.Responder {
+		if claUser.UserID == "" {
+			return users.NewGetUserUnauthorized().WithPayload(errorResponse(
+				fmt.Errorf("UsersGetUserHandler - user %+v not authorized to get users - missing UserID", claUser)))
+		}
+		/* Including this check breaks Corporate Console and other places where
+		   the user is attempting to fetch the other CLA Manager information
 		// Make sure we have good non-empty parameters
 		if claUser.UserID == "" || params.UserID == "" {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
 				fmt.Errorf("user %+v not authorized to get users", claUser)))
 		}
+		*/
 
 		userModel, err := service.GetUser(params.UserID)
 		if err != nil {
@@ -133,7 +152,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		// Make sure we have good non-empty parameters
 		if claUser.UserID == "" {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("user %+v not authorized to get users", claUser)))
+				fmt.Errorf("UsersGetUserByUserNameHandler - user %+v not authorized to get users - missing UserID", claUser)))
 		}
 
 		userModel, err := service.GetUserByUserName(params.UserName, true)
@@ -155,7 +174,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		// Make sure we have good non-empty parameters
 		if claUser.UserID == "" {
 			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("user %+v not authorized to get users", claUser)))
+				fmt.Errorf("UsersSearchUsersHandler - user %+v not authorized to search users - missing UserID", claUser)))
 		}
 
 		// No required params? Return empty result
