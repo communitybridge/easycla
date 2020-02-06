@@ -109,7 +109,7 @@ export class CompanyPage {
           //console.log('Filtered Company signatures: ' + this.companySignatures.length);
           //console.log('Loading projects...');
           for (let signature of this.companySignatures) {
-            this.getProject(signature.projectID);
+            this.getProject(signature.projectID, signature.signatureACL);
           }
           this.loading.companySignatures = false;
         this.loading.projects = false;
@@ -124,7 +124,7 @@ export class CompanyPage {
     );
   }
 
-  getProject(projectId) {
+  getProject(projectId, signatureACL) {
     //console.log('Loading project: ' + projectId);
     this.claService.getProject(projectId).subscribe((response) => {
       //console.log('Loaded project: ');
@@ -132,11 +132,11 @@ export class CompanyPage {
       this.projects.push(response);
 
       this.loading.projects = false;
-      this.rows = this.mapProjects(this.projects);
+      this.rows = this.mapProjects(this.projects, signatureACL);
     });
   }
 
-  mapProjects(projects) {
+  mapProjects(projects, signatureACL) {
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
@@ -145,7 +145,7 @@ export class CompanyPage {
       rows.push({
         ProjectID: project.project_id,
         ProjectName: project.project_name,
-        ProjectManagers: project.project_acl,
+        ProjectManagers: signatureACL,
         Status: this.getStatus(this.companySignatures),
         PendingRequests: this.pendingRequests.length,
       });
@@ -165,9 +165,10 @@ export class CompanyPage {
     });
   }
 
-  viewCLAManager(managers) {
+  viewCLAManager(managers, ProjectName) {
     let modal = this.modalCtrl.create('ViewCLAManagerModal', {
-      managers
+      managers,
+      ProjectName
     });
     modal.onDidDismiss((data) => {
       console.log('ViewCLAManagerModal dismissed with data: ' + data);

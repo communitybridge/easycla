@@ -18,7 +18,7 @@
       </ion-grid>
     </header>
 
-    <ion-grid>
+    <ion-grid margin-top>
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card>
@@ -40,86 +40,97 @@
       </ion-row>
     </ion-grid>
 
-    <ion-grid [loading-display]="loading.projects && loading.companySignatures">
-      <ion-row justify-content-center>
-        <ion-col col-12 col-md-8>
-          <ion-card>
-            <ion-card-title>
-              <h1>Projects with Signed CLAs</h1>
-            </ion-card-title>
-            <ion-card-title>
-              <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
-                company click "Manage Whitelist" for the project interest</p>
-            </ion-card-title>
-
-            <ion-card-title>
-              <p>
-                "Request Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
-              </p>
-            </ion-card-title>
-            <ion-card-content>
-              <ion-grid>
-                <ion-row>
-                  <ion-col col-12>
-                    <div>
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th class="clickable">
-                              Project Name
-                            </th>
-                            <th class="clickable">
-                              Status
-                            </th>
-                            <th class="clickable">
-                              CLA Manager
-                            </th>
-                            <th class="clickable">
-                              Whitelists
-                            </th>
-                            <th class="clickable">
-                              Pending Requests
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-
-                          <tr *ngFor="let row of rows">
-                            <td data-title="Project Name">
-                              <span>{{ row.ProjectName}}</span>
-                            </td>
-
-                            <td data-title="Status">
-                              <span [title]="row.Status">{{ row.Status}}</span>
-                            </td>
-
-                            <td data-title="CLA Manager">
-                              <button clear ion-button color="secondary" (click)="viewCLAManager(row.ProjectManagers)">
-                                View Manager
-                              </button>
-                            </td>
-
-                            <td data-title="Whitelist">
-                              <button clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
-                                Manage Whitelist
-                              </button>
-                            </td>
-
-                            <td data-title="Project Name">
-                              <span>{{ row.PendingRequests}}</span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </ion-col>
-                </ion-row>
-              </ion-grid>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    <ion-row *ngIf="rows.length > 0">
+      <ion-grid [loading-display]="loading.projects && loading.companySignatures">
+        <ion-row justify-content-center>
+          <ion-col col-12 col-md-8>
+            <ion-card>
+              <ion-card-title>
+                <h1>Projects with Signed CLAs</h1>
+              </ion-card-title>
+              <ion-card-title>
+                <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
+                  company click "Manage Whitelist" for the project interest</p>
+              </ion-card-title>
+  
+              <ion-card-title>
+                <p>
+                  "Request Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
+                </p>
+              </ion-card-title>
+              <ion-card-content>
+                <ion-grid>
+                  <ion-row>
+                    <ion-col col-12>
+                      <div>
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th class="clickable">
+                                Project Name
+                              </th>
+                              <th class="clickable">
+                                Status
+                              </th>
+                              <th class="clickable">
+                                CLA Manager
+                              </th>
+                              <th class="clickable">
+                                Whitelists
+                              </th>
+                              <th class="clickable">
+                                Pending Requests
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+  
+                            <tr *ngFor="let row of rows">
+                              <td data-title="Project Name">
+                                <span>{{ row.ProjectName}}</span>
+                              </td>
+  
+                              <td data-title="Status" *ngIf="row.Status === 'Request Access'">
+                                <button clear ion-button color="secondary">
+                                  {{ row.Status}}
+                                </button>
+                              </td>
+  
+                              <td data-title="Status" *ngIf="row.Status !== 'Request Access'">
+                                <span [title]="row.Status">{{ row.Status}}</span>
+                              </td>
+  
+                              <td data-title="CLA Manager">
+                                <button clear ion-button color="secondary" (click)="viewCLAManager(row.ProjectManagers, row.ProjectName)">
+                                  View Manager
+                                </button>
+                              </td>
+  
+                              <td data-title="Whitelist">
+                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
+                                  Manage Whitelist
+                                </button>
+                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
+                                  View Whitelist
+                                </button>
+                              </td>
+  
+                              <td data-title="Project Name" class="text-center">
+                                <span>{{ row.PendingRequests}}</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-row>
 
 
     <ion-grid [loading-display]="loading.invites">

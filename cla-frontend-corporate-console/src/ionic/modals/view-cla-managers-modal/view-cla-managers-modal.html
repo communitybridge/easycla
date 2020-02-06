@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span>View CLA Manager</span>
+      <span>View CLA Manager For {{ ProjectName }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -24,7 +24,7 @@
         <ion-col col-12>
           <ion-list>
             <ion-item ion-item *ngFor="let manager of managers">
-              <ion-label>{{ manager }}</ion-label>
+              <ion-label>{{ manager.username || manager.lfUsername }} ({{ manager.lfEmail }})</ion-label>
             </ion-item>
           </ion-list>
         </ion-col>
