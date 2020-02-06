@@ -8,22 +8,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/go-openapi/strfmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ses"
 )
 
 type service struct {
 	repo                RepositoryService
 	userDynamoRepo      user.RepositoryService
-	sesClient           *ses.SES
-	senderEmailAddress  string
 	corporateConsoleURL string
 }
 
@@ -47,17 +43,14 @@ type Service interface { // nolint
 	DeletePendingCompanyInviteRequest(InviteID string) error
 
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
-	SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
 }
 
 // NewService creates a new company service object
-func NewService(repo RepositoryService, awsSession *session.Session, senderEmailAddress, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
+func NewService(repo RepositoryService, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
 	return service{
 		repo:                repo,
 		userDynamoRepo:      userDynamoRepo,
-		sesClient:           ses.New(awsSession),
-		senderEmailAddress:  senderEmailAddress,
 		corporateConsoleURL: corporateConsoleURL,
 	}
 }
@@ -268,7 +261,7 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 
 	recipientEmailAddress := userProfile.LFEmail
 
-	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, s.senderEmailAddress, &userProfile)
+	err = sendApprovalEmail(company.CompanyName, recipientEmailAddress, &userProfile)
 	if err != nil {
 		return errors.New("failed to send notification email")
 	}
@@ -282,10 +275,9 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 	return nil
 }
 
-// SendApprovalEmail sends the approval email when provided the company name, address and user object
-func (s service) SendApprovalEmail(companyName, recipientAddress, senderAddress string, user *user.CLAUser) error {
+// sendApprovalEmail sends the approval email when provided the company name, address and user object
+func sendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error {
 	var (
-		Sender    = senderAddress
 		Recipient = recipientAddress
 		Subject   = "CLA: Approval of Access for Corporate CLA"
 
@@ -298,31 +290,9 @@ You have now been granted access to the organization: %s
 
 - Linux Foundation CLA System`, user.Name, companyName, user.LFUsername, user.LFEmail)
 		// The character encoding for the email.
-		CharSet = "UTF-8"
 	)
 
-	input := &ses.SendEmailInput{
-		Destination: &ses.Destination{
-			ToAddresses: []*string{
-				aws.String(Recipient),
-			},
-		},
-		Message: &ses.Message{
-			Body: &ses.Body{
-				Text: &ses.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(TextBody),
-				},
-			},
-			Subject: &ses.Content{
-				Charset: aws.String(CharSet),
-				Data:    aws.String(Subject),
-			},
-		},
-		Source: aws.String(Sender),
-	}
-
-	_, err := s.sesClient.SendEmail(input)
+	err := utils.SendEmail(Subject, TextBody, []string{Recipient})
 	if err != nil {
 		log.Warnf("Error sending mail, error: %v", err)
 		return err
@@ -374,31 +344,7 @@ Please navigate to the Corporate Console using the link below, where you can app
 
 - Linux Foundation CLA System`, adminUser.Name, company.CompanyName, user.LFUsername, user.LFEmail, s.corporateConsoleURL)
 
-		CharSet := "UTF-8"
-
-		input := &ses.SendEmailInput{
-			Destination: &ses.Destination{
-				CcAddresses: []*string{},
-				ToAddresses: []*string{
-					aws.String(adminUser.LFEmail),
-				},
-			},
-			Message: &ses.Message{
-				Body: &ses.Body{
-					Text: &ses.Content{
-						Charset: aws.String(CharSet),
-						Data:    aws.String(TextBody),
-					},
-				},
-				Subject: &ses.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(Subject),
-				},
-			},
-			Source: aws.String(s.senderEmailAddress),
-		}
-
-		_, err = s.sesClient.SendEmail(input)
+		err = utils.SendEmail(Subject, TextBody, []string{adminUser.LFEmail})
 		if err != nil {
 			log.Warnf("Error sending mail, error: %v", err)
 			return err
