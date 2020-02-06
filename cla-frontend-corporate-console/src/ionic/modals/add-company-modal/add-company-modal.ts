@@ -35,6 +35,10 @@ export class AddCompanyModal {
   mode: string = 'add';
   loading: any;
   searching: boolean;
+  actionButtonsEnabled: boolean;
+
+  join: boolean
+  add: boolean
 
   constructor(
     public navParams: NavParams,
@@ -59,6 +63,12 @@ export class AddCompanyModal {
       submit: false,
       companies: true
     };
+    this.addNewCompany = true
+    this.actionButtonsEnabled = true
+
+
+    this.add = true;
+    this.join = false;
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -91,6 +101,8 @@ export class AddCompanyModal {
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
+        this.getAllCompanies();
+        window.location.reload(true);
         this.dismiss();
       },
       (err: any) => {
@@ -113,7 +125,8 @@ export class AddCompanyModal {
 
     this.claService.updateUserV3(user).subscribe(
       () => {
-        this.loading.submit = false;
+        this.loading.submit = false; 
+        window.location.reload(true);
         this.dismiss();
       },
       (exception) => {
@@ -171,7 +184,6 @@ export class AddCompanyModal {
   findCompany(event) {
     this.getAllCompanies();
     this.filteredCompanies = [];
-    // console.log(event,this.companies, 'this is even')
     if (!this.companies) {
       this.searching = true;
     }
@@ -179,6 +191,7 @@ export class AddCompanyModal {
     // Remove all non-alpha numeric, -, _ values
     let companyName = event.value.replace(/[^\w-]+/g, '');
     if (companyName.length > 0 && this.companies) {
+      this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
       this.filteredCompanies = this.companies
@@ -199,8 +212,8 @@ export class AddCompanyModal {
         .filter((company) => company.filteredCompany);
     }
 
-    console.log('Company Name:' + companyName);
-    console.log('Filtered Companies Length:' + this.filteredCompanies.length);
+    // console.log('Company Name:' + companyName);
+    // console.log('Filtered Companies Length:' + this.filteredCompanies.length);
 
     /* Not working as desired
     if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
@@ -218,9 +231,40 @@ export class AddCompanyModal {
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
-    this.addNewCompany = false;
-    this.joinExistingCompany = true;
-    this.enableJoinButton = true;
+    this.join = true
+    this.add = false
+    // this.addNewCompany = false;
+    // this.joinExistingCompany = true;
+    // this.enableJoinButton = true;
+  }
+
+  private updateUserInfoBasedLFID() {
+    if (this.authService.isAuthenticated()) {
+      this.authService
+        .getIdToken()
+        .then((token) => {
+          return this.authService.parseIdToken(token);
+        })
+        .then((tokenParsed) => {
+          if (tokenParsed && tokenParsed['email']) {
+            this.userEmail = tokenParsed['email'];
+          }
+          if (tokenParsed && tokenParsed['name']) {
+            this.userName = tokenParsed['name'];
+          }
+        })
+        .catch((error) => {
+          console.log(JSON.stringify(error));
+          return;
+        });
+    }
+    return;
+  }
+
+  //  Move action methods
+
+  actionButtonEnabled() {
+    this.actionButtonsEnabled = false
   }
 
   addButtonDisabled(): boolean {
@@ -247,26 +291,4 @@ export class AddCompanyModal {
     }
   }
 
-  private updateUserInfoBasedLFID() {
-    if (this.authService.isAuthenticated()) {
-      this.authService
-        .getIdToken()
-        .then((token) => {
-          return this.authService.parseIdToken(token);
-        })
-        .then((tokenParsed) => {
-          if (tokenParsed && tokenParsed['email']) {
-            this.userEmail = tokenParsed['email'];
-          }
-          if (tokenParsed && tokenParsed['name']) {
-            this.userName = tokenParsed['name'];
-          }
-        })
-        .catch((error) => {
-          console.log(JSON.stringify(error));
-          return;
-        });
-    }
-    return;
-  }
 }

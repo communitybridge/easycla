@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,7 +21,7 @@ import (
 )
 
 // Configure sets the response handlers for the onboarding API calls
-func Configure(api *operations.ClaAPI, service Service) {
+func Configure(api *operations.ClaAPI, service Service, eventsService events.Service) {
 	api.OnboardCreateCLAManagerRequestHandler = onboard.CreateCLAManagerRequestHandlerFunc(
 		func(params onboard.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 			responseModel, err := service.CreateCLAManagerRequest(

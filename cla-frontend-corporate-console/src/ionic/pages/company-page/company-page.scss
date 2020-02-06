@@ -42,6 +42,7 @@ company-page {
     .toolbar {
       color: #7b7b7b;
       background-color: white;
+      height: 100px;
 
       ion-icon {
         color: #7b7b7b;
@@ -54,9 +55,12 @@ company-page {
     }
 
     .navbar-logo {
-      width: 100px;
       position: absolute;
       left: calc(50% - 20px);
+
+      margin: -30px 0 -18px -138px;
+      width: 300px;
+      padding: 1rem;
     }
   }
 
@@ -80,11 +84,34 @@ company-page {
 
   table.invites .invites th,
   .invites td {
-    vertical-align: center;
     text-align: center;
+  }
+
+  .table button {
+    text-decoration: underline;
   }
 
   ion-footer {
     position: relative;
+  }
+
+  span[title='CLA Manager'] {
+    color: green;
+    font-weight: bold;
+  }
+  
+  span[title='Pending'] {
+    color: #4c79b6;
+    font-weight: bold;
+  }
+  
+  span[title='Request Access'] {
+    color: #4c79b6;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+  td {
+    vertical-align: text-bottom !important;
   }
 }

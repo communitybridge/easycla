@@ -13,7 +13,6 @@
   <div class="page-content">
 
 
-
     <ion-grid>
       <ion-row justify-content-center>
         <ion-card>
@@ -22,7 +21,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Domain Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -35,7 +34,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Email Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -48,7 +47,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -61,7 +60,7 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Org Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
+                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -157,10 +156,10 @@
               </ion-card-title>
               <loading-spinner [loading]="loading.managers"></loading-spinner>
               <ion-list>
-                <ion-item *ngIf="managersRestricted">
+                <ion-item *ngIf="managersRestricted && !loading.managers">
                   <p>Only Company Admins can view and update this list.</p>
                 </ion-item>
-                <ion-item *ngFor="let manager of managers">
+                <!-- <ion-item *ngFor="let manager of managers">
                   <div class="manager">
                     <ion-icon name="person" item-left class="icon-md"></ion-icon>
                     <div class="manager-details" *ngIf="manager.email">
@@ -174,6 +173,27 @@
                     <div class="manager-details" *ngIf="!manager.email">
                       <div class="manager-name">
                         <span>{{ manager.lfid }}</span>
+                        <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      </div>
+                      <h4 class="error-message">The user has not signed in.</h4>
+                    </div>
+                  </div>
+                </ion-item> -->
+
+                <ion-item *ngFor="let manager of claMangers">
+                  <div class="manager">
+                    <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                    <div class="manager-details" *ngIf="manager.lfEmail">
+                      <div class="manager-name">
+                        <span>{{ manager.username || manager.lfUsername}}</span>
+                        <span *ngIf="claMangers.length > 1 && !managersRestricted" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                      </div>
+                      <h4>{{ manager.lfEmail }}</h4>
+                    </div>
+
+                    <div class="manager-details" *ngIf="!manager.lfEmail">
+                      <div class="manager-name">
+                        <span>{{ manager.username || manager.lfUsername }}</span>
                         <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                       </div>
                       <h4 class="error-message">The user has not signed in.</h4>

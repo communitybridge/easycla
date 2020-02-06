@@ -452,6 +452,7 @@ def put_signature(
     """
     return cla.controllers.signature.update_signature(
         signature_id,
+        auth_user=auth_user,
         signature_project_id=signature_project_id,
         signature_reference_id=signature_reference_id,
         signature_reference_type=signature_reference_type,

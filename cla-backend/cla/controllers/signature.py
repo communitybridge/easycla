@@ -4,7 +4,7 @@
 """
 Controller related to signature operations.
 """
-
+import copy
 import uuid
 from datetime import datetime
 from typing import List, Optional
@@ -130,6 +130,7 @@ def create_signature(signature_project_id,  # pylint: disable=too-many-arguments
 
 
 def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-many-return-statements,too-many-branches
+                     auth_user,
                      signature_project_id=None,
                      signature_reference_id=None,
                      signature_reference_type=None,
@@ -174,6 +175,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     signature = Signature()
     try:  # Try to load the signature to update.
         signature.load(str(signature_id))
+        old_signature = copy.deepcopy(signature)
     except DoesNotExist as err:
         return {'errors': {'signature_id': str(err)}}
     if signature_project_id is not None:
@@ -267,8 +269,139 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
             }}
 
     signature.save()
+    notify_whitelist_change(auth_user=auth_user, old_signature=old_signature,new_signature=signature)
     return signature.to_dict()
 
+def change_in_list(old_list,new_list,msg_added,msg_deleted):
+    if old_list is None:
+        old_list = []
+    if new_list is None:
+        new_list = []
+    added = list(set(new_list)-set(old_list))
+    deleted = list(set(old_list)-set(new_list))
+    change = []
+    if len(added) > 0:
+        change.append(msg_added.format('\n'.join(added)))
+    if len(deleted) > 0:
+        change.append(msg_deleted.format('\n'.join(deleted)))
+    return change,added,deleted
+
+def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: Signature):
+    changes = []
+    domain_msg_added = 'following value was added to the domain whitelist \n{}'
+    domain_msg_deleted = 'following value was deleted from the domain whitelist \n{}'
+    domain_changes,_,_ = change_in_list(old_list=old_signature.get_domain_whitelist(),
+                                        new_list=new_signature.get_domain_whitelist(),
+                                        msg_added=domain_msg_added,
+                                        msg_deleted=domain_msg_deleted)
+    changes = changes + domain_changes
+
+    email_msg_added = 'following value was added to the email whitelist \n{}'
+    email_msg_deleted = 'following value was deleted from the email whitelist \n{}'
+    email_changes, email_added, email_deleted = change_in_list(old_list=old_signature.get_email_whitelist(),
+                                                               new_list=new_signature.get_email_whitelist(),
+                                                               msg_added=email_msg_added,
+                                                               msg_deleted=email_msg_deleted)
+    changes = changes + email_changes
+
+    github_msg_added = 'following value was added to the github whitelist \n{}'
+    github_msg_deleted = 'following value was deleted from the github whitelist \n{}'
+    github_changes, github_added, github_deleted = change_in_list(old_list=old_signature.get_github_whitelist(),
+                                                                  new_list=new_signature.get_github_whitelist(),
+                                                                  msg_added=github_msg_added,
+                                                                  msg_deleted=github_msg_deleted)
+    changes = changes + github_changes
+
+    github_org_msg_added = 'following value was added to the github organization whitelist \n{}'
+    github_org_msg_deleted = 'following value was deleted from the github organization whitelist \n{}'
+    github_org_changes, _, _ = change_in_list(old_list=old_signature.get_github_org_whitelist(),
+                                              new_list=new_signature.get_github_org_whitelist(),
+                                              msg_added=github_org_msg_added,
+                                              msg_deleted=github_org_msg_deleted)
+    changes = changes + github_org_changes
+
+    if len(changes) > 0:
+        # send email to cla managers about change
+        cla_managers = new_signature.get_managers()
+        subject,body,recipients = whitelist_change_email_content(cla_managers, changes)
+        if len(recipients) > 0:
+            get_email_service().send(subject, body, recipients)
+    company_name = new_signature.get_signature_reference_name()
+    project = cla.utils.get_project_instance()
+    project.load(new_signature.get_signature_project_id())
+    project_name = project.get_project_name()
+    cla_manager_name = auth_user.name
+    # send email to contributors
+    notify_whitelist_change_to_contributors(email_added=email_added,
+                                            email_removed=email_deleted,
+                                            github_users_added=github_added,
+                                            github_users_removed=github_deleted,
+                                            company_name=company_name,
+                                            project_name=project_name,
+                                            cla_manager_name=cla_manager_name)
+
+
+def notify_whitelist_change_to_contributors(email_added, email_removed, github_users_added, github_users_removed,company_name, project_name, cla_manager_name):
+    for email in email_added:
+        subject,body,recipients = get_contributor_whitelist_update_email_content('added',company_name, project_name, cla_manager_name, email)
+        get_email_service().send(subject, body, recipients)
+    for email in email_removed:
+        subject,body,recipients = get_contributor_whitelist_update_email_content('deleted',company_name, project_name, cla_manager_name, email)
+        get_email_service().send(subject, body, recipients)
+    for github_username in github_users_added:
+        user = cla.utils.get_user_instance()
+        users = user.get_user_by_github_username(github_username)
+        if users is not None:
+            user = users[0]
+            email = user.get_user_email()
+            subject,body,recipients = get_contributor_whitelist_update_email_content('added',company_name, project_name, cla_manager_name, email)
+            get_email_service().send(subject, body, recipients)
+    for github_username in github_users_removed:
+        user = cla.utils.get_user_instance()
+        users = user.get_user_by_github_username(github_username)
+        if users is not None:
+            user = users[0]
+            email = user.get_user_email()
+            subject,body,recipients = get_contributor_whitelist_update_email_content('deleted',company_name, project_name, cla_manager_name, email)
+            get_email_service().send(subject, body, recipients)
+
+
+def get_contributor_whitelist_update_email_content(action, company_name, project_name, cla_manager, email):
+    subject = 'Whitelisting Update'
+    preposition = 'to'
+    if action == 'deleted':
+        preposition = 'from'
+    body = """System generated email.
+
+This is to inform you that you have {} {} the whitelist of {} for the {} by cla manager {}.
+
+Thanks,
+EasyCLA system
+    """.format(action, preposition, company_name, project_name, cla_manager)
+    body = '<p>' + body.replace('\n', '<br>')+ '</p>'
+    recipients = [email]
+    return subject, body, recipients
+
+
+def whitelist_change_email_content(cla_managers, changes):
+    """Helper function to get whitelist change email subject, body, recipients"""
+    subject = 'EasyCLA whitelist modified'
+    change_string = "\n".join(changes)
+    body = """
+This is the notify that EasyCLA whitelist for your organization was modified. The modification was as follows:
+
+{}
+
+Thanks,
+EasyCLA System
+""".format(change_string)
+    body = '<p>' + body.replace('\n', '<br>')+ '</p>'
+    recipients = []
+    for manager in cla_managers:
+        email = manager.get_user_email()
+        if email is not None:
+            recipients.append(email)
+    return subject, body, recipients
 
 def handle_bots(bot_list: List[str], signature: Signature) -> None:
     cla.log.debug(f'Bots: {bot_list}')

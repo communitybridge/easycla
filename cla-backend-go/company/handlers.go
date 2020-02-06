@@ -6,6 +6,7 @@ package company
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -18,7 +19,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service Service, usersService users.Service, companyUserValidation bool) {
+func Configure(api *operations.ClaAPI, service Service, usersService users.Service, companyUserValidation bool, eventsService events.Service) {
 
 	api.CompanyGetCompaniesHandler = company.GetCompaniesHandlerFunc(func(params company.GetCompaniesParams, claUser *user.CLAUser) middleware.Responder {
 		companiesModel, err := service.GetCompanies()
@@ -146,6 +147,23 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewAddGithubOrganizationFromClaBadRequest()
 		}
 
+		// Create an event
+		// Need the company name - lookup th company record
+		companyModel, companyErr := service.GetCompany(params.CompanyID)
+		if companyErr != nil {
+			log.Warnf("error looking up company using the company id: %s, error: %+v",
+				params.CompanyID, companyErr)
+		}
+
+		eventsService.CreateAuditEvent(
+			events.AddUserToCompanyACL,
+			claUser,
+			"", // no project context
+			params.CompanyID,
+			fmt.Sprintf("%s added user %s to the ACL for company: %s (%s)",
+				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
+		)
+
 		return company.NewAddUsertoCompanyAccessListOK()
 	})
 
@@ -199,6 +217,23 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			log.Warnf("error deleting pending company invite using id: %s, error: %v", params.User.InviteID, err)
 			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
 		}
+
+		// Create an event
+		// need the company name - lookup th company record
+		companyModel, companyErr := service.GetCompany(params.CompanyID)
+		if companyErr != nil {
+			log.Warnf("error looking up company using the company id: %s, error: %+v",
+				params.CompanyID, companyErr)
+		}
+
+		eventsService.CreateAuditEvent(
+			events.DeletePendingInvite,
+			claUser,
+			"", // no project context
+			params.CompanyID,
+			fmt.Sprintf("%s deleted pending invite for user %s for company: %s (%s)",
+				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
+		)
 
 		return company.NewDeletePendingInviteOK()
 	})
