@@ -16,9 +16,8 @@ import (
 
 // RepositoryDynamo data model
 type RepositoryDynamo struct {
-	Stage              string
-	DynamoDBClient     *dynamodb.DynamoDB
-	senderEmailAddress string
+	Stage          string
+	DynamoDBClient *dynamodb.DynamoDB
 }
 
 // RepositoryService interface methods

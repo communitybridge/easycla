@@ -9,11 +9,16 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+// EmailSender contains method to send email
 type EmailSender interface {
 	SendEmail(subject string, body string, recipients []string) error
 }
 
 var emailSender EmailSender
+
+func SetEmailSender(es EmailSender) {
+	emailSender = es
+}
 
 type snsEmail struct {
 	snsClient          *sns.SNS
@@ -21,6 +26,7 @@ type snsEmail struct {
 	senderEmailAddress string
 }
 
+// SetSnsEmailSender set sns as mechanism to send email
 func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string, senderEmailAddress string) {
 	emailSender = &snsEmail{
 		snsClient:          sns.New(awsSession),
@@ -60,9 +66,10 @@ func (s *snsEmail) SendEmail(subject string, body string, recipients []string) e
 	return nil
 }
 
+// SendEmail function send email. It uses emailSender interface.
 func SendEmail(subject string, body string, recipients []string) error {
 	if emailSender == nil {
-		return errors.New("Email sender not set")
+		return errors.New("email sender not set")
 	}
 	return emailSender.SendEmail(subject, body, recipients)
 }
