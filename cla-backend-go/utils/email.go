@@ -16,6 +16,7 @@ type EmailSender interface {
 
 var emailSender EmailSender
 
+// SetEmailSender sets up default email sender
 func SetEmailSender(es EmailSender) {
 	emailSender = es
 }
