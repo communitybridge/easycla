@@ -4,11 +4,9 @@
 package onboard
 
 import (
-	"github.com/aws/aws-sdk-go/service/sns"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
 
@@ -17,7 +15,6 @@ const CharSet = "UTF-8"
 
 type service struct {
 	repo             OnboardRepository
-	snsClient        *sns.SNS
 	snsEventTopicARN string
 }
 
@@ -30,10 +27,9 @@ type Service interface { // nolint
 }
 
 // NewService creates a new company service object
-func NewService(repo OnboardRepository, awsSession *session.Session) Service {
+func NewService(repo OnboardRepository) Service {
 	return service{
-		repo:      repo,
-		snsClient: sns.New(awsSession),
+		repo: repo,
 	}
 }
 

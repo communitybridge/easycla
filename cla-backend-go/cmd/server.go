@@ -141,7 +141,7 @@ func server(localMode bool) http.Handler {
 		logrus.Panic(err)
 	}
 
-	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
+	userRepo := user.NewDynamoRepository(awsSession, stage)
 	usersRepo := users.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
@@ -158,7 +158,7 @@ func server(localMode bool) http.Handler {
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, eventsService, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
-	onboardService := onboard.NewService(onboardRepo, awsSession)
+	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))

@@ -46,11 +46,10 @@ type User struct {
 }
 
 // NewDynamoRepository creates a new dynamo repository model
-func NewDynamoRepository(awsSession *session.Session, stage, senderEmailAddress string) RepositoryService {
+func NewDynamoRepository(awsSession *session.Session, stage string) RepositoryService {
 	return RepositoryDynamo{
-		Stage:              stage,
-		DynamoDBClient:     dynamodb.New(awsSession),
-		senderEmailAddress: senderEmailAddress,
+		Stage:          stage,
+		DynamoDBClient: dynamodb.New(awsSession),
 	}
 }
 
