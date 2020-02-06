@@ -43,7 +43,6 @@ type Service interface { // nolint
 	DeletePendingCompanyInviteRequest(InviteID string) error
 
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
-	SendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
 }
 
@@ -262,7 +261,7 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 
 	recipientEmailAddress := userProfile.LFEmail
 
-	err = s.SendApprovalEmail(company.CompanyName, recipientEmailAddress, &userProfile)
+	err = sendApprovalEmail(company.CompanyName, recipientEmailAddress, &userProfile)
 	if err != nil {
 		return errors.New("failed to send notification email")
 	}
@@ -276,8 +275,8 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 	return nil
 }
 
-// SendApprovalEmail sends the approval email when provided the company name, address and user object
-func (s service) SendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error {
+// sendApprovalEmail sends the approval email when provided the company name, address and user object
+func sendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error {
 	var (
 		Recipient = recipientAddress
 		Subject   = "CLA: Approval of Access for Corporate CLA"
