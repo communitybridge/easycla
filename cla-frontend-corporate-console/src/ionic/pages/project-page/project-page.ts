@@ -38,6 +38,7 @@ export class ProjectPage {
   manager: ClaUserModel;
   showModal: any;
   pendingRequests: any[]
+  claMangers: any[];
 
   project: any;
   users: any;
@@ -57,12 +58,13 @@ export class ProjectPage {
     this.projectId = navParams.get('projectId');
     this.showModal = navParams.get('modal');
     this.getDefaults();
-    this.managersRestricted = false;
+    this.managersRestricted = true;
   }
 
   getDefaults() {
     this.loading = {
-      requests: false
+      requests: false,
+      managers: true
     };
     this.users = {};
     this.sort = {
@@ -137,6 +139,7 @@ export class ProjectPage {
     this.loading.signatures = true;
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe(
       (response) => {
+        this.claMangers = response.signatures[0] && response.signatures[0].signatureACL;
         this.loading.signatures = false;
         console.log('Signatures for project: ' + this.projectId + ' for company: ' + this.companyId);
         console.log(response);
@@ -405,6 +408,8 @@ export class ProjectPage {
   declinePendingRequest() {
 
   }
+
+  
 
 
   /*

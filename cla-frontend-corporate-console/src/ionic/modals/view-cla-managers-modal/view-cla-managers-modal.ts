@@ -17,6 +17,7 @@ import { ClaCompanyModel } from '../../models/cla-company';
 })
 export class ViewCLAManagerModal {
   managers: any;
+  ProjectName: string;
 
   constructor(
     public viewCtrl: ViewController,
@@ -29,6 +30,7 @@ export class ViewCLAManagerModal {
 
   getDefaults() {
     this.managers = this.navParams.get('managers');
+    this.ProjectName = this.navParams.get('ProjectName');
   }
 
   dismiss(data = false) {
