@@ -13,6 +13,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/docs"
 	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -142,7 +143,7 @@ func server(localMode bool) http.Handler {
 	}
 
 	// Our backend repository handlers
-	userRepo := user.NewDynamoRepository(awsSession, stage, configFile.SenderEmailAddress)
+	userRepo := user.NewDynamoRepository(awsSession, stage)
 	usersRepo := users.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
@@ -161,8 +162,8 @@ func server(localMode bool) http.Handler {
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, http.DefaultClient)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
-	companyService := company.NewService(companyRepo, awsSession, configFile.SenderEmailAddress, configFile.CorporateConsoleURL, userRepo)
-	onboardService := onboard.NewService(onboardRepo, awsSession, configFile.SNSEventTopicARN)
+	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
+	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo)
 
@@ -170,6 +171,7 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
 	}
+	utils.SetSnsEmailSender(awsSession, configFile.SNSEventTopicARN, configFile.SenderEmailAddress)
 
 	// Setup our API handlers
 	api.OauthSecurityAuth = authorizer.SecurityAuth

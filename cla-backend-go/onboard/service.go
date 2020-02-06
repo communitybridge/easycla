@@ -4,12 +4,9 @@
 package onboard
 
 import (
-	"github.com/aws/aws-sdk-go/service/sns"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 )
 
@@ -18,7 +15,6 @@ const CharSet = "UTF-8"
 
 type service struct {
 	repo             OnboardRepository
-	snsClient        *sns.SNS
 	snsEventTopicARN string
 }
 
@@ -27,15 +23,13 @@ type Service interface { // nolint
 	CreateCLAManagerRequest(lfid, projectName, companyName, userFullName, userEmail string) (*models.OnboardClaManagerRequest, error)
 	GetCLAManagerRequestsByLFID(lfid string) (*models.OnboardClaManagerRequests, error)
 	DeleteCLAManagerRequestsByRequestID(requestID string) error
-	SendNotification(sender *string, recipients []string, subject *string, emailBody *string) (*string, error)
+	SendNotification(recipients []string, subject *string, emailBody *string) error
 }
 
 // NewService creates a new company service object
-func NewService(repo OnboardRepository, awsSession *session.Session, snsEventTopicARN string) Service {
+func NewService(repo OnboardRepository) Service {
 	return service{
-		repo:             repo,
-		snsClient:        sns.New(awsSession),
-		snsEventTopicARN: snsEventTopicARN,
+		repo: repo,
 	}
 }
 
@@ -55,35 +49,11 @@ func (s service) DeleteCLAManagerRequestsByRequestID(requestID string) error {
 }
 
 // SendNotification sends the notification to the specified recipients
-func (s service) SendNotification(sender *string, recipients []string, subject *string, emailBody *string) (*string, error) {
-
-	// Convert the string array to an array of string pointers
-	var awsRecipients = make([]*string, len(recipients))
-	for i, recipient := range recipients {
-		awsRecipients[i] = &recipient
-	}
-
-	event := utils.CreateEventWrapper("cla-email-event")
-	event.Data = utils.ToEmailEvent(sender, recipients, subject, emailBody)
-
-	b, err := event.MarshalBinary()
-	if err != nil {
-		log.Warnf("Unable to marshal event model")
-		return nil, err
-	}
-
-	log.Debugf("Sending SNS message '%s' to topic: '%s'", b, s.snsEventTopicARN)
-	input := &sns.PublishInput{
-		Message:  aws.String(string(b)),          // Required
-		TopicArn: aws.String(s.snsEventTopicARN), // Required
-	}
-
-	sendResp, err := s.snsClient.Publish(input)
+func (s service) SendNotification(recipients []string, subject *string, emailBody *string) error {
+	err := utils.SendEmail(*subject, *emailBody, recipients)
 	if err != nil {
 		log.Warnf("Error publishing message to topic: %s, Error: %v", s.snsEventTopicARN, err)
-		return nil, err
+		return err
 	}
-
-	log.Debugf("Successfully sent SNS message. Response: %v", sendResp)
-	return sendResp.MessageId, nil
+	return nil
 }
