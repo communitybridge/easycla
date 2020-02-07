@@ -30,7 +30,7 @@
       </ion-row>
 
       <ion-col col-12>
-        <div class="project-detail-card mt-30">
+        <div class="project-detail-card mt-30" *ngIf="!searchProjects('OPNFV', claProjects)">
           <ion-row class="project-detail-card-header">
             <ion-col col-6 class="project-title">
               <h2>
@@ -53,7 +53,7 @@
                 <ion-grid>
                   <ion-row>
                     <ion-col class="vertical-rule-right" col-12 col-md-6
-                             *ngFor="let organization of githubOrganizations">
+                      *ngFor="let organization of githubOrganizations">
                       <ion-card-content *ngIf="organization.providerInfo">
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
@@ -72,7 +72,7 @@
 
                         <div class="organization-actions">
                           <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
-                                  color="light">
+                            color="light">
                             Delete
                           </button>
                         </div>
@@ -115,38 +115,48 @@
                       Select Template
                     </button>
                     <button ion-button (click)="openClaViewSignaturesModal(project.project_id, project.project_name)"
-                            color="light">
+                      color="light">
                       View Signatures
+                    </button>
+                    <button ion-button (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
+                      color="light">
+                      View Companies
                     </button>
                   </ion-buttons>
                 </ion-col>
               </ion-row>
 
               <ion-row>
-                <ng-container *ngFor="let documentType of ['corporate']">
-                  <ion-col col-6
-                           *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
+                <!-- TODO
+                if OPNFV - we have "Agreements" and not "CLAs", so we want to change:
+                1) the text
+                2) add a third column a) LF Members PDF, b) Non-LF Members PDF, c) Individual Members
+                otherwise, use the default
+                -->
+
+                <!-- Corporate / CCLA -->
+                <ng-container *ngIf="project.project_name.search('OPNFV') == -1">
+                  <ion-col col-6 *ngIf="project.project_ccla_enabled">
                     <ion-card class="contract-card">
                       <ion-card-content>
                         <ion-card-title>
                           <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
-                          <span>{{ documentType == 'corporate' ? "Corporate" : "Individual" }} CLA</span>
-                          <div class="contract-title-buttons"
-                               *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                          <span>Corporate CLA</span>
+                          <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, documentType, project.project_corporate_documents)">
-                              <img src="/assets/img/pdf.png" title="Download the {{ project.project_name }} {{documentType | titlecase }} CLA as a PDF document" alt="pdf icon"/>
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
+                              <img src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Corporate CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
-                        <ng-container
-                          *ngIf="documentType == 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
+                        <ng-container *ngIf="!project.project_corporate_documents.length">
                           <p>
                             No Template Created.
                           </p>
                         </ng-container>
-                        <ion-grid class="contract-details"
-                                  *ngIf="documentType == 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                        <ion-grid class="contract-details" *ngIf="project.project_corporate_documents.length">
                           <ion-row>
                             <ion-col>
                               <span>
@@ -159,8 +169,7 @@
                               </span>
                               <br>
                               <span>
-                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_major_version }}
-                                .{{
+                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_major_version }}.{{
                                   project.project_corporate_documents[project.project_corporate_documents.length - 1].document_minor_version
                                 }}
                               </span>
@@ -171,7 +180,7 @@
                             <ion-col>
                               <ion-buttons end="" class="bar-buttons bar-buttons-md">
                                 <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
-                                        color="secondary">
+                                  color="secondary">
                                   View Companies
                                 </button>
                               </ion-buttons>
@@ -183,33 +192,29 @@
                   </ion-col>
                 </ng-container>
 
-                <ng-container *ngFor="let documentType of ['individual'];">
-                  <ion-col col-12 col-md-6
-                           *ngIf="documentType == 'corporate' ? project.project_ccla_enabled : project.project_icla_enabled">
+                <!-- Individual / ICLA -->
+                <ng-container *ngIf="project.project_name.search('OPNFV') == -1">
+                  <ion-col col-12 col-md-6 *ngIf="project.project_icla_enabled">
                     <ion-card class="contract-card">
                       <ion-card-content>
                         <ion-card-title>
-                          <ion-icon name="briefcase" item-left class="icon-md"
-                                    *ngIf="documentType === 'corporate'"></ion-icon>
-                          <ion-icon name="person" item-left class="icon-md"
-                                    *ngIf="documentType !== 'corporate'"></ion-icon>
-                          <span>{{ documentType === 'corporate' ? "Corporate" : "Individual" }} CLA</span>
-                          <div class="contract-title-buttons"
-                               *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                          <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                          <span>Individual CLA</span>
+                          <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, documentType, project.project_individual_documents)">
-                              <img src="/assets/img/pdf.png" title="Download the {{ project.project_name }} {{documentType | titlecase }} CLA as a PDF document" alt="pdf icon"/>
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
+                              <img src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Individual CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
-                        <ng-container
-                          *ngIf="documentType === 'corporate' ? !project.project_corporate_documents.length : !project.project_individual_documents.length">
+                        <ng-container *ngIf="!project.project_individual_documents.length">
                           <p>
                             No template selected.
                           </p>
                         </ng-container>
-                        <ion-grid class="contract-details"
-                                  *ngIf="documentType === 'corporate' ? project.project_corporate_documents.length : project.project_individual_documents.length">
+                        <ion-grid class="contract-details" *ngIf="project.project_individual_documents.length">
                           <ion-row>
                             <ion-col>
                               <span>
@@ -222,8 +227,151 @@
                               </span>
                               <br>
                               <span>
-                                Version {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_major_version }}
-                                .{{
+                                Version {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_major_version }}.{{
+                                  project.project_individual_documents[project.project_individual_documents.length - 1].document_minor_version
+                                }}
+                              </span>
+                              <br>
+                            </ion-col>
+                          </ion-row>
+                        </ion-grid>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                </ng-container>
+
+                <!-- OPNFV LF Member -->
+                <ng-container *ngIf="project.project_name.search('OPNFV') !== -1">
+                  <ion-col col-4 *ngIf="project.project_ccla_enabled">
+                    <ion-card class="contract-card">
+                      <ion-card-content>
+                        <ion-card-title>
+                          <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
+                          <span>LF Member Agreement</span>
+                          <div class="contract-title-buttons" *ngIf="project.project_member_documents.length">
+                            <button clear
+                              (click)="openClaContractVersionModal(project.project_id, 'member', project.project_member_documents)">
+                              <img src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon" />
+                            </button>
+                          </div>
+                        </ion-card-title>
+                        <ng-container *ngIf="!project.project_member_documents.length">
+                          <p>
+                            No agreements selected.
+                          </p>
+                        </ng-container>
+                        <ion-grid class="contract-details" *ngIf="project.project_member_documents.length">
+                          <ion-row>
+                            <ion-col>
+                              <span>
+                                {{ project.project_member_documents[project.project_member_documents.length - 1].document_name }}
+                              </span>
+                              <br>
+                              <span>
+                                {{ project.project_member_documents[project.project_member_documents.length - 1].document_creation_date | date:'medium'
+                                }}
+                              </span>
+                              <br>
+                              <span>
+                                Version {{ project.project_member_documents[project.project_member_documents.length - 1].document_major_version }}.{{
+                                  project.project_member_documents[project.project_member_documents.length - 1].document_minor_version
+                                }}
+                              </span>
+                              <br>
+                            </ion-col>
+                          </ion-row>
+                        </ion-grid>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                </ng-container>
+
+                <!-- OPNFV Non-LF Member -->
+                <ng-container *ngIf="project.project_name.search('OPNFV') !== -1">
+                  <ion-col col-4 *ngIf="project.project_ccla_enabled">
+                    <ion-card class="contract-card">
+                      <ion-card-content>
+                        <ion-card-title>
+                          <ion-icon name="briefcase" item-left class="icon-md"></ion-icon>
+                          <span>Non-LF Member Agreement</span>
+                          <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
+                            <button clear
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
+                              <img src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Non-LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon" />
+                            </button>
+                          </div>
+                        </ion-card-title>
+                        <ng-container *ngIf="!project.project_corporate_documents.length">
+                          <p>
+                            No agreements selected.
+                          </p>
+                        </ng-container>
+                        <ion-grid class="contract-details" *ngIf="project.project_corporate_documents.length">
+                          <ion-row>
+                            <ion-col>
+                              <span>
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_name }}
+                              </span>
+                              <br>
+                              <span>
+                                {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_creation_date | date:'medium'
+                                }}
+                              </span>
+                              <br>
+                              <span>
+                                Version {{ project.project_corporate_documents[project.project_corporate_documents.length - 1].document_major_version }}.{{
+                                  project.project_corporate_documents[project.project_corporate_documents.length - 1].document_minor_version
+                                }}
+                              </span>
+                              <br>
+                            </ion-col>
+                          </ion-row>
+                        </ion-grid>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                </ng-container>
+
+                <!-- OPNFV Individual Agreements -->
+                <ng-container *ngIf="project.project_name.search('OPNFV') !== -1">
+                  <ion-col col-4 *ngIf="project.project_icla_enabled">
+                    <ion-card class="contract-card">
+                      <ion-card-content>
+                        <ion-card-title>
+                          <ion-icon name="person" item-left class="icon-md"></ion-icon>
+                          <span>Individual Agreement</span>
+                          <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
+                            <button clear
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
+                              <img src="/assets/img/pdf.png"
+                                title="Download the {{ project.project_name }} Individual Agreement as a PDF document"
+                                alt="pdf icon" />
+                            </button>
+                          </div>
+                        </ion-card-title>
+                        <ng-container *ngIf="!project.project_individual_documents.length">
+                          <p>
+                            No agreement selected.
+                          </p>
+                        </ng-container>
+                        <ion-grid class="contract-details" *ngIf="project.project_individual_documents.length">
+                          <ion-row>
+                            <ion-col>
+                              <span>
+                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_name }}
+                              </span>
+                              <br>
+                              <span>
+                                {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_creation_date | date:'medium'
+                                }}
+                              </span>
+                              <br>
+                              <span>
+                                Version {{ project.project_individual_documents[project.project_individual_documents.length - 1].document_major_version }}.{{
                                   project.project_individual_documents[project.project_individual_documents.length - 1].document_minor_version
                                 }}
                               </span>
@@ -236,10 +384,19 @@
                   </ion-col>
                 </ng-container>
               </ion-row>
+
+              <ion-row class="align-items-center">
+                <ion-buttons end="" class="bar-buttons bar-buttons-md">
+                  <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
+                    color="secondary">
+                    View Companies
+                  </button>
+                </ion-buttons>
+              </ion-row>
             </div>
           </ion-col>
 
-          <ion-col col-12>
+          <ion-col col-12 *ngIf="project.project_name.search('OPNFV') == -1">
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
                 <ion-col col-6 class="project-title">
@@ -250,7 +407,7 @@
                 <ion-col col-6>
                   <ion-buttons end>
                     <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)"
-                            color="secondary">
+                      color="secondary">
                       Configure Github Repositories
                     </button>
                   </ion-buttons>

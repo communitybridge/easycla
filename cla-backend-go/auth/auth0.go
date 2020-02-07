@@ -91,15 +91,15 @@ func (av Validator) getPemCert(token *jwt.Token) (interface{}, error) {
 	}
 	defer resp.Body.Close()
 
-	var jwks = jwks{}
-	err = json.NewDecoder(resp.Body).Decode(&jwks)
+	var jwksModel = jwks{}
+	err = json.NewDecoder(resp.Body).Decode(&jwksModel)
 	if err != nil {
 		return "", err
 	}
 
-	for k := range jwks.Keys {
-		if token.Header["kid"] == jwks.Keys[k].Kid {
-			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
+	for k := range jwksModel.Keys {
+		if token.Header["kid"] == jwksModel.Keys[k].Kid {
+			cert = "-----BEGIN CERTIFICATE-----\n" + jwksModel.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
 		}
 	}
 
