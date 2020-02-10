@@ -15,8 +15,10 @@ import requests
 import cla.hug_types
 from cla.controllers import company
 from cla.models import DoesNotExist
+from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Project, Signature, Company
 from cla.utils import get_email_service
+from cla.controllers.event import create_event
 
 
 def get_signatures():
@@ -126,6 +128,14 @@ def create_signature(signature_project_id,  # pylint: disable=too-many-arguments
     if signature_user_ccla_company_id is not None:
         signature.set_signature_user_ccla_company_id(str(signature_user_ccla_company_id))
     signature.save()
+
+    event_data = f'Signature added. Signature_id - {signature.get_signature_id()} for Project - {project.get_project_name()}'
+    create_event(
+        event_data=event_data,
+        event_type=EventType.CreateSignature,
+        event_project_id=signature_project_id
+    )
+
     return signature.to_dict()
 
 
@@ -178,6 +188,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
         old_signature = copy.deepcopy(signature)
     except DoesNotExist as err:
         return {'errors': {'signature_id': str(err)}}
+    update_str = f'signature {signature_id} updates: \n '
     if signature_project_id is not None:
         # make a note if the project id is set and doesn't match
         if signature.get_signature_project_id() != str(signature_project_id):
@@ -186,6 +197,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
                             f'parameter project id: {str(signature_project_id)}')
         try:
             signature.set_signature_project_id(str(signature_project_id))
+            update_str += f'signature_project_id updated to {signature_project_id} \n'
         except DoesNotExist as err:
             return {'errors': {'signature_project_id': str(err)}}
     # TODO: Ensure signature_reference_id exists.
@@ -197,33 +209,39 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
         signature.set_signature_reference_id(signature_reference_id)
     if signature_reference_type is not None:
         signature.set_signature_reference_type(signature_reference_type)
+        update_str += f'signature_reference_type updated to {signature_reference_type} \n'
     if signature_type is not None:
         if signature_type in ['cla', 'dco']:
             signature.set_signature_type(signature_type)
+            update_str += f'signature_type updated to {signature_type} \n'
         else:
             return {'errors': {'signature_type': 'Invalid value passed. The accepted values are: (cla|dco)'}}
     if signature_signed is not None:
         try:
             val = hug.types.smart_boolean(signature_signed)
             signature.set_signature_signed(val)
+            update_str += f'signature_signed updated to {signature_signed} \n'
         except KeyError as err:
             return {'errors': {'signature_signed': 'Invalid value passed in for true/false field'}}
     if signature_approved is not None:
         try:
             val = hug.types.smart_boolean(signature_approved)
             update_signature_approved(signature, val)
+            update_str += f'signature_approved updated to {val} \n'
         except KeyError as err:
             return {'errors': {'signature_approved': 'Invalid value passed in for true/false field'}}
     if signature_return_url is not None:
         try:
             val = cla.hug_types.url(signature_return_url)
             signature.set_signature_return_url(val)
+            update_str += f'signature_return_url updated to {val} \n'
         except KeyError as err:
             return {'errors': {'signature_return_url': 'Invalid value passed in for URL field'}}
     if signature_sign_url is not None:
         try:
             val = cla.hug_types.url(signature_sign_url)
             signature.set_signature_sign_url(val)
+            update_str += f'signature_sign_url updated to {val} \n'
         except KeyError as err:
             return {'errors': {'signature_sign_url': 'Invalid value passed in for URL field'}}
 
@@ -231,6 +249,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
         try:
             domain_whitelist = hug.types.multiple(domain_whitelist)
             signature.set_domain_whitelist(domain_whitelist)
+            update_str += f'domain_whitelist updated to {domain_whitelist} \n'
         except KeyError as err:
             return {'errors': {
                 'domain_whitelist': 'Invalid value passed in for the domain whitelist'
@@ -240,6 +259,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
         try:
             email_whitelist = hug.types.multiple(email_whitelist)
             signature.set_email_whitelist(email_whitelist)
+            update_str += f'email_whitelist updated to {email_whitelist} \n'
         except KeyError as err:
             return {'errors': {
                 'email_whitelist': 'Invalid value passed in for the email whitelist'
@@ -254,6 +274,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
             bot_list = [github_user for github_user in github_whitelist if is_github_bot(github_user)]
             if bot_list is not None:
                 handle_bots(bot_list, signature)
+            update_str += f'github_whitelist updated to {github_whitelist} \n'
         except KeyError as err:
             return {'errors': {
                 'github_whitelist': 'Invalid value passed in for the github whitelist'
@@ -263,10 +284,17 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
         try:
             github_org_whitelist = hug.types.multiple(github_org_whitelist)
             signature.set_github_org_whitelist(github_org_whitelist)
+            update_str += f'github_org_whitelist updated to {github_org_whitelist} \n'
         except KeyError as err:
             return {'errors': {
                 'github_org_whitelist': 'Invalid value passed in for the github org whitelist'
             }}
+
+    event_data = update_str
+    create_event(
+        event_data=event_data,
+        event_type=EventType.UpdateSignature
+    )
 
     signature.save()
     notify_whitelist_change(auth_user=auth_user, old_signature=old_signature,new_signature=signature)
@@ -339,6 +367,13 @@ def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: 
                                             company_name=company_name,
                                             project_name=project_name,
                                             cla_manager_name=cla_manager_name)
+    event_data = " ,".join(changes)
+    create_event(
+        event_data=event_data,
+        event_type=EventType.NotifyWLChange,
+        event_company_name=company_name,
+        event_project_name=project_name
+    )
 
 
 def notify_whitelist_change_to_contributors(email_added, email_removed, github_users_added, github_users_removed,company_name, project_name, cla_manager_name):
@@ -618,6 +653,12 @@ def delete_signature(signature_id):
         # Should we bother sending back an error?
         return {'errors': {'signature_id': str(err)}}
     signature.delete()
+    event_data = f'Deleted signature {signature_id}'
+    create_event(
+        event_data=event_data,
+        event_type=EventType.DeleteSignature
+    )
+
     return {'success': True}
 
 
@@ -743,7 +784,7 @@ def get_cla_managers(username, signature_id):
 
     :param username: The LF username
     :type username: string
-    :param signature_id: The Signature ID of the CCLA signed. 
+    :param signature_id: The Signature ID of the CCLA signed.
     :type signature_id: string
     :return: dict representation of the project managers.
     :rtype: dict
@@ -765,7 +806,7 @@ def get_cla_managers(username, signature_id):
 
 def add_cla_manager(auth_user, signature_id, lfid):
     """
-    Adds the LFID to the signature ACL and returns a new list of CLA Managers. 
+    Adds the LFID to the signature ACL and returns a new list of CLA Managers.
 
     :param username: username of the user
     :type username: string
@@ -792,6 +833,12 @@ def add_cla_manager(auth_user, signature_id, lfid):
     # Add lfid to acl
     signature.add_signature_acl(lfid)
     signature.save()
+
+    event_data = f'{lfid} added as cla manager to Signature ACL for {signature.get_signature_id()}'
+    create_event(
+        event_data=event_data,
+        event_type=EventType.AddCLAManager
+    )
 
     return get_managers_dict(signature_acl)
 
@@ -826,6 +873,13 @@ def remove_cla_manager(username, signature_id, lfid):
     # Remove LFID from the acl
     signature.remove_signature_acl(lfid)
     signature.save()
+
+    event_data = f'User with lfid {lfid} removed from project ACL with signature {signature.get_signature_id()}'
+
+    create_event(
+        event_data=event_data,
+        event_type=EventType.RemoveCLAManager
+    )
 
     # Return modified managers
     return get_managers_dict(signature_acl)
