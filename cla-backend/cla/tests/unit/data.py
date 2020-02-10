@@ -60,3 +60,17 @@ SIGNATURE_TABLE_DATA = {
         ],
     }
 }
+
+EVENT_TABLE_DESCRIPTION = {
+    "Table": {
+        "AttributeDefinitions": [{"AttributeName": "event_id", "AttributeType": "S"}],
+        "KeySchema": [{"AttributeName": "event_id", "KeyType": "HASH"}],
+    }
+}
+
+PROJECT_TABLE_DESCRIPTION = {
+    "Table": {
+        "AttributeDefinitions": [{"AttributeName": "project_id", "AttributeType": "S"}],
+        "KeySchema": [{"AttributeName": "project_id", "KeyType": "HASH"}],
+    }
+}
