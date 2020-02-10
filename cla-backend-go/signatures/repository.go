@@ -649,6 +649,14 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 			filter = addConditionToFilter(filter, searchTermExpression, &filterAdded)
 		}
 	}
+
+	// Filter condition to cater for approved and signed signatures
+	signatureApprovedExpression := expression.Name("signature_approved").Equal(expression.Value(true))
+	filter = addConditionToFilter(filter, signatureApprovedExpression, &filterAdded)
+
+	signatureSignedExpression := expression.Name("signature_signed").Equal(expression.Value(true))
+	filter = addConditionToFilter(filter, signatureSignedExpression, &filterAdded)
+
 	if filterAdded {
 		builder = builder.WithFilter(filter)
 	}
