@@ -13,7 +13,7 @@ GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)
 GO_FILES=$(shell find . -type f -name '*.go' -not -path './vendor/*')
 TEST_ENV=AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar
 
-.PHONY: generate setup setup_dev setup_deploy clean swagger up fmt test run deps build build-mac build_aws_lambda qc lint
+.PHONY: generate setup setup_dev setup_deploy clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
 
 generate: swagger
 
@@ -73,7 +73,8 @@ rebuild-mac:
 	./cla
 
 build-aws-lambda: deps
-	env GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o backend_aws_lambda main.go
+	@echo "Building a staticlly linked binary..."
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o backend_aws_lambda main.go
 	chmod +x backend_aws_lambda
 
 $(LINT_TOOL):
