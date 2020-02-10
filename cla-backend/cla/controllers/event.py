@@ -4,6 +4,7 @@
 import uuid
 import json
 from datetime import datetime
+from functools import wraps
 
 import hug.types
 from falcon import HTTP_200, HTTP_400, HTTP_404, HTTPError
@@ -11,7 +12,9 @@ from falcon import HTTP_200, HTTP_400, HTTP_404, HTTPError
 import cla
 from cla.auth import AuthUser, admin_list
 from cla.models import DoesNotExist
-from cla.utils import get_event_instance
+from cla.utils import get_event_instance, audit_event
+
+
 
 
 def events(request, response=None):
@@ -57,14 +60,22 @@ def get_event(event_id=None, response=None):
         return {"errors": "Id is not passed"}
 
 
+@audit_event
 def create_event(
-    response=None, event_type=None, event_project_id=None, event_company_id=None, event_data=None, user_id=None,
+    response=None,
+    event_type=None,
+    event_project_id=None,
+    event_company_id=None,
+    event_project_name=None,
+    event_company_name=None,
+    event_data=None,
+    user_id=None,
 ):
     """
     Creates an event returns the newly created event in dict format.
 
     :param event_type: The type of event
-    :type event_type: string
+    :type event_type: EventType
     :param user_id: The user that is assocaited with the event
     :type user_id: string
     :param event_project_id: The project associated with event
@@ -73,10 +84,15 @@ def create_event(
     """
     try:
         event = get_event_instance()
+        if event_project_name is None:
+            event_project_name = "undefined"
+        if event_company_name is None:
+            event_company_name = "undefined"
         if event_project_id:
             try:
                 project = cla.utils.get_project_instance()
                 project.load(str(event_project_id))
+                event_project_name = project.get_project_name()
                 event.set_event_project_id(event_project_id)
             except DoesNotExist as err:
                 response.status = HTTP_400
@@ -85,6 +101,7 @@ def create_event(
             try:
                 company = cla.utils.get_company_instance()
                 company.load(str(event_company_id))
+                event_company_name = company.get_company_name()
                 event.set_event_company_id(event_company_id)
             except DoesNotExist as err:
                 response.status = HTTP_400
@@ -97,10 +114,11 @@ def create_event(
             except DoesNotExist as err:
                 response.status = HTTP_400
                 return {"errors": {"user_id": str(err)}}
-
         event.set_event_id(str(uuid.uuid4()))
         if event_type:
-            event.set_event_type(event_type)
+            event.set_event_type(event_type.name)
+        event.set_event_project_name(event_project_name)
+        event.set_event_company_name(event_company_name)
         event.set_event_data(event_data)
         event.set_event_time(str(datetime.now()))
         event.save()
