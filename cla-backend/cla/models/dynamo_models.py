@@ -1437,7 +1437,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id, company_id=None):
+    def get_latest_signature(self, project_id, company_id=None, signature_signed=None, signature_approved=None):
         """
         Helper function to get a user's latest signature for a project.
 
@@ -1454,7 +1454,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             f"project_id: {project_id}, "
             f"company_id: {company_id}"
         )
-        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id)
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id, signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
@@ -2577,7 +2577,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id):
+    def get_latest_signature(self, project_id,signature_signed=None, signature_approved=None):
         """
         Helper function to get a company's latest signature for a project.
 
@@ -2588,7 +2588,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
-        signatures = self.get_company_signatures(project_id=project_id)
+        signatures = self.get_company_signatures(project_id=project_id,signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
