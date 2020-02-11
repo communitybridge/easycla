@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -58,9 +59,10 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
-// currentTime returns the current UTC time in the RFC3339 format
-func currentTime() string {
-	return time.Now().UTC().Format(time.RFC3339)
+// currentTime returns the current UTC time and current Time in the RFC3339 format
+func currentTime() (time.Time, string) {
+	t := time.Now()
+	return t, t.UTC().Format(time.RFC3339)
 }
 
 // Create event will create event in database.
@@ -77,34 +79,25 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 		return err
 	}
 
-	currentTime := currentTime()
+	currentTime, currentTimeString := currentTime()
 	input := &dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			"event_id": {
-				S: aws.String(eventID.String()),
-			},
-			"event_type": {
-				S: aws.String(event.EventType),
-			},
-			"event_user_id": {
-				S: aws.String(event.UserID),
-			},
-			"event_time": {
-				S: aws.String(currentTime),
-			},
-			"event_data": {
-				S: aws.String(event.EventData),
-			},
-		},
+		Item:      map[string]*dynamodb.AttributeValue{},
 		TableName: aws.String(fmt.Sprintf("cla-%s-events", repo.stage)),
 	}
-	if event.EventCompanyID != "" {
-		input.Item["event_company_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventCompanyID)}
-	}
-	if event.EventProjectID != "" {
-		input.Item["event_project_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventProjectID)}
-	}
-
+	addAttribute(input.Item, "event_id", eventID.String())
+	addAttribute(input.Item, "event_type", event.EventType)
+	addAttribute(input.Item, "event_user_id", event.UserID)
+	addAttribute(input.Item, "event_user_name", event.UserName)
+	addAttribute(input.Item, "event_user_name_lower", strings.ToLower(event.UserName))
+	addAttribute(input.Item, "event_time", currentTimeString)
+	addAttribute(input.Item, "event_data", event.EventData)
+	addAttribute(input.Item, "event_company_id", event.EventCompanyID)
+	addAttribute(input.Item, "event_company_name", event.EventCompanyName)
+	addAttribute(input.Item, "event_company_name_lower", strings.ToLower(event.EventCompanyName))
+	addAttribute(input.Item, "event_project_id", event.EventProjectID)
+	addAttribute(input.Item, "event_project_name", event.EventProjectName)
+	addAttribute(input.Item, "event_project_name_lower", strings.ToLower(event.EventProjectName))
+	input.Item["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(currentTime.Unix(), 10))}
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new event, error: %v", err)
@@ -112,6 +105,12 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 	}
 
 	return nil
+}
+
+func addAttribute(item map[string]*dynamodb.AttributeValue, key string, value string) {
+	if value != "" {
+		item[key] = &dynamodb.AttributeValue{S: aws.String(value)}
+	}
 }
 
 func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
