@@ -515,7 +515,7 @@ def get_last_version(documents):
     return (last_major, last_minor)
 
 
-def user_icla_check(user: User, project: Project, signature: Signature, latest_major_version=True) -> bool:
+def user_icla_check(user: User, project: Project, signature: Signature, latest_major_version=False) -> bool:
     cla.log.debug(f'ICLA signature found for user: {user} on project: {project}, '
                   f'signature_id: {signature.get_signature_id()}')
 
@@ -544,12 +544,6 @@ def user_icla_check(user: User, project: Project, signature: Signature, latest_m
 
 
 def user_ccla_check(user: User, project: Project, signature: Signature) -> bool:
-    document = project.get_project_corporate_document()
-    if signature.get_signature_document_major_version() != document.get_document_major_version():
-        cla.log.debug(f'Company associated with User: {user} only has an old document version signed '
-                      f'(v{signature.get_signature_document_major_version()}) - needs a new version')
-        return False
-
     cla.log.debug(f'CCLA signature found for user: {user} on project: {project}, '
                   f'signature_id: {signature.get_signature_id()}')
 
@@ -567,7 +561,7 @@ def user_ccla_check(user: User, project: Project, signature: Signature) -> bool:
         return False
 
 
-def user_signed_project_signature(user: User, project : Project, latest_major_version=True):
+def user_signed_project_signature(user: User, project : Project):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
     Will consider both ICLA and employee signatures.
@@ -586,10 +580,10 @@ def user_signed_project_signature(user: User, project : Project, latest_major_ve
     # Check if we have an ICLA for this user
     cla.log.debug(f'checking to see if user has signed an ICLA, user: {user}, project: {project}')
 
-    signature = user.get_latest_signature(project.get_project_id())
+    signature = user.get_latest_signature(project.get_project_id(),signature_signed=True, signature_approved=True)
     icla_pass = False
     if signature is not None:
-        icla_pass = user_icla_check(user, project, signature, latest_major_version)
+        icla_pass = True
     else:
         cla.log.debug(f'ICLA signature NOT found for User: {user} on project: {project}')
 
@@ -602,24 +596,26 @@ def user_signed_project_signature(user: User, project : Project, latest_major_ve
 
     # Check if we have an CCLA for this user
     company_id = user.get_user_company_id()
-    cla.log.debug('checking to see if users company has signed an CCLA, '
-                  f'user: {user}, project_id: {project}, company_id: {company_id}')
 
     ccla_pass = False
     if company_id is not None:
-        signature = user.get_latest_signature(project.get_project_id(), company_id=company_id, signature_signed=True, signature_approved=True)
-        if signature is not None:
+        # Get employee signature
+        employee_signature = user.get_latest_signature(project.get_project_id(), company_id=company_id, signature_signed=True, signature_approved=True)
+        if employee_signature is not None:
             company = get_company_instance()
             company.load(company_id)
+            # Get CCLA signature of company to access whitelist
+            cla.log.debug('checking to see if users company has signed an CCLA, '
+                          f'user: {user}, project_id: {project}, company_id: {company_id}')
             signature = company.get_latest_signature(project.get_project_id(), signature_signed=True, signature_approved=True)
 
             # Don't check the version for employee signatures.
             if signature is not None:
                 #Verify if user has been whitelisted: https://github.com/communitybridge/easycla/issues/332
                 if user.is_whitelisted(signature):
-                    ccla_pass = user_ccla_check(user, project, signature)
+                    ccla_pass = True
                 else:
-                    # Delete user signatures due to user failing whitelist checks
+                    # Set user signatures approved = false due to user failing whitelist checks
                     cla.log.debug('user not whitelisted- marking signature approved = false for '
                                   f'user: {user}, project_id: {project}, company_id: {company_id}')
                     user_signatures = user.get_user_signatures(
