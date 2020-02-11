@@ -18,6 +18,7 @@ import cla
 from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
+from cla.utils import get_project_instance
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -319,6 +320,8 @@ class GitHub(repository_service_interface.RepositoryService):
 
         # Retrieve project ID from the repository.
         project_id = repository.get_repository_project_id()
+        project = get_project_instance()
+        project.load(str(project_id))
 
         # Find users who have signed and who have not signed.
         signed = []
@@ -332,7 +335,7 @@ class GitHub(repository_service_interface.RepositoryService):
             author_email = author_info[2]
             cla.log.debug('PR: {}, processing sha: {} from author id: {}, username: {}, email: {}'.
                           format(pull_request.number, commit_sha, author_id, author_username, author_email))
-            handle_commit_from_user(project_id, commit_sha, author_info, signed, missing)
+            handle_commit_from_user(project, commit_sha, author_info, signed, missing)
 
         cla.log.debug('PR: {}, updating github pull request for repo: {}, '
                       'with signed authors: {} with missing authors: {}'.
@@ -545,7 +548,7 @@ def create_repository(data):
         return None
 
 
-def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing):  # pylint: disable=too-many-arguments
+def handle_commit_from_user(project, commit_sha, author_info, signed, missing):  # pylint: disable=too-many-arguments
     """
     Helper method to triage commits between signed and not-signed user signatures.
 
@@ -589,7 +592,7 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
                 # For now, accept non-github users as legitimate users.
                 # Does this user have a signed signature for this project? If so, add to the signed list and return,
                 # no reason to continue looking
-                if cla.utils.user_signed_project_signature(user, project_id):
+                if cla.utils.user_signed_project_signature(user, project):
                     signed.append((commit_sha, author_username))
                     return
 
@@ -600,7 +603,7 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
             cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email not found'.
                           format(author_id, author_username, author_email))
             #Check to see if not found user is whitelisted to assist in triaging github comment
-            signatures = cla.utils.get_signature_instance().get_signatures_by_project(project_id)
+            signatures = cla.utils.get_signature_instance().get_signatures_by_project(project.get_project_id())
             list_author_info = list(author_info)
             for signature in signatures:
                 if cla.utils.is_whitelisted(
@@ -624,7 +627,7 @@ def handle_commit_from_user(project_id, commit_sha, author_info, signed, missing
 
             # Does this user have a signed signature for this project? If so, add to the signed list and return,
             # no reason to continue looking
-            if cla.utils.user_signed_project_signature(user, project_id):
+            if cla.utils.user_signed_project_signature(user, project):
                 signed.append((commit_sha, author_username))
                 return
 
