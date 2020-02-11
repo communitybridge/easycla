@@ -18,12 +18,14 @@ from cla.models.dynamo_models import User, Signature, Project, Company, UserPerm
                                      Repository, GitHubOrg
 from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
+from cla.controllers.event import create_event
+from cla.models.event_types import *
 
 
 def check_user_authorization(auth_user: AuthUser, sfid):
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
-    try: 
+    try:
         user_permissions.load(auth_user.username)
     except DoesNotExist as err:
         return {'valid': False, 'errors': {'errors': {'user does not exist': str(err)}}}
@@ -117,7 +119,7 @@ def get_project_managers(username, project_id, enable_auth):
 
 def get_unsigned_projects_for_company(company_id):
     """
-    Returns a list of projects that the company has not signed a CCLA for. 
+    Returns a list of projects that the company has not signed a CCLA for.
 
     :param company_id: The company's ID.
     :type company_id: string
@@ -131,13 +133,13 @@ def get_unsigned_projects_for_company(company_id):
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    # get project ids that the company has signed the CCLAs for. 
+    # get project ids that the company has signed the CCLAs for.
     signature = Signature()
     signed_project_ids = signature.get_projects_by_company_signed(company_id)
     # from all projects, retrieve projects that are not in the signed project ids
     unsigned_projects = [project.to_dict() for project in Project().all() if project.get_project_id() not in signed_project_ids]
     return unsigned_projects
-    
+
 
 def get_projects_by_external_id(project_external_id, username):
     """
@@ -145,7 +147,7 @@ def get_projects_by_external_id(project_external_id, username):
 
     :param project_external_id: The project's External ID.
     :type project_external_id: string
-    :param username: username of the user 
+    :param username: username of the user
     :type username: string
     :return: dict representation of the project object.
     :rtype: dict
@@ -153,7 +155,7 @@ def get_projects_by_external_id(project_external_id, username):
 
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
-    try: 
+    try:
         user_permissions.load(username)
     except DoesNotExist as err:
         return {'errors': {'username': 'user does not exist. '}}
@@ -200,6 +202,14 @@ def create_project(project_external_id, project_name, project_icla_enabled, proj
     project.set_project_acl(project_acl_username)
     project.save()
 
+    # Create audit trail
+    event_data = 'Project-{} created'.format(project_name)
+    create_event(
+        event_type=EventType.CreateProject,
+        event_project_id=project.get_project_id(),
+        event_data=event_data
+    )
+
     return project.to_dict()
 
 
@@ -228,15 +238,28 @@ def update_project(project_id, project_name=None, project_icla_enabled=None,
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
     project_acl_verify(username, project)
+    updated_string = " "
     if project_name is not None:
         project.set_project_name(project_name)
+        updated_string += f"project_name changed to {project_name} \n"
     if project_icla_enabled is not None:
         project.set_project_icla_enabled(project_icla_enabled)
+        updated_string += f"project_icla_enabled changed to {project_icla_enabled} \n"
     if project_ccla_enabled is not None:
         project.set_project_ccla_enabled(project_ccla_enabled)
+        updated_string += f"project_ccla_enabled changed to {project_ccla_enabled} \n"
     if project_ccla_requires_icla_signature is not None:
         project.set_project_ccla_requires_icla_signature(project_ccla_requires_icla_signature)
+        updated_string += f"project_ccla_requires_icla_signature changed to {project_ccla_requires_icla_signature} \n"
     project.save()
+
+    # Create audit trail
+    event_data = f'Project- {project_id} Updates: ' + updated_string
+    create_event(
+        event_type=EventType.UpdateProject,
+        event_project_id=project.get_project_id(),
+        event_data=event_data
+    )
     return project.to_dict()
 
 
@@ -255,7 +278,15 @@ def delete_project(project_id, username=None):
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
     project_acl_verify(username, project)
+    # Create audit trail
+    event_data = 'Project-{} deleted'.format(project.get_project_name())
+    create_event(
+        event_type=EventType.DeleteProject,
+        event_project_id=project_id,
+        event_data=event_data
+    )
     project.delete()
+
     return {'success': True}
 
 
@@ -332,13 +363,13 @@ def get_project_document_raw(project_id, document_type, document_major_version=N
     document = _get_project_document(project_id, document_type, document_major_version, document_minor_version)
     if isinstance(document, dict):
         return document
-        
+
     content_type = document.get_document_content_type()
-    if document.get_document_s3_url() is not None: 
+    if document.get_document_s3_url() is not None:
         # Document generated by Go Backend
         pdf = urllib.request.urlopen(document.get_document_s3_url())
     elif content_type.startswith('url+'):
-     # Docuemnt generated by python backend (deprecated) 
+     # Docuemnt generated by python backend (deprecated)
         pdf_url = document.get_document_content()
         pdf = urllib.request.urlopen(pdf_url)
     else:
@@ -412,6 +443,14 @@ def post_project_document(project_id,
             document.set_document_minor_version(minor + 1)
         project.add_project_corporate_document(document)
     project.save()
+
+    # Create audit trail
+    event_data = 'Created new document for Project-{} '.format(project.get_project_name())
+    create_event(
+        event_type=EventType.CreateProjectDocument,
+        event_project_id=project.get_project_id(),
+        event_data=event_data
+    )
     return project.to_dict()
 
 def post_project_document_template(project_id,
@@ -478,6 +517,14 @@ def post_project_document_template(project_id,
     document.set_document_content(pdf_content, b64_encoded=False)
     document.set_raw_document_tabs(template.get_tabs())
     project.save()
+
+    # Create audit trail
+    event_data = 'Project Document created for project {} created with template {}'.format(project.get_project_name(),template_name)
+    create_event(
+        event_type=EventType.CreateProjectDocumentTemplate,
+        event_project_id=project.get_project_id(),
+        event_data=event_data
+    )
     return project.to_dict()
 
 def delete_project_document(project_id, document_type, major_version, minor_version, username=None):
@@ -507,6 +554,17 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
     else:
         project.remove_project_corporate_document(document)
     project.save()
+
+    event_data = (
+                f'Project {project.get_project_name()} with {document_type} :'
+                +f'document type , minor version : {minor_version}, major version : {major_version}  deleted'
+    )
+
+    create_event (
+        event_data = event_data,
+        event_project_id = project_id,
+        event_type = EventType.DeleteProjectDocument
+    )
     return {'success': True}
 
 def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
@@ -514,7 +572,6 @@ def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
         return {'error': 'unauthorized'}
 
     cla.log.info('project ({}) added for user ({}) by {}'.format(project_sfdc_id, username, auth_user.username))
-
     user_permission = UserPermissions()
     try:
         user_permission.load(username)
@@ -525,6 +582,13 @@ def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
 
     user_permission.add_project(project_sfdc_id)
     user_permission.save()
+
+    event_data = 'User {} given permissions to project {}'.format(username, project_sfdc_id)
+    create_event (
+        event_data=event_data,
+        event_project_id=project_sfdc_id,
+        event_type=EventType.AddPermission
+    )
 
 def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     if auth_user.username not in admin_list:
@@ -539,8 +603,15 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
         print('Unable to update user permission: {}'.format(err))
         return {'error': err}
 
+    event_data = 'User {} permission removed to project {}'.format(username, project_sfdc_id)
+
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
+    create_event(
+        event_type = EventType.RemovePermission,
+        event_data=event_data,
+        event_project_id=project_sfdc_id
+    )
 
 def get_project_repositories(auth_user: AuthUser, project_id):
     """
@@ -549,14 +620,14 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     :param project_id: The ID of the project.
     :type project_id: string
     """
-    
+
     # Load Project
     project = Project()
     try:
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
         return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
-    
+
     # Get SFDC project identifier
     sfid = project.get_project_external_id()
 
@@ -576,14 +647,14 @@ def get_project_repositories_group_by_organization(auth_user: AuthUser, project_
     :param project_id: The ID of the project.
     :type project_id: string
     """
-    
+
     # Load Project
     project = Project()
     try:
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
         return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
-    
+
     # Get SFDC project identifier
     sfid = project.get_project_external_id()
 
@@ -604,13 +675,13 @@ def get_project_repositories_group_by_organization(auth_user: AuthUser, project_
             organizations_dict[org_name].append(repository)
         else:
             organizations_dict[org_name] = [repository]
-    
+
     organizations = []
     for key, value in organizations_dict.items():
         organizations.append({'name': key, 'repositories': value})
 
     return organizations
-    
+
 
 def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
     # Load Project
@@ -619,7 +690,7 @@ def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
         project.load(project_id=str(project_id))
     except DoesNotExist as err:
         return {'valid': False, 'errors': {'errors': {'project_id': str(err)}}}
-    
+
     # Get SFDC project identifier
     sfid = project.get_project_external_id()
 
@@ -744,6 +815,13 @@ def add_project_manager(username, project_id, lfid):
         'lfid': manager.get_lf_username()
     } for manager in managers]
 
+    event_data = '{} added {} to project {}'.format(username, lfid,project.get_project_name())
+    create_event(
+        event_type=EventType.AddProjectManager,
+        event_data=event_data,
+        event_project_id=project_id
+    )
+
     return managers_dict
 
 def remove_project_manager(username, project_id, lfid):
@@ -777,12 +855,20 @@ def remove_project_manager(username, project_id, lfid):
 
     # Get managers
     managers = project.get_managers()
-    
+
     # Generate managers dict
     managers_dict = [{
         'name': manager.get_user_name(),
         'email': manager.get_user_email(),
         'lfid': manager.get_lf_username()
     } for manager in managers]
+
+    #log event
+    event_data = f'{lfid} removed from project {project.get_project_id()}'
+    create_event(
+        event_type=EventType.RemoveProjectManager,
+        event_data=event_data,
+        event_project_id=project_id
+    )
 
     return managers_dict

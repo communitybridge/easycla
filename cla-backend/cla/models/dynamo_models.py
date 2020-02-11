@@ -3097,6 +3097,8 @@ class EventModel(BaseModel):
     event_type = UnicodeAttribute(null=True)
     event_project_id = UnicodeAttribute(null=True)
     event_company_id = UnicodeAttribute(null=True)
+    event_company_name = UnicodeAttribute(null=True)
+    event_project_name = UnicodeAttribute(null=True)
     event_time = UnicodeAttribute(null=True)
     event_data = UnicodeAttribute(null=True)
     user_id_index = EventUserIndex()
@@ -3156,6 +3158,9 @@ class Event(model_interfaces.Event):
     def get_event_company_id(self):
         return self.model.event_company_id
 
+    def get_event_company_name(self):
+        return self.model.event_company_name
+
     def get_user_id(self):
         return self.model.user_id
 
@@ -3167,6 +3172,9 @@ class Event(model_interfaces.Event):
 
     def get_event_project_id(self):
         return self.model.event_project_id
+
+    def get_event_project_name(self):
+        return self.model.event_project_name
 
     def get_event_type(self):
         return self.model.event_type
@@ -3189,6 +3197,9 @@ class Event(model_interfaces.Event):
     def set_event_company_id(self, company_id):
         self.model.event_company_id = company_id
 
+    def set_event_company_name(self, company_name):
+        self.model.event_company_name = company_name
+
     def set_event_data(self, event_data):
         self.model.event_data = event_data
 
@@ -3204,6 +3215,9 @@ class Event(model_interfaces.Event):
     def set_event_project_id(self, event_project_id):
         self.model.event_project_id = event_project_id
 
+    def set_event_project_name(self, event_project_name):
+        self.model.event_project_name = event_project_name
+
     def set_event_type(self, event_type):
         self.model.event_type = event_type
 
@@ -3213,7 +3227,7 @@ class Event(model_interfaces.Event):
         :param **kwargs: query options that is used to filter events
         """
 
-        attributes = ["event_id", "event_company_id", "event_project_id", "event_type", "user_id"]
+        attributes = ["event_id", "event_company_id", "event_project_id", "event_type", "user_id", "event_project_name", "event_company_name"]
         filter_condition = None
         for key, value in kwargs.items():
             if key not in attributes:

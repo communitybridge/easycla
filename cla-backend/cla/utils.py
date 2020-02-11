@@ -1321,10 +1321,19 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
             "is_whitelisted - users github_username is not defined " "- skipping github org whitelist check"
         )
 
-    cla.log.debug('unavle to find user in any whitelist')
+    cla.log.debug('unable to find user in any whitelist')
     return False
 
-
+def audit_event(func):
+    """ Decorator that audits events """
+    def wrapper(**kwargs):
+        response = func(**kwargs)
+        if response.get("status_code") == falcon.HTTP_200:
+            cla.log.debug("Created event {} ".format(kwargs['event_type']))
+        else:
+            cla.log.debug("Failed to add event")
+        return response
+    return wrapper
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])

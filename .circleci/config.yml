@@ -250,6 +250,13 @@ jobs:
             exit_code=$?
             if [[ ${exit_coe} -eq 0 ]]; then
               echo "Successful response from endpoint: ${v3_url}"
+              # JSON response should include "Status": "healthy"
+              if [[ `curl -s -XGET ${v3_url} | jq -r '.Status'` == "healthy" ]]; then
+                echo "Service is healthy"
+              else
+                echo "Service is NOT healthy"
+                exit -1
+              fi
             else
               echo "Failed to get a successful response from endpoint: ${v3_url}"
               exit ${exit_code}

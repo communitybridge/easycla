@@ -10,9 +10,12 @@ import hug.types
 from cla.models import DoesNotExist
 import cla
 import cla.controllers.user
+from cla.controllers.event import create_event
+from cla.models.event_types import EventType
 from cla.auth import AuthUser, admin_list
 from cla.models.dynamo_models import Company, User
 from falcon import HTTP_409, HTTP_200, HTTPForbidden
+
 
 def get_companies():
     """
@@ -105,7 +108,16 @@ def create_company(auth_user,
     company.set_company_acl(manager.get_lf_username())
 
     company.save()
-    
+
+    # Create audit trail for company
+    event_data = 'Company-{} created'.format(company.get_company_name())
+    create_event(
+        event_type=EventType.CreateCompany,
+        event_company_id=company.get_company_id(),
+        event_data=event_data,
+        user_id=user_id
+    )
+
     return {"status_code": HTTP_200,
             "data": company.to_dict()
             }
@@ -134,15 +146,27 @@ def update_company(company_id, # pylint: disable=too-many-arguments
         return {'errors': {'company_id': str(err)}}
 
     company_acl_verify(username, company)
+    update_str = ""
 
     if company_name is not None:
         company.set_company_name(company_name)
+        update_str += "company_name updated to {} \n".format(company_name)
     if company_manager_id is not None:
         val = hug.types.uuid(company_manager_id)
         company.set_company_manager_id(str(val))
-    company.save()
-    return company.to_dict()
+        update_str += "company_manager_id updated to {} \n".format(val)
 
+    company.save()
+
+    # Audit update event
+    event_data = update_str
+    create_event(
+        event_data=event_data,
+        event_type=EventType.UpdateCompany,
+        event_company_id=company_id
+    )
+    return company.to_dict()
+'''
 def update_company_whitelist_csv(content, company_id, username=None):
     """
     Adds the CSV of email addresse to this company's whitelist.
@@ -163,11 +187,12 @@ def update_company_whitelist_csv(content, company_id, username=None):
     # Ready email addresses.
     emails = content.split('\n')
     emails = [email for email in emails if '@' in email]
-    current_whitelist = company.get_company_whitelist()
+    current_whitelist = company.get_company_'whitelist'()
     new_whitelist = list(set(current_whitelist + emails))
     company.set_company_whitelist(new_whitelist)
     company.save()
     return company.to_dict()
+'''
 
 def delete_company(company_id, username=None):
     """
@@ -185,6 +210,13 @@ def delete_company(company_id, username=None):
     company_acl_verify(username, company)
 
     company.delete()
+
+    event_data = f'Company- {company.get_company_name()} deleted'
+    create_event(
+        event_data=event_data,
+        event_type=EventType.DeleteCompany,
+        event_company_id=company_id
+    )
     return {'success': True}
 
 
@@ -206,6 +238,12 @@ def add_permission(auth_user: AuthUser, username: str, company_id: str, ignore_a
         return {'error': str(err)}
 
     company.add_company_acl(username)
+    event_data = f'Permissions added to user {username} for Company {company.get_company_name()}'
+    create_event(
+        event_data=event_data,
+        event_type=EventType.AddCompanyPermission,
+        event_company_id=company_id
+    )
     company.save()
 
 def remove_permission(auth_user: AuthUser, username: str, company_id: str):
@@ -222,4 +260,10 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
         return {'error': str(err)}
 
     company.remove_company_acl(username)
+    event_data = 'company ({}) removed for ({}) by {}'.format(company_id, username, auth_user.username)
+    create_event(
+        event_data=event_data,
+        event_company_id=company_id,
+        event_type=EventType.RemoveCompanyPermission
+    )
     company.save()
