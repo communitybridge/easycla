@@ -24,6 +24,7 @@ export class ClaSendClaManagerEmailModal {
 
   company: any;
 
+  project: any;
   userEmails: Array<string>;
 
   form: FormGroup;
@@ -56,11 +57,15 @@ export class ClaSendClaManagerEmailModal {
     this.company = {
       company_name: ''
     };
+    this.project = {
+      project_name: ''
+    };
   }
 
   ngOnInit() {
     this.getUser();
     this.getCompany();
+    this.getProject(this.projectId)
   }
 
   getUser() {
@@ -114,6 +119,12 @@ export class ClaSendClaManagerEmailModal {
     };
     this.claService.postUserCCLARequestToManager(this.userId, data).subscribe((response) => {
       this.emailSent();
+    });
+  }
+
+  getProject(projectId) {
+    this.claService.getProject(projectId).subscribe((response) => {
+      this.project = response;
     });
   }
 
