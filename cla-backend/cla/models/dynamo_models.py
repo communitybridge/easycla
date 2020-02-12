@@ -9,12 +9,13 @@ import base64
 import datetime
 import os
 import re
+import time
 import uuid
 from typing import Optional, List
 
 import cla
 import dateutil.parser
-from cla.models import model_interfaces, key_value_store_interface
+from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
 from cla.models.model_interfaces import User, Signature
 from pynamodb.attributes import (
     UTCDateTimeAttribute,
@@ -3093,13 +3094,17 @@ class EventModel(BaseModel):
             host = "http://localhost:8000"
 
     event_id = UnicodeAttribute(hash_key=True)
-    user_id = UnicodeAttribute(null=True)
+    event_user_id = UnicodeAttribute(null=True)
     event_type = UnicodeAttribute(null=True)
     event_project_id = UnicodeAttribute(null=True)
     event_company_id = UnicodeAttribute(null=True)
     event_company_name = UnicodeAttribute(null=True)
+    event_company_name_lower = UnicodeAttribute(null=True)
     event_project_name = UnicodeAttribute(null=True)
-    event_time = UnicodeAttribute(null=True)
+    event_project_name_lower = UnicodeAttribute(null=True)
+    event_user_name = UnicodeAttribute(null=True)
+    event_time = UTCDateTimeAttribute(default=datetime.datetime.now())
+    event_time_epoch = NumberAttribute(default=time.time())
     event_data = UnicodeAttribute(null=True)
     user_id_index = EventUserIndex()
     event_type_index = EventTypeIndex()
@@ -3117,29 +3122,44 @@ class Event(model_interfaces.Event):
             user_id=None,
             event_project_id=None,
             event_company_id=None,
-            event_time=None,
             event_data=None,
+            event_company_name=None,
+            event_user_name=None,
+            event_project_name=None
     ):
 
         super(Event).__init__()
         self.model = EventModel()
         self.model.event_id = event_id
         self.model.event_type = event_type
-        self.model.user_id = user_id
+        self.model.event_user_id = user_id
         self.model.event_project_id = event_project_id
         self.model.event_company_id = event_company_id
-        self.model.event_time = event_time
         self.model.event_data = event_data
+        self.model.event_company_name = event_company_name
+        if self.model.event_company_name:
+            self.model.event_company_name_lower = self.model.event_company_name.lower()
+        self.model.event_user_name = event_user_name
+        if self.model.event_user_name:
+            self.model.event_user_name_lower = self.model.event_user_name.lower()
+        self.model.event_project_name = event_project_name
+        if self.model.event_project_name:
+            self.model.event_project_name_lower = self.model.event_project_name.lower()
+
 
     def __str__(self):
         return (
             f"id:{self.model.event_id}, "
             f"event type:{self.model.event_type}, "
-            f"user id:{self.model.user_id}, "
+            f"event_user id:{self.model.event_user_id}, "
             f"project id:{self.model.project_id}, "
             f"company id: {self.model.company_id}, "
             f"event time: {self.model.event_time}, "
-            f"event data: {self.model.event_data}"
+            f"event time epoch: {self.model.event_time_epoch}, "
+            f"event data: {self.model.event_data}, "
+            f"event company name: {self.model.event_company_name}, "
+            f"event project name: {self.model.event_project_name}, "
+            f"event user name: {self.model.event_user_name}"
         )
 
     def to_dict(self):
@@ -3161,8 +3181,8 @@ class Event(model_interfaces.Event):
     def get_event_company_name(self):
         return self.model.event_company_name
 
-    def get_user_id(self):
-        return self.model.user_id
+    def get_event_user_id(self):
+        return self.model.event_user_id
 
     def get_event_data(self):
         return self.model.event_data
@@ -3176,11 +3196,32 @@ class Event(model_interfaces.Event):
     def get_event_project_name(self):
         return self.model.event_project_name
 
+    def get_event_project_name_lower(self):
+        return self.model.event_project_name_lower
+
     def get_event_type(self):
         return self.model.event_type
 
     def get_event_time(self):
-        return self.get_event_time
+        return self.model.date_created
+
+    def get_event_time_epoch(self):
+        return self.model.event_time_epoch
+
+    def get_event_company_name_lower(self):
+        return self.model.event_company_name_lower
+
+    def get_event_user_name(self):
+        return self.model.event_user_name
+
+    def get_event_user_name_lower(self):
+        return self.model.event_user_name_lower
+
+    def get_event_project_name(self):
+        return self.model.event_project_name
+
+    def get_event_project_name_lower(self):
+        return self.model.event_project_name_lower
 
     def all(self, ids=None):
         if ids is None:
@@ -3199,6 +3240,8 @@ class Event(model_interfaces.Event):
 
     def set_event_company_name(self, company_name):
         self.model.event_company_name = company_name
+        if company_name:
+            self.model.event_company_name_lower = company_name.lower()
 
     def set_event_data(self, event_data):
         self.model.event_data = event_data
@@ -3206,20 +3249,23 @@ class Event(model_interfaces.Event):
     def set_event_id(self, event_id):
         self.model.event_id = event_id
 
-    def set_user_id(self, user_id):
-        self.model.user_id = user_id
-
-    def set_event_time(self, event_time):
-        self.model.event_time = event_time
+    def set_event_user_id(self, user_id):
+        self.model.event_user_id = user_id
 
     def set_event_project_id(self, event_project_id):
         self.model.event_project_id = event_project_id
 
     def set_event_project_name(self, event_project_name):
         self.model.event_project_name = event_project_name
+        if event_project_name:
+            self.model.event_project_name_lower = event_project_name.lower()
 
     def set_event_type(self, event_type):
         self.model.event_type = event_type
+
+    def set_event_user_name(self, event_user_name):
+        self.model.event_user_name = event_user_name
+        self.model.event_user_name_lower = event_user_name.lower()
 
     def search_events(self, **kwargs):
         """
@@ -3227,7 +3273,19 @@ class Event(model_interfaces.Event):
         :param **kwargs: query options that is used to filter events
         """
 
-        attributes = ["event_id", "event_company_id", "event_project_id", "event_type", "user_id", "event_project_name", "event_company_name"]
+        attributes = [
+            'event_id',
+            "event_company_id",
+            "event_project_id",
+            "event_type",
+            "event_user_id",
+            "event_project_name",
+            "event_company_name",
+            "event_project_name_lower",
+            "event_company_name_lower",
+            "event_time",
+            "event_time_epoch",
+        ]
         filter_condition = None
         for key, value in kwargs.items():
             if key not in attributes:
@@ -3249,3 +3307,66 @@ class Event(model_interfaces.Event):
             ret.append(ev)
 
         return ret
+
+    @classmethod
+    def create_event(
+        cls,
+        event_type=None,
+        event_project_id=None,
+        event_company_id=None,
+        event_project_name=None,
+        event_company_name=None,
+        event_data=None,
+        event_user_id=None,
+    ):
+        """
+        Creates an event returns the newly created event in dict format.
+
+        :param event_type: The type of event
+        :type event_type: EventType
+        :param event_user_id: The user that is assocaited with the event
+        :type event_user_id: string
+        :param event_project_id: The project associated with event
+        :type event_project_id: string
+
+        """
+        try:
+            event = cls()
+            if event_project_name is None:
+                event_project_name = "undefined"
+            if event_company_name is None:
+                event_company_name = "undefined"
+            if event_project_id:
+                try:
+                    project = Project()
+                    project.load(str(event_project_id))
+                    event_project_name = project.get_project_name()
+                    event.set_event_project_id(event_project_id)
+                except DoesNotExist as err:
+                    return {"errors": {"event_project_id": str(err)}}
+            if event_company_id:
+                try:
+                    company = Company()
+                    company.load(str(event_company_id))
+                    event_company_name = company.get_company_name()
+                    event.set_event_company_id(event_company_id)
+                except DoesNotExist as err:
+                    return {"errors": {"event_company_id": str(err)}}
+            if event_user_id:
+                try:
+                    user = User()
+                    user.load(str(event_user_id))
+                    event.set_event_user_id(event_user_id)
+                except DoesNotExist as err:
+                    return {"errors": {"event_": str(err)}}
+            event.set_event_id(str(uuid.uuid4()))
+            if event_type:
+                event.set_event_type(event_type.name)
+            event.set_event_project_name(event_project_name)
+            event.set_event_company_name(event_company_name)
+            event.set_event_data(event_data)
+            event.save()
+            return {"data": event.to_dict()}
+
+        except Exception as err:
+            return {"errors": {"event_id": str(err)}}

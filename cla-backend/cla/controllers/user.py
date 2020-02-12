@@ -9,10 +9,9 @@ import uuid
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import User, Company, Project
+from cla.models.dynamo_models import User, Company, Project, Event
 from cla.utils import get_user_instance, get_email_service
 from cla.models.event_types import EventType
-from cla.controllers.event import create_event
 
 
 
@@ -205,7 +204,7 @@ Click on the following link to navigate to the EasyCLA Corporate Console.
     # Create event
     event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}'\
                  f'{user.get_user_name()} <{user.get_user_email()}>'
-    create_event(
+    Event.create_event(
         user_id=user_id,
         event_project_id=project_id,
         event_company_id=company_id,
@@ -229,7 +228,7 @@ def invite_company_admin(user_id, user_email, admin_name, admin_email, project_n
     send_email_to_admin(user.get_user_name(), user_email, admin_name, admin_email, project_name, False)
 
     event_data = f'{user_id} with {user_email} sends to {admin_name}/{admin_email} for project: {project_name}'
-    create_event(
+    Event.create_event(
         user_id=user_id,
         event_project_name=project_name,
         event_data=event_data,
@@ -268,7 +267,7 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
 
     # Audit event
     event_data = f'Sent email to sign ccla for {project.get_project_name() }'
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.RequestCCLA,
         user_id=user_id,
@@ -403,7 +402,7 @@ def get_or_create_user(auth_user):
         user.save()
 
         event_data = f'CLA user added for {auth_user.username}'
-        create_event(
+        Event.create_event(
             event_data=event_data,
             event_type=EventType.CreateUser
         )

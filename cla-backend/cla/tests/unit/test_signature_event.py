@@ -6,7 +6,6 @@ from unittest.mock import patch, Mock
 import pytest
 
 from cla.models.dynamo_models import Signature,Project,Company, Document
-from cla.controllers.event import create_event
 from cla.controllers import signature as signature_controller
 from cla.controllers import company
 from cla.models.event_types import EventType
@@ -24,7 +23,8 @@ def auth_user():
         user = AuthUser()
         yield user
 
-def test_create_signature(create_event_signature, project):
+@patch('cla.controllers.signature.Event.create_event')
+def test_create_signature(mock_event, create_event_signature, project):
     """ Test create signature event """
     Project.load = Mock()
     Company.load = Mock()
@@ -42,13 +42,14 @@ def test_create_signature(create_event_signature, project):
     signature_controller.create_signature(
         project_id,'signature_reference_id','signature_reference_type'
     )
-    signature_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
         event_project_id=project_id
     )
 
-def test_update_signature(auth_user, create_event_signature, signature_instance):
+@patch('cla.controllers.signature.Event.create_event')
+def test_update_signature(mock_event, auth_user, create_event_signature, signature_instance):
     """ Test update signature """
     Signature.load = Mock()
     auth_user.name = 'ddeal'
@@ -62,24 +63,26 @@ def test_update_signature(auth_user, create_event_signature, signature_instance)
     )
 
     event_data = f'signature {signature_instance.get_signature_id()} updates: \n signature_reference_type updated to type \n'
-    signature_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type
     )
 
-def test_delete_signature(create_event_signature, signature_instance):
+@patch('cla.controllers.signature.Event.create_event')
+def test_delete_signature(mock_event, create_event_signature, signature_instance):
     """ Test delete signature """
     event_type = EventType.DeleteSignature
     event_data = f'Deleted signature {signature_instance.get_signature_id()}'
     signature_controller.delete_signature(
         signature_instance.get_signature_id()
     )
-    signature_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type
     )
 
-def test_add_cla_manager(auth_user, signature_instance, create_event_signature):
+@patch('cla.controllers.signature.Event.create_event')
+def test_add_cla_manager(mock_event, auth_user, signature_instance, create_event_signature):
     """ Test add cla manager event """
     Signature.load = Mock()
     auth_user.username = 'harold'
@@ -96,12 +99,13 @@ def test_add_cla_manager(auth_user, signature_instance, create_event_signature):
     )
     event_data = f'{lfid} added as cla manager to Signature ACL for {signature_instance.get_signature_id()}'
 
-    signature_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=EventType.AddCLAManager
     )
 
-def test_remove_cla_manager(signature_instance, create_event_signature):
+@patch('cla.controllers.signature.Event.create_event')
+def test_remove_cla_manager(mock_event, signature_instance, create_event_signature):
     """ Test remove cla_manager """
     Signature.get_signature_acl = Mock(return_value=('harold'))
     Signature.load = Mock()
@@ -114,7 +118,7 @@ def test_remove_cla_manager(signature_instance, create_event_signature):
         'harold', signature_instance.get_signature_id(), lfid
     )
     event_data = f'User with lfid {lfid} removed from project ACL with signature {signature_instance.get_signature_id()}'
-    signature_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type
     )

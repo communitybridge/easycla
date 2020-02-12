@@ -5,21 +5,24 @@
 Controller related to project operations.
 """
 
-import uuid
-import urllib
 import io
+import urllib
+import uuid
+
+from falcon import HTTPForbidden
+
 import cla
 import cla.resources.contract_templates
 from cla.auth import AuthUser, admin_list
-from cla.utils import get_project_instance, get_document_instance, get_signature_instance, \
-                      get_company_instance, get_pdf_service, get_github_organization_instance
-from cla.models import DoesNotExist
-from cla.models.dynamo_models import User, Signature, Project, Company, UserPermissions, \
-                                     Repository, GitHubOrg
-from falcon import HTTPForbidden
 from cla.controllers.github_application import GitHubInstallation
-from cla.controllers.event import create_event
+from cla.models import DoesNotExist
+from cla.models.dynamo_models import (Company, Event, GitHubOrg, Project,
+                                      Repository, Signature, User,
+                                      UserPermissions)
 from cla.models.event_types import *
+from cla.utils import (get_company_instance, get_document_instance,
+                       get_github_organization_instance, get_pdf_service,
+                       get_project_instance, get_signature_instance)
 
 
 def check_user_authorization(auth_user: AuthUser, sfid):
@@ -204,7 +207,7 @@ def create_project(project_external_id, project_name, project_icla_enabled, proj
 
     # Create audit trail
     event_data = 'Project-{} created'.format(project_name)
-    create_event(
+    Event.create_event(
         event_type=EventType.CreateProject,
         event_project_id=project.get_project_id(),
         event_data=event_data
@@ -255,7 +258,7 @@ def update_project(project_id, project_name=None, project_icla_enabled=None,
 
     # Create audit trail
     event_data = f'Project- {project_id} Updates: ' + updated_string
-    create_event(
+    Event.create_event(
         event_type=EventType.UpdateProject,
         event_project_id=project.get_project_id(),
         event_data=event_data
@@ -280,7 +283,7 @@ def delete_project(project_id, username=None):
     project_acl_verify(username, project)
     # Create audit trail
     event_data = 'Project-{} deleted'.format(project.get_project_name())
-    create_event(
+    Event.create_event(
         event_type=EventType.DeleteProject,
         event_project_id=project_id,
         event_data=event_data
@@ -446,7 +449,7 @@ def post_project_document(project_id,
 
     # Create audit trail
     event_data = 'Created new document for Project-{} '.format(project.get_project_name())
-    create_event(
+    Event.create_event(
         event_type=EventType.CreateProjectDocument,
         event_project_id=project.get_project_id(),
         event_data=event_data
@@ -520,7 +523,7 @@ def post_project_document_template(project_id,
 
     # Create audit trail
     event_data = 'Project Document created for project {} created with template {}'.format(project.get_project_name(),template_name)
-    create_event(
+    Event.create_event(
         event_type=EventType.CreateProjectDocumentTemplate,
         event_project_id=project.get_project_id(),
         event_data=event_data
@@ -560,7 +563,7 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
                 +f'document type , minor version : {minor_version}, major version : {major_version}  deleted'
     )
 
-    create_event (
+    Event.create_event (
         event_data = event_data,
         event_project_id = project_id,
         event_type = EventType.DeleteProjectDocument
@@ -584,7 +587,7 @@ def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     user_permission.save()
 
     event_data = 'User {} given permissions to project {}'.format(username, project_sfdc_id)
-    create_event (
+    Event.create_event (
         event_data=event_data,
         event_project_id=project_sfdc_id,
         event_type=EventType.AddPermission
@@ -607,7 +610,7 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
 
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
-    create_event(
+    Event.create_event(
         event_type = EventType.RemovePermission,
         event_data=event_data,
         event_project_id=project_sfdc_id
@@ -816,7 +819,7 @@ def add_project_manager(username, project_id, lfid):
     } for manager in managers]
 
     event_data = '{} added {} to project {}'.format(username, lfid,project.get_project_name())
-    create_event(
+    Event.create_event(
         event_type=EventType.AddProjectManager,
         event_data=event_data,
         event_project_id=project_id
@@ -865,7 +868,7 @@ def remove_project_manager(username, project_id, lfid):
 
     #log event
     event_data = f'{lfid} removed from project {project.get_project_id()}'
-    create_event(
+    Event.create_event(
         event_type=EventType.RemoveProjectManager,
         event_data=event_data,
         event_project_id=project_id
