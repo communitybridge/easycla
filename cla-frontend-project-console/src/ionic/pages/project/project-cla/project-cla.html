@@ -118,6 +118,7 @@
                       color="light">
                       View Signatures
                     </button>
+                    <!-- <button ion-button (click)="openClaContractCompaniesModal(project.project_id)" -->
                     <button ion-button (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
                       color="light">
                       View Companies
@@ -127,12 +128,6 @@
               </ion-row>
 
               <ion-row>
-                <!-- TODO
-                if OPNFV - we have "Agreements" and not "CLAs", so we want to change:
-                1) the text
-                2) add a third column a) LF Members PDF, b) Non-LF Members PDF, c) Individual Members
-                otherwise, use the default
-                -->
 
                 <!-- Corporate / CCLA -->
                 <ng-container *ngIf="project.project_name.search('OPNFV') == -1">
@@ -179,7 +174,8 @@
                           <ion-row>
                             <ion-col>
                               <ion-buttons end="" class="bar-buttons bar-buttons-md">
-                                <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
+                                <!-- <button ion-button (click)="openClaContractCompaniesModal(project.project_id)" -->
+                                <button ion-button (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
                                   color="secondary">
                                   View Companies
                                 </button>
@@ -383,15 +379,6 @@
                     </ion-card>
                   </ion-col>
                 </ng-container>
-              </ion-row>
-
-              <ion-row class="align-items-center">
-                <ion-buttons end="" class="bar-buttons bar-buttons-md">
-                  <button ion-button clear (click)="openClaContractCompaniesModal(project.project_id)"
-                    color="secondary">
-                    View Companies
-                  </button>
-                </ion-buttons>
               </ion-row>
             </div>
           </ion-col>
