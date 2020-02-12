@@ -63,6 +63,7 @@ func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, proj
 	// Create and log the event
 	eventErr := s.CreateEvent(models.Event{
 		UserID:           claUser.UserID,
+		UserName:         claUser.Name,
 		EventProjectID:   projectID,
 		EventProjectName: projectName,
 		EventCompanyID:   companyID,

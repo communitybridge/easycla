@@ -8,7 +8,7 @@ from github import Github
 
 import cla
 from cla.models.github_models import get_pull_request_commit_authors, handle_commit_from_user
-from cla.models.dynamo_models import Signature
+from cla.models.dynamo_models import Signature, Project
 
 
 class TestGitHubModels(unittest.TestCase):
@@ -90,7 +90,9 @@ class TestGitHubModels(unittest.TestCase):
         self.mock_utils_get.return_value.is_whitelisted.return_value = True
         missing = []
         signed = []
-        handle_commit_from_user('fake_project_id', 'fake_sha', (123,'foo','foo@gmail.com'), signed, missing)
+        project = Project()
+        project.set_project_id('fake_project_id')
+        handle_commit_from_user(project, 'fake_sha', (123,'foo','foo@gmail.com'), signed, missing)
         self.assertListEqual(missing,[('fake_sha', [123, 'foo', 'foo@gmail.com', True])])
         self.assertEqual(signed, [])
 
