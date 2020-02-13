@@ -2,7 +2,7 @@
   <modal-header>
     <ion-row class="align-items-center">
       <ion-col col-2>
-        <div>View Signatures: {{claProjectName}}</div>
+        <div>Companies with Signatures for: {{claProjectName}}</div>
       </ion-col>
     </ion-row>
   </modal-header>
@@ -18,7 +18,7 @@
               <ion-row align-items-start align-items-center>
                 <ion-col col-3>
                   <input ion-input type="text" placeholder="Enter manager or company name..."
-                    formControlName="search" />
+                         formControlName="search" />
                 </ion-col>
                 <ion-col col-auto>
                   <ion-item>
@@ -41,7 +41,7 @@
           </div>
           <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
             <ngx-datatable #companiesTable class='material' [headerHeight]="50" [rows]="rows" rowHeight="auto"
-              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (sort)="sortMembers($event)">
+                           [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (sort)="sortMembers($event)">
               <!-- Row Detail Template -->
               <ngx-datatable-row-detail rowHeight="auto" #companyDetailRow>
                 <ng-template let-row="row" let-expanded="expanded" ngx-datatable-row-detail-template>
@@ -57,7 +57,7 @@
               </ngx-datatable-row-detail>
               <!-- Column Templates -->
               <ngx-datatable-column [width]="50" [resizeable]="false" [sortable]="false" [draggable]="false"
-                [canAutoResize]="false">
+                                    [canAutoResize]="false">
                 <ng-template let-row="row" let-expanded="expanded" ngx-datatable-cell-template>
                   <a href="javascript:void(0)" title="Expand/Collapse Row" (click)="toggleExpandRow(row)">
                     <ion-icon name="ios-arrow-forward" *ngIf="!expanded"></ion-icon>
@@ -66,11 +66,11 @@
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Company" prop="Company" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
+                                    [resizeable]="true"></ngx-datatable-column>
               <ngx-datatable-column name="Version" prop="Version" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
+                                    [resizeable]="true"></ngx-datatable-column>
               <ngx-datatable-column name="Date Signed" prop="Date" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
+                                    [resizeable]="true"></ngx-datatable-column>
             </ngx-datatable>
           </div>
         </div>
@@ -84,9 +84,9 @@
     <ion-col col-12 class="pagination-buttons">
       <ion-buttons>
         <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()"
-          (click)="getPreviousPage()">Prev</button>
+                (click)="getPreviousPage()">Prev</button>
         <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()"
-          (click)="getNextPage()">Next</button>
+                (click)="getNextPage()">Next</button>
       </ion-buttons>
     </ion-col>
 
