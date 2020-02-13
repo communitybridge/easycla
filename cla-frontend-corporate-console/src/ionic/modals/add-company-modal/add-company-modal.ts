@@ -36,6 +36,7 @@ export class AddCompanyModal {
   loading: any;
   searching: boolean;
   actionButtonsEnabled: boolean;
+  activateButtons: boolean;
 
   join: boolean
   add: boolean
@@ -69,6 +70,8 @@ export class AddCompanyModal {
 
     this.add = true;
     this.join = false;
+
+    this.activateButtons = true
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -191,6 +194,7 @@ export class AddCompanyModal {
     // Remove all non-alpha numeric, -, _ values
     let companyName = event.value.replace(/[^\w-]+/g, '');
     if (companyName.length > 0 && this.companies) {
+      this.activateButtons = false;
       this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;

@@ -63,10 +63,10 @@
       <button ion-button icon-right color="light" (click)="dismiss()" [disabled]="currentlySubmitting">
         Cancel
       </button>
-      <button ion-button icon-right (click)="joinCompany()" *ngIf="join && !add">
+      <button [disabled]="activateButtons" ion-button icon-right (click)="joinCompany()" *ngIf="join && !add">
         Join Company
       </button>
-      <button  (click)="addCompany()" ion-button icon-right *ngIf="!join && add">
+      <button [disabled]="activateButtons"  (click)="addCompany()" ion-button icon-right *ngIf="!join && add">
         Add Company
       </button>
     </ion-buttons>
