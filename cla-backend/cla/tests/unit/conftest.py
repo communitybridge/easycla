@@ -11,10 +11,20 @@ from cla.tests.unit.data import (
     EVENT_TABLE_DESCRIPTION,
     PROJECT_TABLE_DESCRIPTION,
 )
-from cla.utils import get_user_instance, get_signature_instance, get_company_instance, get_project_instance
-from cla.models.dynamo_models import UserModel, SignatureModel, CompanyModel, EventModel, ProjectModel
+from cla.models.dynamo_models import (
+    UserModel,
+    SignatureModel,
+    CompanyModel,
+    EventModel,
+    ProjectModel,
+    Signature,
+    Company,
+    User,
+    Project
+)
 
 PATCH_METHOD = "pynamodb.connection.Connection._make_api_call"
+
 
 @pytest.fixture()
 def signature_instance():
@@ -23,7 +33,7 @@ def signature_instance():
     """
     with patch(PATCH_METHOD) as req:
         req.return_value = SIGNATURE_TABLE_DATA
-        instance = get_signature_instance()
+        instance = Signature()
         instance.set_signature_id("sig_id")
         instance.set_signature_project_id("proj_id")
         instance.set_signature_reference_id("ref_id")
@@ -49,8 +59,9 @@ def user_instance():
     """
     with patch(PATCH_METHOD) as req:
         req.return_value = USER_TABLE_DATA
-        instance = get_user_instance()
+        instance = User()
         instance.set_user_id("foo")
+        instance.set_user_name("username")
         instance.set_user_external_id("bar")
         instance.save()
         yield instance
@@ -63,7 +74,7 @@ def company_instance():
     """
     with patch(PATCH_METHOD) as req:
         req.return_value = COMPANY_TABLE_DATA
-        instance = get_company_instance()
+        instance = Company()
         instance.set_company_id("uuid")
         instance.set_company_name("co")
         instance.set_company_external_id("external id")
@@ -126,12 +137,13 @@ def company_table():
     with patch(PATCH_METHOD, new=fake_db):
         CompanyModel.create_table()
 
+
 @pytest.fixture()
 def user(user_table):
     """ create user """
     with patch(PATCH_METHOD) as req:
         req.return_value = {}
-        user_instance = get_user_instance()
+        user_instance = User()
         user_instance.set_user_id("user_foo_id")
         user_instance.set_user_email("foo@gmail.com")
         user_instance.set_user_name("foo_username")
@@ -144,7 +156,7 @@ def project(project_table):
     """ create project """
     with patch(PATCH_METHOD) as req:
         req.return_value = {}
-        project_instance = get_project_instance()
+        project_instance = Project()
         project_instance.set_project_id("foo_project_id")
         project_instance.set_project_external_id("foo_external_id")
         project_instance.set_project_name("foo_project_name")
@@ -157,11 +169,12 @@ def company(company_table):
     """ create project """
     with patch(PATCH_METHOD) as req:
         req.return_value = {}
-        company_instance = get_company_instance()
-        company_instance.set_company_id('foo_company_id')
-        company_instance.set_company_name('foo_company_name')
+        company_instance = Company()
+        company_instance.set_company_id("foo_company_id")
+        company_instance.set_company_name("foo_company_name")
         company_instance.save()
         yield company_instance
+
 
 @pytest.fixture()
 def load_project(project):
@@ -190,6 +203,3 @@ def load_user(user):
         instance = mock_user.return_value
         instance.load.return_value = user
         yield instance
-
-
-

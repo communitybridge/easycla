@@ -7,7 +7,6 @@ import pytest
 
 from cla.models.dynamo_models import User, Project, Company
 from cla.models.event_types import EventType
-from cla.controllers.event import create_event
 from cla.controllers import user as user_controller
 from cla.auth import AuthUser
 
@@ -16,8 +15,8 @@ from cla.auth import AuthUser
 def create_event_user():
     user_controller.create_event = Mock()
 
-
-def test_request_company_whitelist(create_event_user, project, company, user):
+@patch('cla.controllers.user.Event.create_event')
+def test_request_company_whitelist(mock_event, create_event_user, project, company, user):
     """ Test user requesting to be whitelisted event """
     event_type = EventType.RequestCompanyWL
     User.load = Mock()
@@ -42,7 +41,7 @@ def test_request_company_whitelist(create_event_user, project, company, user):
         f"{user.get_user_name()} <{user.get_user_email()}>"
     )
 
-    user_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         user_id=user.get_user_id(),
         event_project_id=project.get_project_id(),
         event_company_id=company.get_company_id(),
@@ -50,8 +49,8 @@ def test_request_company_whitelist(create_event_user, project, company, user):
         event_data=event_data,
     )
 
-
-def test_invite_company_admin(create_event_user, user):
+@patch('cla.controllers.user.Event.create_event')
+def test_invite_company_admin(mock_event, create_event_user, user):
     """ Test send email to CLA manager event """
     User.load = Mock()
     user_controller.send_email_to_admin = Mock()
@@ -64,15 +63,15 @@ def test_invite_company_admin(create_event_user, user):
     user_controller.invite_company_admin(
         user_id, user_email, admin_name, admin_email, project_name
     )
-    user_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         user_id=user_id,
         event_project_name=project_name,
         event_data=event_data,
         event_type=EventType.InviteAdmin,
     )
 
-
-def test_request_company_ccla(create_event_user, user, project, company):
+@patch('cla.controllers.user.Event.create_event')
+def test_request_company_ccla(mock_event, create_event_user, user, project, company):
     """ Test request company ccla event """
     User.load = Mock()
     User.get_user_name = Mock(return_value=user.get_user_name())
@@ -86,7 +85,7 @@ def test_request_company_ccla(create_event_user, user, project, company):
     user_controller.request_company_ccla(
         user.get_user_id(), email, company.get_company_id(), project.get_project_id()
     )
-    user_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=EventType.RequestCCLA,
         user_id=user.get_user_id(),
