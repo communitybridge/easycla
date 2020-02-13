@@ -11,14 +11,13 @@ from pynamodb.tests.deep_eq import deep_eq
 import cla
 from cla.auth import AuthUser
 from cla.controllers import project as project_controller
-from cla.controllers.event import create_event
-from cla.models.dynamo_models import Project, User, Document, UserPermissions
+from cla.models.dynamo_models import Project, User, Document, UserPermissions, Event
 from cla.models.event_types import EventType
 
 PATCH_METHOD = "pynamodb.connection.Connection._make_api_call"
 
-
-def test_event_delete_project(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_event_delete_project(mock_event, project):
     """ Test Delete Project event """
     project_controller.create_event = Mock()
     Project.load = Mock()
@@ -32,14 +31,14 @@ def test_event_delete_project(project):
     expected_event_type = EventType.DeleteProject
     expected_event_data = "Project-{} deleted".format(project.get_project_name())
     # Check whether audit event service is invoked
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=expected_event_type,
         event_project_id=project_id,
         event_data=expected_event_data,
     )
 
-
-def test_event_create_project():
+@patch('cla.controllers.project.Event.create_event')
+def test_event_create_project(mock_event):
     """ Test Create Project event """
 
     event_type = EventType.CreateProject
@@ -67,14 +66,14 @@ def test_event_create_project():
         project_acl_username,
     )
     # Test for audit event
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type,
         event_project_id=project_id,
         event_data=expected_event_data,
     )
 
-
-def test_event_update_project(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_event_update_project(mock_event, project):
     """ Test Update Project event """
 
     event_type = EventType.UpdateProject
@@ -94,14 +93,14 @@ def test_event_update_project(project):
     updated_string = f" project_name changed to {new_project_name} \n"
     expected_event_data = f"Project- {project_id} Updates: {updated_string}"
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type,
         event_data=expected_event_data,
         event_project_id=project_id,
     )
 
-
-def test_create_project_document(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_create_project_document(mock_event, project):
     """ Test create project Document event """
     event_type = EventType.CreateProjectDocument
     project_id = project.get_project_id()
@@ -133,13 +132,12 @@ def test_create_project_document(project):
         document_legal_entity_name,
         new_major_version=False,
     )
-
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type, event_project_id=project_id, event_data=event_data
     )
 
-
-def test_create_project_document_template(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_create_project_document_template(mock_event, project):
     """ Test creating project document with existing template event """
     event_type = EventType.CreateProjectDocumentTemplate
     project_id = project.get_project_id()
@@ -173,12 +171,12 @@ def test_create_project_document_template(project):
         template_name,
     )
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type, event_project_id=project_id, event_data=event_data
     )
 
-
-def test_delete_project_document():
+@patch('cla.controllers.project.Event.create_event')
+def test_delete_project_document(mock_event):
     """ Test event for deleting document from the specified project """
     project = Project()
     project.set_project_id("foo_project_id")
@@ -203,11 +201,12 @@ def test_delete_project_document():
         project_id, document_type, major_version, minor_version
     )
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type, event_project_id=project_id, event_data=event_data
     )
 
-def test_project_add_permission_existing_user(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_project_add_permission_existing_user(mock_event, project):
     """ Test adding permissions to project event """
     auth_claims = {
         'auth0_username_claim': 'http:/localhost/foo',
@@ -233,15 +232,15 @@ def test_project_add_permission_existing_user(project):
 
     event_data = 'User {} given permissions to project {}'.format(username, project_sfdc_id)
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
         event_project_id=project_sfdc_id
     )
 
 
-
-def test_project_remove_permission():
+@patch('cla.controllers.project.Event.create_event')
+def test_project_remove_permission(mock_event):
     """ Test removing permissions to project event """
     auth_claims = {
         'auth0_username_claim': 'http:/localhost/foo',
@@ -267,13 +266,14 @@ def test_project_remove_permission():
 
     event_data = 'User {} permission removed to project {}'.format(username, project_sfdc_id)
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
         event_project_id=project_sfdc_id
     )
 
-def test_add_project_manager(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_add_project_manager(mock_event, project):
     """ Tests event logging where LFID is added to the project ACL """
     event_type = EventType.AddProjectManager
     username = 'foo'
@@ -294,13 +294,14 @@ def test_add_project_manager(project):
     )
     event_data = '{} added {} to project {}'.format(username,lfid,project.get_project_name())
 
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
         event_project_id=project.get_project_id()
     )
 
-def test_remove_project_manager(project):
+@patch('cla.controllers.project.Event.create_event')
+def test_remove_project_manager(mock_event, project):
     """ Test event logging where lfid is removed from the project acl """
     event_type = EventType.RemoveProjectManager
     Project.load = Mock()
@@ -314,13 +315,8 @@ def test_remove_project_manager(project):
         'foo_lfid'
     )
     event_data = f'foo_lfid removed from project {project.get_project_id()}'
-    project_controller.create_event.assert_called_with(
+    mock_event.assert_called_once_with(
         event_type=event_type,
         event_data=event_data,
         event_project_id=project.get_project_id()
     )
-
-
-
-
-

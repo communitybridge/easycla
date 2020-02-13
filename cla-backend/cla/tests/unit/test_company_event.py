@@ -8,7 +8,6 @@ import pytest
 import cla
 from cla.auth import AuthUser
 from cla.controllers import company as company_controller
-from cla.controllers.event import create_event
 from cla.models.dynamo_models import Company
 from cla.models.event_types import EventType
 
@@ -24,8 +23,8 @@ def auth_user():
         auth_user = AuthUser()
         yield auth_user
 
-
-def test_create_company_event(auth_user, create_event_company, user, company):
+@patch('cla.controllers.company.Event.create_event')
+def test_create_company_event(mock_event, auth_user, create_event_company, user, company):
     """ Test create company event """
     cla.controllers.user.get_or_create_user = Mock(return_value=user)
     company_controller.get_companies = Mock(return_value=[])
@@ -42,14 +41,15 @@ def test_create_company_event(auth_user, create_event_company, user, company):
         user_id=user.get_user_id(),
     )
     event_data = "Company-{} created".format(company_name)
-    company_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
         user_id=user.get_user_id(),
     )
 
-def test_update_company_event(create_event_company, company):
+@patch('cla.controllers.company.Event.create_event')
+def test_update_company_event(mock_event, create_event_company, company):
     """ Test update company """
     event_type = EventType.UpdateCompany
     Company.load = Mock()
@@ -61,14 +61,14 @@ def test_update_company_event(create_event_company, company):
         company_name=company_name,
     )
     event_data = "company_name updated to {} \n".format(company_name)
-    company_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
         event_company_id=company.get_company_id()
     )
 
-
-def test_delete_company(create_event_company, company):
+@patch('cla.controllers.company.Event.create_event')
+def test_delete_company(mock_event, create_event_company, company):
     """ Test delete company event """
     event_type = EventType.DeleteCompany
     Company.load = Mock()
@@ -78,13 +78,14 @@ def test_delete_company(create_event_company, company):
     company_controller.delete_company(
         company.get_company_id()
     )
-    company_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
         event_company_id=company.get_company_id()
     )
 
-def test_add_permission(create_event_company, auth_user, company):
+@patch('cla.controllers.company.Event.create_event')
+def test_add_permission(mock_event, create_event_company, auth_user, company):
     """ Test add permission event """
     event_type = EventType.AddCompanyPermission
     Company.load = Mock()
@@ -98,15 +99,15 @@ def test_add_permission(create_event_company, auth_user, company):
         ignore_auth_user=True
     )
     event_data = f'Permissions added to user {username} for Company {company.get_company_name()}'
-    company_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
         event_company_id=company.get_company_id()
     )
 
 
-
-def test_remove_permission(create_event_company, auth_user, company):
+@patch('cla.controllers.company.Event.create_event')
+def test_remove_permission(mock_event, create_event_company, auth_user, company):
     """Test remove permissions """
     event_type=EventType.RemoveCompanyPermission
     Company.load = Mock()
@@ -121,7 +122,7 @@ def test_remove_permission(create_event_company, auth_user, company):
         username,
         company_id
     )
-    company_controller.create_event.assert_called_once_with(
+    mock_event.assert_called_once_with(
         event_data=event_data,
         event_company_id=company_id,
         event_type=event_type

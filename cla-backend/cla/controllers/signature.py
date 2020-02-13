@@ -16,9 +16,8 @@ import cla.hug_types
 from cla.controllers import company
 from cla.models import DoesNotExist
 from cla.models.event_types import EventType
-from cla.models.dynamo_models import User, Project, Signature, Company
+from cla.models.dynamo_models import User, Project, Signature, Company, Event
 from cla.utils import get_email_service
-from cla.controllers.event import create_event
 
 
 def get_signatures():
@@ -130,7 +129,7 @@ def create_signature(signature_project_id,  # pylint: disable=too-many-arguments
     signature.save()
 
     event_data = f'Signature added. Signature_id - {signature.get_signature_id()} for Project - {project.get_project_name()}'
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.CreateSignature,
         event_project_id=signature_project_id
@@ -291,7 +290,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
             }}
 
     event_data = update_str
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.UpdateSignature
     )
@@ -368,7 +367,7 @@ def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: 
                                             project_name=project_name,
                                             cla_manager_name=cla_manager_name)
     event_data = " ,".join(changes)
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.NotifyWLChange,
         event_company_name=company_name,
@@ -654,7 +653,7 @@ def delete_signature(signature_id):
         return {'errors': {'signature_id': str(err)}}
     signature.delete()
     event_data = f'Deleted signature {signature_id}'
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.DeleteSignature
     )
@@ -835,7 +834,7 @@ def add_cla_manager(auth_user, signature_id, lfid):
     signature.save()
 
     event_data = f'{lfid} added as cla manager to Signature ACL for {signature.get_signature_id()}'
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.AddCLAManager
     )
@@ -876,7 +875,7 @@ def remove_cla_manager(username, signature_id, lfid):
 
     event_data = f'User with lfid {lfid} removed from project ACL with signature {signature.get_signature_id()}'
 
-    create_event(
+    Event.create_event(
         event_data=event_data,
         event_type=EventType.RemoveCLAManager
     )
