@@ -152,9 +152,11 @@ resources:
                 # We use the serverless-lambda-version plugin to automatically update this every time there is a change.
                 LambdaFunctionARN: ClientEdgeLambdaFunction
             Compress: true # Turns on gzipping
-            MaxTTL: 31536000 # Can keep the file in the cloudfront cache for a maximum of a year.
+            #DefaultTTL: 86400 # Defaults to a day if no Cache-Control header is set.
+            DefaultTTL: 600 # 10 minutes only due to users seeing a lot of stale cache issues after release (even after invalidating
             MinTTL: 0
-            DefaultTTL: 86400 # Defaults to a day if no Cache-Control header is set.
+            #MaxTTL: 31536000 # Can keep the file in the cloudfront cache for a maximum of a year.
+            MaxTTL: 600 # 10 minutes only due to users seeing a lot of stale cache issues after release (even after invalidating
             TargetOriginId:
               Ref: WebsiteDeploymentBucket
             ForwardedValues:
