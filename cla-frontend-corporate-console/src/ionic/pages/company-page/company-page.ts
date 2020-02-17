@@ -137,20 +137,19 @@ export class CompanyPage {
   }
 
   mapProjects(projects, signatureACL) {
+    let pendingRequest  = []
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
-        this.pendingRequests = res.list
+        rows.push({
+          ProjectID: project.project_id,
+          ProjectName: project.project_name,
+          ProjectManagers: signatureACL,
+          Status: this.getStatus(this.companySignatures),
+          PendingRequests: res.list.length,
+        });
       })
-      rows.push({
-        ProjectID: project.project_id,
-        ProjectName: project.project_name,
-        ProjectManagers: signatureACL,
-        Status: this.getStatus(this.companySignatures),
-        PendingRequests: this.pendingRequests.length,
-      });
     }
-
     return rows;
   }
 
