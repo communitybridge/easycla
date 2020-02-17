@@ -129,10 +129,10 @@
                       </td>
 
                       <td data-title="Actions">
-                        <button clear ion-button color="secondary" (click)="accept()">
+                        <button clear ion-button color="secondary" (click)="accept(request.requestId)">
                           Accept
                         </button>
-                        <button clear ion-button color="danger" (click)="decline()">
+                        <button clear ion-button color="danger" (click)="decline(request.requestId)">
                           Decline
                         </button>
                       </td>

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { AlertController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { AlertController, ViewController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
@@ -52,7 +52,8 @@ export class ProjectPage {
     public alertCtrl: AlertController,
     public modalCtrl: ModalController,
     private rolesService: RolesService, // for @Restricted
-    private sortService: SortService
+    private sortService: SortService,
+    public viewCtrl: ViewController,
   ) {
     this.companyId = navParams.get('companyId');
     this.projectId = navParams.get('projectId');
@@ -344,7 +345,7 @@ export class ProjectPage {
   }
 
   listPendingRequests() {
-    this.claService.listCCLAWhitelistRequest('0ddf9b60-b692-4cf4-9476-cb9de25e3cce').subscribe((request) => {
+    this.claService.listCCLAWhitelistRequest(this.companyId).subscribe((request) => {
       if (request.list.length == 0) {
         this.noPendingRequests = true
       }
@@ -356,7 +357,7 @@ export class ProjectPage {
     })
   }
 
-  accept() {
+  accept(requestID) {
     let alert = this.alertCtrl.create({
       subTitle: `Accept Request`,
       message: `Are you sure you want to accept this request?`,
@@ -368,7 +369,7 @@ export class ProjectPage {
           handler: () => { }
         },
         {
-          text: 'Delete',
+          text: 'Accept',
           handler: () => {
             this.acceptPendingRequest()
           }
@@ -378,7 +379,7 @@ export class ProjectPage {
     alert.present();
   }
 
-  decline() {
+  decline(requestID) {
     let alert = this.alertCtrl.create({
       subTitle: `Decline Request`,
       message: `Are you sure you want to decline this request?`,
@@ -390,9 +391,12 @@ export class ProjectPage {
           handler: () => { }
         },
         {
-          text: 'Delete',
+          text: 'Decline Request',
           handler: () => {
-
+            this.claService
+              .deleteCclaWhitelistRequest(this.companyId, this.projectId, requestID)
+              .subscribe((res) => console.log('res', res));
+              // window.location.reload(true)
           }
         }
       ]
@@ -401,11 +405,13 @@ export class ProjectPage {
     alert.present();
   }
 
-  acceptPendingRequest() {
-
+  dismiss() {
+    
+    this.viewCtrl.dismiss();
+    
   }
 
-  declinePendingRequest() {
+  acceptPendingRequest() {
 
   }
 
