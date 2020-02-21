@@ -3,6 +3,8 @@
 
 import os
 import time
+import requests
+from requests.exceptions import RequestException
 
 from github import BadCredentialsException, UnknownObjectException, GithubException, GithubIntegration, Github
 from jose import jwt
@@ -53,6 +55,25 @@ class GitHubInstallation(object):
                             '{}, error: {}'.format(self.app_id, self.installation_id, e))
             raise e
 
+    def create_check_run(self, repository_name, data):
+        """
+        Function that creates a check run for unsigned users
+        """
+        try:
+            url = 'https://api.github.com/repos/{}/check-runs'.format(repository_name)
+            requests.post(
+                url,
+                data=data,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'token %s' % self.token,
+                    'Accept': 'application/vnd.github.antiope-preview+json'
+                }
+            )
+
+        except RequestException as err:
+            cla.log.debug(err)
+
 
 class GithubCLAIntegration(GithubIntegration):
     """
@@ -70,5 +91,5 @@ class GithubCLAIntegration(GithubIntegration):
             "iss": self.integration_id
         }
         gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
-        # cla.log.debug('github jwt: {}'.format(gh_jwt))
+        #cla.log.debug('github jwt: {}'.format(gh_jwt))
         return gh_jwt

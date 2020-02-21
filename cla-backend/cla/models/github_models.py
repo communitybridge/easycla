@@ -4,7 +4,7 @@
 """
 Holds the GitHub repository service.
 """
-
+import json
 import os
 import uuid
 
@@ -340,7 +340,8 @@ class GitHub(repository_service_interface.RepositoryService):
         cla.log.debug('PR: {}, updating github pull request for repo: {}, '
                       'with signed authors: {} with missing authors: {}'.
                       format(pull_request.number, github_repository_id, signed, missing))
-        update_pull_request(installation_id, github_repository_id, pull_request,
+        repository_name = repository.get_repository_name()
+        update_pull_request(installation_id, github_repository_id, pull_request, repository_name,
                             signed=signed, missing=missing)
 
     def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
@@ -632,7 +633,23 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
                 return
 
         # Didn't find a signed signature for this project - add to our missing bucket list
-        missing.append((commit_sha, list(author_info)))
+        list_author_info = list(author_info)
+        signatures = cla.utils.get_signature_instance().get_signatures_by_project(project.get_project_id())
+        for signature in signatures:
+            if cla.utils.is_whitelisted(
+                                        signature,
+                                        email=author_email,
+                                        github_id=author_id,
+                                        github_username=author_username
+                                        ):
+                # Append whitelisted flag to the author info list
+                cla.log.debug(
+                    'Github user(id:{}, user: {}, email {}) is whitelisted but not affiliated'.
+                    format(author_id, author_username, author_email)
+                )
+                list_author_info.append(True)
+                break
+        missing.append((commit_sha, list_author_info))
 
 
 def get_pull_request_commit_authors(pull_request):
@@ -715,7 +732,7 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
     return False
 
 
-def update_pull_request(installation_id, github_repository_id, pull_request, signed,
+def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed,
                         missing):  # pylint: disable=too-many-locals
     """
     Helper function to update a PR's comment/status based on the list of signers.
@@ -733,7 +750,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
     :type signed: [(string, string)]
     :param missing: The list of (commit hash, author name) tuples that have not signed
         an signature for this PR.
-    :type missing: [(string, string)]
+    :type missing: [(string, list)]
     """
     notification = cla.conf['GITHUB_PR_NOTIFICATION']
     both = notification == 'status+comment' or notification == 'comment+status'
@@ -741,6 +758,43 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
 
     # Here we update the PR status by adding/updating the PR body - this is the way the EasyCLA app
     # knows if it is pass/fail.
+    #Create check run for users that havent yet signed and/or affiliated
+    if missing:
+        text = ""
+        for authors in missing:
+            #Check for valid github id
+            if authors[1][0] is None:
+                help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
+            else:
+                help_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            client = GitHubInstallation(installation_id)
+            #check if unsigned user is whitelisted
+            commit_sha = authors[0]
+            if commit_sha != last_commit.sha:
+                continue
+            author_email = authors[1][2]
+            author_id = authors[1][0]
+            if author_id:
+                if len(authors[1]) == 4:
+                    text += f'{author_email} must confirm corporate affiliation.\n'
+                else:
+                    text += f'{author_email} is not authorized under a signed CLA.\n'
+            else:
+                text += f'{author_email} is not linked to this commit. \n'
+
+        payload = {
+            "name": "CLA check",
+            "head_sha": last_commit.sha,
+            "status": "completed",
+            "conclusion": "action_required",
+            "details_url": help_url,
+            "output": {
+                "title": "EasyCLA: Signed CLA not found",
+                "summary": "One or more committers are authorized under a signed CLA.",
+                "text": text,
+            },
+        }
+        client.create_check_run(repository_name, json.dumps(payload))
 
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
@@ -781,6 +835,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, sig
             cla.log.debug('Creating new CLA status on commit %s: %s', commit, state)
             sign_url = "https://lfcla.com"  # Remove this once signature detail page ready.
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
+
 
 
 def create_commit_status(pull_request, commit_hash, state, sign_url, body, context):
