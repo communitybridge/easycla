@@ -117,7 +117,7 @@ export class MyApp {
     this.pages = [
       {
         title: 'All Projects',
-        access: this.userRoles.isPmcUser,
+        access: true,
         component: 'AllProjectsPage'
       },
       // {
@@ -145,11 +145,11 @@ export class MyApp {
         access: true,
         component: 'LogoutPage'
       },
-      {
-        title: 'Sign In',
-        access: !this.userRoles.isAuthenticated,
-        component: 'LoginPage'
-      }
+      // {
+      //   title: 'Sign In',
+      //   access: !this.userRoles.isAuthenticated,
+      //   component: 'LoginPage'
+      // }
     ];
   }
 }
