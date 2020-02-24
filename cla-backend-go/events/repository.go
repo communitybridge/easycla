@@ -59,12 +59,6 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
-// currentTime returns the current UTC time and current Time in the RFC3339 format
-func currentTime() (time.Time, string) {
-	t := time.Now()
-	return t, t.UTC().Format(time.RFC3339)
-}
-
 // Create event will create event in database.
 func (repo *repository) CreateEvent(event *models.Event) error {
 	if event.UserID == "" {
@@ -79,7 +73,7 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 		return err
 	}
 
-	currentTime, currentTimeString := currentTime()
+	currentTime, currentTimeString := utils.CurrentTime()
 	input := &dynamodb.PutItemInput{
 		Item:      map[string]*dynamodb.AttributeValue{},
 		TableName: aws.String(fmt.Sprintf("cla-%s-events", repo.stage)),

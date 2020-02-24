@@ -1,0 +1,337 @@
+---
+test_name: "Project CRUD /v3/project"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: get token from auth0
+    request:
+      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
+      method: POST
+      headers:
+        content-type: "application/x-www-form-urlencoded"
+      data:
+        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
+        realm: "Username-Password-Authentication"
+        username: "{tavern.env_vars.AUTH0_USERNAME}"
+        password: "{tavern.env_vars.AUTH0_PASSWORD}"
+        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
+        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
+        scope: "access:api openid profile email"
+    response:
+      save:
+        body:
+          auth0_token: id_token
+
+  - name: Project create request with no auth
+    request:
+      url: "{api_url}/v3/project"
+      method: POST
+    response:
+      status_code: 401
+
+  - name: Project get request with no auth
+    request:
+      url: "{api_url}/v3/project"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Project get request with no auth
+    request:
+      url: "{api_url}/v3/project/ac8f2892-731e-4e4e-85ab-b6edfb541e6c"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Project delete request with no auth
+    request:
+      url: "{api_url}/v3/project/ac8f2892-731e-4e4e-85ab-b6edfb541e6c"
+      method: DELETE
+    response:
+      status_code: 401
+  - name: Project update request with no auth
+    request:
+      url: "{api_url}/v3/project"
+      method: PUT
+    response:
+      status_code: 401
+
+  - name: Project create request with auth
+    request:
+      url: "{api_url}/v3/project"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        projectName: "dd test project"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectName: "dd test project"
+        projectExternalID: "abc123"
+      save:
+        body:
+          projectID: "projectID"
+          projectExternalID: "projectExternalID"
+          projectName: "projectName"
+          dateCreated: "dateCreated"
+          dateModified: "dateModified"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+  - name: Project get request with auth
+    request:
+      url: "{api_url}/v3/project/{projectID:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectID: "{projectID:s}"
+        projectName: "dd test project"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+        dateCreated: "{dateCreated:s}"
+        dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+  - name: Project update request with auth
+    request:
+      url: "{api_url}/v3/project"
+      method: PUT
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        projectID: "{projectID:s}"
+        projectName: "dd test project 2"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson", "pranab"]
+        projectICLAEnabled: false
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: false
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          # Save the updated/modified date/time
+          dateModified: "dateModified"
+      body:
+        projectName: "dd test project 2"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson", "pranab"]
+        projectICLAEnabled: false
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: false
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+  - name: Project get request after update with auth
+    request:
+      url: "{api_url}/v3/project/{projectID:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectName: "dd test project 2"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson", "pranab"]
+        projectICLAEnabled: false
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: false
+        dateCreated: "{dateCreated:s}"
+        # Should be the updated date/time
+        dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+  - name: Project delete request with auth
+    request:
+      url: "{api_url}/v3/project/{projectID:s}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 204
