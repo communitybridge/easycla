@@ -1,7 +1,11 @@
 # EasyCLA REST API tests using tavern
 
 
-This directory contains REST api tests built using [Travern](https://github.com/taverntesting/tavern). Its a RestAPI test framework based on [py.test](http://pytest.org/en/latest/). All the API tests are defined in file of format `test_*.tavern.yaml`. Reporting and Visualization of tests are done using [allure](https://github.com/allure-framework/allure2) framework.
+This directory contains REST api tests built using
+[Travern](https://github.com/taverntesting/tavern). Its a RestAPI test framework
+based on [py.test](http://pytest.org/en/latest/). All the API tests are defined
+in file of format `test_*.tavern.yaml`. Reporting and Visualization of tests are
+done using [allure](https://github.com/allure-framework/allure2) framework.
 
 
 ## Install dependencies to run tests in local
@@ -29,9 +33,6 @@ sudo apt-get update && \
 sudo apt-get install allure -y
 ```
 
-
-
-
 ## Run Tests
 
 ```bash
@@ -43,16 +44,14 @@ export API_URL=<cla_api_url>
 export STAGE=<dev_or_staging>
 
 # Run tests
-tavern-ci  test_project_management_console.tavern.yaml --alluredir=allure_result_folder -v --tb=short
+tavern-ci test_project_management_console.tavern.yaml --alluredir=allure_result_folder -v --tb=short
 
 # OR
 
 pytest --alluredir=allure_result_folder -v 
 
-
 # Visualize tests with allure
 allure serve allure_result_folder
-
 ```
 
 ## Run Tests in Docker
@@ -62,6 +61,7 @@ allure serve allure_result_folder
 ```bash
 docker build -t tavern-tests .
 ```
+
 - Run tests in container
 
 ```bash
@@ -72,10 +72,7 @@ export API_URL="https://api.staging.lfcla.com"
 export STAGE="staging"
 
 docker run --rm -it -e AUTH_TOKEN -e API_URL tavern-tests 
-
 ```
-
-
 
 ## List tests
 
@@ -83,10 +80,7 @@ docker run --rm -it -e AUTH_TOKEN -e API_URL tavern-tests
 pytest --collect-only
 ```
 
-
 ## Tavern yaml types and equivalent Python types
-
-
 
 ```python
 _types = {
