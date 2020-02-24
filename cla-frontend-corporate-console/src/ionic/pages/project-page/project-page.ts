@@ -350,7 +350,6 @@ export class ProjectPage {
         this.noPendingRequests = true
       }
       else {
-        console.log(request.list, 'request.list')
         this.pendingRequests = request.list
         this.noPendingRequests = false
       }
