@@ -141,12 +141,17 @@ export class CompanyPage {
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        if (res.list.length > 0) {
+          pendingRequest = res.list.filter((r) => {
+            r.projectId === project.project_id
+          })
+        }
         rows.push({
           ProjectID: project.project_id,
           ProjectName: project.project_name,
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
-          PendingRequests: res.list.length,
+          PendingRequests: pendingRequest.length,
         });
       })
     }
