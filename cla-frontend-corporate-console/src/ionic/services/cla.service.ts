@@ -1547,5 +1547,14 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json())
   }
 
+  deleteCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests/${projectId}/${requestID}`);
+    return this.http
+      .delete(url)
+      .map((res) => {
+        return res.json()
+      })
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 }

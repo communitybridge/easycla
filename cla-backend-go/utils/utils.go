@@ -17,3 +17,9 @@ func FmtDuration(d time.Duration) string {
 	seconds := int64(math.Mod(d.Seconds(), 60))
 	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, seconds, d.Milliseconds())
 }
+
+// CurrentTime returns the current UTC time and current Time in the RFC3339 format
+func CurrentTime() (time.Time, string) {
+	t := time.Now()
+	return t, t.UTC().Format(time.RFC3339)
+}

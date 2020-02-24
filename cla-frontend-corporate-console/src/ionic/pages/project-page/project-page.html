@@ -101,6 +101,10 @@
                       <th class="clickable">
                         Name
                       </th>
+
+                      <th class="clickable">
+                        Project Name
+                      </th>
                       <th class="clickable">
                         Email ID
                       </th>
@@ -120,6 +124,11 @@
                         <span>{{ request.userName}}</span>
                       </td>
 
+                      <td data-title="Name">
+                        <span>{{ request.projectName}}</span>
+                      </td>
+
+
                       <td data-title="Email">
                         <ion-list>
                           <ion-item *ngFor="let email of request.userEmails">
@@ -129,10 +138,10 @@
                       </td>
 
                       <td data-title="Actions">
-                        <button clear ion-button color="secondary" (click)="accept()">
+                        <button clear ion-button color="secondary" (click)="accept(request.requestId)">
                           Accept
                         </button>
-                        <button clear ion-button color="danger" (click)="decline()">
+                        <button clear ion-button color="danger" (click)="decline(request.requestId)">
                           Decline
                         </button>
                       </td>
