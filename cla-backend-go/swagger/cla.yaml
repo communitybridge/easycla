@@ -722,18 +722,70 @@ paths:
         - signatures
 
   /project:
-    get:
-      summary: Get Project IDs based on PM
+    post:
+      summary: Create a Project/CLA Group
       security:
         - OauthSecurity: []
-      operationId: getProjects
+      operationId: createProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
       responses:
         '200':
           description: 'Success'
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/project'
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - project
+    put:
+      summary: Update Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: updateProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+    get:
+      summary: Get Projects
+      security:
+        - OauthSecurity: []
+      operationId: getProjects
+      parameters:
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/fullMatch'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -743,14 +795,14 @@ paths:
       tags:
         - project
 
-  /project/{projectSfdcId}/:
+  /project/{projectSfdcId}:
     parameters:
       - name: projectSfdcId
         in: path
         type: string
         required: true
     get:
-      summary: Get Project by ID from SFDC
+      summary: Get Project by ID
       security:
         - OauthSecurity: []
       operationId: getProjectById
@@ -758,182 +810,22 @@ paths:
         '200':
           description: 'Success'
           schema:
-            type: object
+            $ref: '#/definitions/project'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - project
-
-  /project/{projectSfdcId}/contract-group:
-    parameters:
-      - name: projectSfdcId
-        in: path
-        type: string
-        required: true
-    get:
-      summary: Get contract groups
-      security:
-        - OauthSecurity: []
-      operationId: getContractGroups
-      tags:
-        - contractGroup
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/contract-group'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-    post:
-      summary: Create new Contract Group
-      security:
-        - OauthSecurity: []
-      operationId: createContractGroup
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: '#/definitions/contract-group'
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - contractGroup
-
-  /contract-group/{contractGroupId}/contract-template:
-    parameters:
-      - name: contractGroupId
-        in: path
-        type: string
-        required: true
-    post:
-      summary: Create new Contract Template
-      security:
-        - OauthSecurity: []
-      operationId: createContractTemplate
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: '#/definitions/contract-template'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - contractGroup
-
-  /contract-group/{contractGroupId}/github:
-    parameters:
-      - name: contractGroupId
-        in: path
-        type: string
-        required: true
-    post:
-      summary: Adds a GitHub instance to the contract group
-      security:
-        - OauthSecurity: []
-      operationId: addGitHubOrg
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: '#/definitions/github'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - contractGroup
-
-  /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit:
-    parameters:
-      - name: projectSfdcId
-        in: path
-        type: string
-        required: true
-      - name: contractGroupId
-        in: path
-        type: string
-        required: true
-    post:
-      summary: Adds a Gerrit instance to the contract group
-      security:
-        - OauthSecurity: []
-      operationId: addGerritInstance
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: '#/definitions/gerrit'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - contractGroup
-
-  /project/{projectSfdcId}/contract-group/{contractGroupId}/gerrit/{gerritInstanceId}:
-    parameters:
-      - name: projectSfdcId
-        in: path
-        type: string
-        required: true
-      - name: contractGroupId
-        in: path
-        type: string
-        required: true
-      - name: gerritInstanceId
-        in: path
-        type: string
-        required: true
     delete:
-      summary: Delete a Gerrit Instance
+      summary: Delete Project by ID
       security:
         - OauthSecurity: []
-      operationId: deleteGerritInstance
+      operationId: deleteProjectById
       responses:
         '204':
           description: 'Success'
@@ -943,37 +835,10 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
-        - contractGroup
-
-  /project/{projectSfdcID}/contract-group/{contractGroupId}/signature:
-    parameters:
-      - name: projectSfdcID
-        in: path
-        type: string
-        required: true
-      - name: contractGroupId
-        in: path
-        type: string
-        required: true
-    get:
-      summary: Get Contract Group Signatures
-      security:
-        - OauthSecurity: []
-      operationId: getContractGroupSignatures
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/contract-group-signatures'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - contractGroup
+        - project
 
   /company:
     get:
@@ -1946,6 +1811,22 @@ definitions:
       userLFID:
         type: string
 
+  projects:
+    type: object
+    x-nullable: false
+    title: Projects
+    description: A list of projects
+    properties:
+      lastKeyScanned:
+        type: string
+      pageSize:
+        type: integer
+      projects:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project'
+
   project:
     type: object
     x-nullable: false
@@ -1969,12 +1850,15 @@ definitions:
       projectCCLAEnabled:
         description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
         type: boolean
+        x-omitempty: false
       projectICLAEnabled:
         description: Flag to indicate if the Individual Contributor License Agreement is enabled
         type: boolean
+        x-omitempty: false
       projectCCLARequiresICLA:
         description: Flag to indicate if the CCLA configuration also requires an ICLA
         type: boolean
+        x-omitempty: false
       dateCreated:
         description: Date/time the record was created
         type: string
@@ -1983,73 +1867,6 @@ definitions:
         type: string
       version:
         description: Record version
-        type: string
-
-  contract-group:
-    type: object
-    x-nullable: false
-    title: Contract Group
-    description: Contract Group object that gets returned
-    properties:
-      contractGroupId:
-        type: string
-        readOnly: true
-      projectSfdcId:
-        type: string
-      name:
-        type: string
-      corporateClaEnabled:
-        type: boolean
-        default: false
-      individualClaEnabled:
-        type: boolean
-        default: false
-      corporateClaRequiresIndividualCla:
-        type: boolean
-      cclaTemplate:
-        type: object
-        $ref: '#/definitions/contract-template'
-      iclaTemplate:
-        type: object
-        $ref: '#/definitions/contract-template'
-      githubOrganizations:
-        type: array
-        items:
-          $ref: '#/definitions/github'
-        readOnly: true
-      gerritInstances:
-        type: array
-        items:
-          $ref: '#/definitions/gerrit'
-        readOnly: true
-    required:
-      - name
-
-  contract-template:
-    type: object
-    x-nullable: false
-    title: Contract Template
-    description: Create Contract Template object
-    properties:
-      contractTemplateId:
-        type: string
-        readOnly: true
-      contractGroupId:
-        type: string
-      type:
-        type: string
-        enum:
-          - CCLA
-          - ICLA
-      document:
-        type: string
-      majorVersion:
-        type: integer
-      minorVersion:
-        type: integer
-      createdAt:
-        type: string
-      name:
         type: string
 
   create-cla-group-template:
@@ -2074,62 +1891,6 @@ definitions:
       corporatePDFURL:
         type: string
 
-  github:
-    type: object
-    x-nullable: false
-    title: Add a GitHub organization
-    description: Adds a GitHub organization to the contract group
-    properties:
-      githubOrganizationId:
-        readOnly: true
-        type: string
-      contractGroupId:
-        type: string
-      name:
-        type: string
-      installationId:
-        readOnly: true
-        type: string
-      authorizingGithubId:
-        readOnly: true
-      authorizingUserName:
-        readOnly: true
-        type: string
-      createdBy:
-        readOnly: true
-        type: string
-      updatedBy:
-        readOnly: true
-        type: string
-
-  gerrit:
-    type: object
-    x-nullable: false
-    title: Adds a Gerrit instance
-    description: Adds a Gerrit instance to the contract group
-    properties:
-      gerritInstanceId:
-        readOnly: true
-        type: string
-      contractGroupId:
-        readOnly: true
-        type: string
-      ldapGroupId:
-        type: string
-      ldapGroupName:
-        type: string
-      url:
-        type: string
-      createdBy:
-        readOnly: true
-        type: string
-      updatedBy:
-        readOnly: true
-        type: string
-    required:
-      - ldapGroupId
-      - ldapGroupName
-      - url
 
   companies:
     type: object
@@ -2406,66 +2167,6 @@ definitions:
         type: array
         items:
           type: string
-
-  contract-group-signatures:
-    type: object
-    x-nullable: false
-    title: Contract Group Signatures Details
-    description: Signature Details for a Contract Group
-    properties:
-      contractGroupId:
-        type: string
-        readOnly: true
-      projectSfdcID:
-        type: string
-      cclaSignatures:
-        type: array
-        items:
-          $ref: '#/definitions/ccla-signature-details'
-      iclaSignatures:
-        type: array
-        items:
-          $ref: '#/definitions/icla-signature-details'
-
-  ccla-signature-details:
-    type: object
-    x-nullable: false
-    title: ICLA Signature details
-    description: ICLA Signatures Details
-    properties:
-      userName:
-        type: string
-      companyName:
-        type: string
-      githubUserId:
-        type: string
-      minorVersion:
-        type: integer
-      majorVersion:
-        type: integer
-      signedOn:
-        type: string
-      signed:
-        type: boolean
-
-  icla-signature-details:
-    type: object
-    x-nullable: false
-    title: ICLA Signature details
-    description: ICLA Signatures Details
-    properties:
-      userName:
-        type: string
-      githubUserId:
-        type: string
-      minorVersion:
-        type: integer
-      majorVersion:
-        type: integer
-      signedOn:
-        type: string
-      signed:
-        type: boolean
 
   ccla-whitelist-request-input:
     type: object

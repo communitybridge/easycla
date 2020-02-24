@@ -124,11 +124,13 @@ export class ProjectClaPage {
 
   openClaContractConfigModal(claProject) {
     let modal;
+    // Edit CLA Group
     if (claProject) {
       modal = this.modalCtrl.create('ClaContractConfigModal', {
         claProject: claProject
       });
     } else {
+      // Create CLA Group
       modal = this.modalCtrl.create('ClaContractConfigModal', {
         projectId: this.sfdcProjectId
       });
