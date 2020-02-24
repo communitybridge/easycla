@@ -22,15 +22,17 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 4. Log in using your LFID.
 5. Navigate to **Settings**— the gear icon on the upper right corner, and click **Agreements** from the menu on the left:
 
-   ![Gerrit Agreements](../.gitbook/assets/cla-gerrit-agreements-option.png)
+   ![Settings Icon](/.gitbook/assets/settings-icon.png)
+   
+   ![Gerrit Agreements](/.gitbook/assets/agreements.png)
 
-6. Click the **agreement link** that appears:
+6. Click **New Contributor Agreement**.
 
-   ![Gerrit Agreements](../.gitbook/assets/cla-gerrit-agreements.png)
+   ![Gerrit Agreements](/.gitbook/assets/agreement-link.png)
 
    New Contributor Agreement types appear:
 
-   ![Gerrit New Contributor Agreement](../.gitbook/assets/cla-gerrit-new-contributor-agreement.png)
+   ![Gerrit New Contributor Agreement](/.gitbook/assets/new-contributor-agreement.png)
 
 7. Continue to contribute as an individual or employee \(corporate contributor\):
    * [Individual Contributor](contribute-to-a-gerrit-project.md#individual-contributor)
@@ -61,43 +63,100 @@ You are redirected to Gerrit. Wait a few seconds for the CLA status to update.
 
 ## Corporate Contributor
 
-EasyCLA presents a field where you confirm your association to the company.
+EasyCLA presents a review agreement link where you confirm your association with the company.
 
-1. Select the Corporate CLA that you want to sign.
+1. Select **Corporate CLA**.
 
-   An agreement field appears:
+   ![Gerrit Corporate CLA Agreement](/.gitbook/assets/corporate-cla.png)
 
-   ![Gerrit Corporate CLA Agreement](../.gitbook/assets/cla-gerrit-ccla-i-agree.png)
+2. Click the **Please review the agreement link** and then click the message link that appears:
 
-2. Enter **I Agree** in the field and click **SUBMIT**.
-3. Read the Confirmation of Association statement and mark the agreement checkbox.
+   ![Gerrit Sign ICLA Link](../.gitbook/assets/cla-gerrit-icla-proceed-to-sign-cla.png)
+   
+3. Sign in to EasyCLA if you are prompted.
+   
+4. Select **Company**.
+
+   To contribute to this project, you must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your work for a company.
+
+
+5. Continue:
+
+   * [If a **Confirmation of Association with** statement appears](contribute-to-a-gerrit-project.md#if-a-confirmation-of-association-with-statement-appears)
+   * [If a **Company has not signed CCLA** window appears](contribute-to-a-gerrit-project.md#if-a-company-has-not-signed-CCLA-window-appears)
+   * [If You are not whitelisted](contribute-to-a-gerrit-project.md#if-you-are-not-whitelisted)
+   * [If Company is not in the list](contribute-to-a-gerrit-project.md#if-company-is-not-in-the-list)
+   
+  
+## If a **Confirmation of Association with** statement appears
+
+1. Read the Confirmation of Association statement and select the checkbox.
 
    ![Gerrit Confirmation of Association](../.gitbook/assets/cla-gerrit-confirmation-of-association.png)
 
-4. Click **CONTINUE**.
+2. Click **CONTINUE**.
 
    A dialog appears and informs you: You are done!
+   
+   ![You are done](../.gitbook/assets/cla-github-you-are-done%20%281%29.png)
 
-5. Click **RETURN TO REPO**.
+3. Click **RETURN TO REPO**.
 
    You are redirected to Gerrit. Wait a few seconds for the CLA status to update or refresh the page.
+   
+## If a **Company has not signed CCLA** window appears
 
-   * If you are not associated with a company, click your company name and skip to Step 7 below.
-   * If your company is not associated with a company in the list, continue with the next step.
+This window appears if your comapny has not signed a Corporate CLA for the project.
 
-6. Click **COMPANY NOT IN LIST? CLICK HERE**.
+To send an email notification to your company's CLA manager to sign Corporate CLA:
 
-   A Corporate CLA form appears. Some fields are pre-populated such as the company name and email. Fill out the remaining form fields to contact your CCLA manager to request association to the company. The CCLA manager adds you to the whitelist.
+1. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
 
-   A Confirmation of Association with statement appears. Read the Confirmation of Association statement and mark the agreement checkbox.
+   ![](/.gitbook/assets/company-not-signed-ccla.png)
 
-7. Click **CONTINUE**.
+2. Click **SEND**.
 
-   A dialog appears and informs you: You are done!
+  A message shows that your email is successfully sent.
+  
+  ![](/.gitbook/assets/email-to-whitelist.png)
 
-8. Click **RETURN TO REPO**.
+## If You are not whitelisted
 
-   You are redirected to Gerrit. Wait a few seconds for the CLA status to update.
+This window appears if your company has not whitelisted you under their signed Corporate CLA.
+
+To send a request to your company's CLA manager to be whitelisted:
+
+1. Click **CONTACT**.
+
+   ![](/.gitbook/assets/request-to-be-whitelisted.png)
+
+    A **Request Access** window appears.
+  
+2. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
+
+3. Click **SEND**
+
+   A message shows that your email is successfully sent.
+  
+  ![](/.gitbook/assets/email-to-whitelist.png)
+
+## If Company is not in the list
+
+If you don't find your company's name in the list:
+
+1. Click **COMPANY NOT IN LIST? CLICK HERE**.
+
+   The **Verify Your Permission of Access** dialog appears.
+  
+2. Click an answer: Are You a CLA Manager?
+
+   **YES**— You will be redirected to [corporate.lfcla.com](https://corporate.lfcla.com/#/companies) to [add your company](../ccla-managers-and-ccla-signatories/add-a-company-to-a-project.md) to a project.
+   
+   **NO**— A Request Access form appears. Continue to next step.
+   
+3. Complete the form and click **SEND**.
+
+   The CCLA manager signs a Corporate CLA and adds you to the whitelist.
 
 You have finished signing your CLA for this Gerrit instance. You are able to submit your changes to any repository under this Gerrit instance.
 
