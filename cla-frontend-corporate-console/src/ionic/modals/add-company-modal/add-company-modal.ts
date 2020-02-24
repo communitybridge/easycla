@@ -118,6 +118,22 @@ export class AddCompanyModal {
     );
   }
 
+  sendCompanyNotification() {
+    this.loading.submit = false; 
+    let alert = this.alertCtrl.create({
+      title: 'Notification Sent!',
+      subTitle: `A Notification has been sent to the CLA Manager for ${this.companyName}`,
+      buttons: [
+        {
+          text: 'Ok',
+          role: 'dismiss',
+        }
+      ]
+    });
+    alert.onDidDismiss(() => window.location.reload(true));
+    alert.present();
+  }
+
   joinCompany() {
     this.loading.submit = true;
     const user = {
@@ -125,12 +141,10 @@ export class AddCompanyModal {
       // Additional fields that should be updated - API only allow a few fields to be updated
       'companyID': this.existingCompanyId,
     };
-
     this.claService.updateUserV3(user).subscribe(
       () => {
-        this.loading.submit = false; 
-        window.location.reload(true);
         this.dismiss();
+        this.sendCompanyNotification()
       },
       (exception) => {
         this.loading.submit = false;
@@ -232,6 +246,7 @@ export class AddCompanyModal {
   }
 
   setCompanyName(company) {
+    console.log(company, 'company')
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;

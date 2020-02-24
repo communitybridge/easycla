@@ -52,8 +52,9 @@
             <ion-row justify-content-center>
               <ion-list *ngIf="!loading.companies && rows && rows.length > 0">
                 <ion-item *ngFor="let company of rows">
-                  <ion-label class="clickable" (click)="viewCompany(company.CompanyID)">
+                  <ion-label class="clickable" (click)="viewCompany(company.CompanyID, company.Status)">
                     <a href="javascript:void(0);">{{ company.CompanyName }}</a>
+                    <span *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
                   </ion-label>
                 </ion-item>
               </ion-list>
