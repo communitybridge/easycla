@@ -179,27 +179,25 @@ export class CompaniesPage {
     );
   }
 
-  viewCompany(companyId) {
-    this.navCtrl.setRoot('CompanyPage', {
-      companyId: companyId
-    });
+  viewCompany(companyId, status) {
+    if (status !== 'Pending Approval') {
+      this.navCtrl.setRoot('CompanyPage', {
+        companyId: companyId
+      });
+    }
   }
 
 
   onSelect(event) {
     let company = event.selected[0];
     if (company.Status === 'Joined') {
-      this.viewCompany(company.CompanyID);
+      this.viewCompany(company.CompanyID, '');
     }
   }
 
   mapCompanies(companies) {
     let rows = [];
-    let action;
     for (let company of companies) {
-      if (company.status === 'Pending Approval') {
-        action = '';
-      }
       rows.push({
         CompanyID: company.companyID,
         CompanyName: company.companyName,
