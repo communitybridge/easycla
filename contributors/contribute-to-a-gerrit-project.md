@@ -83,7 +83,7 @@ EasyCLA presents a review agreement link where you confirm your association with
 5. Continue:
 
    * [If a **Confirmation of Association with** statement appears](contribute-to-a-gerrit-project.md#if-a-confirmation-of-association-with-statement-appears)
-   * [If a **Company has not signed CCLA** window appears](contribute-to-a-gerrit-project.md#if-a-company-has-not-sigend-CCLA-window-appears)
+   * [If a **Company has not signed CCLA** window appears](contribute-to-a-gerrit-project.md#if-a-company-has-not-signed-CCLA-window-appears)
    * [If You are not whitelisted](contribute-to-a-gerrit-project.md#if-you-are-not-whitelisted)
    * [If Company is not in the list](contribute-to-a-gerrit-project.md#if-company-is-not-in-the-list)
    
