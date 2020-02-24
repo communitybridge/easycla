@@ -724,21 +724,28 @@ jobs:
           command: |
             cd tests/rest
             sudo pip3 install -r requirements.freeze.txt
+            echo "Installing curl and jq..."
+            sudo apt-get install -y curl jq
+      - run:
+          name: Setup Environment
+          command: |
+            echo "export AUTH0_USERNAME=${!AUTH0_USERNAME_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AUTH0_PASSWORD=${!AUTH0_PASSWORD_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AUTH0_CLIENT_ID=${!AUTH0_CLIENT_ID_ENV_VAR}" >> ${BASH_ENV}
       - run:
           name: functional-tests
           halt_build_on_fail: false  # for now, we will pass all functional tests
           command: |
             echo "Running functional tests for stage: ${STAGE}"
             cd tests/rest
-            #lfx-login -u ${AUTH_USERNAME} -p ${AUTH_PASSWORD}
-            # Now ${AUTH_TOKEN} will be set which is used by tavern-cli configuration
-            tavern-ci test_project_management_console.tavern.yaml --alluredir=allure_result_folder -v || true
+            tavern-ci test_*.tavern.yaml --alluredir=allure_result_folder -v || true
 
   functionalTestsDev:
     <<: *functionalTests
     environment:
-      AUTH_USERNAME: ''
-      AUTH_PASSWORD: ''
+      AUTH0_USERNAME_ENV_VAR: AUTH0_USERNAME_DEV
+      AUTH0_PASSWORD_ENV_VAR: AUTH0_PASSWORD_DEV
+      AUTH0_CLIENT_ID_ENV_VAR: AUTH0_CLIENT_ID_DEV
       API_URL: 'https://api.dev.lfcla.com'
       STAGE: dev
 
