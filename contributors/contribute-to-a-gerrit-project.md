@@ -77,13 +77,13 @@ EasyCLA presents a review agreement link where you confirm your association with
    
 4. Select **Company**.
 
-   To contribute to this project, you must be authorized under a signed Contributor License Agreement. You are contributing on behalf of    your work for a company.
+   To contribute to this project, you must be authorized under a signed Contributor License Agreement. You are contributing on behalf of your work for a company.
 
 
 5. Continue:
 
    * [If a **Confirmation of Association with** statement appears](contribute-to-a-gerrit-project.md#if-a-confirmation-of-association-with-statement-appears)
-   * [If a **Company has not sigend CCLA** window appears](contribute-to-a-gerrit-project.md#if-a-company-has-not-sigend-CCLA-window-appears)
+   * [If a **Company has not signed CCLA** window appears](contribute-to-a-gerrit-project.md#if-a-company-has-not-sigend-CCLA-window-appears)
    * [If You are not whitelsited](contribute-to-a-gerrit-project.md#if-you-are-not-whitelisted)
    * [If Company is not in the list](contribute-to-a-gerrit-project.md#if-company-is-not-in-the-list)
    
@@ -96,7 +96,7 @@ EasyCLA presents a review agreement link where you confirm your association with
 
 2. Click **CONTINUE**.
 
-   A dialog appears and informs yoy: You are done!
+   A dialog appears and informs you: You are done!
    
    ![You are done](../.gitbook/assets/cla-github-you-are-done%20%281%29.png)
 
@@ -104,13 +104,13 @@ EasyCLA presents a review agreement link where you confirm your association with
 
    You are redirected to Gerrit. Wait a few seconds for the CLA status to update or refresh the page.
    
-## If a **Company has not sigend CCLA** window appears
+## If a **Company has not signed CCLA** window appears
 
-This window apperas if your comapny has not signed a Corporate CLA with Linux Foundation.
+This window appears if your comapny has not signed a Corporate CLA for the project.
 
 To send an email notification to your company's CLA manager to sign Corporate CLA:
 
-1. Select your email address, that you want your comapny manager to whitelist while signing Corporate CLA, from the **Emial to Authorize** drop-down field.
+1. Select your email address from the **Emial to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
 
    ![](/.gitbook/assets/company-not-signed-ccla.png)
 
@@ -122,7 +122,7 @@ To send an email notification to your company's CLA manager to sign Corporate CL
 
 ## If You are not whitelisted
 
-This window apperas if your comapny has not whitelisted you under their signed Corporate CLA.
+This window appears if your company has not whitelisted you under their signed Corporate CLA.
 
 To send a request to your company's CLA manager to be whitelisted:
 
@@ -132,7 +132,7 @@ To send a request to your company's CLA manager to be whitelisted:
 
     A **Request Access** window appears.
   
-2. Select your email address, that you want your comapny manager to whitelist while signing Corporate CLA, from the **Emial to Authorize** drop-down field, and type a message.
+2. Select your email address from the **Emial to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
 
 3. Click **SEND**
 
@@ -150,7 +150,7 @@ If you don't find your company's name in the list:
   
 2. Click an answer: Are You a CLA Manager?
 
-   **YES**— You will be reditected to [corporate.lfcla.com](https://corporate.lfcla.com/#/companies) to link your company to signed CLA
+   **YES**— You will be redirected to [corporate.lfcla.com](https://corporate.lfcla.com/#/companies) to [add your company](../ccla-managers-and-ccla-signatories/add-a-company-to-a-project.md) to a project.
    
    **NO**— A Request Access form appears. Continue to next step.
    
