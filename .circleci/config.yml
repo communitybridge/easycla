@@ -5,6 +5,18 @@ version: 2.1
 environment:
   BASH_ENV: ~/.bashrc
 
+set_functional_test_environment: &set_functional_test_environment
+  run:
+    name: set deployment environment
+    command: |
+      cd && echo "Setting environment in $BASH_ENV for stage ${STAGE}" && touch $BASH_ENV
+
+      # Note, we place single quotes around the values to ensure any values
+      # with dollar signs are not intrepreted and expanded by accident
+      echo "export AUTH0_USERNAME='${!AUTH0_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_PASSWORD='${!AUTH0_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_CLIENT_ID='${!AUTH0_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
+
 step-library:
   - &install-node-8
     run:
@@ -726,16 +738,12 @@ jobs:
             sudo pip3 install -r requirements.freeze.txt
             echo "Installing curl and jq..."
             sudo apt-get install -y curl jq
-      - run:
-          name: Setup Environment
-          command: |
-            echo "export AUTH0_USERNAME=${!AUTH0_USERNAME_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AUTH0_PASSWORD=${!AUTH0_PASSWORD_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AUTH0_CLIENT_ID=${!AUTH0_CLIENT_ID_ENV_VAR}" >> ${BASH_ENV}
+      - *set_functional_test_environment
       - run:
           name: functional-tests
           halt_build_on_fail: false  # for now, we will pass all functional tests
           command: |
+            source ${BASH_ENV}
             echo "Running functional tests for stage: ${STAGE}"
             cd tests/rest
             tavern-ci test_*.tavern.yaml --alluredir=allure_result_folder -v || true
