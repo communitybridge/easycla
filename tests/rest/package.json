@@ -1,0 +1,11 @@
+{
+  "name": "easycla-test-api",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "newman run easycla-collection.json"
+  },
+  "dependencies": {
+    "newman": "^4.6.0"
+  }
+}
