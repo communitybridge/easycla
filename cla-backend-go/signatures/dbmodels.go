@@ -25,3 +25,9 @@ type ItemSignature struct {
 	GitHubOrgWhitelist            []string `json:"github_org_whitelist"`
 	SignatureACL                  []string `json:"signature_acl"`
 }
+
+// DBManagersModel is a database model for only the ACL/Manager column
+type DBManagersModel struct {
+	SignatureID  string   `json:"signature_id"`
+	SignatureACL []string `json:"signature_acl"`
+}
