@@ -6,6 +6,7 @@ package project
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 
@@ -57,17 +58,72 @@ type repo struct {
 func (repo repo) GetMetrics() (*models.ProjectMetrics, error) {
 	var out models.ProjectMetrics
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
-	}
-	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-	if err != nil {
-		log.Warnf("error retrieving total record count of projects, error: %v", err)
-		return nil, err
+	// Do these counts in parallel
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	var totalCount int64
+	var projects []models.ProjectSimpleModel
+
+	go func(tableName string) {
+		defer wg.Done()
+		// How many total records do we have - may not be up-to-date as this value is updated only periodically
+		describeTableInput := &dynamodb.DescribeTableInput{
+			TableName: &tableName,
+		}
+		describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+		if err != nil {
+			log.Warnf("error retrieving total record count, error: %v", err)
+		}
+		// Meta-data for the response
+		totalCount = *describeTableResult.Table.ItemCount
+	}(tableName)
+
+	go func() {
+		defer wg.Done()
+
+		// Use the last evaluated key to determine if we have more to process
+		lastEvaluatedKey := ""
+
+		for ok := true; ok; ok = lastEvaluatedKey != "" {
+			projectModels, err := repo.GetProjects(&project.GetProjectsParams{
+				PageSize: aws.Int64(50),
+				NextKey:  aws.String(lastEvaluatedKey),
+			})
+			if err != nil {
+				log.Warnf("error retrieving projects for metrics, error: %v", err)
+			}
+			// Convert the full response model to a simple model for metrics
+			projects = append(projects, buildSimpleModel(projectModels)...)
+
+			// Save the last evaluated key - use it to determine if we have more to process
+			lastEvaluatedKey = projectModels.LastKeyScanned
+		}
+	}()
+
+	// Wait for the counts to finish
+	wg.Wait()
+
+	out.TotalCount = totalCount
+	out.Projects = projects
+	return &out, nil
+}
+
+// buildSimpleModel converts the DB model to a simple response model
+func buildSimpleModel(dbProjectsModel *models.Projects) []models.ProjectSimpleModel {
+	if dbProjectsModel == nil || dbProjectsModel.Projects == nil {
+		return []models.ProjectSimpleModel{}
 	}
 
-	out.TotalCount = *describeTableResult.Table.ItemCount
-	return &out, nil
+	var simpleModels []models.ProjectSimpleModel
+	for _, dbModel := range dbProjectsModel.Projects {
+		simpleModels = append(simpleModels, models.ProjectSimpleModel{
+			ProjectName:         dbModel.ProjectName,
+			ProjectManagerCount: int64(len(dbModel.ProjectACL)),
+		})
+	}
+
+	return simpleModels
 }
 
 // CreateProject creates a new project
@@ -243,7 +299,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 	}
 
 	// If we have the next key, set the exclusive start key value
-	if params.NextKey != nil {
+	if params.NextKey != nil && *params.NextKey != "" {
 		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
 		// The primary key of the first item that this operation will evaluate.
 		// and the query key (if not the same)

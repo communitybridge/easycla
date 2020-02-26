@@ -1,0 +1,128 @@
+---
+test_name: "Metrics API /v3/metrics"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: get token from auth0
+    request:
+      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
+      method: POST
+      headers:
+        content-type: "application/x-www-form-urlencoded"
+      data:
+        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
+        realm: "Username-Password-Authentication"
+        username: "{tavern.env_vars.AUTH0_USERNAME}"
+        password: "{tavern.env_vars.AUTH0_PASSWORD}"
+        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
+        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
+        scope: "access:api openid profile email"
+    response:
+      save:
+        body:
+          auth0_token: id_token
+
+  - name: Metrics GET request with no auth
+    request:
+      url: "{api_url}/v3/metrics"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: Metrics get request with auth
+    request:
+      url: "{api_url}/v3/metrics"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              companies:
+                type: map
+                required: true
+                mapping:
+                  companies:
+                    type: seq
+                    required: true
+                    sequence:
+                      - type: map
+                        required: true
+                        mapping:
+                          companyManagerCount:
+                            type: int
+                            required: true
+                          companyName:
+                            type: str
+                            required: true
+                  totalCount:
+                    type: int
+                    required: true
+              projects:
+                type: map
+                required: true
+                mapping:
+                  projects:
+                    type: seq
+                    required: true
+                    sequence:
+                      - type: map
+                        required: true
+                        mapping:
+                          projectManagerCount:
+                            type: int
+                            required: true
+                          projectName:
+                            type: str
+                            required: true
+                  totalCount:
+                    type: int
+                    required: true
+              repositories:
+                type: map
+                required: true
+                mapping:
+                  totalCount:
+                    type: int
+                    required: true
+              signatures:
+                type: map
+                required: true
+                mapping:
+                  cclaCount:
+                    type: int
+                    required: true
+                  claManagerCount:
+                    type: int
+                    required: true
+                  claManagerUniqueCount:
+                    type: int
+                    required: true
+                  count:
+                    type: int
+                    required: true
+                  employeeCount:
+                    type: int
+                    required: true
+                  iclaCount:
+                    type: int
+                    required: true
+              users:
+                type: map
+                required: true
+                mapping:
+                  totalCount:
+                    type: int
+                    required: true
+

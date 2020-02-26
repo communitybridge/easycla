@@ -237,6 +237,20 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 
 		return company.NewDeletePendingInviteOK()
 	})
+
+	api.CompanyGetCompanyMetricsHandler = company.GetCompanyMetricsHandlerFunc(func(params company.GetCompanyMetricsParams, claUser *user.CLAUser) middleware.Responder {
+		companyMetrics, err := service.GetMetrics()
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query all companies, error: %v", err)
+			log.Warnf(msg)
+			return company.NewGetCompanyMetricsBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		return company.NewGetCompanyMetricsOK().WithPayload(companyMetrics)
+	})
 }
 
 type codedResponse interface {
