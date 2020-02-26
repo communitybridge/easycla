@@ -721,6 +721,7 @@ paths:
       tags:
         - signatures
 
+  # Project Service
   /project:
     post:
       summary: Create a Project/CLA Group
@@ -840,6 +841,29 @@ paths:
       tags:
         - project
 
+  /project/metrics:
+    get:
+      summary: Get Project Metrics
+      security:
+        - OauthSecurity: []
+      operationId: getProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  # Company Service
   /company:
     get:
       summary: Get all companies
@@ -1292,6 +1316,28 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/ccla-whitelist-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/metrics:
+    get:
+      summary: Get Company Metrics
+      security:
+        - OauthSecurity: []
+      operationId: getCompanyMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/companies-metrics'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1869,6 +1915,21 @@ definitions:
         description: Record version
         type: string
 
+  project-simple-model:
+    type: object
+    x-nullable: false
+    title: Project
+    description: Project simple data model
+    properties:
+      projectName:
+        description: the project name
+        type: string
+      projectManagerCount:
+        description: A count of project managers
+        type: integer
+        format: int64
+        x-omitempty: false
+
   create-cla-group-template:
     title: CreateCLAGroupTemplate
     type: object
@@ -1948,6 +2009,9 @@ definitions:
         description: The company unique ID
         example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
         type: string
+      companyExternalID:
+        description: the company external ID
+        type: string
       companyName:
         description: The company name
         example: Acme, Inc.
@@ -1965,6 +2029,22 @@ definitions:
         type: string
         description: The company record update date/time
         format: date-time
+
+  company-simple-model:
+    type: object
+    x-nullable: false
+    title: Company
+    description: Company Simple Data Model
+    properties:
+      companyName:
+        description: The company name
+        example: Acme, Inc.
+        type: string
+      companyManagerCount:
+        description: A count of company managers
+        type: integer
+        format: int64
+        x-omitempty: false
 
   company-with-invite:
     type: object
@@ -2024,6 +2104,11 @@ definitions:
         type: integer
         format: int64
         x-omitempty: false
+      projects:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-simple-model'
 
   companies-metrics:
     type: object
@@ -2035,6 +2120,11 @@ definitions:
         type: integer
         format: int64
         x-omitempty: false
+      companies:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/company-simple-model'
 
   repository-metrics:
     type: object
@@ -2077,6 +2167,14 @@ definitions:
         format: int64
         x-omitempty: false
       iclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      claManagerCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      claManagerUniqueCount:
         type: integer
         format: int64
         x-omitempty: false

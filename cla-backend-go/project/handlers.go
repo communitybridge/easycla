@@ -75,6 +75,19 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})
+
+	// Project metrics
+	api.ProjectGetProjectMetricsHandler = project.GetProjectMetricsHandlerFunc(func(projectParams project.GetProjectMetricsParams, claUser *user.CLAUser) middleware.Responder {
+		projectMetrics, err := service.GetMetrics()
+		if err != nil {
+			if err == ErrProjectDoesNotExist {
+				return project.NewGetProjectMetricsNotFound()
+			}
+			return project.NewGetProjectMetricsBadRequest().WithPayload(errorResponse(err))
+		}
+
+		return project.NewGetProjectMetricsOK().WithPayload(projectMetrics)
+	})
 }
 
 // codedResponse interface

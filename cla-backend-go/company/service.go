@@ -44,6 +44,8 @@ type Service interface { // nolint
 
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
+
+	GetMetrics() (*models.CompaniesMetrics, error)
 }
 
 // NewService creates a new company service object
@@ -353,4 +355,9 @@ Please navigate to the Corporate Console using the link below, where you can app
 	}
 
 	return nil
+}
+
+// GetMetrics returns the metrics for the companies
+func (s service) GetMetrics() (*models.CompaniesMetrics, error) {
+	return s.repo.GetMetrics()
 }

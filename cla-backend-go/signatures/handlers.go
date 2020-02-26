@@ -37,7 +37,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		return signatures.NewGetSignatureOK().WithPayload(signature)
 	})
 
-	// Get Signatures
+	// Get Signature Metrics
 	api.SignaturesGetSignatureMetricsHandler = signatures.GetSignatureMetricsHandlerFunc(func(params signatures.GetSignatureMetricsParams, claUser *user.CLAUser) middleware.Responder {
 		metrics, err := service.GetMetrics()
 		if err != nil {

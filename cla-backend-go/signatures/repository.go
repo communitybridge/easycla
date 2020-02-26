@@ -44,6 +44,9 @@ type SignatureRepository interface {
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
+
+	getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error)
+	getSignatureManagerCounts(tableName string, filter expression.ConditionBuilder) (int64, int64, error)
 }
 
 // repository data model
@@ -71,12 +74,14 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 
 	// Do these counts in parallel
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(5)
 
 	var totalCount int64
 	var cclaCount int64
 	var employeeCount int64
 	var iclaCount int64
+	var claManagerCount int64
+	var claManagerUniqueCount int64
 
 	go func(tableName string) {
 		defer wg.Done()
@@ -92,6 +97,7 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		totalCount = *describeTableResult.Table.ItemCount
 	}(tableName)
 
+	// Corporate Signatures Signed by CLA Managers
 	go func(tableName string) {
 		defer wg.Done()
 		count, err := repo.getSignatureCount(tableName,
@@ -105,6 +111,7 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		cclaCount = count
 	}(tableName)
 
+	// Employee Signatures
 	go func(tableName string) {
 		defer wg.Done()
 		count, err := repo.getSignatureCount(tableName,
@@ -118,6 +125,7 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		employeeCount = count
 	}(tableName)
 
+	// Individual Signatures
 	go func(tableName string) {
 		defer wg.Done()
 		count, err := repo.getSignatureCount(tableName,
@@ -131,15 +139,32 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		iclaCount = count
 	}(tableName)
 
+	// Get Manager Counts
+	go func(tableName string) {
+		defer wg.Done()
+		count, uniqueCount, err := repo.getSignatureManagerCounts(tableName,
+			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
+				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
+				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+		if err != nil {
+			log.Warnf("error retrieving CLA Manager counts, error: %v", err)
+			return
+		}
+		claManagerCount = count
+		claManagerUniqueCount = uniqueCount
+	}(tableName)
+
 	// Wait for the counts to finish
 	wg.Wait()
 
 	// Build the response model
 	metrics := models.SignatureMetrics{
-		Count:         totalCount,
-		CclaCount:     cclaCount,
-		EmployeeCount: employeeCount,
-		IclaCount:     iclaCount,
+		Count:                 totalCount,
+		CclaCount:             cclaCount,
+		EmployeeCount:         employeeCount,
+		IclaCount:             iclaCount,
+		ClaManagerCount:       claManagerCount,
+		ClaManagerUniqueCount: claManagerUniqueCount,
 	}
 
 	return &metrics, nil
@@ -190,6 +215,71 @@ func (repo repository) getSignatureCount(tableName string, filter expression.Con
 	}
 
 	return count, nil
+}
+
+// getSignatureManagerCount returns the total number of CLA Managers and unique CLA Managers in the system
+func (repo repository) getSignatureManagerCounts(tableName string, filter expression.ConditionBuilder) (int64, int64, error) {
+	var count int64
+	managerMap := make(map[string]bool)
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithProjection(buildManagerProjection()).WithFilter(filter).Build()
+	if err != nil {
+		log.Warnf("error building expression for signature scan, error: %v", err)
+		return 0, 0, err
+	}
+
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving signatures for CLA Manager Count, error: %v", errQuery)
+			return 0, 0, errQuery
+		}
+
+		var dbManagersModel []DBManagersModel
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbManagersModel)
+		if err != nil {
+			log.Warnf("error unmarshalling signatures from database, error: %v", err)
+			return 0, 0, err
+		}
+
+		for _, record := range dbManagersModel {
+			if record.SignatureACL != nil {
+				// Tally the total count
+				count += int64(len(record.SignatureACL))
+				// Add the individual managers to our map - duplicate entries have the same key
+				for _, manager := range record.SignatureACL {
+					managerMap[manager] = true
+				}
+			}
+		}
+
+		if results.LastEvaluatedKey["signature_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"signature_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	// Return the total and unique count
+	return count, int64(len(managerMap)), nil
 }
 
 // GetGithubOrganizationsFromWhitelist returns a list of GH organizations stored in the whitelist
@@ -1370,5 +1460,14 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("domain_whitelist"),
 		expression.Name("github_whitelist"),
 		expression.Name("github_org_whitelist"),
+	)
+}
+
+// buildManagerProject is a helper function to build a projection with only the manager details
+func buildManagerProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("signature_id"),
+		expression.Name("signature_acl"),
 	)
 }
