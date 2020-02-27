@@ -10,6 +10,8 @@ This platform supports both GitHub and Gerrit source code repositories. Addition
 
 ## Third-party Services
 
+[EasyCLA](./#easycla-architechture)
+
 Besides integration with Auth0 and Salesforce, the CLA system has the following third party services:
 
 * [Docusign](https://www.docusign.com/) for CLA agreement e-sign flow
@@ -54,3 +56,4 @@ This project’s source code is licensed under the MIT License. A copy of the li
 The project includes source code from keycloak, which is licensed under the Apache License, version 2.0 \(Apache-2.0\), a copy of which is available in LICENSE-keycloak.
 
 This project’s documentation is licensed under the Creative Commons Attribution 4.0 International License \(CC-BY-4.0\). A copy of the license is available in LICENSE-docs.
+
