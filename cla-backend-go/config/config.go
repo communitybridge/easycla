@@ -46,6 +46,9 @@ type Config struct {
 
 	// SNSEventTopic the topic ARN for events
 	SNSEventTopicARN string `json:"snsEventTopicARN"`
+
+	// S3 bucket to store signatures
+	SignatureFilesBucket string `json:"signatureFilesBucket"`
 }
 
 // Auth0 model
