@@ -127,5 +127,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 		return Config{}, err
 	}
 
+	config.SignatureFilesBucket, err = getSSMString(ssmClient, fmt.Sprintf("cla-signature-files-bucket-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+
 	return config, nil
 }
