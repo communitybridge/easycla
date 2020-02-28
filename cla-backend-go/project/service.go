@@ -13,6 +13,7 @@ type Service interface {
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectByName(projectName string) (*models.Project, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 	GetMetrics() (*models.ProjectMetrics, error)
@@ -42,7 +43,12 @@ func (s service) GetProjects(params *project.GetProjectsParams) (*models.Project
 
 // GetProjectByID service method
 func (s service) GetProjectByID(projectID string) (*models.Project, error) {
-	return s.repo.GetProject(projectID)
+	return s.repo.GetProjectByID(projectID)
+}
+
+// GetProjectByName service method
+func (s service) GetProjectByName(projectName string) (*models.Project, error) {
+	return s.repo.GetProjectByName(projectName)
 }
 
 // DeleteProject service method

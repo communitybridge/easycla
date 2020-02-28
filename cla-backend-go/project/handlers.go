@@ -4,6 +4,8 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
@@ -16,11 +18,65 @@ import (
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.ClaAPI, service Service) {
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
+		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
+			msg := "Missing Project Name or Project ACL parameter."
+			log.Warnf("Create Project Failed - %s", msg)
+			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+
+		exitingModel, getErr := service.GetProjectByName(params.Body.ProjectName)
+		if getErr != nil {
+			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
+			log.Warnf("Create Project Failed - %s", msg)
+			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+		}
+
+		// If the project with the same name exists...
+		if exitingModel != nil {
+			msg := fmt.Sprintf("Project with same name exists: %s", params.Body.ProjectName)
+			log.Warnf("Create Project Failed - %s", msg)
+			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
+				Code:    "409",
+				Message: msg,
+			})
+		}
+
+		exitingModel, getErr = service.GetProjectByID(params.Body.ProjectExternalID)
+		if getErr != nil {
+			msg := fmt.Sprintf("Error querying the project by ID: %s, error: %+v",
+				params.Body.ProjectExternalID, getErr)
+			log.Warnf("Create Project Failed - %s", msg)
+			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+		}
+
+		// If the project with the same name exists...
+		if exitingModel != nil {
+			msg := fmt.Sprintf("Project with same external ID exists: %s", params.Body.ProjectExternalID)
+			log.Warnf("Create Project Failed - %s", msg)
+			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
+				Code:    "409",
+				Message: msg,
+			})
+		}
+
+		// Ok, safe to create now
 		projectModel, err := service.CreateProject(&params.Body)
 		if err != nil {
+			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
 		}
 
+		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
+			params.Body.ProjectName, params.Body.ProjectExternalID)
 		return project.NewCreateProjectOK().WithPayload(projectModel)
 	})
 
@@ -47,6 +103,20 @@ func Configure(api *operations.ClaAPI, service Service) {
 		}
 
 		return project.NewGetProjectByIDOK().WithPayload(projectModel)
+	})
+
+	// Get Project By Name
+	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, claUser *user.CLAUser) middleware.Responder {
+
+		projectModel, err := service.GetProjectByName(projectParams.ProjectName)
+		if err != nil {
+			return project.NewGetProjectByNameBadRequest().WithPayload(errorResponse(err))
+		}
+		if projectModel == nil {
+			return project.NewGetProjectByNameNotFound()
+		}
+
+		return project.NewGetProjectByNameOK().WithPayload(projectModel)
 	})
 
 	// Delete Project By ID
