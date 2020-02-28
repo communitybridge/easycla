@@ -628,6 +628,18 @@ class DocuSign(signing_service_interface.SigningService):
         # DAD: Authority Name and Authority Email are from the web form
         # (this is the signatory_user in this function)
 
+        if project_id is None:
+            return {'errors': {'project_id': 'request_corporate_signature - project_id is empty'}}
+
+        if company_id is None:
+            return {'errors': {'company_id': 'request_corporate_signature - company_id is empty'}}
+
+        if auth_user is None:
+            return {'errors': {'user_error': 'request_corporate_signature - auth_user is empty'}}
+
+        if auth_user.username is None:
+            return {'errors': {'user_error': 'request_corporate_signature - auth_user.username is empty'}}
+
         # Ensure the user exists in our database - load the record
         signatory_users = User().get_user_by_username(auth_user.username)
         if signatory_users is None:
@@ -658,18 +670,8 @@ class DocuSign(signing_service_interface.SigningService):
                             'Returning an error response')
             return {'errors': {'company_id': str(err)}}
 
-        # DAD: This is wrong - replace with CCLA signature lookup
-        # Ensure the managers list is not empty - returns a list of User objects
-        # TODO: Should we flag the first one as the Initial CLA manager?
-        #managers = company.get_managers()
-        #if len(managers) == 0:
-        #    cla.log.warning('No managers for company: {} - ACL is empty'.format(cla.utils.fmt_company(company)))
-        #    return {'errors': {'company_acl': 'Company ACL is empty'}}
-        #cla.log.debug('Loaded {} managers for company: {}. Will use {} as the initial CLA manager'.
-        #              format(len(managers), company, cla.utils.fmt_user(managers[0])))
-
         # Load the CLA Corporate Signature Record for this project/company combination
-        signatures = Signature().get_signatures_by_project(self.get_project_id(),
+        signatures = Signature().get_signatures_by_project(project_id=project_id,
                                                            signature_approved=True,
                                                            signature_signed=True,
                                                            signature_type='company',
