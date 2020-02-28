@@ -744,6 +744,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - project
     put:
@@ -852,6 +854,34 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/name/{projectName}:
+    get:
+      summary: Get Project By Name
+      description: Returns the project object when provided the project name - exact match
+      parameters:
+        - name: projectName
+          in: path
+          type: string
+          required: true
+      security:
+        - OauthSecurity: []
+      operationId: getProjectByName
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
