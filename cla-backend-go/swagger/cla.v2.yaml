@@ -1,0 +1,399 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+swagger: '2.0'
+info:
+  title: EasyCLA v2 API
+  version: '2.0'
+basePath: /v4
+securityDefinitions:
+  lf-auth:
+    type: apiKey
+    name: X-ACL
+    in: header
+    description: Requires X-ACL headers and bearer token
+security:
+  - lf-auth: []
+
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /ops/version:
+    get:
+      summary: API Version Information
+      security: []
+      operationId: getVersion
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/version'
+      tags:
+        - version
+
+  /ops/health:
+    get:
+      summary: API Health Check
+      security: []
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/health'
+        '503':
+          description: ''
+          schema:
+            $ref: '#/definitions/health'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - health
+
+  /api-docs:
+    get:
+      security: []
+      summary: Get swagger documentation
+      operationId: getDoc
+      produces:
+        - text/html
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
+  /swagger.json:
+    get:
+      security: []
+      summary: Get swagger JSON
+      operationId: getSwagger
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Returns metrics
+      security:
+        - OauthSecurity: []
+      operationId: getMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+responses:
+  unauthorized:
+    description: Unauthorized
+    schema:
+      $ref: '#/definitions/error-response'
+  invalid-request:
+    description: Invalid request
+    schema:
+      $ref: '#/definitions/error-response'
+  forbidden:
+    description: Insufficient privilege to execute action
+    schema:
+      $ref: '#/definitions/error-response'
+  #not-found:
+  #  description: Not found
+  #  schema:
+  #    $ref: '#/definitions/error-response'
+  #conflict:
+  #  description: Duplicate Resource
+  #  schema:
+  #    $ref: '#/definitions/error-response'
+
+definitions:
+  version:
+    type: object
+    x-nullable: false
+    title: Version
+    description: Version Information
+    properties:
+      version:
+        type: string
+      commit:
+        type: string
+      branch:
+        type: string
+      buildDate:
+        type: string
+    required:
+      - version
+      - commit
+      - branch
+      - buildDate
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Health"
+      type: "Version"
+
+  health:
+    type: object
+    title: Health
+    properties:
+      TimeStamp:
+        type: string
+      Status:
+        type: string
+      Version:
+        type: string
+      Githash:
+        type: string
+      Branch:
+        type: string
+      BuildTimeStamp:
+        type: string
+      Healths:
+        type: array
+        items:
+          $ref: '#/definitions/health-status'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Health"
+      type: "Health"
+
+  health-status:
+    type: object
+    properties:
+      Name:
+        type: string
+      Duration:
+        type: string
+      Healthy:
+        type: boolean
+      Error:
+        type: string
+      TimeStamp:
+        type: string
+    title: Health Status
+
+  metrics:
+    type: object
+    x-nullable: false
+    title: Metrics
+    description: All Metrics
+    properties:
+      projects:
+        $ref: '#/definitions/project-metrics'
+      companies:
+        $ref: '#/definitions/companies-metrics'
+      repositories:
+        $ref: '#/definitions/repository-metrics'
+      users:
+        $ref: '#/definitions/user-metrics'
+      signatures:
+        $ref: '#/definitions/signature-metrics'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Metrics"
+      type: "Metrics"
+
+  project-metrics:
+    type: object
+    x-nullable: false
+    title: ProjectMetrics
+    description: Project Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      projects:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-simple-model'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1ProjectMetrics"
+      type: "ProjectMetrics"
+
+  project-simple-model:
+    type: object
+    x-nullable: false
+    title: Project
+    description: Project simple data model
+    properties:
+      projectName:
+        description: the project name
+        type: string
+      projectManagerCount:
+        description: A count of project managers
+        type: integer
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1ProjectSimpleMetrics"
+      type: "ProjectSimpleMetrics"
+
+  companies-metrics:
+    type: object
+    x-nullable: false
+    title: CompaniesMetrics
+    description: Companies Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      companies:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/company-simple-model'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1CompaniesMetrics"
+      type: "CompaniesMetrics"
+
+  company-simple-model:
+    type: object
+    x-nullable: false
+    title: Company
+    description: Company Simple Data Model
+    properties:
+      companyName:
+        description: The company name
+        example: Acme, Inc.
+        type: string
+      companyManagerCount:
+        description: A count of company managers
+        type: integer
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1CompaniesSimpleMetrics"
+      type: "CompaniesSimpleMetrics"
+
+  repository-metrics:
+    type: object
+    x-nullable: false
+    title: RepositoryMetrics
+    description: Repository Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1RepositoryMetrics"
+      type: "RepositoryMetrics"
+
+  user-metrics:
+    type: object
+    x-nullable: false
+    title: UserMetrics
+    description: User Metrics
+    properties:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1UserMetrics"
+      type: "UserMetrics"
+
+  signature-metrics:
+    type: object
+    x-nullable: false
+    title: Signatures
+    description: Signature Metrics
+    properties:
+      count:
+        type: integer
+        format: int64
+        x-omitempty: false
+      cclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      employeeCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      iclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      claManagerCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      claManagerUniqueCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1SignatureMetrics"
+      type: "SignatureMetrics"
+
+  error-response:
+    type: object
+    x-nullable: false
+    title: Error Response
+    description: Standard error format
+    properties:
+      Code:
+        type: string
+      Message:
+        type: string

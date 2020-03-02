@@ -4,7 +4,7 @@ package:
   # Exclude all first - selectively add in lambda functions
   exclude:
     - auth/**
-    - ./backend_aws_lambda
+    - ./backend-aws-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -199,7 +199,7 @@ functions:
 
   apiv3:
     runtime: go1.x
-    handler: backend_aws_lambda
+    handler: backend-aws-lambda
     events:
       - http:
           method: ANY
@@ -208,7 +208,7 @@ functions:
     package:
       individually: true
       include:
-        - ./backend_aws_lambda
+        - ./backend-aws-lambda
 
   apiv1:
     handler: wsgi_handler.handler
