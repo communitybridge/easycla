@@ -1,0 +1,149 @@
+---
+test_name: "User CRUD /v3/users"
+includes:
+  - !include common.yaml
+
+stages:
+  - name: get token from auth0
+    request:
+      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
+      method: POST
+      headers:
+        content-type: "application/x-www-form-urlencoded"
+      data:
+        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
+        realm: "Username-Password-Authentication"
+        username: "{tavern.env_vars.AUTH0_USERNAME}"
+        password: "{tavern.env_vars.AUTH0_PASSWORD}"
+        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
+        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
+        scope: "access:api openid profile email"
+    response:
+      save:
+        body:
+          auth0_token: id_token
+
+  - name: User create request with no auth
+    request:
+      url: "{api_url}/v3/users"
+      method: POST
+    response:
+      status_code: 401
+
+  - name: User get by ID request with no auth
+    request:
+      url: "{api_url}/v3/users/ac8f2892-731e-4e4e-85ab-b6edfb541e6c"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: User get by Usernmae request with no auth
+    request:
+      url: "{api_url}/v3/users/username/ddeal"
+      method: GET
+    response:
+      status_code: 401
+
+  - name: User delete request with no auth
+    request:
+      url: "{api_url}/v3/users/ac8f2892-731e-4e4e-85ab-b6edfb541e6c"
+      method: DELETE
+    response:
+      status_code: 401
+
+  - name: User update request with no auth
+    request:
+      url: "{api_url}/v3/users"
+      method: PUT
+    response:
+      status_code: 401
+
+  - name: User create request with auth
+    request:
+      url: "{api_url}/v3/users"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        userExternalID: "abc123"
+        username: "CLA Functional Test User"
+        lfEmail: "claFunctionalTestUser@linuxfoundation.org"
+        lfUsername: "claFunctionalTestUser"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        userExternalID: "abc123"
+        username: "CLA Functional Test User"
+        lfEmail: "claFunctionalTestUser@linuxfoundation.org"
+        lfUsername: "claFunctionalTestUser"
+      save:
+        body:
+          userID: "userID"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              userID:
+                type: str
+                required: true
+              userExternalID:
+                type: str
+                required: true
+              username:
+                type: str
+                required: true
+              lfEmail:
+                type: str
+                required: true
+              emails:
+                type: seq
+                required: false
+                sequence:
+                  - type: str
+                    required: true
+              lfUsername:
+                type: str
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+#  - name: Project create request with auth with username conflict
+#    request:
+#      url: "{api_url}/v3/project"
+#      method: POST
+#      headers:
+#        Authorization: "Bearer {auth0_token:s}"
+#        Content-Type: "application/json"
+#        Accept: "application/json"
+#      json:
+#        userExternalID: "abc123"
+#        username: "CLA Functional Test User"
+#        lfEmail: "claFunctionalTestUser@linuxfoundation.org"
+#        lfUsername: "claFunctionalTestUser"
+#    response:
+#      status_code: 409
+
+  - name: User delete request with auth
+    request:
+      url: "{api_url}/v3/users/{userID:s}"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 204

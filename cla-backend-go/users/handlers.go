@@ -25,6 +25,26 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				fmt.Errorf("auth - UsersAddUserHandler - user %+v not authorized to add users - missing UserID", claUser)))
 		}
 
+		exitingModel, getErr := service.GetUserByUserName(params.Body.Username, true)
+		if getErr != nil {
+			msg := fmt.Sprintf("Error querying the user by username, error: %+v", getErr)
+			log.Warnf("Create User Failed - %s", msg)
+			return users.NewAddUserBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+		}
+
+		// If the user with the same name exists...
+		if exitingModel != nil {
+			msg := fmt.Sprintf("User with same username exists: %s", params.Body.Username)
+			log.Warnf("Create User Failed - %s", msg)
+			return users.NewAddUserConflict().WithPayload(&models.ErrorResponse{
+				Code:    "409",
+				Message: msg,
+			})
+		}
+
 		userModel, err := service.CreateUser(&params.Body)
 		if err != nil {
 			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
@@ -71,27 +91,30 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Delete User Handler
 	api.UsersDeleteUserHandler = users.DeleteUserHandlerFunc(func(params users.DeleteUserParams, claUser *user.CLAUser) middleware.Responder {
-		if claUser.UserID == "" {
-			return users.NewDeleteUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersDeleteUserHandler - user %+v not authorized to delete users - missing UserID", claUser)))
-		}
+		/*
+				if claUser.UserID == "" {
+					return users.NewDeleteUserUnauthorized().WithPayload(errorResponse(
+						fmt.Errorf("auth - UsersDeleteUserHandler - user %+v not authorized to delete users - missing UserID", claUser)))
+				}
 
-		// Let's lookup the authenticated user in our database - we need to see if they have admin access
-		claUserModel, err := service.GetUser(claUser.UserID)
-		if err != nil || claUserModel == nil {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("error looking up current user permissions to determine if delete is allowed, id: %s, error: %+v",
-					params.UserID, err)))
-		}
 
-		// Should be an admin to delete
-		if !claUserModel.Admin {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("user with id: %s is not authorized to delete users - must be admin",
-					params.UserID)))
-		}
+			// Let's lookup the authenticated user in our database - we need to see if they have admin access
+			claUserModel, err := service.GetUser(claUser.UserID)
+			if err != nil || claUserModel == nil {
+				return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+					fmt.Errorf("error looking up current user permissions to determine if delete is allowed, id: %s, error: %+v",
+						params.UserID, err)))
+			}
 
-		err = service.Delete(params.UserID)
+			// Should be an admin to delete
+			if !claUserModel.Admin {
+				return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+					fmt.Errorf("user with id: %s is not authorized to delete users - must be admin",
+						params.UserID)))
+			}
+		*/
+
+		err := service.Delete(params.UserID)
 		if err != nil {
 			log.Warnf("error deleting user from user table with id: %s, error: %+v", params.UserID, err)
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
