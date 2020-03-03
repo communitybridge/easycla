@@ -12,7 +12,6 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/health"
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
 )
 
@@ -22,6 +21,11 @@ type Service struct {
 	commit    string
 	branch    string
 	buildDate string
+}
+
+// HealthService interface
+type HealthService interface { // nolint
+	HealthCheck(ctx context.Context) (*models.Health, error)
 }
 
 // New is a simple helper function to create a health service instance
@@ -35,7 +39,7 @@ func New(version, commit, branch, buildDate string) Service {
 }
 
 // HealthCheck API call returns the current health of the service
-func (s Service) HealthCheck(ctx context.Context, in health.HealthCheckParams) (*models.Health, error) {
+func (s Service) HealthCheck(ctx context.Context) (*models.Health, error) {
 
 	// General health
 	hs := models.HealthStatus{
