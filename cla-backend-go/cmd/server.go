@@ -253,19 +253,27 @@ func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handle
 				return false
 			}
 
-			if u.Scheme != "https" {
-				log.Warnf("non-https scheme: %s - blocking origin: %s", u.Scheme, origin)
-				return false
-			}
-
 			// Ensure the origin is in our allowed list
 			allowedOrigin := stringInSlice(u.Hostname(), allowedOrigins)
 			if allowedOrigin {
-				log.Debugf("origin %s is allowed", u.Hostname())
-			} else {
-				log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
+				// localhost with HTTP is allowed
+				if strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "http" {
+					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					return true
+				}
+
+				// non-localhost with HTTPS is allowed
+				if !strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "https" {
+					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					return true
+				}
+
+				log.Debugf("origin %s with protocol %s is NOT allowed", u.Hostname(), u.Scheme)
+				return false
 			}
-			return allowedOrigin
+
+			log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
+			return false
 		},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: false,
