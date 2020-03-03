@@ -174,7 +174,7 @@ provider:
 
   stackTags:
     stage: ${self:provider.stage}
-    project: ${self:custom.project}
+    project: "EasyCLA"
     Product: "EasyCLA"
     ManagedBy: "Serverless CloudFormation"
     SericeType: "EasyCLA"
