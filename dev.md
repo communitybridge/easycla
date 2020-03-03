@@ -212,10 +212,10 @@ common data models:
 - github.com/LF-Engineering/lfx-kit (authorization library)
 - github.com/LF-Engineering/lfx-models (common data models)
 
-The near-term plan is to migrate these priavte libraries to the 
+The near-term plan is to migrate these private libraries to the 
 github.com/communitybridge organization as public repositories.
 
-Until that time, each user needs to request access to this repository 
+Until that time, each user needs to request access to these repositories 
 and create/update the following file: `~/.gitconfig` to include the following:
 
 ```code
