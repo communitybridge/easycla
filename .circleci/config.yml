@@ -237,6 +237,7 @@ jobs:
             echo "Directory: $(pwd)"
             yarn install
 
+            if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
             if [[ ! -f serverless-authorizer.yml ]]; then echo "Missing serverless-authorizer.yml file. Exiting..."; exit 1; fi
             yarn sls deploy --force --stage ${STAGE} --region us-east-1
@@ -246,9 +247,21 @@ jobs:
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
 
+            # --------------------------------------------------------------
+            ## Debug to confirm the binary files were restored
+            echo "Directory: ~/"
+            ls -alF ~/
+            echo "Directory: ~/cla-backend-go/"
+            ls -alF ~/cla-backend-go/
+            ## End Debug
+            # --------------------------------------------------------------
+
+            cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend-go/
+            echo "Directory: ~/project/cla-backend-go/"
             ls -alF ~/project/cla-backend-go/
             pushd ~/project/cla-backend-go
             echo "Directory: $(pwd)"
+            if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
             yarn install
 
             # Deploy to us-east-2
