@@ -1,13 +1,17 @@
 {
-    "name": "aws-typescript",
-    "devDependencies": {
-        "@types/node": "^8.0.0"
-    },
-    "dependencies": {
-        "@pulumi/aws": "^1.0.0",
-        "@pulumi/awsx": "^0.18.10",
-        "@pulumi/pulumi": "^1.0.0",
-        "aws-sdk": "^2.623.0",
-        "commander": "^4.1.1"
-    }
+  "name": "easycla-infra",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "The Linux Foundation",
+  "devDependencies": {
+    "@types/node": "^8.0.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^1.0.0",
+    "@pulumi/awsx": "^0.18.10",
+    "@pulumi/pulumi": "^1.0.0",
+    "aws-sdk": "^2.623.0",
+    "bluebird": "^3.7.2",
+    "commander": "^4.1.1"
+  }
 }
