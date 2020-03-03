@@ -14,7 +14,7 @@ import (
 func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 	api.MetricsGetMetricsHandler = metrics.GetMetricsHandlerFunc(
 		func(params metrics.GetMetricsParams, user *auth.User) middleware.Responder {
-			// TODO: Need to inspect the auth.User roles/permissions to confirm they can query the metrics
+			// For now, any authenticated user can see the metrics
 			result, err := service.GetMetrics(v1MetricsOps.GetMetricsParams{HTTPRequest: params.HTTPRequest})
 			if err != nil {
 				return metrics.NewGetMetricsBadRequest().WithPayload(errorResponse(err))
