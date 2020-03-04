@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -163,10 +162,10 @@ func newProjectMetrics() *ProjectMetrics {
 }
 
 type ClaManagersDistribution struct {
-	OneClaManager        int
-	TwoClaManager        int
-	ThreeClaManager      int
-	FourOrMoreClaManager int
+	OneClaManager        int `json:"one_cla_manager"`
+	TwoClaManager        int `json:"two_cla_manager"`
+	ThreeClaManager      int `json:"three_cla_manager"`
+	FourOrMoreClaManager int `json:"four_or_more_cla_manager"`
 }
 
 func increaseCountIfNotPresent(cacheData map[string]interface{}, count *int, key string) {
@@ -301,6 +300,7 @@ func getClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
 }
 
 func (repo *repo) processSignaturesTable(metrics *Metrics) error {
+	log.Println("processing signatures table")
 	filter := expression.Name("signature_signed").Equal(expression.Value(true))
 	projection := expression.NamesList(
 		expression.Name("signature_reference_id"),
@@ -347,7 +347,6 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
-			fmt.Println("processing", results.LastEvaluatedKey["signature_id"])
 			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			break
@@ -358,6 +357,7 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 }
 
 func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
+	log.Println("processing repositories table")
 	projection := expression.NamesList(
 		expression.Name("repository_project_id"),
 	)
@@ -396,7 +396,6 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
-			fmt.Println("processing", results.LastEvaluatedKey["signature_id"])
 			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			break
@@ -418,8 +417,117 @@ func (repo *repo) getMetrics() (*Metrics, error) {
 		return nil, err
 	}
 	_, metrics.CalculatedAt = utils.CurrentTime()
-	fmt.Println("GetMetrics took time", time.Since(t).String())
+	log.Println("GetMetrics took time", time.Since(t).String())
 	return metrics, nil
+}
+
+func (repo *repo) saveMetrics(metrics *Metrics) error {
+	t := time.Now()
+	err := repo.saveTotalMetris(metrics.TotalMetrics)
+	if err != nil {
+		return err
+	}
+	err = repo.saveCompaniesMetrics(metrics.CompanyMetrics)
+	if err != nil {
+		return err
+	}
+	err = repo.saveProjectMetrics(metrics.ProjectMetrics)
+	if err != nil {
+		return err
+	}
+	err = repo.saveClaManagerDistribution(metrics.ClaManagersDistribution)
+	if err != nil {
+		return err
+	}
+	log.Printf("save metrics took :%s \n", time.Since(t).String())
+	return nil
+}
+
+func addIdTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricType string) {
+	_, ctime := utils.CurrentTime()
+	utils.AddStringAttribute(item, "id", id)
+	utils.AddStringAttribute(item, "metric_type", metricType)
+	utils.AddStringAttribute(item, "created_at", ctime)
+}
+
+func (repo *repo) saveTotalMetris(tm *TotalMetrics) error {
+	log.Println("saving total_metrics")
+	av, err := dynamodbattribute.MarshalMap(tm)
+	if err != nil {
+		return err
+	}
+	addIdTypeTime(av, "total_metrics", "total_metrics")
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(repo.metricTableName),
+	})
+	if err != nil {
+		log.Error("cannot put total_metrics in dynamodb", err)
+		return err
+	}
+	return nil
+}
+
+func (repo *repo) saveCompaniesMetrics(companyMetrics *CompanyMetrics) error {
+	t := time.Now()
+	log.Println("saving company_metrics")
+	for id, cm := range companyMetrics.CompanyMetrics {
+		av, err := dynamodbattribute.MarshalMap(cm)
+		if err != nil {
+			return err
+		}
+		addIdTypeTime(av, id, "company_metric")
+		_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+			Item:      av,
+			TableName: aws.String(repo.metricTableName),
+		})
+		if err != nil {
+			log.Printf("cannot put company_metric in dynamodb, metric = %v, error = %s\n", cm, err.Error())
+			return err
+		}
+	}
+	log.Printf("saving company_metrics took :%s \n", time.Since(t).String())
+	return nil
+}
+
+func (repo *repo) saveClaManagerDistribution(cmd *ClaManagersDistribution) error {
+	log.Println("saving cla_managers_distribution")
+	av, err := dynamodbattribute.MarshalMap(cmd)
+	if err != nil {
+		return err
+	}
+	addIdTypeTime(av, "cla_managers_distribution", "cla_managers_distribution")
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(repo.metricTableName),
+	})
+	if err != nil {
+		log.Printf("cannot put cla_managers_distribution in dynamodb, metric = %v, error = %s\n", cmd, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
+	t := time.Now()
+	log.Println("saving project_metrics")
+	for id, cm := range projectMetrics.ProjectMetrics {
+		av, err := dynamodbattribute.MarshalMap(cm)
+		if err != nil {
+			return err
+		}
+		addIdTypeTime(av, id, "project_metric")
+		_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+			Item:      av,
+			TableName: aws.String(repo.metricTableName),
+		})
+		if err != nil {
+			log.Printf("cannot put project_metric in dynamodb, metric = %v, error = %s\n", cm, err.Error())
+			return err
+		}
+	}
+	log.Printf("saving project_metrics took :%s \n", time.Since(t).String())
+	return nil
 }
 
 func (repo *repo) CalculateAndSaveMetrics() error {
@@ -427,10 +535,9 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 	if err != nil {
 		return err
 	}
-	metricString, err := json.Marshal(m)
+	err = repo.saveMetrics(m)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(metricString))
 	return nil
 }
