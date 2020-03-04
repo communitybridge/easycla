@@ -16,6 +16,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
 	v2Metrics "github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 	v2Version "github.com/communitybridge/easycla/cla-backend-go/v2/version"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
@@ -23,6 +24,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
+	v2Project "github.com/communitybridge/easycla/cla-backend-go/v2/project"
 
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
 
@@ -195,6 +197,7 @@ func server(localMode bool) http.Handler {
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
 	project.Configure(api, projectService)
+	v2Project.Configure(v2API, projectService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
@@ -204,6 +207,7 @@ func server(localMode bool) http.Handler {
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	onboard.Configure(api, onboardService, eventsService)
 	docs.Configure(api)
+	v2Docs.Configure(v2API)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
