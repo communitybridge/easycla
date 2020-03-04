@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,6 +17,10 @@ import (
 
 type Repository interface {
 	CalculateAndSaveMetrics() error
+	GetClaManagerDistribution() (*ClaManagersDistribution, error)
+	GetTotalCountMetrics() (*TotalMetrics, error)
+	GetCompanyMetrics() ([]*CompanyMetric, error)
+	GetProjectMetrics() ([]*ProjectMetric, error)
 }
 
 type repo struct {
@@ -62,36 +67,45 @@ type Metrics struct {
 }
 
 type TotalMetrics struct {
-	CorporateContributorsCount  int                    `json:"corporate_contributors_count"`
-	CorporateContributors       map[string]interface{} `json:"-"`
-	IndividualContributorsCount int                    `json:"individual_contributors_count"`
-	IndividualContributors      map[string]interface{} `json:"-"`
-	ClaManagersCount            int                    `json:"cla_managers_count"`
-	ClaManagers                 map[string]interface{} `json:"-"`
-	ContributorsCount           int                    `json:"contributors_count"`
-	Contributors                map[string]interface{} `json:"-"`
+	CorporateContributorsCount  int `json:"corporate_contributors_count"`
+	IndividualContributorsCount int `json:"individual_contributors_count"`
+	ClaManagersCount            int `json:"cla_managers_count"`
+	ContributorsCount           int `json:"contributors_count"`
+	corporateContributors       map[string]interface{}
+	individualContributors      map[string]interface{}
+	claManagers                 map[string]interface{}
+	contributors                map[string]interface{}
 }
 
 type CompanyMetric struct {
-	CompanyName                string                 `json:"company_name"`
-	ProjectCount               int                    `json:"project_count"`
-	CorporateContributorsCount int                    `json:"corporate_contributors_count"`
-	CorporateContributors      map[string]interface{} `json:"-"`
-	ClaManagersCount           int                    `json:"cla_managers_count"`
-	ClaManagers                map[string]interface{} `json:"-"`
+	ID                         string `json:"id"`
+	CompanyName                string `json:"company_name"`
+	ProjectCount               int    `json:"project_count"`
+	CorporateContributorsCount int    `json:"corporate_contributors_count"`
+	ClaManagersCount           int    `json:"cla_managers_count"`
+	corporateContributors      map[string]interface{}
+	claManagers                map[string]interface{}
 }
 
 type ProjectMetric struct {
-	CompaniesCount              int                    `json:"companies_count"`
-	Companies                   map[string]interface{} `json:"-"`
-	ClaManagersCount            int                    `json:"cla_managers_count"`
-	ClaManagers                 map[string]interface{} `json:"-"`
-	CorporateContributorsCount  int                    `json:"corporate_contributors_count"`
-	CorporateContributors       map[string]interface{} `json:"-"`
-	IndividualContributorsCount int                    `json:"individual_contributors_count"`
-	IndividualContributors      map[string]interface{} `json:"-"`
-	TotalContributorsCount      int                    `json:"total_contributors_count"`
-	RepositoriesCount           int                    `json:"repositories_count"`
+	ID                          string `json:"id"`
+	CompaniesCount              int    `json:"companies_count"`
+	ClaManagersCount            int    `json:"cla_managers_count"`
+	CorporateContributorsCount  int    `json:"corporate_contributors_count"`
+	IndividualContributorsCount int    `json:"individual_contributors_count"`
+	TotalContributorsCount      int    `json:"total_contributors_count"`
+	RepositoriesCount           int    `json:"repositories_count"`
+	companies                   map[string]interface{}
+	claManagers                 map[string]interface{}
+	corporateContributors       map[string]interface{}
+	individualContributors      map[string]interface{}
+}
+
+type ClaManagersDistribution struct {
+	OneClaManager        int `json:"one_cla_manager"`
+	TwoClaManager        int `json:"two_cla_manager"`
+	ThreeClaManager      int `json:"three_cla_manager"`
+	FourOrMoreClaManager int `json:"four_or_more_cla_manager"`
 }
 
 func newMetrics() *Metrics {
@@ -106,13 +120,13 @@ func newMetrics() *Metrics {
 func newTotalMetrics() *TotalMetrics {
 	return &TotalMetrics{
 		CorporateContributorsCount:  0,
-		CorporateContributors:       make(map[string]interface{}),
+		corporateContributors:       make(map[string]interface{}),
 		IndividualContributorsCount: 0,
-		IndividualContributors:      make(map[string]interface{}),
+		individualContributors:      make(map[string]interface{}),
 		ClaManagersCount:            0,
-		ClaManagers:                 make(map[string]interface{}),
+		claManagers:                 make(map[string]interface{}),
 		ContributorsCount:           0,
-		Contributors:                make(map[string]interface{}),
+		contributors:                make(map[string]interface{}),
 	}
 }
 
@@ -120,9 +134,9 @@ func newCompanyMetric() *CompanyMetric {
 	return &CompanyMetric{
 		ProjectCount:               0,
 		CorporateContributorsCount: 0,
-		CorporateContributors:      make(map[string]interface{}),
+		corporateContributors:      make(map[string]interface{}),
 		ClaManagersCount:           0,
-		ClaManagers:                make(map[string]interface{}),
+		claManagers:                make(map[string]interface{}),
 	}
 }
 
@@ -139,13 +153,13 @@ func newCompanyMetrics() *CompanyMetrics {
 func newProjectMetric() *ProjectMetric {
 	return &ProjectMetric{
 		CompaniesCount:              0,
-		Companies:                   make(map[string]interface{}),
+		companies:                   make(map[string]interface{}),
 		ClaManagersCount:            0,
-		ClaManagers:                 make(map[string]interface{}),
+		claManagers:                 make(map[string]interface{}),
 		CorporateContributorsCount:  0,
-		CorporateContributors:       make(map[string]interface{}),
+		corporateContributors:       make(map[string]interface{}),
 		IndividualContributorsCount: 0,
-		IndividualContributors:      make(map[string]interface{}),
+		individualContributors:      make(map[string]interface{}),
 		TotalContributorsCount:      0,
 		RepositoriesCount:           0,
 	}
@@ -159,13 +173,6 @@ func newProjectMetrics() *ProjectMetrics {
 	return &ProjectMetrics{
 		ProjectMetrics: make(map[string]*ProjectMetric),
 	}
-}
-
-type ClaManagersDistribution struct {
-	OneClaManager        int `json:"one_cla_manager"`
-	TwoClaManager        int `json:"two_cla_manager"`
-	ThreeClaManager      int `json:"three_cla_manager"`
-	FourOrMoreClaManager int `json:"four_or_more_cla_manager"`
 }
 
 func increaseCountIfNotPresent(cacheData map[string]interface{}, count *int, key string) {
@@ -204,16 +211,16 @@ func (cm *TotalMetrics) processSignature(sig *ItemSignature, sigType int) {
 	switch sigType {
 	case CclaSignature:
 		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(cm.ClaManagers, &cm.ClaManagersCount, acl)
+			increaseCountIfNotPresent(cm.claManagers, &cm.ClaManagersCount, acl)
 		}
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(cm.CorporateContributors, &cm.CorporateContributorsCount, userID)
-		increaseCountIfNotPresent(cm.Contributors, &cm.ContributorsCount, userID)
+		increaseCountIfNotPresent(cm.corporateContributors, &cm.CorporateContributorsCount, userID)
+		increaseCountIfNotPresent(cm.contributors, &cm.ContributorsCount, userID)
 	case IclaSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(cm.IndividualContributors, &cm.IndividualContributorsCount, userID)
-		increaseCountIfNotPresent(cm.Contributors, &cm.ContributorsCount, userID)
+		increaseCountIfNotPresent(cm.individualContributors, &cm.IndividualContributorsCount, userID)
+		increaseCountIfNotPresent(cm.contributors, &cm.ContributorsCount, userID)
 	}
 }
 
@@ -232,7 +239,7 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 		}
 		m.ProjectCount++
 		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(m.ClaManagers, &m.ClaManagersCount, acl)
+			increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, acl)
 		}
 	case EmployeeSignature:
 		companyID := sig.SignatureUserCompanyID
@@ -242,7 +249,7 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 			cm.CompanyMetrics[companyID] = m
 		}
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(m.CorporateContributors, &m.CorporateContributorsCount, userID)
+		increaseCountIfNotPresent(m.corporateContributors, &m.CorporateContributorsCount, userID)
 	}
 }
 
@@ -256,16 +263,16 @@ func (pm *ProjectMetrics) processSignature(sig *ItemSignature, sigType int) {
 	switch sigType {
 	case CclaSignature:
 		companyID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(m.Companies, &m.CompaniesCount, companyID)
+		increaseCountIfNotPresent(m.companies, &m.CompaniesCount, companyID)
 		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(m.ClaManagers, &m.ClaManagersCount, acl)
+			increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, acl)
 		}
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(m.CorporateContributors, &m.CorporateContributorsCount, userID)
+		increaseCountIfNotPresent(m.corporateContributors, &m.CorporateContributorsCount, userID)
 	case IclaSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(m.IndividualContributors, &m.IndividualContributorsCount, userID)
+		increaseCountIfNotPresent(m.individualContributors, &m.IndividualContributorsCount, userID)
 	}
 	m.TotalContributorsCount = m.IndividualContributorsCount + m.CorporateContributorsCount
 }
@@ -405,7 +412,7 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 	return nil
 }
 
-func (repo *repo) getMetrics() (*Metrics, error) {
+func (repo *repo) calculateMetrics() (*Metrics, error) {
 	metrics := newMetrics()
 	t := time.Now()
 	err := repo.processSignaturesTable(metrics)
@@ -531,7 +538,7 @@ func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
 }
 
 func (repo *repo) CalculateAndSaveMetrics() error {
-	m, err := repo.getMetrics()
+	m, err := repo.calculateMetrics()
 	if err != nil {
 		return err
 	}
@@ -540,4 +547,148 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 		return err
 	}
 	return nil
+}
+
+func (repo *repo) GetClaManagerDistribution() (*ClaManagersDistribution, error) {
+	id := "cla_managers_distribution"
+	metricType := "cla_managers_distribution"
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(repo.metricTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+			"metric_type": {
+				S: aws.String(metricType),
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Item) == 0 {
+		return nil, errors.New("cla manager distribution not found")
+	}
+	var out ClaManagersDistribution
+	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (repo *repo) GetTotalCountMetrics() (*TotalMetrics, error) {
+	id := "total_metrics"
+	metricType := "total_metrics"
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(repo.metricTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+			"metric_type": {
+				S: aws.String(metricType),
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Item) == 0 {
+		return nil, errors.New("total count metrics not found")
+	}
+	var out TotalMetrics
+	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (repo *repo) GetCompanyMetrics() ([]*CompanyMetric, error) {
+
+	keyCondition := expression.Key("metric_type").Equal(expression.Value("company_metric"))
+
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCondition).Build()
+	if err != nil {
+		log.Warnf("error building expression for company metric scan, error: %v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		TableName:                 aws.String(repo.metricTableName),
+	}
+
+	var companyMetrics []*CompanyMetric
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving company metrics, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		var companyMetricsTmp []*CompanyMetric
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &companyMetricsTmp)
+		if err != nil {
+			log.Warnf("error unmarshalling company metrics from database. error: %v", err)
+			return nil, err
+		}
+		companyMetrics = append(companyMetrics, companyMetricsTmp...)
+
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return companyMetrics, nil
+}
+
+func (repo *repo) GetProjectMetrics() ([]*ProjectMetric, error) {
+
+	keyCondition := expression.Key("metric_type").Equal(expression.Value("project_metric"))
+
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCondition).Build()
+	if err != nil {
+		log.Warnf("error building expression for company metric scan, error: %v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		TableName:                 aws.String(repo.metricTableName),
+	}
+
+	var projectMetrics []*ProjectMetric
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving project metrics, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		var projectMetricsTmp []*ProjectMetric
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &projectMetricsTmp)
+		if err != nil {
+			log.Warnf("error unmarshalling project metrics from database. error: %v", err)
+			return nil, err
+		}
+		projectMetrics = append(projectMetrics, projectMetricsTmp...)
+
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return projectMetrics, nil
 }
