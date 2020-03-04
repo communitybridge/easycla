@@ -150,11 +150,6 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Get User by name handler
 	api.UsersGetUserByUserNameHandler = users.GetUserByUserNameHandlerFunc(func(params users.GetUserByUserNameParams, claUser *user.CLAUser) middleware.Responder {
-		// Make sure we have good non-empty parameters
-		if claUser.UserID == "" {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersGetUserByUserNameHandler - user %+v not authorized to get users - missing UserID", claUser)))
-		}
 
 		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {
