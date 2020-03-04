@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -21,6 +20,8 @@ type Repository interface {
 	GetTotalCountMetrics() (*TotalCountMetrics, error)
 	GetCompanyMetrics() ([]*CompanyMetric, error)
 	GetProjectMetrics() ([]*ProjectMetric, error)
+	GetCompanyMetric(companyID string) (*CompanyMetric, error)
+	GetProjectMetric(projectID string) (*ProjectMetric, error)
 }
 
 type repo struct {
@@ -560,25 +561,8 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 }
 
 func (repo *repo) GetClaManagerDistribution() (*ClaManagersDistribution, error) {
-	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(repo.metricTableName),
-		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(IDClaManagerDistribution),
-			},
-			"metric_type": {
-				S: aws.String(MetricTypeClaManagerDistribution),
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(result.Item) == 0 {
-		return nil, errors.New("cla manager distribution not found")
-	}
 	var out ClaManagersDistribution
-	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+	err := repo.getMetricById(IDClaManagerDistribution, MetricTypeClaManagerDistribution, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -586,25 +570,8 @@ func (repo *repo) GetClaManagerDistribution() (*ClaManagersDistribution, error) 
 }
 
 func (repo *repo) GetTotalCountMetrics() (*TotalCountMetrics, error) {
-	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(repo.metricTableName),
-		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(IDTotalCount),
-			},
-			"metric_type": {
-				S: aws.String(MetricTypeClaManagerDistribution),
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(result.Item) == 0 {
-		return nil, errors.New("total count metrics not found")
-	}
 	var out TotalCountMetrics
-	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+	err := repo.getMetricById(IDTotalCount, MetricTypeTotalCount, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -697,4 +664,46 @@ func (repo *repo) GetProjectMetrics() ([]*ProjectMetric, error) {
 		}
 	}
 	return projectMetrics, nil
+}
+func (repo *repo) GetCompanyMetric(companyID string) (*CompanyMetric, error) {
+	var out CompanyMetric
+	err := repo.getMetricById(companyID, MetricTypeCompany, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (repo *repo) GetProjectMetric(projectID string) (*ProjectMetric, error) {
+	var out ProjectMetric
+	err := repo.getMetricById(projectID, MetricTypeProject, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (repo *repo) getMetricById(id string, metricType string, out interface{}) error {
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(repo.metricTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+			"metric_type": {
+				S: aws.String(metricType),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if len(result.Item) == 0 {
+		return fmt.Errorf("metric with id:%s metric_type:%s not found", id, metricType)
+	}
+	err = dynamodbattribute.UnmarshalMap(result.Item, out)
+	if err != nil {
+		return err
+	}
+	return nil
 }
