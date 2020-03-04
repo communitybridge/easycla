@@ -61,7 +61,7 @@ paths:
   /api-docs:
     get:
       security: []
-      summary: Get swagger documentation
+      summary: API documentation
       operationId: getDoc
       produces:
         - text/html
@@ -74,7 +74,7 @@ paths:
   /swagger.json:
     get:
       security: []
-      summary: Get swagger JSON
+      summary: Swagger API as JSON
       operationId: getSwagger
       produces:
         - application/json
@@ -86,8 +86,8 @@ paths:
 
   /metrics:
     get:
-      summary: Get metrics
-      description: Returns metrics
+      summary: Get EasyCLA Metrics
+      description: Returns EasyCLA Metrics
       security:
         - OauthSecurity: []
       operationId: getMetrics
@@ -105,6 +105,179 @@ paths:
       tags:
         - metrics
 
+  # Project Service
+  /project:
+    post:
+      summary: Create an EasyCLA CLA Group
+      description: Creates a new CLA Group within the EasyCLA system.
+      security:
+        - OauthSecurity: []
+      operationId: createProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - project
+    put:
+      summary: Update Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: updateProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+    get:
+      summary: Get Projects
+      security:
+        - OauthSecurity: []
+      operationId: getProjects
+      parameters:
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/fullMatch'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - project
+
+  /project/{projectSfdcId}:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+    get:
+      summary: Get Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: getProjectById
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+    delete:
+      summary: Delete Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: deleteProjectById
+      responses:
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/metrics:
+    get:
+      summary: Get Project Metrics
+      security:
+        - OauthSecurity: []
+      operationId: getProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/name/{projectName}:
+    get:
+      summary: Get Project By Name
+      description: Returns the project object when provided the project name - exact match
+      parameters:
+        - name: projectName
+          in: path
+          type: string
+          required: true
+      security:
+        - OauthSecurity: []
+      operationId: getProjectByName
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -118,14 +291,52 @@ responses:
     description: Insufficient privilege to execute action
     schema:
       $ref: '#/definitions/error-response'
-  #not-found:
-  #  description: Not found
-  #  schema:
-  #    $ref: '#/definitions/error-response'
-  #conflict:
-  #  description: Duplicate Resource
-  #  schema:
-  #    $ref: '#/definitions/error-response'
+  not-found:
+    description: Not found
+    schema:
+      $ref: '#/definitions/error-response'
+  conflict:
+    description: Duplicate Resource
+    schema:
+      $ref: '#/definitions/error-response'
+
+# Common parameters
+parameters:
+  pageSize:
+    name: pageSize
+    description: The maximum number of results per page, value must be a positive integer value
+    in: query
+    type: integer
+    required: false
+    minimum: 0
+    exclusiveMinimum: true
+  searchField:
+    name: searchField
+    description: The optional user name filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  searchTerm:
+    name: searchTerm
+    description: The optional search filter
+    in: query
+    type: string
+    required: false
+  fullMatch:
+    name: fullMatch
+    in: query
+    type: boolean
+    default: false
+    required: false
+  nextKey:
+    name: nextKey
+    description: The next key to scan - used as a page offset for scanning batches of records
+    in: query
+    type: string
+    required: false
+    # UUID v4 regex
+    # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
 
 definitions:
   version:
@@ -229,10 +440,13 @@ definitions:
     description: Project Metrics
     properties:
       totalCount:
+        description: The total number of projects
         type: integer
         format: int64
+        example: 123
         x-omitempty: false
       projects:
+        description: A list of projects
         type: array
         x-omitempty: false
         items:
@@ -253,10 +467,12 @@ definitions:
     properties:
       projectName:
         description: the project name
+        example: "CNCF"
         type: string
       projectManagerCount:
         description: A count of project managers
         type: integer
+        example: 6
         format: int64
         x-omitempty: false
     # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
@@ -274,10 +490,13 @@ definitions:
     description: Companies Metrics
     properties:
       totalCount:
+        description: The total number of companies
         type: integer
         format: int64
+        example: 621
         x-omitempty: false
       companies:
+        description: The company list
         type: array
         x-omitempty: false
         items:
@@ -301,9 +520,10 @@ definitions:
         example: Acme, Inc.
         type: string
       companyManagerCount:
-        description: A count of company managers
+        description: The number of company managers for this company
         type: integer
         format: int64
+        example: 12
         x-omitempty: false
     # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
     # Imported package and type alias may be specified as options
@@ -320,8 +540,10 @@ definitions:
     description: Repository Metrics
     properties:
       totalCount:
+        description: The total number of repositories managed by EasyCLA
         type: integer
         format: int64
+        example: 42
         x-omitempty: false
     # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
     # Imported package and type alias may be specified as options
@@ -338,8 +560,10 @@ definitions:
     description: User Metrics
     properties:
       totalCount:
+        description: The total number of users managed by EasyCLA
         type: integer
         format: int64
+        example: 394
         x-omitempty: false
     # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
     # Imported package and type alias may be specified as options
@@ -356,28 +580,40 @@ definitions:
     description: Signature Metrics
     properties:
       count:
+        description: The total number of signatures managed by EasyCLA
         type: integer
         format: int64
+        example: 10939
         x-omitempty: false
       cclaCount:
+        description: The total number of Corporate Signatures managed by EasyCLA
         type: integer
         format: int64
+        example: 622
         x-omitempty: false
       employeeCount:
+        description: The total number of Employee Signatures managed by EasyCLA
         type: integer
         format: int64
+        example: 1862
         x-omitempty: false
       iclaCount:
+        description: The total number of Individual Contributor Signatures managed by EasyCLA
         type: integer
         format: int64
+        example: 8453
         x-omitempty: false
       claManagerCount:
+        description: The total number of CLA Managers managed by EasyCLA
         type: integer
         format: int64
+        example: 1146
         x-omitempty: false
       claManagerUniqueCount:
+        description: The total number of unique CLA Managers managed by EasyCLA
         type: integer
         format: int64
+        example: 1014
         x-omitempty: false
     # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
     # Imported package and type alias may be specified as options
@@ -387,6 +623,78 @@ definitions:
         alias: "v1SignatureMetrics"
       type: "SignatureMetrics"
 
+  projects:
+    type: object
+    x-nullable: false
+    title: Projects
+    description: A list of projects
+    properties:
+      lastKeyScanned:
+        type: string
+      pageSize:
+        type: integer
+      projects:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Projects"
+      type: "Projects"
+
+  project:
+    type: object
+    x-nullable: false
+    title: Project
+    description: EasyCLA CLA Group/Project data model
+    properties:
+      projectID:
+        description: the EasyCLA Group/Project internal ID
+        type: string
+      projectExternalID:
+        description: the EasyCLA Group/Project external ID
+        type: string
+      projectName:
+        description: the EasyCLA Group/Project Name
+        type: string
+      projectACL:
+        type: array
+        description: A list of user ID's authorized to make changes to the EasyCLA Group/Project
+        items:
+          type: string
+      projectCCLAEnabled:
+        description: CLA Group/Project flag to indicate if the Corporate/Company Contributor License Agreement is enabled
+        type: boolean
+        x-omitempty: false
+      projectICLAEnabled:
+        description: CLA Group/Project flag to indicate if the Individual Contributor License Agreement is enabled
+        type: boolean
+        x-omitempty: false
+      projectCCLARequiresICLA:
+        description: CLA Group/Project flag to indicate if the CCLA configuration also requires an ICLA
+        type: boolean
+        x-omitempty: false
+      dateCreated:
+        description: Date/time the record EasyCLA Group/Project was created
+        type: string
+      dateModified:
+        description: Date/time the record EasyCLA Group/Project was last modified
+        type: string
+      version:
+        description: EasyCLA Group/Project record version
+        type: string
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Project"
+      type: "Project"
+
   error-response:
     type: object
     x-nullable: false
@@ -394,6 +702,10 @@ definitions:
     description: Standard error format
     properties:
       Code:
+        description: The error code
+        example: "404"
         type: string
       Message:
+        description: The error message
+        example: "unable to find project Acme, Inc."
         type: string
