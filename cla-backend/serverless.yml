@@ -4,7 +4,7 @@ package:
   # Exclude all first - selectively add in lambda functions
   exclude:
     - auth/**
-    - ./backend_aws_lambda
+    - ./backend-aws-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -129,6 +129,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-initial-manager-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/external-company-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
@@ -199,7 +200,7 @@ functions:
 
   apiv3:
     runtime: go1.x
-    handler: backend_aws_lambda
+    handler: backend-aws-lambda
     events:
       - http:
           method: ANY
@@ -208,7 +209,7 @@ functions:
     package:
       individually: true
       include:
-        - ./backend_aws_lambda
+        - ./backend-aws-lambda
 
   apiv1:
     handler: wsgi_handler.handler
