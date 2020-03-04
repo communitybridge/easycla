@@ -4,20 +4,29 @@
 package project
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/LF-Engineering/lfx-kit/auth"
 
+	v1ProjectOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/project"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	v1Project "github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// errors
+var (
+	ErrProjectDoesNotExist = errors.New("project does not exist")
+	ErrProjectIDMissing    = errors.New("project id is missing")
+)
+
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.ClaAPI, service Service) {
-	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
+func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
+	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
 			log.Warnf("Create Project Failed - %s", msg)
@@ -81,9 +90,16 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Get Projects
-	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, user *auth.User) middleware.Responder {
 
-		projects, err := service.GetProjects(&params)
+		projects, err := service.GetProjects(&v1ProjectOps.GetProjectsParams{
+			HTTPRequest: params.HTTPRequest,
+			FullMatch:   params.FullMatch,
+			NextKey:     params.NextKey,
+			PageSize:    params.PageSize,
+			SearchField: params.SearchField,
+			SearchTerm:  params.SearchTerm,
+		})
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
 		}
@@ -92,7 +108,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Get Project By ID
-	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, user *auth.User) middleware.Responder {
 
 		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
@@ -106,7 +122,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Get Project By Name
-	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, user *auth.User) middleware.Responder {
 
 		projectModel, err := service.GetProjectByName(projectParams.ProjectName)
 		if err != nil {
@@ -120,7 +136,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Delete Project By ID
-	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
 		err := service.DeleteProject(projectParams.ProjectSfdcID)
 		if err != nil {
@@ -134,7 +150,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Update Project By ID
-	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, user *auth.User) middleware.Responder {
 		projectModel, err := service.UpdateProject(&projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
@@ -147,7 +163,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	})
 
 	// Project metrics
-	api.ProjectGetProjectMetricsHandler = project.GetProjectMetricsHandlerFunc(func(projectParams project.GetProjectMetricsParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectMetricsHandler = project.GetProjectMetricsHandlerFunc(func(projectParams project.GetProjectMetricsParams, user *auth.User) middleware.Responder {
 		projectMetrics, err := service.GetMetrics()
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
