@@ -32,7 +32,8 @@ var (
 type Repository interface {
 	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
-	GetProject(projectID string) (*models.Project, error)
+	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectByName(projectName string) (*models.Project, error)
 	GetExternalProject(projectExternalID string) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	DeleteProject(projectID string) error
@@ -173,8 +174,8 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	return projectModel, nil
 }
 
-// GetProject returns the project model associated for the specified projectID
-func (repo *repo) GetProject(projectID string) (*models.Project, error) {
+// GetProjectByID returns the project model associated for the specified projectID
+func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 	log.Debugf("GetProject - projectID: %s", projectID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	// This is the key we want to match
@@ -215,6 +216,62 @@ func (repo *repo) GetProject(projectID string) (*models.Project, error) {
 		log.Warnf("Project query returned more than one result using projectID: %s", projectID)
 	}
 
+	var dbModel DBProjectModel
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+	if err != nil {
+		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		return nil, err
+	}
+
+	// Convert the database model to an API response model
+	return repo.buildProjectModel(dbModel), nil
+}
+
+// GetProjectByName returns the project model associated for the specified project name
+func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) {
+	log.Debugf("GetProject - projectName: %s", projectName)
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("project_name").Equal(expression.Value(projectName))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for Project query, projectName: %s, error: %v",
+			projectName, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("project-name-search-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	results, queryErr := repo.dynamoDBClient.Query(queryInput)
+	if queryErr != nil {
+		log.Warnf("error retrieving project by projectName: %s, error: %v", projectName, queryErr)
+		return nil, queryErr
+	}
+
+	// Should only have one result
+	if *results.Count > 1 {
+		log.Warnf("Project scan by name returned more than one result using projectName: %s", projectName)
+	}
+
+	// Didn't find it...
+	if *results.Count == 0 {
+		log.Debugf("Project scan by name returned no results using projectName: %s", projectName)
+		return nil, nil
+	}
+
+	// Found it...
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
 	if err != nil {
@@ -370,7 +427,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 func (repo *repo) DeleteProject(projectID string) error {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
-	existingProject, getErr := repo.GetProject(projectID)
+	existingProject, getErr := repo.GetProjectByID(projectID)
 	if getErr != nil {
 		log.Warnf("delete - error locating the project id: %s, error: %+v", projectID, getErr)
 		return getErr
@@ -407,7 +464,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		return nil, ErrProjectIDMissing
 	}
 
-	existingProject, getErr := repo.GetProject(projectModel.ProjectID)
+	existingProject, getErr := repo.GetProjectByID(projectModel.ProjectID)
 	if getErr != nil {
 		log.Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
 		return nil, getErr
@@ -479,7 +536,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	// Read the updated record back from the DB and return - probably could
 	// just create/update a new model in memory and return it to make it fast,
 	// but this approach return exactly what the DB has
-	return repo.GetProject(projectModel.ProjectID)
+	return repo.GetProjectByID(projectModel.ProjectID)
 }
 
 // buildProjectModels converts the database response model into an API response data model

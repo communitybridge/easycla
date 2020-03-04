@@ -12,8 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/google/uuid"
 
-	"github.com/communitybridge/easycla/cla-backend-go/utils"
-
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -52,17 +50,17 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 
 // CreateUser creates a new user
 func (repo repository) CreateUser(user *models.User) (*models.User, error) {
-	putStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	theUUID, err := uuid.NewUUID()
 	if err != nil {
-		return &models.User{}, err
+		return nil, err
 	}
 	newUUID := theUUID.String()
 
 	// Set and add the attributes from the request
+	user.UserID = newUUID
 	attributes := map[string]*dynamodb.AttributeValue{
 		"user_id": {
 			S: aws.String(newUUID),
@@ -72,42 +70,55 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	attributes["admin"] = &dynamodb.AttributeValue{
 		BOOL: aws.Bool(user.Admin),
 	}
+
 	if user.UserExternalID != "" {
 		attributes["user_external_id"] = &dynamodb.AttributeValue{
 			S: aws.String(user.UserExternalID),
 		}
 	}
+
 	if user.GithubID != "" {
 		attributes["user_github_id"] = &dynamodb.AttributeValue{
 			S: aws.String(user.GithubID),
 		}
 	}
+
 	if user.GithubUsername != "" {
 		attributes["user_github_username"] = &dynamodb.AttributeValue{
 			S: aws.String(user.GithubUsername),
 		}
 	}
+
 	if user.LfEmail != "" {
 		attributes["lf_email"] = &dynamodb.AttributeValue{
 			S: aws.String(user.LfEmail),
 		}
 	}
+
 	if user.LfUsername != "" {
 		attributes["lf_username"] = &dynamodb.AttributeValue{
 			S: aws.String(user.LfUsername),
 		}
 	}
+
 	if user.Username != "" {
 		attributes["user_name"] = &dynamodb.AttributeValue{
 			S: aws.String(user.Username),
 		}
 	}
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	user.DateCreated = now
 	attributes["date_created"] = &dynamodb.AttributeValue{
-		S: aws.String(time.Now().UTC().Format(time.RFC3339)),
+		S: aws.String(now),
 	}
+
+	user.DateModified = now
 	attributes["date_modified"] = &dynamodb.AttributeValue{
-		S: aws.String(time.Now().UTC().Format(time.RFC3339)),
+		S: aws.String(now),
 	}
+
+	user.Version = "v1"
 	attributes["version"] = &dynamodb.AttributeValue{
 		S: aws.String("v1"),
 	}
@@ -126,7 +137,7 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
 				log.Warnf("dynamodb.ErrCodeConditionalCheckFailedException: %v", aerr.Error())
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-				log.Warnf("dynamodb.ErrCodeProvisionedThroughputExceededExceptio: %vn", aerr.Error())
+				log.Warnf("dynamodb.ErrCodeProvisionedThroughputExceededException: %vn", aerr.Error())
 			case dynamodb.ErrCodeResourceNotFoundException:
 				log.Warnf("dynamodb.ErrCodeResourceNotFoundException: %v", aerr.Error())
 			case dynamodb.ErrCodeItemCollectionSizeLimitExceededException:
@@ -145,18 +156,11 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 			// Message from an error.
 			log.Warnf(err.Error())
 		}
-		return &models.User{}, err
+		return nil, err
 	}
 
-	log.Debugf("AddUser put took: %v", utils.FmtDuration(time.Since(putStartTime)))
 	log.Debugf("Created new user: %+v", user)
-	userModel, err := repo.GetUserByUserName(user.Username, true)
-	if err != nil {
-		log.Warnf("Error locating new user after creation, user: %+v, error: %+v", user, err)
-	}
-	log.Debugf("Returning new user: %+v", userModel)
-
-	return userModel, err
+	return user, err
 }
 
 // Save saves the user model to the data store
