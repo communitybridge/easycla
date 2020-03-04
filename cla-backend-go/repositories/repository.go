@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	"github.com/labstack/gommon/log"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // Repository defines functions of Repositories

@@ -150,6 +150,7 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'project_id', type: 'S' },
         { name: 'project_external_id', type: 'S' },
+        { name: 'project_name', type: 'S' },
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -157,6 +158,11 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'external-project-index',
           hashKey: 'project_external_id',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'project-name-search-index',
+          hashKey: 'project_name',
           projectionType: 'ALL',
         },
       ],
