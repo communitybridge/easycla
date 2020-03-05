@@ -43,7 +43,7 @@ func init() {
 func handler(ctx context.Context, event events.CloudWatchEvent) {
 	err := metricsRepo.CalculateAndSaveMetrics()
 	if err != nil {
-		log.Fatal("Unable to save metrics in dynamodb")
+		log.Fatalf("Unable to save metrics in dynamodb. error = %s", err)
 	}
 }
 
