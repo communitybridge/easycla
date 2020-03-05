@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/labstack/gommon/log"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // EmailSender contains method to send email
