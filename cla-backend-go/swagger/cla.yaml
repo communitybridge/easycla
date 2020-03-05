@@ -1524,6 +1524,48 @@ paths:
       tags:
         - metrics
 
+  /metrics/cla-manager-distribution:
+    get:
+      summary: Get cla manager distribution for easycla
+      description: Returns cla manager distribution
+      security:
+        - OauthSecurity: []
+      operationId: getClaManagerDistribution
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-distribution'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/total-count:
+    get:
+      summary: Get total count metrics
+      description: Returns total count metrics
+      security:
+        - OauthSecurity: []
+      operationId: getTotalCount
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/total-count-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
 # Common parameters
 parameters:
   pageSize:
@@ -2516,6 +2558,42 @@ definitions:
       EventData:
         type: string
         description: data related to the event
+
+  cla-manager-distribution:
+    type: object
+    properties:
+      oneClaManager:
+        type: integer
+      twoClaManagers:
+        type: integer
+      threeClaManagers:
+        type: integer
+      fourOrMoreClaManagers:
+        type: integer
+      createdAt:
+        type: string
+    title: CLA manager distribution across companies
+
+  total-count-metrics:
+    type: object
+    properties:
+      corporateContributorsCount:
+        type: integer
+      individualContributorsCount:
+        type: integer
+      claManagersCount:
+        type: integer
+      contributorsCount:
+        type: integer
+      projectsCount:
+        type: integer
+      companiesCount:
+        type: integer
+      repositoriesCount:
+        type: integer
+      createdAt:
+        type: string
+    title: CLA total metrics
 
 responses:
   resource-deleted:

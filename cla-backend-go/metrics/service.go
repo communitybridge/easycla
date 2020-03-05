@@ -17,6 +17,8 @@ import (
 // Service interface defines function of Metrics service
 type Service interface {
 	GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error)
+	GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error)
+	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 }
 
 type service struct {
@@ -25,6 +27,7 @@ type service struct {
 	repositoriesRepo repositories.Repository
 	signatureRepo    signatures.SignatureRepository
 	projectRepo      project.Repository
+	metricsRepo      Repository
 }
 
 // NewService creates new instance of metrics service
@@ -34,6 +37,7 @@ func NewService(
 	repositoriesRepo repositories.Repository,
 	signatureRepo signatures.SignatureRepository,
 	projectRepo project.Repository,
+	metricsRepo Repository,
 ) Service {
 	return &service{
 		userRepo:         userRepo,
@@ -41,6 +45,7 @@ func NewService(
 		repositoriesRepo: repositoriesRepo,
 		signatureRepo:    signatureRepo,
 		projectRepo:      projectRepo,
+		metricsRepo:      metricsRepo,
 	}
 }
 
@@ -123,4 +128,35 @@ func (s *service) GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, 
 		out.Projects = *projectMetrics
 	}
 	return &out, nil
+}
+
+func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error) {
+	cmd, err := s.metricsRepo.GetClaManagerDistribution()
+	if err != nil {
+		return nil, err
+	}
+	return &models.ClaManagerDistribution{
+		FourOrMoreClaManagers: int64(cmd.FourOrMoreClaManager),
+		OneClaManager:         int64(cmd.OneClaManager),
+		ThreeClaManagers:      int64(cmd.ThreeClaManager),
+		TwoClaManagers:        int64(cmd.TwoClaManager),
+		CreatedAt:             cmd.CreatedAt,
+	}, nil
+}
+
+func (s *service) GetTotalCountMetrics() (*models.TotalCountMetrics, error) {
+	tmc, err := s.metricsRepo.GetTotalCountMetrics()
+	if err != nil {
+		return nil, err
+	}
+	return &models.TotalCountMetrics{
+		ClaManagersCount:            int64(tmc.ClaManagersCount),
+		ContributorsCount:           int64(tmc.ContributorsCount),
+		CorporateContributorsCount:  int64(tmc.CorporateContributorsCount),
+		CreatedAt:                   tmc.CreatedAt,
+		IndividualContributorsCount: int64(tmc.IndividualContributorsCount),
+		CompaniesCount:              tmc.CompaniesCount,
+		ProjectsCount:               tmc.ProjectsCount,
+		RepositoriesCount:           tmc.RepositoriesCount,
+	}, nil
 }

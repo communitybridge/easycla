@@ -18,6 +18,24 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return metrics.NewGetMetricsOK().WithPayload(result)
 		})
+
+	api.MetricsGetClaManagerDistributionHandler = metrics.GetClaManagerDistributionHandlerFunc(
+		func(params metrics.GetClaManagerDistributionParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.GetCLAManagerDistribution(params)
+			if err != nil {
+				return metrics.NewGetClaManagerDistributionBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetClaManagerDistributionOK().WithPayload(result)
+		})
+
+	api.MetricsGetTotalCountHandler = metrics.GetTotalCountHandlerFunc(
+		func(params metrics.GetTotalCountParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.GetTotalCountMetrics()
+			if err != nil {
+				return metrics.NewGetTotalCountBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetTotalCountOK().WithPayload(result)
+		})
 }
 
 type codedResponse interface {

@@ -90,10 +90,16 @@ type TotalCountMetrics struct {
 	IndividualContributorsCount int `json:"individual_contributors_count"`
 	ClaManagersCount            int `json:"cla_managers_count"`
 	ContributorsCount           int `json:"contributors_count"`
-	corporateContributors       map[string]interface{}
-	individualContributors      map[string]interface{}
-	claManagers                 map[string]interface{}
-	contributors                map[string]interface{}
+
+	ProjectsCount     int64 `json:"projects_count"`
+	RepositoriesCount int64 `json:"repositories_count"`
+	CompaniesCount    int64 `json:"companies_count"`
+
+	CreatedAt              string `json:"created_at"`
+	corporateContributors  map[string]interface{}
+	individualContributors map[string]interface{}
+	claManagers            map[string]interface{}
+	contributors           map[string]interface{}
 }
 
 // CompanyMetric contains all metrics related with particular company
@@ -103,6 +109,7 @@ type CompanyMetric struct {
 	ProjectCount               int    `json:"project_count"`
 	CorporateContributorsCount int    `json:"corporate_contributors_count"`
 	ClaManagersCount           int    `json:"cla_managers_count"`
+	CreatedAt                  string `json:"created_at"`
 	corporateContributors      map[string]interface{}
 	claManagers                map[string]interface{}
 }
@@ -116,6 +123,7 @@ type ProjectMetric struct {
 	IndividualContributorsCount int    `json:"individual_contributors_count"`
 	TotalContributorsCount      int    `json:"total_contributors_count"`
 	RepositoriesCount           int    `json:"repositories_count"`
+	CreatedAt                   string `json:"created_at"`
 	companies                   map[string]interface{}
 	claManagers                 map[string]interface{}
 	corporateContributors       map[string]interface{}
@@ -124,10 +132,11 @@ type ProjectMetric struct {
 
 // ClaManagersDistribution tells distribution of number of cla mangers associated with company
 type ClaManagersDistribution struct {
-	OneClaManager        int `json:"one_cla_manager"`
-	TwoClaManager        int `json:"two_cla_manager"`
-	ThreeClaManager      int `json:"three_cla_manager"`
-	FourOrMoreClaManager int `json:"four_or_more_cla_manager"`
+	OneClaManager        int    `json:"one_cla_manager"`
+	TwoClaManager        int    `json:"two_cla_manager"`
+	ThreeClaManager      int    `json:"three_cla_manager"`
+	FourOrMoreClaManager int    `json:"four_or_more_cla_manager"`
+	CreatedAt            string `json:"created_at"`
 }
 
 func newMetrics() *Metrics {
@@ -310,7 +319,7 @@ func (pm *ProjectMetrics) processRepositories(repo *ItemRepository) {
 	m.RepositoriesCount++
 }
 
-func getClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
+func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
 	var cmd ClaManagersDistribution
 	for _, companyMetric := range cm.CompanyMetrics {
 		switch companyMetric.ClaManagersCount {
@@ -382,7 +391,6 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 			break
 		}
 	}
-	metrics.ClaManagersDistribution = getClaManagerDistribution(metrics.CompanyMetrics)
 	return nil
 }
 
@@ -422,6 +430,7 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 		}
 
 		for _, r := range repos {
+			metrics.TotalCountMetrics.RepositoriesCount++
 			metrics.ProjectMetrics.processRepositories(r)
 		}
 
@@ -431,7 +440,26 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 			break
 		}
 	}
-	metrics.ClaManagersDistribution = getClaManagerDistribution(metrics.CompanyMetrics)
+	return nil
+}
+
+func (repo *repo) processProjectsTable(metrics *Metrics) error {
+	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	projectCount, err := repo.getItemCount(projectTableName)
+	if err != nil {
+		return err
+	}
+	metrics.TotalCountMetrics.ProjectsCount = projectCount
+	return nil
+}
+
+func (repo *repo) processCompaniesTable(metrics *Metrics) error {
+	companiesTableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	companiesCount, err := repo.getItemCount(companiesTableName)
+	if err != nil {
+		return err
+	}
+	metrics.TotalCountMetrics.CompaniesCount = companiesCount
 	return nil
 }
 
@@ -446,6 +474,15 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = repo.processProjectsTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	err = repo.processCompaniesTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	metrics.ClaManagersDistribution = calculateClaManagerDistribution(metrics.CompanyMetrics)
 	_, metrics.CalculatedAt = utils.CurrentTime()
 	log.Println("GetMetrics took time", time.Since(t).String())
 	return metrics, nil
@@ -718,4 +755,17 @@ func (repo *repo) getMetricByID(id string, metricType string, out interface{}) e
 		return err
 	}
 	return nil
+}
+
+func (repo *repo) getItemCount(tableName string) (int64, error) {
+	// How many total records do we have - may not be up-to-date as this value is updated only periodically
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of table %s, error: %v", tableName, err)
+		return 0, err
+	}
+	return *describeTableResult.Table.ItemCount, nil
 }
