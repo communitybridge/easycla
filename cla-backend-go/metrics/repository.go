@@ -14,6 +14,7 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// Repository provides methods for calculation,storage and retrieval of metrics
 type Repository interface {
 	CalculateAndSaveMetrics() error
 	GetClaManagerDistribution() (*ClaManagersDistribution, error)
@@ -30,6 +31,7 @@ type repo struct {
 	stage           string
 }
 
+// NewRepository creates new metrics repository
 func NewRepository(awsSession *session.Session, stage string) Repository {
 	return &repo{
 		dynamoDBClient:  dynamodb.New(awsSession),
@@ -38,6 +40,7 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
+// SignatureType constants
 const (
 	IclaSignature = iota
 	CclaSignature
@@ -45,6 +48,7 @@ const (
 	InvalidSignature
 )
 
+// MetricType constants and ID constants
 const (
 	MetricTypeTotalCount             = "total_count"
 	MetricTypeCompany                = "company"
@@ -55,6 +59,7 @@ const (
 	IDClaManagerDistribution = "cla_manager_distribution"
 )
 
+// ItemSignature represent item of signature table
 type ItemSignature struct {
 	SignatureReferenceID   string   `json:"signature_reference_id"`
 	SignatureReferenceName string   `json:"signature_reference_name"`
@@ -65,10 +70,12 @@ type ItemSignature struct {
 	SignatureProjectID     string   `json:"signature_project_id"`
 }
 
+// ItemRepository represent item of repositories table
 type ItemRepository struct {
 	RepositoryProjectID string `json:"repository_project_id"`
 }
 
+// Metrics contain all metrics related to easycla
 type Metrics struct {
 	TotalCountMetrics       *TotalCountMetrics       `json:"total_metrics"`
 	CompanyMetrics          *CompanyMetrics          `json:"company_metrics"`
@@ -77,6 +84,7 @@ type Metrics struct {
 	CalculatedAt            string                   `json:"calculated_at"`
 }
 
+// TotalCountMetrics contains all metrics related to total count
 type TotalCountMetrics struct {
 	CorporateContributorsCount  int `json:"corporate_contributors_count"`
 	IndividualContributorsCount int `json:"individual_contributors_count"`
@@ -88,6 +96,7 @@ type TotalCountMetrics struct {
 	contributors                map[string]interface{}
 }
 
+// CompanyMetric contains all metrics related with particular company
 type CompanyMetric struct {
 	ID                         string `json:"id"`
 	CompanyName                string `json:"company_name"`
@@ -98,6 +107,7 @@ type CompanyMetric struct {
 	claManagers                map[string]interface{}
 }
 
+// ProjectMetric contains all metrics related with particular project
 type ProjectMetric struct {
 	ID                          string `json:"id"`
 	CompaniesCount              int    `json:"companies_count"`
@@ -112,6 +122,7 @@ type ProjectMetric struct {
 	individualContributors      map[string]interface{}
 }
 
+// ClaManagersDistribution tells distribution of number of cla mangers associated with company
 type ClaManagersDistribution struct {
 	OneClaManager        int `json:"one_cla_manager"`
 	TwoClaManager        int `json:"two_cla_manager"`
@@ -151,6 +162,7 @@ func newCompanyMetric() *CompanyMetric {
 	}
 }
 
+// CompanyMetrics contain collection of all company metrics
 type CompanyMetrics struct {
 	CompanyMetrics map[string]*CompanyMetric
 }
@@ -176,6 +188,7 @@ func newProjectMetric() *ProjectMetric {
 	}
 }
 
+// ProjectMetrics contain collection of all project metrics
 type ProjectMetrics struct {
 	ProjectMetrics map[string]*ProjectMetric
 }
@@ -200,9 +213,8 @@ func signatureType(sig *ItemSignature) int {
 	if sig.SignatureType == "cla" {
 		if sig.SignatureUserCompanyID != "" {
 			return EmployeeSignature
-		} else {
-			return IclaSignature
 		}
+		return IclaSignature
 	}
 	return InvalidSignature
 }
@@ -461,7 +473,7 @@ func (repo *repo) saveMetrics(metrics *Metrics) error {
 	return nil
 }
 
-func addIdTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricType string) {
+func addIDTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricType string) {
 	_, ctime := utils.CurrentTime()
 	utils.AddStringAttribute(item, "id", id)
 	utils.AddStringAttribute(item, "metric_type", metricType)
@@ -474,7 +486,7 @@ func (repo *repo) saveTotalMetris(tm *TotalCountMetrics) error {
 	if err != nil {
 		return err
 	}
-	addIdTypeTime(av, IDTotalCount, MetricTypeTotalCount)
+	addIDTypeTime(av, IDTotalCount, MetricTypeTotalCount)
 	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:      av,
 		TableName: aws.String(repo.metricTableName),
@@ -494,7 +506,7 @@ func (repo *repo) saveCompaniesMetrics(companyMetrics *CompanyMetrics) error {
 		if err != nil {
 			return err
 		}
-		addIdTypeTime(av, id, MetricTypeCompany)
+		addIDTypeTime(av, id, MetricTypeCompany)
 		_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 			Item:      av,
 			TableName: aws.String(repo.metricTableName),
@@ -514,7 +526,7 @@ func (repo *repo) saveClaManagerDistribution(cmd *ClaManagersDistribution) error
 	if err != nil {
 		return err
 	}
-	addIdTypeTime(av, IDClaManagerDistribution, MetricTypeClaManagerDistribution)
+	addIDTypeTime(av, IDClaManagerDistribution, MetricTypeClaManagerDistribution)
 	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:      av,
 		TableName: aws.String(repo.metricTableName),
@@ -534,7 +546,7 @@ func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
 		if err != nil {
 			return err
 		}
-		addIdTypeTime(av, id, MetricTypeProject)
+		addIDTypeTime(av, id, MetricTypeProject)
 		_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 			Item:      av,
 			TableName: aws.String(repo.metricTableName),
@@ -562,7 +574,7 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 
 func (repo *repo) GetClaManagerDistribution() (*ClaManagersDistribution, error) {
 	var out ClaManagersDistribution
-	err := repo.getMetricById(IDClaManagerDistribution, MetricTypeClaManagerDistribution, &out)
+	err := repo.getMetricByID(IDClaManagerDistribution, MetricTypeClaManagerDistribution, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -571,7 +583,7 @@ func (repo *repo) GetClaManagerDistribution() (*ClaManagersDistribution, error) 
 
 func (repo *repo) GetTotalCountMetrics() (*TotalCountMetrics, error) {
 	var out TotalCountMetrics
-	err := repo.getMetricById(IDTotalCount, MetricTypeTotalCount, &out)
+	err := repo.getMetricByID(IDTotalCount, MetricTypeTotalCount, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +679,7 @@ func (repo *repo) GetProjectMetrics() ([]*ProjectMetric, error) {
 }
 func (repo *repo) GetCompanyMetric(companyID string) (*CompanyMetric, error) {
 	var out CompanyMetric
-	err := repo.getMetricById(companyID, MetricTypeCompany, &out)
+	err := repo.getMetricByID(companyID, MetricTypeCompany, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -676,14 +688,14 @@ func (repo *repo) GetCompanyMetric(companyID string) (*CompanyMetric, error) {
 
 func (repo *repo) GetProjectMetric(projectID string) (*ProjectMetric, error) {
 	var out ProjectMetric
-	err := repo.getMetricById(projectID, MetricTypeProject, &out)
+	err := repo.getMetricByID(projectID, MetricTypeProject, &out)
 	if err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (repo *repo) getMetricById(id string, metricType string, out interface{}) error {
+func (repo *repo) getMetricByID(id string, metricType string, out interface{}) error {
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.metricTableName),
 		Key: map[string]*dynamodb.AttributeValue{
