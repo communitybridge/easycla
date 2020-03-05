@@ -127,7 +127,43 @@ stages:
                 type: str
                 required: true
 
-  - name: Project get request with auth
+  - name: Project create request with auth with name conflict
+    request:
+      url: "{api_url}/v3/project"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        projectName: "dd test project"
+        projectExternalID: "abc123456"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+    response:
+      status_code: 409
+
+  - name: Project create request with auth with External ID conflict
+    request:
+      url: "{api_url}/v3/project"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        projectName: "dd test project not matching"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+    response:
+      status_code: 409
+
+  - name: Project get by ID request with auth
     request:
       url: "{api_url}/v3/project/{projectID:s}"
       method: GET
@@ -190,6 +226,131 @@ stages:
                 type: str
                 required: true
 
+  - name: Project get by External ID request with auth
+    request:
+      url: "{api_url}/v3/project/{projectExternalID:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectID: "{projectID:s}"
+        projectName: "dd test project"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+        dateCreated: "{dateCreated:s}"
+        dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
+
+  - name: Project get by name request with auth
+    request:
+      url: "{api_url}/v3/project/name/{projectName:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectID: "{projectID:s}"
+        projectName: "dd test project"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+        dateCreated: "{dateCreated:s}"
+        dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: true
+            mapping:
+              projectID:
+                type: str
+                required: true
+              projectExternalID:
+                type: str
+                required: true
+              projectName:
+                type: str
+                required: true
+              projectACL:
+                type: seq
+                required: true
+                sequence:
+                  - type: str
+                    required: true
+              projectICLAEnabled:
+                type: bool
+                required: true
+              projectCCLAEnabled:
+                type: bool
+                required: true
+              projectCCLARequiresICLA:
+                type: bool
+                required: true
+              dateCreated:
+                type: str
+                required: true
+              dateModified:
+                type: str
+                required: true
+              version:
+                type: str
+                required: true
   - name: Project update request with auth
     request:
       url: "{api_url}/v3/project"

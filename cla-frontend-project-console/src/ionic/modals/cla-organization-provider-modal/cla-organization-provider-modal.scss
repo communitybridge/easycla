@@ -1,6 +1,11 @@
 cla-organization-provider-modal {
   ion-item {
     position: relative;
+    .read-only {
+      text-overflow: inherit;
+      white-space: inherit;
+      color: #999;
+    }
   }
 
   .github-label {
