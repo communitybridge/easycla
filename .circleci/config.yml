@@ -142,6 +142,7 @@ jobs:
           command: |
             cd cla-backend-go
             make build-aws-lambda
+            make build-metrics-lambda
       - run:
           name: Test
           command: |
@@ -156,10 +157,12 @@ jobs:
           name: Move Binary
           command: |
             mv cla-backend-go ~/cla-backend-go
+            mv metrics-aws-lambda ~/cla-backend-go
       - persist_to_workspace:
           root: ~/
           paths:
             - cla-backend-go/backend-aws-lambda
+            - cla-backend-go/metrics-aws-lambda
 
   buildGoBackendDev:
     <<: *buildGoBackendAnchor
@@ -231,6 +234,7 @@ jobs:
 
             # Copy over the go backend binary to the common cla-backend folder (they share a single serverless.yml config)
             cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend/
+            cp ~/cla-backend-go/metrics-aws-lambda ~/project/cla-backend/
 
             ls -alF ~/project/cla-backend/
             pushd ~/project/cla-backend
@@ -238,6 +242,7 @@ jobs:
             yarn install
 
             if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
+            if [[ ! -f metrics-aws-lambda ]]; then echo "Missing metrics-aws-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
             if [[ ! -f serverless-authorizer.yml ]]; then echo "Missing serverless-authorizer.yml file. Exiting..."; exit 1; fi
             yarn sls deploy --force --stage ${STAGE} --region us-east-1
@@ -257,11 +262,13 @@ jobs:
             # --------------------------------------------------------------
 
             cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend-go/
+            cp ~/cla-backend-go/metrics-aws-lambda ~/project/cla-backend-go/
             echo "Directory: ~/project/cla-backend-go/"
             ls -alF ~/project/cla-backend-go/
             pushd ~/project/cla-backend-go
             echo "Directory: $(pwd)"
             if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
+            if [[ ! -f metrics-aws-lambda ]]; then echo "Missing metrics-aws-lambda binary file. Exiting..."; exit 1; fi
             yarn install
 
             # Deploy to us-east-2
