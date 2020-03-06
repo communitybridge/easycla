@@ -180,12 +180,6 @@ paths:
         - OauthSecurity:
             - user
       operationId: addUser
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/user'
-          required: true
       responses:
         '200':
           description: 'Success'
