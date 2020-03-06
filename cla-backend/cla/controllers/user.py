@@ -205,7 +205,7 @@ Click on the following link to navigate to the EasyCLA Corporate Console.
     event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}'\
                  f'{user.get_user_name()} <{user.get_user_email()}>'
     Event.create_event(
-        user_id=user_id,
+        event_user_id=user_id,
         event_project_id=project_id,
         event_company_id=company_id,
         event_type=EventType.RequestCompanyWL,

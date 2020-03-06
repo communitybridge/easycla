@@ -16,8 +16,8 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/onboard"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/labstack/gommon/log"
 )
 
 // Configure sets the response handlers for the onboarding API calls
