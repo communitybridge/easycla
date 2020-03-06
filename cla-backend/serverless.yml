@@ -5,6 +5,7 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
+    - ./metrics-aws-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -111,6 +112,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-store"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-user-permissions"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-metrics"
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -257,6 +259,19 @@ functions:
           method: ANY
           path: v1/salesforce/project
           cors: true
+
+  saveMetrics:
+    description: "EasyCLA Save Metrics"
+    runtime: go1.x
+    handler: metrics-aws-lambda
+    events:
+      - schedule:
+        rate: rate(1 hour)
+        enabled: true
+    package:
+      individually: true
+      include:
+        - ./metrics-aws-lambda
 
 resources:
   Resources:

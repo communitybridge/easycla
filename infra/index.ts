@@ -54,6 +54,7 @@ const storeTable = buildStoreTable(importResources);
 const sessionStoreTable = buildSessionStoreTable(importResources);
 const eventsTable = buildEventsTable(importResources);
 const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
+const metricsTable = buildMetricsTable(importResources);
 
 /**
  * Build the Logo S3 Bucket.
@@ -685,6 +686,35 @@ function buildCclaWhitelistRequestsTable(importResources: boolean): aws.dynamodb
   );
 }
 
+/**
+ * Metrics Table
+ *
+ * @param importResources flag to indicate if we should import the resources
+ * into our stack from the provider (rather than creating it for the first
+ * time).
+ */
+function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
+  return new aws.dynamodb.Table(
+    'cla-' + stage + '-metrics',
+    {
+      name: 'cla-' + stage + '-metrics',
+      attributes: [
+        { name: 'metric_type', type: 'S' },
+        { name: 'id', type: 'S' },
+      ],
+      hashKey: 'metric_type',
+      rangeKey: "id",
+      readCapacity: 1,
+      writeCapacity: 5,
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
+      tags: defaultTags,
+    },
+    importResources ? { import: 'cla-' + stage + '-metrics' } : {},
+  );
+}
+
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;
@@ -719,3 +749,5 @@ export const eventsTableName = eventsTable.name;
 export const eventsTableARN = eventsTable.arn;
 export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
 export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
+export const metricsTableName = metricsTable.name;
+export const metricsTableARN = metricsTable.arn;

@@ -847,6 +847,18 @@ export class ClaService {
   }
 
   /**
+   *  /company/{companyID}/ccla_whitelist_requests/{projectID}
+   */
+  postCCLAWhitelistRequest(companyID, projectID, user) {
+
+    if (this.localTesting) {
+      return this.http.post(this.v3ClaAPIURLLocal + '/v3/company/' + companyID + '/ccla_whitelist_requests/'+ projectID, user);
+    } else {
+      return this.http.post(this.claApiUrl + '/v3/company/' + companyID + '/ccla_whitelist_requests/'+ projectID, user);
+    }
+  }
+
+  /**
    * /github/installation
    **/
 
