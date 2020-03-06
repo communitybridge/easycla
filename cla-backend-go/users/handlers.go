@@ -20,12 +20,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
-		if claUser.UserID == "" {
-			return users.NewAddUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersAddUserHandler - user %+v not authorized to add users - missing UserID", claUser)))
-		}
-
-		exitingModel, getErr := service.GetUserByUserName(params.Body.Username, true)
+		exitingModel, getErr := service.GetUserByUserName(claUser.LFUsername, true)
 		if getErr != nil {
 			msg := fmt.Sprintf("Error querying the user by username, error: %+v", getErr)
 			log.Warnf("Create User Failed - %s", msg)
@@ -37,7 +32,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// If the user with the same name exists...
 		if exitingModel != nil {
-			msg := fmt.Sprintf("User with same username exists: %s", params.Body.Username)
+			msg := fmt.Sprintf("User with same username exists: %s", claUser.LFUsername)
 			log.Warnf("Create User Failed - %s", msg)
 			return users.NewAddUserConflict().WithPayload(&models.ErrorResponse{
 				Code:    "409",
@@ -45,11 +40,18 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			})
 		}
 
-		userModel, err := service.CreateUser(&params.Body)
+		newUser := &models.User{
+			LfEmail:    claUser.LFEmail,
+			LfUsername: claUser.LFUsername,
+			Username:   claUser.Name,
+		}
+		userModel, err := service.CreateUser(newUser)
 		if err != nil {
-			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
+			log.Warnf("error creating user from user: %+v, error: %+v", newUser, err)
 			return users.NewAddUserBadRequest().WithPayload(errorResponse(err))
 		}
+		// filling userID in claUser for logging event
+		claUser.UserID = userModel.UserID
 
 		// Create an event - run as a go-routine
 		eventsService.CreateAuditEvent(
