@@ -42,7 +42,7 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
     )
 
     mock_event.assert_called_once_with(
-        user_id=user.get_user_id(),
+        event_user_id=user.get_user_id(),
         event_project_id=project.get_project_id(),
         event_company_id=company.get_company_id(),
         event_type=event_type,
