@@ -250,52 +250,23 @@ func (repo repository) AddCclaWhitelistRequest(company company.Company, project 
 
 	currentTime := currentTime()
 	input := &dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			"request_id": {
-				S: aws.String(requestID.String()),
-			},
-			"request_status": {
-				S: aws.String(StatusPending),
-			},
-			"company_id": {
-				S: aws.String(company.CompanyID),
-			},
-			"company_name": {
-				S: aws.String(company.CompanyName),
-			},
-			"project_id": {
-				S: aws.String(project.ProjectID),
-			},
-			"project_name": {
-				S: aws.String(project.ProjectName),
-			},
-			"user_id": {
-				S: aws.String(user.UserID),
-			},
-			"user_emails": {
-				SS: aws.StringSlice(user.Emails),
-			},
-			"user_name": {
-				S: aws.String(user.Username),
-			},
-			"user_github_id": {
-				S: aws.String(user.GithubID),
-			},
-			"user_github_username": {
-				S: aws.String(user.GithubUsername),
-			},
-			"date_created": {
-				S: aws.String(currentTime),
-			},
-			"date_modified": {
-				S: aws.String(currentTime),
-			},
-			"version": {
-				S: aws.String(Version),
-			},
-		},
+		Item:      map[string]*dynamodb.AttributeValue{},
 		TableName: aws.String(fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)),
 	}
+	addStringAttribute(input.Item, "request_id", requestID.String())
+	addStringAttribute(input.Item, "request_status", StatusPending)
+	addStringAttribute(input.Item, "company_id", company.CompanyID)
+	addStringAttribute(input.Item, "company_name", company.CompanyName)
+	addStringAttribute(input.Item, "project_id", project.ProjectID)
+	addStringAttribute(input.Item, "project_name", project.ProjectName)
+	addStringAttribute(input.Item, "user_id", user.UserID)
+	addStringSliceAttribute(input.Item, "user_emails", user.Emails)
+	addStringAttribute(input.Item, "user_name", user.Username)
+	addStringAttribute(input.Item, "user_github_id", user.GithubID)
+	addStringAttribute(input.Item, "user_github_username", user.GithubUsername)
+	addStringAttribute(input.Item, "date_created", currentTime)
+	addStringAttribute(input.Item, "date_modified", currentTime)
+	addStringAttribute(input.Item, "version", Version)
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
@@ -437,4 +408,15 @@ func buildCclaWhitelistRequestsModels(results *dynamodb.QueryOutput) ([]models.C
 		})
 	}
 	return requests, nil
+}
+
+func addStringAttribute(item map[string]*dynamodb.AttributeValue, key string, value string) {
+	if value != "" {
+		item[key] = &dynamodb.AttributeValue{S: aws.String(value)}
+	}
+}
+func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key string, value []string) {
+	if len(value) > 0 {
+		item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
+	}
 }

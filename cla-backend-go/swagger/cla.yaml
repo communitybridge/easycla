@@ -498,8 +498,7 @@ paths:
     get:
       summary: Get project company signatures
       description: Returns a list of project signature models when provided the project ID and company ID
-      security:
-        - OauthSecurity: []
+      security: []
       operationId: getProjectCompanySignatures
       parameters:
         - name: projectID
@@ -1260,9 +1259,7 @@ paths:
   /company/{companyID}/ccla_whitelist_requests/{projectID}:
     post:
       summary: create ccla whitelist request for given project
-      security:
-        - OauthSecurity:
-            - user
+      security: []
       operationId: addCclaWhitelistRequest
       parameters:
         - name: companyID
