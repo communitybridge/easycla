@@ -229,7 +229,7 @@ def invite_company_admin(user_id, user_email, admin_name, admin_email, project_n
 
     event_data = f'{user_id} with {user_email} sends to {admin_name}/{admin_email} for project: {project_name}'
     Event.create_event(
-        user_id=user_id,
+        event_user_id=user_id,
         event_project_name=project_name,
         event_data=event_data,
         event_type=EventType.InviteAdmin
@@ -270,7 +270,7 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     Event.create_event(
         event_data=event_data,
         event_type=EventType.RequestCCLA,
-        user_id=user_id,
+        event_user_id=user_id,
         event_company_id=company_id
     )
 
