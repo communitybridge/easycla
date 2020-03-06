@@ -1566,6 +1566,81 @@ paths:
       tags:
         - metrics
 
+  /metrics/company/{companyID}:
+    get:
+      summary: Get metrics of company
+      description: Returns company metrics
+      security:
+        - OauthSecurity: []
+      operationId: getCompanyMetric
+      parameters:
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/top-companies:
+    get:
+      summary: company metrics of top companies
+      description: Returns list company metrics of top companies
+      security:
+        - OauthSecurity: []
+      operationId: getTopCompanies
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/top-companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/project/{projectID}:
+    get:
+      summary: Get metrics of project
+      description: Returns project metrics
+      security:
+        - OauthSecurity: []
+      operationId: getProjectMetric
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
 # Common parameters
 parameters:
   pageSize:
@@ -2564,12 +2639,16 @@ definitions:
     properties:
       oneClaManager:
         type: integer
+        x-omitempty: false
       twoClaManagers:
         type: integer
+        x-omitempty: false
       threeClaManagers:
         type: integer
+        x-omitempty: false
       fourOrMoreClaManagers:
         type: integer
+        x-omitempty: false
       createdAt:
         type: string
     title: CLA manager distribution across companies
@@ -2579,21 +2658,105 @@ definitions:
     properties:
       corporateContributorsCount:
         type: integer
+        x-omitempty: false
       individualContributorsCount:
         type: integer
+        x-omitempty: false
       claManagersCount:
         type: integer
+        x-omitempty: false
       contributorsCount:
         type: integer
+        x-omitempty: false
       projectsCount:
         type: integer
+        x-omitempty: false
       companiesCount:
         type: integer
+        x-omitempty: false
       repositoriesCount:
         type: integer
+        x-omitempty: false
+      companiesProjectContributionCount:
+        type: integer
+        x-omitempty: false
       createdAt:
         type: string
     title: CLA total metrics
+
+  top-companies:
+    type: object
+    properties:
+      topCompaniesByProjectCount:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      topCompaniesByCorporateContributors:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      topCompaniesByClaManagers:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      averageCompanyProjectCount:
+        type: integer
+        x-omitempty: false
+      averageCompanyCorporateContributors:
+        type: integer
+        x-omitempty: false
+      averageCompanyClaManagers:
+        type: integer
+        x-omitempty: false
+
+  company-metric:
+    type: object
+    properties:
+      id:
+        type: string
+      companyName:
+        type: string
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      corporateContributorsCount:
+        type: integer
+        x-omitempty: false
+      projectsCount:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: Company metrics
+
+  project-metric:
+    type: object
+    properties:
+      id:
+        type: string
+      externalProjectID:
+        type: string
+      companiesCount:
+        type: integer
+        x-omitempty: false
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      corporateContributorsCount:
+        type: integer
+        x-omitempty: false
+      individualContributorsCount:
+        type: integer
+        x-omitempty: false
+      totalContributorsCount:
+        type: integer
+        x-omitempty: false
+      repositoriesCount:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: project metrics
 
 responses:
   resource-deleted:

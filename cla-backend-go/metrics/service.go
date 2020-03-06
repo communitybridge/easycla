@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"math"
+	"sort"
 	"sync"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -19,6 +21,9 @@ type Service interface {
 	GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error)
 	GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
+	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
+	GetProjectMetric(projectID string) (*models.ProjectMetric, error)
+	GetTopCompanies() (*models.TopCompanies, error)
 }
 
 type service struct {
@@ -136,10 +141,10 @@ func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistribu
 		return nil, err
 	}
 	return &models.ClaManagerDistribution{
-		FourOrMoreClaManagers: int64(cmd.FourOrMoreClaManager),
-		OneClaManager:         int64(cmd.OneClaManager),
-		ThreeClaManagers:      int64(cmd.ThreeClaManager),
-		TwoClaManagers:        int64(cmd.TwoClaManager),
+		FourOrMoreClaManagers: cmd.FourOrMoreClaManager,
+		OneClaManager:         cmd.OneClaManager,
+		ThreeClaManagers:      cmd.ThreeClaManager,
+		TwoClaManagers:        cmd.TwoClaManager,
 		CreatedAt:             cmd.CreatedAt,
 	}, nil
 }
@@ -150,13 +155,105 @@ func (s *service) GetTotalCountMetrics() (*models.TotalCountMetrics, error) {
 		return nil, err
 	}
 	return &models.TotalCountMetrics{
-		ClaManagersCount:            int64(tmc.ClaManagersCount),
-		ContributorsCount:           int64(tmc.ContributorsCount),
-		CorporateContributorsCount:  int64(tmc.CorporateContributorsCount),
-		CreatedAt:                   tmc.CreatedAt,
-		IndividualContributorsCount: int64(tmc.IndividualContributorsCount),
-		CompaniesCount:              tmc.CompaniesCount,
-		ProjectsCount:               tmc.ProjectsCount,
-		RepositoriesCount:           tmc.RepositoriesCount,
+		ClaManagersCount:                  tmc.ClaManagersCount,
+		ContributorsCount:                 tmc.ContributorsCount,
+		CorporateContributorsCount:        tmc.CorporateContributorsCount,
+		CreatedAt:                         tmc.CreatedAt,
+		IndividualContributorsCount:       tmc.IndividualContributorsCount,
+		CompaniesCount:                    tmc.CompaniesCount,
+		ProjectsCount:                     tmc.ProjectsCount,
+		RepositoriesCount:                 tmc.RepositoriesCount,
+		CompaniesProjectContributionCount: tmc.CompaniesProjectContributionCount,
+	}, nil
+}
+
+func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, error) {
+	cm, err := s.metricsRepo.GetCompanyMetric(companyID)
+	if err != nil {
+		return nil, err
+	}
+	return cm.toModel(), nil
+}
+
+func (s *service) GetProjectMetric(projectID string) (*models.ProjectMetric, error) {
+	cm, err := s.metricsRepo.GetProjectMetric(projectID)
+	if err != nil {
+		return nil, err
+	}
+	return &models.ProjectMetric{
+		ClaManagersCount:            cm.ClaManagersCount,
+		CompaniesCount:              cm.CompaniesCount,
+		CorporateContributorsCount:  cm.CorporateContributorsCount,
+		CreatedAt:                   cm.CreatedAt,
+		ID:                          cm.ID,
+		IndividualContributorsCount: cm.IndividualContributorsCount,
+		RepositoriesCount:           cm.RepositoriesCount,
+		TotalContributorsCount:      cm.TotalContributorsCount,
+		ExternalProjectID:           cm.ExternalProjectID,
+	}, nil
+}
+
+func average(numerator, denominator int64) int64 {
+	return int64(math.Round(float64(numerator) / float64(denominator)))
+}
+
+func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
+	var averageClaManagers, averageCorporateContributors, averageProjects int64
+	returnCount := 5
+	cmetrics, err := s.metricsRepo.GetCompanyMetrics()
+	if err != nil {
+		return nil, err
+	}
+	if len(cmetrics) < returnCount {
+		returnCount = len(cmetrics)
+	}
+	cmByCorporateContributors := make([]*CompanyMetric, len(cmetrics))
+	cmByClaManagers := make([]*CompanyMetric, len(cmetrics))
+	cmByProjectCount := make([]*CompanyMetric, len(cmetrics))
+	copy(cmByCorporateContributors, cmetrics)
+	copy(cmByClaManagers, cmetrics)
+	copy(cmByProjectCount, cmetrics)
+
+	var wg sync.WaitGroup
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		tm, err := s.metricsRepo.GetTotalCountMetrics()
+		if err != nil {
+			log.Warnf("unable to get total count metrics. error = %s", err.Error())
+			return
+		}
+		averageClaManagers = average(tm.ClaManagersCount, tm.CompaniesCount)
+		averageCorporateContributors = average(tm.CorporateContributorsCount, tm.CompaniesCount)
+		averageProjects = average(tm.CompaniesProjectContributionCount, tm.CompaniesCount)
+	}()
+	go func() {
+		defer wg.Done()
+		sort.Slice(cmByProjectCount, func(i, j int) bool {
+			return cmByProjectCount[i].ProjectCount > cmByProjectCount[j].ProjectCount
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(cmByCorporateContributors, func(i, j int) bool {
+			return cmByCorporateContributors[i].CorporateContributorsCount > cmByCorporateContributors[j].CorporateContributorsCount
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(cmByClaManagers, func(i, j int) bool {
+			return cmByClaManagers[i].ClaManagersCount > cmByClaManagers[j].ClaManagersCount
+		})
+	}()
+	wg.Wait()
+	return &models.TopCompanies{
+		AverageCompanyClaManagers:           averageClaManagers,
+		AverageCompanyCorporateContributors: averageCorporateContributors,
+		AverageCompanyProjectCount:          averageProjects,
+		TopCompaniesByClaManagers:           companiesToModel(cmByClaManagers[:returnCount]),
+		TopCompaniesByCorporateContributors: companiesToModel(cmByCorporateContributors[:returnCount]),
+		TopCompaniesByProjectCount:          companiesToModel(cmByProjectCount[:returnCount]),
 	}, nil
 }

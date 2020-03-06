@@ -36,6 +36,32 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return metrics.NewGetTotalCountOK().WithPayload(result)
 		})
+
+	api.MetricsGetCompanyMetricHandler = metrics.GetCompanyMetricHandlerFunc(
+		func(params metrics.GetCompanyMetricParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.GetCompanyMetric(params.CompanyID)
+			if err != nil {
+				return metrics.NewGetCompanyMetricBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetCompanyMetricOK().WithPayload(result)
+		})
+
+	api.MetricsGetProjectMetricHandler = metrics.GetProjectMetricHandlerFunc(
+		func(params metrics.GetProjectMetricParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.GetProjectMetric(params.ProjectID)
+			if err != nil {
+				return metrics.NewGetProjectMetricBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetProjectMetricOK().WithPayload(result)
+		})
+	api.MetricsGetTopCompaniesHandler = metrics.GetTopCompaniesHandlerFunc(
+		func(params metrics.GetTopCompaniesParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.GetTopCompanies()
+			if err != nil {
+				return metrics.NewGetTopCompaniesBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetTopCompaniesOK().WithPayload(result)
+		})
 }
 
 type codedResponse interface {
