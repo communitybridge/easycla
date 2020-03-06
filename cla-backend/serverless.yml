@@ -266,8 +266,9 @@ functions:
     handler: metrics-aws-lambda
     events:
       - schedule:
-        rate: rate(1 hour)
-        enabled: true
+          description: 'A function that gathers metrics on a given schedule'
+          rate: rate(1 hour)
+          enabled: true
     package:
       individually: true
       include:
