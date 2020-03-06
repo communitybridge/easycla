@@ -83,10 +83,6 @@ export class MyApp {
     });
   }
 
-  openHomePage() {
-    this.nav.setRoot(this.rootPage);
-  }
-
   openPage(page) {
     // Set the nav root so back button doesn't show
     this.nav.setRoot(page.component);
