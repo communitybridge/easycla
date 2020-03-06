@@ -9,6 +9,7 @@ import { SortService } from '../../../services/sort.service';
 import { ClaService } from '../../../services/cla.service';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
+import {CLAGroupModel} from "../../../models/cla-group-model";
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -66,24 +67,29 @@ export class ProjectClaPage {
     };
   }
 
-  sortClaProjects(projects) {
+  sortClaProjects(projects: CLAGroupModel[]) {
     if (projects == null || projects.length == 0) {
       return projects;
     }
 
     return projects.sort((a, b) => {
-      return a.project_name.trim().localeCompare(b.project_name.trim());
+      return a.projectName.trim().localeCompare(b.projectName.trim());
     });
   }
 
   getClaProjects() {
+    console.log(`Loading CLA Groups for SFDC: ${this.sfdcProjectId}`);
     this.loading.claProjects = true;
-    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((projects) => {
-      this.claProjects = this.sortClaProjects(projects);
+    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((response) => {
+      console.log("Projects:");
+      console.log(response);
+      this.claProjects = this.sortClaProjects(response.projects);
       this.loading.claProjects = false;
 
       this.claProjects.map((project) => {
-        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
+        this.claService.getProjectRepositoriesByrOrg(project.projectID).subscribe((githubOrganizations) => {
+          console.log(`Organizations for Project ID: ${project.projectID}`);
+          console.log(githubOrganizations);
           project.githubOrganizations = githubOrganizations;
         });
       });
@@ -109,9 +115,9 @@ export class ProjectClaPage {
         }
       });
 
-      for (let project of projects) {
-        //Get Gerrit Instances
-        this.claService.getGerritInstance(project.project_id).subscribe((gerrits) => {
+      for (let project of this.claProjects) {
+        // Get Gerrit Instances
+        this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
           project.gerrits = gerrits;
         });
       }
@@ -262,7 +268,7 @@ export class ProjectClaPage {
     let found = false;
 
     projects.forEach((project) => {
-      if (project.project_name.search(name) !== -1) {
+      if (project.projectName.search(name) !== -1) {
         found = true;
       }
     });

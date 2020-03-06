@@ -50,13 +50,16 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	// the list of scopes mentioned by the spec for this route.
 
 	// Verify the token is valid
+	log.Debugf("Verifying token...")
 	claims, err := a.authValidator.VerifyToken(token)
 	if err != nil {
 		log.Warnf("SecurityAuth - verify token error: %+v", err)
 		return nil, err
 	}
+	log.Debugf("Token is verified with the following claims: %+v", claims)
 
 	// Get the username from the token claims
+	log.Debugf("Checking for claim: %s", a.authValidator.usernameClaim)
 	usernameClaim, ok := claims[a.authValidator.usernameClaim]
 	if !ok {
 		log.Warnf("SecurityAuth - username not found, error: %+v", err)
@@ -68,62 +71,39 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 		log.Warnf("SecurityAuth - invalid username, error: %+v", err)
 		return nil, errors.New("invalid username")
 	}
-	nameClaim, ok := claims[a.authValidator.nameClaim]
-	if !ok {
-		log.Warnf("SecurityAuth - name not found, error: %+v", err)
-		return nil, errors.New("name not found")
-	}
-	name, ok := nameClaim.(string)
-	if !ok {
-		log.Warnf("SecurityAuth - invalid name, error: %+v", err)
-		return nil, errors.New("invalid name")
-	}
-	emailClaim, ok := claims[a.authValidator.emailClaim]
-	if !ok {
-		log.Warnf("SecurityAuth - email not found, error: %+v", err)
-		return nil, errors.New("email not found")
-	}
-	email, ok := emailClaim.(string)
-	if !ok {
-		log.Warnf("SecurityAuth - invalid email, error: %+v", err)
-		return nil, errors.New("invalid email")
-	}
+	log.Debugf("Claim is valid for claim: %s", username)
+
 	// Get User by LFID
-	lfuser, err := a.userPermissioner.GetUserAndProfilesByLFID(username)
+	log.Debugf("Locating user profile by: %s", username)
+	user, err := a.userPermissioner.GetUserAndProfilesByLFID(username)
 	if err != nil {
 		log.Warnf("SecurityAuth - GetUserAndProfilesByLFID error for username: %s, error: %+v", username, err)
-		if err.Error() == "user not found" {
-			return &user.CLAUser{
-				Name:       name,
-				LFEmail:    email,
-				LFUsername: username,
-			}, nil
-		}
 		return nil, err
 	}
+	log.Debugf("Found user profile by: %s - ID is: %s", username, user.UserID)
 
 	for _, scope := range scopes {
 		switch Scope(scope) {
 		case projectScope:
-			projectIDs, err := a.userPermissioner.GetUserProjectIDs(lfuser.UserID)
+			projectIDs, err := a.userPermissioner.GetUserProjectIDs(user.UserID)
 			if err != nil {
-				log.Warnf("SecurityAuth - GetUserProjectIDs error for user id: %s, error: %+v", lfuser.UserID, err)
+				log.Warnf("SecurityAuth - GetUserProjectIDs error for user id: %s, error: %+v", user.UserID, err)
 				return nil, err
 			}
 
-			lfuser.ProjectIDs = projectIDs
+			user.ProjectIDs = projectIDs
 		case companyScope:
 			//TODO:  Get all companies for this user
-			companies, err := a.userPermissioner.GetUserCompanyIDs(lfuser.UserID)
+			companies, err := a.userPermissioner.GetUserCompanyIDs(user.UserID)
 			if err != nil {
-				log.Warnf("SecurityAuth - GetUserCompanyIDs error for user id: %s, error: %+v", lfuser.UserID, err)
+				log.Warnf("SecurityAuth - GetUserCompanyIDs error for user id: %s, error: %+v", user.UserID, err)
 				return nil, err
 			}
 
-			lfuser.CompanyIDs = companies
+			user.CompanyIDs = companies
 		case adminScope:
 		}
 	}
 
-	return &lfuser, nil
+	return &user, nil
 }

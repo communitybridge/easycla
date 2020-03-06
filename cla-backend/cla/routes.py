@@ -841,36 +841,6 @@ def get_manager_companies(manager_id: hug.types.uuid):
 # #
 # # Project Routes.
 # #
-@hug.get("/project", versions=1)
-def get_projects(auth_user: check_auth):
-    """
-    GET: /project
-
-    Returns all CLA projects.
-    """
-    # staff_verify(user)
-    projects = cla.controllers.project.get_projects()
-    # For public endpoint, don't show the project_external_id.
-    for project in projects:
-        if "project_external_id" in project:
-            del project["project_external_id"]
-    return projects
-
-
-@hug.get("/project/{project_id}", versions=2)
-def get_project(project_id: hug.types.uuid):
-    """
-    GET: /project/{project_id}
-
-    Returns the CLA project requested by ID.
-    """
-    project = cla.controllers.project.get_project(project_id)
-    # For public endpoint, don't show the project_external_id.
-    if "project_external_id" in project:
-        del project["project_external_id"]
-    return project
-
-
 @hug.get("/project/{project_id}/manager", versions=1)
 def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
     """
@@ -906,80 +876,6 @@ def get_external_project(auth_user: check_auth, project_external_id: hug.types.t
     Returns the list of CLA projects marching the requested external ID.
     """
     return cla.controllers.project.get_projects_by_external_id(project_external_id, auth_user.username)
-
-
-@hug.post("/project", versions=1, examples=" - {'project_name': 'Project Name'}")
-def post_project(
-    auth_user: check_auth,
-    project_external_id: hug.types.text,
-    project_name: hug.types.text,
-    project_icla_enabled: hug.types.boolean,
-    project_ccla_enabled: hug.types.boolean,
-    project_ccla_requires_icla_signature: hug.types.boolean,
-):
-    """
-    POST: /project
-
-    DATA: {'project_external_id': '<proj-external-id>', 'project_name': 'Project Name',
-           'project_icla_enabled': True, 'project_ccla_enabled': True,
-           'project_ccla_requires_icla_signature': True}
-
-    Returns the CLA project that was just created.
-    """
-    # staff_verify(user) or pm_verify_external_id(user, project_external_id)
-
-    return cla.controllers.project.create_project(
-        project_external_id,
-        project_name,
-        project_icla_enabled,
-        project_ccla_enabled,
-        project_ccla_requires_icla_signature,
-        auth_user.username,
-    )
-
-
-@hug.put(
-    "/project",
-    versions=1,
-    examples=" - {'project_id': '<proj-id>', \
-                       'project_name': 'New Project Name'}",
-)
-def put_project(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    project_name=None,
-    project_icla_enabled=None,
-    project_ccla_enabled=None,
-    project_ccla_requires_icla_signature=None,
-):
-    """
-    PUT: /project
-
-    DATA: {'project_id': '<project-id>',
-           'project_name': 'New Project Name'}
-
-    Returns the CLA project that was just updated.
-    """
-    # staff_verify(user) or pm_verify(user, project_id)
-    return cla.controllers.project.update_project(
-        project_id,
-        project_name=project_name,
-        project_icla_enabled=project_icla_enabled,
-        project_ccla_enabled=project_ccla_enabled,
-        project_ccla_requires_icla_signature=project_ccla_requires_icla_signature,
-        username=auth_user.username,
-    )
-
-
-@hug.delete("/project/{project_id}", versions=1)
-def delete_project(auth_user: check_auth, project_id: hug.types.uuid):
-    """
-    DELETE: /project/{project_id}
-
-    Deletes the specified project.
-    """
-    # staff_verify(user)
-    return cla.controllers.project.delete_project(project_id, username=auth_user.username)
 
 
 @hug.get("/project/{project_id}/repositories", versions=1)

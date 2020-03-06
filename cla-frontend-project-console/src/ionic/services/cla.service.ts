@@ -6,6 +6,7 @@ import { Http } from '@angular/http';
 import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
+import {CLAGroupModel} from "../models/cla-group-model";
 
 @Injectable()
 export class ClaService {
@@ -552,75 +553,66 @@ export class ClaService {
     return this.http.delete(url).map((res) => res.json());
   }
 
-  /**
-   * GET /project
-   */
-  getProjects() {
-    const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.get(url).map((res) => res.json());
-  }
-
   getProjectsCcla() {
     const url: URL = this.getV1Endpoint('/v1/project/ccla');
     return this.http.get(url).map((res) => res.json());
   }
 
-  postProject(project) {
-    /*
-      {
-        'project_external_id': '<proj-external-id>',
-        'project_name': 'Project Name',
-        'project_ccla_enabled': True,
-        'project_ccla_requires_icla_signature': True,
-        'project_icla_enabled': True
-      }
-     */
-    const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.post(url, project).map((res) => res.json());
+  /**
+   * Creates a new CLA Group/Project.
+   *
+   * @param claGroupModel the CLA Group/Project model
+   */
+  createCLAGroup(claGroupModel: CLAGroupModel) {
+    const url: URL = this.getV3Endpoint('/v3/project');
+    return this.http.post(url, claGroupModel).map((res) => res.json());
   }
 
   /**
-   * PUT /project/{project_id}
-   * @param project the project payload
+   * Updates an existing CLA Group/Project.
+   *
+   * @param claGroupModel the CLA Group/Project model
    */
-  putProject(project) {
-    /*
-      {
-        'project_id': '<project-id>',
-        'project_name': 'New Project Name'
-      }
-     */
-    const url: URL = this.getV1Endpoint('/v1/project');
-    return this.http.put(url, project).map((res) => res.json());
+  updateCLAGroup(claGroupModel: CLAGroupModel) {
+    const url: URL = this.getV3Endpoint('/v3/project');
+    return this.http.put(url, claGroupModel).map((res) => res.json());
+  }
+
+  /**
+   * Returns the CLA Group/Project associated with the internal project ID or external project ID.
+   * @param projectID the internal or external project ID
+   */
+  getCLAGroup(projectID: string) {
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectID);
+    return this.http.get(url).map((res) => res.json());
   }
 
   /**
    * GET /project/{project_id}
    * @param projectId the project ID
    */
-  getProject(projectId) {
-    const url: URL = this.getV2Endpoint('/v2/project/' + projectId);
+  getProject(projectId: string) {
+    console.log(`Looking up project by: ${projectId}`);
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectId);
     return this.http.get(url).map((res) => res.json());
   }
 
   /**
-   * GET /v1/project/external/{externalId}
+   * GET /v3/project/{externalId}
    * @param externalId the external ID
    */
-  getProjectsByExternalId(externalId) {
-    const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
-    return this.http
-      .get(url)
-      .map((res) => res.json())
-      .catch((error) => this.handleServiceError(error));
+  getProjectsByExternalId(externalId: string) {
+    const url: URL = this.getV3Endpoint('/v3/project/external/' + externalId);
+    return this.http.get(url).map((res) => res.json());
   }
 
   /**
-   * DELETE /v1/project/{projectId}
+   * Delete's the specified project by ID.
+   * DELETE /v3/project/{projectId}
    * @param projectId the project ID
    */
   deleteProject(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId);
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectId);
     return this.http.delete(url).map((res) => res.json());
   }
 

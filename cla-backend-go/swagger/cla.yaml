@@ -791,9 +791,9 @@ paths:
       tags:
         - project
 
-  /project/{projectSfdcId}:
+  /project/{projectID}:
     parameters:
-      - name: projectSfdcId
+      - name: projectID
         in: path
         type: string
         required: true
@@ -847,6 +847,36 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/external/{externalID}:
+    get:
+      summary: Get Projects By External ID
+      description: Returns a list of CLA groups associated with the specified external ID
+      parameters:
+        - name: externalID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      security:
+        - OauthSecurity: []
+      operationId: getProjectsByExternalID
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1926,6 +1956,24 @@ definitions:
         description: Flag to indicate if the CCLA configuration also requires an ICLA
         type: boolean
         x-omitempty: false
+      projectCorporateDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
+      projectIndividualDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
+      projectMemberDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
       dateCreated:
         description: Date/time the record was created
         type: string
@@ -1934,6 +1982,53 @@ definitions:
         type: string
       version:
         description: Record version
+        type: string
+
+  project-document:
+    type: object
+    x-nullable: false
+    title: Project Document
+    description: Project Document
+    properties:
+      documentName:
+        description: the document name
+        example: "Apache Style"
+        type: string
+      documentFileID:
+        description: the document file ID
+        example: "fb4cc144-a76c-4c17-8a52-c648f158fded"
+        type: string
+      documentPreamble:
+        description: the document preamble
+        example: "Apache Style"
+        type: string
+      documentLegalEntityName:
+        description: the document legal entity name
+        example: "Apache Style"
+        type: string
+      documentAuthorName:
+        description: the document author name
+        example: "Apache Style"
+        type: string
+      documentContentType:
+        description: the document content type
+        example: 'storage+pdf'
+        type: string
+      documentS3URL:
+        description: the document S3 URL
+        example: "https://cla-signature-files-dev.s3.amazonaws.com/contract-group/f7222222-7777-4444-aaaa-1c1c1c1c1c1c/template/ccla.pdf"
+        type: string
+      documentMajorVersion:
+        description: the document major version
+        example: "2"
+        type: string
+      documentMinorVersion:
+        description: the document minor version
+        example: "0"
+        type: string
+      documentCreationDate:
+        description: the document creation date
+        example: '2019-08-01T06:55:09Z'
         type: string
 
   project-simple-model:

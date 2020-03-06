@@ -1,10 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service';
+import {Component} from '@angular/core';
+import {Events, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {ClaService} from '../../services/cla.service';
+import {CLAGroupModel} from '../../models/cla-group-model';
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
@@ -60,56 +61,55 @@ export class ClaContractConfigModal {
     }
   }
 
-  ngOnInit() { }
+  ngOnInit() {
+  }
 
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (this.isFormValid()) {
-      if (this.newClaProject) {
-        this.postProject();
-      } else {
-        this.putProject();
-      }
-    } else {
+    if (!this.form.valid) {
       this.currentlySubmitting = false;
+      // prevent submit
+      return;
+    }
+    if (this.newClaProject) {
+      this.createCLAGroup();
+    } else {
+      this.updateCLAGroup();
     }
   }
 
-  isFormValid(){
-    return this.form.valid && (this.form.controls.ccla.value || this.form.controls.icla.value)
+  checkMandatory(value: boolean = true) {
+    this.form.controls['cclaAndIcla'].setValue(value);
   }
 
-  checkMandatory() {
-    if (!this.form.controls.ccla.value || !this.form.controls.icla.value) {
-      this.form.controls['cclaAndIcla'].setValue(false);
-    }
-  }
-
-  postProject() {
-    let claProject = {
-      project_external_id: this.claProject.project_external_id,
-      project_name: this.form.value.name,
-      project_ccla_enabled: this.form.value.ccla,
-      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla
-    };
-    this.claService.postProject(claProject).subscribe((response) => {
+  createCLAGroup() {
+    let claGroupModel = new CLAGroupModel(
+      null,
+      this.form.value.name,
+      this.claProject.project_external_id,
+      [localStorage.getItem('userid')], // Current user
+      this.form.value.icla,
+      this.form.value.ccla,
+      this.form.value.cclaAndIcla
+    );
+    this.claService.createCLAGroup(claGroupModel).subscribe((response) => {
       this.dismiss();
     });
   }
 
-  putProject() {
+  updateCLAGroup() {
     // rebuild the claProject object from existing data and form data
-    let claProject = {
-      project_id: this.claProject.project_id,
-      project_external_id: this.claProject.project_external_id,
-      project_name: this.form.value.name,
-      project_ccla_enabled: this.form.value.ccla,
-      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla
-    };
-    this.claService.putProject(claProject).subscribe((response) => {
+    let claGroupModel = new CLAGroupModel(
+      this.claProject.project_id,
+      this.form.value.name,
+      this.claProject.project_external_id,
+      null,// [localStorage.getItem('userid')], // Current user
+      this.form.value.icla,
+      this.form.value.ccla,
+      this.form.value.cclaAndIcla
+    );
+    this.claService.updateCLAGroup(claGroupModel).subscribe((response) => {
       this.dismiss();
     });
   }
