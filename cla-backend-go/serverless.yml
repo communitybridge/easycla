@@ -5,7 +5,6 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
-    - ./metrics-aws-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -200,15 +199,3 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
-  saveMetrics:
-    description: "EasyCLA Save Metrics"
-    runtime: go1.x
-    handler: metrics-aws-lambda
-    events:
-      - schedule:
-        rate: rate(1 hour)
-        enabled: true
-    package:
-      individually: true
-      include:
-        - ./metrics-aws-lambda
