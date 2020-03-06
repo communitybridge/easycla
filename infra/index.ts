@@ -54,7 +54,7 @@ const storeTable = buildStoreTable(importResources);
 const sessionStoreTable = buildSessionStoreTable(importResources);
 const eventsTable = buildEventsTable(importResources);
 const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
-const metricsTable = buildMetricsTable(importResources)
+const metricsTable = buildMetricsTable(importResources);
 
 /**
  * Build the Logo S3 Bucket.

@@ -259,6 +259,7 @@ functions:
           method: ANY
           path: v1/salesforce/project
           cors: true
+
   saveMetrics:
     description: "EasyCLA Save Metrics"
     runtime: go1.x
