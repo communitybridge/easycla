@@ -169,6 +169,7 @@ func server(localMode bool) http.Handler {
 	projectRepo := project.NewDynamoRepository(awsSession, stage)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	repositoriesRepo := repositories.NewRepository(awsSession, stage)
+	metricsRepo := metrics.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
@@ -181,7 +182,7 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo)
+	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
