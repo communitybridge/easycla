@@ -16,6 +16,11 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+const (
+	// DeleteBeforeMinutes , any metrics created before this time will be deleted
+	DeleteBeforeMinutes = 50
+)
+
 // Repository provides methods for calculation,storage and retrieval of metrics
 type Repository interface {
 	CalculateAndSaveMetrics() error
@@ -607,6 +612,71 @@ func (repo *repo) saveMetrics(metrics *Metrics) error {
 	return nil
 }
 
+func (repo *repo) clearOldMetrics() error {
+	t := time.Now()
+	beforeTime := t.Add(-(time.Minute * DeleteBeforeMinutes))
+	filter := expression.Name("created_at").LessThan(expression.Value(utils.TimeToString(beforeTime)))
+	type ItemMetric struct {
+		ID         string `json:"id"`
+		MetricType string `json:"metric_type"`
+	}
+	projection := expression.NamesList(
+		expression.Name("id"),
+		expression.Name("metric_type"),
+	)
+	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for metric scan, error: %v", err)
+		return err
+	}
+
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.metricTableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving metrics, error: %v", err)
+			return err
+		}
+
+		var metrics []*ItemMetric
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &metrics)
+		if err != nil {
+			log.Warnf("error unmarshalling metrics from database. error: %v", err)
+			return err
+		}
+
+		for _, m := range metrics {
+			_, err = repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+				Key: map[string]*dynamodb.AttributeValue{
+					"id":          {S: aws.String(m.ID)},
+					"metric_type": {S: aws.String(m.MetricType)},
+				},
+				TableName: aws.String(repo.metricTableName),
+			})
+			if err != nil {
+				log.Error(fmt.Sprintf("error deleting outdated metric with id:%s, metric_type:%s", m.ID, m.MetricType), err)
+			}
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	log.Printf("clear old metrics took :%s \n", time.Since(t).String())
+	return nil
+}
+
 func addIDTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricType string) {
 	_, ctime := utils.CurrentTime()
 	utils.AddStringAttribute(item, "id", id)
@@ -700,6 +770,10 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 		return err
 	}
 	err = repo.saveMetrics(m)
+	if err != nil {
+		return err
+	}
+	err = repo.clearOldMetrics()
 	if err != nil {
 		return err
 	}

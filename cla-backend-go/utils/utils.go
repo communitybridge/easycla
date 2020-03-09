@@ -22,10 +22,15 @@ func FmtDuration(d time.Duration) string {
 	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, seconds, d.Milliseconds())
 }
 
+// TimeToString returns time in the RFC3339 format
+func TimeToString(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
+}
+
 // CurrentTime returns the current UTC time and current Time in the RFC3339 format
 func CurrentTime() (time.Time, string) {
 	t := time.Now()
-	return t, t.UTC().Format(time.RFC3339)
+	return t, TimeToString(t)
 }
 
 // AddStringAttribute adds string attribute to dynamodb input map
