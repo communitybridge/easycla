@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+)
+
+const (
+	// DeleteBeforeMinutes , any metrics created before this time will be deleted
+	DeleteBeforeMinutes = 50
 )
 
 // Repository provides methods for calculation,storage and retrieval of metrics
@@ -75,6 +82,12 @@ type ItemRepository struct {
 	RepositoryProjectID string `json:"repository_project_id"`
 }
 
+// ItemProject represent item of projects table
+type ItemProject struct {
+	ProjectID         string `json:"project_id"`
+	ProjectExternalID string `json:"project_external_id"`
+}
+
 // Metrics contain all metrics related to easycla
 type Metrics struct {
 	TotalCountMetrics       *TotalCountMetrics       `json:"total_metrics"`
@@ -86,23 +99,31 @@ type Metrics struct {
 
 // TotalCountMetrics contains all metrics related to total count
 type TotalCountMetrics struct {
-	CorporateContributorsCount  int `json:"corporate_contributors_count"`
-	IndividualContributorsCount int `json:"individual_contributors_count"`
-	ClaManagersCount            int `json:"cla_managers_count"`
-	ContributorsCount           int `json:"contributors_count"`
-	corporateContributors       map[string]interface{}
-	individualContributors      map[string]interface{}
-	claManagers                 map[string]interface{}
-	contributors                map[string]interface{}
+	CorporateContributorsCount        int64  `json:"corporate_contributors_count"`
+	IndividualContributorsCount       int64  `json:"individual_contributors_count"`
+	ClaManagersCount                  int64  `json:"cla_managers_count"`
+	ContributorsCount                 int64  `json:"contributors_count"`
+	ProjectsCount                     int64  `json:"projects_count"`
+	RepositoriesCount                 int64  `json:"repositories_count"`
+	CompaniesCount                    int64  `json:"companies_count"`
+	CompaniesProjectContributionCount int64  `json:"companies_project_contribution_count"`
+	CreatedAt                         string `json:"created_at"`
+
+	corporateContributors        map[string]interface{}
+	individualContributors       map[string]interface{}
+	claManagers                  map[string]interface{}
+	contributors                 map[string]interface{}
+	companiesProjectContribution map[string]interface{}
 }
 
 // CompanyMetric contains all metrics related with particular company
 type CompanyMetric struct {
 	ID                         string `json:"id"`
 	CompanyName                string `json:"company_name"`
-	ProjectCount               int    `json:"project_count"`
-	CorporateContributorsCount int    `json:"corporate_contributors_count"`
-	ClaManagersCount           int    `json:"cla_managers_count"`
+	ProjectCount               int64  `json:"project_count"`
+	CorporateContributorsCount int64  `json:"corporate_contributors_count"`
+	ClaManagersCount           int64  `json:"cla_managers_count"`
+	CreatedAt                  string `json:"created_at"`
 	corporateContributors      map[string]interface{}
 	claManagers                map[string]interface{}
 }
@@ -110,12 +131,14 @@ type CompanyMetric struct {
 // ProjectMetric contains all metrics related with particular project
 type ProjectMetric struct {
 	ID                          string `json:"id"`
-	CompaniesCount              int    `json:"companies_count"`
-	ClaManagersCount            int    `json:"cla_managers_count"`
-	CorporateContributorsCount  int    `json:"corporate_contributors_count"`
-	IndividualContributorsCount int    `json:"individual_contributors_count"`
-	TotalContributorsCount      int    `json:"total_contributors_count"`
-	RepositoriesCount           int    `json:"repositories_count"`
+	CompaniesCount              int64  `json:"companies_count"`
+	ClaManagersCount            int64  `json:"cla_managers_count"`
+	CorporateContributorsCount  int64  `json:"corporate_contributors_count"`
+	IndividualContributorsCount int64  `json:"individual_contributors_count"`
+	TotalContributorsCount      int64  `json:"total_contributors_count"`
+	RepositoriesCount           int64  `json:"repositories_count"`
+	CreatedAt                   string `json:"created_at"`
+	ExternalProjectID           string `json:"external_project_id"`
 	companies                   map[string]interface{}
 	claManagers                 map[string]interface{}
 	corporateContributors       map[string]interface{}
@@ -124,10 +147,11 @@ type ProjectMetric struct {
 
 // ClaManagersDistribution tells distribution of number of cla mangers associated with company
 type ClaManagersDistribution struct {
-	OneClaManager        int `json:"one_cla_manager"`
-	TwoClaManager        int `json:"two_cla_manager"`
-	ThreeClaManager      int `json:"three_cla_manager"`
-	FourOrMoreClaManager int `json:"four_or_more_cla_manager"`
+	OneClaManager        int64  `json:"one_cla_manager"`
+	TwoClaManager        int64  `json:"two_cla_manager"`
+	ThreeClaManager      int64  `json:"three_cla_manager"`
+	FourOrMoreClaManager int64  `json:"four_or_more_cla_manager"`
+	CreatedAt            string `json:"created_at"`
 }
 
 func newMetrics() *Metrics {
@@ -141,14 +165,16 @@ func newMetrics() *Metrics {
 
 func newTotalCountMetrics() *TotalCountMetrics {
 	return &TotalCountMetrics{
-		CorporateContributorsCount:  0,
-		corporateContributors:       make(map[string]interface{}),
-		IndividualContributorsCount: 0,
-		individualContributors:      make(map[string]interface{}),
-		ClaManagersCount:            0,
-		claManagers:                 make(map[string]interface{}),
-		ContributorsCount:           0,
-		contributors:                make(map[string]interface{}),
+		CorporateContributorsCount:        0,
+		corporateContributors:             make(map[string]interface{}),
+		IndividualContributorsCount:       0,
+		individualContributors:            make(map[string]interface{}),
+		ClaManagersCount:                  0,
+		claManagers:                       make(map[string]interface{}),
+		ContributorsCount:                 0,
+		contributors:                      make(map[string]interface{}),
+		CompaniesProjectContributionCount: 0,
+		companiesProjectContribution:      make(map[string]interface{}),
 	}
 }
 
@@ -185,6 +211,7 @@ func newProjectMetric() *ProjectMetric {
 		individualContributors:      make(map[string]interface{}),
 		TotalContributorsCount:      0,
 		RepositoriesCount:           0,
+		ExternalProjectID:           "",
 	}
 }
 
@@ -199,11 +226,30 @@ func newProjectMetrics() *ProjectMetrics {
 	}
 }
 
-func increaseCountIfNotPresent(cacheData map[string]interface{}, count *int, key string) {
+func increaseCountIfNotPresent(cacheData map[string]interface{}, count *int64, key string) {
 	if _, ok := cacheData[key]; !ok {
 		cacheData[key] = nil
 		*count++
 	}
+}
+
+func (cm *CompanyMetric) toModel() *models.CompanyMetric {
+	return &models.CompanyMetric{
+		ClaManagersCount:           cm.ClaManagersCount,
+		CompanyName:                cm.CompanyName,
+		CorporateContributorsCount: cm.CorporateContributorsCount,
+		CreatedAt:                  cm.CreatedAt,
+		ID:                         cm.ID,
+		ProjectsCount:              cm.ProjectCount,
+	}
+}
+
+func companiesToModel(in []*CompanyMetric) []*models.CompanyMetric {
+	var out []*models.CompanyMetric
+	for _, cm := range in {
+		out = append(out, cm.toModel())
+	}
+	return out
 }
 
 func signatureType(sig *ItemSignature) int {
@@ -236,6 +282,9 @@ func (cm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) {
 		for _, acl := range sig.SignatureACL {
 			increaseCountIfNotPresent(cm.claManagers, &cm.ClaManagersCount, acl)
 		}
+		companyID := sig.SignatureReferenceID
+		key := fmt.Sprintf("%s#%s", companyID, sig.SignatureProjectID)
+		increaseCountIfNotPresent(cm.companiesProjectContribution, &cm.CompaniesProjectContributionCount, key)
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(cm.corporateContributors, &cm.CorporateContributorsCount, userID)
@@ -310,7 +359,16 @@ func (pm *ProjectMetrics) processRepositories(repo *ItemRepository) {
 	m.RepositoriesCount++
 }
 
-func getClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
+func (pm *ProjectMetrics) fillExternalProjectID(project *ItemProject) {
+	m, ok := pm.ProjectMetrics[project.ProjectID]
+	if !ok {
+		m = newProjectMetric()
+		pm.ProjectMetrics[project.ProjectID] = m
+	}
+	m.ExternalProjectID = project.ProjectExternalID
+}
+
+func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
 	var cmd ClaManagersDistribution
 	for _, companyMetric := range cm.CompanyMetrics {
 		switch companyMetric.ClaManagersCount {
@@ -382,7 +440,6 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 			break
 		}
 	}
-	metrics.ClaManagersDistribution = getClaManagerDistribution(metrics.CompanyMetrics)
 	return nil
 }
 
@@ -422,6 +479,7 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 		}
 
 		for _, r := range repos {
+			metrics.TotalCountMetrics.RepositoriesCount++
 			metrics.ProjectMetrics.processRepositories(r)
 		}
 
@@ -431,7 +489,79 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 			break
 		}
 	}
-	metrics.ClaManagersDistribution = getClaManagerDistribution(metrics.CompanyMetrics)
+	return nil
+}
+
+func (repo *repo) processProjectsTable(metrics *Metrics) error {
+	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	projectCount, err := repo.getItemCount(projectTableName)
+	if err != nil {
+		return err
+	}
+	metrics.TotalCountMetrics.ProjectsCount = projectCount
+	err = repo.fillProjectExternalID(metrics)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *repo) fillProjectExternalID(metrics *Metrics) error {
+	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	log.Println("processing project table to fill ExternalProjectID")
+	projection := expression.NamesList(
+		expression.Name("project_id"),
+		expression.Name("project_external_id"),
+	)
+	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for metric scan, error: %v", err)
+		return err
+	}
+
+	// Assemble the scan input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(projectTableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving projects, error: %v", err)
+			return err
+		}
+
+		var projects []*ItemProject
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &projects)
+		if err != nil {
+			log.Warnf("error unmarshalling projects from database. error: %v", err)
+			return err
+		}
+
+		for _, project := range projects {
+			metrics.ProjectMetrics.fillExternalProjectID(project)
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return nil
+}
+
+func (repo *repo) processCompaniesTable(metrics *Metrics) error {
+	companiesTableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	companiesCount, err := repo.getItemCount(companiesTableName)
+	if err != nil {
+		return err
+	}
+	metrics.TotalCountMetrics.CompaniesCount = companiesCount
 	return nil
 }
 
@@ -446,6 +576,15 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = repo.processProjectsTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	err = repo.processCompaniesTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	metrics.ClaManagersDistribution = calculateClaManagerDistribution(metrics.CompanyMetrics)
 	_, metrics.CalculatedAt = utils.CurrentTime()
 	log.Println("GetMetrics took time", time.Since(t).String())
 	return metrics, nil
@@ -470,6 +609,71 @@ func (repo *repo) saveMetrics(metrics *Metrics) error {
 		return err
 	}
 	log.Printf("save metrics took :%s \n", time.Since(t).String())
+	return nil
+}
+
+func (repo *repo) clearOldMetrics() error {
+	t := time.Now()
+	beforeTime := t.Add(-(time.Minute * DeleteBeforeMinutes))
+	filter := expression.Name("created_at").LessThan(expression.Value(utils.TimeToString(beforeTime)))
+	type ItemMetric struct {
+		ID         string `json:"id"`
+		MetricType string `json:"metric_type"`
+	}
+	projection := expression.NamesList(
+		expression.Name("id"),
+		expression.Name("metric_type"),
+	)
+	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for metric scan, error: %v", err)
+		return err
+	}
+
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.metricTableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving metrics, error: %v", err)
+			return err
+		}
+
+		var metrics []*ItemMetric
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &metrics)
+		if err != nil {
+			log.Warnf("error unmarshalling metrics from database. error: %v", err)
+			return err
+		}
+
+		for _, m := range metrics {
+			_, err = repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+				Key: map[string]*dynamodb.AttributeValue{
+					"id":          {S: aws.String(m.ID)},
+					"metric_type": {S: aws.String(m.MetricType)},
+				},
+				TableName: aws.String(repo.metricTableName),
+			})
+			if err != nil {
+				log.Error(fmt.Sprintf("error deleting outdated metric with id:%s, metric_type:%s", m.ID, m.MetricType), err)
+			}
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	log.Printf("clear old metrics took :%s \n", time.Since(t).String())
 	return nil
 }
 
@@ -566,6 +770,10 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 		return err
 	}
 	err = repo.saveMetrics(m)
+	if err != nil {
+		return err
+	}
+	err = repo.clearOldMetrics()
 	if err != nil {
 		return err
 	}
@@ -718,4 +926,17 @@ func (repo *repo) getMetricByID(id string, metricType string, out interface{}) e
 		return err
 	}
 	return nil
+}
+
+func (repo *repo) getItemCount(tableName string) (int64, error) {
+	// How many total records do we have - may not be up-to-date as this value is updated only periodically
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.Warnf("error retrieving total record count of table %s, error: %v", tableName, err)
+		return 0, err
+	}
+	return *describeTableResult.Table.ItemCount, nil
 }
