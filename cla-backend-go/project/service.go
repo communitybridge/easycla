@@ -6,6 +6,7 @@ package project
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // Service interface defines the project service methods/functions
@@ -13,6 +14,7 @@ type Service interface {
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
 	GetProjectByName(projectName string) (*models.Project, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
@@ -44,6 +46,12 @@ func (s service) GetProjects(params *project.GetProjectsParams) (*models.Project
 // GetProjectByID service method
 func (s service) GetProjectByID(projectID string) (*models.Project, error) {
 	return s.repo.GetProjectByID(projectID)
+}
+
+// GetProjectsByExternalID returns a list of projects based on the external ID parameters
+func (s service) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+	log.Debugf("Project Service Handler - GetProjectsByExternalID")
+	return s.repo.GetProjectsByExternalID(params)
 }
 
 // GetProjectByName service method
