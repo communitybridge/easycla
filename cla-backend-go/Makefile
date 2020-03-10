@@ -96,6 +96,11 @@ build-aws-lambda: deps
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o backend-aws-lambda main.go
 	chmod +x backend-aws-lambda
 
+build-metrics-lambda: deps
+	@echo "Building a staticlly linked Linux amd64 binary..."
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o metrics-aws-lambda cmd/metrics_lambda/main.go
+	chmod +x metrics-aws-lambda
+
 $(LINT_TOOL):
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."
 	# Latest releases: https://github.com/golangci/golangci-lint/releases

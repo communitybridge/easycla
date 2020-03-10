@@ -43,6 +43,7 @@ type Repository interface {
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
+	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 }
 
 // repository data model
@@ -412,4 +413,128 @@ func buildProjectModel(dbModel project.DBProjectModel) *models.Project {
 		DateModified:       dbModel.DateModified,
 		Version:            dbModel.Version,
 	}
+}
+
+// buildUserProject returns the list of columns we want from the result
+func buildUserProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("user_id"),
+		expression.Name("user_external_id"),
+		expression.Name("user_company_id"),
+		expression.Name("admin"),
+		expression.Name("lf_email"),
+		expression.Name("lf_username"),
+		expression.Name("user_name"),
+		expression.Name("user_emails"),
+		expression.Name("user_github_username"),
+		expression.Name("user_github_id"),
+		expression.Name("date_created"),
+		expression.Name("date_modified"),
+		expression.Name("version"),
+		expression.Name("note"),
+	)
+}
+
+// convertDBUserModel translates a dyanamoDB data model into a service response model
+func convertDBUserModel(user DBUser) *models.User {
+	return &models.User{
+		UserID:         user.UserID,
+		UserExternalID: user.UserExternalID,
+		Admin:          user.Admin,
+		LfEmail:        user.LFEmail,
+		LfUsername:     user.LFUsername,
+		DateCreated:    user.DateCreated,
+		DateModified:   user.DateModified,
+		Username:       user.UserName,
+		Version:        user.Version,
+		Emails:         user.UserEmails,
+		GithubID:       user.UserGithubID,
+		CompanyID:      user.UserCompanyID,
+		GithubUsername: user.UserGithubUsername,
+		Note:           user.Note,
+	}
+}
+
+// GetUser looks up a user by id
+func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+	var indexName string
+	// This is the filter we want to match
+	var condition expression.KeyConditionBuilder
+	if strings.Contains(userName, "github:") {
+		indexName = "github-user-index"
+		// Username for Github comes in as github:123456, so we want to remove the initial string
+		githubID, err := strconv.Atoi(strings.Replace(userName, "github:", "", 1))
+		if err != nil {
+			log.Warnf("Unable to convert Github ID to number: %s", err)
+			return nil, err
+		}
+		condition = expression.Key("user_github_id").Equal(expression.Value(githubID))
+	} else {
+		indexName = "lf-username-index"
+		condition = expression.Key("lf_username").Equal(expression.Value(userName))
+	}
+	// These are the columns we want returned
+	projection := buildUserProjection()
+	builder := expression.NewBuilder().WithProjection(projection)
+	// This is the filter we want to match
+	if fullMatch {
+		filter := expression.Name("lf_username").Equal(expression.Value(userName))
+		builder.WithFilter(filter)
+	} else {
+		filter := expression.Name("lf_username").Contains(userName)
+		builder.WithFilter(filter)
+	}
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for user name: %s, error: %v", userName, err)
+		return nil, err
+	}
+	// Assemble the scan input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+	}
+	var lastEvaluatedKey string
+	// The database user model
+	var dbUserModels []DBUser
+	// Loop until we find a match or exhausted all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		result, err := repo.dynamoDBClient.Query(queryInput)
+		if err != nil {
+			log.Warnf("Error retrieving user by user name: %s, error: %+v", userName, err)
+			return nil, err
+		}
+		err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+		if err != nil {
+			log.Warnf("error unmarshalling user record from database for user name: %s, error: %+v", userName, err)
+			return nil, err
+		}
+		if len(dbUserModels) == 1 {
+			return convertDBUserModel(dbUserModels[0]), nil
+		} else if len(dbUserModels) > 1 {
+			log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
+			return convertDBUserModel(dbUserModels[0]), nil
+		}
+		// Didn't find a match so far...need to keep looking via the next page of data
+		// If we have another page of results...
+		if result.LastEvaluatedKey["user_id"] != nil {
+			lastEvaluatedKey = *result.LastEvaluatedKey["user_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"user_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+	return nil, nil
 }
