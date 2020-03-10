@@ -49,6 +49,11 @@ export class HttpClient {
     );
   }
 
+  getWithoutHeaders(url) {
+    return this.http.get(url).map((res) => res.json());
+    
+  }
+
   getWithCreds(url) {
     return Observable.fromPromise(this.buildAuthHeaders()).switchMap((headers) =>
       this.http.get(url, {headers: headers, withCredentials: true})
