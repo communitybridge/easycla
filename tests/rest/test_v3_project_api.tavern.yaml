@@ -117,6 +117,15 @@ stages:
               projectCCLARequiresICLA:
                 type: bool
                 required: true
+              projectCorporateDocuments:
+                type: none
+                required: true
+              projectIndividualDocuments:
+                type: none
+                required: true
+              projectMemberDocuments:
+                type: none
+                required: true
               dateCreated:
                 type: str
                 required: true
@@ -138,24 +147,6 @@ stages:
       json:
         projectName: "dd test project"
         projectExternalID: "abc123456"
-        projectACL: ["ddeal", "hwillson"]
-        projectICLAEnabled: true
-        projectCCLAEnabled: true
-        projectCCLARequiresICLA: true
-    response:
-      status_code: 409
-
-  - name: Project create request with auth with External ID conflict
-    request:
-      url: "{api_url}/v3/project"
-      method: POST
-      headers:
-        Authorization: "Bearer {auth0_token:s}"
-        Content-Type: "application/json"
-        Accept: "application/json"
-      json:
-        projectName: "dd test project not matching"
-        projectExternalID: "abc123"
         projectACL: ["ddeal", "hwillson"]
         projectICLAEnabled: true
         projectCCLAEnabled: true
@@ -216,6 +207,15 @@ stages:
               projectCCLARequiresICLA:
                 type: bool
                 required: true
+              projectCorporateDocuments:
+                type: none
+                required: true
+              projectIndividualDocuments:
+                type: none
+                required: true
+              projectMemberDocuments:
+                type: none
+                required: true
               dateCreated:
                 type: str
                 required: true
@@ -228,7 +228,7 @@ stages:
 
   - name: Project get by External ID request with auth
     request:
-      url: "{api_url}/v3/project/{projectExternalID:s}"
+      url: "{api_url}/v3/project/external/{projectExternalID:s}"
       method: GET
       headers:
         Authorization: "Bearer {auth0_token:s}"
@@ -239,15 +239,18 @@ stages:
       headers:
         content-type: application/json
       body:
-        projectID: "{projectID:s}"
-        projectName: "dd test project"
-        projectExternalID: "abc123"
-        projectACL: ["ddeal", "hwillson"]
-        projectICLAEnabled: true
-        projectCCLAEnabled: true
-        projectCCLARequiresICLA: true
-        dateCreated: "{dateCreated:s}"
-        dateModified: "{dateModified:s}"
+        resultCount: 1
+        pageSize: 50
+        projects:
+          - projectID: "{projectID:s}"
+            projectName: "dd test project"
+            projectExternalID: "abc123"
+            projectACL: ["ddeal", "hwillson"]
+            projectICLAEnabled: true
+            projectCCLAEnabled: true
+            projectCCLARequiresICLA: true
+            dateCreated: "{dateCreated:s}"
+            dateModified: "{dateModified:s}"
       verify_response_with:
         function: tavern.testutils.helpers:validate_pykwalify
         extra_kwargs:
@@ -255,39 +258,61 @@ stages:
             type: map
             required: true
             mapping:
-              projectID:
-                type: str
+              pageSize:
+                type: int
                 required: true
-              projectExternalID:
-                type: str
+              resultCount:
+                type: int
                 required: true
-              projectName:
-                type: str
-                required: true
-              projectACL:
+              projects:
                 type: seq
                 required: true
                 sequence:
-                  - type: str
+                  - type: map
                     required: true
-              projectICLAEnabled:
-                type: bool
-                required: true
-              projectCCLAEnabled:
-                type: bool
-                required: true
-              projectCCLARequiresICLA:
-                type: bool
-                required: true
-              dateCreated:
-                type: str
-                required: true
-              dateModified:
-                type: str
-                required: true
-              version:
-                type: str
-                required: true
+                    mapping:
+                      projectID:
+                        type: str
+                        required: true
+                      projectExternalID:
+                        type: str
+                        required: true
+                      projectName:
+                        type: str
+                        required: true
+                      projectACL:
+                        type: seq
+                        required: true
+                        sequence:
+                          - type: str
+                            required: true
+                      projectICLAEnabled:
+                        type: bool
+                        required: true
+                      projectCCLAEnabled:
+                        type: bool
+                        required: true
+                      projectCCLARequiresICLA:
+                        type: bool
+                        required: true
+                      projectCorporateDocuments:
+                        type: none
+                        required: true
+                      projectIndividualDocuments:
+                        type: none
+                        required: true
+                      projectMemberDocuments:
+                        type: none
+                        required: true
+                      dateCreated:
+                        type: str
+                        required: true
+                      dateModified:
+                        type: str
+                        required: true
+                      version:
+                        type: str
+                        required: true
 
   - name: Project get by name request with auth
     request:
@@ -341,6 +366,15 @@ stages:
                 required: true
               projectCCLARequiresICLA:
                 type: bool
+                required: true
+              projectCorporateDocuments:
+                type: none
+                required: true
+              projectIndividualDocuments:
+                type: none
+                required: true
+              projectMemberDocuments:
+                type: none
                 required: true
               dateCreated:
                 type: str
@@ -413,6 +447,15 @@ stages:
               projectCCLARequiresICLA:
                 type: bool
                 required: true
+              projectCorporateDocuments:
+                type: none
+                required: true
+              projectIndividualDocuments:
+                type: none
+                required: true
+              projectMemberDocuments:
+                type: none
+                required: true
               dateCreated:
                 type: str
                 required: true
@@ -475,6 +518,15 @@ stages:
                 required: true
               projectCCLARequiresICLA:
                 type: bool
+                required: true
+              projectCorporateDocuments:
+                type: none
+                required: true
+              projectIndividualDocuments:
+                type: none
+                required: true
+              projectMemberDocuments:
+                type: none
                 required: true
               dateCreated:
                 type: str
