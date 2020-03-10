@@ -33,13 +33,15 @@ type Repository interface {
 	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
 	GetProjectByName(projectName string) (*models.Project, error)
 	GetExternalProject(projectExternalID string) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 	buildProjectModel(dbModel DBProjectModel) *models.Project
-	buildProjectModels(results *dynamodb.ScanOutput) ([]models.Project, error)
+	buildProjectDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument
+	buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error)
 }
 
 // NewDynamoRepository creates instance of project repository
@@ -205,26 +207,110 @@ func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 		return nil, queryErr
 	}
 
-	// No match, didn't find it
-	if *results.Count == 0 {
-		// Attempt to lookup via external ID
-		return repo.GetExternalProject(projectID)
+	if len(results.Items) > 0 {
+		var dbModel DBProjectModel
+		err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+		if err != nil {
+			log.Warnf("error unmarshalling db project model, error: %+v", err)
+			return nil, err
+		}
+
+		// Convert the database model to an API response model
+		return repo.buildProjectModel(dbModel), nil
 	}
 
-	// Should only have one result
-	if *results.Count > 1 {
-		log.Warnf("Project query returned more than one result using projectID: %s", projectID)
-	}
+	return nil, nil
+}
 
-	var dbModel DBProjectModel
-	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+// GetProjectsByExternalID queries the database and returns a list of the projects
+func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ExternalID)
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("project_external_id").Equal(expression.Value(params.ExternalID))
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error unmarshalling db project model, error: %+v", err)
-		return nil, err
+		log.Warnf("error building expression for project scan, error: %v", err)
 	}
 
-	// Convert the database model to an API response model
-	return repo.buildProjectModel(dbModel), nil
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("external-project-index"),
+	}
+
+	// If we have the next key, set the exclusive start key value
+	if params.NextKey != nil && *params.NextKey != "" {
+		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+		// The primary key of the first item that this operation will evaluate.
+		// and the query key (if not the same)
+		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			"project_id": {
+				S: params.NextKey,
+			},
+		}
+	}
+
+	// If we have a page size, set the limit value - make sure it's a positive value
+	if params.PageSize != nil && *params.PageSize > 0 {
+		log.Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
+		queryInput.Limit = params.PageSize
+	} else {
+		// Default page size
+		*params.PageSize = 50
+	}
+
+	var projects []models.Project
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving projects, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		// Convert the list of DB models to a list of response models
+		projectList, modelErr := repo.buildProjectModels(results.Items)
+		if modelErr != nil {
+			log.Warnf("error converting project DB model to response model, error: %v",
+				modelErr)
+			return nil, modelErr
+		}
+
+		// Add to the project response models to the list
+		projects = append(projects, projectList...)
+
+		if results.LastEvaluatedKey["project_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["project_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"project_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+
+		if int64(len(projects)) >= *params.PageSize {
+			break
+		}
+	}
+
+	return &models.Projects{
+		LastKeyScanned: lastEvaluatedKey,
+		PageSize:       *params.PageSize,
+		ResultCount:    int64(len(projects)),
+		Projects:       projects,
+	}, nil
 }
 
 // GetProjectByName returns the project model associated for the specified project name
@@ -390,7 +476,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildProjectModels(results)
+		projectList, modelErr := repo.buildProjectModels(results.Items)
 		if modelErr != nil {
 			log.Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -540,13 +626,13 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 }
 
 // buildProjectModels converts the database response model into an API response data model
-func (repo *repo) buildProjectModels(results *dynamodb.ScanOutput) ([]models.Project, error) {
+func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error) {
 	var projects []models.Project
 
 	// The DB project model
 	var dbProjects []DBProjectModel
 
-	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbProjects)
+	err := dynamodbattribute.UnmarshalListOfMaps(results, &dbProjects)
 	if err != nil {
 		log.Warnf("error unmarshalling projects from database, error: %v", err)
 		return nil, err
@@ -573,17 +659,47 @@ func (repo *repo) buildProjectModels(results *dynamodb.ScanOutput) ([]models.Pro
 // buildProjectModel maps the database model to the API response model
 func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
 	return &models.Project{
-		ProjectID:               dbModel.ProjectID,
-		ProjectExternalID:       dbModel.ProjectExternalID,
-		ProjectName:             dbModel.ProjectName,
-		ProjectACL:              dbModel.ProjectACL,
-		ProjectCCLAEnabled:      dbModel.ProjectCclaEnabled,
-		ProjectICLAEnabled:      dbModel.ProjectIclaEnabled,
-		ProjectCCLARequiresICLA: dbModel.ProjectCclaRequiresIclaSignature,
-		DateCreated:             dbModel.DateCreated,
-		DateModified:            dbModel.DateModified,
-		Version:                 dbModel.Version,
+		ProjectID:                  dbModel.ProjectID,
+		ProjectExternalID:          dbModel.ProjectExternalID,
+		ProjectName:                dbModel.ProjectName,
+		ProjectACL:                 dbModel.ProjectACL,
+		ProjectCCLAEnabled:         dbModel.ProjectCclaEnabled,
+		ProjectICLAEnabled:         dbModel.ProjectIclaEnabled,
+		ProjectCCLARequiresICLA:    dbModel.ProjectCclaRequiresIclaSignature,
+		ProjectCorporateDocuments:  repo.buildProjectDocumentModels(dbModel.ProjectCorporateDocuments),
+		ProjectIndividualDocuments: repo.buildProjectDocumentModels(dbModel.ProjectIndividualDocuments),
+		ProjectMemberDocuments:     repo.buildProjectDocumentModels(dbModel.ProjectMemberDocuments),
+		DateCreated:                dbModel.DateCreated,
+		DateModified:               dbModel.DateModified,
+		Version:                    dbModel.Version,
 	}
+}
+
+// buildProjectDocumentModels builds response models based on the array of db models
+func (repo *repo) buildProjectDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument {
+	if dbDocumentModels == nil {
+		return nil
+	}
+
+	// Response model
+	var response []models.ProjectDocument
+
+	for _, dbDocumentModel := range dbDocumentModels {
+		response = append(response, models.ProjectDocument{
+			DocumentName:            dbDocumentModel.DocumentName,
+			DocumentAuthorName:      dbDocumentModel.DocumentAuthorName,
+			DocumentContentType:     dbDocumentModel.DocumentContentType,
+			DocumentFileID:          dbDocumentModel.DocumentFileID,
+			DocumentLegalEntityName: dbDocumentModel.DocumentLegalEntityName,
+			DocumentPreamble:        dbDocumentModel.DocumentPreamble,
+			DocumentS3URL:           dbDocumentModel.DocumentS3URL,
+			DocumentMajorVersion:    dbDocumentModel.DocumentMajorVersion,
+			DocumentMinorVersion:    dbDocumentModel.DocumentMinorVersion,
+			DocumentCreationDate:    dbDocumentModel.DocumentCreationDate,
+		})
+	}
+
+	return response
 }
 
 // buildProject is a helper function to build a common set of projection/columns for the query
@@ -597,6 +713,9 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("project_ccla_enabled"),
 		expression.Name("project_icla_enabled"),
 		expression.Name("project_ccla_requires_icla_signature"),
+		expression.Name("project_corporate_documents"),
+		expression.Name("project_individual_documents"),
+		expression.Name("project_member_documents"),
 		expression.Name("date_created"),
 		expression.Name("date_modified"),
 		expression.Name("version"),
@@ -619,10 +738,3 @@ func addBooleanAttribute(item map[string]*dynamodb.AttributeValue, key string, v
 func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key string, value []string) {
 	item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
 }
-
-// addListAttribute adds a new list attribute to the existing map
-/*
-func addListAttribute(item map[string]*dynamodb.AttributeValue, key string, value []*dynamodb.AttributeValue) {
-	item[key] = &dynamodb.AttributeValue{L: value}
-}
-*/

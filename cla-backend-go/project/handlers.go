@@ -6,6 +6,8 @@ package project
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
@@ -15,8 +17,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+const defaultPageSize int64 = 50
+
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.ClaAPI, service Service) {
+	// Create CLA Group/Project Handler
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
@@ -94,7 +99,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 	// Get Project By ID
 	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 
-		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
+		projectModel, err := service.GetProjectByID(projectParams.ProjectID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
@@ -103,6 +108,34 @@ func Configure(api *operations.ClaAPI, service Service) {
 		}
 
 		return project.NewGetProjectByIDOK().WithPayload(projectModel)
+	})
+
+	// Get Project By External ID Handler
+	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, claUser *user.CLAUser) middleware.Responder {
+
+		log.Debugf("Project Handler - GetProjectsByExternalID")
+		if projectParams.ExternalID == "" {
+			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: "External ID is empty",
+			})
+		}
+
+		// Set the default page size
+		if projectParams.PageSize == nil {
+			projectParams.PageSize = aws.Int64(defaultPageSize)
+		}
+
+		log.Debugf("Project Handler - GetProjectsByExternalID - invoking service")
+		projectsModel, err := service.GetProjectsByExternalID(&projectParams)
+		if err != nil {
+			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
+		}
+		if projectsModel == nil {
+			return project.NewGetProjectsByExternalIDNotFound()
+		}
+
+		return project.NewGetProjectsByExternalIDOK().WithPayload(projectsModel)
 	})
 
 	// Get Project By Name
@@ -121,8 +154,8 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
-		err := service.DeleteProject(projectParams.ProjectSfdcID)
+		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectID)
+		err := service.DeleteProject(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
