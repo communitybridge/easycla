@@ -19,12 +19,12 @@ import (
 // Service interface defines function of Metrics service
 type Service interface {
 	GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error)
-	GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error)
+	GetCLAManagerDistribution() (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
 	GetProjectMetric(projectID string) (*models.ProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
-	ListProjectMetrics(params *metrics.ListProjectMetricsParams) (*models.ListProjectMetric, error)
+	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
 
 type service struct {
@@ -136,7 +136,7 @@ func (s *service) GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, 
 	return &out, nil
 }
 
-func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error) {
+func (s *service) GetCLAManagerDistribution() (*models.ClaManagerDistribution, error) {
 	cmd, err := s.metricsRepo.GetClaManagerDistribution()
 	if err != nil {
 		return nil, err
@@ -151,11 +151,11 @@ func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistribu
 }
 
 func (s *service) GetTotalCountMetrics() (*models.TotalCountMetrics, error) {
-	tmc, err := s.metricsRepo.GetTotalCountMetrics()
+	tcm, err := s.metricsRepo.GetTotalCountMetrics()
 	if err != nil {
 		return nil, err
 	}
-	return tmc.toModel(), nil
+	return tcm.toModel(), nil
 }
 
 func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, error) {
@@ -238,15 +238,15 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 		TopCompaniesByProjectCount:          companiesToModel(cmByProjectCount[:returnCount]),
 	}, nil
 }
-func (s *service) ListProjectMetrics(params *metrics.ListProjectMetricsParams) (*models.ListProjectMetric, error) {
+func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error) {
 	var out models.ListProjectMetric
 	var pageSize int64 = 5
 	var nextKey string
-	if params.PageSize != nil {
-		pageSize = *params.PageSize
+	if paramPageSize != nil {
+		pageSize = *paramPageSize
 	}
-	if params.NextKey != nil {
-		nextKey = *params.NextKey
+	if paramNextKey != nil {
+		nextKey = *paramNextKey
 	}
 	list, nextKey, err := s.metricsRepo.GetProjectMetrics(pageSize, nextKey)
 	if err != nil {

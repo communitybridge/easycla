@@ -105,6 +105,147 @@ paths:
       tags:
         - metrics
 
+  /metrics/cla-manager-distribution:
+    get:
+      summary: Get cla manager distribution for easycla
+      description: Returns cla manager distribution
+      security:
+        - lf-auth: []
+      operationId: getClaManagerDistribution
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-distribution'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/total-count:
+    get:
+      summary: Get total count metrics
+      description: Returns total count metrics
+      security:
+        - lf-auth: []
+      operationId: getTotalCount
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/total-count-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/company/{companyID}:
+    get:
+      summary: Get metrics of company
+      description: Returns company metrics
+      security:
+        - lf-auth: []
+      operationId: getCompanyMetric
+      parameters:
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/top-companies:
+    get:
+      summary: company metrics of top companies
+      description: Returns list company metrics of top companies
+      security:
+        - lf-auth: []
+      operationId: getTopCompanies
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/top-companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/project/{projectID}:
+    get:
+      summary: Get metrics of project
+      description: Returns project metrics
+      security:
+        - lf-auth: []
+      operationId: getProjectMetric
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/project:
+    get:
+      summary: list metrics of project
+      description: Returns list of project metrics
+      security:
+        - lf-auth: []
+      parameters:
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      operationId: listProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/list-project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
   # Project Service
   /project:
     post:
@@ -432,6 +573,48 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Metrics"
       type: "Metrics"
+
+  cla-manager-distribution:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ClaManagerDistribution"
+
+  total-count-metrics:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TotalCountMetrics"
+
+  top-companies:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TopCompanies"
+
+  company-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "CompanyMetric"
+
+  list-project-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ListProjectMetric"
+
+  project-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ProjectMetric"
 
   project-metrics:
     type: object

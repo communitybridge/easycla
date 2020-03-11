@@ -269,19 +269,19 @@ func (pm *ProjectMetric) toModel() *models.ProjectMetric {
 	}
 }
 
-func (tmc *TotalCountMetrics) toModel() *models.TotalCountMetrics {
+func (tcm *TotalCountMetrics) toModel() *models.TotalCountMetrics {
 	return &models.TotalCountMetrics{
-		ClaManagersCount:                  tmc.ClaManagersCount,
-		ContributorsCount:                 tmc.ContributorsCount,
-		CorporateContributorsCount:        tmc.CorporateContributorsCount,
-		CreatedAt:                         tmc.CreatedAt,
-		IndividualContributorsCount:       tmc.IndividualContributorsCount,
-		CompaniesCount:                    tmc.CompaniesCount,
-		ProjectsCount:                     tmc.ProjectsCount,
-		RepositoriesCount:                 tmc.RepositoriesCount,
-		CompaniesProjectContributionCount: tmc.CompaniesProjectContributionCount,
-		GerritRepositoriesCount:           tmc.GerritRepositoriesCount,
-		GithubRepositoriesCount:           tmc.GithubRepositoriesCount,
+		ClaManagersCount:                  tcm.ClaManagersCount,
+		ContributorsCount:                 tcm.ContributorsCount,
+		CorporateContributorsCount:        tcm.CorporateContributorsCount,
+		CreatedAt:                         tcm.CreatedAt,
+		IndividualContributorsCount:       tcm.IndividualContributorsCount,
+		CompaniesCount:                    tcm.CompaniesCount,
+		ProjectsCount:                     tcm.ProjectsCount,
+		RepositoriesCount:                 tcm.RepositoriesCount,
+		CompaniesProjectContributionCount: tcm.CompaniesProjectContributionCount,
+		GerritRepositoriesCount:           tcm.GerritRepositoriesCount,
+		GithubRepositoriesCount:           tcm.GithubRepositoriesCount,
 	}
 }
 
@@ -317,23 +317,23 @@ func (m *Metrics) processSignature(sig *ItemSignature) {
 	m.ProjectMetrics.processSignature(sig, sigType)
 }
 
-func (cm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) {
+func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) {
 	switch sigType {
 	case CclaSignature:
 		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(cm.claManagers, &cm.ClaManagersCount, acl)
+			increaseCountIfNotPresent(tcm.claManagers, &tcm.ClaManagersCount, acl)
 		}
 		companyID := sig.SignatureReferenceID
 		key := fmt.Sprintf("%s#%s", companyID, sig.SignatureProjectID)
-		increaseCountIfNotPresent(cm.companiesProjectContribution, &cm.CompaniesProjectContributionCount, key)
+		increaseCountIfNotPresent(tcm.companiesProjectContribution, &tcm.CompaniesProjectContributionCount, key)
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(cm.corporateContributors, &cm.CorporateContributorsCount, userID)
-		increaseCountIfNotPresent(cm.contributors, &cm.ContributorsCount, userID)
+		increaseCountIfNotPresent(tcm.corporateContributors, &tcm.CorporateContributorsCount, userID)
+		increaseCountIfNotPresent(tcm.contributors, &tcm.ContributorsCount, userID)
 	case IclaSignature:
 		userID := sig.SignatureReferenceID
-		increaseCountIfNotPresent(cm.individualContributors, &cm.IndividualContributorsCount, userID)
-		increaseCountIfNotPresent(cm.contributors, &cm.ContributorsCount, userID)
+		increaseCountIfNotPresent(tcm.individualContributors, &tcm.IndividualContributorsCount, userID)
+		increaseCountIfNotPresent(tcm.contributors, &tcm.ContributorsCount, userID)
 	}
 }
 
@@ -970,8 +970,8 @@ func (repo *repo) GetProjectMetrics(pageSize int64, nextKey string) ([]*ProjectM
 
 	if nextKey != "" {
 		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-			"id":          &dynamodb.AttributeValue{S: aws.String(nextKey)},
-			"metric_type": &dynamodb.AttributeValue{S: aws.String(MetricTypeProject)},
+			"id":          {S: aws.String(nextKey)},
+			"metric_type": {S: aws.String(MetricTypeProject)},
 		}
 	}
 
