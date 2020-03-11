@@ -62,6 +62,16 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return metrics.NewGetTopCompaniesOK().WithPayload(result)
 		})
+
+	api.MetricsListProjectMetricsHandler = metrics.ListProjectMetricsHandlerFunc(
+		func(params metrics.ListProjectMetricsParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.ListProjectMetrics(&params)
+			if err != nil {
+				return metrics.NewListProjectMetricsBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewListProjectMetricsOK().WithPayload(result)
+		})
+
 }
 
 type codedResponse interface {

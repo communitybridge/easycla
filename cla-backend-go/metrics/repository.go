@@ -27,7 +27,7 @@ type Repository interface {
 	GetClaManagerDistribution() (*ClaManagersDistribution, error)
 	GetTotalCountMetrics() (*TotalCountMetrics, error)
 	GetCompanyMetrics() ([]*CompanyMetric, error)
-	GetProjectMetrics() ([]*ProjectMetric, error)
+	GetProjectMetrics(pageSize int64, nextKey string) ([]*ProjectMetric, string, error)
 	GetCompanyMetric(companyID string) (*CompanyMetric, error)
 	GetProjectMetric(projectID string) (*ProjectMetric, error)
 }
@@ -82,10 +82,16 @@ type ItemRepository struct {
 	RepositoryProjectID string `json:"repository_project_id"`
 }
 
+// ItemGerritInstance represent item of gerrit instance table
+type ItemGerritInstance struct {
+	ProjectID string `json:"project_id"`
+}
+
 // ItemProject represent item of projects table
 type ItemProject struct {
 	ProjectID         string `json:"project_id"`
 	ProjectExternalID string `json:"project_external_id"`
+	ProjectName       string `json:"project_name"`
 }
 
 // Metrics contain all metrics related to easycla
@@ -104,6 +110,8 @@ type TotalCountMetrics struct {
 	ClaManagersCount                  int64  `json:"cla_managers_count"`
 	ContributorsCount                 int64  `json:"contributors_count"`
 	ProjectsCount                     int64  `json:"projects_count"`
+	GithubRepositoriesCount           int64  `json:"github_repositories_count"`
+	GerritRepositoriesCount           int64  `json:"gerrit_repositories_count"`
 	RepositoriesCount                 int64  `json:"repositories_count"`
 	CompaniesCount                    int64  `json:"companies_count"`
 	CompaniesProjectContributionCount int64  `json:"companies_project_contribution_count"`
@@ -139,6 +147,7 @@ type ProjectMetric struct {
 	RepositoriesCount           int64  `json:"repositories_count"`
 	CreatedAt                   string `json:"created_at"`
 	ExternalProjectID           string `json:"external_project_id"`
+	ProjectName                 string `json:"project_name"`
 	companies                   map[string]interface{}
 	claManagers                 map[string]interface{}
 	corporateContributors       map[string]interface{}
@@ -212,6 +221,7 @@ func newProjectMetric() *ProjectMetric {
 		TotalContributorsCount:      0,
 		RepositoriesCount:           0,
 		ExternalProjectID:           "",
+		ProjectName:                 "",
 	}
 }
 
@@ -241,6 +251,37 @@ func (cm *CompanyMetric) toModel() *models.CompanyMetric {
 		CreatedAt:                  cm.CreatedAt,
 		ID:                         cm.ID,
 		ProjectsCount:              cm.ProjectCount,
+	}
+}
+
+func (pm *ProjectMetric) toModel() *models.ProjectMetric {
+	return &models.ProjectMetric{
+		ClaManagersCount:            pm.ClaManagersCount,
+		CompaniesCount:              pm.CompaniesCount,
+		CorporateContributorsCount:  pm.CorporateContributorsCount,
+		CreatedAt:                   pm.CreatedAt,
+		ID:                          pm.ID,
+		IndividualContributorsCount: pm.IndividualContributorsCount,
+		RepositoriesCount:           pm.RepositoriesCount,
+		TotalContributorsCount:      pm.TotalContributorsCount,
+		ExternalProjectID:           pm.ExternalProjectID,
+		ProjectName:                 pm.ProjectName,
+	}
+}
+
+func (tmc *TotalCountMetrics) toModel() *models.TotalCountMetrics {
+	return &models.TotalCountMetrics{
+		ClaManagersCount:                  tmc.ClaManagersCount,
+		ContributorsCount:                 tmc.ContributorsCount,
+		CorporateContributorsCount:        tmc.CorporateContributorsCount,
+		CreatedAt:                         tmc.CreatedAt,
+		IndividualContributorsCount:       tmc.IndividualContributorsCount,
+		CompaniesCount:                    tmc.CompaniesCount,
+		ProjectsCount:                     tmc.ProjectsCount,
+		RepositoriesCount:                 tmc.RepositoriesCount,
+		CompaniesProjectContributionCount: tmc.CompaniesProjectContributionCount,
+		GerritRepositoriesCount:           tmc.GerritRepositoriesCount,
+		GithubRepositoriesCount:           tmc.GithubRepositoriesCount,
 	}
 }
 
@@ -359,13 +400,24 @@ func (pm *ProjectMetrics) processRepositories(repo *ItemRepository) {
 	m.RepositoriesCount++
 }
 
-func (pm *ProjectMetrics) fillExternalProjectID(project *ItemProject) {
+func (pm *ProjectMetrics) processGerritInstance(gi *ItemGerritInstance) {
+	projectID := gi.ProjectID
+	m, ok := pm.ProjectMetrics[projectID]
+	if !ok {
+		m = newProjectMetric()
+		pm.ProjectMetrics[projectID] = m
+	}
+	m.RepositoriesCount++
+}
+
+func (pm *ProjectMetrics) fillProjectInfo(project *ItemProject) {
 	m, ok := pm.ProjectMetrics[project.ProjectID]
 	if !ok {
 		m = newProjectMetric()
 		pm.ProjectMetrics[project.ProjectID] = m
 	}
 	m.ExternalProjectID = project.ProjectExternalID
+	m.ProjectName = project.ProjectName
 }
 
 func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
@@ -479,8 +531,57 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 		}
 
 		for _, r := range repos {
-			metrics.TotalCountMetrics.RepositoriesCount++
+			metrics.TotalCountMetrics.GithubRepositoriesCount++
 			metrics.ProjectMetrics.processRepositories(r)
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return nil
+}
+
+func (repo *repo) processGerritInstancesTable(metrics *Metrics) error {
+	log.Println("processing gerrit instances table")
+	projection := expression.NamesList(
+		expression.Name("project_id"),
+	)
+	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for metric scan, error: %v", err)
+		return err
+	}
+
+	gerritInstancesTableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(gerritInstancesTableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving repositories, error: %v", err)
+			return err
+		}
+
+		var gerritInstances []*ItemGerritInstance
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerritInstances)
+		if err != nil {
+			log.Warnf("error unmarshalling repositories from database. error: %v", err)
+			return err
+		}
+
+		for _, gi := range gerritInstances {
+			metrics.TotalCountMetrics.GerritRepositoriesCount++
+			metrics.ProjectMetrics.processGerritInstance(gi)
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
@@ -499,19 +600,20 @@ func (repo *repo) processProjectsTable(metrics *Metrics) error {
 		return err
 	}
 	metrics.TotalCountMetrics.ProjectsCount = projectCount
-	err = repo.fillProjectExternalID(metrics)
+	err = repo.fillProjectInfo(metrics)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (repo *repo) fillProjectExternalID(metrics *Metrics) error {
+func (repo *repo) fillProjectInfo(metrics *Metrics) error {
 	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	log.Println("processing project table to fill ExternalProjectID")
+	log.Println("processing project table to fill project info")
 	projection := expression.NamesList(
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
+		expression.Name("project_name"),
 	)
 	expr, err := expression.NewBuilder().WithProjection(projection).Build()
 	if err != nil {
@@ -543,7 +645,7 @@ func (repo *repo) fillProjectExternalID(metrics *Metrics) error {
 		}
 
 		for _, project := range projects {
-			metrics.ProjectMetrics.fillExternalProjectID(project)
+			metrics.ProjectMetrics.fillProjectInfo(project)
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
@@ -573,6 +675,10 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 		return nil, err
 	}
 	err = repo.processRepositoriesTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	err = repo.processGerritInstancesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
@@ -686,6 +792,7 @@ func addIDTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricTy
 
 func (repo *repo) saveTotalMetris(tm *TotalCountMetrics) error {
 	log.Println("saving total count metrics")
+	tm.RepositoriesCount = tm.GithubRepositoriesCount + tm.GerritRepositoriesCount
 	av, err := dynamodbattribute.MarshalMap(tm)
 	if err != nil {
 		return err
@@ -842,14 +949,14 @@ func (repo *repo) GetCompanyMetrics() ([]*CompanyMetric, error) {
 	return companyMetrics, nil
 }
 
-func (repo *repo) GetProjectMetrics() ([]*ProjectMetric, error) {
+func (repo *repo) GetProjectMetrics(pageSize int64, nextKey string) ([]*ProjectMetric, string, error) {
 
 	keyCondition := expression.Key("metric_type").Equal(expression.Value(MetricTypeProject))
 
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCondition).Build()
 	if err != nil {
 		log.Warnf("error building expression for company metric scan, error: %v", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	// Assemble the query input parameters
@@ -858,33 +965,46 @@ func (repo *repo) GetProjectMetrics() ([]*ProjectMetric, error) {
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		TableName:                 aws.String(repo.metricTableName),
+		Limit:                     aws.Int64(pageSize),
+	}
+
+	if nextKey != "" {
+		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			"id":          &dynamodb.AttributeValue{S: aws.String(nextKey)},
+			"metric_type": &dynamodb.AttributeValue{S: aws.String(MetricTypeProject)},
+		}
 	}
 
 	var projectMetrics []*ProjectMetric
 	for {
-		results, errQuery := repo.dynamoDBClient.Query(queryInput)
-		if errQuery != nil {
-			log.Warnf("error retrieving project metrics, error: %v", errQuery)
-			return nil, errQuery
+		results, err := repo.dynamoDBClient.Query(queryInput)
+		if err != nil {
+			log.Warnf("error retrieving project metrics, error: %v", err)
+			return nil, "", err
 		}
 
 		var projectMetricsTmp []*ProjectMetric
 
-		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &projectMetricsTmp)
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &projectMetricsTmp)
 		if err != nil {
 			log.Warnf("error unmarshalling project metrics from database. error: %v", err)
-			return nil, err
+			return nil, "", err
 		}
 		projectMetrics = append(projectMetrics, projectMetricsTmp...)
-
 		if len(results.LastEvaluatedKey) != 0 {
 			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+			nextKey = *results.LastEvaluatedKey["id"].S
 		} else {
+			nextKey = ""
+			break
+		}
+		if int64(len(projectMetrics)) >= pageSize {
 			break
 		}
 	}
-	return projectMetrics, nil
+	return projectMetrics, nextKey, nil
 }
+
 func (repo *repo) GetCompanyMetric(companyID string) (*CompanyMetric, error) {
 	var out CompanyMetric
 	err := repo.getMetricByID(companyID, MetricTypeCompany, &out)

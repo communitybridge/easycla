@@ -1671,6 +1671,30 @@ paths:
       tags:
         - metrics
 
+  /metrics/project:
+    get:
+      summary: list metrics of project
+      description: Returns list of project metrics
+      security:
+        - OauthSecurity: []
+      parameters:
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      operationId: listProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/list-project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
 # Common parameters
 parameters:
   pageSize:
@@ -2776,6 +2800,12 @@ definitions:
       repositoriesCount:
         type: integer
         x-omitempty: false
+      githubRepositoriesCount:
+        type: integer
+        x-omitempty: false
+      gerritRepositoriesCount:
+        type: integer
+        x-omitempty: false
       companiesProjectContributionCount:
         type: integer
         x-omitempty: false
@@ -2828,12 +2858,24 @@ definitions:
         type: string
     title: Company metrics
 
+  list-project-metric:
+    type: object
+    properties:
+      nextKey:
+        type: string
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+
   project-metric:
     type: object
     properties:
       id:
         type: string
       externalProjectID:
+        type: string
+      projectName:
         type: string
       companiesCount:
         type: integer
