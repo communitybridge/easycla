@@ -189,10 +189,11 @@ func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadClose
 
 	// Upload the file to S3.
 	result, err := s.s3Client.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filepath),
-		Body:   template,
-		ACL:    aws.String("public-read"),
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(filepath),
+		Body:        template,
+		ACL:         aws.String("public-read"),
+		ContentType: aws.String("application/pdf"),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload file to S3 Bucket: %s / %s, %v", bucket, filepath, err)

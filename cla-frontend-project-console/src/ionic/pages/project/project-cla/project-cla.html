@@ -53,7 +53,7 @@
                 <ion-grid>
                   <ion-row>
                     <ion-col class="vertical-rule-right" col-12 col-md-6
-                             *ngFor="let organization of githubOrganizations">
+                      *ngFor="let organization of githubOrganizations">
                       <ion-card-content *ngIf="organization.providerInfo">
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
@@ -72,7 +72,7 @@
 
                         <div class="organization-actions">
                           <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
-                                  color="light">
+                            color="light">
                             Delete
                           </button>
                         </div>
@@ -99,10 +99,12 @@
           <ion-col col-12>
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
-                <ion-col col-6 class="project-title">
+                <ion-col col-5 class="project-title">
                   <h2>
                     {{ project.project_name }}
                   </h2>
+                </ion-col>
+                <ion-col col-auto>
                   <ion-buttons start>
                     <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
                       <ion-icon name="settings" item-right></ion-icon>
@@ -115,12 +117,12 @@
                       Select Template
                     </button>
                     <button ion-button (click)="openClaViewSignaturesModal(project.project_id, project.project_name)"
-                            color="light">
+                      color="light">
                       View Signatures
                     </button>
                     <!-- <button ion-button (click)="openClaContractCompaniesModal(project.project_id)" -->
                     <button ion-button (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
-                            color="light">
+                      color="light">
                       View Companies
                     </button>
                   </ion-buttons>
@@ -139,16 +141,16 @@
                           <span>Corporate CLA</span>
                           <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
                               <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Corporate CLA as a PDF document"
-                                   alt="pdf icon" />
+                                title="Download the {{ project.project_name }} Corporate CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
                         <ng-container *ngIf="!project.project_corporate_documents.length">
                           <p>
-                            No Template Created.
+                            No template selected.
                           </p>
                         </ng-container>
                         <ion-grid class="contract-details" *ngIf="project.project_corporate_documents.length">
@@ -175,8 +177,9 @@
                             <ion-col>
                               <ion-buttons end="" class="bar-buttons bar-buttons-md">
                                 <!-- <button ion-button (click)="openClaContractCompaniesModal(project.project_id)" -->
-                                <button ion-button (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
-                                        color="secondary">
+                                <button ion-button
+                                  (click)="openClaViewCompaniesModal(project.project_id, project.project_name)"
+                                  color="secondary">
                                   View Companies
                                 </button>
                               </ion-buttons>
@@ -198,10 +201,10 @@
                           <span>Individual CLA</span>
                           <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
                               <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Individual CLA as a PDF document"
-                                   alt="pdf icon" />
+                                title="Download the {{ project.project_name }} Individual CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
@@ -246,10 +249,10 @@
                           <span>LF Member Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_member_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'member', project.project_member_documents)">
+                              (click)="openClaContractVersionModal(project.project_id, 'member', project.project_member_documents)">
                               <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} LF Member Agreement CLA as a PDF document"
-                                   alt="pdf icon" />
+                                title="Download the {{ project.project_name }} LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
@@ -294,10 +297,10 @@
                           <span>Non-LF Member Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_corporate_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
+                              (click)="openClaContractVersionModal(project.project_id, 'corporate', project.project_corporate_documents)">
                               <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Non-LF Member Agreement CLA as a PDF document"
-                                   alt="pdf icon" />
+                                title="Download the {{ project.project_name }} Non-LF Member Agreement CLA as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
@@ -342,10 +345,10 @@
                           <span>Individual Agreement</span>
                           <div class="contract-title-buttons" *ngIf="project.project_individual_documents.length">
                             <button clear
-                                    (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
+                              (click)="openClaContractVersionModal(project.project_id, 'individual', project.project_individual_documents)">
                               <img src="/assets/img/pdf.png"
-                                   title="Download the {{ project.project_name }} Individual Agreement as a PDF document"
-                                   alt="pdf icon" />
+                                title="Download the {{ project.project_name }} Individual Agreement as a PDF document"
+                                alt="pdf icon" />
                             </button>
                           </div>
                         </ion-card-title>
@@ -394,7 +397,7 @@
                 <ion-col col-6>
                   <ion-buttons end>
                     <button ion-button (click)="openClaConfigureGithubRepositoriesModal(project.project_id)"
-                            color="secondary">
+                      color="secondary">
                       Configure Github Repositories
                     </button>
                   </ion-buttons>

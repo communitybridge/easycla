@@ -60,25 +60,30 @@ export class ClaContractConfigModal {
     }
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   submit() {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
-    if (!this.form.valid) {
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
-    if (this.newClaProject) {
-      this.postProject();
+    if (this.isFormValid()) {
+      if (this.newClaProject) {
+        this.postProject();
+      } else {
+        this.putProject();
+      }
     } else {
-      this.putProject();
+      this.currentlySubmitting = false;
     }
   }
 
-  checkMandatory(value: boolean = true) {
-    this.form.controls['cclaAndIcla'].setValue(value);
+  isFormValid(){
+    return this.form.valid && (this.form.controls.ccla.value || this.form.controls.icla.value)
+  }
+
+  checkMandatory() {
+    if (!this.form.controls.ccla.value || !this.form.controls.icla.value) {
+      this.form.controls['cclaAndIcla'].setValue(false);
+    }
   }
 
   postProject() {

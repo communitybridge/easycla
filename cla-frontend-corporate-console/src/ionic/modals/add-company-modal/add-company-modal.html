@@ -41,7 +41,7 @@
           </ion-row>
 
           <ion-item *ngIf="!form.controls.companyName.valid && (form.controls.companyName.touched || submitAttempt)" no-lines>
-            <p>* A company name is required.</p>
+            <p class="danger">* A company name is required.</p>
           </ion-item>
         </ion-col>
       </ion-row>

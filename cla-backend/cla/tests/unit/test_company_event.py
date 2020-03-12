@@ -45,7 +45,7 @@ def test_create_company_event(mock_event, auth_user, create_event_company, user,
         event_data=event_data,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
-        user_id=user.get_user_id(),
+        event_user_id=user.get_user_id(),
     )
 
 @patch('cla.controllers.company.Event.create_event')

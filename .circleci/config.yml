@@ -51,8 +51,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
-            - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+            - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -106,19 +105,28 @@ jobs:
 
   buildGoBackend: &buildGoBackendAnchor
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
     working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
-            - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+            - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
       - run:
           name: Setup
           command: |
             cd cla-backend-go
             make setup_dev
+      - run:
+          name: Clean
+          command: |
+            cd cla-backend-go
+            make clean
+      - run:
+          name: Dependencies
+          command: |
+            cd cla-backend-go
+            make deps
       - run:
           name: Build Swagger
           command: |
@@ -134,6 +142,7 @@ jobs:
           command: |
             cd cla-backend-go
             make build-aws-lambda
+            make build-metrics-lambda
       - run:
           name: Test
           command: |
@@ -151,7 +160,8 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - cla-backend-go/backend_aws_lambda
+            - cla-backend-go/backend-aws-lambda
+            - cla-backend-go/metrics-aws-lambda
 
   buildGoBackendDev:
     <<: *buildGoBackendAnchor
@@ -184,8 +194,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "9c:fe:5c:73:07:32:4e:5f:01:13:01:a1:ea:6a:04:9d"
-            - "47:b5:56:d6:bb:a2:c5:90:76:74:70:bf:60:8a:f4:cf"
+            - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -208,7 +217,7 @@ jobs:
             printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
             echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
       - run:
-          name: Deploy
+          name: Deploy EasyCLA v1
           command: |
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
@@ -223,16 +232,45 @@ jobs:
             # --------------------------------------------------------------
 
             # Copy over the go backend binary to the common cla-backend folder (they share a single serverless.yml config)
-            cp ~/cla-backend-go/backend_aws_lambda ~/project/cla-backend/
+            cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend/
+            cp ~/cla-backend-go/metrics-aws-lambda ~/project/cla-backend/
 
-            echo "Directory: ~/project/cla-backend/"
             ls -alF ~/project/cla-backend/
             pushd ~/project/cla-backend
+            echo "Directory: $(pwd)"
             yarn install
 
+            if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
+            if [[ ! -f metrics-aws-lambda ]]; then echo "Missing metrics-aws-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
             if [[ ! -f serverless-authorizer.yml ]]; then echo "Missing serverless-authorizer.yml file. Exiting..."; exit 1; fi
             yarn sls deploy --force --stage ${STAGE} --region us-east-1
+      - run:
+          name: Deploy EasyCLA v2
+          command: |
+            echo "Using AWS profile: ${AWS_PROFILE}"
+            echo "Stage is: ${STAGE}"
+
+            # --------------------------------------------------------------
+            ## Debug to confirm the binary files were restored
+            echo "Directory: ~/"
+            ls -alF ~/
+            echo "Directory: ~/cla-backend-go/"
+            ls -alF ~/cla-backend-go/
+            ## End Debug
+            # --------------------------------------------------------------
+
+            cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend-go/
+            echo "Directory: ~/project/cla-backend-go/"
+            ls -alF ~/project/cla-backend-go/
+            pushd ~/project/cla-backend-go
+            echo "Directory: $(pwd)"
+            if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
+            yarn install
+
+            # Deploy to us-east-2
+            if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file in $(pwd). Exiting..."; exit 1; fi
+            yarn sls deploy --force --stage ${STAGE} --region us-east-2
       - run:
           name: Service Check
           command: |

@@ -9,16 +9,22 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 
+	lfxAuth "github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/docs"
 	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
+	v2Metrics "github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
+	v2Version "github.com/communitybridge/easycla/cla-backend-go/v2/version"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
+	v2Project "github.com/communitybridge/easycla/cla-backend-go/v2/project"
 
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
 
@@ -35,10 +41,13 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
+	v2RestAPI "github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi"
+	v2Ops "github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"github.com/communitybridge/easycla/cla-backend-go/health"
 	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
 	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -124,10 +133,17 @@ func server(localMode bool) http.Handler {
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
-		logrus.Panicf("Invalid swagger file for initializing cla - Error: %v", err)
+		logrus.Panicf("Invalid swagger file for initializing EasyCLA v1 - Error: %v", err)
+	}
+
+	v2SwaggerSpec, err := loads.Analyzed(v2RestAPI.SwaggerJSON, "")
+	if err != nil {
+		logrus.Panicf("Invalid swagger file for initializing EasyCLA v2 - Error: %v", err)
 	}
 
 	api := operations.NewClaAPI(swaggerSpec)
+	v2API := v2Ops.NewEasyclaAPI(v2SwaggerSpec)
+
 	docraptorClient, err := docraptor.NewDocraptorClient(configFile.Docraptor.APIKey, configFile.Docraptor.TestMode)
 	if err != nil {
 		logrus.Panicf("Unable to setup docraptor client - Error: %v", err)
@@ -153,6 +169,7 @@ func server(localMode bool) http.Handler {
 	projectRepo := project.NewDynamoRepository(awsSession, stage)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	repositoriesRepo := repositories.NewRepository(awsSession, stage)
+	metricsRepo := metrics.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
@@ -165,7 +182,7 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo)
+	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -174,11 +191,16 @@ func server(localMode bool) http.Handler {
 	utils.SetSnsEmailSender(awsSession, configFile.SNSEventTopicARN, configFile.SenderEmailAddress)
 	utils.SetS3Storage(awsSession, configFile.SignatureFilesBucket)
 
-	// Setup our API handlers
+	// Setup security handlers
 	api.OauthSecurityAuth = authorizer.SecurityAuth
+	v2API.LfAuthAuth = lfxAuth.SwaggerAuth
+
+	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
 	project.Configure(api, projectService)
+	v2Project.Configure(v2API, projectService)
 	health.Configure(api, healthService)
+	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
@@ -186,20 +208,30 @@ func server(localMode bool) http.Handler {
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	onboard.Configure(api, onboardService, eventsService)
 	docs.Configure(api)
+	v2Docs.Configure(v2API)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
+	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
 	metrics.Configure(api, metricsService)
+	v2Metrics.Configure(v2API, metricsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
 	if localMode {
-		apiHandler = setupCORSHandlerLocal(api.Serve(setupMiddlewares))
-		// For auto session save/load, use:
-		//apiHandler = setupSessionHandler(
-		//	setupCORSHandlerLocal(
-		//		api.Serve(setupMiddlewares)), sessionStore)
+		apiHandler = setupCORSHandlerLocal(
+			wrapHandlers(
+				// v1 API => /v3, python side is /v1 and /v2
+				api.Serve(setupMiddlewares), swaggerSpec.BasePath(),
+				// v2 API => /v4
+				v2API.Serve(setupMiddlewares), v2SwaggerSpec.BasePath()))
 	} else {
-		apiHandler = setupCORSHandler(api.Serve(setupMiddlewares), configFile.AllowedOrigins)
+		apiHandler = setupCORSHandler(
+			wrapHandlers(
+				// v1 API => /v3, python side is /v1 and /v2
+				api.Serve(setupMiddlewares), swaggerSpec.BasePath(),
+				// v2 API => /v4
+				v2API.Serve(setupMiddlewares), v2SwaggerSpec.BasePath()),
+			configFile.AllowedOrigins)
 	}
 
 	return apiHandler
@@ -226,25 +258,48 @@ func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handle
 				return false
 			}
 
-			if u.Scheme != "https" {
-				log.Warnf("non-https scheme: %s - blocking origin: %s", u.Scheme, origin)
+			// Ensure the origin is in our allowed list
+			allowedOrigin := hostInSlice(u.Hostname(), allowedOrigins)
+			if allowedOrigin {
+				// localhost with HTTP is allowed
+				if strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "http" {
+					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					return true
+				}
+
+				// non-localhost with HTTPS is allowed
+				if !strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "https" {
+					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					return true
+				}
+
+				log.Debugf("origin %s with protocol %s is NOT allowed", u.Hostname(), u.Scheme)
 				return false
 			}
 
-			// Ensure the origin is in our allowed list
-			allowedOrigin := stringInSlice(u.Hostname(), allowedOrigins)
-			if allowedOrigin {
-				log.Debugf("origin %s is allowed", u.Hostname())
-			} else {
-				log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
-			}
-			return allowedOrigin
+			log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
+			return false
 		},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: false,
 	})
 
 	return c.Handler(handler)
+}
+
+// wrapHandlers routes the request to the appropriate handler
+func wrapHandlers(v1 http.Handler, v1BasePath string, v2 http.Handler, v2BasePath string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//log.Debugf("Path is: %s", r.URL.Path)
+		if strings.HasPrefix(r.URL.Path, v1BasePath) {
+			//log.Debugf("Routing to /v3 API handler...")
+			v1.ServeHTTP(w, r)
+		}
+		if strings.HasPrefix(r.URL.Path, v2BasePath) {
+			//log.Debugf("Routing to /v2 API handler...")
+			v2.ServeHTTP(w, r)
+		}
+	})
 }
 
 // setupCORSHandlerLocal allows all origins and sets up the handler
@@ -264,13 +319,28 @@ func setupCORSHandlerLocal(handler http.Handler) http.Handler {
 	return c.Handler(handler)
 }
 
-// stringInSlice returns true if the specified string exists in the slice, otherwise returns false
+// stringInSlice returns true if the specified string value exists in the slice, otherwise returns false
 func stringInSlice(a string, list []string) bool {
 	if list == nil {
 		return false
 	}
 
 	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// hostInSlice returns true if the specified host value exists in the slice, otherwise returns false
+func hostInSlice(a string, list []string) bool {
+	if list == nil {
+		return false
+	}
+
+	for _, b := range list {
+		b = strings.Split(b, ":")[0]
 		if b == a {
 			return true
 		}
@@ -319,39 +389,3 @@ func responseLoggingMiddleware(next http.Handler) http.Handler {
 		}
 	})
 }
-
-/*
-func setupSessionHandler(next http.Handler, sessionStore *dynastore.Store) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		session, err := sessionStore.Get(req, github.SessionStoreKey)
-		if err != nil {
-			log.Warnf("Error fetching session, error: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			next.ServeHTTP(w, req)
-			return
-		}
-
-		if session.IsNew {
-			err := session.Save(req, w)
-			if err != nil {
-				log.Warnf("Error saving session, error: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				next.ServeHTTP(w, req)
-				return
-			}
-		}
-
-		defer func() {
-			err := session.Save(req, w)
-			if err != nil {
-				log.Warnf("Error saving session, error: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				next.ServeHTTP(w, req)
-				return
-			}
-		}()
-
-		next.ServeHTTP(w, req)
-	})
-}
-*/
