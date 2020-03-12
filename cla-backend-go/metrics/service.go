@@ -19,11 +19,12 @@ import (
 // Service interface defines function of Metrics service
 type Service interface {
 	GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error)
-	GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error)
+	GetCLAManagerDistribution() (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
 	GetProjectMetric(projectID string) (*models.ProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
+	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
 
 type service struct {
@@ -135,7 +136,7 @@ func (s *service) GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, 
 	return &out, nil
 }
 
-func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistributionParams) (*models.ClaManagerDistribution, error) {
+func (s *service) GetCLAManagerDistribution() (*models.ClaManagerDistribution, error) {
 	cmd, err := s.metricsRepo.GetClaManagerDistribution()
 	if err != nil {
 		return nil, err
@@ -150,21 +151,11 @@ func (s *service) GetCLAManagerDistribution(params metrics.GetClaManagerDistribu
 }
 
 func (s *service) GetTotalCountMetrics() (*models.TotalCountMetrics, error) {
-	tmc, err := s.metricsRepo.GetTotalCountMetrics()
+	tcm, err := s.metricsRepo.GetTotalCountMetrics()
 	if err != nil {
 		return nil, err
 	}
-	return &models.TotalCountMetrics{
-		ClaManagersCount:                  tmc.ClaManagersCount,
-		ContributorsCount:                 tmc.ContributorsCount,
-		CorporateContributorsCount:        tmc.CorporateContributorsCount,
-		CreatedAt:                         tmc.CreatedAt,
-		IndividualContributorsCount:       tmc.IndividualContributorsCount,
-		CompaniesCount:                    tmc.CompaniesCount,
-		ProjectsCount:                     tmc.ProjectsCount,
-		RepositoriesCount:                 tmc.RepositoriesCount,
-		CompaniesProjectContributionCount: tmc.CompaniesProjectContributionCount,
-	}, nil
+	return tcm.toModel(), nil
 }
 
 func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, error) {
@@ -176,21 +167,11 @@ func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, err
 }
 
 func (s *service) GetProjectMetric(projectID string) (*models.ProjectMetric, error) {
-	cm, err := s.metricsRepo.GetProjectMetric(projectID)
+	pm, err := s.metricsRepo.GetProjectMetric(projectID)
 	if err != nil {
 		return nil, err
 	}
-	return &models.ProjectMetric{
-		ClaManagersCount:            cm.ClaManagersCount,
-		CompaniesCount:              cm.CompaniesCount,
-		CorporateContributorsCount:  cm.CorporateContributorsCount,
-		CreatedAt:                   cm.CreatedAt,
-		ID:                          cm.ID,
-		IndividualContributorsCount: cm.IndividualContributorsCount,
-		RepositoriesCount:           cm.RepositoriesCount,
-		TotalContributorsCount:      cm.TotalContributorsCount,
-		ExternalProjectID:           cm.ExternalProjectID,
-	}, nil
+	return pm.toModel(), nil
 }
 
 func average(numerator, denominator int64) int64 {
@@ -256,4 +237,24 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 		TopCompaniesByCorporateContributors: companiesToModel(cmByCorporateContributors[:returnCount]),
 		TopCompaniesByProjectCount:          companiesToModel(cmByProjectCount[:returnCount]),
 	}, nil
+}
+func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error) {
+	var out models.ListProjectMetric
+	var pageSize int64 = 5
+	var nextKey string
+	if paramPageSize != nil {
+		pageSize = *paramPageSize
+	}
+	if paramNextKey != nil {
+		nextKey = *paramNextKey
+	}
+	list, nextKey, err := s.metricsRepo.GetProjectMetrics(pageSize, nextKey)
+	if err != nil {
+		return nil, err
+	}
+	for _, pm := range list {
+		out.List = append(out.List, pm.toModel())
+	}
+	out.NextKey = nextKey
+	return &out, nil
 }
