@@ -35,12 +35,13 @@ function generateCSP(env, isDevServer) {
         'https://linuxfoundation-dev.auth0.com/',
         'https://linuxfoundation-staging.auth0.com/',
         'https://sso.linuxfoundation.org/',
-        'https://api.staging.lfcla.com/',
         'https://api.dev.lfcla.com/',
-        'https://api.test.lfcla.com/',
+        'https://api.staging.lfcla.com/',
         'https://api.lfcla.com/',
-        'https://communitybridge.org/'
+        'https://communitybridge.org/',
+        'https://github.org/',
     ];
+
     let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
     let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
 
@@ -59,7 +60,6 @@ function generateCSP(env, isDevServer) {
         'default-src': [NONE],
         'img-src': [SELF, 'data:',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
-            'https://s3.amazonaws.com/cla-project-logo-test/',
             'https://s3.amazonaws.com/cla-project-logo-staging/',
             'https://s3.amazonaws.com/cla-project-logo-prod/'
         ],
@@ -76,8 +76,6 @@ function generateCSP(env, isDevServer) {
             'https://drive.google.com/', // allow the google drive PDF viewer
             'https://cla-signature-files-dev.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
-            'https://cla-signature-files-test.s3.amazonaws.com/',
-            'https://s3.amazonaws.com/cla-project-logo-test/',
             'https://cla-signature-files-staging.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-staging/',
             'https://cla-signature-files-prod.s3.amazonaws.com/',

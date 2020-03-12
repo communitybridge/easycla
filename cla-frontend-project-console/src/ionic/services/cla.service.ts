@@ -1002,8 +1002,8 @@ export class ClaService {
     // const header = {
     //   Accept: 'application/vnd.github.v3+json',
     // }
-    // let requestOptions = {                                                                                                                                                                                 
-    //   headers: new Headers(header), 
+    // let requestOptions = {
+    //   headers: new Headers(header),
     // };
     const url = new URL(`https://api.github.com/orgs/${gitOrganisationName}`);
     return this.http.getWithoutHeaders(url);
