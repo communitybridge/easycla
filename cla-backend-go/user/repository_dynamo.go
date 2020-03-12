@@ -4,6 +4,7 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -92,7 +93,7 @@ func (repo RepositoryDynamo) GetUserAndProfilesByLFID(lfidUsername string) (CLAU
 		log.Debugf(fmt.Sprintf("Get User And Profiles By LFID - user not found given LFID: %s", lfidUsername))
 		return CLAUser{
 			LFUsername: lfidUsername,
-		}, err
+		}, errors.New("user not found")
 	}
 
 	claUser := CLAUser{

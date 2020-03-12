@@ -114,7 +114,7 @@ def create_company(auth_user,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
         event_data=event_data,
-        user_id=user_id
+        event_user_id=user_id
     )
 
     return {"status_code": HTTP_200,

@@ -72,7 +72,7 @@ export class ClaContractVersionModal {
     }
   }
 
-  openNewWindow(event, document) {
+  async openPdfModal(document) {
     if (document.document_s3_url == null || document.document_s3_url == '') {
       const msg =
         'Unable to open PDF document for ' +
@@ -93,8 +93,8 @@ export class ClaContractVersionModal {
           '</body></html>'
       );
     } else {
-      console.log('Opening new window to' + document.document_s3_url);
-      let win = window.open(document.document_s3_url, '_blank', 'titlebar=yes');
+      const modal = this.modalCtrl.create('PdfViewerModal', {doc: document.document_s3_url, documentType: this.documentType});
+      modal.present();
     }
   }
 

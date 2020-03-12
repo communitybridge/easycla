@@ -32,7 +32,7 @@
                 <ion-row>
                   <ion-col>
                     <button ion-button (click)="goToStep('selection')" color="light">
-                      <ion-icon name="arrow-back"></ion-icon>
+                      <ion-icon name="arrow-back" class="icon-mr"></ion-icon>
                       Back to Template Selection
                     </button>
                   </ion-col>
@@ -71,7 +71,7 @@
                 <ion-row>
                   <ion-col>
                     <button ion-button (click)="goToStep('values')" color="light">
-                      <ion-icon name="arrow-back"></ion-icon>
+                      <ion-icon name="arrow-back" class="icon-mr"></ion-icon>
                       Back to Template Information
                     </button>
                   </ion-col>
@@ -92,9 +92,7 @@
 
                 <ion-row>
                   <ion-col>
-                    <object [data]="getPdfPath()" type="application/pdf" class="pdf-viewer">
-                      <embed [src]="getPdfPath()" type="application/pdf" />
-                    </object>
+                    <easy-pdf-viewer [src]="getPdfPath()"></easy-pdf-viewer>
                   </ion-col>
                 </ion-row>
 

@@ -1,0 +1,21 @@
+{
+  "name": "easycla-api",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "The Linux Foundation",
+  "scripts": {
+    "sls": "./node_modules/serverless/bin/serverless",
+    "deploy:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s dev -r us-east-2 --verbose",
+    "package:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s dev -r us-east-2 --verbose"
+  },
+  "dependencies": {
+    "install": "^0.13.0",
+    "node.extend": "^2.0.2",
+    "request": "^2.88.0",
+    "serverless": "^1.54.0",
+    "serverless-finch": "^2.3.2",
+    "serverless-layers": "^1.4.3",
+    "serverless-plugin-tracing": "^2.0.0",
+    "serverless-pseudo-parameters": "^2.5.0"
+  }
+}

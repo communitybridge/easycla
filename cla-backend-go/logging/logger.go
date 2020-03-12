@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/log"
-
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -189,11 +187,11 @@ func StripSpecialChars(s string) string {
 
 // GenerateUUID is function to generate our own uuid if the google uuid throws error
 func GenerateUUID() string {
-	log.Info("entering func generateUUID")
+	Info("entering func generateUUID")
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
 	if err != nil {
-		log.Error(Trace(), err)
+		Error(Trace(), err)
 		return ""
 	}
 	theUUID := fmt.Sprintf("%x-%x-%x-%x-%x",
@@ -203,7 +201,7 @@ func GenerateUUID() string {
 
 // GetRequestID is function to generate uuid as request id if client doesn't pass X-REQUEST-ID request header
 func GetRequestID(requestIDParams *string) string {
-	log.Debug("entering func getRequestID")
+	Debug("entering func getRequestID")
 	//generate UUID as request ID if it doesn't exist in request header
 	if requestIDParams == nil || *requestIDParams == "" {
 		theUUID, err := uuid.NewUUID()

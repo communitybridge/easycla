@@ -11,6 +11,10 @@ project-cla-template {
     border-bottom: 40px solid #4c79b6;
   }
 
+  .icon-mr {
+    margin-right: 15px;
+  }
+
   .page-content {
     min-height: calc(100vh - 200px);
     padding: 10px 10px;
@@ -289,8 +293,6 @@ project-cla-template {
   ion-icon {
     color: #4c79b6;
     line-height: 6px;
-    margin-left: -15px;
-    margin-right: 15px;
 
     &:before {
       font-size: 19px;
