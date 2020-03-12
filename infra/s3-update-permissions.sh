@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -o nounset -o pipefail
-declare -r SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+declare -r SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 #------------------------------------------------------------------------------
 # Load helper scripts
@@ -62,43 +62,64 @@ declare -r dry_run_logo="false"
 declare -r dry_run_signatures="false"
 
 #------------------------------------------------------------------------------
-# Check and update S3 bucket permissions
+# Check and update S3 Project Logo bucket permissions
 #------------------------------------------------------------------------------
-log "Querying s3 bucket: ${_Y}s3://cla-project-logo-${env}/${_W} for items..."
-objects=$(aws --profile lfproduct-${env} s3api list-objects --bucket cla-project-logo-${env} --query 'Contents[].{Key: Key}' | jq -r '.[]| .Key')
-# Conver the newline delimited output to a bash array so we can loop over it
-readarray -t array <<<"${objects}"
-updated_logo_permissions_count=0
+function update_project_logos() {
+  log "Querying s3 bucket: ${_Y}s3://cla-project-logo-${env}/${_W} for items..."
+  objects=$(aws --profile lfproduct-${env} s3api list-objects --bucket cla-project-logo-${env} --query 'Contents[].{Key: Key}' | jq -r '.[]| .Key')
+  # Convert the newline delimited output to a bash array so we can loop over it
+  readarray -t array <<<"${objects}"
+  updated_logo_permissions_count=0
 
-if [[ "${dry_run_logo}" == "true" ]]; then
-  log "Skipping setting cla-project-logo-${env} bucket permissions - in ${_Y}dry-run${_W} mode."
-else
-  for object in "${array[@]}"; do
-    log "Setting public-read permission on object: ${_Y}${object}${_W}${_W} - ${_Y}$((updated_logo_permissions_count+1))${_W} of ${_Y}${#array[@]}${_W}"
-    aws --profile "lfproduct-${env}" s3api put-object-acl --bucket "cla-project-logo-${env}" --key "${object}" --acl public-read
-    updated_logo_permissions_count=$((updated_logo_permissions_count+1))
-  done
-fi
-log "Updated ${_Y}${updated_logo_permissions_count}${_W} objects."
+  if [[ "${dry_run_logo}" == "true" ]]; then
+    log "Skipping setting cla-project-logo-${env} bucket permissions - in ${_Y}dry-run${_W} mode."
+  else
+    for object in "${array[@]}"; do
+      log "Setting public-read permission on object: ${_Y}${object}${_W}${_W} - ${_Y}$((updated_logo_permissions_count + 1))${_W} of ${_Y}${#array[@]}${_W}"
+      aws --profile "lfproduct-${env}" s3api put-object-acl --bucket "cla-project-logo-${env}" --key "${object}" --acl public-read
+      updated_logo_permissions_count=$((updated_logo_permissions_count + 1))
+    done
+  fi
+  log "Updated ${_Y}${updated_logo_permissions_count}${_W} project logo objects."
+}
 
-log "Querying s3 bucket: ${_Y}s3://cla-signature-files-${env}/${_W} for items..."
-#objects=$(aws --profile "lfproduct-${env}" s3api list-objects --bucket "cla-signature-files-${env}" --query 'Contents[].{Key: Key}' | jq -r '.[]| .Key')
-objects=$(aws --profile "lfproduct-${env}" s3api list-objects --bucket "cla-signature-files-${env}" --query "Contents[?contains(Key,'template')].Key" | jq -r '.[]|.')
-# Conver the newline delimited output to a bash array so we can loop over it
-readarray -t array <<<"${objects}"
-updated_signature_permissions_count=0
+#------------------------------------------------------------------------------
+# Check and update S3 Project Template bucket permissions
+#------------------------------------------------------------------------------
+function update_project_templates() {
+  log "Querying s3 bucket: ${_Y}s3://cla-signature-files-${env}/${_W} for project templates..."
+  #objects=$(aws --profile "lfproduct-${env}" s3api list-objects --bucket "cla-signature-files-${env}" --query 'Contents[].{Key: Key}' | jq -r '.[]| .Key')
+  objects=$(aws --profile "lfproduct-${env}" s3api list-objects --bucket "cla-signature-files-${env}" --query "Contents[?contains(Key,'template')].Key" | jq -r '.[]|.')
 
-if [[ "${dry_run_signatures}" == "true" ]]; then
-  log "Skipping setting cla-signature-files-${env} bucket permissions - in ${_Y}dry-run${_W} mode."
-else
-  log "Processing ${_Y}${#array[@]}${_W} objects..."
-  for object in "${array[@]}"; do
-    #log_debug "Testing ${object}"
-    if [[ "${object}" == *"template"* ]]; then
-      log "Setting public-read permission on object: ${_Y}${object}${_W} - ${_Y}$((updated_signature_permissions_count+1))${_W} of ${_Y}${#array[@]}${_W}"
-      aws --profile "lfproduct-${env}" s3api put-object-acl --bucket "cla-signature-files-${env}" --key "${object}" --acl public-read
-      updated_signature_permissions_count=$((updated_signature_permissions_count+1))
-    fi
-  done
-fi
-log "Updated ${_Y}${updated_signature_permissions_count}${_W} objects."
+  # Convert the newline delimited output to a bash array so we can loop over it
+  readarray -t array <<<"${objects}"
+  updated_signature_permissions_count=0
+
+  if [[ "${dry_run_signatures}" == "true" ]]; then
+    log "Skipping setting cla-signature-files-${env} bucket permissions - in ${_Y}dry-run${_W} mode."
+  else
+    log "Processing ${_Y}${#array[@]}${_W} objects..."
+    for object in "${array[@]}"; do
+      #log_debug "Testing ${object}"
+      if [[ "${object}" == *"template"* ]]; then
+        log "Setting public-read permission on object: ${_Y}${object}${_W} - ${_Y}$((updated_signature_permissions_count + 1))${_W} of ${_Y}${#array[@]}${_W}"
+        aws --profile "lfproduct-${env}" s3api put-object-acl --bucket "cla-signature-files-${env}" --key "${object}" --acl public-read
+        updated_signature_permissions_count=$((updated_signature_permissions_count + 1))
+      fi
+    done
+  fi
+  log "Updated ${_Y}${updated_signature_permissions_count}${_W} project template objects."
+}
+
+#------------------------------------------------------------------------------
+# Main function
+#------------------------------------------------------------------------------
+function main() {
+  update_project_logos
+  update_project_templates
+}
+
+#------------------------------------------------------------------------------
+# Application entry point - call the main function
+#------------------------------------------------------------------------------
+main
