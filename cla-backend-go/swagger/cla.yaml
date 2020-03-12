@@ -1533,6 +1533,33 @@ paths:
       tags:
         - events
 
+  /events/recent:
+    get:
+      summary: search events
+      security:
+        - OauthSecurity: []
+      description: Returns list of events matching with search criteria
+      operationId: getRecentEvents
+      parameters:
+        - $ref: '#/parameters/pageSize'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - events
+
   /metrics:
     get:
       summary: Get metrics
@@ -2616,6 +2643,13 @@ definitions:
       EventData:
         type: string
         description: data related to the event
+      EventProjectExternalID:
+        type: string
+        description: sf id of the project
+      ContainsPII:
+        type: boolean
+        description: contains personal identifiable information
+
 
   cla-manager-distribution:
     type: object

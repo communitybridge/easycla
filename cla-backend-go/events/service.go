@@ -16,11 +16,12 @@ import (
 // Service interface defines methods of event service
 type Service interface {
 	CreateEvent(event models.Event) error
-	CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string)
-	CreateAuditEventWithUserID(eventType string, userID, projectID, companyID, data string)
+	CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string, containsPII bool)
+	CreateAuditEventWithUserID(eventType string, userID, projectID, companyID, data string, containsPII bool)
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
+	GetRecentEvents(params *eventOps.GetRecentEventsParams) (*models.EventList, error)
 }
 
 type service struct {
@@ -37,8 +38,9 @@ func (s *service) CreateEvent(event models.Event) error {
 }
 
 // CreateAuditEventWithUserID creates an audit event record in the database
-func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, companyID, data string) {
+func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, companyID, data string, containsPII bool) {
 	var projectName = "not defined"
+	var projectExternalID = "not defined"
 	if projectID != "" {
 		projectModel, projectErr := s.GetProject(projectID)
 		if projectErr != nil || projectModel == nil {
@@ -46,6 +48,7 @@ func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, compa
 		}
 		if projectModel != nil {
 			projectName = projectModel.ProjectName
+			projectExternalID = projectModel.ProjectExternalID
 		}
 	}
 	var companyName = "not defined"
@@ -70,16 +73,18 @@ func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, compa
 	}
 	// Create and log the event
 	eventErr := s.CreateEvent(models.Event{
-		UserID:           userID,
-		UserName:         userName,
-		EventProjectID:   projectID,
-		EventProjectName: projectName,
-		EventCompanyID:   companyID,
-		EventCompanyName: companyName,
-		EventType:        eventType,
-		EventTime:        time.Now().UTC().Format(time.RFC3339),
-		EventTimeEpoch:   time.Now().Unix(),
-		EventData:        data,
+		UserID:                 userID,
+		UserName:               userName,
+		EventProjectID:         projectID,
+		EventProjectName:       projectName,
+		EventCompanyID:         companyID,
+		EventCompanyName:       companyName,
+		EventType:              eventType,
+		EventTime:              time.Now().UTC().Format(time.RFC3339),
+		EventTimeEpoch:         time.Now().Unix(),
+		EventData:              data,
+		EventProjectExternalID: projectExternalID,
+		ContainsPII:            containsPII,
 	})
 	if eventErr != nil {
 		log.Warnf("error adding event type: %s by user %s (%s) for project: %s (%s) and company: %s (%s) to the event log, error: %v",
@@ -88,9 +93,10 @@ func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, compa
 }
 
 // CreateAuditEvent creates an audit event record in the database
-func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string) {
+func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string, containsPII bool) {
 
 	var projectName = "not defined"
+	var projectExternalID = "not defined"
 	if projectID != "" {
 		projectModel, projectErr := s.GetProject(projectID)
 		if projectErr != nil || projectModel == nil {
@@ -98,6 +104,7 @@ func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, proj
 		}
 		if projectModel != nil {
 			projectName = projectModel.ProjectName
+			projectExternalID = projectModel.ProjectExternalID
 		}
 	}
 
@@ -114,16 +121,18 @@ func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, proj
 
 	// Create and log the event
 	eventErr := s.CreateEvent(models.Event{
-		UserID:           claUser.UserID,
-		UserName:         claUser.Name,
-		EventProjectID:   projectID,
-		EventProjectName: projectName,
-		EventCompanyID:   companyID,
-		EventCompanyName: companyName,
-		EventType:        eventType,
-		EventTime:        time.Now().UTC().Format(time.RFC3339),
-		EventTimeEpoch:   time.Now().Unix(),
-		EventData:        data,
+		UserID:                 claUser.UserID,
+		UserName:               claUser.Name,
+		EventProjectID:         projectID,
+		EventProjectName:       projectName,
+		EventCompanyID:         companyID,
+		EventCompanyName:       companyName,
+		EventType:              eventType,
+		EventTime:              time.Now().UTC().Format(time.RFC3339),
+		EventTimeEpoch:         time.Now().Unix(),
+		EventData:              data,
+		EventProjectExternalID: projectExternalID,
+		ContainsPII:            containsPII,
 	})
 
 	if eventErr != nil {
@@ -155,4 +164,14 @@ func (s *service) GetCompany(companyID string) (*models.Company, error) {
 // GetUser returns the user object based on the user id
 func (s *service) GetUser(userID string) (*models.User, error) {
 	return s.repo.GetUserByUserName(userID, true)
+}
+
+// GetRecentEvents returns event list of recent events
+func (s *service) GetRecentEvents(params *eventOps.GetRecentEventsParams) (*models.EventList, error) {
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+	if params.PageSize != nil {
+		pageSize = *params.PageSize
+	}
+	return s.repo.GetRecentEvents(pageSize)
 }
