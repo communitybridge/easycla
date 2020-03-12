@@ -38,22 +38,27 @@
                   </ion-col>
                 </ion-row>
 
-                <ion-row *ngFor="let field of selectedTemplate.metaFields">
-                  <ion-col col-12 col-md-8>
-                    <ion-item>
-                      <ion-label stacked>{{ field.name }}</ion-label>
-                      <ion-input class="template-field" type="text"
-                                 [(ngModel)]="templateValues[field.templateVariable]">
-                      </ion-input>
-                      <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+                <div [formGroup]="form">
+                  <ion-row *ngFor="let field of selectedTemplate.metaFields">
+                    <ion-col col-12 col-md-8>
+                      <ion-item>
+                        <ion-label stacked>{{ field.name }}</ion-label>
+                        <ion-input class="template-field" type="text" [formControlName]="getFieldName(field)">
+                        </ion-input>
+                        <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
+                      </ion-item>
+                      <ion-item class="no-margin-bottom"
+                        *ngIf="!form.controls[getFieldName(field)].valid && (submitAttempt)" no-lines>
+                        <ion-label class="field-error">{{field.name}} is required.</ion-label>
+                      </ion-item>
+                    </ion-col>
+                  </ion-row>
+                </div>
 
                 <ion-row>
-                  <div style="text-align: left;">
+                  <div style="text-align: left;margin-top: 15px;">
                     <button ion-button (click)="reviewSelectedTemplate()" color="secondary"
-                            [disabled]="!buttonGenerateEnabled">
+                      [disabled]="!buttonGenerateEnabled" [ngClass]="{'inactive':!form.valid}">
                       Generate and Review PDFs
                     </button>
                     <loading-spinner [loading]="loading.documents"></loading-spinner>
@@ -75,11 +80,11 @@
                 <ion-row>
                   <ion-col>
                     <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
-                            [disabled]="currentPDF === 'corporatePDFURL'">
+                      [disabled]="currentPDF === 'corporatePDFURL'">
                       View CCLA
                     </button>
                     <button ion-button (click)="showPDF('individualPDFURL')" color="secondary"
-                            [disabled]="currentPDF === 'individualPDFURL'">
+                      [disabled]="currentPDF === 'individualPDFURL'">
                       View ICLA
                     </button>
                   </ion-col>
@@ -108,3 +113,4 @@
 
   <cla-footer></cla-footer>
 </ion-content>
+

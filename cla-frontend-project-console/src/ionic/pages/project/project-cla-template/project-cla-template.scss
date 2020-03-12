@@ -46,6 +46,27 @@ project-cla-template {
     font-size: 20px !important;
   }
 
+  .no-margin-bottom {
+    margin-bottom: 0 !important;
+    min-height: 1rem !important;
+  }
+
+  .inactive {
+    background-color:#888;
+
+    &:hover {
+      background-color: #888 !important;
+   }
+  }
+
+  .input-wrapper {
+    .field-error {
+      color: red !important;
+      font-size: 12px;
+      margin: 0;
+    }
+  }
+
   .toolbar {
     color: #7b7b7b;
     background-color: white;
@@ -287,3 +308,4 @@ project-cla-template {
     position: relative;
   }
 }
+
