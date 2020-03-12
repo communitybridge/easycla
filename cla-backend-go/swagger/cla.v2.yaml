@@ -1,0 +1,894 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+swagger: '2.0'
+info:
+  title: EasyCLA v2 API
+  version: '2.0'
+basePath: /v4
+securityDefinitions:
+  lf-auth:
+    type: apiKey
+    name: X-ACL
+    in: header
+    description: Requires X-ACL headers and bearer token
+security:
+  - lf-auth: []
+
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /ops/version:
+    get:
+      summary: API Version Information
+      security: []
+      operationId: getVersion
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/version'
+      tags:
+        - version
+
+  /ops/health:
+    get:
+      summary: API Health Check
+      security: []
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/health'
+        '503':
+          description: ''
+          schema:
+            $ref: '#/definitions/health'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - health
+
+  /api-docs:
+    get:
+      security: []
+      summary: API documentation
+      operationId: getDoc
+      produces:
+        - text/html
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
+  /swagger.json:
+    get:
+      security: []
+      summary: Swagger API as JSON
+      operationId: getSwagger
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success
+      tags:
+        - docs
+
+  /metrics:
+    get:
+      summary: Get EasyCLA Metrics
+      description: Returns EasyCLA Metrics
+      security:
+        - OauthSecurity: []
+      operationId: getMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/cla-manager-distribution:
+    get:
+      summary: Get cla manager distribution for easycla
+      description: Returns cla manager distribution
+      security:
+        - lf-auth: []
+      operationId: getClaManagerDistribution
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-distribution'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/total-count:
+    get:
+      summary: Get total count metrics
+      description: Returns total count metrics
+      security:
+        - lf-auth: []
+      operationId: getTotalCount
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/total-count-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/company/{companyID}:
+    get:
+      summary: Get metrics of company
+      description: Returns company metrics
+      security:
+        - lf-auth: []
+      operationId: getCompanyMetric
+      parameters:
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/top-companies:
+    get:
+      summary: company metrics of top companies
+      description: Returns list company metrics of top companies
+      security:
+        - lf-auth: []
+      operationId: getTopCompanies
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/top-companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/project/{projectID}:
+    get:
+      summary: Get metrics of project
+      description: Returns project metrics
+      security:
+        - lf-auth: []
+      operationId: getProjectMetric
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/project:
+    get:
+      summary: list metrics of project
+      description: Returns list of project metrics
+      security:
+        - lf-auth: []
+      parameters:
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      operationId: listProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/list-project-metric'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  # Project Service
+  /project:
+    post:
+      summary: Create an EasyCLA CLA Group
+      description: Creates a new CLA Group within the EasyCLA system.
+      security:
+        - OauthSecurity: []
+      operationId: createProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - project
+    put:
+      summary: Update Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: updateProject
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/project'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+    get:
+      summary: Get Projects
+      security:
+        - OauthSecurity: []
+      operationId: getProjects
+      parameters:
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/fullMatch'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - project
+
+  /project/{projectSfdcId}:
+    parameters:
+      - name: projectSfdcId
+        in: path
+        type: string
+        required: true
+    get:
+      summary: Get Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: getProjectById
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+    delete:
+      summary: Delete Project by ID
+      security:
+        - OauthSecurity: []
+      operationId: deleteProjectById
+      responses:
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/metrics:
+    get:
+      summary: Get Project Metrics
+      security:
+        - OauthSecurity: []
+      operationId: getProjectMetrics
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/name/{projectName}:
+    get:
+      summary: Get Project By Name
+      description: Returns the project object when provided the project name - exact match
+      parameters:
+        - name: projectName
+          in: path
+          type: string
+          required: true
+      security:
+        - OauthSecurity: []
+      operationId: getProjectByName
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+responses:
+  unauthorized:
+    description: Unauthorized
+    schema:
+      $ref: '#/definitions/error-response'
+  invalid-request:
+    description: Invalid request
+    schema:
+      $ref: '#/definitions/error-response'
+  forbidden:
+    description: Insufficient privilege to execute action
+    schema:
+      $ref: '#/definitions/error-response'
+  not-found:
+    description: Not found
+    schema:
+      $ref: '#/definitions/error-response'
+  conflict:
+    description: Duplicate Resource
+    schema:
+      $ref: '#/definitions/error-response'
+
+# Common parameters
+parameters:
+  pageSize:
+    name: pageSize
+    description: The maximum number of results per page, value must be a positive integer value
+    in: query
+    type: integer
+    required: false
+    minimum: 0
+    exclusiveMinimum: true
+  searchField:
+    name: searchField
+    description: The optional user name filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  searchTerm:
+    name: searchTerm
+    description: The optional search filter
+    in: query
+    type: string
+    required: false
+  fullMatch:
+    name: fullMatch
+    in: query
+    type: boolean
+    default: false
+    required: false
+  nextKey:
+    name: nextKey
+    description: The next key to scan - used as a page offset for scanning batches of records
+    in: query
+    type: string
+    required: false
+    # UUID v4 regex
+    # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+
+definitions:
+  version:
+    type: object
+    x-nullable: false
+    title: Version
+    description: Version Information
+    properties:
+      version:
+        type: string
+      commit:
+        type: string
+      branch:
+        type: string
+      buildDate:
+        type: string
+    required:
+      - version
+      - commit
+      - branch
+      - buildDate
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Health"
+      type: "Version"
+
+  health:
+    type: object
+    title: Health
+    properties:
+      TimeStamp:
+        type: string
+      Status:
+        type: string
+      Version:
+        type: string
+      Githash:
+        type: string
+      Branch:
+        type: string
+      BuildTimeStamp:
+        type: string
+      Healths:
+        type: array
+        items:
+          $ref: '#/definitions/health-status'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Health"
+      type: "Health"
+
+  health-status:
+    type: object
+    properties:
+      Name:
+        type: string
+      Duration:
+        type: string
+      Healthy:
+        type: boolean
+      Error:
+        type: string
+      TimeStamp:
+        type: string
+    title: Health Status
+
+  metrics:
+    type: object
+    x-nullable: false
+    title: Metrics
+    description: All Metrics
+    properties:
+      projects:
+        $ref: '#/definitions/project-metrics'
+      companies:
+        $ref: '#/definitions/companies-metrics'
+      repositories:
+        $ref: '#/definitions/repository-metrics'
+      users:
+        $ref: '#/definitions/user-metrics'
+      signatures:
+        $ref: '#/definitions/signature-metrics'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Metrics"
+      type: "Metrics"
+
+  cla-manager-distribution:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ClaManagerDistribution"
+
+  total-count-metrics:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TotalCountMetrics"
+
+  top-companies:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TopCompanies"
+
+  company-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "CompanyMetric"
+
+  list-project-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ListProjectMetric"
+
+  project-metric:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ProjectMetric"
+
+  project-metrics:
+    type: object
+    x-nullable: false
+    title: ProjectMetrics
+    description: Project Metrics
+    properties:
+      totalCount:
+        description: The total number of projects
+        type: integer
+        format: int64
+        example: 123
+        x-omitempty: false
+      projects:
+        description: A list of projects
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-simple-model'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1ProjectMetrics"
+      type: "ProjectMetrics"
+
+  project-simple-model:
+    type: object
+    x-nullable: false
+    title: Project
+    description: Project simple data model
+    properties:
+      projectName:
+        description: the project name
+        example: "CNCF"
+        type: string
+      projectManagerCount:
+        description: A count of project managers
+        type: integer
+        example: 6
+        format: int64
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1ProjectSimpleMetrics"
+      type: "ProjectSimpleMetrics"
+
+  companies-metrics:
+    type: object
+    x-nullable: false
+    title: CompaniesMetrics
+    description: Companies Metrics
+    properties:
+      totalCount:
+        description: The total number of companies
+        type: integer
+        format: int64
+        example: 621
+        x-omitempty: false
+      companies:
+        description: The company list
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/company-simple-model'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1CompaniesMetrics"
+      type: "CompaniesMetrics"
+
+  company-simple-model:
+    type: object
+    x-nullable: false
+    title: Company
+    description: Company Simple Data Model
+    properties:
+      companyName:
+        description: The company name
+        example: Acme, Inc.
+        type: string
+      companyManagerCount:
+        description: The number of company managers for this company
+        type: integer
+        format: int64
+        example: 12
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1CompaniesSimpleMetrics"
+      type: "CompaniesSimpleMetrics"
+
+  repository-metrics:
+    type: object
+    x-nullable: false
+    title: RepositoryMetrics
+    description: Repository Metrics
+    properties:
+      totalCount:
+        description: The total number of repositories managed by EasyCLA
+        type: integer
+        format: int64
+        example: 42
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1RepositoryMetrics"
+      type: "RepositoryMetrics"
+
+  user-metrics:
+    type: object
+    x-nullable: false
+    title: UserMetrics
+    description: User Metrics
+    properties:
+      totalCount:
+        description: The total number of users managed by EasyCLA
+        type: integer
+        format: int64
+        example: 394
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1UserMetrics"
+      type: "UserMetrics"
+
+  signature-metrics:
+    type: object
+    x-nullable: false
+    title: Signatures
+    description: Signature Metrics
+    properties:
+      count:
+        description: The total number of signatures managed by EasyCLA
+        type: integer
+        format: int64
+        example: 10939
+        x-omitempty: false
+      cclaCount:
+        description: The total number of Corporate Signatures managed by EasyCLA
+        type: integer
+        format: int64
+        example: 622
+        x-omitempty: false
+      employeeCount:
+        description: The total number of Employee Signatures managed by EasyCLA
+        type: integer
+        format: int64
+        example: 1862
+        x-omitempty: false
+      iclaCount:
+        description: The total number of Individual Contributor Signatures managed by EasyCLA
+        type: integer
+        format: int64
+        example: 8453
+        x-omitempty: false
+      claManagerCount:
+        description: The total number of CLA Managers managed by EasyCLA
+        type: integer
+        format: int64
+        example: 1146
+        x-omitempty: false
+      claManagerUniqueCount:
+        description: The total number of unique CLA Managers managed by EasyCLA
+        type: integer
+        format: int64
+        example: 1014
+        x-omitempty: false
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1SignatureMetrics"
+      type: "SignatureMetrics"
+
+  projects:
+    type: object
+    x-nullable: false
+    title: Projects
+    description: A list of projects
+    properties:
+      lastKeyScanned:
+        type: string
+      pageSize:
+        type: integer
+      projects:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project'
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Projects"
+      type: "Projects"
+
+  project:
+    type: object
+    x-nullable: false
+    title: Project
+    description: EasyCLA CLA Group/Project data model
+    properties:
+      projectID:
+        description: the EasyCLA Group/Project internal ID
+        type: string
+      projectExternalID:
+        description: the EasyCLA Group/Project external ID
+        type: string
+      projectName:
+        description: the EasyCLA Group/Project Name
+        type: string
+      projectACL:
+        type: array
+        description: A list of user ID's authorized to make changes to the EasyCLA Group/Project
+        items:
+          type: string
+      projectCCLAEnabled:
+        description: CLA Group/Project flag to indicate if the Corporate/Company Contributor License Agreement is enabled
+        type: boolean
+        x-omitempty: false
+      projectICLAEnabled:
+        description: CLA Group/Project flag to indicate if the Individual Contributor License Agreement is enabled
+        type: boolean
+        x-omitempty: false
+      projectCCLARequiresICLA:
+        description: CLA Group/Project flag to indicate if the CCLA configuration also requires an ICLA
+        type: boolean
+        x-omitempty: false
+      dateCreated:
+        description: Date/time the record EasyCLA Group/Project was created
+        type: string
+      dateModified:
+        description: Date/time the record EasyCLA Group/Project was last modified
+        type: string
+      version:
+        description: EasyCLA Group/Project record version
+        type: string
+    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
+    # Imported package and type alias may be specified as options
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Project"
+      type: "Project"
+
+  error-response:
+    type: object
+    x-nullable: false
+    title: Error Response
+    description: Standard error format
+    properties:
+      Code:
+        description: The error code
+        example: "404"
+        type: string
+      Message:
+        description: The error message
+        example: "unable to find project Acme, Inc."
+        type: string

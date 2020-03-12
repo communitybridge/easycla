@@ -19,6 +19,7 @@ type MockRepository interface {
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
+	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 }
 
 // mockRepository data model
@@ -104,5 +105,24 @@ func (repo *mockRepository) GetCompany(companyID string) (*models.Company, error
 		CompanyName: "Mock Company Name",
 		Created:     strfmt.DateTime(time.Now().UTC()),
 		Updated:     strfmt.DateTime(time.Now().UTC()),
+	}, nil
+}
+
+func (repo *mockRepository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
+	return &models.User{
+		Admin:          true,
+		CompanyID:      "mock_company_id",
+		DateCreated:    "",
+		DateModified:   "",
+		Emails:         []string{"foo@gmail.com"},
+		GithubID:       "",
+		GithubUsername: "bar",
+		LfEmail:        "foo@gmail.com",
+		LfUsername:     "foo",
+		Note:           "note",
+		UserExternalID: "external",
+		UserID:         "mock_user_id",
+		Username:       "username",
+		Version:        "v1",
 	}, nil
 }

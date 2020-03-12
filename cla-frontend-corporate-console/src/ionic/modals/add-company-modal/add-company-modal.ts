@@ -206,7 +206,7 @@ export class AddCompanyModal {
     }
     this.companies.length >= 0 && this.getAllCompanies();
     // Remove all non-alpha numeric, -, _ values
-    let companyName = event.value.replace(/[^\w-]+/g, '');
+    let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
       this.actionButtonEnabled()

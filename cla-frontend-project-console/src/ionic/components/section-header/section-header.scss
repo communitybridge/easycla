@@ -12,9 +12,8 @@ section-header {
   }
 
   .project-logo {
-    height: 100%;
-    max-width: 30px;
-    max-height: 30px;
+    width: 30px;
+    height: 30px;
 
     img {
       width: 100%;
@@ -37,12 +36,12 @@ section-header {
     p {
       margin: 0;
       color: #7b7b7b;
-      text-transform: capitalize;
     }
   }
 
   .project-description-wrapper {
     margin-left: 10px;
+    line-height: 21px;
   }
 
   ion-datetime {
