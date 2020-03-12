@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -o nounset -o pipefail
-declare -r SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+declare -r SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 #------------------------------------------------------------------------------
 # Load helper scripts
@@ -59,28 +59,44 @@ declare -r logo_bucket_name="cla-project-logo-${env}"
 declare -r signature_bucket_name="cla-signature-files-${env}"
 
 #------------------------------------------------------------------------------
-# Perform the meta-data update
+# Update the content type for the specified files identified by the filter
 #------------------------------------------------------------------------------
-log "Setting ${_Y}'image/png'${_W} content type for PNG objects in s3 bucket: ${_Y}s3://${logo_bucket_name}/${_W}..."
-aws --profile "${profile}" \
-  s3 cp \
-  "s3://${logo_bucket_name}/" \
-  "s3://${logo_bucket_name}/" \
-  --exclude '*' \
-  --include '*.png' \
-  --no-guess-mime-type \
-  --content-type="image/png" \
-  --metadata-directive="REPLACE" \
-  --recursive
+function update_content_type() {
+  if [[ $# -ne 3 ]]; then
+    log_warn "Missing function parameters for ${FUNCNAME[0]} - expecting 3"
+    log "Usage  : ${FUNCNAME[0]} <s3-bucket> <content-type> <filename_filter>"
+    log "Example: ${FUNCNAME[0]} cla-project-logo-dev 'image/png' and '*.png'"
+    log "Example: ${FUNCNAME[0]} cla-signature-files-dev 'application/pdf' and '*.pdf'"
+    return
+  fi
 
-log "Setting ${_Y}'application/pdf'${_W} content type for PDF objects in s3 bucket: ${_Y}s3://${signature_bucket_name}/${_W}..."
-aws --profile "${profile}" \
-  s3 cp \
-  "s3://${signature_bucket_name}/" \
-  "s3://${signature_bucket_name}/" \
-  --exclude '*' \
-  --include '*.pdf' \
-  --no-guess-mime-type \
-  --content-type="application/pdf" \
-  --metadata-directive="REPLACE" \
-  --recursive
+  # Grab the arguments
+  bucket_name="${1}"
+  content_type="${2}"
+  filter="${3}"
+
+  log "Setting ${_Y}'${content_type}'${_W} content type for ${_Y}'${filter}'${_W} objects in s3 bucket: ${_Y}s3://${bucket_name}/${_W}..."
+  aws --profile "${profile}" \
+    s3 cp \
+    "s3://${bucket_name}/" \
+    "s3://${bucket_name}/" \
+    --exclude '*' \
+    --include "${filter}" \
+    --no-guess-mime-type \
+    --content-type="${content_type}" \
+    --metadata-directive="REPLACE" \
+    --recursive
+}
+
+#------------------------------------------------------------------------------
+# Main function
+#------------------------------------------------------------------------------
+function main() {
+  update_content_type "${logo_bucket_name}" 'image/png' '*.png'
+  update_content_type "${signature_bucket_name}" 'application/pdf' '*.pdf'
+}
+
+#------------------------------------------------------------------------------
+# Application entry point - call the main function
+#------------------------------------------------------------------------------
+main
