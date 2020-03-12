@@ -504,7 +504,6 @@ jobs:
             pushd $PROJECT_DIR/edge
             yarn build
             popd
-      - *install-node-12
       - run:
           name: Deploy
           command: |

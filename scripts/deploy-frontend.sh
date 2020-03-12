@@ -34,7 +34,7 @@ fi
 
 echo 'Building Distribution'
 cd src
-npm run build:${STAGE}
+yarn build:${STAGE}
 cd ../
 
 echo 'Building Edge Function'
