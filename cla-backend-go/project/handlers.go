@@ -52,27 +52,6 @@ func Configure(api *operations.ClaAPI, service Service) {
 			})
 		}
 
-		exitingModel, getErr = service.GetProjectByID(params.Body.ProjectExternalID)
-		if getErr != nil {
-			msg := fmt.Sprintf("Error querying the project by ID: %s, error: %+v",
-				params.Body.ProjectExternalID, getErr)
-			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: msg,
-			})
-		}
-
-		// If the project with the same name exists...
-		if exitingModel != nil {
-			msg := fmt.Sprintf("Project with same external ID exists: %s", params.Body.ProjectExternalID)
-			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
-				Code:    "409",
-				Message: msg,
-			})
-		}
-
 		// Ok, safe to create now
 		projectModel, err := service.CreateProject(&params.Body)
 		if err != nil {
