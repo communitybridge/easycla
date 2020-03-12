@@ -504,6 +504,7 @@ jobs:
             pushd $PROJECT_DIR/edge
             yarn build
             popd
+      - *install-node-12
       - run:
           name: Deploy
           command: |
@@ -697,7 +698,6 @@ jobs:
             echo "Node version is: $(node --version)"
             echo "Running top level install..."
             yarn install
-      - *install-node-8
       - run:
           name: Deploy
           command: |
