@@ -1,14 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {IonicPage, ModalController, NavController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
-import {RolesService} from '../../services/roles.service';
-import {Restricted} from '../../decorators/restricted';
-import {ColumnMode, SelectionType, SortType} from '@swimlane/ngx-datatable';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EmailValidator} from '../../validators/email';
+import { Component } from '@angular/core';
+import { IonicPage, ModalController, NavController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from '../../validators/email';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -77,7 +77,7 @@ export class CompaniesPage {
     this.userName = localStorage.getItem('user_name');
     this.setUserDetails();
     this.companies = [];
-    this.columns = [{prop: 'CompanyName'}, {prop: 'Status'}, {prop: 'Action'}, {prop: 'CompanyID'}, {prop: 'ProjectName'}];
+    this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }, { prop: 'ProjectName' }];
   }
 
   ngOnInit() {
@@ -218,6 +218,10 @@ export class CompaniesPage {
       }
     });
     modal.present();
+  }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 
   openRequestManagerModal() {
