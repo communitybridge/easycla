@@ -10,6 +10,7 @@ import { SortingDisplayComponentModule } from '../../../components/sorting-displ
 import { SectionHeaderComponentModule } from '../../../components/section-header/section-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 import { LayoutModule } from '../../../layout/layout.module';
+import { PdfViewerComponentModule } from '../../../components/pdf-viewer/pdf-viewer.module';
 
 @NgModule({
   declarations: [ProjectClaTemplatePage],
@@ -19,6 +20,7 @@ import { LayoutModule } from '../../../layout/layout.module';
     SortingDisplayComponentModule,
     SectionHeaderComponentModule,
     ProjectNavigationComponentModule,
+    PdfViewerComponentModule,
     IonicPageModule.forChild(ProjectClaTemplatePage),
     LayoutModule
   ],
