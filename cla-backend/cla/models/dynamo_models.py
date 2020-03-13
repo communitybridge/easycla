@@ -3104,8 +3104,12 @@ class EventModel(BaseModel):
     event_project_name_lower = UnicodeAttribute(null=True)
     event_user_name = UnicodeAttribute(null=True)
     event_time = UTCDateTimeAttribute(default=datetime.datetime.now())
-    event_time_epoch = NumberAttribute(default=time.time())
+    event_time_epoch = NumberAttribute(default=int(time.time()))
     event_data = UnicodeAttribute(null=True)
+    event_date = UnicodeAttribute(null=True)
+    event_project_external_id = UnicodeAttribute(null=True)
+    event_date_and_contains_pii = UnicodeAttribute(null=True)
+    contains_pii = BooleanAttribute(null=True)
     user_id_index = EventUserIndex()
     event_type_index = EventTypeIndex()
 
@@ -3125,7 +3129,8 @@ class Event(model_interfaces.Event):
             event_data=None,
             event_company_name=None,
             event_user_name=None,
-            event_project_name=None
+            event_project_name=None,
+            contains_pii=False,
     ):
 
         super(Event).__init__()
@@ -3137,6 +3142,7 @@ class Event(model_interfaces.Event):
         self.model.event_company_id = event_company_id
         self.model.event_data = event_data
         self.model.event_company_name = event_company_name
+        self.model.contains_pii = contains_pii
         if self.model.event_company_name:
             self.model.event_company_name_lower = self.model.event_company_name.lower()
         self.model.event_user_name = event_user_name
@@ -3152,14 +3158,17 @@ class Event(model_interfaces.Event):
             f"id:{self.model.event_id}, "
             f"event type:{self.model.event_type}, "
             f"event_user id:{self.model.event_user_id}, "
-            f"project id:{self.model.project_id}, "
-            f"company id: {self.model.company_id}, "
+            f"event project id:{self.model.event_project_id}, "
+            f"event company id: {self.model.event_company_id}, "
             f"event time: {self.model.event_time}, "
             f"event time epoch: {self.model.event_time_epoch}, "
             f"event data: {self.model.event_data}, "
             f"event company name: {self.model.event_company_name}, "
             f"event project name: {self.model.event_project_name}, "
-            f"event user name: {self.model.event_user_name}"
+            f"event user name: {self.model.event_user_name},"
+            f"event date: {self.model.event_date},"
+            f"event project external id: {self.model.event_project_external_id},"
+            f"contains pii: {self.model.contains_pii}"
         )
 
     def to_dict(self):
@@ -3223,6 +3232,9 @@ class Event(model_interfaces.Event):
     def get_event_project_name_lower(self):
         return self.model.event_project_name_lower
 
+    def get_event_project_external_id(self):
+        return self.model.event_project_external_id
+
     def all(self, ids=None):
         if ids is None:
             events = self.model.scan()
@@ -3266,6 +3278,15 @@ class Event(model_interfaces.Event):
     def set_event_user_name(self, event_user_name):
         self.model.event_user_name = event_user_name
         self.model.event_user_name_lower = event_user_name.lower()
+
+    def set_event_project_external_id(self, event_project_external_id):
+        self.model.event_project_external_id = event_project_external_id
+
+    def set_event_date_and_contains_pii(self, contains_pii=False):
+        dateDDMMYYYY = datetime.date.today().strftime("%d-%m-%Y")
+        self.model.contains_pii = contains_pii
+        self.model.event_date = dateDDMMYYYY
+        self.model.event_date_and_contains_pii = '{}#{}'.format(dateDDMMYYYY,str(contains_pii).lower())
 
     def search_events(self, **kwargs):
         """
@@ -3318,6 +3339,7 @@ class Event(model_interfaces.Event):
         event_company_name=None,
         event_data=None,
         event_user_id=None,
+        contains_pii=False
     ):
         """
         Creates an event returns the newly created event in dict format.
@@ -3341,7 +3363,9 @@ class Event(model_interfaces.Event):
                     project = Project()
                     project.load(str(event_project_id))
                     event_project_name = project.get_project_name()
+                    event_project_external_id = project.get_project_external_id()
                     event.set_event_project_id(event_project_id)
+                    event.set_event_project_external_id(event_project_external_id)
                 except DoesNotExist as err:
                     return {"errors": {"event_project_id": str(err)}}
             if event_company_id:
@@ -3361,10 +3385,11 @@ class Event(model_interfaces.Event):
                     return {"errors": {"event_": str(err)}}
             event.set_event_id(str(uuid.uuid4()))
             if event_type:
-                event.set_event_type(event_type.name)
+                event.set_event_type(event_type)
             event.set_event_project_name(event_project_name)
             event.set_event_company_name(event_company_name)
             event.set_event_data(event_data)
+            event.set_event_date_and_contains_pii(contains_pii)
             event.save()
             return {"data": event.to_dict()}
 
