@@ -1,0 +1,17 @@
+---
+test_name: "CCLA whitelist requests"
+includes:
+  - !include common.yaml
+  - !include auth_stage.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: User CCLA whitelist requests to company/project
+    request:
+      url: "{api_url}/v3/company/3ceedb0a-18e9-4784-985e-408beb94addd/ccla_whitelist_requests/9d1cead9-0587-49ab-9d7e-25b52e6c2ca0"
+      method: POST
+      json:
+        userId: "fa9b4f02-be51-4484-94c7-4c7be8221185"
+    response:
+      status_code: 200
