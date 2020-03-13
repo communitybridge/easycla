@@ -21,6 +21,8 @@ export class ClaOrganizationProviderModal {
   currentlySubmitting: boolean = false;
   responseErrors: string[] = [];
   claProjectId: any;
+  showErrorMsg: boolean;
+  loading: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -50,7 +52,26 @@ export class ClaOrganizationProviderModal {
       // prevent submit
       return;
     }
-    this.postClaGithubOrganization();
+    this.checkGitOrganisationName();
+  }
+
+  checkGitOrganisationName() {
+    this.loading = true;
+    this.showErrorMsg = false;
+    this.claService.testGitOrganisation(this.form.value.orgName).subscribe((res: any)=> {
+      this.loading = false;
+      if(res.login === this.form.value.orgName) {
+        this.postClaGithubOrganization();
+      }
+      else {
+        this.showErrorMsg = true;
+      }
+    }, (err: any) => { 
+      this.loading = false;
+      if(!err.ok) {
+        this.showErrorMsg = true;
+      }
+    })
   }
 
   postClaGithubOrganization() {

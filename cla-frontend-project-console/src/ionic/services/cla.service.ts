@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, RequestOptions } from '@angular/http';
 import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
 
 @Injectable()
 export class ClaService {
@@ -805,13 +806,13 @@ export class ClaService {
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
     const url: URL = this.getV2Endpoint(
       '/v2/repository-provider/' +
-        provider +
-        '/sign/' +
-        installationId +
-        '/' +
-        githubRepositoryId +
-        '/' +
-        changeRequestId,
+      provider +
+      '/sign/' +
+      installationId +
+      '/' +
+      githubRepositoryId +
+      '/' +
+      changeRequestId,
     );
     return this.http.get(url).map((res) => res.json());
   }
@@ -860,7 +861,8 @@ export class ClaService {
    */
   getGithubGetNamespace(namespace) {
     const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
-    return this.http.get(url).map((res) => res.json());
+    return this.http.get(url).map((res) => res.json())
+      .catch((error) => Observable.throw(error));
   }
 
   /**
@@ -995,6 +997,18 @@ export class ClaService {
   getReleaseVersion() {
     const url: URL = this.getV3Endpoint('/v3/ops/version');
     return this.http.get(url).map((res) => res.json());
+  }
+
+  // Check if git organisation is valid
+  testGitOrganisation(gitOrganisationName) {
+    // const header = {
+    //   Accept: 'application/vnd.github.v3+json',
+    // }
+    // let requestOptions = {
+    //   headers: new Headers(header),
+    // };
+    const url = new URL(`https://api.github.com/orgs/${gitOrganisationName}`);
+    return this.http.getWithoutHeaders(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////

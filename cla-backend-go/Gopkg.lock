@@ -401,17 +401,6 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:9bc108827ac1d8783dea294f1ef07732fa4ca7d6e20518c04888a85828eba4ce"
-  name = "github.com/labstack/gommon"
-  packages = [
-    "color",
-    "log",
-  ]
-  pruneopts = "UT"
-  revision = "4919956f6fb227b548f004da27c7c6b20fba499f"
-  version = "v0.3.0"
-
-[[projects]]
   branch = "master"
   digest = "1:f91a2273ddc23c72aa048d02d6612f516550d6b59454aa016b5f993447b93c58"
   name = "github.com/lytics/logrus"
@@ -438,22 +427,6 @@
   pruneopts = "UT"
   revision = "8edcc4e51f39ddbd3505a3386aff3f435a7fd028"
   version = "v0.7.1"
-
-[[projects]]
-  digest = "1:0109cf4321a15313ec895f42e723e1f76121c6975ea006abfa20012272ec0937"
-  name = "github.com/mattn/go-colorable"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "68e95eba382c972aafde02ead2cd2426a8a92480"
-  version = "v0.1.6"
-
-[[projects]]
-  digest = "1:0c58d31abe2a2ccb429c559b6292e7df89dcda675456fecc282fa90aa08273eb"
-  name = "github.com/mattn/go-isatty"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "7b513a986450394f7bbf1476909911b3aa3a55ce"
-  version = "v0.0.12"
 
 [[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
@@ -581,22 +554,6 @@
   ]
   pruneopts = "UT"
   revision = "9a6ea1bf75b89a0cd917a1e846bacf40fc06ca56"
-
-[[projects]]
-  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
-  name = "github.com/valyala/bytebufferpool"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
-  version = "v1.0.0"
-
-[[projects]]
-  digest = "1:d2b6739022f7bc284b94fc553ddd2ff790de7b0fc0b37206e8bff80481a1d7aa"
-  name = "github.com/valyala/fasttemplate"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8fcc7a99b5795b7c3e95172237cf93282fc339a9"
-  version = "v1.1.0"
 
 [[projects]]
   digest = "1:3f2695e75ed6dfa1187df6baf40a81d8dd47589e6fbfc4ccb748bceb3af8836c"
@@ -760,7 +717,6 @@
     "github.com/google/uuid",
     "github.com/jessevdk/go-flags",
     "github.com/jmoiron/sqlx",
-    "github.com/labstack/gommon/log",
     "github.com/lytics/logrus",
     "github.com/rs/cors",
     "github.com/savaki/dynastore",

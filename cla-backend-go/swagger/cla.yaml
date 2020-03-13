@@ -180,12 +180,6 @@ paths:
         - OauthSecurity:
             - user
       operationId: addUser
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/user'
-          required: true
       responses:
         '200':
           description: 'Success'
@@ -498,8 +492,7 @@ paths:
     get:
       summary: Get project company signatures
       description: Returns a list of project signature models when provided the project ID and company ID
-      security:
-        - OauthSecurity: []
+      security: []
       operationId: getProjectCompanySignatures
       parameters:
         - name: projectID
@@ -798,9 +791,9 @@ paths:
       tags:
         - project
 
-  /project/{projectSfdcId}:
+  /project/{projectID}:
     parameters:
-      - name: projectSfdcId
+      - name: projectID
         in: path
         type: string
         required: true
@@ -854,6 +847,36 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
+  /project/external/{externalID}:
+    get:
+      summary: Get Projects By External ID
+      description: Returns a list of CLA groups associated with the specified external ID
+      parameters:
+        - name: externalID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      security:
+        - OauthSecurity: []
+      operationId: getProjectsByExternalID
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1260,9 +1283,7 @@ paths:
   /company/{companyID}/ccla_whitelist_requests/{projectID}:
     post:
       summary: create ccla whitelist request for given project
-      security:
-        - OauthSecurity:
-            - user
+      security: []
       operationId: addCclaWhitelistRequest
       parameters:
         - name: companyID
@@ -1511,6 +1532,7 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - events
+
 
   /metrics:
     get:
@@ -1897,6 +1919,10 @@ definitions:
         type: string
       pageSize:
         type: integer
+      resultCount:
+        type: integer
+        format: int64
+        x-omitempty: false
       projects:
         type: array
         x-omitempty: false
@@ -1935,6 +1961,24 @@ definitions:
         description: Flag to indicate if the CCLA configuration also requires an ICLA
         type: boolean
         x-omitempty: false
+      projectCorporateDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
+      projectIndividualDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
+      projectMemberDocuments:
+        description: Project Corporate Documents
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/project-document'
       dateCreated:
         description: Date/time the record was created
         type: string
@@ -1943,6 +1987,53 @@ definitions:
         type: string
       version:
         description: Record version
+        type: string
+
+  project-document:
+    type: object
+    x-nullable: false
+    title: Project Document
+    description: Project Document
+    properties:
+      documentName:
+        description: the document name
+        example: "Apache Style"
+        type: string
+      documentFileID:
+        description: the document file ID
+        example: "fb4cc144-a76c-4c17-8a52-c648f158fded"
+        type: string
+      documentPreamble:
+        description: the document preamble
+        example: "Apache Style"
+        type: string
+      documentLegalEntityName:
+        description: the document legal entity name
+        example: "Apache Style"
+        type: string
+      documentAuthorName:
+        description: the document author name
+        example: "Apache Style"
+        type: string
+      documentContentType:
+        description: the document content type
+        example: 'storage+pdf'
+        type: string
+      documentS3URL:
+        description: the document S3 URL
+        example: "https://cla-signature-files-dev.s3.amazonaws.com/contract-group/f7222222-7777-4444-aaaa-1c1c1c1c1c1c/template/ccla.pdf"
+        type: string
+      documentMajorVersion:
+        description: the document major version
+        example: "2"
+        type: string
+      documentMinorVersion:
+        description: the document minor version
+        example: "0"
+        type: string
+      documentCreationDate:
+        description: the document creation date
+        example: '2019-08-01T06:55:09Z'
         type: string
 
   project-simple-model:
@@ -2525,6 +2616,155 @@ definitions:
       EventData:
         type: string
         description: data related to the event
+      EventProjectExternalID:
+        type: string
+        description: sf id of the project
+      ContainsPII:
+        type: boolean
+        description: contains personal identifiable information
+
+
+  cla-manager-distribution:
+    type: object
+    properties:
+      oneClaManager:
+        type: integer
+        x-omitempty: false
+      twoClaManagers:
+        type: integer
+        x-omitempty: false
+      threeClaManagers:
+        type: integer
+        x-omitempty: false
+      fourOrMoreClaManagers:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: CLA manager distribution across companies
+
+  total-count-metrics:
+    type: object
+    properties:
+      corporateContributorsCount:
+        type: integer
+        x-omitempty: false
+      individualContributorsCount:
+        type: integer
+        x-omitempty: false
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      contributorsCount:
+        type: integer
+        x-omitempty: false
+      projectsCount:
+        type: integer
+        x-omitempty: false
+      companiesCount:
+        type: integer
+        x-omitempty: false
+      repositoriesCount:
+        type: integer
+        x-omitempty: false
+      githubRepositoriesCount:
+        type: integer
+        x-omitempty: false
+      gerritRepositoriesCount:
+        type: integer
+        x-omitempty: false
+      companiesProjectContributionCount:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: CLA total metrics
+
+  top-companies:
+    type: object
+    properties:
+      topCompaniesByProjectCount:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      topCompaniesByCorporateContributors:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      topCompaniesByClaManagers:
+        type: array
+        items:
+          $ref: '#/definitions/company-metric'
+      averageCompanyProjectCount:
+        type: integer
+        x-omitempty: false
+      averageCompanyCorporateContributors:
+        type: integer
+        x-omitempty: false
+      averageCompanyClaManagers:
+        type: integer
+        x-omitempty: false
+
+  company-metric:
+    type: object
+    properties:
+      id:
+        type: string
+      companyName:
+        type: string
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      corporateContributorsCount:
+        type: integer
+        x-omitempty: false
+      projectsCount:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: Company metrics
+
+  list-project-metric:
+    type: object
+    properties:
+      nextKey:
+        type: string
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+
+  project-metric:
+    type: object
+    properties:
+      id:
+        type: string
+      externalProjectID:
+        type: string
+      projectName:
+        type: string
+      companiesCount:
+        type: integer
+        x-omitempty: false
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      corporateContributorsCount:
+        type: integer
+        x-omitempty: false
+      individualContributorsCount:
+        type: integer
+        x-omitempty: false
+      totalContributorsCount:
+        type: integer
+        x-omitempty: false
+      repositoriesCount:
+        type: integer
+        x-omitempty: false
+      createdAt:
+        type: string
+    title: project metrics
 
 responses:
   resource-deleted:

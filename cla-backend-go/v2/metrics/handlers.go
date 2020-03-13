@@ -21,6 +21,59 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			}
 			return metrics.NewGetMetricsOK().WithPayload(result)
 		})
+
+	api.MetricsGetClaManagerDistributionHandler = metrics.GetClaManagerDistributionHandlerFunc(
+		func(params metrics.GetClaManagerDistributionParams, user *auth.User) middleware.Responder {
+			result, err := service.GetCLAManagerDistribution()
+			if err != nil {
+				return metrics.NewGetClaManagerDistributionBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetClaManagerDistributionOK().WithPayload(*result)
+		})
+
+	api.MetricsGetTotalCountHandler = metrics.GetTotalCountHandlerFunc(
+		func(params metrics.GetTotalCountParams, user *auth.User) middleware.Responder {
+			result, err := service.GetTotalCountMetrics()
+			if err != nil {
+				return metrics.NewGetTotalCountBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetTotalCountOK().WithPayload(*result)
+		})
+
+	api.MetricsGetCompanyMetricHandler = metrics.GetCompanyMetricHandlerFunc(
+		func(params metrics.GetCompanyMetricParams, user *auth.User) middleware.Responder {
+			result, err := service.GetCompanyMetric(params.CompanyID)
+			if err != nil {
+				return metrics.NewGetCompanyMetricBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetCompanyMetricOK().WithPayload(*result)
+		})
+
+	api.MetricsGetProjectMetricHandler = metrics.GetProjectMetricHandlerFunc(
+		func(params metrics.GetProjectMetricParams, user *auth.User) middleware.Responder {
+			result, err := service.GetProjectMetric(params.ProjectID)
+			if err != nil {
+				return metrics.NewGetProjectMetricBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetProjectMetricOK().WithPayload(*result)
+		})
+	api.MetricsGetTopCompaniesHandler = metrics.GetTopCompaniesHandlerFunc(
+		func(params metrics.GetTopCompaniesParams, user *auth.User) middleware.Responder {
+			result, err := service.GetTopCompanies()
+			if err != nil {
+				return metrics.NewGetTopCompaniesBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewGetTopCompaniesOK().WithPayload(*result)
+		})
+
+	api.MetricsListProjectMetricsHandler = metrics.ListProjectMetricsHandlerFunc(
+		func(params metrics.ListProjectMetricsParams, user *auth.User) middleware.Responder {
+			result, err := service.ListProjectMetrics(params.PageSize, params.NextKey)
+			if err != nil {
+				return metrics.NewListProjectMetricsBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewListProjectMetricsOK().WithPayload(*result)
+		})
 }
 
 type codedResponse interface {

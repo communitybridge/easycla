@@ -16,6 +16,8 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
+	v2Events "github.com/communitybridge/easycla/cla-backend-go/v2/events"
 	v2Metrics "github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 	v2Version "github.com/communitybridge/easycla/cla-backend-go/v2/version"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
@@ -23,6 +25,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
+	v2Project "github.com/communitybridge/easycla/cla-backend-go/v2/project"
 
 	"github.com/communitybridge/easycla/cla-backend-go/onboard"
 
@@ -167,6 +170,7 @@ func server(localMode bool) http.Handler {
 	projectRepo := project.NewDynamoRepository(awsSession, stage)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	repositoriesRepo := repositories.NewRepository(awsSession, stage)
+	metricsRepo := metrics.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
@@ -179,7 +183,7 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo)
+	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -195,6 +199,7 @@ func server(localMode bool) http.Handler {
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
 	project.Configure(api, projectService)
+	v2Project.Configure(v2API, projectService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
@@ -204,9 +209,11 @@ func server(localMode bool) http.Handler {
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	onboard.Configure(api, onboardService, eventsService)
 	docs.Configure(api)
+	v2Docs.Configure(v2API)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
+	v2Events.Configure(v2API, eventsService)
 	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
 

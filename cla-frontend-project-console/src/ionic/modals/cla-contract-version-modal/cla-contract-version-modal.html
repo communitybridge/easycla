@@ -19,7 +19,7 @@
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
-              <button ion-button icon-only clear round (click)="openNewWindow($event, document)">
+              <button ion-button icon-only clear round (click)="openPdfModal(document)">
                 <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
             </td>
@@ -38,7 +38,7 @@
               Version {{ document.document_major_version }}.{{ document.document_minor_version }}
             </td>
             <td class="actions-cell">
-              <button ion-button icon-only clear round (click)="openNewWindow($event, document)">
+              <button ion-button icon-only clear round (click)="openPdfModal(document)">
                 <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
             </td>
