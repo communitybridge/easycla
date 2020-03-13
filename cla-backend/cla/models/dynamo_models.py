@@ -3385,7 +3385,7 @@ class Event(model_interfaces.Event):
                     return {"errors": {"event_": str(err)}}
             event.set_event_id(str(uuid.uuid4()))
             if event_type:
-                event.set_event_type(event_type)
+                event.set_event_type(event_type.name)
             event.set_event_project_name(event_project_name)
             event.set_event_company_name(event_company_name)
             event.set_event_data(event_data)
