@@ -54,7 +54,7 @@
                   <ion-row *ngIf="!loading.orgs">
                     <ion-col class="vertical-rule-right" col-12 col-md-6
                       *ngFor="let organization of githubOrganizations">
-                      <ion-card-content *ngIf="organization.providerInfo">
+                      <ion-card-content>
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
                           <span>{{ organization.organization_name }}</span>
@@ -65,6 +65,10 @@
                             https://github.com/{{organization.organization_name }}
                           </a>
                         </p>
+
+                        <h3 *ngIf="organization.providerInfo === null" class="namespace-error">
+                          Error occured during fetching Github account.
+                        </h3>
 
                         <h3 *ngIf="organization.providerInfo?.errors" class="namespace-error">
                           {{organization.providerInfo?.errors.namespace}}
@@ -79,27 +83,12 @@
 
                         <p>{{ organization.providerInfo?.bio }}</p>
 
-                        <div class="organization-actions">
+                        <div *ngIf="organization.providerInfo" class="organization-actions">
                           <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
                             color="light">
                             Delete
                           </button>
                         </div>
-                      </ion-card-content>
-
-                      <ion-card-content *ngIf="organization.providerInfo === undefined">
-                        <ion-card-title>
-                          <ion-icon name="logo-github"></ion-icon>
-                          <span>{{ organization.organization_name }}</span>
-                        </ion-card-title>
-                        <p>
-                          <a target="_blank" href="https://github.com/{{ organization.organization_name }}">
-                            https://github.com/{{organization.organization_name }}
-                          </a>
-                        </p>
-                        <h3 class="namespace-error">
-                          Error occured during fetching Github account.
-                        </h3>
                       </ion-card-content>
 
                     </ion-col>

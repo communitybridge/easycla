@@ -84,9 +84,9 @@ export class ProjectClaPage {
       this.loading.claProjects = false;
 
       this.claProjects.map((project) => {
-        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
-          project.githubOrganizations = githubOrganizations;
-        });
+        // this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
+        //   project.githubOrganizations = githubOrganizations;
+        // });
       });
 
       // Get Github Organizations
@@ -94,9 +94,14 @@ export class ProjectClaPage {
       this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
         this.loading.orgs = false;
         for (let organization of organizations) {
-          this.claService.getGithubGetNamespace(organization.organization_name).subscribe((providerInfo) => {
-            organization.providerInfo = providerInfo;
-          });
+          this.claService.getGithubGetNamespace(organization.organization_name).subscribe(
+            (providerInfo) => {
+              organization.providerInfo = providerInfo;
+            },
+            (exception) => {
+              organization.providerInfo = null;
+            }
+          );
 
           if (organization.organization_installation_id) {
             this.claService
