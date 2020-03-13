@@ -1533,32 +1533,6 @@ paths:
       tags:
         - events
 
-  /events/recent:
-    get:
-      summary: search events
-      security:
-        - OauthSecurity: []
-      description: Returns list of events matching with search criteria
-      operationId: getRecentEvents
-      parameters:
-        - $ref: '#/parameters/pageSize'
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: Success
-          schema:
-            $ref: '#/definitions/event-list'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - events
 
   /metrics:
     get:
@@ -1580,7 +1554,6 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - metrics
-
 
 # Common parameters
 parameters:

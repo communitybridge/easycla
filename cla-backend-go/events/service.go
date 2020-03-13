@@ -21,7 +21,7 @@ type Service interface {
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
-	GetRecentEvents(params *eventOps.GetRecentEventsParams) (*models.EventList, error)
+	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
 }
 
 type service struct {
@@ -167,11 +167,11 @@ func (s *service) GetUser(userID string) (*models.User, error) {
 }
 
 // GetRecentEvents returns event list of recent events
-func (s *service) GetRecentEvents(params *eventOps.GetRecentEventsParams) (*models.EventList, error) {
+func (s *service) GetRecentEvents(paramPageSize *int64) (*models.EventList, error) {
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
-	if params.PageSize != nil {
-		pageSize = *params.PageSize
+	if paramPageSize != nil {
+		pageSize = *paramPageSize
 	}
 	return s.repo.GetRecentEvents(pageSize)
 }

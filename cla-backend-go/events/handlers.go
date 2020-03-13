@@ -20,15 +20,6 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return eventOps.NewSearchEventsOK().WithPayload(result)
 		})
-	api.EventsGetRecentEventsHandler = eventOps.GetRecentEventsHandlerFunc(
-		func(params eventOps.GetRecentEventsParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.GetRecentEvents(&params)
-			if err != nil {
-				log.Debugf("error retrieving events, error: %s", err.Error())
-				return eventOps.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
-			}
-			return eventOps.NewGetRecentEventsOK().WithPayload(result)
-		})
 }
 
 type codedResponse interface {
