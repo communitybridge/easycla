@@ -419,6 +419,33 @@ paths:
       tags:
         - project
 
+  /events/recent:
+    get:
+      summary: search events
+      security:
+        - lf-auth: []
+      description: Returns list of events matching with search criteria
+      operationId: getRecentEvents
+      parameters:
+        - $ref: '#/parameters/pageSize'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - events
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -615,6 +642,13 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "ProjectMetric"
+
+  event-list:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "EventList"
 
   project-metrics:
     type: object

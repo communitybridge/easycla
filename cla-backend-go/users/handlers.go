@@ -60,6 +60,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s created a new user %+v", claUser.Name, userModel),
+			true,
 		)
 
 		return users.NewAddUserOK().WithPayload(userModel)
@@ -86,6 +87,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s updated user %+v", claUser.Name, userModel),
+			true,
 		)
 
 		return users.NewUpdateUserOK().WithPayload(userModel)
@@ -129,6 +131,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s deleted user id: %s", claUser.Name, params.UserID),
+			true,
 		)
 
 		return users.NewDeleteUserNoContent()

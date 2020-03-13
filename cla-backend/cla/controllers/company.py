@@ -114,7 +114,8 @@ def create_company(auth_user,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
         event_data=event_data,
-        event_user_id=user_id
+        event_user_id=user_id,
+        contains_pii=False,
     )
 
     return {"status_code": HTTP_200,
@@ -162,7 +163,8 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     Event.create_event(
         event_data=event_data,
         event_type=EventType.UpdateCompany,
-        event_company_id=company_id
+        event_company_id=company_id,
+        contains_pii = False,
     )
     return company.to_dict()
 '''
@@ -214,7 +216,8 @@ def delete_company(company_id, username=None):
     Event.create_event(
         event_data=event_data,
         event_type=EventType.DeleteCompany,
-        event_company_id=company_id
+        event_company_id=company_id,
+        contains_pii=False,
     )
     return {'success': True}
 
@@ -241,7 +244,8 @@ def add_permission(auth_user: AuthUser, username: str, company_id: str, ignore_a
     Event.create_event(
         event_data=event_data,
         event_type=EventType.AddCompanyPermission,
-        event_company_id=company_id
+        event_company_id=company_id,
+        contains_pii=True,
     )
     company.save()
 
@@ -263,6 +267,7 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
     Event.create_event(
         event_data=event_data,
         event_company_id=company_id,
-        event_type=EventType.RemoveCompanyPermission
+        event_type=EventType.RemoveCompanyPermission,
+        contains_pii=True,
     )
     company.save()
