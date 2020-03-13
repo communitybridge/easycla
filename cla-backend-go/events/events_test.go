@@ -36,7 +36,7 @@ func TestEventsService(t *testing.T) {
 	eventsMockRepo := NewMockRepository(awsSession, stage)
 	eventsService := NewService(eventsMockRepo)
 
-	eventsService.CreateAuditEvent(CreateUser, claUser, "project-1234", "company-1234", "Audit event test")
+	eventsService.CreateAuditEvent(CreateUser, claUser, "project-1234", "company-1234", "Audit event test", false)
 	eventsSearch, err := eventsService.SearchEvents(&eventOps.SearchEventsParams{
 		ProjectID: aws.String("project-1234"),
 		CompanyID: aws.String("company-1234"),

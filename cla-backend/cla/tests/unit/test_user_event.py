@@ -47,6 +47,7 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
         event_company_id=company.get_company_id(),
         event_type=event_type,
         event_data=event_data,
+        contains_pii=True,
     )
 
 @patch('cla.controllers.user.Event.create_event')
@@ -68,6 +69,7 @@ def test_invite_company_admin(mock_event, create_event_user, user):
         event_project_name=project_name,
         event_data=event_data,
         event_type=EventType.InviteAdmin,
+        contains_pii=True,
     )
 
 @patch('cla.controllers.user.Event.create_event')
@@ -90,4 +92,5 @@ def test_request_company_ccla(mock_event, create_event_user, user, project, comp
         event_type=EventType.RequestCCLA,
         event_user_id=user.get_user_id(),
         event_company_id=company.get_company_id(),
+        contains_pii=False,
     )

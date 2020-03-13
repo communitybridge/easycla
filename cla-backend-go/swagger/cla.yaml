@@ -1533,6 +1533,7 @@ paths:
       tags:
         - events
 
+
   /metrics:
     get:
       summary: Get metrics
@@ -1553,7 +1554,6 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - metrics
-
 
 # Common parameters
 parameters:
@@ -2616,6 +2616,13 @@ definitions:
       EventData:
         type: string
         description: data related to the event
+      EventProjectExternalID:
+        type: string
+        description: sf id of the project
+      ContainsPII:
+        type: boolean
+        description: contains personal identifiable information
+
 
   cla-manager-distribution:
     type: object
