@@ -640,19 +640,9 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 		return nil, err
 	}
 
+	// For each project, convert to a response model
 	for _, dbProject := range dbProjects {
-		projects = append(projects, models.Project{
-			ProjectID:               dbProject.ProjectID,
-			ProjectExternalID:       dbProject.ProjectExternalID,
-			ProjectName:             dbProject.ProjectName,
-			ProjectACL:              dbProject.ProjectACL,
-			ProjectCCLAEnabled:      dbProject.ProjectCclaEnabled,
-			ProjectICLAEnabled:      dbProject.ProjectIclaEnabled,
-			ProjectCCLARequiresICLA: dbProject.ProjectCclaRequiresIclaSignature,
-			DateCreated:             dbProject.DateCreated,
-			DateModified:            dbProject.DateModified,
-			Version:                 dbProject.Version,
-		})
+		projects = append(projects, *repo.buildProjectModel(dbProject))
 	}
 
 	return projects, nil
