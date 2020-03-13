@@ -34,14 +34,23 @@ fi
 
 echo 'Building Distribution'
 cd src
+echo "Switching to node v8.17.0..."
+nvm use v8.17.0
+node --version
 yarn build:${STAGE}
 cd ../
 
 echo 'Building Edge Function'
 cd edge
+echo "Switching to node v8.17.0..."
+nvm use v8.17.0
+node --version
 yarn build
 cd ../
 
+echo "Switching to node v12.14.1..."
+nvm use v12.14.1
+node --version
 echo 'Deploying Cloudfront and lambda@edge'
 yarn sls deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
 
