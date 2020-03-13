@@ -15,18 +15,24 @@
       <ion-row>
         <ion-col col-12>
           <ion-item>
-            <ion-label stacked>GitHub Organization URL</ion-label>
-            <ion-label class="github-label">https://github.com/<b>{{ form.controls.orgName.value }}</b></ion-label>
+            <ion-label floating>Enter GitHub Organization Account Name</ion-label>
             <ion-input formControlName="orgName"></ion-input>
           </ion-item>
+          <p class="form-message" *ngIf="showErrorMsg">
+            Github organization name not found.
+          </p>
+          <ion-col col-12>
+            <ion-label class="read-only">https://github.com/<b>{{ form.controls.orgName.value }}</b></ion-label>
+          </ion-col>
           <p class="form-message" *ngFor="let error of responseErrors">{{error}}</p>
         </ion-col>
       </ion-row>
     </ion-grid>
   </form>
   <div class="btn-wrapper">
-    <button ion-button color="secondary" (click)="submit()">
+    <button ion-button color="secondary" [disabled]="!form.controls.orgName.value  || loading" (click)="submit()">
       Connect
     </button>
+    <loading-spinner [loading]="loading"></loading-spinner>
   </div>
 </ion-content>

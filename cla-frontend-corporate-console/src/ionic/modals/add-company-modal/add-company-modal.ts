@@ -1,12 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {AuthService} from '../../services/auth.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
   segment: 'add-company-modal'
@@ -119,7 +119,7 @@ export class AddCompanyModal {
   }
 
   sendCompanyNotification() {
-    this.loading.submit = false; 
+    this.loading.submit = false;
     let alert = this.alertCtrl.create({
       title: 'Notification Sent!',
       subTitle: `A Notification has been sent to the CLA Manager for ${this.companyName}`,
@@ -187,7 +187,7 @@ export class AddCompanyModal {
     alert.present();
   }
 
-  
+
   getAllCompanies() {
     if (!this.companies) {
       this.loading.companies = true;
@@ -206,7 +206,7 @@ export class AddCompanyModal {
     }
     this.companies.length >= 0 && this.getAllCompanies();
     // Remove all non-alpha numeric, -, _ values
-    let companyName = event.value.replace(/[^\w-]+/g, '');
+    let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
       this.actionButtonEnabled()
@@ -228,6 +228,8 @@ export class AddCompanyModal {
           return company;
         })
         .filter((company) => company.filteredCompany);
+    } else {
+      this.activateButtons = true;
     }
 
     // console.log('Company Name:' + companyName);

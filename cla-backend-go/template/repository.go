@@ -206,7 +206,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		},
 	}
 
-	log.Debugf("Updating table %s with %s template details.", tableName, ContractGroupID)
+	log.Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, ContractGroupID)
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: expr,
 		TableName:                 aws.String(tableName),
@@ -218,6 +218,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 
@@ -269,6 +270,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 	expr, err = dynamodbattribute.MarshalMap(dynamoIndividualProject)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 
@@ -280,8 +282,10 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
 	}
 
+	log.Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, ContractGroupID)
 	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 

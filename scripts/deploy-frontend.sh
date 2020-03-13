@@ -5,7 +5,7 @@
 
 set -e
 
-usage () {
+usage() {
   echo "Usage : $0 -s <stage> -r <region of api> [-c](enable cloudfront)"
 }
 
@@ -13,14 +13,14 @@ usage () {
 CLOUDFRONT=false
 while getopts ":s:r:c" opts; do
   case ${opts} in
-    s) STAGE=${OPTARG} ;;
-    r) REGION=${OPTARG} ;;
-    c) CLOUDFRONT=true ;;
-    *) break ;;
+  s) STAGE=${OPTARG} ;;
+  r) REGION=${OPTARG} ;;
+  c) CLOUDFRONT=true ;;
+  *) break ;;
   esac
 done
 # Removes the parsed command line opts
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
 if [ -z "${STAGE}" ]; then
   usage
@@ -32,16 +32,28 @@ if [ -z "${REGION}" ]; then
   exit 1
 fi
 
+# Allow nvm to work within a script
+. /usr/local/opt/nvm/nvm.sh
+
 echo 'Building Distribution'
 cd src
-npm run build:${STAGE}
+echo "Switching to node v8.17.0..."
+nvm use v8.17.0
+node --version
+yarn build:${STAGE}
 cd ../
 
 echo 'Building Edge Function'
 cd edge
+echo "Switching to node v8.17.0..."
+nvm use v8.17.0
+node --version
 yarn build
 cd ../
 
+echo "Switching to node v12.14.1..."
+nvm use v12.14.1
+node --version
 echo 'Deploying Cloudfront and lambda@edge'
 yarn sls deploy --stage="${STAGE}" --cloudfront="${CLOUDFRONT}"
 

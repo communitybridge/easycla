@@ -1,0 +1,203 @@
+service: cla-backend-go
+
+package:
+  # Exclude all first - selectively add in lambda functions
+  exclude:
+    - auth/**
+    - ./backend-aws-lambda
+    - dev.sh
+    - docs/**
+    - helpers/**
+    - Makefile
+    - .env/**
+    - .venv/**
+    - .git*
+    - .git/**
+    - .vscode/**
+    - .serverless-wsgi
+    - .pylintrc
+    - node_modules/**
+    - package-lock.json
+    - yarn.lock
+
+custom:
+  allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
+  dynamodb:
+    # Region where dynamodb is installed
+    region: us-east-1
+
+provider:
+  name: aws
+  provider: go1.x
+  stage: ${opt:stage}
+  # EasyCLA v2 is deployed in us-east-2 to support Platform API GW and ACS
+  region: us-east-2
+  timeout: 300 # optional, in seconds, default is 6
+  logRetentionInDays: 14
+
+  tracing:
+    lambda: true
+
+  iamManagedPolicies:
+    - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cloudwatch:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+        - s3:PutObjectAcl
+      Resource:
+        - "arn:aws:s3:::cla-signature-files-${self:provider.stage}/*"
+        - "arn:aws:s3:::cla-project-logo-${self:provider.stage}/*"
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:${self:provider.region}:"
+            - Ref: AWS::AccountId
+            - ":parameter/cla-*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+      Resource:
+        - "*"
+      Condition:
+        StringEquals:
+          ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:DeleteItem
+        - dynamodb:UpdateItem
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Scan
+        - dynamodb:DescribeTable
+        - dynamodb:BatchGetItem
+      Resource:
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-ccla-whitelist-requests"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-company-invites"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-github-orgs"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-session-store"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-store"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-user-permissions"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-metrics"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource:
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-ccla-whitelist-requests/index/company-id-project-id-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-user-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-username-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-username-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-user-ccla-company-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-external-id-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-signatory-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-search-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-project-id-type-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-initial-manager-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/external-company-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-github-orgs/index/github-org-sfid-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-company-invites/index/requested-company-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-type-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/user-id-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-project-id-event-time-epoch-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-date-and-contains-pii-event-time-epoch-index"
+
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: us-east-2
+    GH_APP_PRIVATE_SECRET: ${file(./env.json):gh-app-private-key, ssm:/cla-gh-app-private-key-${opt:stage}~true}
+    GH_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
+    GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
+    GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
+    GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
+    GH_STATUS_CTX_NAME: "EasyCLA"
+    GH_ORG_VALIDATION: true
+    COMPANY_USER_VALIDATION: true
+    AUTH0_DOMAIN: ${file(./env.json):auth0-domain, ssm:/cla-auth0-domain-${opt:stage}~true}
+    AUTH0_CLIENT_ID: ${file(./env.json):auth0-clientId, ssm:/cla-auth0-clientId-${opt:stage}~true}
+    AUTH0_USERNAME_CLAIM: ${file(./env.json):auth0-username-claim, ssm:/cla-auth0-username-claim-${opt:stage}}
+    AUTH0_ALGORITHM: ${file(./env.json):auth0-algorithm, ssm:/cla-auth0-algorithm-${opt:stage}}
+    SF_INSTANCE_URL: ${file(./env.json):sf-instance-url, ssm:/cla-sf-instance-url-${opt:stage}~true}
+    SF_CLIENT_ID: ${file(./env.json):sf-client-id, ssm:/cla-sf-consumer-key-${opt:stage}~true}
+    SF_CLIENT_SECRET: ${file(./env.json):sf-client-secret, ssm:/cla-sf-consumer-secret-${opt:stage}~true}
+    SF_USERNAME: ${file(./env.json):sf-username, ssm:/cla-sf-username-${opt:stage}~true}
+    SF_PASSWORD: ${file(./env.json):sf-password, ssm:/cla-sf-password-${opt:stage}~true}
+    DOCRAPTOR_API_KEY: ${file(./env.json):doc-raptor-api-key, ssm:/cla-doc-raptor-api-key-${opt:stage}}
+    DOCUSIGN_ROOT_URL: ${file(./env.json):docusign-root-url, ssm:/cla-docusign-root-url-${opt:stage}}
+    DOCUSIGN_USERNAME: ${file(./env.json):docusign-username, ssm:/cla-docusign-username-${opt:stage}}
+    DOCUSIGN_PASSWORD: ${file(./env.json):docusign-password, ssm:/cla-docusign-password-${opt:stage}}
+    DOCUSIGN_INTEGRATOR_KEY: ${file(./env.json):docusign-integrator-key, ssm:/cla-docusign-integrator-key-${opt:stage}}
+    CLA_API_BASE: ${file(./env.json):cla-api-base, ssm:/cla-api-base-${opt:stage}}
+    CLA_CONTRIBUTOR_BASE: ${file(./env.json):cla-contributor-base, ssm:/cla-contributor-base-${opt:stage}}
+    CLA_CORPORATE_BASE: ${file(./env.json):cla-corporate-base, ssm:/cla-corporate-base-${opt:stage}}
+    CLA_LANDING_PAGE: ${file(./env.json):cla-landing-page, ssm:/cla-landing-page-${opt:stage}}
+    CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}
+    CLA_BUCKET_LOGO_URL: ${file(./env.json):cla-logo-s3-url, ssm:/cla-cla-logo-s3-url-${opt:stage}~true}
+    SES_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-ses-sender-email-address, ssm:/cla-ses-sender-email-address-${opt:stage}}
+    LF_GROUP_CLIENT_ID: ${file(./env.json):lf-group-client-id, ssm:/cla-lf-group-client-id-${opt:stage}}
+    LF_GROUP_CLIENT_SECRET: ${file(./env.json):lf-group-client-secret, ssm:/cla-lf-group-client-secret-${opt:stage}}
+    LF_GROUP_REFRESH_TOKEN: ${file(./env.json):lf-group-refresh-token, ssm:/cla-lf-group-refresh-token-${opt:stage}}
+    LF_GROUP_CLIENT_URL: ${file(./env.json):lf-group-client-url, ssm:/cla-lf-group-client-url-${opt:stage}}
+    SNS_EVENT_TOPIC_ARN: ${file(./env.json):sns-event-topic-arn, ssm:/cla-sns-event-topic-arn-${opt:stage}}
+    DOCRAPTOR_TEST_MODE: ${file(./env.json):docraptor-test-mode}
+
+  stackTags:
+    stage: ${self:provider.stage}
+    project: "EasyCLA"
+    Product: "EasyCLA"
+    ManagedBy: "Serverless CloudFormation"
+    SericeType: "EasyCLA"
+    Service: "API"
+    ServiceRole: "Backend"
+    Owner: "David Deal"
+
+plugins:
+  - serverless-plugin-tracing
+  - serverless-pseudo-parameters
+  # Serverless Finch does s3 uploading. Called with 'sls client deploy'.
+  # Also allows bucket removal with 'sls client remove'.
+  - serverless-finch
+
+functions:
+  api:
+    description: "EasyCLA v2 API"
+    runtime: go1.x
+    handler: backend-aws-lambda
+    package:
+      individually: true
+      include:
+        - ./backend-aws-lambda

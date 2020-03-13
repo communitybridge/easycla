@@ -54,6 +54,7 @@ const storeTable = buildStoreTable(importResources);
 const sessionStoreTable = buildSessionStoreTable(importResources);
 const eventsTable = buildEventsTable(importResources);
 const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
+const metricsTable = buildMetricsTable(importResources);
 
 /**
  * Build the Logo S3 Bucket.
@@ -150,6 +151,7 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'project_id', type: 'S' },
         { name: 'project_external_id', type: 'S' },
+        { name: 'project_name', type: 'S' },
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -157,6 +159,11 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'external-project-index',
           hashKey: 'project_external_id',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'project-name-search-index',
+          hashKey: 'project_name',
           projectionType: 'ALL',
         },
       ],
@@ -630,6 +637,7 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
         { name: 'event-user-id-index', hashKey: 'event_user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
         { name: 'event-project-id-event-time-epoch-index', hashKey: 'event_project_id', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        { name: 'event-date-and-contains-pii-event-time-epoch-index', hashKey: 'event_date_and_contains_pii', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
@@ -679,6 +687,35 @@ function buildCclaWhitelistRequestsTable(importResources: boolean): aws.dynamodb
   );
 }
 
+/**
+ * Metrics Table
+ *
+ * @param importResources flag to indicate if we should import the resources
+ * into our stack from the provider (rather than creating it for the first
+ * time).
+ */
+function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
+  return new aws.dynamodb.Table(
+    'cla-' + stage + '-metrics',
+    {
+      name: 'cla-' + stage + '-metrics',
+      attributes: [
+        { name: 'metric_type', type: 'S' },
+        { name: 'id', type: 'S' },
+      ],
+      hashKey: 'metric_type',
+      rangeKey: "id",
+      readCapacity: 1,
+      writeCapacity: 5,
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
+      tags: defaultTags,
+    },
+    importResources ? { import: 'cla-' + stage + '-metrics' } : {},
+  );
+}
+
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;
@@ -713,3 +750,5 @@ export const eventsTableName = eventsTable.name;
 export const eventsTableARN = eventsTable.arn;
 export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
 export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
+export const metricsTableName = metricsTable.name;
+export const metricsTableARN = metricsTable.arn;

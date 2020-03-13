@@ -54,7 +54,7 @@
                   <ion-row *ngIf="!loading.orgs">
                     <ion-col class="vertical-rule-right" col-12 col-md-6
                       *ngFor="let organization of githubOrganizations">
-                      <ion-card-content>
+                      <ion-card-content *ngIf="organization.providerInfo">
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
                           <span>{{ organization.organization_name }}</span>
@@ -113,10 +113,12 @@
           <ion-col col-12>
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
-                <ion-col col-6 class="project-title">
+                <ion-col col-5 class="project-title">
                   <h2>
                     {{ project.project_name }}
                   </h2>
+                </ion-col>
+                <ion-col col-auto>
                   <ion-buttons start>
                     <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
                       <ion-icon name="settings" item-right></ion-icon>
@@ -162,7 +164,7 @@
                         </ion-card-title>
                         <ng-container *ngIf="!project.project_corporate_documents.length">
                           <p>
-                            No Template Created.
+                            No template selected.
                           </p>
                         </ng-container>
                         <ion-grid class="contract-details" *ngIf="project.project_corporate_documents.length">

@@ -190,6 +190,8 @@ export class ClaEmployeeRequestAccessModal {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     this.formErrors = [];
+    console.log("Form");
+    console.log(this.form);
     let data = {
       company_id: this.companyId,
       user_id: this.userId,
@@ -216,10 +218,27 @@ export class ClaEmployeeRequestAccessModal {
       this.loading = true;
       this.emailSent();
     });
+
+  }
+
+  saveWhiteListRequest() {
+    let user = {
+      userId: this.userId
+    }
+    this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
+      () => {
+        console.log(this.userId+ ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+      },
+      (exception) => {
+        console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
+        console.log(exception);
+      }
+    );
   }
 
   emailSent() {
     this.loading = false;
+    this.saveWhiteListRequest();
     let message = this.authenticated
       ? "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process"
       : "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.";
