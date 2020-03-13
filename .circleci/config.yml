@@ -492,25 +492,34 @@ jobs:
             echo "Building src..."
             pushd $PROJECT_DIR/src
             echo "Current directory is: `pwd`"
-            echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
+            echo "Running pre-fetch config: 'yarn prebuild:${STAGE}'..."
             yarn prebuild:${STAGE}
-            echo "Running build: `yarn build`..."
-            yarn build
+            echo "Running build: 'yarn build:${STAGE}'..."
+            yarn build:${STAGE}
             popd
       - run:
           name: Build Edge Source
           command: |
             echo "Building edge..."
             pushd $PROJECT_DIR/edge
+            echo "Current directory is: `pwd`"
+            echo "Running build: 'yarn build'..."
             yarn build
             popd
+      - *install-node-12
       - run:
-          name: Deploy
+          name: Deploy Cloudfront and LambdaEdge
           command: |
-            echo "Deploying $PROJECT_DIR..."
             pushd $PROJECT_DIR
-            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
-            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true""
+            yarn sls deploy --stage="${STAGE}" --cloudfront=true"
+            popd
+      - run:
+          name: Deploy Frontend Bucket
+          command: |
+            pushd $PROJECT_DIR
+            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
+            yarn sls client deploy --stage="${STAGE}" --cloudfront=true --no-confirm --no-policy-change --no-config-change
             popd
       - run:
           name: Invalidate Cache
