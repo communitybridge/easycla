@@ -5,7 +5,7 @@
 
 set -e
 
-usage () {
+usage() {
   echo "Usage : $0 -s <stage> -r <region of api> [-c](enable cloudfront)"
 }
 
@@ -13,14 +13,14 @@ usage () {
 CLOUDFRONT=false
 while getopts ":s:r:c" opts; do
   case ${opts} in
-    s) STAGE=${OPTARG} ;;
-    r) REGION=${OPTARG} ;;
-    c) CLOUDFRONT=true ;;
-    *) break ;;
+  s) STAGE=${OPTARG} ;;
+  r) REGION=${OPTARG} ;;
+  c) CLOUDFRONT=true ;;
+  *) break ;;
   esac
 done
 # Removes the parsed command line opts
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
 if [ -z "${STAGE}" ]; then
   usage
@@ -31,6 +31,9 @@ if [ -z "${REGION}" ]; then
   usage
   exit 1
 fi
+
+# Allow nvm to work within a script
+. /usr/local/opt/nvm/nvm.sh
 
 echo 'Building Distribution'
 cd src
