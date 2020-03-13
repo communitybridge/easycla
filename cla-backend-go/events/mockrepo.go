@@ -20,6 +20,7 @@ type MockRepository interface {
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	GetRecentEvents(pageSize int64) (*models.EventList, error)
 }
 
 // mockRepository data model
@@ -125,4 +126,8 @@ func (repo *mockRepository) GetUserByUserName(userName string, fullMatch bool) (
 		Username:       "username",
 		Version:        "v1",
 	}, nil
+}
+
+func (repo *mockRepository) GetRecentEvents(pageSize int64) (*models.EventList, error) {
+	return &models.EventList{}, nil
 }
