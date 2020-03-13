@@ -33,7 +33,7 @@ if [ -z "${REGION}" ]; then
 fi
 
 # Allow nvm to work within a script
-. /usr/local/opt/nvm/nvm.sh
+[[ -s "${NVM_DIR}/nvm.sh" ]] && . "${NVM_DIR}/nvm.sh"
 
 echo 'Building Distribution'
 cd src
