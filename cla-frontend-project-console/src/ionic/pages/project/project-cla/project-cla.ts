@@ -84,9 +84,9 @@ export class ProjectClaPage {
       this.loading.claProjects = false;
 
       this.claProjects.map((project) => {
-        // this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
-        //   project.githubOrganizations = githubOrganizations;
-        // });
+        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
+          project.githubOrganizations = githubOrganizations;
+        });
       });
 
       // Get Github Organizations
