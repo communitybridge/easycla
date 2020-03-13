@@ -2,27 +2,11 @@
 test_name: "Project CRUD /v3/project"
 includes:
   - !include common.yaml
+  - !include auth_stage.yaml
 
 stages:
-  - name: get token from auth0
-    request:
-      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
-      method: POST
-      headers:
-        content-type: "application/x-www-form-urlencoded"
-      data:
-        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
-        realm: "Username-Password-Authentication"
-        username: "{tavern.env_vars.AUTH0_USERNAME}"
-        password: "{tavern.env_vars.AUTH0_PASSWORD}"
-        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
-        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
-        scope: "access:api openid profile email"
-    response:
-      save:
-        body:
-          auth0_token: id_token
-
+  - type: ref
+    id: login_get_token
   - name: Project create request with no auth
     request:
       url: "{api_url}/v3/project"
@@ -118,14 +102,36 @@ stages:
                 type: bool
                 required: true
               projectCorporateDocuments:
-                type: none
-                required: true
+                type: seq
+                sequence: &document_seq
+                  - type: map
+                    mapping: 
+                      documentAuthorName:
+                        type: str 
+                      documentContentType:
+                        type: str 
+                      documentCreationDate:
+                        type: str 
+                      documentFileID:
+                        type: str 
+                      documentLegalEntityName:
+                        type: str 
+                      documentMajorVersion:
+                        type: str 
+                      documentMinorVersion:
+                        type: str 
+                      documentName:
+                        type: str 
+                      documentPreamble:
+                        type: str 
+                      documentS3URL:
+                        type: str 
               projectIndividualDocuments:
-                type: none
-                required: true
+                type: seq
+                sequence: *document_seq
               projectMemberDocuments:
-                type: none
-                required: true
+                type: seq
+                sequence: *document_seq
               dateCreated:
                 type: str
                 required: true
@@ -145,7 +151,7 @@ stages:
         Content-Type: "application/json"
         Accept: "application/json"
       json:
-        projectName: "dd test project"
+        projectName: "{projectName:s}"
         projectExternalID: "abc123456"
         projectACL: ["ddeal", "hwillson"]
         projectICLAEnabled: true
@@ -168,7 +174,7 @@ stages:
         content-type: application/json
       body:
         projectID: "{projectID:s}"
-        projectName: "dd test project"
+        projectName: "{projectName:s}"
         projectExternalID: "abc123"
         projectACL: ["ddeal", "hwillson"]
         projectICLAEnabled: true
@@ -243,7 +249,7 @@ stages:
         pageSize: 50
         projects:
           - projectID: "{projectID:s}"
-            projectName: "dd test project"
+            projectName: "{projectName:s}"
             projectExternalID: "abc123"
             projectACL: ["ddeal", "hwillson"]
             projectICLAEnabled: true
@@ -328,7 +334,7 @@ stages:
         content-type: application/json
       body:
         projectID: "{projectID:s}"
-        projectName: "dd test project"
+        projectName: "{projectName:s}"
         projectExternalID: "abc123"
         projectACL: ["ddeal", "hwillson"]
         projectICLAEnabled: true
