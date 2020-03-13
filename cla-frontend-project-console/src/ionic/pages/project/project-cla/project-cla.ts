@@ -9,6 +9,7 @@ import { SortService } from '../../../services/sort.service';
 import { ClaService } from '../../../services/cla.service';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
+import { GithubOrganisationModel } from '../../../models/github-organisation-model';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -24,7 +25,7 @@ export class ProjectClaPage {
   loading: any;
 
   sfdcProjectId: string;
-  githubOrganizations: any[] = [];
+  githubOrganizations: GithubOrganisationModel[];
 
   claProjects: any;
 
@@ -91,9 +92,7 @@ export class ProjectClaPage {
       // Get Github Organizations
       this.loading.orgs = true;
       this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
-        this.githubOrganizations = organizations;
         this.loading.orgs = false;
-
         for (let organization of organizations) {
           this.claService.getGithubGetNamespace(organization.organization_name).subscribe((providerInfo) => {
             organization.providerInfo = providerInfo;
@@ -107,6 +106,7 @@ export class ProjectClaPage {
               });
           }
         }
+        this.githubOrganizations = organizations;
       });
 
       for (let project of projects) {
@@ -279,7 +279,7 @@ export class ProjectClaPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => {}
+          handler: () => { }
         },
         {
           text: 'Delete',
