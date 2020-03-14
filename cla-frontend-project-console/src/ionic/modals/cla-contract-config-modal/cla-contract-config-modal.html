@@ -17,10 +17,11 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>CLA Group Name</ion-label>
-            <ion-input type="text" maxlength="150" formControlName="name"></ion-input>
+            <ion-input type="text" maxlength="150" (ionFocus)="clearError($event)" formControlName="name"></ion-input>
           </ion-item>
 
           <!-- <ion-item no-lines> -->
+          <p *ngIf="errorMessage" class="form-message">{{errorMessage}}</p>
           <p>
             Select the CLA types applicable to contributions to the project
           </p>
@@ -47,8 +48,9 @@
   </form>
 
   <div class="btn-wrapper">
-    <button ion-button color="secondary" (click)="submit()">
+    <button ion-button color="secondary" (click)="submit()" [disabled]="!form.controls.name.value || loading">
       Save
     </button>
+    <loading-spinner [loading]="loading"></loading-spinner>
   </div>
 </ion-content>

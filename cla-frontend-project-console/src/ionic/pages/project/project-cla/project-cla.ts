@@ -72,22 +72,25 @@ export class ProjectClaPage {
     }
 
     return projects.sort((a, b) => {
-      return a.project_name.trim().localeCompare(b.project_name.trim());
+      return a.projectName.trim().localeCompare(b.projectName.trim());
     });
   }
 
   getClaProjects() {
     this.loading.claProjects = true;
-    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((projects) => {
-      this.claProjects = this.sortClaProjects(projects);
+    this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((response) => {
+      console.log('res',response)
+      this.claProjects = this.sortClaProjects(response.projects);
+      console.log('claproj', this.claProjects);
       this.loading.claProjects = false;
-
-      this.claProjects.map((project) => {
-        this.claService.getProjectRepositoriesByrOrg(project.project_id).subscribe((githubOrganizations) => {
-          project.githubOrganizations = githubOrganizations;
+      
+      if(this.claProjects){
+        this.claProjects.map((project) => {
+          this.claService.getProjectRepositoriesByrOrg(project.projectID).subscribe((githubOrganizations) => {
+            project.githubOrganizations = githubOrganizations;
+          });
         });
-      });
-
+      }
       // Get Github Organizations
       this.loading.orgs = true;
       this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
@@ -109,9 +112,11 @@ export class ProjectClaPage {
         }
       });
 
-      for (let project of projects) {
+      // if(!this.claProjects) return;
+
+      for (let project of response.projects) {
         //Get Gerrit Instances
-        this.claService.getGerritInstance(project.project_id).subscribe((gerrits) => {
+        this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
           project.gerrits = gerrits;
         });
       }
@@ -159,12 +164,12 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  openClaViewSignaturesModal(project_id: string, project_name: string) {
+  openClaViewSignaturesModal(projectID: string, projectName: string) {
     let modal = this.modalCtrl.create(
       'ClaContractViewSignaturesModal',
       {
-        claProjectId: project_id,
-        claProjectName: project_name
+        claProjectId: projectID,
+        claProjectName: projectName
       },
       {
         cssClass: 'medium'
@@ -179,12 +184,12 @@ export class ProjectClaPage {
     });
   }
 
-  openClaViewCompaniesModal(project_id: string, project_name: string) {
+  openClaViewCompaniesModal(projectID: string, projectName: string) {
     let modal = this.modalCtrl.create(
       'ClaContractViewCompaniesSignaturesModal',
       {
-        claProjectId: project_id,
-        claProjectName: project_name
+        claProjectId: projectID,
+        claProjectName: projectName
       },
       {
         cssClass: 'medium'
@@ -261,11 +266,14 @@ export class ProjectClaPage {
   searchProjects(name: string, projects: any) {
     let found = false;
 
-    projects.forEach((project) => {
-      if (project.project_name.search(name) !== -1) {
-        found = true;
-      }
-    });
+    if(projects){
+      projects.forEach((project) => {
+        if (project.projectName.search(name) !== -1) {
+          found = true;
+        }
+      });
+  
+    }
 
     return found;
   }
