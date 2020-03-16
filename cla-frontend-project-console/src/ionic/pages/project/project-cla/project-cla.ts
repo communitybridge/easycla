@@ -80,9 +80,7 @@ export class ProjectClaPage {
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((response) => {
-      console.log('res',response)
       this.claProjects = this.sortClaProjects(response.projects);
-      console.log('claproj', this.claProjects);
       this.loading.claProjects = false;
       
       if(this.claProjects){
