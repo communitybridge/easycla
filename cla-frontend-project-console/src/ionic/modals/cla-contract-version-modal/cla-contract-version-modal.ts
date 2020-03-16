@@ -73,10 +73,10 @@ export class ClaContractVersionModal {
   }
 
   async openPdfModal(document) {
-    if (document.document_s3_url == null || document.document_s3_url == '') {
+    if (document.documentS3URL == null || document.documentS3URL == '') {
       const msg =
         'Unable to open PDF document for ' +
-        document.document_name +
+        document.documentName +
         ' - document URL is empty.' +
         ' For further assistance with EasyCLA, please ' +
         '<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">submit a support request ticket</a>.';
@@ -93,7 +93,7 @@ export class ClaContractVersionModal {
           '</body></html>'
       );
     } else {
-      const modal = this.modalCtrl.create('PdfViewerModal', {doc: document.document_s3_url, documentType: this.documentType});
+      const modal = this.modalCtrl.create('PdfViewerModal', {doc: document.documentS3URL, documentType: this.documentType});
       modal.present();
     }
   }

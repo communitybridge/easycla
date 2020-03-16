@@ -32,7 +32,6 @@ export class PdfViewerComponent {
     document.body.appendChild(downloadLink);
     downloadLink.setAttribute('href', this.src);
     downloadLink.setAttribute('download', 'true');
-    downloadLink.setAttribute('target', '_blank');
     downloadLink.click();
     document.body.removeChild(downloadLink);
   }
