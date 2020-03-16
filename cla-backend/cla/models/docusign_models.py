@@ -715,9 +715,12 @@ class DocuSign(signing_service_interface.SigningService):
                                                            signature_type='company',
                                                            signature_reference_id=company_id)
         if len(signatures) == 0:
-            cla.log.warning(f'No CCLA corporate signature for company: {company} - '
-                            'Unable to load the Manager list.  Returning error response.')
-            return {'errors': {'signature': 'Corporate Signature missing'}}
+            # Check signatures that havent yet been approved and signed and nor assocaited with a company
+            signatures = Signature().get_signatures_by_project(project_id=project_id)
+            if len(signatures) == 0:
+                cla.log.warning(f'No CCLA corporate signature for company: {company} - '
+                                'Unable to load the Manager list.  Returning error response.')
+                return {'errors': {'signature': 'Corporate Signature missing'}}
         if len(signatures) > 1:
             cla.log.warning(f'More than 1 CCLA corporate signature for company: {company} - '
                             f'{len(signatures)} total - will use the first one')
