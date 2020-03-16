@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+
 	lfxAuth "github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/docs"
 	"github.com/communitybridge/easycla/cla-backend-go/metrics"
@@ -51,7 +53,6 @@ import (
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
 	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/go-openapi/loads"
 	"github.com/lytics/logrus"
 	"github.com/rs/cors"
@@ -105,6 +106,7 @@ func server(localMode bool) http.Handler {
 		log.Fatalf("COMPANY_USER_VALIDATION value must be a boolean string. Error: %v", err)
 	}
 	stage := viper.GetString("STAGE")
+	dynamodbRegion := ini.GetProperty("DYNAMODB_AWS_REGION")
 
 	log.Infof("Service %s starting...", ini.ServiceName)
 
@@ -116,6 +118,7 @@ func server(localMode bool) http.Handler {
 	log.Infof("Build date              : %s", BuildDate)
 	log.Infof("Golang OS               : %s", runtime.GOOS)
 	log.Infof("Golang Arch             : %s", runtime.GOARCH)
+	log.Infof("DYANAMODB_AWS_REGION    : %s", dynamodbRegion)
 	log.Infof("GH_ORG_VALIDATION       : %t", githubOrgValidation)
 	log.Infof("COMPANY_USER_VALIDATION : %t", companyUserValidation)
 	log.Infof("STAGE                   : %s", stage)
@@ -203,7 +206,7 @@ func server(localMode bool) http.Handler {
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
-	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, sessionStore)
+	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)

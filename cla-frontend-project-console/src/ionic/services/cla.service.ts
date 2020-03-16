@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
+import {Response} from "@angular/http/src/static_response";
 
 @Injectable()
 export class ClaService {
@@ -1009,6 +1010,15 @@ export class ClaService {
     // };
     const url = new URL(`https://api.github.com/orgs/${gitOrganisationName}`);
     return this.http.getWithoutHeaders(url);
+  }
+
+  /**
+   * Check if the specified GitHub Organization name is valid
+   * @param githubOrgName the GitHub Organization Name
+   */
+  testGitHubOrganization(githubOrgName: string): Observable<Response> {
+    const url: URL = this.getV3Endpoint(`v3/github/org/${githubOrgName}/exists`);
+    return this.http.get(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////

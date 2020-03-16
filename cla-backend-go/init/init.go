@@ -21,11 +21,11 @@ var (
 
 // CommonInit initializes the common properties
 func CommonInit() {
-	stage = getProperty("STAGE")
+	stage = GetProperty("STAGE")
 }
 
-// getProperty is a common routine to bind and return the specified environment variable
-func getProperty(property string) string {
+// GetProperty is a common routine to bind and return the specified environment variable
+func GetProperty(property string) string {
 	err := viper.BindEnv(property)
 	if err != nil {
 		log.Fatalf("Unable to load property: %s - value not defined or empty", property)

@@ -75,10 +75,15 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	githubAccessToken, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-access-token-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
 
 	config.Github = Github{
 		ClientID:     githubClientID,
 		ClientSecret: githubSecret,
+		AccessToken:  githubAccessToken,
 	}
 
 	//Corporate Console Link
