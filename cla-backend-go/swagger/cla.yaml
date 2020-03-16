@@ -1495,6 +1495,31 @@ paths:
       tags:
         - github
 
+  /github/org/{orgName}/exists:
+    get:
+      summary: API to fetch the GitHub Oranization Details
+      security:
+        - OauthSecurity: []
+      operationId: getOrg
+      parameters:
+        - name: orgName
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: 'Success'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+        404:
+          $ref: '#/responses/not-found'
+      tags:
+        - github
+
   /events:
     get:
       summary: search events

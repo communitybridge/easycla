@@ -1,0 +1,39 @@
+---
+test_name: "GitHub API Functional Tests"
+includes:
+  - !include common.yaml
+  - !include auth_stage.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: GitHub Organization Exists No Auth
+    request:
+      url: "{api_url}/v3/github/org/communitybridge/exists"
+      method: GET
+      headers:
+        Accept: "application/json"
+    response:
+      status_code: 401
+
+  - name: Valid GitHub Organization Exists
+    request:
+      url: "{api_url}/v3/github/org/communitybridge/exists"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+
+  - name: Invalid GitHub Organization Exists
+    request:
+      url: "{api_url}/v3/github/org/communitybridgessss/exists"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 404
