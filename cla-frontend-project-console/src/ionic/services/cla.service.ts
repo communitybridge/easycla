@@ -576,7 +576,10 @@ export class ClaService {
         'project_icla_enabled': True
       }
      */
-    const url: URL = this.getV1Endpoint('/v1/project');
+
+    // OUTDATED: Python v1 backend
+    // const url: URL = this.getV1Endpoint('/v1/project');
+    const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.post(url, project).map((res) => res.json());
   }
 
@@ -591,7 +594,9 @@ export class ClaService {
         'project_name': 'New Project Name'
       }
      */
-    const url: URL = this.getV1Endpoint('/v1/project');
+    // OUTDATED: Python v1 backend
+    // const url: URL = this.getV1Endpoint('/v1/project');
+    const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.put(url, project).map((res) => res.json());
   }
 
@@ -609,7 +614,9 @@ export class ClaService {
    * @param externalId the external ID
    */
   getProjectsByExternalId(externalId) {
-    const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
+    //OUTDATED
+    // const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
+    const url: URL = this.getV3Endpoint('/v3/project/external/' + externalId);
     return this.http
       .get(url)
       .map((res) => res.json())
