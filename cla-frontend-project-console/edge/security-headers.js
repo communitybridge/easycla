@@ -39,7 +39,6 @@ function generateCSP(env, isDevServer) {
         'https://api.staging.lfcla.com/',
         'https://api.lfcla.com/',
         'https://communitybridge.org/',
-        'https://github.org/',
     ];
 
     let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
@@ -73,7 +72,6 @@ function generateCSP(env, isDevServer) {
         'base-uri': [SELF],
         // frame-src restricts what iframe's you can put on your website
         'frame-src': [SELF, 'data:',
-            'https://drive.google.com/', // allow the google drive PDF viewer
             'https://cla-signature-files-dev.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
             'https://cla-signature-files-staging.s3.amazonaws.com/',

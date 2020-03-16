@@ -139,6 +139,8 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     REGION: us-east-2
+    # Currently, we use DynamoDB in the us-east-1 region
+    DYNAMODB_AWS_REGION: us-east-1
     GH_APP_PRIVATE_SECRET: ${file(./env.json):gh-app-private-key, ssm:/cla-gh-app-private-key-${opt:stage}~true}
     GH_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
     GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
