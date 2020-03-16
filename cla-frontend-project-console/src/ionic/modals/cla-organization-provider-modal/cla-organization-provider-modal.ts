@@ -60,7 +60,9 @@ export class ClaOrganizationProviderModal {
     this.showErrorMsg = false;
     this.claService.testGitHubOrganization(this.form.value.orgName).subscribe((res: any)=> {
       this.loading = false;
+      if(res.status ===  200) {
         this.postClaGithubOrganization();
+      }
     }, (err: any) => { 
       this.loading = false;
       if(!err.ok) {

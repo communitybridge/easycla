@@ -1025,7 +1025,7 @@ export class ClaService {
    */
   testGitHubOrganization(githubOrgName: string): Observable<Response> {
     const url: URL = this.getV3Endpoint(`/v3/github/org/${githubOrgName}/exists`);
-    return this.http.get(url).map((res) => res.json());
+    return this.http.get(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////
