@@ -51,7 +51,7 @@
               <loading-spinner [loading]="loading.orgs"></loading-spinner>
               <ion-card class="organization-card">
                 <ion-grid>
-                  <ion-row>
+                  <ion-row *ngIf="!loading.orgs">
                     <ion-col class="vertical-rule-right" col-12 col-md-6
                       *ngFor="let organization of githubOrganizations">
                       <ion-card-content *ngIf="organization.providerInfo">
@@ -59,24 +59,38 @@
                           <ion-icon name="logo-github"></ion-icon>
                           <span>{{ organization.organization_name }}</span>
                         </ion-card-title>
-                        <h3 *ngIf="!organization.organization_installation_id" class="not-configured-warning">
-                          Not Configured.
-                          <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
-                        </h3>
+
                         <p>
                           <a target="_blank" href="https://github.com/{{ organization.organization_name }}">
                             https://github.com/{{organization.organization_name }}
                           </a>
                         </p>
-                        <p>{{ organization.providerInfo.bio }}</p>
 
-                        <div class="organization-actions">
+                        <h3 *ngIf="organization.providerInfo === null" class="namespace-error">
+                          Error occured during fetching Github account.
+                        </h3>
+
+                        <h3 *ngIf="organization.providerInfo?.errors" class="namespace-error">
+                          {{organization.providerInfo?.errors.namespace}}
+                        </h3>
+
+                        <h3
+                          *ngIf="!organization.organization_installation_id && organization.providerInfo?.errors === undefined"
+                          class="not-configured-warning">
+                          Not Configured.
+                          <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
+                        </h3>
+
+                        <p>{{ organization.providerInfo?.bio }}</p>
+
+                        <div *ngIf="organization.providerInfo" class="organization-actions">
                           <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
                             color="light">
                             Delete
                           </button>
                         </div>
                       </ion-card-content>
+
                     </ion-col>
                   </ion-row>
                 </ion-grid>

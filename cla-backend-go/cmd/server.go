@@ -17,6 +17,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
+	v2Events "github.com/communitybridge/easycla/cla-backend-go/v2/events"
 	v2Metrics "github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 	v2Version "github.com/communitybridge/easycla/cla-backend-go/v2/version"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
@@ -212,6 +213,7 @@ func server(localMode bool) http.Handler {
 	version.Configure(api, Version, Commit, Branch, BuildDate)
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
+	v2Events.Configure(v2API, eventsService)
 	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
 

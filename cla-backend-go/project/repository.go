@@ -153,10 +153,12 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_requires_icla_signature", projectModel.ProjectCCLARequiresICLA)
-	// TODO
-	//addListAttribute(input.Item, "project_individual_documents", individualDocs)
-	// TODO
-	//addListAttribute(input.Item, "project_member_documents", corporateDocs)
+
+	// Empty documents for now - will add the template details later
+	addListAttribute(input.Item, "project_corporate_documents", []*dynamodb.AttributeValue{})
+	addListAttribute(input.Item, "project_individual_documents", []*dynamodb.AttributeValue{})
+	addListAttribute(input.Item, "project_member_documents", []*dynamodb.AttributeValue{})
+
 	addStringAttribute(input.Item, "date_created", currentTimeString)
 	addStringAttribute(input.Item, "date_modified", currentTimeString)
 	addStringAttribute(input.Item, "version", "v1")
@@ -638,19 +640,9 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 		return nil, err
 	}
 
+	// For each project, convert to a response model
 	for _, dbProject := range dbProjects {
-		projects = append(projects, models.Project{
-			ProjectID:               dbProject.ProjectID,
-			ProjectExternalID:       dbProject.ProjectExternalID,
-			ProjectName:             dbProject.ProjectName,
-			ProjectACL:              dbProject.ProjectACL,
-			ProjectCCLAEnabled:      dbProject.ProjectCclaEnabled,
-			ProjectICLAEnabled:      dbProject.ProjectIclaEnabled,
-			ProjectCCLARequiresICLA: dbProject.ProjectCclaRequiresIclaSignature,
-			DateCreated:             dbProject.DateCreated,
-			DateModified:            dbProject.DateModified,
-			Version:                 dbProject.Version,
-		})
+		projects = append(projects, *repo.buildProjectModel(dbProject))
 	}
 
 	return projects, nil
@@ -737,4 +729,9 @@ func addBooleanAttribute(item map[string]*dynamodb.AttributeValue, key string, v
 // addStringSliceAttribute adds a new string slice attribute to the existing map
 func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key string, value []string) {
 	item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
+}
+
+// addListAttribute adds a list to the existing map
+func addListAttribute(item map[string]*dynamodb.AttributeValue, key string, value []*dynamodb.AttributeValue) {
+	item[key] = &dynamodb.AttributeValue{L: value}
 }

@@ -6,6 +6,7 @@ import { Http, RequestOptions } from '@angular/http';
 import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
 
 @Injectable()
 export class ClaService {
@@ -812,13 +813,13 @@ export class ClaService {
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
     const url: URL = this.getV2Endpoint(
       '/v2/repository-provider/' +
-        provider +
-        '/sign/' +
-        installationId +
-        '/' +
-        githubRepositoryId +
-        '/' +
-        changeRequestId,
+      provider +
+      '/sign/' +
+      installationId +
+      '/' +
+      githubRepositoryId +
+      '/' +
+      changeRequestId,
     );
     return this.http.get(url).map((res) => res.json());
   }
@@ -867,7 +868,8 @@ export class ClaService {
    */
   getGithubGetNamespace(namespace) {
     const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
-    return this.http.get(url).map((res) => res.json());
+    return this.http.get(url).map((res) => res.json())
+      .catch((error) => Observable.throw(error));
   }
 
   /**

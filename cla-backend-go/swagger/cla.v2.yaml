@@ -88,8 +88,6 @@ paths:
     get:
       summary: Get EasyCLA Metrics
       description: Returns EasyCLA Metrics
-      security:
-        - OauthSecurity: []
       operationId: getMetrics
       responses:
         '200':
@@ -109,8 +107,6 @@ paths:
     get:
       summary: Get cla manager distribution for easycla
       description: Returns cla manager distribution
-      security:
-        - lf-auth: []
       operationId: getClaManagerDistribution
       responses:
         '200':
@@ -130,8 +126,6 @@ paths:
     get:
       summary: Get total count metrics
       description: Returns total count metrics
-      security:
-        - lf-auth: []
       operationId: getTotalCount
       responses:
         '200':
@@ -151,8 +145,6 @@ paths:
     get:
       summary: Get metrics of company
       description: Returns company metrics
-      security:
-        - lf-auth: []
       operationId: getCompanyMetric
       parameters:
         - name: companyID
@@ -178,8 +170,6 @@ paths:
     get:
       summary: company metrics of top companies
       description: Returns list company metrics of top companies
-      security:
-        - lf-auth: []
       operationId: getTopCompanies
       responses:
         '200':
@@ -199,8 +189,6 @@ paths:
     get:
       summary: Get metrics of project
       description: Returns project metrics
-      security:
-        - lf-auth: []
       operationId: getProjectMetric
       parameters:
         - name: projectID
@@ -226,8 +214,6 @@ paths:
     get:
       summary: list metrics of project
       description: Returns list of project metrics
-      security:
-        - lf-auth: []
       parameters:
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
@@ -251,8 +237,6 @@ paths:
     post:
       summary: Create an EasyCLA CLA Group
       description: Creates a new CLA Group within the EasyCLA system.
-      security:
-        - OauthSecurity: []
       operationId: createProject
       parameters:
         - name: body
@@ -276,8 +260,6 @@ paths:
         - project
     put:
       summary: Update Project by ID
-      security:
-        - OauthSecurity: []
       operationId: updateProject
       parameters:
         - name: body
@@ -301,8 +283,6 @@ paths:
         - project
     get:
       summary: Get Projects
-      security:
-        - OauthSecurity: []
       operationId: getProjects
       parameters:
         - $ref: '#/parameters/searchTerm'
@@ -332,8 +312,6 @@ paths:
         required: true
     get:
       summary: Get Project by ID
-      security:
-        - OauthSecurity: []
       operationId: getProjectById
       responses:
         '200':
@@ -352,8 +330,6 @@ paths:
         - project
     delete:
       summary: Delete Project by ID
-      security:
-        - OauthSecurity: []
       operationId: deleteProjectById
       responses:
         '204':
@@ -372,8 +348,6 @@ paths:
   /project/metrics:
     get:
       summary: Get Project Metrics
-      security:
-        - OauthSecurity: []
       operationId: getProjectMetrics
       responses:
         '200':
@@ -400,8 +374,6 @@ paths:
           in: path
           type: string
           required: true
-      security:
-        - OauthSecurity: []
       operationId: getProjectByName
       responses:
         '200':
@@ -418,6 +390,31 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - project
+
+  /events/recent:
+    get:
+      summary: search events
+      description: Returns list of events matching with search criteria
+      operationId: getRecentEvents
+      parameters:
+        - $ref: '#/parameters/pageSize'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - events
 
 responses:
   unauthorized:
@@ -615,6 +612,13 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "ProjectMetric"
+
+  event-list:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "EventList"
 
   project-metrics:
     type: object

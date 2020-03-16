@@ -44,6 +44,7 @@ type Repository interface {
 	GetProject(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	GetRecentEvents(pageSize int64) (*models.EventList, error)
 }
 
 // repository data model
@@ -58,6 +59,11 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
 	}
+}
+
+func toDateFormat(t time.Time) string {
+	//DD-MM-YYYY format
+	return t.Format("02-01-2006")
 }
 
 // Create event will create event in database.
@@ -79,6 +85,7 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 		Item:      map[string]*dynamodb.AttributeValue{},
 		TableName: aws.String(fmt.Sprintf("cla-%s-events", repo.stage)),
 	}
+	eventDateAndContainsPII := fmt.Sprintf("%s#%t", toDateFormat(currentTime), event.ContainsPII)
 	addAttribute(input.Item, "event_id", eventID.String())
 	addAttribute(input.Item, "event_type", event.EventType)
 	addAttribute(input.Item, "event_user_id", event.UserID)
@@ -92,7 +99,12 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 	addAttribute(input.Item, "event_project_id", event.EventProjectID)
 	addAttribute(input.Item, "event_project_name", event.EventProjectName)
 	addAttribute(input.Item, "event_project_name_lower", strings.ToLower(event.EventProjectName))
+	addAttribute(input.Item, "event_date", toDateFormat(currentTime))
+	addAttribute(input.Item, "event_project_external_id", event.EventProjectExternalID)
+	addAttribute(input.Item, "event_date_and_contains_pii", eventDateAndContainsPII)
+	input.Item["contains_pii"] = &dynamodb.AttributeValue{BOOL: &event.ContainsPII}
 	input.Item["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(currentTime.Unix(), 10))}
+
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new event, error: %v", err)
@@ -397,6 +409,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("event_time"),
 		expression.Name("event_time_epoch"),
 		expression.Name("event_data"),
+		expression.Name("event_project_external_id"),
 	)
 }
 
@@ -537,4 +550,85 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 		}
 	}
 	return nil, nil
+}
+
+func (repo repository) GetRecentEvents(pageSize int64) (*models.EventList, error) {
+	ctime := time.Now()
+	maxQueryDays := 30
+	events := make([]*models.Event, 0)
+	for queriedDays := 0; queriedDays < maxQueryDays; queriedDays++ {
+		day := toDateFormat(ctime)
+		eventList, err := repo.getEventByDay(day, false, pageSize)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, eventList...)
+		if int64(len(events)) >= pageSize {
+			events = events[0:pageSize]
+			break
+		}
+		ctime = ctime.Add(-(24 * time.Hour))
+	}
+
+	return &models.EventList{
+		Events: events,
+	}, nil
+
+}
+
+func (repo repository) getEventByDay(day string, containsPII bool, pageSize int64) ([]*models.Event, error) {
+	tableName := fmt.Sprintf("cla-%s-events", repo.stage)
+	var condition expression.KeyConditionBuilder
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+
+	indexName := "event-date-and-contains-pii-event-time-epoch-index"
+	eventDateAndContainsPII := fmt.Sprintf("%s#%t", day, containsPII)
+	condition = expression.Key("event_date_and_contains_pii").Equal(expression.Value(eventDateAndContainsPII))
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		Limit:                     aws.Int64(pageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
+		ScanIndexForward:          aws.Bool(false),
+	}
+
+	events := make([]*models.Event, 0)
+
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving events. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		eventsList, modelErr := buildEventListModels(results)
+		if modelErr != nil {
+			return nil, modelErr
+		}
+
+		if len(eventsList) > 0 {
+			events = append(events, eventsList...)
+		}
+		if int64(len(events)) >= pageSize {
+			return events[0:pageSize], nil
+		}
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return events, nil
 }
