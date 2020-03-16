@@ -23,9 +23,10 @@ from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
-    Document
+    Document, Event
 from cla.models.s3_storage import S3Storage
 from pydocusign.exceptions import DocuSignException  # type: ignore
+from cla.models.event_types import EventType
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -408,7 +409,17 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Assume this company is the user's employer.
         # TODO: DAD - we should check to see if they already have a company id assigned
-        user.set_user_company_id(str(company_id))
+        if user.get_user_company_id() != company_id:
+            user.set_user_company_id(str(company_id))
+            Event.create_event(
+                event_type=EventType.UserAssociatedWithCompany,
+                event_company_id=company_id,
+                event_project_id=project_id,
+                event_user_id=user.get_user_id(),
+                event_data='user {} associated himself with company {}'.format(user.get_user_name(),company.get_company_name()),
+                contains_pii=True,
+            )
+
 
         # Take a moment to update the user record's github information
         github_username = user.get_user_github_username()
@@ -467,6 +478,11 @@ class DocuSign(signing_service_interface.SigningService):
         project.load(project_id)
         cla.log.info(f'Loaded project details for: {request_info}')
 
+        # company has already been checked from check_and_prepare_employee_signature. Load company with company ID.
+        company = Company()
+        company.load(company_id)
+        cla.log.info(f'Loaded company details for: {request_info}')
+
         # Get project's latest corporate document to get major/minor version numbers.
         last_document = project.get_latest_corporate_document()
         cla.log.info(f'Loaded last project document details for: {request_info}')
@@ -493,6 +509,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        Event.create_event(
+            event_type=EventType.EmployeeSignatureCreated,
+            event_company_id=company_id,
+            event_project_id=project_id,
+            event_user_id=user_id,
+            event_data='employee signature created for user {}, company {}, project {}'.
+                format(user.get_user_name(),company.get_company_name(), project.get_project_name()),
+            contains_pii=True,
+        )
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
@@ -549,6 +574,10 @@ class DocuSign(signing_service_interface.SigningService):
         project = Project()
         project.load(project_id)
         cla.log.info(f'Loaded project for: {request_info}')
+        # company has already been checked from check_and_prepare_employee_signature. Load company with company ID.
+        company = Company()
+        company.load(company_id)
+        cla.log.info(f'Loaded company details for: {request_info}')
 
         # Get project's latest corporate document to get major/minor version numbers. 
         last_document = project.get_latest_corporate_document()
@@ -573,6 +602,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        Event.create_event(
+            event_type=EventType.EmployeeSignatureCreated,
+            event_company_id=company_id,
+            event_project_id=project_id,
+            event_user_id=user_id,
+            event_data='employee signature created for user {}, company {}, project {}'.
+                format(user.get_user_name(),company.get_company_name(), project.get_project_name()),
+            contains_pii=True,
+        )
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.
