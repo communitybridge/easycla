@@ -58,13 +58,10 @@ export class ClaOrganizationProviderModal {
   checkGitOrganisationName() {
     this.loading = true;
     this.showErrorMsg = false;
-    this.claService.testGitOrganisation(this.form.value.orgName).subscribe((res: any)=> {
+    this.claService.testGitHubOrganization(this.form.value.orgName).subscribe((res: any)=> {
       this.loading = false;
-      if(res.login === this.form.value.orgName) {
+      if(res.status ===  200) {
         this.postClaGithubOrganization();
-      }
-      else {
-        this.showErrorMsg = true;
       }
     }, (err: any) => { 
       this.loading = false;
