@@ -159,22 +159,22 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 	if len(list.List) > 0 {
 		return "", ErrCclaWhitelistRequestAlreadyExists
 	}
-	company, err := s.companyRepo.GetCompany(companyID)
+	companyModel, err := s.companyRepo.GetCompany(companyID)
 	if err != nil {
 		return "", err
 	}
-	project, err := s.projectRepo.GetProject(projectID)
+	projectModel, err := s.projectRepo.GetProjectByID(projectID)
 	if err != nil {
 		return "", err
 	}
-	user, err := s.userRepo.GetUser(args.UserID)
+	userModel, err := s.userRepo.GetUser(args.UserID)
 	if err != nil {
 		return "", err
 	}
-	if user == nil {
+	if userModel == nil {
 		return "", errors.New("invalid user")
 	}
-	return s.repo.AddCclaWhitelistRequest(company, project, user)
+	return s.repo.AddCclaWhitelistRequest(companyModel, projectModel, userModel)
 }
 
 // DeleteCclaWhitelistRequest is the handler for the Delete CLA Whitelist request

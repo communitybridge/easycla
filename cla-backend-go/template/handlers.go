@@ -41,6 +41,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			params.ClaGroupID,
 			"", // no company context for creating templates
 			fmt.Sprintf("%s created PDF templates for project id: %s", claUser.Name, params.ClaGroupID),
+			true,
 		)
 
 		return template.NewCreateCLAGroupTemplateOK().WithPayload(&pdfUrls)

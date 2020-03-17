@@ -1,0 +1,28 @@
+---
+name: Authentication stage
+description:
+  Reusable test stage for authentication
+
+stages:
+  - id: login_get_token
+    name: get token from auth0
+    request:
+      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
+      method: POST
+      headers:
+        content-type: "application/x-www-form-urlencoded"
+      data:
+        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
+        realm: "Username-Password-Authentication"
+        username: "{tavern.env_vars.AUTH0_USERNAME}"
+        password: "{tavern.env_vars.AUTH0_PASSWORD}"
+        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
+        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
+        scope: "access:api openid profile email"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          auth0_token: id_token

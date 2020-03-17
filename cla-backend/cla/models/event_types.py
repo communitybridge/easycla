@@ -37,4 +37,7 @@ class EventType(Enum):
     AddCLAManager = "Add CLA Manager"
     RemoveCLAManager = "Remove CLA Manager"
     NotifyWLChange = "Notify WL Change"
+    UserAssociatedWithCompany = "User associated with company"
+    EmployeeSignatureCreated = "Employee signature created"
+    EmployeeSignatureDisapproved = "Employee signature disapproved"
 

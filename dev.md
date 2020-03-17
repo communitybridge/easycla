@@ -163,7 +163,7 @@ echo $GOROOT
 
 # And go should be in your path
 go version
-go version go1.13.5 darwin/amd64
+go version go1.14 darwin/amd64
 ```
 
 ### Setup Project Folders
@@ -203,6 +203,28 @@ ls -la $GOPATH/src/github.com/communitybridge/easycla
 # Should see something like:
 lrwxr-xr-x  1 ddeal  staff  29 Jul  7 14:48 /Users/ddeal/projects/go/src/github.com/communitybridge/easycla@ -> /Users/ddeal/projects/easycla
 ```
+
+### Configure Git
+
+EasyCLA currently relies on two private libraries for user authorization and
+common data models:
+
+- github.com/LF-Engineering/lfx-kit (authorization library)
+- github.com/LF-Engineering/lfx-models (common data models)
+
+The near-term plan is to migrate these private libraries to the 
+github.com/communitybridge organization as public repositories.
+
+Until that time, each user needs to request access to these repositories 
+and create/update the following file: `~/.gitconfig` to include the following:
+
+```code
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
+```
+
+This will allow the Golang `dep` tool to pull dependencies from private
+repositories.
 
 ### Building Go Source
 

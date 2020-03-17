@@ -4,7 +4,8 @@ package:
   # Exclude all first - selectively add in lambda functions
   exclude:
     - auth/**
-    - ./backend_aws_lambda
+    - ./backend-aws-lambda
+    - ./metrics-aws-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -111,6 +112,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-store"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-user-permissions"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-metrics"
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -129,6 +131,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-initial-manager-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/external-company-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
@@ -140,6 +143,7 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     REGION: us-east-1
+    DYNAMODB_AWS_REGION: us-east-1
     GH_APP_PRIVATE_SECRET: ${file(./env.json):gh-app-private-key, ssm:/cla-gh-app-private-key-${opt:stage}~true}
     GH_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
     GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
@@ -199,7 +203,7 @@ functions:
 
   apiv3:
     runtime: go1.x
-    handler: backend_aws_lambda
+    handler: backend-aws-lambda
     events:
       - http:
           method: ANY
@@ -208,7 +212,7 @@ functions:
     package:
       individually: true
       include:
-        - ./backend_aws_lambda
+        - ./backend-aws-lambda
 
   apiv1:
     handler: wsgi_handler.handler
@@ -256,6 +260,20 @@ functions:
           method: ANY
           path: v1/salesforce/project
           cors: true
+
+  saveMetrics:
+    description: "EasyCLA Save Metrics"
+    runtime: go1.x
+    handler: metrics-aws-lambda
+    events:
+      - schedule:
+          description: 'A function that gathers metrics on a given schedule'
+          rate: rate(1 hour)
+          enabled: true
+    package:
+      individually: true
+      include:
+        - ./metrics-aws-lambda
 
 resources:
   Resources:
