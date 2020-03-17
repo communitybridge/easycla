@@ -63,8 +63,8 @@ provider:
       Action:
         - ssm:GetParameter
       Resource:
-        - "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameters/cla-*"
-        - "arn:aws:ssm:${self:custom.dynamodb.region}:#{AWS::AccountId}:parameters/cla-*"
+        - "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/cla-*"
+        - "arn:aws:ssm:${self:custom.dynamodb.region}:#{AWS::AccountId}:parameter/cla-*"
     - Effect: Allow
       Action:
         - ses:SendEmail
