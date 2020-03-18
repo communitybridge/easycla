@@ -1,12 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {AuthService} from '../../services/auth.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
   segment: 'add-company-modal'
@@ -37,7 +37,7 @@ export class AddCompanyModal {
   searching: boolean;
   actionButtonsEnabled: boolean;
   activateButtons: boolean;
-
+  selectionBtnName: string = 'add company';
   join: boolean
   add: boolean
 
@@ -119,7 +119,7 @@ export class AddCompanyModal {
   }
 
   sendCompanyNotification() {
-    this.loading.submit = false; 
+    this.loading.submit = false;
     let alert = this.alertCtrl.create({
       title: 'Notification Sent!',
       subTitle: `A Notification has been sent to the CLA Manager for ${this.companyName}`,
@@ -187,7 +187,7 @@ export class AddCompanyModal {
     alert.present();
   }
 
-  
+
   getAllCompanies() {
     if (!this.companies) {
       this.loading.companies = true;
@@ -200,6 +200,7 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.getAllCompanies();
+    this.selectionBtnName = 'add company';
     this.filteredCompanies = [];
     if (!this.companies) {
       this.searching = true;
@@ -209,6 +210,7 @@ export class AddCompanyModal {
     let companyName = event.value.replace(/[^\w-]+/g, '');
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
+      this.selectionBtnName = 'join company';
       this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
@@ -246,7 +248,6 @@ export class AddCompanyModal {
   }
 
   setCompanyName(company) {
-    console.log(company, 'company')
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
