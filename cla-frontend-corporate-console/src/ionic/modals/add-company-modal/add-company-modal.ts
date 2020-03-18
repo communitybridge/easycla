@@ -37,7 +37,7 @@ export class AddCompanyModal {
   searching: boolean;
   actionButtonsEnabled: boolean;
   activateButtons: boolean;
-
+  selectionBtnName: string = 'add company';
   join: boolean
   add: boolean
 
@@ -200,6 +200,7 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.getAllCompanies();
+    this.selectionBtnName = 'add company';
     this.filteredCompanies = [];
     if (!this.companies) {
       this.searching = true;
@@ -209,6 +210,7 @@ export class AddCompanyModal {
     let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
+      this.selectionBtnName = 'join company';
       this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
@@ -248,7 +250,6 @@ export class AddCompanyModal {
   }
 
   setCompanyName(company) {
-    console.log(company, 'company')
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
