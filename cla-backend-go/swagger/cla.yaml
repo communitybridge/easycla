@@ -2075,6 +2075,10 @@ definitions:
         type: integer
         format: int64
         x-omitempty: false
+      projectExternalID:
+        description: SF ID of the project
+        type: string
+        x-omitempty: false
 
   create-cla-group-template:
     title: CreateCLAGroupTemplate
