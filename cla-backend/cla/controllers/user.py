@@ -205,11 +205,12 @@ Click on the following link to navigate to the EasyCLA Corporate Console.
     event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}'\
                  f'{user.get_user_name()} <{user.get_user_email()}>'
     Event.create_event(
-        user_id=user_id,
+        event_user_id=user_id,
         event_project_id=project_id,
         event_company_id=company_id,
         event_type=EventType.RequestCompanyWL,
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=True,
     )
 
 
@@ -229,10 +230,11 @@ def invite_company_admin(user_id, user_email, admin_name, admin_email, project_n
 
     event_data = f'{user_id} with {user_email} sends to {admin_name}/{admin_email} for project: {project_name}'
     Event.create_event(
-        user_id=user_id,
+        event_user_id=user_id,
         event_project_name=project_name,
         event_data=event_data,
-        event_type=EventType.InviteAdmin
+        event_type=EventType.InviteAdmin,
+        contains_pii=True,
     )
 
 
@@ -270,8 +272,9 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     Event.create_event(
         event_data=event_data,
         event_type=EventType.RequestCCLA,
-        user_id=user_id,
-        event_company_id=company_id
+        event_user_id=user_id,
+        event_company_id=company_id,
+        contains_pii=False,
     )
 
 
@@ -404,7 +407,8 @@ def get_or_create_user(auth_user):
         event_data = f'CLA user added for {auth_user.username}'
         Event.create_event(
             event_data=event_data,
-            event_type=EventType.CreateUser
+            event_type=EventType.CreateUser,
+            contains_pii=True,
         )
 
         return user

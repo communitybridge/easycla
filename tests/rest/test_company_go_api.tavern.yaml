@@ -1,0 +1,124 @@
+---
+test_name: "Get all companies"
+includes:
+  - !include auth_stage.yaml
+  - !include common.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: Get companies
+    request:
+      url: "{api_url}/v3/company"
+      method: GET
+      headers: 
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      save:
+        body:
+          company_name: "companies[0].companyName"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: &companies_schema
+            type: map
+            required: True
+            mapping:
+              companies:
+                type: seq
+                sequence: &company_schema
+                  - type: map
+                    mapping:
+                      companyACL:
+                        type: seq
+                        sequence:
+                          - type: str
+                      companyExternalID:
+                        type: str
+                      companyID:
+                        type: str
+                      companyName:
+                        type: str
+                      created:
+                        type: str
+                      updated:
+                        type: str
+              lastKeyScanned:
+                type: str
+              resultCount:
+                type: int
+              searchItems:
+                type: str
+              totalCount:
+                type: int
+
+---
+test_name: Search Companies
+stages:
+  - name: Search company by company name
+    request:
+      url: "{api_url}/v3/company/search"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+      params:
+        companyName: "{company_name:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: *companies_schema
+
+
+---
+test_name: Search companies by user 
+stages:
+  - name: Get cla user 
+    request:
+      url: "{api_url}/v3/users/username/{username:s}"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200 
+      save: 
+        body:
+          user_id: userID 
+
+  - name: Get companies by user 
+    request:
+      url: "{api_url}/v3/company/user/{user_id:s}"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200 
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: *companies_schema
+
+  - name: Get companies by user unauthenticated state 
+    request:
+      url: "{api_url}/v3/company/user/{user_id:s}"
+      method: GET 
+    response:
+      status_code: 401
+
+
+
+# Search companies
+# Retrieve list of companies where the user is the manager
+# Retrieve list of companies the the user is the manager and in the invite list
+# Get company
+# Get ccla whitelist requests for given project
+# Delete ccla whitelist request
+# Retrieve pending invite requests
+# Get all Github organization under the ccla whitelist
+# Add Github organization to the CCLA whitelist
+# Delete Github Org from CCLA whitelist
+# Send Email to Company Admins for request of access to be a CLA manager
+# API to retrieve pending invite requests
+

@@ -132,7 +132,8 @@ def create_signature(signature_project_id,  # pylint: disable=too-many-arguments
     Event.create_event(
         event_data=event_data,
         event_type=EventType.CreateSignature,
-        event_project_id=signature_project_id
+        event_project_id=signature_project_id,
+        contains_pii=False,
     )
 
     return signature.to_dict()
@@ -292,7 +293,8 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     event_data = update_str
     Event.create_event(
         event_data=event_data,
-        event_type=EventType.UpdateSignature
+        event_type=EventType.UpdateSignature,
+        contains_pii=True,
     )
 
     signature.save()
@@ -371,7 +373,8 @@ def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: 
         event_data=event_data,
         event_type=EventType.NotifyWLChange,
         event_company_name=company_name,
-        event_project_name=project_name
+        event_project_name=project_name,
+        contains_pii=True,
     )
 
 
@@ -655,7 +658,8 @@ def delete_signature(signature_id):
     event_data = f'Deleted signature {signature_id}'
     Event.create_event(
         event_data=event_data,
-        event_type=EventType.DeleteSignature
+        event_type=EventType.DeleteSignature,
+        contains_pii=False,
     )
 
     return {'success': True}
@@ -836,7 +840,8 @@ def add_cla_manager(auth_user, signature_id, lfid):
     event_data = f'{lfid} added as cla manager to Signature ACL for {signature.get_signature_id()}'
     Event.create_event(
         event_data=event_data,
-        event_type=EventType.AddCLAManager
+        event_type=EventType.AddCLAManager,
+        contains_pii=True,
     )
 
     return get_managers_dict(signature_acl)
@@ -877,7 +882,8 @@ def remove_cla_manager(username, signature_id, lfid):
 
     Event.create_event(
         event_data=event_data,
-        event_type=EventType.RemoveCLAManager
+        event_type=EventType.RemoveCLAManager,
+        contains_pii=True,
     )
 
     # Return modified managers

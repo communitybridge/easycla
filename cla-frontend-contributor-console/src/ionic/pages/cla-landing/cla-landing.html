@@ -16,13 +16,17 @@
           <ion-col col-12 col-md-2>
             <img src="{{ project.logoUrl }}" alt="{{ project.project_name }} Logo" />
           </ion-col>
-          <ion-col col-12 col-md-10>
-            <h1>{{ project.project_name }}</h1>
-          </ion-col>
         </ion-row>
       </ion-grid>
     </header>
     <ion-grid>
+
+      <ion-row justify-content-center>
+        <ion-col col-auto>
+          <h1>{{ project.project_name }}</h1>
+        </ion-col>
+      </ion-row>
+
       <ion-row justify-content-center>
         <ion-col col-12 col-md-6>
           <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
