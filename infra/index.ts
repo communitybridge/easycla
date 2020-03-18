@@ -708,6 +708,16 @@ function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
       rangeKey: "id",
       readCapacity: 1,
       writeCapacity: 5,
+      globalSecondaryIndexes: [
+        {
+          name: 'metric-type-salesforce-id-index',
+          hashKey: 'metric_type',
+          rangeKey: "salesforce_id",
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+      ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
       },

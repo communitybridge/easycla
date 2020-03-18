@@ -196,6 +196,14 @@ paths:
           in: path
           type: string
           required: true
+        - name: idType
+          description: ID type
+          in: query
+          type: string
+          enum:
+            - salesforce
+            - internal
+          required: true
       responses:
         '200':
           description: 'Success'

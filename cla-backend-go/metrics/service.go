@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"math"
 	"sort"
 	"sync"
@@ -22,7 +23,7 @@ type Service interface {
 	GetCLAManagerDistribution() (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
-	GetProjectMetric(projectID string) (*models.ProjectMetric, error)
+	GetProjectMetric(projectID string, idType string) (*models.ProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
@@ -166,8 +167,17 @@ func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, err
 	return cm.toModel(), nil
 }
 
-func (s *service) GetProjectMetric(projectID string) (*models.ProjectMetric, error) {
-	pm, err := s.metricsRepo.GetProjectMetric(projectID)
+func (s *service) GetProjectMetric(projectID string, idType string) (*models.ProjectMetric, error) {
+	var pm *ProjectMetric
+	var err error
+	switch idType {
+	case "internal":
+		pm, err = s.metricsRepo.GetProjectMetric(projectID)
+	case "salesforce":
+		pm, err = s.metricsRepo.GetProjectMetricBySalesForceID(projectID)
+	default:
+		err = errors.New("invalid idType")
+	}
 	if err != nil {
 		return nil, err
 	}

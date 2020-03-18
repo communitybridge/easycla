@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,6 +22,16 @@ const (
 	DeleteBeforeMinutes = 50
 )
 
+// errors
+var (
+	ErrMetricNotFound = errors.New("metric not found")
+)
+
+// index
+const (
+	IndexMetricTypeSalesforceID = "metric-type-salesforce-id-index"
+)
+
 // Repository provides methods for calculation,storage and retrieval of metrics
 type Repository interface {
 	CalculateAndSaveMetrics() error
@@ -30,6 +41,7 @@ type Repository interface {
 	GetProjectMetrics(pageSize int64, nextKey string) ([]*ProjectMetric, string, error)
 	GetCompanyMetric(companyID string) (*CompanyMetric, error)
 	GetProjectMetric(projectID string) (*ProjectMetric, error)
+	GetProjectMetricBySalesForceID(salesforceID string) (*ProjectMetric, error)
 }
 
 type repo struct {
@@ -139,6 +151,7 @@ type CompanyMetric struct {
 // ProjectMetric contains all metrics related with particular project
 type ProjectMetric struct {
 	ID                          string `json:"id"`
+	SalesforceID                string `json:"salesforce_id,omitempty"`
 	CompaniesCount              int64  `json:"companies_count"`
 	ClaManagersCount            int64  `json:"cla_managers_count"`
 	CorporateContributorsCount  int64  `json:"corporate_contributors_count"`
@@ -417,6 +430,7 @@ func (pm *ProjectMetrics) fillProjectInfo(project *ItemProject) {
 		pm.ProjectMetrics[project.ProjectID] = m
 	}
 	m.ExternalProjectID = project.ProjectExternalID
+	m.SalesforceID = project.ProjectExternalID
 	m.ProjectName = project.ProjectName
 }
 
@@ -1023,6 +1037,15 @@ func (repo *repo) GetProjectMetric(projectID string) (*ProjectMetric, error) {
 	return &out, nil
 }
 
+func (repo *repo) GetProjectMetricBySalesForceID(salesforceID string) (*ProjectMetric, error) {
+	var out ProjectMetric
+	err := repo.getMetricBySalesforceID(salesforceID, MetricTypeProject, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (repo *repo) getMetricByID(id string, metricType string, out interface{}) error {
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.metricTableName),
@@ -1042,6 +1065,45 @@ func (repo *repo) getMetricByID(id string, metricType string, out interface{}) e
 		return fmt.Errorf("metric with id:%s metric_type:%s not found", id, metricType)
 	}
 	err = dynamodbattribute.UnmarshalMap(result.Item, out)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo *repo) getMetricBySalesforceID(salesforceId string, metricType string, out interface{}) error {
+	var condition expression.KeyConditionBuilder
+	builder := expression.NewBuilder()
+
+	condition = expression.Key("metric_type").Equal(expression.Value(metricType)).
+		And(expression.Key("salesforce_id").Equal(expression.Value(salesforceId)))
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return err
+	}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.metricTableName),
+		IndexName:                 aws.String(IndexMetricTypeSalesforceID),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving metrics using salesforce_id. error = %s", err.Error())
+		return err
+	}
+	if len(results.Items) == 0 {
+		return ErrMetricNotFound
+	}
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], out)
 	if err != nil {
 		return err
 	}
