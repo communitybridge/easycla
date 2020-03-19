@@ -701,8 +701,9 @@ function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
     {
       name: 'cla-' + stage + '-metrics',
       attributes: [
-        { name: 'metric_type', type: 'S' },
         { name: 'id', type: 'S' },
+        { name: 'salesforce_id', type: 'S' },
+        { name: 'metric_type', type: 'S' },
       ],
       hashKey: 'metric_type',
       rangeKey: "id",
