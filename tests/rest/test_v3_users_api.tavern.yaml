@@ -50,20 +50,10 @@ stages:
         Authorization: "Bearer {auth0_token:s}"
         Content-Type: "application/json"
         Accept: "application/json"
-      json:
-        userExternalID: "abc123"
-        username: "CLA Functional Test User"
-        lfEmail: "claFunctionalTestUser@linuxfoundation.org"
-        lfUsername: "claFunctionalTestUser"
     response:
       status_code: 200
       headers:
         content-type: application/json
-      body:
-        userExternalID: "abc123"
-        username: "CLA Functional Test User"
-        lfEmail: "claFunctionalTestUser@linuxfoundation.org"
-        lfUsername: "claFunctionalTestUser"
       save:
         body:
           userID: "userID"
@@ -75,9 +65,6 @@ stages:
             required: true
             mapping:
               userID:
-                type: str
-                required: true
-              userExternalID:
                 type: str
                 required: true
               username:
