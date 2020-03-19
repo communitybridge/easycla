@@ -1,33 +1,12 @@
-test_name: Get LF Auth0 ID id_token
-includes:
-  - !include common.yaml
-
-stages:
-  - name: get token from auth0
-    request:
-      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
-      method: POST
-      headers:
-        content-type: "application/x-www-form-urlencoded"
-      data:
-        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
-        realm: "Username-Password-Authentication"
-        username: "{tavern.env_vars.AUTH0_USERNAME}"
-        password: "{tavern.env_vars.AUTH0_PASSWORD}"
-        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
-        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
-        scope: "access:api openid profile email"
-    response:
-      save:
-        body:
-          auth0_token: id_token
-
 ---
 test_name: All projects homepage /v1/salesforce/projects
 includes:
   - !include common.yaml
+  - !include auth_stage.yaml
 
 stages:
+  - type: ref
+    id: login_get_token
   - name: Salesforce endpoint with no auth
     request:
       url: "{api_url}/v1/salesforce/projects"
@@ -373,6 +352,7 @@ stages:
       method: POST
       headers:
         Authorization: "Bearer {auth0_token:s}"
+        X-GITHUB-EVENT: "installation"
       json: !include data/github-app-installation-staging.json
     response:
       status_code: 200
@@ -640,29 +620,4 @@ stages:
                 type: bool
                 required: True
 
----
 
-test_name: Check Duplicate Company
-includes:
-    - !include common.yaml
-
-stages:
-  - name: Create company with unique name
-    request:
-      url: "{api_url}/v1/company"
-      method: POST
-      headers:
-        Authorization: "Bearer {auth0_token:s}"
-      json: !include data/company.json
-    response:
-      status_code: 200
-
-  - name: Create company with duplicate name
-    request:
-      url: "{api_url}/v1/company"
-      method: POST
-      headers:
-        Authorization: "Bearer {auth0_token:s}"
-      json: !include data/company_duplicate.json
-    response:
-      status_code: 409
