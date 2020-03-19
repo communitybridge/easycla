@@ -11,7 +11,7 @@ import uuid
 import falcon
 import github
 from github import PullRequest
-from github.GithubException import UnknownObjectException, BadCredentialsException
+from github.GithubException import UnknownObjectException, BadCredentialsException, GithubException
 from requests_oauthlib import OAuth2Session
 
 import cla
@@ -853,18 +853,37 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body, conte
     :param body: The contents of the status message.
     :type body: string
     """
-    commit_obj = None
-    for commit in pull_request.get_commits():
-        if commit.sha == commit_hash:
-            commit_obj = commit
-            break
-    if commit_obj is None:
-        cla.log.error('Could not post status on PR %s: Commit %s not found',
-                      pull_request.number, commit_hash)
-        return
-    # context is a string label to differentiate one signer status from another signer status.
-    # committer name is used as context label
-    commit_obj.create_status(state, sign_url, body, context)
+    try:
+        commit_obj = None
+        for commit in pull_request.get_commits():
+            if commit.sha == commit_hash:
+                commit_obj = commit
+                break
+        if commit_obj is None:
+            cla.log.error(
+                'Could not post status on PR %s: Commit %s not found',
+                pull_request.number,
+                commit_hash,
+            )
+            return
+        # context is a string label to differentiate one signer status from another signer status.
+        # committer name is used as context label
+        commit_obj.create_status(state, sign_url, body, context)
+        cla.log.info(
+            'Successfully posted status on PR %s: Commit %s',
+            pull_request.number,
+            commit_hash,
+        )
+    except GithubException as exc:
+        cla.log.error(
+            'Could not post status on PR %s: Commit %s : Response Code: %s: Mesage: %s',
+            pull_request.number,
+            commit_hash,
+            exc.status,
+            exc.data,
+        )
+
+
 
 
 def update_cla_comment(pull_request, body):
