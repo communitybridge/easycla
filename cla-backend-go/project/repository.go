@@ -123,6 +123,7 @@ func buildSimpleModel(dbProjectsModel *models.Projects) []models.ProjectSimpleMo
 		simpleModels = append(simpleModels, models.ProjectSimpleModel{
 			ProjectName:         dbModel.ProjectName,
 			ProjectManagerCount: int64(len(dbModel.ProjectACL)),
+			ProjectExternalID:   dbModel.ProjectExternalID,
 		})
 	}
 

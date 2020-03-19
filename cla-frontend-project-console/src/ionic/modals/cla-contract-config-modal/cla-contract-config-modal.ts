@@ -101,7 +101,7 @@ export class ClaContractConfigModal {
     };
     this.claService.postProject(claProject).subscribe((response) => {
       this.loading = false;
-      this.dismiss();
+      this.dismiss(true);
     }, (error) => {
       this.loading = false;
       if(!error.ok) {
@@ -123,12 +123,12 @@ export class ClaContractConfigModal {
     };
     this.claService.putProject(claProject).subscribe((response) => {
       this.loading = false;
-      this.dismiss();
+      this.dismiss(true);
     });
   }
 
-  dismiss() {
-    this.viewCtrl.dismiss();
+  dismiss(data?) {
+    this.viewCtrl.dismiss(data);
   }
 
   clearError(event) {

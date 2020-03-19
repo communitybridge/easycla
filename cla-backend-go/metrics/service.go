@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"math"
 	"sort"
 	"sync"
@@ -22,7 +23,7 @@ type Service interface {
 	GetCLAManagerDistribution() (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
-	GetProjectMetric(projectID string) (*models.ProjectMetric, error)
+	GetProjectMetric(projectID string, idType string) (*models.SfProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
@@ -166,12 +167,29 @@ func (s *service) GetCompanyMetric(companyID string) (*models.CompanyMetric, err
 	return cm.toModel(), nil
 }
 
-func (s *service) GetProjectMetric(projectID string) (*models.ProjectMetric, error) {
-	pm, err := s.metricsRepo.GetProjectMetric(projectID)
-	if err != nil {
-		return nil, err
+func (s *service) GetProjectMetric(projectID string, idType string) (*models.SfProjectMetric, error) {
+	sfpm := &models.SfProjectMetric{}
+	switch idType {
+	case "internal":
+		pm, err := s.metricsRepo.GetProjectMetric(projectID)
+		if err != nil {
+			return nil, err
+		}
+		sfpm.ProjectExternalID = pm.ExternalProjectID
+		sfpm.List = append(sfpm.List, pm.toModel())
+	case "salesforce":
+		pmList, err := s.metricsRepo.GetProjectMetricBySalesForceID(projectID)
+		if err != nil {
+			return nil, err
+		}
+		sfpm.ProjectExternalID = projectID
+		for _, pm := range pmList {
+			sfpm.List = append(sfpm.List, pm.toModel())
+		}
+	default:
+		return nil, errors.New("invalid idType")
 	}
-	return pm.toModel(), nil
+	return sfpm, nil
 }
 
 func average(numerator, denominator int64) int64 {
@@ -240,7 +258,7 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 }
 func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error) {
 	var out models.ListProjectMetric
-	var pageSize int64 = 5
+	var pageSize int64 = 100
 	var nextKey string
 	if paramPageSize != nil {
 		pageSize = *paramPageSize
@@ -252,8 +270,17 @@ func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string)
 	if err != nil {
 		return nil, err
 	}
+	sfProjectMetrics := make(map[string]*models.SfProjectMetric)
 	for _, pm := range list {
-		out.List = append(out.List, pm.toModel())
+		sfpm, ok := sfProjectMetrics[pm.ExternalProjectID]
+		if !ok {
+			sfpm = &models.SfProjectMetric{
+				ProjectExternalID: pm.ExternalProjectID,
+			}
+			sfProjectMetrics[pm.ExternalProjectID] = sfpm
+			out.List = append(out.List, sfpm)
+		}
+		sfpm.List = append(sfpm.List, pm.toModel())
 	}
 	out.NextKey = nextKey
 	return &out, nil
