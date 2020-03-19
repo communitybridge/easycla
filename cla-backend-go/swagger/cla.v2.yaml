@@ -208,13 +208,11 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/project-metric'
+            $ref: '#/definitions/sf-project-metric'
         '400':
           $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - metrics
 
@@ -614,12 +612,12 @@ definitions:
         alias: "v1models"
       type: "ListProjectMetric"
 
-  project-metric:
+  sf-project-metric:
     x-go-type:
       import:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
-      type: "ProjectMetric"
+      type: "SfProjectMetric"
 
   event-list:
     x-go-type:

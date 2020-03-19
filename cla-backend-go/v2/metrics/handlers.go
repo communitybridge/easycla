@@ -53,6 +53,9 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 		func(params metrics.GetProjectMetricParams, user *auth.User) middleware.Responder {
 			result, err := service.GetProjectMetric(params.ProjectID, params.IDType)
 			if err != nil {
+				if err.Error() == "metric not found" {
+					return metrics.NewGetProjectMetricNotFound()
+				}
 				return metrics.NewGetProjectMetricBadRequest().WithPayload(errorResponse(err))
 			}
 			return metrics.NewGetProjectMetricOK().WithPayload(*result)

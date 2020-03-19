@@ -2762,7 +2762,18 @@ definitions:
       list:
         type: array
         items:
+          $ref: '#/definitions/sf-project-metric'
+
+  sf-project-metric:
+    type: object
+    properties:
+      projectExternalId:
+        type : string
+      list:
+        type: array
+        items:
           $ref: '#/definitions/project-metric'
+
 
   project-metric:
     type: object

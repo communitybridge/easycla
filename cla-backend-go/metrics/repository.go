@@ -41,7 +41,7 @@ type Repository interface {
 	GetProjectMetrics(pageSize int64, nextKey string) ([]*ProjectMetric, string, error)
 	GetCompanyMetric(companyID string) (*CompanyMetric, error)
 	GetProjectMetric(projectID string) (*ProjectMetric, error)
-	GetProjectMetricBySalesForceID(salesforceID string) (*ProjectMetric, error)
+	GetProjectMetricBySalesForceID(salesforceID string) ([]*ProjectMetric, error)
 }
 
 type repo struct {
@@ -1037,13 +1037,13 @@ func (repo *repo) GetProjectMetric(projectID string) (*ProjectMetric, error) {
 	return &out, nil
 }
 
-func (repo *repo) GetProjectMetricBySalesForceID(salesforceID string) (*ProjectMetric, error) {
-	var out ProjectMetric
+func (repo *repo) GetProjectMetricBySalesForceID(salesforceID string) ([]*ProjectMetric, error) {
+	var out []*ProjectMetric
 	err := repo.getMetricBySalesforceID(salesforceID, MetricTypeProject, &out)
 	if err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return out, nil
 }
 
 func (repo *repo) getMetricByID(id string, metricType string, out interface{}) error {
@@ -1062,7 +1062,7 @@ func (repo *repo) getMetricByID(id string, metricType string, out interface{}) e
 		return err
 	}
 	if len(result.Item) == 0 {
-		return fmt.Errorf("metric with id:%s metric_type:%s not found", id, metricType)
+		return ErrMetricNotFound
 	}
 	err = dynamodbattribute.UnmarshalMap(result.Item, out)
 	if err != nil {
@@ -1071,12 +1071,12 @@ func (repo *repo) getMetricByID(id string, metricType string, out interface{}) e
 	return nil
 }
 
-func (repo *repo) getMetricBySalesforceID(salesforceId string, metricType string, out interface{}) error {
+func (repo *repo) getMetricBySalesforceID(salesforceID string, metricType string, out interface{}) error {
 	var condition expression.KeyConditionBuilder
 	builder := expression.NewBuilder()
 
 	condition = expression.Key("metric_type").Equal(expression.Value(metricType)).
-		And(expression.Key("salesforce_id").Equal(expression.Value(salesforceId)))
+		And(expression.Key("salesforce_id").Equal(expression.Value(salesforceID)))
 
 	builder = builder.WithKeyCondition(condition)
 	// Use the nice builder to create the expression
@@ -1103,7 +1103,7 @@ func (repo *repo) getMetricBySalesforceID(salesforceId string, metricType string
 	if len(results.Items) == 0 {
 		return ErrMetricNotFound
 	}
-	err = dynamodbattribute.UnmarshalMap(results.Items[0], out)
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, out)
 	if err != nil {
 		return err
 	}
