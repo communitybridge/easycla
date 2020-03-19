@@ -2075,6 +2075,10 @@ definitions:
         type: integer
         format: int64
         x-omitempty: false
+      projectExternalID:
+        description: SF ID of the project
+        type: string
+        x-omitempty: false
 
   create-cla-group-template:
     title: CreateCLAGroupTemplate
@@ -2758,7 +2762,18 @@ definitions:
       list:
         type: array
         items:
+          $ref: '#/definitions/sf-project-metric'
+
+  sf-project-metric:
+    type: object
+    properties:
+      projectExternalId:
+        type : string
+      list:
+        type: array
+        items:
           $ref: '#/definitions/project-metric'
+
 
   project-metric:
     type: object
