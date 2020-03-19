@@ -41,7 +41,15 @@ func (o *GetDocOK) WriteResponse(rw http.ResponseWriter, producer runtime.Produc
 		</style>
 	  </head>
 	  <body>
-		<redoc spec-url='/v4/swagger.json'></redoc>
+		<redoc></redoc>
+		<script>
+		var redoc = document.getElementsByTagName("REDOC")[0];
+		if (window.location.href.includes("/cla-service/v4")) {
+			redoc.setAttribute('spec-url','/cla-service/v4/swagger.json');
+		} else {
+			redoc.setAttribute('spec-url','/v4/swagger.json');
+		}
+		</script>
 		<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
 	  </body>
 	</html>`
