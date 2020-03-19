@@ -132,6 +132,7 @@ provider:
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/user-id-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-project-id-event-time-epoch-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-date-and-contains-pii-event-time-epoch-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-metrics/index/metric-type-salesforce-id-index"
 
   environment:
     STAGE: ${self:provider.stage}
