@@ -23,7 +23,7 @@
       </ion-grid>
     </header>
     <ion-grid>
-      <ion-row justify-content-center>
+      <ion-row *ngIf="project.project_ccla_enabled" justify-content-center>
         <ion-col col-12 col-md-6>
           <ion-card class="clickable" (click)="openClaIndividualEmployeeModal()">
             <ion-card-content>
@@ -36,7 +36,7 @@
           </ion-card>
         </ion-col>
       </ion-row>
-      <ion-row justify-content-center>
+      <ion-row *ngIf="project.project_icla_enabled" justify-content-center>
         <ion-col col-12 col-md-6>
           <ion-card class="clickable" (click)="openClaIndividualPage()">
             <ion-card-content>
