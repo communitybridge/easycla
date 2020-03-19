@@ -131,7 +131,7 @@ export class ClaContractViewCompaniesSignaturesModal {
 
   resetFilter() {
     this.searchString = null;
-    this.searchField.reset('user');
+    this.searchField.reset('company');
     this.fullMatch.setValue(false);
     this.search.reset();
     this.getSignatures();

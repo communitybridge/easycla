@@ -28,6 +28,7 @@ export class ProjectClaPage {
   githubOrganizations: GithubOrganisationModel[];
 
   claProjects: any;
+  projectsByExternalId: any;
 
   iclaUploadInfo: any;
   cclaUploadInfo: any;
@@ -80,6 +81,7 @@ export class ProjectClaPage {
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((response) => {
+      this.projectsByExternalId = response.projects;
       this.claProjects = this.sortClaProjects(response.projects);
       this.loading.claProjects = false;
       
@@ -90,8 +92,26 @@ export class ProjectClaPage {
           });
         });
       }
+
+
       // Get Github Organizations
-      this.loading.orgs = true;
+      this.getGithubOrganisation();
+      this.getGerrit();
+      
+    });
+  }
+
+  getGerrit() {
+    for (let project of this.projectsByExternalId) {
+      //Get Gerrit Instances
+      this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
+        project.gerrits = gerrits;
+      });
+    }
+  }
+
+  getGithubOrganisation() {
+    this.loading.orgs = true;
       this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
         this.loading.orgs = false;
         for (let organization of organizations) {
@@ -114,16 +134,6 @@ export class ProjectClaPage {
         }
         this.githubOrganizations = organizations;
       });
-
-      // if(!this.claProjects) return;
-
-      for (let project of response.projects) {
-        //Get Gerrit Instances
-        this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
-          project.gerrits = gerrits;
-        });
-      }
-    });
   }
 
   backToProjects() {
@@ -144,7 +154,10 @@ export class ProjectClaPage {
       });
     }
     modal.onDidDismiss((data) => {
-      this.getClaProjects();
+      if(data){
+        this.getGithubOrganisation();
+      }
+      
     });
     modal.present();
   }
@@ -219,7 +232,7 @@ export class ProjectClaPage {
     modal.onDidDismiss((data) => {
       if (data) {
         this.openClaOrganizationAppModal();
-        this.getClaProjects();
+        // this.getGithubOrganisation();
       }
     });
     modal.present();
@@ -230,7 +243,7 @@ export class ProjectClaPage {
       claProjectId: claProjectId
     });
     modal.onDidDismiss((data) => {
-      this.getClaProjects();
+      this.getGithubOrganisation();
     });
     modal.present();
   }
@@ -240,7 +253,9 @@ export class ProjectClaPage {
       projectId: projectId
     });
     modal.onDidDismiss((data) => {
-      this.getClaProjects();
+      if(data) {
+        this.getGerrit();
+      }
     });
     modal.present();
   }
@@ -248,7 +263,8 @@ export class ProjectClaPage {
   openClaOrganizationAppModal() {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
-      this.getClaProjects();
+      console.log('data', data)
+      this.getGithubOrganisation();
     });
     modal.present();
   }
@@ -314,13 +330,13 @@ export class ProjectClaPage {
 
   deleteClaGithubOrganization(organization) {
     this.claService.deleteGithubOrganization(organization.organization_name).subscribe((response) => {
-      this.getClaProjects();
+      this.getGithubOrganisation();
     });
   }
 
   deleteGerritInstance(gerrit) {
     this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
-      this.getClaProjects();
+      this.getGerrit();
     });
   }
 
