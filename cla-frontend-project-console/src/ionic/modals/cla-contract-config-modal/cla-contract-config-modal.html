@@ -7,19 +7,21 @@
 <ion-content>
   <form [formGroup]="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
-      <ion-row *ngIf="submitAttempt && !form.valid">
+      <ion-row *ngIf="submitAttempt && !isFormValid()">
         <ion-col col-12>
-          <p class="form-message">Please check the fields below for errors.</p>
+          <p *ngIf="form.controls.name.value ===''" class="form-message">CLA Group Name is required.</p>
+          <p *ngIf="form.controls.name.value !=='' && !isFormValid()" class="form-message">Please select atleast one checkbox.</p>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>CLA Group Name</ion-label>
-            <ion-input type="text" formControlName="name"></ion-input>
+            <ion-input type="text" maxlength="150" (ionFocus)="clearError($event)" formControlName="name"></ion-input>
           </ion-item>
 
           <!-- <ion-item no-lines> -->
+          <p *ngIf="errorMessage" class="form-message">{{errorMessage}}</p>
           <p>
             Select the CLA types applicable to contributions to the project
           </p>
@@ -27,18 +29,18 @@
 
           <ion-item no-lines>
             <ion-label><ion-icon name="briefcase"></ion-icon> Corporate CLA: to be signed by a company</ion-label>
-            <ion-checkbox color="secondary" formControlName="ccla"></ion-checkbox>
+            <ion-checkbox color="secondary" formControlName="ccla" (ionChange)="checkMandatory()"></ion-checkbox>
           </ion-item>
 
           <ion-item no-lines>
             <ion-label><ion-icon name="person"></ion-icon> Individual CLA: to be signed as an individual contributing</ion-label>
-            <ion-checkbox color="secondary" formControlName="icla" (ionChange)="checkMandatory(form.controls.icla.value)"></ion-checkbox>
+            <ion-checkbox color="secondary" formControlName="icla" (ionChange)="checkMandatory()"></ion-checkbox>
           </ion-item>
 
           <ion-item class="indented" no-lines>
             <ion-label class="no-elipsis">Contributors under Corporate CLA must also sign Individual CLA</ion-label>
             <ion-checkbox color="secondary" formControlName="cclaAndIcla"
-                          [disabled]="!form.controls.icla.value" (ionChange)="checkMandatory(form.controls.icla.value)"></ion-checkbox>
+                          [disabled]="!(form.controls.icla.value && form.controls.ccla.value)"></ion-checkbox>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -46,8 +48,9 @@
   </form>
 
   <div class="btn-wrapper">
-    <button ion-button color="secondary" (click)="submit()">
+    <button ion-button color="secondary" (click)="submit()" [disabled]="!form.controls.name.value || loading">
       Save
     </button>
+    <loading-spinner [loading]="loading"></loading-spinner>
   </div>
 </ion-content>

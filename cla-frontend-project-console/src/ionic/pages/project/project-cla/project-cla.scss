@@ -10,6 +10,11 @@ body {
   box-shadow: none;
 }
 
+.namespace-error {
+  margin-top: 5px !important;
+  color: #db4e4e !important;
+}
+
 .button-md-light {
   box-shadow: none;
   background-color: transparent;
@@ -241,7 +246,7 @@ h2 {
 }
 
 .not-configured-warning {
-  margin-top: -5px !important;
+  // margin-top: -5px !important;
   color: #db4e4e !important;
 
   a {
