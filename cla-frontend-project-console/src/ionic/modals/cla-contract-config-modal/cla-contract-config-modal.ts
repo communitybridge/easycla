@@ -21,6 +21,8 @@ export class ClaContractConfigModal {
   projectId: string;
   claProject: any;
   newClaProject: boolean;
+  loading: boolean;
+  errorMessage: string;
 
   constructor(
     public navCtrl: NavController,
@@ -34,10 +36,10 @@ export class ClaContractConfigModal {
     this.claProject = this.navParams.get('claProject');
     this.getDefaults();
     this.form = formBuilder.group({
-      name: [this.claProject.project_name, Validators.compose([Validators.required])],
-      ccla: [this.claProject.project_ccla_enabled],
-      cclaAndIcla: [this.claProject.project_ccla_requires_icla_signature],
-      icla: [this.claProject.project_icla_enabled]
+      name: [this.claProject.projectName, Validators.compose([Validators.required])],
+      ccla: [this.claProject.projectCCLAEnabled],
+      cclaAndIcla: [this.claProject.projectCCLARequiresICLA],
+      icla: [this.claProject.projectICLAEnabled]
     });
 
     events.subscribe('modal:close', () => {
@@ -51,65 +53,85 @@ export class ClaContractConfigModal {
     if (!this.claProject) {
       this.newClaProject = true; // change to creating new project
       this.claProject = {
-        project_external_id: this.projectId,
-        project_name: '',
-        project_ccla_enabled: false,
-        project_ccla_requires_icla_signature: false,
-        project_icla_enabled: false
+        projectExternalID: this.projectId,
+        projectName: '',
+        projectCCLAEnabled: false,
+        projectCCLARequiresICLA: false,
+        projectICLAEnabled: false
       };
     }
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   submit() {
     this.submitAttempt = true;
+    this.errorMessage = '';
     this.currentlySubmitting = true;
-    if (!this.form.valid) {
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
-    if (this.newClaProject) {
-      this.postProject();
+    if (this.isFormValid()) {
+      if (this.newClaProject) {
+        this.postProject();
+      } else {
+        this.putProject();
+      }
     } else {
-      this.putProject();
+      this.currentlySubmitting = false;
     }
   }
 
-  checkMandatory(value: boolean = true) {
-    this.form.controls['cclaAndIcla'].setValue(value);
+  isFormValid(){
+    return this.form.valid && (this.form.controls.ccla.value || this.form.controls.icla.value)
+  }
+
+  checkMandatory() {
+    if (!this.form.controls.ccla.value || !this.form.controls.icla.value) {
+      this.form.controls['cclaAndIcla'].setValue(false);
+    }
   }
 
   postProject() {
+    this.loading = true;
     let claProject = {
-      project_external_id: this.claProject.project_external_id,
-      project_name: this.form.value.name,
-      project_ccla_enabled: this.form.value.ccla,
-      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla
+      projectExternalID: this.claProject.projectExternalID,
+      projectName: this.form.value.name,
+      projectCCLAEnabled: this.form.value.ccla,
+      projectACL: [localStorage.getItem('userid')],
+      projectCCLARequiresICLA: this.form.value.cclaAndIcla,
+      projectICLAEnabled: this.form.value.icla
     };
     this.claService.postProject(claProject).subscribe((response) => {
-      this.dismiss();
+      this.loading = false;
+      this.dismiss(true);
+    }, (error) => {
+      this.loading = false;
+      if(!error.ok) {
+        this.errorMessage = JSON.parse(error._body).Message;
+      }
     });
   }
 
   putProject() {
     // rebuild the claProject object from existing data and form data
+    this.loading = true;
     let claProject = {
-      project_id: this.claProject.project_id,
-      project_external_id: this.claProject.project_external_id,
-      project_name: this.form.value.name,
-      project_ccla_enabled: this.form.value.ccla,
-      project_ccla_requires_icla_signature: this.form.value.cclaAndIcla,
-      project_icla_enabled: this.form.value.icla
+      projectID: this.claProject.projectID,
+      projectExternalID: this.claProject.projectExternalID,
+      projectName: this.form.value.name,
+      projectCCLAEnabled: this.form.value.ccla,
+      projectCCLARequiresICLA: this.form.value.cclaAndIcla,
+      projectICLAEnabled: this.form.value.icla
     };
     this.claService.putProject(claProject).subscribe((response) => {
-      this.dismiss();
+      this.loading = false;
+      this.dismiss(true);
     });
   }
 
-  dismiss() {
-    this.viewCtrl.dismiss();
+  dismiss(data?) {
+    this.viewCtrl.dismiss(data);
+  }
+
+  clearError(event) {
+    this.errorMessage = '';
   }
 }

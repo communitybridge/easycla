@@ -18,6 +18,7 @@ from requests_oauthlib import OAuth2Session
 
 import cla
 from cla.models import DoesNotExist
+from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
     GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite
@@ -624,6 +625,16 @@ def user_signed_project_signature(user: User, project : Project):
                     for signature in user_signatures:
                         signature.set_signature_approved(False)
                         signature.save()
+                        Event.create_event(
+                            event_type=EventType.EmployeeSignatureDisapproved,
+                            event_project_id= project.get_project_id(),
+                            event_company_id= company.get_company_id(),
+                            event_user_id = user.get_user_id(),
+                            event_data= 'employee signature of user {} disapproved for project {} and company {}'.
+                                format(user.get_user_name(), project.get_project_name(), company.get_company_name()),
+                            contains_pii=True,
+                        )
+
     else:
         cla.log.debug(f'User: {user} is NOT associated with a company - unable to check for a CCLA.')
 

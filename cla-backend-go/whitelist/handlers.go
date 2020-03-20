@@ -63,6 +63,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				params.CompanyID,
 				fmt.Sprintf("%s added GH Org %s to whitelist for project: %s, company: %s (%s)",
 					claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
+				true,
 			)
 
 			return company.NewAddGithubOrganizationFromClaOK()
@@ -122,26 +123,28 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				params.CompanyID,
 				fmt.Sprintf("%s deleted GH Org %s from the CLA whitelist for project: %s, company: %s (%s)",
 					claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
+				true,
 			)
 
 			return company.NewDeleteGithubOrganizationFromClaOK()
 		})
 
 	api.CompanyAddCclaWhitelistRequestHandler = company.AddCclaWhitelistRequestHandlerFunc(
-		func(params company.AddCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
+		func(params company.AddCclaWhitelistRequestParams) middleware.Responder {
 			requestID, err := service.AddCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.Body)
 			if err != nil {
 				return company.NewAddCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
 
 			// Create an event - run as a go-routine
-			eventsService.CreateAuditEvent(
+			eventsService.CreateAuditEventWithUserID(
 				events.CreateCCLAWhitelistRequest,
-				claUser,
+				params.Body.UserID,
 				params.ProjectID,
 				params.CompanyID,
 				fmt.Sprintf("%s created a CCLA Whitelist Request for project: %s, company: %s - request id: %s",
-					claUser.Name, params.ProjectID, params.CompanyID, requestID),
+					params.Body.UserID, params.ProjectID, params.CompanyID, requestID),
+				false,
 			)
 
 			return company.NewAddCclaWhitelistRequestOK()
@@ -162,6 +165,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				params.CompanyID,
 				fmt.Sprintf("%s deleted a CCLA Whitelist Request for project: %s, company: %s - request id: %s",
 					claUser.Name, params.ProjectID, params.CompanyID, params.RequestID),
+				true,
 			)
 
 			return company.NewDeleteCclaWhitelistRequestOK()
