@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
 	lfxAuth "github.com/LF-Engineering/lfx-kit/auth"
@@ -174,10 +176,11 @@ func server(localMode bool) http.Handler {
 	eventsRepo := events.NewRepository(awsSession, stage)
 	repositoriesRepo := repositories.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage)
+	gerritRepo := gerrits.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
-	projectService := project.NewService(projectRepo)
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
