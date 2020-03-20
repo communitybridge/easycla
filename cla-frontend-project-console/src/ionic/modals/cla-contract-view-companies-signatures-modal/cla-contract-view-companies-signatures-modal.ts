@@ -33,27 +33,25 @@ export class ClaContractViewCompaniesSignaturesModal {
   claProjectId: string;
   claProjectName: string;
 
-  ColumnMode = ColumnMode;
-  SortType = SortType;
-  expanded = {};
 
   loading: any;
-  //sort: any;
-  columns: any[];
-  rows: any[];
 
   form: FormGroup;
   searchString: string = '';
 
   companies: any[];
   users: any[];
-  filteredData: any[];
   data: any;
   page: any;
 
   // Pagination next/previous options
   nextKey: string;
   previousKeys: any[];
+
+  // Easy sort table variables
+  columnData = [];
+  column = [{head:'Company', dataKey:'companyName'}, {head:'Version', dataKey:'version'}, {head:'Date Signed', dataKey:'signatureCreated'}];
+  childColumn = [{head:'Name', dataKey:'username'}, {head:'Email', dataKey:'lfEmail'}, {head:'username/LFID', dataKey:'lfUsername'}];
 
   constructor(
     public navCtrl: NavController,
@@ -114,8 +112,6 @@ export class ClaContractViewCompaniesSignaturesModal {
       signatures: true,
     };
 
-    this.filteredData = this.rows;
-    this.columns = [{ prop: 'Company' }, { prop: 'Version' }, { prop: 'Date' }];
   }
 
   async getCompany(referenceId) {
@@ -152,20 +148,11 @@ export class ClaContractViewCompaniesSignaturesModal {
       )
       .subscribe((response) => {
         this.data = response;
-
-        // Pagination Logic - add the key used to render this page to our previous keys
-        if (lastKeyScanned) {
-          this.previousKeys.push(lastKeyScanned);
-        }
-        // If we have a next key (usually we would unless there are no more records)
-        if (this.data.lastKeyScanned) {
-          this.nextKey = this.data.lastKeyScanned;
-        } else {
-          this.nextKey = null;
+        if(this.data && this.data.signatures){
+          this.columnData = this.data.signatures.map(e => ({...e, signatureCreated:  e.signatureCreated.split('T')[0]}))
         }
 
         this.page.totalCount = this.data.resultCount;
-        this.rows = this.mapSignatures(this.data.signatures);
         this.loading.signatures = false;
       });
   }
@@ -288,33 +275,6 @@ export class ClaContractViewCompaniesSignaturesModal {
 
   dismiss() {
     this.viewCtrl.dismiss();
-  }
-
-  mapSignatures(signatures: any[]) {
-    // If no records
-    if (signatures == null || signatures.length == 0) {
-      return [];
-    } else {
-      return (
-        signatures &&
-        signatures.map((signature) => {
-          let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
-          return {
-            /**
-             * | Type                   | Reference Type | Signature Type | Company Name |
-             * |------------------------|----------------|----------------|--------------|
-             * | ICLA (individual icon) | user           | cla            | empty        |
-             * | CCLA (employee icon)   | user           | cla            | not empty    |
-             * | CCLA (company icon)    | company        | ccla           | not empty    |
-             */
-            Company: signature.companyName && signature.companyName,
-            Managers: signature.signatureACL,
-            Version: `v${signature.version}`,
-            Date: date,
-          };
-        })
-      );
-    }
   }
 
   getSignatureType(signature: any): string {

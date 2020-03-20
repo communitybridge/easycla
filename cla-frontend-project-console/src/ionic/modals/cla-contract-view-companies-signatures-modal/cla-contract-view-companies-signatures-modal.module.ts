@@ -10,6 +10,7 @@ import { ModalHeaderComponentModule } from '../../components/modal-header/modal-
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { SortTableComponentModule } from '../../components/sort-table/sort-table.module';
 
 @NgModule({
   declarations: [ClaContractViewCompaniesSignaturesModal],
@@ -20,6 +21,7 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
     SortingDisplayComponentModule,
     NgxPaginationModule,
     NgxDatatableModule,
+    SortTableComponentModule,
     IonicPageModule.forChild(ClaContractViewCompaniesSignaturesModal)
   ],
   entryComponents: [ClaContractViewCompaniesSignaturesModal]
