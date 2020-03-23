@@ -59,8 +59,8 @@ export class ClaGerritModal {
 
   getDefaults() {}
 
-  dismiss() {
-    this.viewCtrl.dismiss();
+  dismiss(data?) {
+    this.viewCtrl.dismiss(data);
   }
 
   submit() {
@@ -97,7 +97,7 @@ export class ClaGerritModal {
             groupNotExistentError: 'The specified LDAP group for CCLA does not exist.'
           });
         } else {
-          this.dismiss();
+          this.dismiss(true);
         }
       },
       (error) => {

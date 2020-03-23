@@ -4,8 +4,14 @@
 package project
 
 import (
+	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // Service interface defines the project service methods/functions
@@ -13,6 +19,8 @@ type Service interface {
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
+	GetProjectByName(projectName string) (*models.Project, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 	GetMetrics() (*models.ProjectMetrics, error)
@@ -20,13 +28,17 @@ type Service interface {
 
 // service
 type service struct {
-	repo Repository
+	repo             Repository
+	repositoriesRepo repositories.Repository
+	gerritRepo       gerrits.Repository
 }
 
 // NewService returns an instance of the project service
-func NewService(projectRepo Repository) Service {
+func NewService(projectRepo Repository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository) Service {
 	return service{
-		repo: projectRepo,
+		repo:             projectRepo,
+		repositoriesRepo: repositoriesRepo,
+		gerritRepo:       gerritRepo,
 	}
 }
 
@@ -42,7 +54,69 @@ func (s service) GetProjects(params *project.GetProjectsParams) (*models.Project
 
 // GetProjectByID service method
 func (s service) GetProjectByID(projectID string) (*models.Project, error) {
-	return s.repo.GetProject(projectID)
+	project, err := s.repo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, err
+	}
+	s.fillRepoInfo(project)
+	return project, nil
+}
+
+// GetProjectsByExternalID returns a list of projects based on the external ID parameters
+func (s service) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+	log.Debugf("Project Service Handler - GetProjectsByExternalID")
+	projects, err := s.repo.GetProjectsByExternalID(params)
+	if err != nil {
+		return nil, err
+	}
+	numberOfProjects := len(projects.Projects)
+	if numberOfProjects == 0 {
+		return projects, nil
+	}
+	var wg sync.WaitGroup
+	wg.Add(numberOfProjects)
+	for i := range projects.Projects {
+		go func(project *models.Project) {
+			defer wg.Done()
+			s.fillRepoInfo(project)
+		}(&projects.Projects[i])
+	}
+	wg.Wait()
+	return projects, nil
+}
+
+func (s service) fillRepoInfo(project *models.Project) {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	var ghrepos []*models.GithubRepositoriesGroupByOrgs
+	var gerrits []*models.Gerrit
+	go func() {
+		defer wg.Done()
+		var err error
+		ghrepos, err = s.repositoriesRepo.GetProjectRepositoriesGroupByOrgs(project.ProjectID)
+		if err != nil {
+			log.Error("unable to get github repositories for project.", err)
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		gerrits, err = s.gerritRepo.GetProjectGerrits(project.ProjectID)
+		if err != nil {
+			log.Error("unable to get gerrit instances:w for project.", err)
+			return
+		}
+
+	}()
+	wg.Wait()
+	project.GithubRepositories = ghrepos
+	project.Gerrits = gerrits
+}
+
+// GetProjectByName service method
+func (s service) GetProjectByName(projectName string) (*models.Project, error) {
+	return s.repo.GetProjectByName(projectName)
 }
 
 // DeleteProject service method
