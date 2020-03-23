@@ -7,6 +7,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { AuthService } from '../../services/auth.service';
 import { ClaCompanyModel } from '../../models/cla-company';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'view-cla-managers-modal'
@@ -23,9 +24,13 @@ export class ViewCLAManagerModal {
     public viewCtrl: ViewController,
     public navParams: NavParams,
     public formBuilder: FormBuilder,
-    private claService: ClaService
+    private claService: ClaService,
+    location: PlatformLocation,
   ) {
-    this.getDefaults()
+    this.getDefaults();
+    location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
   }
 
   getDefaults() {
