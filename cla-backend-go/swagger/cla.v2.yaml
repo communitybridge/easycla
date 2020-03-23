@@ -351,6 +351,34 @@ paths:
       tags:
         - project
 
+  /project/external/{externalID}:
+    get:
+      summary: Get Projects By External ID
+      description: Returns a list of CLA groups associated with the specified external ID
+      parameters:
+        - name: externalID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      operationId: getProjectsByExternalID
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - project
+
   /project/metrics:
     get:
       summary: Get Project Metrics

@@ -121,6 +121,20 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
 		return project.NewGetProjectByIDOK().WithPayload(projectModel)
 	})
 
+	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
+
+		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
+			HTTPRequest: projectParams.HTTPRequest,
+			ExternalID:  projectParams.ExternalID,
+			NextKey:     projectParams.NextKey,
+			PageSize:    projectParams.PageSize,
+		})
+		if err != nil {
+			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
+		}
+		return project.NewGetProjectsByExternalIDOK().WithPayload(projectModel)
+	})
+
 	// Get Project By Name
 	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, user *auth.User) middleware.Responder {
 

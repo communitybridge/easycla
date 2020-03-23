@@ -261,14 +261,16 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 		}
 	}
 
+	var pageSize *int64
 	// If we have a page size, set the limit value - make sure it's a positive value
 	if params.PageSize != nil && *params.PageSize > 0 {
 		log.Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
-		queryInput.Limit = params.PageSize
+		pageSize = params.PageSize
 	} else {
 		// Default page size
-		*params.PageSize = 50
+		pageSize = aws.Int64(50)
 	}
+	queryInput.Limit = pageSize
 
 	var projects []models.Project
 	var lastEvaluatedKey string
@@ -303,14 +305,14 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(projects)) >= *params.PageSize {
+		if int64(len(projects)) >= *pageSize {
 			break
 		}
 	}
 
 	return &models.Projects{
 		LastKeyScanned: lastEvaluatedKey,
-		PageSize:       *params.PageSize,
+		PageSize:       *pageSize,
 		ResultCount:    int64(len(projects)),
 		Projects:       projects,
 	}, nil
