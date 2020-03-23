@@ -2,6 +2,17 @@
 
 
 [[projects]]
+  digest = "1:331e268764f0ba5b74d0b7d854289c1c25c5168b4b7b1028c3347500d9ac797b"
+  name = "github.com/LF-Engineering/aws-lambda-go-api-proxy"
+  packages = [
+    "core",
+    "httpadapter",
+  ]
+  pruneopts = "UT"
+  revision = "ba4da446efc5da97fa815b055ab396e65bf574c7"
+  version = "v0.3.1"
+
+[[projects]]
   digest = "1:6940cbc26e9eb6af2ccfa68c98498c0aec81c3d0bdfd97274cd5c9bfca55d0bb"
   name = "github.com/LF-Engineering/lfx-kit"
   packages = ["auth"]
@@ -118,17 +129,6 @@
   pruneopts = "UT"
   revision = "620f3b5a8a9ee50f75456feef21a9c900897debd"
   version = "v1.29.15"
-
-[[projects]]
-  digest = "1:2b37c4a99088ea3519ea60527160dd0b5de8c5dee2472b3f6df60b2ed573e87e"
-  name = "github.com/awslabs/aws-lambda-go-api-proxy"
-  packages = [
-    "core",
-    "httpadapter",
-  ]
-  pruneopts = "UT"
-  revision = "9f6f9d2a6cbc7f3d441488125b2811b6ffeeaff0"
-  version = "v0.6.0"
 
 [[projects]]
   digest = "1:4333e9d9cc731d01e67e19c33da46e95860b95f8b8032bc586d69b169e1b0c1b"
@@ -682,6 +682,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/LF-Engineering/aws-lambda-go-api-proxy/httpadapter",
     "github.com/LF-Engineering/lfx-kit/auth",
     "github.com/LF-Engineering/lfx-models/models/email",
     "github.com/LF-Engineering/lfx-models/models/event",
@@ -698,7 +699,6 @@
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
     "github.com/aws/aws-sdk-go/service/sns",
     "github.com/aws/aws-sdk-go/service/ssm",
-    "github.com/awslabs/aws-lambda-go-api-proxy/httpadapter",
     "github.com/aymerick/raymond",
     "github.com/dgrijalva/jwt-go",
     "github.com/fnproject/fdk-go",
