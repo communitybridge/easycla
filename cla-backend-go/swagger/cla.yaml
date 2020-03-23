@@ -2013,6 +2013,18 @@ definitions:
       version:
         description: Record version
         type: string
+      githubRepositories:
+        description: Github repositories associated with project
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/github-repositories-group-by-orgs'
+      gerrits:
+        description: Gerrits associated with project
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/gerrit'
 
   project-document:
     type: object
@@ -2805,6 +2817,69 @@ definitions:
       createdAt:
         type: string
     title: project metrics
+
+  github-repositories-group-by-orgs:
+    type: object
+    properties:
+      repository_organization_name:
+        type: string
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository'
+
+  github-repository:
+    type: object
+    properties:
+      dateCreated:
+        type: string
+      dateModified:
+        type: string
+      repositoryExternalID:
+        type: string
+      repositoryID:
+        type: string
+      repositoryName:
+        type: string
+      repositoryOrganizationName:
+        type: string
+      repositoryProjectID:
+        type: string
+      repositorySfdcID:
+        type: string
+      repositoryType:
+        type: string
+      repositoryUrl:
+        type: string
+      version:
+        type: string
+
+  gerrit:
+    type: object
+    properties:
+      dateCreated:
+        type: string
+      dateModified:
+        type: string
+      gerritId:
+        type: string
+      gerritName:
+        type: string
+      gerritUrl:
+        type: string
+      groupIdCcla:
+        type: string
+      groupIdIcla:
+        type: string
+      groupNameCcla:
+        type: string
+      groupNameIcla:
+        type: string
+      projectId:
+        type: string
+      version:
+        type: string
+
 
 responses:
   resource-deleted:
