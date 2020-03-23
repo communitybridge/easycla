@@ -1,12 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {AuthService} from '../../services/auth.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
   segment: 'add-company-modal'
@@ -99,12 +99,13 @@ export class AddCompanyModal {
     let company = {
       company_name: this.companyName,
       company_manager_user_email: this.userEmail,
-      company_manager_user_name: this.userName
+      company_manager_user_name: this.userName,
+      company_manager_id: this.userId
     };
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
-        this.getAllCompanies();
+        // this.getAllCompanies();
         window.location.reload(true);
         this.dismiss();
       },
@@ -119,7 +120,7 @@ export class AddCompanyModal {
   }
 
   sendCompanyNotification() {
-    this.loading.submit = false; 
+    this.loading.submit = false;
     let alert = this.alertCtrl.create({
       title: 'Notification Sent!',
       subTitle: `A Notification has been sent to the CLA Manager for ${this.companyName}`,
@@ -187,7 +188,7 @@ export class AddCompanyModal {
     alert.present();
   }
 
-  
+
   getAllCompanies() {
     if (!this.companies) {
       this.loading.companies = true;
