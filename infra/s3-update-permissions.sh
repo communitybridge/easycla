@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
 
 set -o nounset -o pipefail
 declare -r SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

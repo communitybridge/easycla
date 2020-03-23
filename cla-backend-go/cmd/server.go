@@ -167,16 +167,16 @@ func server(localMode bool) http.Handler {
 	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage)
 	usersRepo := users.NewRepository(awsSession, stage)
+	repositoriesRepo := repositories.NewRepository(awsSession, stage)
+	gerritRepo := gerrits.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 	onboardRepo := onboard.NewRepository(awsSession, stage)
-	projectRepo := project.NewDynamoRepository(awsSession, stage)
+	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
-	repositoriesRepo := repositories.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage)
-	gerritRepo := gerrits.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)

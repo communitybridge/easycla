@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -44,17 +47,21 @@ type Repository interface {
 	buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error)
 }
 
-// NewDynamoRepository creates instance of project repository
-func NewDynamoRepository(awsSession *session.Session, stage string) Repository {
+// NewRepository creates instance of project repository
+func NewRepository(awsSession *session.Session, stage string, ghRepo repositories.Repository, gerritRepo gerrits.Repository) Repository {
 	return &repo{
 		dynamoDBClient: dynamodb.New(awsSession),
 		stage:          stage,
+		ghRepo:         ghRepo,
+		gerritRepo:     gerritRepo,
 	}
 }
 
 type repo struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+	ghRepo         repositories.Repository
+	gerritRepo     gerrits.Repository
 }
 
 // GetMetrics returns the metrics for the projects
@@ -643,9 +650,20 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 		return nil, err
 	}
 
-	// For each project, convert to a response model
+	// Create an output channel to receive the results
+	responseChannel := make(chan *models.Project)
+
+	// For each project, convert to a response model - using a go routine
 	for _, dbProject := range dbProjects {
-		projects = append(projects, *repo.buildProjectModel(dbProject))
+		go func(dbProject DBProjectModel) {
+			// Send the results to the output channel
+			responseChannel <- repo.buildProjectModel(dbProject)
+		}(dbProject)
+	}
+
+	// Append all the responses to our list
+	for i := 0; i < len(dbProjects); i++ {
+		projects = append(projects, *<-responseChannel)
 	}
 
 	return projects, nil
@@ -653,6 +671,32 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 
 // buildProjectModel maps the database model to the API response model
 func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
+
+	var ghOrgs []*models.GithubRepositoriesGroupByOrgs
+	var gerrits []*models.Gerrit
+
+	if dbModel.ProjectID != "" {
+		var err error
+		ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
+		if err != nil {
+			log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
+				dbModel.ProjectID, err)
+			// Reset to empty array
+			ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
+		}
+
+		gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
+		if err != nil {
+			log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
+				dbModel.ProjectID, err)
+			// Reset to empty array
+			gerrits = make([]*models.Gerrit, 0)
+		}
+	} else {
+		log.Warnf("buildProjectModel - project ID missing for project '%s' - ID: %s - unable to load GH and Gerrit repository details",
+			dbModel.ProjectName, dbModel.ProjectID)
+	}
+
 	return &models.Project{
 		ProjectID:                  dbModel.ProjectID,
 		ProjectExternalID:          dbModel.ProjectExternalID,
@@ -664,6 +708,8 @@ func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
 		ProjectCorporateDocuments:  repo.buildProjectDocumentModels(dbModel.ProjectCorporateDocuments),
 		ProjectIndividualDocuments: repo.buildProjectDocumentModels(dbModel.ProjectIndividualDocuments),
 		ProjectMemberDocuments:     repo.buildProjectDocumentModels(dbModel.ProjectMemberDocuments),
+		GithubRepositories:         ghOrgs,
+		Gerrits:                    gerrits,
 		DateCreated:                dbModel.DateCreated,
 		DateModified:               dbModel.DateModified,
 		Version:                    dbModel.Version,

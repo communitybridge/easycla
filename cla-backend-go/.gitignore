@@ -3,6 +3,7 @@
 # Project specific ignores
 cla-backend-go
 cla
+backend-aws-lambda
 *env.json
 db/schema.sql
 
