@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
-
 set -o nounset -o pipefail
-declare -r SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+declare -r SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 #------------------------------------------------------------------------------
 # Load helper scripts
@@ -56,49 +55,32 @@ fi
 #------------------------------------------------------------------------------
 # Common variables
 #------------------------------------------------------------------------------
+declare -r region="us-east-1"
 declare -r profile="lfproduct-${env}"
-declare -r logo_bucket_name="cla-project-logo-${env}"
-declare -r signature_bucket_name="cla-signature-files-${env}"
+declare -a parameters=("cla-docusign-root-url-${env}"
+  "cla-docusign-username-${env}"
+  "cla-docusign-password-${env}"
+  "cla-docusign-integrator-key-${env}"
+  )
 
 #------------------------------------------------------------------------------
-# Update the content type for the specified files identified by the filter
+# Show parameter function
 #------------------------------------------------------------------------------
-function update_content_type() {
-  if [[ $# -ne 3 ]]; then
-    log_warn "Missing function parameters for ${FUNCNAME[0]} - expecting 3"
-    log "Usage  : ${FUNCNAME[0]} <s3-bucket> <content-type> <filename_filter>"
-    log "Example: ${FUNCNAME[0]} cla-project-logo-dev 'image/png' and '*.png'"
-    log "Example: ${FUNCNAME[0]} cla-signature-files-dev 'application/pdf' and '*.pdf'"
-    return
-  fi
-
-  # Grab the arguments
-  bucket_name="${1}"
-  content_type="${2}"
-  filter="${3}"
-
-  log "Setting ${_Y}'${content_type}'${_W} content type for ${_Y}'${filter}'${_W} objects in s3 bucket: ${_Y}s3://${bucket_name}/${_W}..."
-  aws --profile "${profile}" \
-    s3 cp \
-    "s3://${bucket_name}/" \
-    "s3://${bucket_name}/" \
-    --exclude '*' \
-    --include "${filter}" \
-    --no-guess-mime-type \
-    --content-type="${content_type}" \
-    --metadata-directive="REPLACE" \
-    --recursive
+function show-parameter() {
+  aws --profile "${profile}" ssm get-parameter --name "${1}" | jq -r '.Parameter | .Value'
 }
 
 #------------------------------------------------------------------------------
 # Main function
 #------------------------------------------------------------------------------
 function main() {
-  update_content_type "${logo_bucket_name}" 'image/png' '*.png'
-  update_content_type "${signature_bucket_name}" 'application/pdf' '*.pdf'
+  for parameter in "${parameters[@]}"; do
+    log "Feching parameter: ${_Y}${parameter}${_W}..."
+    show-parameter "${parameter}"
+  done
 }
 
 #------------------------------------------------------------------------------
-# Application entry point - call the main function
+# Call the main function
 #------------------------------------------------------------------------------
 main

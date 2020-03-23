@@ -1,4 +1,5 @@
 tavern
+pytest
 pytest-tldr
 pytest-sugar
 allure-pytest

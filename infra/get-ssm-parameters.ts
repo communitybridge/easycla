@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 const AWS = require('aws-sdk');
 const SSM = require('aws-sdk/clients/ssm');
 const program = require('commander');
@@ -26,6 +29,9 @@ const parameters = [
   `cla-auth0-clientId-${program.stage}`,
   `cla-auth0-username-claim-${program.stage}`,
   `cla-auth0-algorithm-${program.stage}`,
+  `cla-auth0-platform-client-id-${program.stage}`,
+  `cla-auth0-platform-client-secret-${program.stage}`,
+  `cla-auth0-platform-api-gw-url-${program.stage}`,
   `cla-sf-instance-url-${program.stage}`,
   `cla-sf-consumer-key-${program.stage}`,
   `cla-sf-consumer-secret-${program.stage}`,

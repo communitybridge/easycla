@@ -2821,7 +2821,7 @@ definitions:
   github-repositories-group-by-orgs:
     type: object
     properties:
-      repository_organization_name:
+      organizationName:
         type: string
       list:
         type: array

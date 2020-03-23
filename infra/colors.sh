@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 # Colors consist of one or more of the following numeric codes:
 # Attribute codes:
 #   00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed

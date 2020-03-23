@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
 import {PrivateAcl, PublicReadAcl} from '@pulumi/aws/s3';

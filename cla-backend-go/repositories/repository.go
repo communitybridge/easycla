@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package repositories
 
 import (
@@ -38,6 +41,7 @@ type repo struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
+// GetMetrics returns the metrics for the github repository
 func (repo repo) GetMetrics() (*models.RepositoryMetrics, error) {
 	var out models.RepositoryMetrics
 	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
@@ -54,6 +58,7 @@ func (repo repo) GetMetrics() (*models.RepositoryMetrics, error) {
 	return &out, nil
 }
 
+// GetProjectRepositoriesGroupByOrgs returns a list of GH orgs by project id
 func (repo repo) GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error) {
 	out := make([]*models.GithubRepositoriesGroupByOrgs, 0)
 	outMap := make(map[string]*models.GithubRepositoriesGroupByOrgs)
@@ -65,7 +70,7 @@ func (repo repo) GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.
 		ghrepoGroup, ok := outMap[ghrepo.RepositoryOrganizationName]
 		if !ok {
 			ghrepoGroup = &models.GithubRepositoriesGroupByOrgs{
-				RepositoryOrganizationName: ghrepo.RepositoryOrganizationName,
+				OrganizationName: ghrepo.RepositoryOrganizationName,
 			}
 			out = append(out, ghrepoGroup)
 			outMap[ghrepo.RepositoryOrganizationName] = ghrepoGroup
@@ -75,6 +80,7 @@ func (repo repo) GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.
 	return out, nil
 }
 
+// getProjectRepositories returns an array of GH repositories for the specified project ID
 func (repo repo) getProjectRepositories(projectID string) ([]*models.GithubRepository, error) {
 	var out []*models.GithubRepository
 	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
