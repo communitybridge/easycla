@@ -162,6 +162,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			params.CompanyID,
 			fmt.Sprintf("%s added user %s to the ACL for company: %s (%s)",
 				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
+			true,
 		)
 
 		return company.NewAddUsertoCompanyAccessListOK()
@@ -233,6 +234,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			params.CompanyID,
 			fmt.Sprintf("%s deleted pending invite for user %s for company: %s (%s)",
 				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
+			true,
 		)
 
 		return company.NewDeletePendingInviteOK()

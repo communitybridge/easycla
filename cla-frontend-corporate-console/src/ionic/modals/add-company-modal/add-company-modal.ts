@@ -37,7 +37,7 @@ export class AddCompanyModal {
   searching: boolean;
   actionButtonsEnabled: boolean;
   activateButtons: boolean;
-
+  selectionBtnName: string = 'add company';
   join: boolean
   add: boolean
 
@@ -201,15 +201,17 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.getAllCompanies();
+    this.selectionBtnName = 'add company';
     this.filteredCompanies = [];
     if (!this.companies) {
       this.searching = true;
     }
     this.companies.length >= 0 && this.getAllCompanies();
     // Remove all non-alpha numeric, -, _ values
-    let companyName = event.value.replace(/[^\w-]+/g, '');
+    let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
+      this.selectionBtnName = 'join company';
       this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
@@ -229,6 +231,8 @@ export class AddCompanyModal {
           return company;
         })
         .filter((company) => company.filteredCompany);
+    } else {
+      this.activateButtons = true;
     }
 
     // console.log('Company Name:' + companyName);
@@ -247,7 +251,6 @@ export class AddCompanyModal {
   }
 
   setCompanyName(company) {
-    console.log(company, 'company')
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
