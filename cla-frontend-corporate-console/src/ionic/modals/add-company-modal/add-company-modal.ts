@@ -99,12 +99,13 @@ export class AddCompanyModal {
     let company = {
       company_name: this.companyName,
       company_manager_user_email: this.userEmail,
-      company_manager_user_name: this.userName
+      company_manager_user_name: this.userName,
+      company_manager_id: this.userId
     };
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
-        this.getAllCompanies();
+        // this.getAllCompanies();
         window.location.reload(true);
         this.dismiss();
       },
