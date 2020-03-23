@@ -71,6 +71,9 @@ stages:
                           projectName:
                             type: str
                             required: true
+                          projectExternalID:
+                            type: str 
+                            required: true 
                   totalCount:
                     type: int
                     required: true
