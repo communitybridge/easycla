@@ -2,6 +2,7 @@ package gerrits
 
 import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
+// Gerrit represent gerrit instances table
 type Gerrit struct {
 	DateCreated   string `json:"date_created,omitempty"`
 	DateModified  string `json:"date_modified,omitempty"`

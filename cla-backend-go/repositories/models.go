@@ -2,6 +2,7 @@ package repositories
 
 import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
+// GithubRepository represent repositories table
 type GithubRepository struct {
 	DateCreated                string `json:"date_created,omitempty"`
 	DateModified               string `json:"date_modified,omitempty"`

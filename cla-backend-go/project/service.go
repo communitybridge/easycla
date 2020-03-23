@@ -54,7 +54,12 @@ func (s service) GetProjects(params *project.GetProjectsParams) (*models.Project
 
 // GetProjectByID service method
 func (s service) GetProjectByID(projectID string) (*models.Project, error) {
-	return s.repo.GetProjectByID(projectID)
+	project, err := s.repo.GetProjectByID(projectID)
+	if err != nil {
+		return nil, err
+	}
+	s.fillRepoInfo(project)
+	return project, nil
 }
 
 // GetProjectsByExternalID returns a list of projects based on the external ID parameters
@@ -70,7 +75,7 @@ func (s service) GetProjectsByExternalID(params *project.GetProjectsByExternalID
 	}
 	var wg sync.WaitGroup
 	wg.Add(numberOfProjects)
-	for i, _ := range projects.Projects {
+	for i := range projects.Projects {
 		go func(project *models.Project) {
 			defer wg.Done()
 			s.fillRepoInfo(project)
@@ -106,7 +111,7 @@ func (s service) fillRepoInfo(project *models.Project) {
 	}()
 	wg.Wait()
 	project.GithubRepositories = ghrepos
-	project.Gerrit = gerrits
+	project.Gerrits = gerrits
 }
 
 // GetProjectByName service method

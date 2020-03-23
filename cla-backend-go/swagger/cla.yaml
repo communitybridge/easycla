@@ -2019,7 +2019,7 @@ definitions:
         x-omitempty: false
         items:
           $ref: '#/definitions/github-repositories-group-by-orgs'
-      gerrit:
+      gerrits:
         description: Gerrits associated with project
         type: array
         x-omitempty: false
@@ -2831,25 +2831,25 @@ definitions:
   github-repository:
     type: object
     properties:
-      date_created:
+      dateCreated:
         type: string
-      date_modified:
+      dateModified:
         type: string
-      repository_external_id:
+      repositoryExternalID:
         type: string
-      repository_id:
+      repositoryID:
         type: string
-      repository_name:
+      repositoryName:
         type: string
-      repository_organization_name:
+      repositoryOrganizationName:
         type: string
-      repository_project_id:
+      repositoryProjectID:
         type: string
-      repository_sfdc_id:
+      repositorySfdcID:
         type: string
-      repository_type:
+      repositoryType:
         type: string
-      repository_url:
+      repositoryUrl:
         type: string
       version:
         type: string
@@ -2857,25 +2857,25 @@ definitions:
   gerrit:
     type: object
     properties:
-      date_created:
+      dateCreated:
         type: string
-      date_modified:
+      dateModified:
         type: string
-      gerrit_id:
+      gerritId:
         type: string
-      gerrit_name:
+      gerritName:
         type: string
-      gerrit_url:
+      gerritUrl:
         type: string
-      group_id_ccla:
+      groupIdCcla:
         type: string
-      group_id_icla:
+      groupIdIcla:
         type: string
-      group_name_ccla:
+      groupNameCcla:
         type: string
-      group_name_icla:
+      groupNameIcla:
         type: string
-      project_id:
+      projectId:
         type: string
       version:
         type: string
