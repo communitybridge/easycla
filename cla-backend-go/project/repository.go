@@ -676,22 +676,32 @@ func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
 	var gerrits []*models.Gerrit
 
 	if dbModel.ProjectID != "" {
-		var err error
-		ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
-		if err != nil {
-			log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
-				dbModel.ProjectID, err)
-			// Reset to empty array
-			ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
-		}
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			var err error
+			ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
+			if err != nil {
+				log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
+					dbModel.ProjectID, err)
+				// Reset to empty array
+				ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
+			}
+		}()
 
-		gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
-		if err != nil {
-			log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
-				dbModel.ProjectID, err)
-			// Reset to empty array
-			gerrits = make([]*models.Gerrit, 0)
-		}
+		go func() {
+			defer wg.Done()
+			var err error
+			gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
+			if err != nil {
+				log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
+					dbModel.ProjectID, err)
+				// Reset to empty array
+				gerrits = make([]*models.Gerrit, 0)
+			}
+		}()
+		wg.Wait()
 	} else {
 		log.Warnf("buildProjectModel - project ID missing for project '%s' - ID: %s - unable to load GH and Gerrit repository details",
 			dbModel.ProjectName, dbModel.ProjectID)
