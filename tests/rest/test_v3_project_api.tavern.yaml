@@ -2,27 +2,11 @@
 test_name: "Project CRUD /v3/project"
 includes:
   - !include common.yaml
+  - !include auth_stage.yaml
 
 stages:
-  - name: get token from auth0
-    request:
-      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
-      method: POST
-      headers:
-        content-type: "application/x-www-form-urlencoded"
-      data:
-        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
-        realm: "Username-Password-Authentication"
-        username: "{tavern.env_vars.AUTH0_USERNAME}"
-        password: "{tavern.env_vars.AUTH0_PASSWORD}"
-        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
-        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
-        scope: "access:api openid profile email"
-    response:
-      save:
-        body:
-          auth0_token: id_token
-
+  - type: ref
+    id: login_get_token
   - name: Project create request with no auth
     request:
       url: "{api_url}/v3/project"
@@ -89,7 +73,7 @@ stages:
       verify_response_with:
         function: tavern.testutils.helpers:validate_pykwalify
         extra_kwargs:
-          schema:
+          schema: &project
             type: map
             required: true
             mapping:
@@ -117,6 +101,107 @@ stages:
               projectCCLARequiresICLA:
                 type: bool
                 required: true
+              projectCorporateDocuments:
+                type: seq
+                sequence: &document_seq
+                  - type: map
+                    mapping: 
+                      documentAuthorName:
+                        type: str 
+                      documentContentType:
+                        type: str 
+                      documentCreationDate:
+                        type: str 
+                      documentFileID:
+                        type: str 
+                      documentLegalEntityName:
+                        type: str 
+                      documentMajorVersion:
+                        type: str 
+                      documentMinorVersion:
+                        type: str 
+                      documentName:
+                        type: str 
+                      documentPreamble:
+                        type: str 
+                      documentS3URL:
+                        type: str 
+              projectIndividualDocuments:
+                type: seq
+                sequence: *document_seq
+              projectMemberDocuments:
+                type: seq
+                sequence: *document_seq
+              githubRepositories:
+                type: seq
+                sequence:
+                  - type: map
+                    mapping:
+                      organizationName:
+                        type: str
+                      list:
+                        type: seq
+                        sequence:
+                          - type: map
+                            mapping:
+                              repositoryExternalID:
+                                type: str
+                                required: true
+                              repositoryID:
+                                type: str
+                                required: true
+                              repositoryName:
+                                type: str
+                                required: true
+                              repositoryOrganizationName:
+                                type: str
+                                required: true
+                              repositoryProjectID:
+                                type: str
+                                required: true
+                              repositorySfdcID:
+                                type: str
+                                required: true
+                              repositoryType:
+                                type: str
+                                required: true
+                              repositoryUrl:
+                                type: str
+                                required: true
+                              dateCreated:
+                                type: str
+                                required: true
+                              dateModified:
+                                type: str
+                                required: true
+                              version:
+                                type: str
+                                required: true
+              gerrits:
+                type: seq
+                sequence:
+                  - type: map
+                    mapping:
+                      gerritId:
+                        type: str
+                      gerritName:
+                        type: str
+                      gerritUrl:
+                        type: str
+                      groupIdCcla:
+                        type: str
+                      groupIdIcla:
+                        type: str
+                      groupNameCcla:
+                        type: str
+                      groupNameIcla:
+                        type: str
+                      projectId:
+                        type: str
+                      dateCreated:
+                        type: str
+                      dateModified:
+                        type: str
               dateCreated:
                 type: str
                 required: true
@@ -127,7 +212,25 @@ stages:
                 type: str
                 required: true
 
-  - name: Project get request with auth
+  - name: Project create request with auth with name conflict
+    request:
+      url: "{api_url}/v3/project"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        projectName: "{projectName:s}"
+        projectExternalID: "abc123456"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+    response:
+      status_code: 409
+
+  - name: Project get by ID request with auth
     request:
       url: "{api_url}/v3/project/{projectID:s}"
       method: GET
@@ -141,7 +244,7 @@ stages:
         content-type: application/json
       body:
         projectID: "{projectID:s}"
-        projectName: "dd test project"
+        projectName: "{projectName:s}"
         projectExternalID: "abc123"
         projectACL: ["ddeal", "hwillson"]
         projectICLAEnabled: true
@@ -152,43 +255,77 @@ stages:
       verify_response_with:
         function: tavern.testutils.helpers:validate_pykwalify
         extra_kwargs:
-          schema:
+          schema: *project
+
+  - name: Project get by External ID request with auth
+    request:
+      url: "{api_url}/v3/project/external/{projectExternalID:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        resultCount: 1
+        pageSize: 50
+        projects:
+          - projectID: "{projectID:s}"
+            projectName: "{projectName:s}"
+            projectExternalID: "abc123"
+            projectACL: ["ddeal", "hwillson"]
+            projectICLAEnabled: true
+            projectCCLAEnabled: true
+            projectCCLARequiresICLA: true
+            dateCreated: "{dateCreated:s}"
+            dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: &projects
             type: map
             required: true
             mapping:
-              projectID:
-                type: str
+              pageSize:
+                type: int
                 required: true
-              projectExternalID:
-                type: str
+              resultCount:
+                type: int
                 required: true
-              projectName:
-                type: str
-                required: true
-              projectACL:
+              projects:
                 type: seq
                 required: true
-                sequence:
-                  - type: str
-                    required: true
-              projectICLAEnabled:
-                type: bool
-                required: true
-              projectCCLAEnabled:
-                type: bool
-                required: true
-              projectCCLARequiresICLA:
-                type: bool
-                required: true
-              dateCreated:
-                type: str
-                required: true
-              dateModified:
-                type: str
-                required: true
-              version:
-                type: str
-                required: true
+                sequence: *project
+
+  - name: Project get by name request with auth
+    request:
+      url: "{api_url}/v3/project/name/{projectName:s}"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        projectID: "{projectID:s}"
+        projectName: "{projectName:s}"
+        projectExternalID: "abc123"
+        projectACL: ["ddeal", "hwillson"]
+        projectICLAEnabled: true
+        projectCCLAEnabled: true
+        projectCCLARequiresICLA: true
+        dateCreated: "{dateCreated:s}"
+        dateModified: "{dateModified:s}"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: *project
 
   - name: Project update request with auth
     request:
@@ -224,43 +361,7 @@ stages:
       verify_response_with:
         function: tavern.testutils.helpers:validate_pykwalify
         extra_kwargs:
-          schema:
-            type: map
-            required: true
-            mapping:
-              projectID:
-                type: str
-                required: true
-              projectExternalID:
-                type: str
-                required: true
-              projectName:
-                type: str
-                required: true
-              projectACL:
-                type: seq
-                required: true
-                sequence:
-                  - type: str
-                    required: true
-              projectICLAEnabled:
-                type: bool
-                required: true
-              projectCCLAEnabled:
-                type: bool
-                required: true
-              projectCCLARequiresICLA:
-                type: bool
-                required: true
-              dateCreated:
-                type: str
-                required: true
-              dateModified:
-                type: str
-                required: true
-              version:
-                type: str
-                required: true
+          schema: *project
 
   - name: Project get request after update with auth
     request:
@@ -287,43 +388,7 @@ stages:
       verify_response_with:
         function: tavern.testutils.helpers:validate_pykwalify
         extra_kwargs:
-          schema:
-            type: map
-            required: true
-            mapping:
-              projectID:
-                type: str
-                required: true
-              projectExternalID:
-                type: str
-                required: true
-              projectName:
-                type: str
-                required: true
-              projectACL:
-                type: seq
-                required: true
-                sequence:
-                  - type: str
-                    required: true
-              projectICLAEnabled:
-                type: bool
-                required: true
-              projectCCLAEnabled:
-                type: bool
-                required: true
-              projectCCLARequiresICLA:
-                type: bool
-                required: true
-              dateCreated:
-                type: str
-                required: true
-              dateModified:
-                type: str
-                required: true
-              version:
-                type: str
-                required: true
+          schema: *project
 
   - name: Project delete request with auth
     request:

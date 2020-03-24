@@ -65,11 +65,11 @@ export class CompanyPage {
 
     this.data = {};
     this.columns = [
-      { prop: 'ProjectName' }, 
-      { prop: 'ProjectManagers' }, 
-      { prop: 'Status'}, 
-      {prop: 'PendingRequets'},
-      {prop: 'WhiteList'}
+      { prop: 'ProjectName' },
+      { prop: 'ProjectManagers' },
+      { prop: 'Status' },
+      { prop: 'PendingRequets' },
+      { prop: 'WhiteList' }
     ];
   }
 
@@ -112,7 +112,7 @@ export class CompanyPage {
             this.getProject(signature.projectID, signature.signatureACL);
           }
           this.loading.companySignatures = false;
-        this.loading.projects = false;
+          this.loading.projects = false;
         }
         this.loading.companySignatures = true;
         this.loading.projects = true;
@@ -137,13 +137,14 @@ export class CompanyPage {
   }
 
   mapProjects(projects, signatureACL) {
-    let pendingRequest  = []
+    let pendingRequest = []
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        let pendingRequest = [];
         if (res.list.length > 0) {
           pendingRequest = res.list.filter((r) => {
-            r.projectId === project.project_id
+            return r.projectId === project.project_id
           })
         }
         rows.push({
@@ -222,7 +223,8 @@ export class CompanyPage {
 
   openProjectsCclaSelectModal() {
     let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
-      company: this.company
+      company: this.company,
+      companyId: this.companyId
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
@@ -239,7 +241,7 @@ export class CompanyPage {
       }
       else {
         this.loading.invites = true;
-      }      
+      }
     });
   }
 

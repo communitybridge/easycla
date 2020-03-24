@@ -18,6 +18,8 @@ type Validator struct {
 	usernameClaim string
 	algorithm     string
 	wellKnownURL  string
+	nameClaim     string
+	emailClaim    string
 }
 
 // NewAuthValidator creates a new auth0 validator based on the specified parameters
@@ -40,6 +42,8 @@ func NewAuthValidator(domain, clientID, usernameClaim, algorithm string) (Valida
 		usernameClaim: usernameClaim,
 		algorithm:     algorithm,
 		wellKnownURL:  "https://" + path.Join(domain, ".well-known/jwks.json"),
+		nameClaim:     "name",
+		emailClaim:    "email",
 	}
 
 	return validator, nil

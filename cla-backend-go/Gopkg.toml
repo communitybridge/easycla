@@ -27,14 +27,17 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[constraint]]
+  name = "github.com/LF-Engineering/aws-lambda-go-api-proxy"
+  version = "v0.3.1"
 
 [[constraint]]
   name = "github.com/go-openapi/errors"
-  version = "0.19.2"
+  version = "0.19.3"
 
 [[constraint]]
   name = "github.com/go-openapi/loads"
-  version = "0.19.3"
+  version = "0.19.5"
 
 [[constraint]]
   name = "github.com/go-openapi/runtime"
@@ -42,19 +45,19 @@
 
 [[constraint]]
   name = "github.com/go-openapi/spec"
-  version = "0.19.3"
+  version = "0.19.6"
 
 [[constraint]]
   name = "github.com/go-openapi/strfmt"
-  version = "0.19.3"
+  version = "0.19.4"
 
 [[constraint]]
   name = "github.com/go-openapi/swag"
-  version = "0.19.5"
+  version = "0.19.7"
 
 [[constraint]]
   name = "github.com/go-openapi/validate"
-  version = "0.19.3"
+  version = "0.19.6"
 
 [[constraint]]
   name = "github.com/jessevdk/go-flags"
@@ -66,11 +69,11 @@
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  version = "0.0.5"
+  version = "0.0.6"
 
 [[constraint]]
   name = "github.com/spf13/viper"
-  version = "1.4.0"
+  version = "1.6.2"
 
 [[constraint]]
   branch = "master"

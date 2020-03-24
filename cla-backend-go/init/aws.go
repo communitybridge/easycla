@@ -19,7 +19,7 @@ var (
 
 // AWSInit initialization logic for the AWS resources
 func AWSInit() {
-	awsRegion = getProperty("AWS_REGION")
+	awsRegion = GetProperty("DYNAMODB_AWS_REGION")
 
 	if err := startCloudWatchSession(); err != nil {
 		log.Fatalf("Error starting the AWS CloudWatch session - Error: %s", err.Error())

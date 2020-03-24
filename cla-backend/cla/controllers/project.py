@@ -210,7 +210,8 @@ def create_project(project_external_id, project_name, project_icla_enabled, proj
     Event.create_event(
         event_type=EventType.CreateProject,
         event_project_id=project.get_project_id(),
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=False,
     )
 
     return project.to_dict()
@@ -261,7 +262,8 @@ def update_project(project_id, project_name=None, project_icla_enabled=None,
     Event.create_event(
         event_type=EventType.UpdateProject,
         event_project_id=project.get_project_id(),
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=False,
     )
     return project.to_dict()
 
@@ -286,7 +288,8 @@ def delete_project(project_id, username=None):
     Event.create_event(
         event_type=EventType.DeleteProject,
         event_project_id=project_id,
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=False,
     )
     project.delete()
 
@@ -452,7 +455,8 @@ def post_project_document(project_id,
     Event.create_event(
         event_type=EventType.CreateProjectDocument,
         event_project_id=project.get_project_id(),
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=False,
     )
     return project.to_dict()
 
@@ -526,7 +530,8 @@ def post_project_document_template(project_id,
     Event.create_event(
         event_type=EventType.CreateProjectDocumentTemplate,
         event_project_id=project.get_project_id(),
-        event_data=event_data
+        event_data=event_data,
+        contains_pii=False,
     )
     return project.to_dict()
 
@@ -566,7 +571,8 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
     Event.create_event (
         event_data = event_data,
         event_project_id = project_id,
-        event_type = EventType.DeleteProjectDocument
+        event_type = EventType.DeleteProjectDocument,
+        contains_pii=False,
     )
     return {'success': True}
 
@@ -590,7 +596,8 @@ def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     Event.create_event (
         event_data=event_data,
         event_project_id=project_sfdc_id,
-        event_type=EventType.AddPermission
+        event_type=EventType.AddPermission,
+        contains_pii=True,
     )
 
 def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
@@ -613,7 +620,8 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     Event.create_event(
         event_type = EventType.RemovePermission,
         event_data=event_data,
-        event_project_id=project_sfdc_id
+        event_project_id=project_sfdc_id,
+        contains_pii=True,
     )
 
 def get_project_repositories(auth_user: AuthUser, project_id):
@@ -822,7 +830,8 @@ def add_project_manager(username, project_id, lfid):
     Event.create_event(
         event_type=EventType.AddProjectManager,
         event_data=event_data,
-        event_project_id=project_id
+        event_project_id=project_id,
+        contains_pii=True,
     )
 
     return managers_dict
@@ -871,7 +880,8 @@ def remove_project_manager(username, project_id, lfid):
     Event.create_event(
         event_type=EventType.RemoveProjectManager,
         event_data=event_data,
-        event_project_id=project_id
+        event_project_id=project_id,
+        contains_pii=True,
     )
 
     return managers_dict

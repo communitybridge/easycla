@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, RequestOptions } from '@angular/http';
 import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
+import {Response} from "@angular/http/src/static_response";
 
 @Injectable()
 export class ClaService {
@@ -575,7 +577,10 @@ export class ClaService {
         'project_icla_enabled': True
       }
      */
-    const url: URL = this.getV1Endpoint('/v1/project');
+
+    // OUTDATED: Python v1 backend
+    // const url: URL = this.getV1Endpoint('/v1/project');
+    const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.post(url, project).map((res) => res.json());
   }
 
@@ -590,7 +595,9 @@ export class ClaService {
         'project_name': 'New Project Name'
       }
      */
-    const url: URL = this.getV1Endpoint('/v1/project');
+    // OUTDATED: Python v1 backend
+    // const url: URL = this.getV1Endpoint('/v1/project');
+    const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.put(url, project).map((res) => res.json());
   }
 
@@ -608,7 +615,9 @@ export class ClaService {
    * @param externalId the external ID
    */
   getProjectsByExternalId(externalId) {
-    const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
+    //OUTDATED
+    // const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
+    const url: URL = this.getV3Endpoint('/v3/project/external/' + externalId);
     return this.http
       .get(url)
       .map((res) => res.json())
@@ -805,13 +814,13 @@ export class ClaService {
   getSignRequest(provider, installationId, githubRepositoryId, changeRequestId) {
     const url: URL = this.getV2Endpoint(
       '/v2/repository-provider/' +
-        provider +
-        '/sign/' +
-        installationId +
-        '/' +
-        githubRepositoryId +
-        '/' +
-        changeRequestId,
+      provider +
+      '/sign/' +
+      installationId +
+      '/' +
+      githubRepositoryId +
+      '/' +
+      changeRequestId,
     );
     return this.http.get(url).map((res) => res.json());
   }
@@ -860,7 +869,8 @@ export class ClaService {
    */
   getGithubGetNamespace(namespace) {
     const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
-    return this.http.get(url).map((res) => res.json());
+    return this.http.get(url).map((res) => res.json())
+      .catch((error) => Observable.throw(error));
   }
 
   /**
@@ -995,6 +1005,27 @@ export class ClaService {
   getReleaseVersion() {
     const url: URL = this.getV3Endpoint('/v3/ops/version');
     return this.http.get(url).map((res) => res.json());
+  }
+
+  // Check if git organisation is valid
+  testGitOrganisation(gitOrganisationName) {
+    // const header = {
+    //   Accept: 'application/vnd.github.v3+json',
+    // }
+    // let requestOptions = {
+    //   headers: new Headers(header),
+    // };
+    const url = new URL(`https://api.github.com/orgs/${gitOrganisationName}`);
+    return this.http.getWithoutHeaders(url);
+  }
+
+  /**
+   * Check if the specified GitHub Organization name is valid
+   * @param githubOrgName the GitHub Organization Name
+   */
+  testGitHubOrganization(githubOrgName: string): Observable<Response> {
+    const url: URL = this.getV3Endpoint(`/v3/github/org/${githubOrgName}/exists`);
+    return this.http.get(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////

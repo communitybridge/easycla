@@ -1,6 +1,6 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
-import {Http} from '@angular/http';
+import { Http } from '@angular/http';
 import { Component, ViewChild } from '@angular/core';
 import { Nav, Platform, App, Events } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
@@ -102,10 +102,6 @@ export class MyApp {
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
     });
-  }
-
-  openHomePage() {
-    this.nav.setRoot(this.rootPage);
   }
 
   openPage(page) {

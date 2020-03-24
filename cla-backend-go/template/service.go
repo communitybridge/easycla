@@ -63,7 +63,7 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 // CreateCLAGroupTemplate
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error) {
 	// Verify claGroupID matches an existing CLA Group
-	_, err := s.templateRepo.GetCLAGroup(claGroupID)
+	claGroup, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
 		log.Warnf("Unable to fetch CLA group by id: %s, error: %v - returning empty template PDFs", claGroupID, err)
 		return models.TemplatePdfs{}, err
@@ -86,52 +86,69 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		return models.TemplatePdfs{}, err
 	}
 
-	// Create PDF
-	iclaPdf, err := s.docraptorClient.CreatePDF(iclaTemplateHTML)
-	if err != nil {
-		log.Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
-		return models.TemplatePdfs{}, err
-	}
-	defer func() {
-		closeErr := iclaPdf.Close()
-		if closeErr != nil {
-			log.Warnf("error closing ICLA PDF, error: %v", closeErr)
-		}
-	}()
-
-	cclaPdf, err := s.docraptorClient.CreatePDF(cclaTemplateHTML)
-	if err != nil {
-		log.Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
-		return models.TemplatePdfs{}, err
-	}
-	defer func() {
-		closeErr := cclaPdf.Close()
-		if closeErr != nil {
-			log.Warnf("error closing CCLA PDF, error: %v", closeErr)
-		}
-	}()
-
-	// Save PDF to S3
 	bucket := fmt.Sprintf("cla-signature-files-%s", s.stage)
 	fileNameTemplate := "contract-group/%s/template/%s"
-	iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
-	cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
 
-	iclaFileURL, err := s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
-	if err != nil {
-		log.Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
-		return models.TemplatePdfs{}, err
+	// Create PDF
+	var pdfUrls models.TemplatePdfs
+	var iclaFileURL string
+	var cclaFileURL string
+
+	if claGroup.ProjectICLAEnabled {
+		iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML)
+		if iclaErr != nil {
+			log.Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
+			return models.TemplatePdfs{}, err
+		}
+		defer func() {
+			closeErr := iclaPdf.Close()
+			if closeErr != nil {
+				log.Warnf("error closing ICLA PDF, error: %v", closeErr)
+			}
+		}()
+		iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
+		iclaFileURL, err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
+		if err != nil {
+			log.Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
+			return models.TemplatePdfs{}, err
+		}
+		template.IclaHTMLBody = iclaTemplateHTML
 	}
 
-	cclaFileURL, err := s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
-	if err != nil {
-		log.Warnf("Problem uploading CCLA PDF: %s to s3, error: %v - returning empty template PDFs", cclaFileName, err)
-		return models.TemplatePdfs{}, err
+	if claGroup.ProjectCCLAEnabled {
+		cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML)
+		if cclaErr != nil {
+			log.Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
+			return models.TemplatePdfs{}, err
+		}
+		defer func() {
+			closeErr := cclaPdf.Close()
+			if closeErr != nil {
+				log.Warnf("error closing CCLA PDF, error: %v", closeErr)
+			}
+		}()
+		cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+		cclaFileURL, err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
+		if err != nil {
+			log.Warnf("Problem uploading CCLA PDF: %s to s3, error: %v - returning empty template PDFs", cclaFileName, err)
+			return models.TemplatePdfs{}, err
+		}
+		template.CclaHTMLBody = cclaTemplateHTML
 	}
 
-	pdfUrls := models.TemplatePdfs{
-		IndividualPDFURL: iclaFileURL,
-		CorporatePDFURL:  cclaFileURL,
+	if claGroup.ProjectICLAEnabled && claGroup.ProjectCCLAEnabled {
+		pdfUrls = models.TemplatePdfs{
+			IndividualPDFURL: iclaFileURL,
+			CorporatePDFURL:  cclaFileURL,
+		}
+	} else if claGroup.ProjectCCLAEnabled {
+		pdfUrls = models.TemplatePdfs{
+			CorporatePDFURL: cclaFileURL,
+		}
+	} else if claGroup.ProjectICLAEnabled {
+		pdfUrls = models.TemplatePdfs{
+			IndividualPDFURL: iclaFileURL,
+		}
 	}
 
 	// Save Template to DynamoDB
@@ -140,9 +157,6 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		log.Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
 		return models.TemplatePdfs{}, err
 	}
-
-	template.IclaHTMLBody = iclaTemplateHTML
-	template.CclaHTMLBody = cclaTemplateHTML
 
 	return pdfUrls, nil
 }
@@ -189,10 +203,11 @@ func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadClose
 
 	// Upload the file to S3.
 	result, err := s.s3Client.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filepath),
-		Body:   template,
-		ACL:    aws.String("public-read"),
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(filepath),
+		Body:        template,
+		ACL:         aws.String("public-read"),
+		ContentType: aws.String("application/pdf"),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload file to S3 Bucket: %s / %s, %v", bucket, filepath, err)

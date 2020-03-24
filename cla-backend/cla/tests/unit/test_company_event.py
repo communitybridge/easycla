@@ -45,7 +45,8 @@ def test_create_company_event(mock_event, auth_user, create_event_company, user,
         event_data=event_data,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
-        user_id=user.get_user_id(),
+        event_user_id=user.get_user_id(),
+        contains_pii=False,
     )
 
 @patch('cla.controllers.company.Event.create_event')
@@ -64,7 +65,8 @@ def test_update_company_event(mock_event, create_event_company, company):
     mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
-        event_company_id=company.get_company_id()
+        event_company_id=company.get_company_id(),
+        contains_pii=False,
     )
 
 @patch('cla.controllers.company.Event.create_event')
@@ -81,7 +83,8 @@ def test_delete_company(mock_event, create_event_company, company):
     mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
-        event_company_id=company.get_company_id()
+        event_company_id=company.get_company_id(),
+        contains_pii=False,
     )
 
 @patch('cla.controllers.company.Event.create_event')
@@ -102,7 +105,8 @@ def test_add_permission(mock_event, create_event_company, auth_user, company):
     mock_event.assert_called_once_with(
         event_data=event_data,
         event_type=event_type,
-        event_company_id=company.get_company_id()
+        event_company_id=company.get_company_id(),
+        contains_pii = True,
     )
 
 
@@ -125,6 +129,7 @@ def test_remove_permission(mock_event, create_event_company, auth_user, company)
     mock_event.assert_called_once_with(
         event_data=event_data,
         event_company_id=company_id,
-        event_type=event_type
+        event_type=event_type,
+        contains_pii = True,
     )
 

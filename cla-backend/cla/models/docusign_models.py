@@ -23,7 +23,8 @@ from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
-    Document
+    Document, Event
+from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
 from pydocusign.exceptions import DocuSignException  # type: ignore
 
@@ -408,7 +409,17 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Assume this company is the user's employer.
         # TODO: DAD - we should check to see if they already have a company id assigned
-        user.set_user_company_id(str(company_id))
+        if user.get_user_company_id() != company_id:
+            user.set_user_company_id(str(company_id))
+            Event.create_event(
+                event_type=EventType.UserAssociatedWithCompany,
+                event_company_id=company_id,
+                event_project_id=project_id,
+                event_user_id=user.get_user_id(),
+                event_data='user {} associated himself with company {}'.format(user.get_user_name(),
+                                                                               company.get_company_name()),
+                contains_pii=True,
+            )
 
         # Take a moment to update the user record's github information
         github_username = user.get_user_github_username()
@@ -467,6 +478,11 @@ class DocuSign(signing_service_interface.SigningService):
         project.load(project_id)
         cla.log.info(f'Loaded project details for: {request_info}')
 
+        # company has already been checked from check_and_prepare_employee_signature. Load company with company ID.
+        company = Company()
+        company.load(company_id)
+        cla.log.info(f'Loaded company details for: {request_info}')
+
         # Get project's latest corporate document to get major/minor version numbers.
         last_document = project.get_latest_corporate_document()
         cla.log.info(f'Loaded last project document details for: {request_info}')
@@ -493,6 +509,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        Event.create_event(
+            event_type=EventType.EmployeeSignatureCreated,
+            event_company_id=company_id,
+            event_project_id=project_id,
+            event_user_id=user_id,
+            event_data='employee signature created for user {}, company {}, project {}'.
+                format(user.get_user_name(), company.get_company_name(), project.get_project_name()),
+            contains_pii=True,
+        )
 
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
@@ -549,6 +574,10 @@ class DocuSign(signing_service_interface.SigningService):
         project = Project()
         project.load(project_id)
         cla.log.info(f'Loaded project for: {request_info}')
+        # company has already been checked from check_and_prepare_employee_signature. Load company with company ID.
+        company = Company()
+        company.load(company_id)
+        cla.log.info(f'Loaded company details for: {request_info}')
 
         # Get project's latest corporate document to get major/minor version numbers. 
         last_document = project.get_latest_corporate_document()
@@ -573,6 +602,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group. 
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        Event.create_event(
+            event_type=EventType.EmployeeSignatureCreated,
+            event_company_id=company_id,
+            event_project_id=project_id,
+            event_user_id=user_id,
+            event_data='employee signature created for user {}, company {}, project {}'.
+                format(user.get_user_name(), company.get_company_name(), project.get_project_name()),
+            contains_pii=True,
+        )
 
         for gerrit in gerrits:
             # For every Gerrit Instance of this project, add the user to the LDAP Group.
@@ -607,26 +645,86 @@ class DocuSign(signing_service_interface.SigningService):
         """
         return os.path.join(api_base_url, 'v2/signed/corporate', str(project_id), str(company_id))
 
-    def request_corporate_signature(self,
-                                    auth_user,
-                                    project_id,
-                                    company_id,
-                                    send_as_email=False,
-                                    authority_name=None,
-                                    authority_email=None,
-                                    return_url_type=None,
+    def handle_signing_new_corporate_signature(self, project, company, user,
+                                               signatory_name=None, signatory_email=None,
+                                               send_as_email=False, return_url_type=None, return_url=None):
+        cla.log.debug('Handle signing of new corporate signature - '
+                      f'project: {project}, '
+                      f'company: {company}, '
+                      f'user id: {user}, '
+                      f'signatory name: {signatory_name}, '
+                      f'signatory email: {signatory_email} '
+                      f'send email: {send_as_email}')
+
+        # Set the CLA Managers in the schedule
+        scheduleA = generate_manager_and_contributor_list([(signatory_name, signatory_email)])
+
+        # Signatory and the Initial CLA Manager
+        cla_template_values = create_default_company_values(
+            company, signatory_name, signatory_email,
+            user.get_user_name(), user.get_user_email(), scheduleA)
+
+        # Ensure the project/CLA group has a corporate template document
+        last_document = project.get_latest_corporate_document()
+        if last_document is None or \
+                last_document.get_document_major_version() is None or \
+                last_document.get_document_minor_version() is None:
+            cla.log.info('Contract Group {} does not have a CCLA'.format(project))
+            return {'errors': {'project_id': 'Contract Group does not support CCLAs.'}}
+
+        # No signature exists, create the new Signature.
+        cla.log.info(f'Creating new signature for project {project} on company {company}')
+        signature = Signature(signature_id=str(uuid.uuid4()),
+                              signature_project_id=project.get_project_id(),
+                              signature_document_minor_version=last_document.get_document_minor_version(),
+                              signature_document_major_version=last_document.get_document_major_version(),
+                              signature_reference_id=company.get_company_id(),
+                              signature_reference_type='company',
+                              signature_type='ccla',
+                              signature_signed=False,
+                              signature_approved=True)
+
+        callback_url = self._get_corporate_signature_callback_url(project.get_project_id(), company.get_company_id())
+        cla.log.info('Setting callback_url: %s', callback_url)
+        signature.set_signature_callback_url(callback_url)
+
+        if not send_as_email:  # get return url only for manual signing through console
+            cla.log.info('Setting signature return_url to %s', return_url)
+            signature.set_signature_return_url(return_url)
+
+        # Set signature ACL
+        signature.set_signature_acl(user.get_lf_username())
+
+        self.populate_sign_url(signature, callback_url,
+                               signatory_name, signatory_email,
+                               send_as_email,
+                               user.get_user_name(),
+                               user.get_user_email(),
+                               cla_template_values)
+
+        # Save the signature
+        signature.save()
+
+        response_model = {'company_id': company.get_company_id(),
+                          'project_id': project.get_project_id(),
+                          'signature_id': signature.get_signature_id(),
+                          'sign_url': signature.get_signature_sign_url()}
+        cla.log.debug(f'Saved the signature {signature} - response mode: {response_model}')
+        return response_model
+
+    def request_corporate_signature(self, auth_user, project_id, company_id, send_as_email=False,
+                                    signatory_name=None, signatory_email=None, return_url_type=None,
                                     return_url=None):
 
         cla.log.debug('Request corporate signature - '
                       f'project id: {project_id}, '
                       f'company id: {company_id}, '
-                      f'authority name: {authority_name}, '
-                      f'authority email: {authority_email} '
+                      f'signatory name: {signatory_name}, '
+                      f'signatory email: {signatory_email} '
                       f'send email: {send_as_email}')
 
-        # DAD: Auth user is the currently logged in user
-        # DAD: Authority Name and Authority Email are from the web form
-        # (this is the signatory_user in this function)
+        # Auth user is the currently logged in user - the user who started the signing process
+        # Signatory Name and Signatory Email are from the web form - will be empty if CLA Manager is the CLA Signatory
 
         if project_id is None:
             return {'errors': {'project_id': 'request_corporate_signature - project_id is empty'}}
@@ -641,21 +739,26 @@ class DocuSign(signing_service_interface.SigningService):
             return {'errors': {'user_error': 'request_corporate_signature - auth_user.username is empty'}}
 
         # Ensure the user exists in our database - load the record
-        signatory_users = User().get_user_by_username(auth_user.username)
-        if signatory_users is None:
+        cla.log.debug(f'Loading user {auth_user.username}')
+        users_list = User().get_user_by_username(auth_user.username)
+        if users_list is None:
             cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
                             'Returning an error response')
             return {'errors': {'user_error': 'user does not exist'}}
-        if len(signatory_users) > 1:
-            cla.log.warning(f'More than one user record was returned ({len(signatory_users)}) from user '
+        if len(users_list) > 1:
+            cla.log.warning(f'More than one user record was returned ({len(users_list)}) from user '
                             f'username: {auth_user.username} query')
-        # Just grab the first record
-        signatory_user = signatory_users[0]
 
+        # We've looked up this user and now have the user record - we'll use the first record we find
+        # unlikely we'll have more than one
+        cla_manager_user = users_list[0]
+        cla.log.debug(f'Loaded user {cla_manager_user} - this is our CLA Manager')
         # Ensure the project exists
         project = Project()
         try:
+            cla.log.debug(f'Loading project {project_id}')
             project.load(str(project_id))
+            cla.log.debug(f'Loaded project {project}')
         except DoesNotExist as err:
             cla.log.warning(f'Unable to load project by id: {project_id}. '
                             'Returning an error response')
@@ -664,203 +767,43 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure the company exists
         company = Company()
         try:
+            cla.log.debug(f'Loading company {company_id}')
             company.load(str(company_id))
+            cla.log.debug(f'Loaded company {company}')
         except DoesNotExist as err:
             cla.log.warning(f'Unable to load company by id: {company_id}. '
                             'Returning an error response')
             return {'errors': {'company_id': str(err)}}
 
-        # Load the CLA Corporate Signature Record for this project/company combination
+        # Decision Point:
+        # If no signatory name/email passed in, then the specified user (CLA Manager) IS also the CLA Signatory
+        if signatory_name is None or signatory_email is None:
+            cla.log.debug(f'No CLA Signatory specified for project {project}, company {company}.'
+                          f' User: {cla_manager_user} will be the CLA Authority.')
+            signatory_name = cla_manager_user.get_user_name()
+            signatory_email = cla_manager_user.get_user_email()
+
+        # Attempt to load the CLA Corporate Signature Record for this project/company combination
+        cla.log.debug(f'Searching for existing CCLA signatures for project: {project_id} '
+                      f'with company: {company_id} '
+                      'type: company, signed: true, approved: true')
         signatures = Signature().get_signatures_by_project(project_id=project_id,
                                                            signature_approved=True,
                                                            signature_signed=True,
                                                            signature_type='company',
                                                            signature_reference_id=company_id)
+        # No existing corporate signatures
         if len(signatures) == 0:
-            cla.log.warning(f'No CCLA corporate signature for company: {company} - '
-                            'Unable to load the Manager list.  Returning error response.')
-            return {'errors': {'signature': 'Corporate Signature missing'}}
-        if len(signatures) > 1:
-            cla.log.warning(f'More than 1 CCLA corporate signature for company: {company} - '
-                            f'{len(signatures)} total - will use the first one')
-        cla.log.debug(f'Loaded {len(signatures)} CCLA signatures for project: {project}, company: {company}.')
+            cla.log.debug(f'No CCLA signatures on file for project: {project_id}, company: {company_id}')
+            return self.handle_signing_new_corporate_signature(
+                project=project, company=company, user=cla_manager_user,
+                signatory_name=signatory_name, signatory_email=signatory_email,
+                send_as_email=send_as_email, return_url_type=return_url_type, return_url=return_url)
 
-        # Load the CLA Managers (as User objects)
-        cla_managers = signatures[0].get_managers()
-        # Make sure we have at least one CLA Manager for this company
-        if len(cla_managers) == 0:
-            cla.log.warning(f'No CCLA corporate CLA Managers specified for company: {company} - '
-                            'Unable to load the Manager list.  Returning error response.')
-            return {'errors': {'signature_acl': 'Corporate CLA Managers missing'}}
-        cla.log.debug(f' Loaded {len(cla_managers)} managers from the CCLA signature list for '
-                      f'project: {project}, company: {company}.')
-
-        found_authority = False
-        if authority_name is not None:
-            for cla_manager in cla_managers:
-                if cla_manager.get_user_name() is None:
-                    cla.log.warning(f'Manager name {cla_manager} is missing the user name value. '
-                                    f'Unable to compare with provided authority_name={authority_name} '
-                                    f'with CLA manager {cla_manager}. '
-                                    'Skipping this manager.')
-                    continue
-                if cla_manager.get_user_name().lower() == authority_name.lower():
-                    found_authority = True
-                    cla.log.debug(f'Authority name {authority_name} provided is in the '
-                                  f'{company.get_company_name()} manager list.')
-                    break
-
-        # Get CLA Managers. In the future, we will support contributors
-        scheduleA = generate_manager_and_contributor_list(
-            [(cla_manager.get_user_name(), cla_manager.get_user_email()) for cla_manager in cla_managers]
-        )
-
-        # We may see the provided authority (from the web form) in the manager list...
-        # If they are not, then we will send the request via e-mail below
-        if not found_authority:
-            cla.log.debug(f'Authority name: {authority_name} / {authority_email} '
-                          f'NOT found in {company.get_company_name()} '
-                          f'manager list: {cla.utils.fmt_users(cla_managers)}')
-
-        # TODO: DAD should we create the values based on:
-        # web user? signatory_user / signatory_email
-        # values from web form? authority_name / authority_email
-        # Maybe we should decide this based on if the web user was already in
-        # the manager list? the found_authority flag or do we key off the email flag?
-        if authority_name:
-            cla.log.debug('Using authority name from web form to create the default company values')
-            cla_template_values = create_default_company_values(company,
-                                                                authority_name,
-                                                                authority_email,
-                                                                cla_managers[0].get_user_name(),
-                                                                cla_managers[0].get_user_email(),
-                                                                scheduleA)
-        else:
-            cla.log.debug('Using current_user/signatory_user to create the default company values.')
-            cla_template_values = create_default_company_values(company,
-                                                                signatory_user.get_user_name(),
-                                                                signatory_user.get_user_email(),
-                                                                cla_managers[0].get_user_name(),
-                                                                cla_managers[0].get_user_email(),
-                                                                scheduleA)
-
-        # Ensure the contract group has a CCLA
-        last_document = project.get_latest_corporate_document()
-        if last_document is None or \
-                last_document.get_document_major_version() is None or \
-                last_document.get_document_minor_version() is None:
-            cla.log.info('Contract Group does not have a CCLA: {}'.format(project_id))
-            return {'errors': {'project_id': 'Contract Group does not support CCLAs.'}}
-
-        # Ensure the company doesn't already have a CCLA with this project.
-        # and the user is about to sign the ccla manually
-        cla.log.info('Checking if a signature exists for project: {}'.format(project_id))
-        latest_signature = company.get_latest_signature(str(project_id))
-        if latest_signature is not None and \
-                last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
-            cla.log.info('CCLA signature object ({}) already exists '
-                         'for company {} on project {}'.
-                         format(latest_signature.get_signature_id(), cla.utils.fmt_company(company),
-                                cla.utils.fmt_project(project)))
-
-            if latest_signature.get_signature_signed():
-                cla.log.info('CCLA signature object ({}) is already signed'.format(latest_signature.get_signature_id()))
-                return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
-            else:
-                cla.log.info('CCLA signature object ({}) is NOT signed'.format(latest_signature.get_signature_id()))
-                callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
-                cla.log.info('Signing callback URL is: {}'.format(callback_url))
-
-                # Populate sign url
-                # TOOD DAD: Need to provide: authority_name, authority_email ??
-                if authority_name:
-                    cla.log.debug(f'Using authority name {authority_name} / {authority_email}'
-                                  f'and the CLA Manager {cla_managers[0]} '
-                                  'from web form to populate the signing request.')
-                    self.populate_sign_url(latest_signature, callback_url,
-                                           authority_name,
-                                           authority_email,
-                                           send_as_email,
-                                           cla_managers[0].get_user_name(),
-                                           cla_managers[0].get_user_email(),
-                                           cla_template_values)
-                else:
-                    if signatory_user.get_user_name() is not None:
-                        signatory_name = signatory_user.get_user_name()
-                    else:
-                        signatory_name = signatory_user.get_lf_username()
-                    cla.log.debug(f'Using current user/signatory user {signatory_user} - '
-                                  f'{signatory_name} / {signatory_user.get_user_email} '
-                                  f'and the CLA Manager {cla_managers[0]} '
-                                  f'to populate the signing request.')
-                    self.populate_sign_url(latest_signature, callback_url,
-                                           signatory_name,
-                                           signatory_user.get_user_email(),
-                                           send_as_email,
-                                           cla_managers[0].get_user_name(),
-                                           cla_managers[0].get_user_email(),
-                                           cla_template_values)
-
-                return {'company_id': str(company_id),
-                        'project_id': str(project_id),
-                        'signature_id': latest_signature.get_signature_id(),
-                        'sign_url': latest_signature.get_signature_sign_url()}
-
-        # No signature exists, create the new Signature.
-        cla.log.info('Creating new signature for company %s on project %s', company_id, project_id)
-        signature = Signature(signature_id=str(uuid.uuid4()),
-                              signature_project_id=project_id,
-                              signature_document_minor_version=last_document.get_document_minor_version(),
-                              signature_document_major_version=last_document.get_document_major_version(),
-                              signature_reference_id=company_id,
-                              signature_reference_type='company',
-                              signature_type='ccla',
-                              signature_signed=False,
-                              signature_approved=True)
-
-        callback_url = self._get_corporate_signature_callback_url(str(project_id), str(company_id))
-        cla.log.info('Setting callback_url: %s', callback_url)
-        signature.set_signature_callback_url(callback_url)
-
-        if not send_as_email:  # get return url only for manual signing through console
-            cla.log.info('Setting signature return_url to %s', return_url)
-            signature.set_signature_return_url(return_url)
-
-        # Set signature ACL
-        signature.set_signature_acl(signatory_user.get_lf_username())
-
-        # Populate sign url
-        if authority_name:
-            cla.log.debug(f'Using authority name {authority_name} / {authority_email}'
-                          f'and the CLA Manager {cla_managers[0]} '
-                          'from web form to populate the signing request.')
-            self.populate_sign_url(signature, callback_url,
-                                   authority_name,
-                                   authority_email,
-                                   send_as_email,
-                                   cla_managers[0].get_user_name(),  # authority_name
-                                   cla_managers[0].get_user_email(),  # authority_email
-                                   cla_template_values)
-        else:
-            cla.log.debug(f'Using current user/signatory user {signatory_user} '
-                          f'and the CLA Manager {cla_managers[0]} '
-                          'to populate the signing request.')
-            self.populate_sign_url(signature, callback_url,
-                                   signatory_user.get_user_name(),
-                                   signatory_user.get_user_email(),
-                                   send_as_email,
-                                   cla_managers[0].get_user_name(),  # authority_name
-                                   cla_managers[0].get_user_email(),  # authority_email
-                                   cla_template_values)
-
-        # Save signature
-        signature.save()
-        cla.log.debug(f'Saved the signature {signature}')
-
-        return {'company_id': str(company_id),
-                'project_id': str(project_id),
-                'signature_id': signature.get_signature_id(),
-                'sign_url': signature.get_signature_sign_url()}
+        cla.log.warning(f'One or more corporate valid signatures exist for '
+                        f'project: {project}, company: {company} - '
+                        f'{len(signatures)} total')
+        return {'errors': {'signature_id': 'Company has already signed CCLA with this project'}}
 
     def populate_sign_url(self, signature, callback_url=None,
                           authority_or_signatory_name=None,

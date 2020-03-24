@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 const AWS = require('aws-sdk');
 const SSM = require('aws-sdk/clients/ssm');
 const program = require('commander');
@@ -29,9 +32,9 @@ const query = {
   "Type": (program.securestring ? "SecureString" : "String"),
   "Overwrite": (program.overwrite ? true : false),
   "Tags": [
-    { "Key": "Name", "Value": "vulnerability-detection" },
+    { "Key": "Name", "Value": "EasyCLA" },
     { "Key": "ServiceType", "Value": "Product" },
-    { "Key": "Service", "Value": "vulnerability-detection" },
+    { "Key": "Service", "Value": "EasyCLA" },
     { "Key": "ServiceRole", "Value": "Backend" },
     { "Key": "ProgrammingPlatform", "Value": "Go" },
     { "Key": "Owner", "Value": "David Deal" },

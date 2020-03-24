@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -32,26 +35,33 @@ var (
 type Repository interface {
 	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
-	GetProject(projectID string) (*models.Project, error)
+	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
+	GetProjectByName(projectName string) (*models.Project, error)
 	GetExternalProject(projectExternalID string) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 	buildProjectModel(dbModel DBProjectModel) *models.Project
-	buildProjectModels(results *dynamodb.ScanOutput) ([]models.Project, error)
+	buildProjectDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument
+	buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error)
 }
 
-// NewDynamoRepository creates instance of project repository
-func NewDynamoRepository(awsSession *session.Session, stage string) Repository {
+// NewRepository creates instance of project repository
+func NewRepository(awsSession *session.Session, stage string, ghRepo repositories.Repository, gerritRepo gerrits.Repository) Repository {
 	return &repo{
 		dynamoDBClient: dynamodb.New(awsSession),
 		stage:          stage,
+		ghRepo:         ghRepo,
+		gerritRepo:     gerritRepo,
 	}
 }
 
 type repo struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+	ghRepo         repositories.Repository
+	gerritRepo     gerrits.Repository
 }
 
 // GetMetrics returns the metrics for the projects
@@ -120,6 +130,7 @@ func buildSimpleModel(dbProjectsModel *models.Projects) []models.ProjectSimpleMo
 		simpleModels = append(simpleModels, models.ProjectSimpleModel{
 			ProjectName:         dbModel.ProjectName,
 			ProjectManagerCount: int64(len(dbModel.ProjectACL)),
+			ProjectExternalID:   dbModel.ProjectExternalID,
 		})
 	}
 
@@ -150,10 +161,12 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_requires_icla_signature", projectModel.ProjectCCLARequiresICLA)
-	// TODO
-	//addListAttribute(input.Item, "project_individual_documents", individualDocs)
-	// TODO
-	//addListAttribute(input.Item, "project_member_documents", corporateDocs)
+
+	// Empty documents for now - will add the template details later
+	addListAttribute(input.Item, "project_corporate_documents", []*dynamodb.AttributeValue{})
+	addListAttribute(input.Item, "project_individual_documents", []*dynamodb.AttributeValue{})
+	addListAttribute(input.Item, "project_member_documents", []*dynamodb.AttributeValue{})
+
 	addStringAttribute(input.Item, "date_created", currentTimeString)
 	addStringAttribute(input.Item, "date_modified", currentTimeString)
 	addStringAttribute(input.Item, "version", "v1")
@@ -173,8 +186,8 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	return projectModel, nil
 }
 
-// GetProject returns the project model associated for the specified projectID
-func (repo *repo) GetProject(projectID string) (*models.Project, error) {
+// GetProjectByID returns the project model associated for the specified projectID
+func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 	log.Debugf("GetProject - projectID: %s", projectID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	// This is the key we want to match
@@ -204,17 +217,159 @@ func (repo *repo) GetProject(projectID string) (*models.Project, error) {
 		return nil, queryErr
 	}
 
-	// No match, didn't find it
-	if *results.Count == 0 {
-		// Attempt to lookup via external ID
-		return repo.GetExternalProject(projectID)
+	if len(results.Items) > 0 {
+		var dbModel DBProjectModel
+		err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+		if err != nil {
+			log.Warnf("error unmarshalling db project model, error: %+v", err)
+			return nil, err
+		}
+
+		// Convert the database model to an API response model
+		return repo.buildProjectModel(dbModel), nil
+	}
+
+	return nil, nil
+}
+
+// GetProjectsByExternalID queries the database and returns a list of the projects
+func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ExternalID)
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("project_external_id").Equal(expression.Value(params.ExternalID))
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for project scan, error: %v", err)
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("external-project-index"),
+	}
+
+	// If we have the next key, set the exclusive start key value
+	if params.NextKey != nil && *params.NextKey != "" {
+		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+		// The primary key of the first item that this operation will evaluate.
+		// and the query key (if not the same)
+		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+			"project_id": {
+				S: params.NextKey,
+			},
+		}
+	}
+
+	var pageSize *int64
+	// If we have a page size, set the limit value - make sure it's a positive value
+	if params.PageSize != nil && *params.PageSize > 0 {
+		log.Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
+		pageSize = params.PageSize
+	} else {
+		// Default page size
+		pageSize = aws.Int64(50)
+	}
+	queryInput.Limit = pageSize
+
+	var projects []models.Project
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving projects, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		// Convert the list of DB models to a list of response models
+		projectList, modelErr := repo.buildProjectModels(results.Items)
+		if modelErr != nil {
+			log.Warnf("error converting project DB model to response model, error: %v",
+				modelErr)
+			return nil, modelErr
+		}
+
+		// Add to the project response models to the list
+		projects = append(projects, projectList...)
+
+		if results.LastEvaluatedKey["project_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["project_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"project_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+
+		if int64(len(projects)) >= *pageSize {
+			break
+		}
+	}
+
+	return &models.Projects{
+		LastKeyScanned: lastEvaluatedKey,
+		PageSize:       *pageSize,
+		ResultCount:    int64(len(projects)),
+		Projects:       projects,
+	}, nil
+}
+
+// GetProjectByName returns the project model associated for the specified project name
+func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) {
+	log.Debugf("GetProject - projectName: %s", projectName)
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("project_name").Equal(expression.Value(projectName))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for Project query, projectName: %s, error: %v",
+			projectName, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("project-name-search-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	results, queryErr := repo.dynamoDBClient.Query(queryInput)
+	if queryErr != nil {
+		log.Warnf("error retrieving project by projectName: %s, error: %v", projectName, queryErr)
+		return nil, queryErr
 	}
 
 	// Should only have one result
 	if *results.Count > 1 {
-		log.Warnf("Project query returned more than one result using projectID: %s", projectID)
+		log.Warnf("Project scan by name returned more than one result using projectName: %s", projectName)
 	}
 
+	// Didn't find it...
+	if *results.Count == 0 {
+		log.Debugf("Project scan by name returned no results using projectName: %s", projectName)
+		return nil, nil
+	}
+
+	// Found it...
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
 	if err != nil {
@@ -333,7 +488,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildProjectModels(results)
+		projectList, modelErr := repo.buildProjectModels(results.Items)
 		if modelErr != nil {
 			log.Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -370,7 +525,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 func (repo *repo) DeleteProject(projectID string) error {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
-	existingProject, getErr := repo.GetProject(projectID)
+	existingProject, getErr := repo.GetProjectByID(projectID)
 	if getErr != nil {
 		log.Warnf("delete - error locating the project id: %s, error: %+v", projectID, getErr)
 		return getErr
@@ -407,7 +562,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		return nil, ErrProjectIDMissing
 	}
 
-	existingProject, getErr := repo.GetProject(projectModel.ProjectID)
+	existingProject, getErr := repo.GetProjectByID(projectModel.ProjectID)
 	if getErr != nil {
 		log.Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
 		return nil, getErr
@@ -479,35 +634,36 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	// Read the updated record back from the DB and return - probably could
 	// just create/update a new model in memory and return it to make it fast,
 	// but this approach return exactly what the DB has
-	return repo.GetProject(projectModel.ProjectID)
+	return repo.GetProjectByID(projectModel.ProjectID)
 }
 
 // buildProjectModels converts the database response model into an API response data model
-func (repo *repo) buildProjectModels(results *dynamodb.ScanOutput) ([]models.Project, error) {
+func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error) {
 	var projects []models.Project
 
 	// The DB project model
 	var dbProjects []DBProjectModel
 
-	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbProjects)
+	err := dynamodbattribute.UnmarshalListOfMaps(results, &dbProjects)
 	if err != nil {
 		log.Warnf("error unmarshalling projects from database, error: %v", err)
 		return nil, err
 	}
 
+	// Create an output channel to receive the results
+	responseChannel := make(chan *models.Project)
+
+	// For each project, convert to a response model - using a go routine
 	for _, dbProject := range dbProjects {
-		projects = append(projects, models.Project{
-			ProjectID:               dbProject.ProjectID,
-			ProjectExternalID:       dbProject.ProjectExternalID,
-			ProjectName:             dbProject.ProjectName,
-			ProjectACL:              dbProject.ProjectACL,
-			ProjectCCLAEnabled:      dbProject.ProjectCclaEnabled,
-			ProjectICLAEnabled:      dbProject.ProjectIclaEnabled,
-			ProjectCCLARequiresICLA: dbProject.ProjectCclaRequiresIclaSignature,
-			DateCreated:             dbProject.DateCreated,
-			DateModified:            dbProject.DateModified,
-			Version:                 dbProject.Version,
-		})
+		go func(dbProject DBProjectModel) {
+			// Send the results to the output channel
+			responseChannel <- repo.buildProjectModel(dbProject)
+		}(dbProject)
+	}
+
+	// Append all the responses to our list
+	for i := 0; i < len(dbProjects); i++ {
+		projects = append(projects, *<-responseChannel)
 	}
 
 	return projects, nil
@@ -515,18 +671,86 @@ func (repo *repo) buildProjectModels(results *dynamodb.ScanOutput) ([]models.Pro
 
 // buildProjectModel maps the database model to the API response model
 func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
-	return &models.Project{
-		ProjectID:               dbModel.ProjectID,
-		ProjectExternalID:       dbModel.ProjectExternalID,
-		ProjectName:             dbModel.ProjectName,
-		ProjectACL:              dbModel.ProjectACL,
-		ProjectCCLAEnabled:      dbModel.ProjectCclaEnabled,
-		ProjectICLAEnabled:      dbModel.ProjectIclaEnabled,
-		ProjectCCLARequiresICLA: dbModel.ProjectCclaRequiresIclaSignature,
-		DateCreated:             dbModel.DateCreated,
-		DateModified:            dbModel.DateModified,
-		Version:                 dbModel.Version,
+
+	var ghOrgs []*models.GithubRepositoriesGroupByOrgs
+	var gerrits []*models.Gerrit
+
+	if dbModel.ProjectID != "" {
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			var err error
+			ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
+			if err != nil {
+				log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
+					dbModel.ProjectID, err)
+				// Reset to empty array
+				ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			var err error
+			gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
+			if err != nil {
+				log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
+					dbModel.ProjectID, err)
+				// Reset to empty array
+				gerrits = make([]*models.Gerrit, 0)
+			}
+		}()
+		wg.Wait()
+	} else {
+		log.Warnf("buildProjectModel - project ID missing for project '%s' - ID: %s - unable to load GH and Gerrit repository details",
+			dbModel.ProjectName, dbModel.ProjectID)
 	}
+
+	return &models.Project{
+		ProjectID:                  dbModel.ProjectID,
+		ProjectExternalID:          dbModel.ProjectExternalID,
+		ProjectName:                dbModel.ProjectName,
+		ProjectACL:                 dbModel.ProjectACL,
+		ProjectCCLAEnabled:         dbModel.ProjectCclaEnabled,
+		ProjectICLAEnabled:         dbModel.ProjectIclaEnabled,
+		ProjectCCLARequiresICLA:    dbModel.ProjectCclaRequiresIclaSignature,
+		ProjectCorporateDocuments:  repo.buildProjectDocumentModels(dbModel.ProjectCorporateDocuments),
+		ProjectIndividualDocuments: repo.buildProjectDocumentModels(dbModel.ProjectIndividualDocuments),
+		ProjectMemberDocuments:     repo.buildProjectDocumentModels(dbModel.ProjectMemberDocuments),
+		GithubRepositories:         ghOrgs,
+		Gerrits:                    gerrits,
+		DateCreated:                dbModel.DateCreated,
+		DateModified:               dbModel.DateModified,
+		Version:                    dbModel.Version,
+	}
+}
+
+// buildProjectDocumentModels builds response models based on the array of db models
+func (repo *repo) buildProjectDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument {
+	if dbDocumentModels == nil {
+		return nil
+	}
+
+	// Response model
+	var response []models.ProjectDocument
+
+	for _, dbDocumentModel := range dbDocumentModels {
+		response = append(response, models.ProjectDocument{
+			DocumentName:            dbDocumentModel.DocumentName,
+			DocumentAuthorName:      dbDocumentModel.DocumentAuthorName,
+			DocumentContentType:     dbDocumentModel.DocumentContentType,
+			DocumentFileID:          dbDocumentModel.DocumentFileID,
+			DocumentLegalEntityName: dbDocumentModel.DocumentLegalEntityName,
+			DocumentPreamble:        dbDocumentModel.DocumentPreamble,
+			DocumentS3URL:           dbDocumentModel.DocumentS3URL,
+			DocumentMajorVersion:    dbDocumentModel.DocumentMajorVersion,
+			DocumentMinorVersion:    dbDocumentModel.DocumentMinorVersion,
+			DocumentCreationDate:    dbDocumentModel.DocumentCreationDate,
+		})
+	}
+
+	return response
 }
 
 // buildProject is a helper function to build a common set of projection/columns for the query
@@ -540,6 +764,9 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("project_ccla_enabled"),
 		expression.Name("project_icla_enabled"),
 		expression.Name("project_ccla_requires_icla_signature"),
+		expression.Name("project_corporate_documents"),
+		expression.Name("project_individual_documents"),
+		expression.Name("project_member_documents"),
 		expression.Name("date_created"),
 		expression.Name("date_modified"),
 		expression.Name("version"),
@@ -563,9 +790,7 @@ func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key strin
 	item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
 }
 
-// addListAttribute adds a new list attribute to the existing map
-/*
+// addListAttribute adds a list to the existing map
 func addListAttribute(item map[string]*dynamodb.AttributeValue, key string, value []*dynamodb.AttributeValue) {
 	item[key] = &dynamodb.AttributeValue{L: value}
 }
-*/

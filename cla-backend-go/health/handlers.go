@@ -14,7 +14,7 @@ import (
 func Configure(api *operations.ClaAPI, service Service) {
 
 	api.HealthHealthCheckHandler = health.HealthCheckHandlerFunc(func(params health.HealthCheckParams) middleware.Responder {
-		result, err := service.HealthCheck(params.HTTPRequest.Context(), params)
+		result, err := service.HealthCheck(params.HTTPRequest.Context())
 		if err != nil {
 			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
 		}
