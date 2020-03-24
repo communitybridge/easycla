@@ -137,6 +137,7 @@ export class CompanyPage {
   }
 
   mapProjects(projects, signatureACL) {
+    let pendingRequest = []
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
@@ -222,7 +223,8 @@ export class CompanyPage {
 
   openProjectsCclaSelectModal() {
     let modal = this.modalCtrl.create('ProjectsCclaSelectModal', {
-      company: this.company
+      company: this.company,
+      companyId: this.companyId
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
