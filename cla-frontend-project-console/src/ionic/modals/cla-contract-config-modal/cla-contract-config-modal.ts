@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
@@ -28,11 +29,15 @@ export class ClaContractConfigModal {
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
     private claService: ClaService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.projectId = this.navParams.get('projectId');
     this.claProject = this.navParams.get('claProject');
     this.getDefaults();
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
     this.form = formBuilder.group({
       name: [this.claProject.project_name, Validators.compose([Validators.required])],
       ccla: [this.claProject.project_ccla_enabled],
@@ -60,7 +65,7 @@ export class ClaContractConfigModal {
     }
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   submit() {
     this.submitAttempt = true;
