@@ -6,6 +6,7 @@ import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angul
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'projects-ccla-select-modal'
@@ -28,12 +29,15 @@ export class ProjectsCclaSelectModal {
     public navCtrl: NavController,
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
-    private claService: ClaService
+    private claService: ClaService,
+    private location: PlatformLocation
   ) {
-    this.getDefaults();
     this.form = formBuilder.group({
       // provider: ['', Validators.required],
       search: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
+    });
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
     });
   }
 
@@ -44,11 +48,13 @@ export class ProjectsCclaSelectModal {
   }
 
   ngOnInit() {
+    this.getDefaults();
     this.getProjectsCcla();
   }
 
   getProjectsCcla() {
-    this.claService.getCompanyUnsignedProjects(this.company.company_id).subscribe((response) => {
+    const companyId = this.navParams.get('companyId');
+    this.claService.getCompanyUnsignedProjects(companyId).subscribe((response) => {
       this.loading = false;
       // Sort on the project name field after filtering empty project names
       this.projects = response
@@ -82,12 +88,12 @@ export class ProjectsCclaSelectModal {
     this.submitDisabled = false
     this.form.controls['search'].setValue(project.project_name);
     this.projectId = project.project_id
-    
+
   }
 
   submit() {
     this.navCtrl.push('AuthorityYesnoPage', {
-      projectId: this.projectId ,
+      projectId: this.projectId,
       company: this.company
     });
 
