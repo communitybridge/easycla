@@ -16,6 +16,12 @@ type Config struct {
 	// Auth0
 	Auth0 Auth0 `json:"auth0"`
 
+	// Auth0 Platform config
+	Auth0Platform Auth0Platform `json:"auth0_platform"`
+
+	// API GW
+	ApiGateway string `json:"api_gateway"`
+
 	// SFDC
 
 	// GitHub
@@ -57,6 +63,12 @@ type Auth0 struct {
 	ClientID      string `json:"auth0-clientId"`
 	UsernameClaim string `json:"auth0-username-claim"`
 	Algorithm     string `json:"auth0-algorithm"`
+}
+
+// Auth0-Platform
+type Auth0Platform struct {
+	ClientID     string `json:"auth0-clientId"`
+	ClientSecret string `json:"auth0-clientSecret"`
 }
 
 // Docraptor model

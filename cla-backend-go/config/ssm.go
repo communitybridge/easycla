@@ -137,5 +137,23 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 		return Config{}, err
 	}
 
+	auth0PlatformClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-client-id-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+	auth0PlatformSecret, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-client-secret-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+	apiGw, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+	config.Auth0Platform = Auth0Platform{
+		ClientID:     auth0PlatformClientID,
+		ClientSecret: auth0PlatformSecret,
+	}
+	config.ApiGateway = apiGw
+
 	return config, nil
 }

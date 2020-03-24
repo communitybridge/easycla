@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/token"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -163,6 +165,8 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		logrus.Panic(err)
 	}
+
+	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0.Domain, configFile.ApiGateway)
 
 	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage)
