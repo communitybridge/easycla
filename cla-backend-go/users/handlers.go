@@ -20,16 +20,38 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Create user handler
 	api.UsersAddUserHandler = users.AddUserHandlerFunc(func(params users.AddUserParams, claUser *user.CLAUser) middleware.Responder {
-		if claUser.UserID == "" {
-			return users.NewAddUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersAddUserHandler - user %+v not authorized to add users - missing UserID", claUser)))
+		exitingModel, getErr := service.GetUserByUserName(claUser.LFUsername, true)
+		if getErr != nil {
+			msg := fmt.Sprintf("Error querying the user by username, error: %+v", getErr)
+			log.Warnf("Create User Failed - %s", msg)
+			return users.NewAddUserBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
 		}
 
-		userModel, err := service.CreateUser(&params.Body)
+		// If the user with the same name exists...
+		if exitingModel != nil {
+			msg := fmt.Sprintf("User with same username exists: %s", claUser.LFUsername)
+			log.Warnf("Create User Failed - %s", msg)
+			return users.NewAddUserConflict().WithPayload(&models.ErrorResponse{
+				Code:    "409",
+				Message: msg,
+			})
+		}
+
+		newUser := &models.User{
+			LfEmail:    claUser.LFEmail,
+			LfUsername: claUser.LFUsername,
+			Username:   claUser.Name,
+		}
+		userModel, err := service.CreateUser(newUser)
 		if err != nil {
-			log.Warnf("error creating user from user: %+v, error: %+v", params.Body, err)
+			log.Warnf("error creating user from user: %+v, error: %+v", newUser, err)
 			return users.NewAddUserBadRequest().WithPayload(errorResponse(err))
 		}
+		// filling userID in claUser for logging event
+		claUser.UserID = userModel.UserID
 
 		// Create an event - run as a go-routine
 		eventsService.CreateAuditEvent(
@@ -38,6 +60,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s created a new user %+v", claUser.Name, userModel),
+			true,
 		)
 
 		return users.NewAddUserOK().WithPayload(userModel)
@@ -64,6 +87,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s updated user %+v", claUser.Name, userModel),
+			true,
 		)
 
 		return users.NewUpdateUserOK().WithPayload(userModel)
@@ -71,27 +95,30 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Delete User Handler
 	api.UsersDeleteUserHandler = users.DeleteUserHandlerFunc(func(params users.DeleteUserParams, claUser *user.CLAUser) middleware.Responder {
-		if claUser.UserID == "" {
-			return users.NewDeleteUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersDeleteUserHandler - user %+v not authorized to delete users - missing UserID", claUser)))
-		}
+		/*
+				if claUser.UserID == "" {
+					return users.NewDeleteUserUnauthorized().WithPayload(errorResponse(
+						fmt.Errorf("auth - UsersDeleteUserHandler - user %+v not authorized to delete users - missing UserID", claUser)))
+				}
 
-		// Let's lookup the authenticated user in our database - we need to see if they have admin access
-		claUserModel, err := service.GetUser(claUser.UserID)
-		if err != nil || claUserModel == nil {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("error looking up current user permissions to determine if delete is allowed, id: %s, error: %+v",
-					params.UserID, err)))
-		}
 
-		// Should be an admin to delete
-		if !claUserModel.Admin {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("user with id: %s is not authorized to delete users - must be admin",
-					params.UserID)))
-		}
+			// Let's lookup the authenticated user in our database - we need to see if they have admin access
+			claUserModel, err := service.GetUser(claUser.UserID)
+			if err != nil || claUserModel == nil {
+				return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+					fmt.Errorf("error looking up current user permissions to determine if delete is allowed, id: %s, error: %+v",
+						params.UserID, err)))
+			}
 
-		err = service.Delete(params.UserID)
+			// Should be an admin to delete
+			if !claUserModel.Admin {
+				return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+					fmt.Errorf("user with id: %s is not authorized to delete users - must be admin",
+						params.UserID)))
+			}
+		*/
+
+		err := service.Delete(params.UserID)
 		if err != nil {
 			log.Warnf("error deleting user from user table with id: %s, error: %+v", params.UserID, err)
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
@@ -104,6 +131,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"", // no project context for creating users
 			"", // no company context for creating users
 			fmt.Sprintf("%s deleted user id: %s", claUser.Name, params.UserID),
+			true,
 		)
 
 		return users.NewDeleteUserNoContent()
@@ -127,11 +155,6 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Get User by name handler
 	api.UsersGetUserByUserNameHandler = users.GetUserByUserNameHandlerFunc(func(params users.GetUserByUserNameParams, claUser *user.CLAUser) middleware.Responder {
-		// Make sure we have good non-empty parameters
-		if claUser.UserID == "" {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("auth - UsersGetUserByUserNameHandler - user %+v not authorized to get users - missing UserID", claUser)))
-		}
 
 		userModel, err := service.GetUserByUserName(params.UserName, true)
 		if err != nil {

@@ -141,9 +141,10 @@ export class CompanyPage {
     let rows = [];
     for (let project of projects) {
       this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+        let pendingRequest = [];
         if (res.list.length > 0) {
           pendingRequest = res.list.filter((r) => {
-            r.projectId === project.project_id
+            return r.projectId === project.project_id
           })
         }
         rows.push({

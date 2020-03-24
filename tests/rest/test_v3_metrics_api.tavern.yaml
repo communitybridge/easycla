@@ -2,27 +2,12 @@
 test_name: "Metrics API /v3/metrics"
 includes:
   - !include common.yaml
+  - !include auth_stage.yaml
 
 stages:
-  - name: get token from auth0
-    request:
-      url: "https://linuxfoundation-dev.auth0.com/oauth/token"
-      method: POST
-      headers:
-        content-type: "application/x-www-form-urlencoded"
-      data:
-        grant_type: "http://auth0.com/oauth/grant-type/password-realm"
-        realm: "Username-Password-Authentication"
-        username: "{tavern.env_vars.AUTH0_USERNAME}"
-        password: "{tavern.env_vars.AUTH0_PASSWORD}"
-        client_id: "{tavern.env_vars.AUTH0_CLIENT_ID}"
-        audience: "https://api-gw.dev.platform.linuxfoundation.org/"
-        scope: "access:api openid profile email"
-    response:
-      save:
-        body:
-          auth0_token: id_token
-
+  - type: ref
+    id: login_get_token
+    
   - name: Metrics GET request with no auth
     request:
       url: "{api_url}/v3/metrics"
@@ -86,6 +71,9 @@ stages:
                           projectName:
                             type: str
                             required: true
+                          projectExternalID:
+                            type: str 
+                            required: true 
                   totalCount:
                     type: int
                     required: true

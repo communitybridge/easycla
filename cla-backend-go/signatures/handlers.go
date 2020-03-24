@@ -115,6 +115,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			companyID,
 			fmt.Sprintf("CLA Manager %s added GitHub Org %s to the whitelist for project %s company %s (%s).",
 				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
+			true,
 		)
 
 		return company.NewAddGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
@@ -164,6 +165,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			companyID,
 			fmt.Sprintf("CLA Manager %s removed GitHub Org %s from the whitelist for project %s company %s (%s).",
 				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
+			true,
 		)
 
 		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
@@ -193,7 +195,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	// Get Project Company Signatures
-	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams, claUser *user.CLAUser) middleware.Responder {
+	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams) middleware.Responder {
 		projectSignatures, err := service.GetProjectCompanySignatures(params)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",

@@ -1,0 +1,191 @@
+---
+test_name: "Get all companies"
+includes:
+  - !include auth_stage.yaml
+  - !include common.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: Get companies
+    request:
+      url: "{api_url}/v3/company"
+      method: GET
+      headers: 
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      save:
+        body:
+          company_name: "companies[0].companyName"
+          company_id: "companies[0].companyID"
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: &companies_schema
+            type: map
+            required: True
+            mapping:
+              companies:
+                type: seq
+                sequence: &company_schema
+                  - type: map
+                    mapping:
+                      companyACL:
+                        type: seq
+                        sequence:
+                          - type: str
+                      companyExternalID:
+                        type: str
+                      companyID:
+                        type: str
+                      companyName:
+                        type: str
+                      created:
+                        type: str
+                      updated:
+                        type: str
+              lastKeyScanned:
+                type: str
+              resultCount:
+                type: int
+              searchItems:
+                type: str
+              totalCount:
+                type: int
+
+---
+test_name: Get Company 
+stages:
+  - name: Get Company with no auth 
+    request:
+      url: "{api_url}/v3/company/{company_id}"
+      method: GET 
+    response:
+      status_code: 401 
+
+  - name: Get Company 
+    request:
+      url: "{api_url}/v3/company/{company_id}"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: 
+            type: map
+            mapping:
+              companyACL:
+                type: seq
+                sequence:
+                  - type: str 
+              companyExternalID:
+                type: str
+              companyID:
+                type: str
+              companyName:
+                type: str
+              created:
+                type: str
+              updated:
+                type: str
+                          
+---
+test_name: Search Companies
+stages:
+  - name: Search company by company name
+    request:
+      url: "{api_url}/v3/company/search"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+      params:
+        companyName: "{company_name:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: *companies_schema
+
+
+---
+test_name: Search companies by user 
+stages:
+  - name: Get cla user 
+    request:
+      url: "{api_url}/v3/users/username/{username:s}"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200 
+      save: 
+        body:
+          user_id: userID 
+
+  - name: Get companies by user 
+    request:
+      url: "{api_url}/v3/company/user/{user_id:s}"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200 
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: *companies_schema
+
+  - name: Get companies by user unauthenticated state 
+    request:
+      url: "{api_url}/v3/company/user/{user_id:s}"
+      method: GET 
+    response:
+      status_code: 401
+  
+  - name: Get Companies where user is manager and in invites list
+    request:
+      url: "{api_url}/v3/company/user/{user_id:s}/invites"
+      method: GET 
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema: 
+            type: map
+            mapping:
+              companies-with-invites:
+                type: seq 
+                sequence:
+                  - type: map 
+                    mapping:
+                      companyACL:
+                        type: seq
+                        sequence:
+                          - type: str 
+                      status:
+                        type: str
+                      companyName:
+                        type: str 
+                      companyID:
+                        type: str 
+                      created:
+                        type: str 
+                      updated:
+                        type: str
+              lastKeyScanned:
+                type: str 
+              resultCount:
+                type: int 
+              totalCount:
+                type: int
+                  
+
+

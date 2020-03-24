@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 const AWS = require('aws-sdk');
 const SSM = require('aws-sdk/clients/ssm');
 const program = require('commander');

@@ -28,7 +28,7 @@ var (
 type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
-	GetCLAGroup(claGroupID string) (CLAGroup, error)
+	GetCLAGroup(claGroupID string) (*models.Project, error)
 	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error
 }
 
@@ -122,10 +122,12 @@ func (r repository) GetTemplate(templateID string) (models.Template, error) {
 // GetCLAGroup This method belongs in the contractgroup package. We are leaving it here
 // because it accesses DynamoDB, but the contractgroup repository is designed
 // to connect to postgres
-func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
+func (r repository) GetCLAGroup(claGroupID string) (*models.Project, error) {
+	log.Debugf("GetCLAGroup - claGroupID: %s", claGroupID)
+	var dbModel DBProjectModel
 	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
 
-	_, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+	result, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"project_id": {
@@ -133,11 +135,33 @@ func (r repository) GetCLAGroup(claGroupID string) (CLAGroup, error) {
 			},
 		},
 	})
+
 	if err != nil {
-		return CLAGroup{}, err
+		log.Warnf("error getting CLAGroup: %+v", err)
+	}
+	err = dynamodbattribute.UnmarshalMap(result.Item, &dbModel)
+	if err != nil {
+		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		return nil, err
 	}
 
-	return CLAGroup{}, nil
+	return r.buildProjectModel(dbModel), nil
+}
+
+// buildProjectModel maps the database model to the API response model
+func (r repository) buildProjectModel(dbModel DBProjectModel) *models.Project {
+	return &models.Project{
+		ProjectID:               dbModel.ProjectID,
+		ProjectExternalID:       dbModel.ProjectExternalID,
+		ProjectName:             dbModel.ProjectName,
+		ProjectACL:              dbModel.ProjectACL,
+		ProjectCCLAEnabled:      dbModel.ProjectCclaEnabled,
+		ProjectICLAEnabled:      dbModel.ProjectIclaEnabled,
+		ProjectCCLARequiresICLA: dbModel.ProjectCclaRequiresIclaSignature,
+		DateCreated:             dbModel.DateCreated,
+		DateModified:            dbModel.DateModified,
+		Version:                 dbModel.Version,
+	}
 }
 
 // UpdateDynamoContractGroupTemplates updates the templates in the data store
@@ -206,7 +230,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		},
 	}
 
-	log.Debugf("Updating table %s with %s template details.", tableName, ContractGroupID)
+	log.Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, ContractGroupID)
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: expr,
 		TableName:                 aws.String(tableName),
@@ -218,6 +242,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 
@@ -269,6 +294,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 	expr, err = dynamodbattribute.MarshalMap(dynamoIndividualProject)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 
@@ -280,8 +306,10 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
 	}
 
+	log.Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, ContractGroupID)
 	_, err = r.dynamoDBClient.UpdateItem(input)
 	if err != nil {
+		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 		return err
 	}
 
