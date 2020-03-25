@@ -79,11 +79,11 @@
 
                 <ion-row>
                   <ion-col>
-                    <button ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
+                    <button *ngIf="pdfPath.corporatePDFURL" ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
                       [disabled]="currentPDF === 'corporatePDFURL'">
                       View CCLA
                     </button>
-                    <button ion-button (click)="showPDF('individualPDFURL')" color="secondary"
+                    <button *ngIf="pdfPath.individualPDFURL" ion-button (click)="showPDF('individualPDFURL')" color="secondary"
                       [disabled]="currentPDF === 'individualPDFURL'">
                       View ICLA
                     </button>
