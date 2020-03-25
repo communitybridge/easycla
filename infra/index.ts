@@ -17,13 +17,17 @@ const pointInTimeRecoveryEnabled = (stage == 'prod');
 // part of the stack, we set this value to false since it would then be under
 // control of pulumi.
 const importResources = false;
+const defaultReadCapacity = 10;
+const defaultWriteCapacity = 1;
 
 console.log('Pulumi project name is  : ' + pulumi.getProject());
 console.log('Pulumi stack name is    : ' + stackName);
 console.log('Account ID is           : ' + accountID);
 console.log('STAGE is                : ' + stage);
 console.log('Region is               : ' + aws.getRegion().name);
-console.log('Point In Time Recovery: : ' + pointInTimeRecoveryEnabled);
+console.log('Point In Time Recovery  : ' + pointInTimeRecoveryEnabled);
+console.log('Default read capacity   : ' + defaultReadCapacity);
+console.log('Default write capacity  : ' + defaultWriteCapacity);
 
 const defaultTags = {
   Product: 'EasyCLA',
@@ -205,21 +209,29 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
           name: 'github-username-index',
           hashKey: 'user_github_username',
           projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity
         },
-        { name: 'lf-username-index', hashKey: 'lf_username', projectionType: 'ALL', readCapacity: 0, writeCapacity: 0 },
+        {
+          name: 'lf-username-index',
+          hashKey: 'lf_username',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity
+        },
         {
           name: 'github-user-index',
           hashKey: 'user_github_id',
           projectionType: 'ALL',
-          readCapacity: 0,
-          writeCapacity: 0,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
         {
           name: 'github-user-external-id-index',
           hashKey: 'user_external_id',
           projectionType: 'ALL',
-          readCapacity: 0,
-          writeCapacity: 0,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
       ],
       pointInTimeRecovery: {
@@ -363,29 +375,29 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
-      readCapacity: 2,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
           name: 'sfdc-repository-index',
           hashKey: 'repository_sfdc_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
         {
           name: 'project-repository-index',
           hashKey: 'repository_project_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
         {
           name: 'external-repository-index',
           hashKey: 'repository_external_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
       ],
       pointInTimeRecovery: {
@@ -415,15 +427,15 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'organization_name',
       billingMode: 'PROVISIONED',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
           name: 'github-org-sfid-index',
           hashKey: 'organization_sfid',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
       ],
       pointInTimeRecovery: {
@@ -450,8 +462,8 @@ function buildGerritInstancesTable(importResources: boolean): aws.dynamodb.Table
       attributes: [{ name: 'gerrit_id', type: 'S' }],
       hashKey: 'gerrit_id',
       billingMode: 'PROVISIONED',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
       },
@@ -475,8 +487,8 @@ function buildUserPermissionsTable(importResources: boolean): aws.dynamodb.Table
       name: 'cla-' + stage + '-user-permissions',
       attributes: [{ name: 'username', type: 'S' }],
       hashKey: 'username',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
       },
@@ -499,15 +511,15 @@ function buildCompanyInvitesTable(importResources: boolean): aws.dynamodb.Table 
         { name: 'requested_company_id', type: 'S' },
       ],
       hashKey: 'company_invite_id',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
           name: 'requested-company-index',
           hashKey: 'requested_company_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
       ],
       pointInTimeRecovery: {
@@ -536,15 +548,15 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
         { name: 'lf_id', type: 'S' },
       ],
       hashKey: 'request_id',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
           name: 'cla-manager-requests-lfid-index',
           hashKey: 'lf_id',
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1,
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
         },
       ],
       pointInTimeRecovery: {
@@ -570,8 +582,8 @@ function buildStoreTable(importResources: boolean): aws.dynamodb.Table {
       name: 'cla-' + stage + '-store',
       attributes: [{ name: 'key', type: 'S' }],
       hashKey: 'key',
-      readCapacity: 5,
-      writeCapacity: 2,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       ttl: {
         attributeName: 'expire',
         enabled: true,
@@ -599,8 +611,8 @@ function buildSessionStoreTable(importResources: boolean): aws.dynamodb.Table {
       name: 'cla-' + stage + '-session-store',
       attributes: [{ name: 'id', type: 'S' }],
       hashKey: 'id',
-      readCapacity: 5,
-      writeCapacity: 2,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       ttl: {
         attributeName: 'expire',
         enabled: true,
@@ -635,13 +647,33 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'event_time_epoch', type: 'N' },
       ],
       hashKey: 'event_id',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'event-user-id-index', hashKey: 'event_user_id', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'event-project-id-event-time-epoch-index', hashKey: 'event_project_id', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
-        { name: 'event-date-and-contains-pii-event-time-epoch-index', hashKey: 'event_date_and_contains_pii', rangeKey: 'event_time_epoch', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
+        {
+          name: 'event-user-id-index',
+          hashKey: 'event_user_id',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'event-project-id-event-time-epoch-index',
+          hashKey: 'event_project_id',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'event-date-and-contains-pii-event-time-epoch-index',
+          hashKey: 'event_date_and_contains_pii',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
@@ -670,16 +702,16 @@ function buildCclaWhitelistRequestsTable(importResources: boolean): aws.dynamodb
         { name: 'project_id', type: 'S' },
       ],
       hashKey: 'request_id',
-      readCapacity: 1,
-      writeCapacity: 1,
+      readCapacity: defaultReadCapacity,
+      writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
           name: 'company-id-project-id-index',
           hashKey: 'company_id',
           rangeKey: "project_id",
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity
         },
       ],
       pointInTimeRecovery: {
@@ -710,7 +742,7 @@ function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'metric_type',
       rangeKey: "id",
-      readCapacity: 1,
+      readCapacity: defaultReadCapacity,
       writeCapacity: 5,
       globalSecondaryIndexes: [
         {
@@ -718,8 +750,8 @@ function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
           hashKey: 'metric_type',
           rangeKey: "salesforce_id",
           projectionType: 'ALL',
-          readCapacity: 1,
-          writeCapacity: 1
+          readCapacity: defaultReadCapacity,
+          writeCapacity: 5
         },
       ],
       pointInTimeRecovery: {
