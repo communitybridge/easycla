@@ -54,7 +54,7 @@
                   <ion-row *ngIf="!loading.orgs">
                     <ion-col class="vertical-rule-right" col-12 col-md-6
                       *ngFor="let organization of githubOrganizations">
-                      <ion-card-content *ngIf="organization.providerInfo">
+                      <ion-card-content>
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
                           <span>{{ organization.organization_name }}</span>
