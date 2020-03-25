@@ -1,7 +1,6 @@
 package token
 
 import (
-	"encoding/json"
 	"time"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -59,8 +58,6 @@ func retrieveToken() {
 		ClientSecret: clientSecret,
 		Audience:     audience,
 	}
-	b, _ := json.Marshal(tg)
-	log.Println(string(b))
 
 	resp, err := req.Post(oauthTokenURL, req.BodyJSON(&tg))
 	if err != nil {

@@ -145,6 +145,14 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	auth0PlatformAudience, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-audience-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+	auth0PlatformURL, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-url-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
 	apiGw, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage))
 	if err != nil {
 		return Config{}, err
@@ -152,8 +160,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	config.Auth0Platform = Auth0Platform{
 		ClientID:     auth0PlatformClientID,
 		ClientSecret: auth0PlatformSecret,
+		Audience:     auth0PlatformAudience,
+		URL:          auth0PlatformURL,
 	}
-	config.ApiGateway = apiGw
+	config.APIGatewayURL = apiGw
 
 	return config, nil
 }
