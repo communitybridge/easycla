@@ -419,7 +419,7 @@
               </ion-row>
 
               <ion-row>
-                <ion-col col-12 *ngFor="let organization of project.githubOrganizations">
+                <ion-col col-12 *ngFor="let organization of project.githubRepositories">
                   <ion-card class="organization-card">
                     <ion-grid>
                       <ion-row>
@@ -427,11 +427,11 @@
                           <ion-card-content>
                             <ion-card-title>
                               <ion-icon name="logo-github"></ion-icon>
-                              <span>{{ organization.name }}</span>
+                              <span>{{ organization.organisationName }}</span>
                             </ion-card-title>
                             <p>
-                              <a target="_blank" href="https://github.com/{{ organization.name }}">
-                                https://github.com/{{organization.name }}
+                              <a target="_blank" href="https://github.com/{{ organization.organisationName }}">
+                                https://github.com/{{organization.organisationName }}
                               </a>
                             </p>
                           </ion-card-content>
@@ -440,10 +440,10 @@
                           <ion-card-content>
                             <h2>Repositories</h2>
                             <div class="repositories">
-                              <ion-row *ngFor="let repository of organization.repositories">
+                              <ion-row *ngFor="let repository of organization.list">
                                 <ion-col col-12 icon-left>
                                   <ion-icon name="checkmark"></ion-icon>
-                                  {{ repository.repository_name }}
+                                  {{ repository.repositoryName }}
                                 </ion-col>
                               </ion-row>
                             </div>

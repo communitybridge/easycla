@@ -60,6 +60,7 @@ export class ProjectClaPage {
 
   ngOnInit() {
     this.getClaProjects();
+    this.getGithubOrganisation();
   }
 
   setLoadingOrganizationsSpinner(value) {
@@ -78,62 +79,40 @@ export class ProjectClaPage {
     });
   }
 
+
   getClaProjects() {
     this.loading.claProjects = true;
     this.claService.getProjectsByExternalId(this.sfdcProjectId).subscribe((response) => {
+      this.loading.claProjects = false;
       this.projectsByExternalId = response.projects;
       this.claProjects = this.sortClaProjects(response.projects);
-      this.loading.claProjects = false;
-      
-      if(this.claProjects){
-        this.claProjects.map((project) => {
-          this.claService.getProjectRepositoriesByrOrg(project.projectID).subscribe((githubOrganizations) => {
-            project.githubOrganizations = githubOrganizations;
-          });
-        });
-      }
-
-
-      // Get Github Organizations
-      this.getGithubOrganisation();
-      this.getGerrit();
-      
-    });
+    })
   }
-
-  getGerrit() {
-    for (let project of this.projectsByExternalId) {
-      //Get Gerrit Instances
-      this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
-        project.gerrits = gerrits;
-      });
-    }
-  }
-
+  
   getGithubOrganisation() {
     this.loading.orgs = true;
-      this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
-        this.loading.orgs = false;
-        for (let organization of organizations) {
-          this.claService.getGithubGetNamespace(organization.organization_name).subscribe(
-            (providerInfo) => {
-              organization.providerInfo = providerInfo;
-            },
-            (exception) => {
-              organization.providerInfo = null;
-            }
-          );
-
-          if (organization.organization_installation_id) {
-            this.claService
-              .getGithubOrganizationRepositories(organization.organization_name)
-              .subscribe((repositories) => {
-                organization.repositories = repositories;
-              });
+    this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
+      this.loading.orgs = false;
+      for (let organization of organizations) {
+        this.claService.getGithubGetNamespace(organization.organization_name).subscribe(
+          (providerInfo) => {
+            organization.providerInfo = providerInfo;
+          },
+          (exception) => {
+            organization.providerInfo = null;
           }
+        );
+
+        if (organization.organization_installation_id) {
+          this.claService
+            .getGithubOrganizationRepositories(organization.organization_name)
+            .subscribe((repositories) => {
+              organization.repositories = repositories;
+            });
         }
-        this.githubOrganizations = organizations;
-      });
+      }
+      this.githubOrganizations = organizations;
+    });
   }
 
   backToProjects() {
@@ -154,10 +133,10 @@ export class ProjectClaPage {
       });
     }
     modal.onDidDismiss((data) => {
-      if(data){
+      if (data) {
         this.getGithubOrganisation();
       }
-      
+
     });
     modal.present();
   }
@@ -232,7 +211,6 @@ export class ProjectClaPage {
     modal.onDidDismiss((data) => {
       if (data) {
         this.openClaOrganizationAppModal();
-        // this.getGithubOrganisation();
       }
     });
     modal.present();
@@ -253,8 +231,8 @@ export class ProjectClaPage {
       projectId: projectId
     });
     modal.onDidDismiss((data) => {
-      if(data) {
-        this.getGerrit();
+      if (data) {
+        this.getClaProjects();
       }
     });
     modal.present();
@@ -285,13 +263,13 @@ export class ProjectClaPage {
   searchProjects(name: string, projects: any) {
     let found = false;
 
-    if(projects){
+    if (projects) {
       projects.forEach((project) => {
         if (project.projectName.search(name) !== -1) {
           found = true;
         }
       });
-  
+
     }
 
     return found;
@@ -336,7 +314,7 @@ export class ProjectClaPage {
 
   deleteGerritInstance(gerrit) {
     this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
-      this.getGerrit();
+      this.getClaProjects();
     });
   }
 
