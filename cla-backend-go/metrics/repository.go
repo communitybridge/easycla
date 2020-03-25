@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/token"
+	"github.com/imroc/req"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -25,6 +27,12 @@ const (
 // errors
 var (
 	ErrMetricNotFound = errors.New("metric not found")
+)
+
+// LfMembers contains names of LF members
+var (
+	LfMembers                     = make(map[string]interface{})
+	processedSFProjectsMembership = make(map[string]interface{})
 )
 
 // index
@@ -48,14 +56,16 @@ type repo struct {
 	metricTableName string
 	dynamoDBClient  *dynamodb.DynamoDB
 	stage           string
+	apiGatewayURL   string
 }
 
 // NewRepository creates new metrics repository
-func NewRepository(awsSession *session.Session, stage string) Repository {
+func NewRepository(awsSession *session.Session, stage string, apiGwURL string) Repository {
 	return &repo{
 		dynamoDBClient:  dynamodb.New(awsSession),
 		metricTableName: fmt.Sprintf("cla-%s-metrics", stage),
 		stage:           stage,
+		apiGatewayURL:   apiGwURL,
 	}
 }
 
@@ -127,6 +137,8 @@ type TotalCountMetrics struct {
 	RepositoriesCount                 int64  `json:"repositories_count"`
 	CompaniesCount                    int64  `json:"companies_count"`
 	CompaniesProjectContributionCount int64  `json:"companies_project_contribution_count"`
+	LfMembersCLACount                 int64  `json:"lf_members_cla_count"`
+	NonLfMembersCLACount              int64  `json:"non_lf_members_cla_count"`
 	CreatedAt                         string `json:"created_at"`
 
 	corporateContributors        map[string]interface{}
@@ -295,6 +307,8 @@ func (tcm *TotalCountMetrics) toModel() *models.TotalCountMetrics {
 		CompaniesProjectContributionCount: tcm.CompaniesProjectContributionCount,
 		GerritRepositoriesCount:           tcm.GerritRepositoriesCount,
 		GithubRepositoriesCount:           tcm.GithubRepositoriesCount,
+		LfMembersCLACount:                 tcm.LfMembersCLACount,
+		NonLfMembersCLACount:              tcm.NonLfMembersCLACount,
 	}
 }
 
@@ -337,8 +351,14 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) 
 			increaseCountIfNotPresent(tcm.claManagers, &tcm.ClaManagersCount, acl)
 		}
 		companyID := sig.SignatureReferenceID
+		companyName := sig.SignatureReferenceName
 		key := fmt.Sprintf("%s#%s", companyID, sig.SignatureProjectID)
 		increaseCountIfNotPresent(tcm.companiesProjectContribution, &tcm.CompaniesProjectContributionCount, key)
+		if _, ok := LfMembers[companyName]; ok {
+			tcm.LfMembersCLACount++
+		} else {
+			tcm.NonLfMembersCLACount++
+		}
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(tcm.corporateContributors, &tcm.CorporateContributorsCount, userID)
@@ -423,7 +443,7 @@ func (pm *ProjectMetrics) processGerritInstance(gi *ItemGerritInstance) {
 	m.RepositoriesCount++
 }
 
-func (pm *ProjectMetrics) fillProjectInfo(project *ItemProject) {
+func (pm *ProjectMetrics) processProjectItem(project *ItemProject, apiGatewayURL string) {
 	m, ok := pm.ProjectMetrics[project.ProjectID]
 	if !ok {
 		m = newProjectMetric()
@@ -432,6 +452,52 @@ func (pm *ProjectMetrics) fillProjectInfo(project *ItemProject) {
 	m.ExternalProjectID = project.ProjectExternalID
 	m.SalesforceID = project.ProjectExternalID
 	m.ProjectName = project.ProjectName
+
+	if project.ProjectExternalID != "" {
+		_, ok := processedSFProjectsMembership[project.ProjectExternalID]
+		if !ok {
+			processedSFProjectsMembership[project.ProjectExternalID] = nil
+			cacheProjectMembership(project.ProjectExternalID, apiGatewayURL)
+		}
+	}
+}
+
+func cacheProjectMembership(externalProjectID, apiGatewayURL string) {
+	url := apiGatewayURL + "/project-service/v1/projects/" + externalProjectID + "/members"
+
+	// Grab our token
+	authToken := token.GetToken()
+
+	// Use Req object to initiate requests.
+	r := req.New()
+	authHeader := req.Header{
+		"Authorization": authToken,
+		"Accept":        "application/json",
+	}
+	resp, err := r.Get(url, authHeader)
+	if err != nil {
+		log.Warnf("project fetch failed with error: %+v", err)
+		return
+	}
+
+	log.Debugf("Project %s service query response code: %d", externalProjectID, resp.Response().StatusCode)
+	if resp.Response().StatusCode < 200 || resp.Response().StatusCode > 299 {
+		log.Warnf("unable to query project service - received error response: %s", resp.String())
+		return
+	}
+
+	var response []struct {
+		Name string `json:"name"`
+	}
+
+	jsonErr := resp.ToJSON(&response)
+	if jsonErr != nil {
+		log.Warnf("error unmarshalling response to JSON, error: %+v", jsonErr)
+		return
+	}
+	for _, r := range response {
+		LfMembers[r.Name] = nil
+	}
 }
 
 func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistribution {
@@ -659,7 +725,7 @@ func (repo *repo) fillProjectInfo(metrics *Metrics) error {
 		}
 
 		for _, project := range projects {
-			metrics.ProjectMetrics.fillProjectInfo(project)
+			metrics.ProjectMetrics.processProjectItem(project, repo.apiGatewayURL)
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
@@ -684,7 +750,11 @@ func (repo *repo) processCompaniesTable(metrics *Metrics) error {
 func (repo *repo) calculateMetrics() (*Metrics, error) {
 	metrics := newMetrics()
 	t := time.Now()
-	err := repo.processSignaturesTable(metrics)
+	err := repo.processProjectsTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	err = repo.processSignaturesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
@@ -693,10 +763,6 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 		return nil, err
 	}
 	err = repo.processGerritInstancesTable(metrics)
-	if err != nil {
-		return nil, err
-	}
-	err = repo.processProjectsTable(metrics)
 	if err != nil {
 		return nil, err
 	}

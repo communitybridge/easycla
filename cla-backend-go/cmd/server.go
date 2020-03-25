@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/token"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -164,6 +166,8 @@ func server(localMode bool) http.Handler {
 		logrus.Panic(err)
 	}
 
+	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+
 	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage)
 	usersRepo := users.NewRepository(awsSession, stage)
@@ -176,7 +180,7 @@ func server(localMode bool) http.Handler {
 	onboardRepo := onboard.NewRepository(awsSession, stage)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
-	metricsRepo := metrics.NewRepository(awsSession, stage)
+	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
