@@ -450,6 +450,55 @@ paths:
       tags:
         - events
 
+  /template:
+    get:
+      summary: Get Available Templates
+      operationId: getTemplates
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/template'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - template
+
+  /clagroup/{claGroupId}/template:
+    parameters:
+      - name: claGroupId
+        in: path
+        type: string
+        required: true
+    post:
+      summary: Create contract template for CLA Group
+      operationId: createCLAGroupTemplate
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/create-cla-group-template'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/template-pdfs'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - template
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -915,6 +964,27 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Project"
       type: "Project"
+
+  template:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "Template"
+
+  create-cla-group-template:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "CreateClaGroupTemplate"
+
+  template-pdfs:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "TemplatePdfs"
 
   error-response:
     type: object
