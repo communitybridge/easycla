@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/config"
+
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -37,7 +39,12 @@ func init() {
 		log.Fatal("stage not set")
 	}
 	log.Infof("STAGE set to %s\n", stage)
-	metricsRepo = metrics.NewRepository(awsSession, stage)
+	configFile, err := config.LoadConfig("", awsSession, stage)
+	if err != nil {
+		log.Panicf("Unable to load config - Error: %v", err)
+	}
+
+	metricsRepo = metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 }
 
 func handler(ctx context.Context, event events.CloudWatchEvent) {

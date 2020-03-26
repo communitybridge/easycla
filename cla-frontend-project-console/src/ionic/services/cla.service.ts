@@ -577,9 +577,6 @@ export class ClaService {
         'project_icla_enabled': True
       }
      */
-
-    // OUTDATED: Python v1 backend
-    // const url: URL = this.getV1Endpoint('/v1/project');
     const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.post(url, project).map((res) => res.json());
   }
@@ -595,8 +592,6 @@ export class ClaService {
         'project_name': 'New Project Name'
       }
      */
-    // OUTDATED: Python v1 backend
-    // const url: URL = this.getV1Endpoint('/v1/project');
     const url: URL = this.getV3Endpoint('/v3/project');
     return this.http.put(url, project).map((res) => res.json());
   }
@@ -615,9 +610,7 @@ export class ClaService {
    * @param externalId the external ID
    */
   getProjectsByExternalId(externalId) {
-    //OUTDATED
-    // const url: URL = this.getV1Endpoint('/v1/project/external/' + externalId);
-    const url: URL = this.getV3Endpoint('/v3/project/external/' + externalId);
+    const url: URL = this.getV3Endpoint(`/v3/project/external/${externalId}`);
     return this.http
       .get(url)
       .map((res) => res.json())
@@ -868,7 +861,7 @@ export class ClaService {
    * GET /github/get/namespace/{namespace}
    */
   getGithubGetNamespace(namespace) {
-    const url: URL = this.getV1Endpoint('/v1/github/get/namespace/' + namespace);
+    const url: URL = this.getV1Endpoint(`/v1/github/get/namespace/${namespace}` );
     return this.http.get(url).map((res) => res.json())
       .catch((error) => Observable.throw(error));
   }
@@ -1027,6 +1020,4 @@ export class ClaService {
     const url: URL = this.getV3Endpoint(`/v3/github/org/${githubOrgName}/exists`);
     return this.http.get(url);
   }
-
-  //////////////////////////////////////////////////////////////////////////////
 }
