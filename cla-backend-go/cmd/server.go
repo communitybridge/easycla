@@ -55,6 +55,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
+	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
 	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
 
 	"github.com/go-openapi/loads"
@@ -213,6 +214,7 @@ func server(localMode bool) http.Handler {
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
+	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
