@@ -138,4 +138,8 @@ export class ClaSendClaManagerEmailModal {
     alert.onDidDismiss(() => this.dismiss());
     alert.present();
   }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  }
 }
