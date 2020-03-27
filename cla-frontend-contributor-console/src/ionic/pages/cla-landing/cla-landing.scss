@@ -7,6 +7,12 @@ cla-landing {
     text-align: center;
     font-size: 25px;
   }
+
+  .xc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .cla-header {
@@ -44,7 +50,7 @@ cla-landing {
   padding: 10px 10px;
 
   img {
-    max-height: 50px;
+    max-height: 150px;
   }
 
   @media (min-width: 768px) and (max-width: 1200px) {
