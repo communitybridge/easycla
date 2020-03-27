@@ -97,7 +97,7 @@
                 </ion-row>
 
                 <ion-row>
-                  <ion-col>
+                  <ion-col  *ngIf="pdfPath.corporatePDFURL || pdfPath.individualPDFURL">
                     <button ion-button (click)="backToProject()" color="secondary">
                       Done
                     </button>
