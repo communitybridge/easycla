@@ -13,7 +13,7 @@
   <div class="page-content">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
-    <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+    <loading-spinner *ngIf="claProjects.length == 0" [loading]="loading.claProjects"></loading-spinner>
 
     <ion-grid [loading-display]="loading.claProjects" class="project-grid">
       <ion-row *ngIf="!claProjects">
@@ -100,6 +100,8 @@
         </div>
       </ion-col>
 
+      <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+
       <ion-col col-12 *ngIf="claProjects">
         <div class="section-title">
           <h1>CLA Groups</h1>
@@ -113,11 +115,6 @@
           <ion-col col-12>
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
-                <ion-col col-5 class="project-title">
-                  <h2>
-                    {{ project.projectName }}
-                  </h2>
-                </ion-col>
                 <ion-col col-auto>
                   <ion-buttons start>
                     <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
@@ -125,7 +122,12 @@
                     </button>
                   </ion-buttons>
                 </ion-col>
-                <ion-col col-6>
+                <ion-col col-auto class="project-title">
+                  <h2>
+                    {{ project.projectName }}
+                  </h2>
+                </ion-col>
+                <ion-col col>
                   <ion-buttons end>
                     <button ion-button (click)="goToSelectTemplatePage(project.projectID)" color="light">
                       Select Template

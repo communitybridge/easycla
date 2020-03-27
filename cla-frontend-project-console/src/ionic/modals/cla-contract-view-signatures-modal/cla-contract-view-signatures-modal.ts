@@ -52,6 +52,18 @@ export class ClaContractViewSignaturesModal {
   nextKey: string;
   previousKeys: any[];
 
+  // Easy sort table variables
+  columnData = [];
+  column = [
+    {head:'Type', dataKey:'signatureReferenceType'}, 
+    {head:'Name', dataKey:'userName,'}, 
+    {head:'Company Name', dataKey:'companyName'}, 
+    {head:'GitHubID', dataKey:'userGHID'},
+    {head:'LFID', dataKey:'userLFID'},
+    {head:'Version', dataKey:'version'},
+    {head:'Date', dataKey:'signatureCreated'},
+  ];
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -110,57 +122,6 @@ export class ClaContractViewSignaturesModal {
     this.loading = {
       signatures: true,
     };
-
-    /*
-    this.sort = {
-      Type: {
-        arrayProp: 'Type',
-        sortType: 'text',
-        sort: null,
-      },
-      Name: {
-        arrayProp: 'Name',
-        sortType: 'text',
-        sort: null,
-      },
-      Company: {
-        arrayProp: 'Company',
-        sortType: 'text',
-        sort: null,
-      },
-      GitHubID: {
-        arrayProp: 'GitHubID',
-        sortType: 'number',
-        sort: null,
-      },
-      LFID: {
-        arrayProp: 'LFID',
-        sortType: 'number',
-        sort: null,
-      },
-      Version: {
-        arrayProp: 'documentVersion',
-        sortType: 'semver',
-        sort: null,
-      },
-      Date: {
-        arrayProp: 'Date',
-        sortType: 'date',
-        sort: null,
-      },
-    };
-     */
-
-    this.filteredData = this.rows;
-    this.columns = [
-      { prop: 'Type' },
-      { prop: 'Name' },
-      { prop: 'Company' },
-      { prop: 'GitHubID' },
-      { prop: 'LFID' },
-      { prop: 'Version' },
-      { prop: 'Date' },
-    ];
   }
 
   async getUser(signatureReferenceId) {
@@ -201,20 +162,21 @@ export class ClaContractViewSignaturesModal {
       )
       .subscribe((response) => {
         this.data = response;
-
-        // Pagination Logic - add the key used to render this page to our previous keys
-        if (lastKeyScanned) {
-          this.previousKeys.push(lastKeyScanned);
-        }
-        // If we have a next key (usually we would unless there are no more records)
-        if (this.data.lastKeyScanned) {
-          this.nextKey = this.data.lastKeyScanned;
-        } else {
-          this.nextKey = null;
-        }
-
         this.page.totalCount = this.data.resultCount;
-        this.rows = this.mapSignatures(this.data.signatures);
+        console.log('data', this.data);
+        if(this.data && this.data.signatures){
+          this.columnData = this.data.signatures.map(e => ({
+            ...e, 
+            signatureCreated:  e.signatureCreated.split('T')[0],
+            signatureReferenceType: this.getSignatureType(e),
+            icon: this.getSignatureType(e) === 'Company' || 
+            this.getSignatureType(e) === 'Employee' ? 
+            {index: 0, iconName: 'briefcase'}: 
+            {index: 0, iconName: 'person'}
+          }))
+        } else {
+          this.columnData = []
+        }
         this.loading.signatures = false;
       });
   }
@@ -262,23 +224,6 @@ export class ClaContractViewSignaturesModal {
       return 'secondary';
     }
   }
-
-  /**
-   * Helper function to dump the pagination details.
-   */
-  debugShowPaginationReport() {
-    console.log('NextKey: ' + this.nextKey);
-    console.log('PreviousKeys:');
-    console.log(this.previousKeys);
-    console.log('------------------------------');
-  }
-
-  /**
-   * Default sorting.
-   *
-   * @param prop
-   */
-  sortMembers(prop) {}
 
   signaturePopover(ev, signature) {
     let actions = {
@@ -335,57 +280,27 @@ export class ClaContractViewSignaturesModal {
     this.viewCtrl.dismiss();
   }
 
-  mapSignatures(signatures: any[]) {
-    // If no records
-    if (signatures == null || signatures.length == 0) {
-      return [];
-    } else {
-      return (
-        signatures &&
-        signatures.map((signature) => {
-          let date = this.datePipe.transform(signature.signatureCreated, 'yyyy-MM-dd');
-          return {
-            /**
-             * | Type                   | Reference Type | Signature Type | Company Name |
-             * |------------------------|----------------|----------------|--------------|
-             * | ICLA (individual icon) | user           | cla            | empty        |
-             * | CCLA (employee icon)   | user           | cla            | not empty    |
-             * | CCLA (company icon)    | company        | ccla           | not empty    |
-             */
-            Type: this.getSignatureType(signature),
-            Name: signature.userName && signature.userName,
-            Company: signature.companyName && signature.companyName,
-            GitHubID: signature.userGHID && signature.userGHID,
-            LFID: signature.userLFID && signature.userLFID,
-            Version: `v${signature.version}`,
-            Date: date,
-          };
-        })
-      );
-    }
-  }
-
   getSignatureType(signature: any): string {
     if (
       signature.signatureReferenceType === 'user' &&
       signature.signatureType === 'cla' &&
       signature.companyName == undefined
     ) {
-      return 'individual';
+      return 'Individual';
     } else if (
       signature.signatureReferenceType === 'user' &&
       signature.signatureType === 'cla' &&
       signature.companyName != undefined
     ) {
-      return 'employee';
+      return 'Employee';
     } else if (
       signature.signatureReferenceType === 'company' &&
       signature.signatureType === 'ccla' &&
       signature.companyName != undefined
     ) {
-      return 'company';
+      return 'Company';
     } else {
-      return 'unknown';
+      return 'Unknown';
     }
   }
 }

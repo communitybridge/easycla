@@ -58,7 +58,9 @@ export class ClaOrganizationProviderModal {
   checkGitOrganisationName() {
     this.loading = true;
     this.showErrorMsg = false;
-    this.claService.testGitHubOrganization(this.form.value.orgName).subscribe((res: any)=> {
+    let trimName = this.form.value.orgName.trim();
+    console.log(trimName);
+    this.claService.testGitHubOrganization(trimName).subscribe((res: any)=> {
       this.loading = false;
       if(res.status ===  200) {
         this.postClaGithubOrganization();
@@ -72,9 +74,10 @@ export class ClaOrganizationProviderModal {
   }
 
   postClaGithubOrganization() {
+    let trimName = this.form.value.orgName.trim();
     let organization = {
       organization_sfid: this.claProjectId,
-      organization_name: this.form.value.orgName
+      organization_name: trimName
     };
     this.claService.postGithubOrganization(organization).subscribe((response) => {
       this.responseErrors = [];
@@ -93,5 +96,11 @@ export class ClaOrganizationProviderModal {
 
   dismiss(data = false) {
     this.viewCtrl.dismiss(data);
+  }
+
+  clearError(event) {
+    this.showErrorMsg = false;
+    this.responseErrors = [];
+    this.submitAttempt = false;
   }
 }
