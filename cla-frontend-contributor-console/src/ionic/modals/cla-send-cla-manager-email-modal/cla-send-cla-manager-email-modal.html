@@ -1,7 +1,9 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>
-      {{ company.company_name }} has not signed a CCLA for {{ project.project_name }}
+    <ion-title class="title">
+      <span class="name" [title]="company.company_name">{{trimCharacter(company.company_name,20)}}</span>
+      has not signed a CCLA for
+      <span class="name" [title]="project.project_name">{{trimCharacter(project.project_name,15)}}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -21,7 +23,8 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>Your company {{ company.company_name }} has not signed a Corporate CLA yet. Would you like to send an E-Mail Notification to the CLA Manager to sign the Corporate CLA?</p>
+          <p>Your company <span class="name">{{ company.company_name }}</span> has not signed a Corporate CLA yet. Would you like to send an
+            E-Mail Notification to the CLA Manager to sign the Corporate CLA?</p>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -32,7 +35,8 @@
               <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
             </ion-select>
           </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your company's CLA Manager to whitelist.</p>
+          <p class="field-description">Select the email address attached to your account that you would like your
+            company's CLA Manager to whitelist.</p>
           <ion-item *ngIf="!form.controls.email.valid && (form.controls.email.touched || submitAttempt)" no-lines>
             <p>* A valid email address is required.</p>
           </ion-item>
