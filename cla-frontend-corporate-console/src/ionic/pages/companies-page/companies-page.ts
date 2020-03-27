@@ -21,7 +21,6 @@ import { EmailValidator } from '../../validators/email';
   templateUrl: 'companies-page.html'
 })
 export class CompaniesPage {
-  hasCompanyId: boolean = false;
   loading: any;
   companies: any;
 
@@ -71,7 +70,6 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
-    this.hasCompanyId = false;
     this.userId = localStorage.getItem('userid');
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
@@ -104,7 +102,6 @@ export class CompaniesPage {
     this.userId && this.claService.getUserByUserName(this.userId).subscribe((user) => {
       if (user.companyID != null) {
         this.companyId = user.companyID;
-        this.hasCompanyId = true
       }
     })
   }
