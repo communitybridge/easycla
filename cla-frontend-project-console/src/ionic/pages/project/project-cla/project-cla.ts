@@ -48,7 +48,14 @@ export class ProjectClaPage {
   ) {
     this.sfdcProjectId = navParams.get('projectId');
     this.getDefaults();
+    this.listenEvents();
   }
+
+  listenEvents(){
+    this.events.subscribe('reloadProjectCla',() => {
+     this.getClaProjects();
+    });
+ }
 
   getDefaults() {
     this.loading = {
@@ -134,7 +141,7 @@ export class ProjectClaPage {
     }
     modal.onDidDismiss((data) => {
       if (data) {
-        this.getGithubOrganisation();
+        this.getClaProjects();
       }
 
     });
@@ -221,7 +228,7 @@ export class ProjectClaPage {
       claProjectId: claProjectId
     });
     modal.onDidDismiss((data) => {
-      this.getGithubOrganisation();
+      this.getClaProjects();
     });
     modal.present();
   }
@@ -242,7 +249,7 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
       console.log('data', data)
-      this.getGithubOrganisation();
+      this.getClaProjects();
     });
     modal.present();
   }
