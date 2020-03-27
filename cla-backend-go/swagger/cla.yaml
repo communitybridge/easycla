@@ -2717,6 +2717,12 @@ definitions:
       companiesProjectContributionCount:
         type: integer
         x-omitempty: false
+      lfMembersCLACount:
+        type: integer
+        x-omitempty: false
+      nonLfMembersCLACount:
+        type: integer
+        x-omitempty: false
       createdAt:
         type: string
     title: CLA total metrics

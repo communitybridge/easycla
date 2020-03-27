@@ -150,6 +150,8 @@ export class ClaContractViewCompaniesSignaturesModal {
         this.data = response;
         if(this.data && this.data.signatures){
           this.columnData = this.data.signatures.map(e => ({...e, signatureCreated:  e.signatureCreated.split('T')[0]}))
+        } else {
+          this.columnData = []
         }
 
         this.page.totalCount = this.data.resultCount;
@@ -204,23 +206,6 @@ export class ClaContractViewCompaniesSignaturesModal {
       return 'secondary';
     }
   }
-
-  /**
-   * Helper function to dump the pagination details.
-   */
-  debugShowPaginationReport() {
-    console.log('NextKey: ' + this.nextKey);
-    console.log('PreviousKeys:');
-    console.log(this.previousKeys);
-    console.log('------------------------------');
-  }
-
-  /**
-   * Default sorting.
-   *
-   * @param prop
-   */
-  sortMembers(prop) {}
 
   signaturePopover(ev, signature) {
     let actions = {

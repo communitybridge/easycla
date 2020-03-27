@@ -13,7 +13,7 @@
   <div class="page-content">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
-    <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+    <loading-spinner *ngIf="claProjects.length == 0" [loading]="loading.claProjects"></loading-spinner>
 
     <ion-grid [loading-display]="loading.claProjects" class="project-grid">
       <ion-row *ngIf="!claProjects">
@@ -100,6 +100,8 @@
         </div>
       </ion-col>
 
+      <loading-spinner [loading]="loading.claProjects"></loading-spinner>
+
       <ion-col col-12 *ngIf="claProjects">
         <div class="section-title">
           <h1>CLA Groups</h1>
@@ -113,11 +115,6 @@
           <ion-col col-12>
             <div class="project-detail-card">
               <ion-row class="project-detail-card-header">
-                <ion-col col-5 class="project-title">
-                  <h2>
-                    {{ project.projectName }}
-                  </h2>
-                </ion-col>
                 <ion-col col-auto>
                   <ion-buttons start>
                     <button ion-button icon-only clear round (click)="openClaContractConfigModal(project)">
@@ -125,7 +122,12 @@
                     </button>
                   </ion-buttons>
                 </ion-col>
-                <ion-col col-6>
+                <ion-col col-auto class="project-title">
+                  <h2>
+                    {{ project.projectName }}
+                  </h2>
+                </ion-col>
+                <ion-col col>
                   <ion-buttons end>
                     <button ion-button (click)="goToSelectTemplatePage(project.projectID)" color="light">
                       Select Template
@@ -419,7 +421,7 @@
               </ion-row>
 
               <ion-row>
-                <ion-col col-12 *ngFor="let organization of project.githubOrganizations">
+                <ion-col col-12 *ngFor="let organization of project.githubRepositories">
                   <ion-card class="organization-card">
                     <ion-grid>
                       <ion-row>
@@ -427,11 +429,11 @@
                           <ion-card-content>
                             <ion-card-title>
                               <ion-icon name="logo-github"></ion-icon>
-                              <span>{{ organization.name }}</span>
+                              <span>{{ organization.organisationName }}</span>
                             </ion-card-title>
                             <p>
-                              <a target="_blank" href="https://github.com/{{ organization.name }}">
-                                https://github.com/{{organization.name }}
+                              <a target="_blank" href="https://github.com/{{ organization.organisationName }}">
+                                https://github.com/{{organization.organisationName }}
                               </a>
                             </p>
                           </ion-card-content>
@@ -440,10 +442,10 @@
                           <ion-card-content>
                             <h2>Repositories</h2>
                             <div class="repositories">
-                              <ion-row *ngFor="let repository of organization.repositories">
+                              <ion-row *ngFor="let repository of organization.list">
                                 <ion-col col-12 icon-left>
                                   <ion-icon name="checkmark"></ion-icon>
-                                  {{ repository.repository_name }}
+                                  {{ repository.repositoryName }}
                                 </ion-col>
                               </ion-row>
                             </div>

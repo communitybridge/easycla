@@ -37,7 +37,6 @@ export class AddCompanyModal {
   searching: boolean;
   actionButtonsEnabled: boolean;
   activateButtons: boolean;
-  selectionBtnName: string = 'add company';
   join: boolean
   add: boolean
 
@@ -64,14 +63,13 @@ export class AddCompanyModal {
       submit: false,
       companies: true
     };
-    this.addNewCompany = true
-    this.actionButtonsEnabled = true
+    this.addNewCompany = true;
+    this.actionButtonsEnabled = true;
 
 
     this.add = true;
     this.join = false;
-
-    this.activateButtons = true
+    this.activateButtons = true;
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
@@ -201,17 +199,24 @@ export class AddCompanyModal {
 
   findCompany(event) {
     this.getAllCompanies();
-    this.selectionBtnName = 'add company';
     this.filteredCompanies = [];
     if (!this.companies) {
       this.searching = true;
     }
+
+    if (!this.companySet) {
+      this.join = false;
+      this.add = true;
+    } else {
+      this.join = true;
+      this.add = false;
+    }
+
     this.companies.length >= 0 && this.getAllCompanies();
     // Remove all non-alpha numeric, -, _ values
     let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
-      this.selectionBtnName = 'join company';
       this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
@@ -254,11 +259,6 @@ export class AddCompanyModal {
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
-    this.join = true
-    this.add = false
-    // this.addNewCompany = false;
-    // this.joinExistingCompany = true;
-    // this.enableJoinButton = true;
   }
 
   private updateUserInfoBasedLFID() {

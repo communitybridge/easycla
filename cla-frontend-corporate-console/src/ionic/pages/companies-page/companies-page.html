@@ -9,51 +9,44 @@
   <get-help></get-help>
 </ion-header>
 
-
 <ion-content>
   <div class="page-content">
-
-    <ion-row *ngIf="!hasCompanyId">
+    <ion-row>
       <ion-card class="sm-card">
         <ion-card-header>
           <ion-card-title class="center-card-title">
             Associate yourself with a company in Easy CLA
           </ion-card-title>
         </ion-card-header>
-        <ion-row justify-content-center margin-top>
-          <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
-        </ion-row>
-      </ion-card>
-    </ion-row>
 
-    <ion-row *ngIf="hasCompanyId">
-      <ion-card class="sm-card">
-        <ion-card-header>
-          <ion-card-title class="center-card-title">
-            Associate yourself with a company in Easy CLA
-          </ion-card-title>
-        </ion-card-header>
         <ion-row justify-content-center margin-top margin-bottom>
           <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
         </ion-row>
 
-        <ion-card-content>
+        <loading-spinner [loading]="loading.companies"></loading-spinner>
+
+        <ion-row *ngIf="loading.companies" justify-content-center>
+          <h2>Wait we are loading companies associated with easyCLA...</h2>
+        </ion-row>
+
+        <ion-card-content *ngIf="!loading.companies && rows && rows.length > 0">
           <ion-card-header>
             <ion-card-title class="text-black">
               Companies you are Associated with in EasyCLA
             </ion-card-title>
           </ion-card-header>
+
           <ion-card-content>
             <ion-row justify-content-center>
               <h2>*Click on Company Name to proceed to next screen</h2>
             </ion-row>
 
-            <loading-spinner [loading]="loading.companies"></loading-spinner>
             <ion-row justify-content-center>
-              <ion-list *ngIf="!loading.companies && rows && rows.length > 0">
+              <ion-list>
                 <ion-item *ngFor="let company of rows">
                   <ion-label class="clickable" (click)="viewCompany(company.CompanyID, company.Status)">
-                    <a href="javascript:void(0);">{{ trimCharacter(company.CompanyName,100) }}</a>
+                    <a href="javascript:void(0);"
+                      [title]="company.CompanyName">{{ trimCharacter(company.CompanyName,25) }}</a>
                     <span *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
                   </ion-label>
                 </ion-item>
@@ -61,6 +54,13 @@
             </ion-row>
           </ion-card-content>
         </ion-card-content>
+
+        <ion-card-content *ngIf="!loading.companies && rows && rows.length <= 0">
+          <ion-row justify-content-center>
+            <h2>No Company found associated with easyCLA.</h2>
+          </ion-row>
+        </ion-card-content>
+
       </ion-card>
     </ion-row>
   </div>

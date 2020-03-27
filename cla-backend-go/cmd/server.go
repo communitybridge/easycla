@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/token"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -53,6 +55,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
+	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
 	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
 
 	"github.com/go-openapi/loads"
@@ -164,6 +167,8 @@ func server(localMode bool) http.Handler {
 		logrus.Panic(err)
 	}
 
+	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+
 	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage)
 	usersRepo := users.NewRepository(awsSession, stage)
@@ -176,7 +181,7 @@ func server(localMode bool) http.Handler {
 	onboardRepo := onboard.NewRepository(awsSession, stage)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
-	metricsRepo := metrics.NewRepository(awsSession, stage)
+	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
@@ -209,6 +214,7 @@ func server(localMode bool) http.Handler {
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
+	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)

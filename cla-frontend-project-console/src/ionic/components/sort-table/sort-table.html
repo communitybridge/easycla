@@ -12,11 +12,18 @@
     <ng-container *ngFor="let item of columnData, let i = index">
       <tr (click)="show(i)" class="cursor">
         <td *ngFor="let obj of column, let i = index">
-          <span *ngIf="i === 0 && childTable" class="chevron-md">&#8250;</span> 
-          {{item[obj.dataKey]}} 
+          <!-- Chevron is only shown if it exist in columnData -->
+          <span *ngIf="i === 0 && childTable" class="chevron-md">&#8250;</span>
+          <!-- Icon is only shown if it exist in columnData 
+            icon should contain an object with index and iconName 
+            Eg: icon: {index: 0, iconName: 'briefcase'} 
+          -->
+          <ion-icon *ngIf="item.icon && i===item.icon.index" [name]="item.icon.iconName"></ion-icon>
+          <span [innerHTML]="item[obj.dataKey]"></span>
         </td>
       </tr>
 
+      <!-- Child is only shown if childTable attribute is set to true -->
       <ng-container *ngIf="childTable && i === showIndex">
         <h6>{{childTitle}}</h6>
         <tr class="background-none">

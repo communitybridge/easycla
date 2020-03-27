@@ -26,12 +26,13 @@ export class PdfViewerComponent {
 
   //download pdf
   download() {
-    console.log(this.src);
+    const filename = new Date().getTime();
     const downloadLink = document.createElement('a');
     downloadLink.style.display = 'none';
     document.body.appendChild(downloadLink);
     downloadLink.setAttribute('href', this.src);
-    downloadLink.setAttribute('download', 'true');
+    downloadLink.setAttribute('target', '_blank');
+    downloadLink.setAttribute('download', filename.toString());
     downloadLink.click();
     document.body.removeChild(downloadLink);
   }

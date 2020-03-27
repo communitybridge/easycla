@@ -16,7 +16,7 @@
         <ion-col col-12>
           <ion-item>
             <ion-label floating>Enter GitHub Organization Account Name</ion-label>
-            <ion-input formControlName="orgName"></ion-input>
+            <ion-input formControlName="orgName" (ionFocus)="clearError($event)"></ion-input>
           </ion-item>
           <p class="form-message" *ngIf="showErrorMsg">
             Github organization name not found.
