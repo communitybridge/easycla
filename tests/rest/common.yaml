@@ -5,6 +5,7 @@ description: Variables used in YAML files
 
 variables:
   api_url: "{tavern.env_vars.API_URL}"
+  v2_api_url: "{tavern.env_vars.V2_API_URL}"
   username: "{tavern.env_vars.AUTH0_USERNAME}"
   github_org_name : "cla-{tavern.env_vars.STAGE}-tavern-org"
   google_account_username: "manikantanr"

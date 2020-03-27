@@ -801,6 +801,7 @@ jobs:
       AUTH0_PASSWORD_ENV_VAR: AUTH0_PASSWORD_DEV
       AUTH0_CLIENT_ID_ENV_VAR: AUTH0_CLIENT_ID_DEV
       API_URL: 'https://api.dev.lfcla.com'
+      V2_API_URL: 'https://api-gw.dev.platform.linuxfoundation.org/cla-service'
       STAGE: dev
 
 workflows:
