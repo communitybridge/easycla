@@ -19,16 +19,13 @@ export class SortTableComponent {
   
 
 
-  constructor() { }
+  constructor() {}
 
 
   ngOnInit(){
-    console.log(this.column);
-    console.log(this.columnData);
     this.sort(this.column[0].dataKey);
   }
-
-  
+s
   compareValues(key, order = 'asc') {
     return function innerSort(a, b) {
       if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {

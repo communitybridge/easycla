@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, ViewChild, Input } from '@angular/core';
-import { IonicPage, Nav, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, Nav, NavController, NavParams, Events } from 'ionic-angular';
 import { ClaService } from '../../../services/cla.service';
 import { Restricted } from '../../../decorators/restricted';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -44,7 +44,8 @@ export class ProjectClaTemplatePage {
     public navParams: NavParams,
     public claService: ClaService,
     public sanitizer: DomSanitizer,
-    public rolesService: RolesService
+    public rolesService: RolesService,
+    public events: Events
   ) {
     this.sfdcProjectId = navParams.get('sfdcProjectId');
     this.projectId = navParams.get('projectId');
@@ -150,7 +151,14 @@ export class ProjectClaTemplatePage {
   }
 
   backToProject() {
-    this.navCtrl.pop();
+    if(this.navCtrl.getViews().length > 1){
+      if(this.pdfPath.corporatePDFURL || this.pdfPath.individualPDFURL){
+        this.events.publish('reloadProjectCla');
+      }
+      this.navCtrl.pop();
+      return;
+    }
+    this.navCtrl.push('AllProjectsPage');
   }
 
   setLoadingSpinner(value: boolean) {
