@@ -12,20 +12,18 @@
   <div class="page-content">
     <header>
       <ion-grid>
-        <ion-row>
+        <ion-row ion-justify-content-around>
           <ion-col col-12 col-md-2>
             <img src="{{ project.logoUrl }}" alt="{{ project.project_name }} Logo" />
+          </ion-col>
+          <ion-col col-12 col-md-7>
+            <div class="project-name">{{ project.project_name }}</div>
           </ion-col>
         </ion-row>
       </ion-grid>
     </header>
     <ion-grid>
 
-      <ion-row justify-content-center>
-        <ion-col col-auto>
-          <h1>{{ project.project_name }}</h1>
-        </ion-col>
-      </ion-row>
 
       <ion-row *ngIf="project.project_ccla_enabled" justify-content-center>
         <ion-col col-12 col-md-6>
