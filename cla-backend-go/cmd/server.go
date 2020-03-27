@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
+
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
@@ -182,6 +184,7 @@ func server(localMode bool) http.Handler {
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
+	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo)
@@ -195,6 +198,7 @@ func server(localMode bool) http.Handler {
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
+	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -228,6 +232,7 @@ func server(localMode bool) http.Handler {
 	v2Events.Configure(v2API, eventsService)
 	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
+	github_organizations.Configure(api, githubOrganizationsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

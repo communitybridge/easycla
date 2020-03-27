@@ -1520,6 +1520,31 @@ paths:
       tags:
         - github
 
+  /project/{projectSFID}/github/organizations:
+    get:
+      summary: API to fetch the gitHub oranizations of the project
+      security:
+        - OauthSecurity: []
+      operationId: getProjectGithubOrganizations
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-organizations'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-organizations
+
   /events:
     get:
       summary: search events
@@ -2886,6 +2911,29 @@ definitions:
       version:
         type: string
 
+  github-organizations:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/github-organization'
+
+  github-organization:
+    type: object
+    properties:
+      dateCreated:
+        type: string
+      dateModified:
+        type: string
+      organizationInstallationID:
+        type: integer
+      organizationName:
+        type: string
+      organizationSfid:
+        type: string
+      version:
+        type: string
 
 responses:
   resource-deleted:
