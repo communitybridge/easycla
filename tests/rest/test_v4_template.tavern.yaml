@@ -1,0 +1,180 @@
+---
+test_name: "templates functional test"
+includes:
+  - !include auth_stage.yaml
+  - !include common.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: Create cla group templates with no auth
+    request:
+      url: "{v2_api_url}/v4/clagroup/2f65ce7c-2cdd-4582-86dd-95a8d1543b3c/template"
+      method: POST
+    response:
+      status_code: 401
+  - name: Create cla group templates with auth
+    request:
+      url: "{v2_api_url}/v4/clagroup/2f65ce7c-2cdd-4582-86dd-95a8d1543b3c/template"
+      method: POST
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+        Content-Type: "application/json"
+        Accept: "application/json"
+      json:
+        TemplateID: "fb4cc144-a76c-4c17-8a52-c648f158fded"
+        MetaFields: [
+          {
+            "description": "Project's Full Name.",
+            "name": "Project Name",
+            "templateVariable": "PROJECT_NAME",
+            "value" : "Kubernetes"
+          },
+          {
+            "description": "The Full Entity Name of the Project.",
+            "name": "Project Entity Name",
+            "templateVariable": "PROJECT_ENTITY_NAME",
+            "value" : "Cloud native computing foundation"
+          },
+          {
+            "description": "The E-Mail Address of the Person managing the CLA. ",
+            "name": "Contact Email Address",
+            "templateVariable": "CONTACT_EMAIL",
+            "value" : "contact@cncf.org"
+          }
+        ]
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            mapping:
+              corporatePDFURL:
+                type: str
+                required: true
+              individualPDFURL:
+                type: str
+                required: true
+  - name: Get templates with no auth
+    request:
+      url: "{v2_api_url}/v4/template"
+      method: GET
+    response:
+      status_code: 401
+  - name: get templates with auth
+    request:
+      url: "{v2_api_url}/v4/template"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: seq
+            required: true
+            sequence:
+              - type: map
+                required: true
+                mapping:
+                  ID:
+                    type: str
+                    required: true
+                  Name:
+                    type: str
+                    required: true
+                  description:
+                    type: str
+                    required: true
+                  metaFields:
+                    type: seq
+                    sequence:
+                      - type: map
+                        mapping:
+                          name:
+                            type: str
+                            required: true
+                          description:
+                            type: str
+                            required: true
+                          templateVariable:
+                            type: str
+                            required: true
+                  iclaFields:
+                    type: seq
+                    sequence:
+                      - type: map
+                        mapping:
+                          anchorString:
+                            type: str
+                            required: true
+                          fieldType:
+                            type: str
+                            required: true
+                          id:
+                            type: str
+                            required: true
+                          name:
+                            type: str
+                            required: true
+                          height:
+                            type: int
+                            required: false
+                          offsetX:
+                            type: int
+                            required: false
+                          offsetY:
+                            type: int
+                            required: false
+                          width:
+                            type: int
+                            required: false
+                          isOptional:
+                            type: bool
+                            required: false
+                          isEditable:
+                            type: bool
+                            required: false
+                  cclaFields:
+                    type: seq
+                    sequence:
+                      - type: map
+                        mapping:
+                          anchorString:
+                            type: str
+                            required: true
+                          fieldType:
+                            type: str
+                            required: true
+                          id:
+                            type: str
+                            required: true
+                          name:
+                            type: str
+                            required: true
+                          height:
+                            type: int
+                            required: false
+                          offsetX:
+                            type: int
+                            required: false
+                          offsetY:
+                            type: int
+                            required: false
+                          width:
+                            type: int
+                            required: false
+                          isOptional:
+                            type: bool
+                            required: false
+                          isEditable:
+                            type: bool
+                            required: false
