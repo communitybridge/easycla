@@ -117,7 +117,7 @@ export class AddCompanyModal {
     );
   }
 
-  sendCompanyNotification() {
+  sendCompanyNotification(reload) {
     this.loading.submit = false;
     let alert = this.alertCtrl.create({
       title: 'Notification Sent!',
@@ -129,7 +129,11 @@ export class AddCompanyModal {
         }
       ]
     });
-    alert.onDidDismiss(() => window.location.reload(true));
+    alert.onDidDismiss(() => {
+      if (reload) {
+        window.location.reload(true);
+      }
+    });
     alert.present();
   }
 
@@ -143,7 +147,7 @@ export class AddCompanyModal {
     this.claService.updateUserV3(user).subscribe(
       () => {
         this.dismiss();
-        this.sendCompanyNotification()
+        this.sendCompanyNotification(true);
       },
       (exception) => {
         this.loading.submit = false;
@@ -171,7 +175,10 @@ export class AddCompanyModal {
             const userName = localStorage.getItem('user_name');
             this.claService
               .sendInviteRequestEmail(company_id, userId, userEmail, userName)
-              .subscribe(() => this.dismiss());
+              .subscribe(() => {
+                this.sendCompanyNotification(false);
+                this.dismiss();
+              });
           }
         },
         {
