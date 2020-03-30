@@ -77,6 +77,7 @@ export class ProjectsCclaSelectModal {
     const searchTerm = this.form.value.search;
     if (searchTerm === '') {
       this.projectsFiltered = this.projects;
+      this.submitDisabled = true;
     } else {
       this.projectsFiltered = this.projects.filter((a) => {
         return a.project_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -92,12 +93,13 @@ export class ProjectsCclaSelectModal {
   }
 
   submit() {
-    this.navCtrl.push('AuthorityYesnoPage', {
-      projectId: this.projectId,
-      company: this.company
-    });
-
-    this.dismiss();
+    if (!this.submitDisabled) {
+      this.navCtrl.push('AuthorityYesnoPage', {
+        projectId: this.projectId,
+        company: this.company
+      });
+      this.dismiss();
+    }
   }
 
   /**
