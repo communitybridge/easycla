@@ -14,6 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
+// configLookupResponse is a channel response model for the configuration lookup
+type configLookupResponse struct {
+	key   string
+	value string
+}
+
 // getSSMString is a generic routine to fetch the specified key value
 func getSSMString(ssmClient *ssm.SSM, key string) (string, error) {
 	log.Debugf("Loading SSM parameter: %s", key)
@@ -29,141 +35,105 @@ func getSSMString(ssmClient *ssm.SSM, key string) (string, error) {
 	return strings.TrimSpace(*value.Parameter.Value), nil
 }
 
-func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
+// loadSSMConfig fetches all the configuration values and populates the response Config model
+func loadSSMConfig(awsSession *session.Session, stage string) Config {
 	config := Config{}
 
 	ssmClient := ssm.New(awsSession)
 
-	// TODO: DAD - optimization: fetch the SSM values in parallel
+	// AWS Region
+	config.AWS.Region = *awsSession.Config.Region
 
-	// Auth0
-	auth0Domain, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-domain-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
+	// A channel for the responses from the go routines
+	responseChannel := make(chan configLookupResponse)
 
-	auth0ClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-clientId-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	auth0Username, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-username-claim-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	auth0Algorithm, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-algorithm-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	config.Auth0 = Auth0{
-		Domain:        auth0Domain,
-		ClientID:      auth0ClientID,
-		UsernameClaim: auth0Username,
-		Algorithm:     auth0Algorithm,
-	}
-
-	// SFDC
-
-	// GitHub
-	githubClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	githubSecret, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	githubAccessToken, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-access-token-%s", stage))
-	if err != nil {
-		return Config{}, err
+	// Our list of keys to lookup
+	ssmKeys := []string{
+		fmt.Sprintf("cla-auth0-domain-%s", stage),
+		fmt.Sprintf("cla-auth0-clientId-%s", stage),
+		fmt.Sprintf("cla-auth0-username-claim-%s", stage),
+		fmt.Sprintf("cla-auth0-algorithm-%s", stage),
+		fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage),
+		fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage),
+		fmt.Sprintf("cla-gh-access-token-%s", stage),
+		fmt.Sprintf("cla-corporate-base-%s", stage),
+		fmt.Sprintf("cla-doc-raptor-api-key-%s", stage),
+		fmt.Sprintf("cla-session-store-table-%s", stage),
+		fmt.Sprintf("cla-ses-sender-email-address-%s", stage),
+		fmt.Sprintf("cla-allowed-origins-%s", stage),
+		fmt.Sprintf("cla-sns-event-topic-arn-%s", stage),
+		fmt.Sprintf("cla-signature-files-bucket-%s", stage),
+		fmt.Sprintf("cla-auth0-platform-client-id-%s", stage),
+		fmt.Sprintf("cla-auth0-platform-client-secret-%s", stage),
+		fmt.Sprintf("cla-auth0-platform-audience-%s", stage),
+		fmt.Sprintf("cla-auth0-platform-url-%s", stage),
+		fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage),
 	}
 
-	config.Github = Github{
-		ClientID:     githubClientID,
-		ClientSecret: githubSecret,
-		AccessToken:  githubAccessToken,
+	// For each key to lookup
+	for _, key := range ssmKeys {
+		// Create a go routine to this concurrently
+		go func(theKey string) {
+			theValue, err := getSSMString(ssmClient, theKey)
+			if err != nil {
+				log.Fatalf("error looking up key: %s", theKey)
+			}
+			// Send the response back through the channel
+			responseChannel <- configLookupResponse{
+				key:   theKey,
+				value: theValue,
+			}
+		}(key)
 	}
 
-	//Corporate Console Link
-	corporateConsoleURL, err := getSSMString(ssmClient, fmt.Sprintf("cla-corporate-base-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	corporateConsoleURLValue := corporateConsoleURL
-	if corporateConsoleURLValue == "corporate.prod.lfcla.com" {
-		corporateConsoleURLValue = "corporate.lfcla.com"
-	}
-	config.CorporateConsoleURL = corporateConsoleURLValue
-
-	// Docusign
-
-	// Docraptor
-	config.Docraptor.APIKey, err = getSSMString(ssmClient, fmt.Sprintf("cla-doc-raptor-api-key-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	config.Docraptor.TestMode = stage != "prod" && stage != "staging"
-
-	// LF Identity
-
-	// AWS
-	config.AWS.Region = "us-east-1"
-
-	// Session Store Table Name
-	config.SessionStoreTableName, err = getSSMString(ssmClient, fmt.Sprintf("cla-session-store-table-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	config.SenderEmailAddress, err = getSSMString(ssmClient, fmt.Sprintf("cla-ses-sender-email-address-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	config.AllowedOriginsCommaSeparated, err = getSSMString(ssmClient, fmt.Sprintf("cla-allowed-origins-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	config.SNSEventTopicARN, err = getSSMString(ssmClient, fmt.Sprintf("cla-sns-event-topic-arn-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-
-	config.SignatureFilesBucket, err = getSSMString(ssmClient, fmt.Sprintf("cla-signature-files-bucket-%s", stage))
-	if err != nil {
-		return Config{}, err
+	for i := 0; i < len(ssmKeys); i++ {
+		resp := <-responseChannel
+		switch resp.key {
+		case fmt.Sprintf("cla-auth0-domain-%s", stage):
+			config.Auth0.Domain = resp.value
+		case fmt.Sprintf("cla-auth0-clientId-%s", stage):
+			config.Auth0.ClientID = resp.value
+		case fmt.Sprintf("cla-auth0-username-claim-%s", stage):
+			config.Auth0.UsernameClaim = resp.value
+		case fmt.Sprintf("cla-auth0-algorithm-%s", stage):
+			config.Auth0.Algorithm = resp.value
+		case fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage):
+			config.Github.ClientID = resp.value
+		case fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage):
+			config.Github.ClientSecret = resp.value
+		case fmt.Sprintf("cla-gh-access-token-%s", stage):
+			config.Github.AccessToken = resp.value
+		case fmt.Sprintf("cla-corporate-base-%s", stage):
+			corporateConsoleURLValue := resp.value
+			if corporateConsoleURLValue == "corporate.prod.lfcla.com" {
+				corporateConsoleURLValue = "corporate.lfcla.com"
+			}
+			config.CorporateConsoleURL = corporateConsoleURLValue
+		case fmt.Sprintf("cla-doc-raptor-api-key-%s", stage):
+			config.Docraptor.APIKey = resp.value
+			config.Docraptor.TestMode = stage != "prod" && stage != "staging"
+		case fmt.Sprintf("cla-session-store-table-%s", stage):
+			config.SessionStoreTableName = resp.value
+		case fmt.Sprintf("cla-ses-sender-email-address-%s", stage):
+			config.SenderEmailAddress = resp.value
+		case fmt.Sprintf("cla-allowed-origins-%s", stage):
+			config.AllowedOriginsCommaSeparated = resp.value
+		case fmt.Sprintf("cla-sns-event-topic-arn-%s", stage):
+			config.SNSEventTopicARN = resp.value
+		case fmt.Sprintf("cla-signature-files-bucket-%s", stage):
+			config.SignatureFilesBucket = resp.value
+		case fmt.Sprintf("cla-auth0-platform-client-id-%s", stage):
+			config.Auth0Platform.ClientID = resp.value
+		case fmt.Sprintf("cla-auth0-platform-client-secret-%s", stage):
+			config.Auth0Platform.ClientSecret = resp.value
+		case fmt.Sprintf("cla-auth0-platform-audience-%s", stage):
+			config.Auth0Platform.Audience = resp.value
+		case fmt.Sprintf("cla-auth0-platform-url-%s", stage):
+			config.Auth0Platform.URL = resp.value
+		case fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage):
+			config.APIGatewayURL = resp.value
+		}
 	}
 
-	auth0PlatformClientID, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-client-id-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	auth0PlatformSecret, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-client-secret-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	auth0PlatformAudience, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-audience-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	auth0PlatformURL, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-url-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	apiGw, err := getSSMString(ssmClient, fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage))
-	if err != nil {
-		return Config{}, err
-	}
-	config.Auth0Platform = Auth0Platform{
-		ClientID:     auth0PlatformClientID,
-		ClientSecret: auth0PlatformSecret,
-		Audience:     auth0PlatformAudience,
-		URL:          auth0PlatformURL,
-	}
-	config.APIGatewayURL = apiGw
-
-	return config, nil
+	return config
 }
