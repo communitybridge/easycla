@@ -2924,43 +2924,54 @@ definitions:
     properties:
       dateCreated:
         type: string
+        example: "2020-02-06T09:31:49.245630+0000"
       dateModified:
         type: string
+        example: "2020-02-06T09:31:49.245646+0000"
       organizationInstallationID:
         type: integer
+        example: 6635271
       organizationName:
         type: string
+        example: "communitybridge"
       organizationSfid:
         type: string
+        example: "a0941000002wBz4AAA"
       version:
         type: string
+        example: "v1"
       githubInfo:
         type: object
         properties:
           error:
             type: string
+            example: "unable to get github info of communitybridge"
           details:
             type: object
             properties:
               id:
                 type: integer
                 x-nullable: true
+                example: 1476068
               bio:
                 type: string
                 x-nullable: true
               htmlUrl:
                 type: string
                 x-nullable: true
+                example: "https://github.com/communitybridge"
 
       repositories:
         type: object
         properties:
           error:
             type: string
+            example: "unable to get repositories for installation id : 6854001"
           list:
             type: array
             items:
               type: string
+              example: "communitybridge/easycla-api"
 
 responses:
   resource-deleted:

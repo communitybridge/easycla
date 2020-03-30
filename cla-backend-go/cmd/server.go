@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
+	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
 
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
@@ -234,6 +235,7 @@ func server(localMode bool) http.Handler {
 	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
 	github_organizations.Configure(api, githubOrganizationsService)
+	v2GithubOrganizations.Configure(v2API, githubOrganizationsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
