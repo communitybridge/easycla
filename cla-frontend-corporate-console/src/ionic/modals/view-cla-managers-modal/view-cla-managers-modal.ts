@@ -38,6 +38,10 @@ export class ViewCLAManagerModal {
     this.ProjectName = this.navParams.get('ProjectName');
   }
 
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  }
+
   dismiss(data = false) {
     this.viewCtrl.dismiss(data);
   }
