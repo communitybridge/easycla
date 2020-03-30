@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span>View CLA Manager For {{ ProjectName }}</span>
+      View CLA Manager For <span class="project-name" [title]="ProjectName">{{ trimCharacter(ProjectName,25) }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
