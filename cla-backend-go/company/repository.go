@@ -27,10 +27,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const (
-	dateTimeFormat = "2006-01-02T15:04:05.000000+0000"
-)
-
 // errors
 var (
 	ErrCompanyDoesNotExist = errors.New("company does not exist")
@@ -464,14 +460,14 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 			continue
 		}
 
-		createdDateTime, err := time.Parse(dateTimeFormat, company.Created)
+		createdDateTime, err := utils.ParseDateTime(company.Created)
 		if err != nil {
 			log.Warnf("Unable to parse company created date time: %s, error: %v - using current time",
 				company.Created, err)
 			createdDateTime = time.Now()
 		}
 
-		modifiedDateTime, err := time.Parse(dateTimeFormat, company.Updated)
+		modifiedDateTime, err := utils.ParseDateTime(company.Updated)
 		if err != nil {
 			log.Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
 				company.Created, err)
@@ -520,14 +516,14 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 	}
 
 	for _, dbCompany := range dbCompanies {
-		createdDateTime, err := time.Parse(dateTimeFormat, dbCompany.Created)
+		createdDateTime, err := utils.ParseDateTime(dbCompany.Created)
 		if err != nil {
 			log.Warnf("Unable to parse company created date time: %s, error: %v - using current time",
 				dbCompany.Created, err)
 			createdDateTime = time.Now()
 		}
 
-		modifiedDateTime, err := time.Parse(dateTimeFormat, dbCompany.Modified)
+		modifiedDateTime, err := utils.ParseDateTime(dbCompany.Modified)
 		if err != nil {
 			log.Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
 				dbCompany.Created, err)

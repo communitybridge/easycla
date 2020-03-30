@@ -359,6 +359,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:d40f8ff9f3c1ccd0e36025dafd3e301e3b7c53742ba0c5b19936d3e580b2fdb3"
+  name = "github.com/imroc/req"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d679d25f09a22a186b72b8bb286ff06a7ac6d4a0"
+  version = "v0.3.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -715,6 +723,7 @@
     "github.com/gofrs/uuid",
     "github.com/google/go-github/github",
     "github.com/google/uuid",
+    "github.com/imroc/req",
     "github.com/jessevdk/go-flags",
     "github.com/jmoiron/sqlx",
     "github.com/lytics/logrus",
