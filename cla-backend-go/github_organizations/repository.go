@@ -5,6 +5,9 @@ package github_organizations
 
 import (
 	"fmt"
+	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -76,5 +79,44 @@ func (repo repository) GetGithubOrganizations(externalProjectID string) (*models
 	if err != nil {
 		return nil, err
 	}
-	return &models.GithubOrganizations{List: toModels(resultOutput)}, nil
+	ghOrgList := buildGithubOrganizationListModels(resultOutput)
+	return &models.GithubOrganizations{List: ghOrgList}, nil
+}
+
+func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization) []*models.GithubOrganization {
+	ghOrgList := toModels(githubOrganizations)
+	if len(ghOrgList) > 0 {
+		var wg sync.WaitGroup
+		wg.Add(len(ghOrgList))
+		for _, ghorganization := range ghOrgList {
+			go func(ghorg *models.GithubOrganization) {
+				defer wg.Done()
+				ghorg.GithubInfo = &models.GithubOrganizationGithubInfo{}
+				user, err := github.GetUserDetails(ghorg.OrganizationName)
+				if err != nil {
+					ghorg.GithubInfo.Error = err.Error()
+				} else {
+					ghorg.GithubInfo.Details = &models.GithubOrganizationGithubInfoDetails{
+						Bio:     user.Bio,
+						HTMLURL: user.HTMLURL,
+						ID:      user.ID,
+					}
+				}
+				ghorg.Repositories = &models.GithubOrganizationRepositories{
+					List: make([]string, 0),
+				}
+				if ghorg.OrganizationInstallationID != 0 {
+					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
+					if err != nil {
+						log.Warnf("unable to get repositories for installation id : %d", ghorg.OrganizationInstallationID)
+						ghorg.Repositories.Error = err.Error()
+						return
+					}
+					ghorg.Repositories.List = list
+				}
+			}(ghorganization)
+		}
+		wg.Wait()
+	}
+	return ghOrgList
 }

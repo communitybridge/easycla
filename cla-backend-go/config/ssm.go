@@ -5,6 +5,7 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -79,11 +80,25 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	ghAppID, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-app-id-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
+	githubAppID, err := strconv.Atoi(ghAppID)
+	if err != nil {
+		return Config{}, err
+	}
+	githubAppPrivateKey, err := getSSMString(ssmClient, fmt.Sprintf("cla-gh-app-private-key-%s", stage))
+	if err != nil {
+		return Config{}, err
+	}
 
 	config.Github = Github{
-		ClientID:     githubClientID,
-		ClientSecret: githubSecret,
-		AccessToken:  githubAccessToken,
+		ClientID:      githubClientID,
+		ClientSecret:  githubSecret,
+		AccessToken:   githubAccessToken,
+		AppPrivateKey: githubAppPrivateKey,
+		AppId:         githubAppID,
 	}
 
 	//Corporate Console Link

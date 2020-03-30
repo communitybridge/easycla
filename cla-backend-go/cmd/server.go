@@ -170,6 +170,7 @@ func server(localMode bool) http.Handler {
 	}
 
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+	github.Init(configFile.Github.AppId, configFile.Github.AppPrivateKey, configFile.Github.AccessToken)
 
 	// Our backend repository handlers
 	userRepo := user.NewDynamoRepository(awsSession, stage)

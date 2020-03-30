@@ -2934,6 +2934,33 @@ definitions:
         type: string
       version:
         type: string
+      githubInfo:
+        type: object
+        properties:
+          error:
+            type: string
+          details:
+            type: object
+            properties:
+              id:
+                type: integer
+                x-nullable: true
+              bio:
+                type: string
+                x-nullable: true
+              htmlUrl:
+                type: string
+                x-nullable: true
+
+      repositories:
+        type: object
+        properties:
+          error:
+            type: string
+          list:
+            type: array
+            items:
+              type: string
 
 responses:
   resource-deleted:
