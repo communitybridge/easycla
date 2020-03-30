@@ -144,6 +144,14 @@
   version = "v2.0.2"
 
 [[projects]]
+  digest = "1:e0c707db323e135ad46d1197436966f6276dca1d97f2626e859e63527db84d4c"
+  name = "github.com/bradleyfalzon/ghinstallation"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7bdf9f8bf3828df62ed87398508beee1a22a34b1"
+  version = "v0.1.3"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -166,14 +174,6 @@
   pruneopts = "UT"
   revision = "519db1ee28dcc9fd2474ae59fca29a810482bfb1"
   version = "v0.4.0"
-
-[[projects]]
-  digest = "1:41dd6c66548c6a8e3a9bbb38132002f1907547f99246070aff172afaae51d657"
-  name = "github.com/fnproject/fdk-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "2ad3d2d98fa8bec0b8b1cb8f8d8c2c3a3e71bac9"
-  version = "v0.0.2"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -359,6 +359,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:d40f8ff9f3c1ccd0e36025dafd3e301e3b7c53742ba0c5b19936d3e580b2fdb3"
+  name = "github.com/imroc/req"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d679d25f09a22a186b72b8bb286ff06a7ac6d4a0"
+  version = "v0.3.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -461,6 +469,14 @@
   version = "v1.7.0"
 
 [[projects]]
+  digest = "1:557c675b127d3ffdb1e6830f5f14e747da291c21a7b9e1230ec83c9d7f2246d0"
+  name = "github.com/sanity-io/litter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6d3310f9743f04a36bd5c898067ecb80ac3b332b"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:abddc141d57793195f9e1138a2381606b5801545b06c08e89e747eeb64819c35"
   name = "github.com/savaki/dynastore"
@@ -542,18 +558,6 @@
   pruneopts = "UT"
   revision = "2ef7124db659d49edac6aa459693a15ae36c671a"
   version = "v1.2.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:d414058838cbe9c12bf62ce696624ed7ef36a9b82e388d6d5ed4a20326219a78"
-  name = "github.com/tencentyun/scf-go-lib"
-  packages = [
-    "cloudfunction",
-    "cloudfunction/messages",
-    "functioncontext",
-  ]
-  pruneopts = "UT"
-  revision = "9a6ea1bf75b89a0cd917a1e846bacf40fc06ca56"
 
 [[projects]]
   digest = "1:3f2695e75ed6dfa1187df6baf40a81d8dd47589e6fbfc4ccb748bceb3af8836c"
@@ -700,8 +704,8 @@
     "github.com/aws/aws-sdk-go/service/sns",
     "github.com/aws/aws-sdk-go/service/ssm",
     "github.com/aymerick/raymond",
+    "github.com/bradleyfalzon/ghinstallation",
     "github.com/dgrijalva/jwt-go",
-    "github.com/fnproject/fdk-go",
     "github.com/go-openapi/errors",
     "github.com/go-openapi/loads",
     "github.com/go-openapi/runtime",
@@ -715,16 +719,17 @@
     "github.com/gofrs/uuid",
     "github.com/google/go-github/github",
     "github.com/google/uuid",
+    "github.com/imroc/req",
     "github.com/jessevdk/go-flags",
     "github.com/jmoiron/sqlx",
     "github.com/lytics/logrus",
     "github.com/rs/cors",
+    "github.com/sanity-io/litter",
     "github.com/savaki/dynastore",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
-    "github.com/tencentyun/scf-go-lib/cloudfunction",
     "golang.org/x/net/netutil",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/github",
