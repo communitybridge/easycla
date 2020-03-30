@@ -64,13 +64,12 @@ company-page {
     }
   }
 
-
   ul {
     list-style: none; /* Remove default bullets */
   }
 
   ul li::before {
-    content: '\2022'; /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    content: "\2022"; /* Add content: \2022 is the CSS Code/unicode for a bullet */
     color: #4c79b6; /* Change the color */
     font-weight: bold; /* If you want it to be bold */
     display: inline-block; /* Needed to add space between the bullet and the text */
@@ -95,17 +94,17 @@ company-page {
     position: relative;
   }
 
-  span[title='CLA Manager'] {
+  span[title="CLA Manager"] {
     color: green;
     font-weight: bold;
   }
-  
-  span[title='Pending'] {
+
+  span[title="Pending"] {
     color: #4c79b6;
     font-weight: bold;
   }
-  
-  span[title='Request Access'] {
+
+  span[title="Request Access"] {
     color: #4c79b6;
     font-weight: bold;
     text-decoration: underline;
@@ -113,5 +112,8 @@ company-page {
 
   td {
     vertical-align: text-bottom !important;
+    &.wrap-word {
+      word-break: break-all;
+    }
   }
 }
