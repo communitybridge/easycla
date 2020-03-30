@@ -98,7 +98,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) {
 		ClientSecret:  githubSecret,
 		AccessToken:   githubAccessToken,
 		AppPrivateKey: githubAppPrivateKey,
-		AppId:         githubAppID,
+		AppID:         githubAppID,
 	}
 
 	//Corporate Console Link

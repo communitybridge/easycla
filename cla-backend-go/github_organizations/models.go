@@ -2,6 +2,7 @@ package github_organizations
 
 import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
+// GithubOrganization is data model for github organizations
 type GithubOrganization struct {
 	DateCreated                string `json:"date_created,omitempty"`
 	DateModified               string `json:"date_modified,omitempty"`

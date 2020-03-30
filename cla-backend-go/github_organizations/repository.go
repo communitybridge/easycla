@@ -18,11 +18,12 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// indexes
 const (
 	GithubOrgSFIDIndex = "github-org-sfid-index"
 )
 
-// Repository interface defines the functions for the whitelist service
+// Repository interface defines the functions for the github organizations data model
 type Repository interface {
 	GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error)
 }
@@ -33,7 +34,7 @@ type repository struct {
 	githubOrgTableName string
 }
 
-// NewRepository creates a new instance of the whitelist service
+// NewRepository creates a new instance of the githubOrganizations repository
 func NewRepository(awsSession *session.Session, stage string) repository {
 	return repository{
 		stage:              stage,

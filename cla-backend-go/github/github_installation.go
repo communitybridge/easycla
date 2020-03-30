@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// GetInstallationRepositories returns list of repositories for github app installation
 func GetInstallationRepositories(installationID int64) ([]string, error) {
 	client, err := newGithubAppClient(installationID)
 	if err != nil {

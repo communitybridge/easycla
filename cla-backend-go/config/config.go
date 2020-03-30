@@ -89,7 +89,7 @@ type Github struct {
 	ClientID      string `json:"clientId"`
 	ClientSecret  string `json:"clientSecret"`
 	AccessToken   string `json:"accessToken"`
-	AppId         int    `json:"app_id"`
+	AppID         int    `json:"app_id"`
 	AppPrivateKey string `json:"app_private_key"`
 }
 
