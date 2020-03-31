@@ -266,7 +266,13 @@ class GitHub(repository_service_interface.RepositoryService):
     def update_change_request(self, installation_id, github_repository_id, change_request_id):
         # Queries GH for the complete pull request details, see:
         # https://developer.github.com/v3/pulls/#response-1
-        pull_request = self.get_pull_request(github_repository_id, change_request_id, installation_id)
+        try:
+            # check if change_request_id is a valid int
+            _ = int(change_request_id)
+            pull_request = self.get_pull_request(github_repository_id, change_request_id, installation_id)
+        except ValueError:
+            cla.log.error ('Invalid PR: %s . (Unable to cast to integer) ', change_request_id)
+            return
         cla.log.debug(f'Retrieved pull request: {pull_request}')
 
         # Get all unique users/authors involved in this PR - returns a list of
