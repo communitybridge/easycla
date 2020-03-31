@@ -5,6 +5,7 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -56,6 +57,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 		fmt.Sprintf("cla-gh-oauth-client-id-go-backend-%s", stage),
 		fmt.Sprintf("cla-gh-oauth-secret-go-backend-%s", stage),
 		fmt.Sprintf("cla-gh-access-token-%s", stage),
+		fmt.Sprintf("cla-gh-app-id-%s", stage),
+		fmt.Sprintf("cla-gh-app-private-key-%s", stage),
 		fmt.Sprintf("cla-corporate-base-%s", stage),
 		fmt.Sprintf("cla-doc-raptor-api-key-%s", stage),
 		fmt.Sprintf("cla-session-store-table-%s", stage),
@@ -103,6 +106,16 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 			config.Github.ClientSecret = resp.value
 		case fmt.Sprintf("cla-gh-access-token-%s", stage):
 			config.Github.AccessToken = resp.value
+		case fmt.Sprintf("cla-gh-app-id-%s", stage):
+			githubAppID, err := strconv.Atoi(resp.value)
+			if err != nil {
+				errMsg := fmt.Sprintf("invalid value of key: %s", fmt.Sprintf("cla-gh-app-id-%s", stage))
+				log.Fatal(errMsg)
+			}
+			config.Github.AppID = githubAppID
+		case fmt.Sprintf("cla-gh-app-private-key-%s", stage):
+			config.Github.AppPrivateKey = resp.value
+
 		case fmt.Sprintf("cla-corporate-base-%s", stage):
 			corporateConsoleURLValue := resp.value
 			if corporateConsoleURLValue == "corporate.prod.lfcla.com" {
