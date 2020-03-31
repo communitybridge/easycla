@@ -1,0 +1,85 @@
+---
+test_name: "github organizations functional test"
+includes:
+  - !include auth_stage.yaml
+  - !include common.yaml
+
+stages:
+  - type: ref
+    id: login_get_token
+  - name: get github organizations for project with with no auth
+    request:
+      url: "{v2_api_url}/v4/project/a0941000002wBz4AAE/github/organizations"
+      method: GET
+    response:
+      status_code: 401
+  - name: get github organizations for project
+    request:
+      url: "{v2_api_url}/v4/project/a0941000002wBz4AAE/github/organizations"
+      method: GET
+      headers:
+        Authorization: "Bearer {auth0_token:s}"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            mapping:
+              list:
+                type: seq
+                sequence:
+                - type: map
+                  mapping:
+                    dateCreated:
+                      type: str
+                      required: true
+                    dateModified:
+                      type: str
+                      required: true
+                    organizationInstallationID:
+                      type: int
+                      required: false
+                    organizationName:
+                      type: str
+                      required: true
+                    organizationSfid:
+                      type: str
+                      required: true
+                    version:
+                      type: str
+                      required: true
+                    githubInfo:
+                      type: map
+                      required: true
+                      mapping:
+                        error:
+                          type: str
+                          required: false
+                        details:
+                          type: map
+                          mapping:
+                            id:
+                              type: int
+                              required: false
+                            bio:
+                              type: str
+                              required: false
+                            htmlUrl:
+                              type: str
+                              required: false
+                    repositories:
+                      type: map
+                      required: true
+                      mapping:
+                        error:
+                          type: str
+                          required: false
+                        list:
+                          type: seq
+                          required: true
+                          sequence:
+                          - type: str

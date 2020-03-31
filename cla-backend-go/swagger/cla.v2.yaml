@@ -499,6 +499,29 @@ paths:
       tags:
         - template
 
+  /project/{projectSFID}/github/organizations:
+    get:
+      summary: API to fetch the gitHub oranizations of the project
+      operationId: getProjectGithubOrganizations
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-organizations'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-organizations
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -985,6 +1008,13 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Models"
       type: "TemplatePdfs"
+
+  github-organizations:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "GithubOrganizations"
 
   error-response:
     type: object

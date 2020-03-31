@@ -86,9 +86,11 @@ type AWS struct {
 
 // Github model
 type Github struct {
-	ClientID     string `json:"clientId"`
-	ClientSecret string `json:"clientSecret"`
-	AccessToken  string `json:"accessToken"`
+	ClientID      string `json:"clientId"`
+	ClientSecret  string `json:"clientSecret"`
+	AccessToken   string `json:"accessToken"`
+	AppID         int    `json:"app_id"`
+	AppPrivateKey string `json:"app_private_key"`
 }
 
 // LoadConfig loads the configuration
