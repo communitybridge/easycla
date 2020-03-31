@@ -109,7 +109,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 		case fmt.Sprintf("cla-gh-app-id-%s", stage):
 			githubAppID, err := strconv.Atoi(resp.value)
 			if err != nil {
-				log.Fatal("invalid value of key: %s", fmt.Sprintf("cla-gh-app-id-%s", stage))
+				errMsg := fmt.Sprintf("invalid value of key: %s", fmt.Sprintf("cla-gh-app-id-%s", stage))
+				log.Fatal(errMsg)
 			}
 			config.Github.AppID = githubAppID
 		case fmt.Sprintf("cla-gh-app-private-key-%s", stage):
