@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,6 +32,32 @@ func TimeToString(t time.Time) string {
 func CurrentTime() (time.Time, string) {
 	t := time.Now()
 	return t, TimeToString(t)
+}
+
+// ParseDateTime attempts to convert the string to one of our supported date time formats
+func ParseDateTime(dateTimeStr string) (time.Time, error) {
+	dateTimeStrTrimmed := strings.TrimSpace(dateTimeStr)
+
+	supportedFormats := []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05Z-07:00",
+		"2006-01-02T15:04:05-07:00",
+		"2006-01-02T15:04:05.000000-0700",
+		time.RFC850,
+		time.RFC1123,
+		time.RFC1123Z,
+	}
+
+	for _, format := range supportedFormats {
+		dateTimeValue, err := time.Parse(format, dateTimeStrTrimmed)
+		if err == nil {
+			return dateTimeValue, err
+		}
+	}
+
+	return time.Unix(0, 0), fmt.Errorf("unsupported date/time format: %s", dateTimeStrTrimmed)
 }
 
 // AddStringAttribute adds string attribute to dynamodb input map
