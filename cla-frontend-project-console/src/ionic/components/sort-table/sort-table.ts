@@ -25,6 +25,7 @@ export class SortTableComponent {
   ngOnInit(){
     this.sort(this.column[0].dataKey);
   }
+  
   compareValues(key, order = 'asc') {
     return function innerSort(a, b) {
       if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
