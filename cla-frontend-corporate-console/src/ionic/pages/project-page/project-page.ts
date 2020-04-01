@@ -9,9 +9,7 @@ import { ClaUserModel } from '../../models/cla-user';
 import { ClaSignatureModel } from '../../models/cla-signature';
 import { ClaManager } from '../../models/cla-manager';
 import { SortService } from '../../services/sort.service';
-import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
-import { WhitelistModal } from '../../modals/whitelist-modal/whitelist-modal';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -27,8 +25,6 @@ export class ProjectPage {
   noPendingRequests: boolean;
   cclaSignature: any;
   employeeSignatures: any[];
-  //githubOrgWhitelist: any[] = [];
-  //githubEnabledWhitelist: any[] = [];
   loading: any;
   companyId: string;
   projectId: string;
@@ -38,8 +34,6 @@ export class ProjectPage {
   manager: ClaUserModel;
   showModal: any;
   pendingRequests: any[]
-  claMangers: any[];
-
   project: any;
   users: any;
 
@@ -51,7 +45,6 @@ export class ProjectPage {
     private claService: ClaService,
     public alertCtrl: AlertController,
     public modalCtrl: ModalController,
-    private rolesService: RolesService, // for @Restricted
     private sortService: SortService,
     public viewCtrl: ViewController,
   ) {
@@ -87,12 +80,9 @@ export class ProjectPage {
   }
 
   getProject() {
-    // console.log('Loading project: ' + this.projectId);
     this.loading.projects = true;
     this.claService.getProject(this.projectId).subscribe((response) => {
       this.loading.projects = false;
-      console.log('Project response:');
-      console.log(response);
       this.project = response;
       this.getProjectSignatures();
     });
@@ -105,26 +95,10 @@ export class ProjectPage {
     });
   }
 
-  /*
-  getGitHubOrgWhitelist() {
-    this.claService.getGithubOrganizationWhitelistEntries(this.cclaSignature.signatureID).subscribe(organizations => {
-      this.githubOrgWhitelist = organizations;
-      this.githubOrgWhitelistEnabled();
-    });
-  }
-
-  githubOrgWhitelistEnabled() {
-    this.githubEnabledWhitelist = this.githubOrgWhitelist.filter((org) => org.selected);
-  }
-   */
-
   getCLAManagers() {
     this.loading.managers = true;
-    console.log('Loading CCLA Manager list using signature id: ' + this.cclaSignature.signatureID);
     this.claService.getCLAManagers(this.cclaSignature.signatureID).subscribe((response) => {
       this.loading.managers = false;
-      console.log('Loaded CCLA Managers: ');
-      console.log(response);
       if (response.errors != null) {
         this.managers = [];
         this.managersRestricted = true;
@@ -140,16 +114,10 @@ export class ProjectPage {
     this.loading.signatures = true;
     this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe(
       (response) => {
-        this.claMangers = response.signatures[0] && response.signatures[0].signatureACL;
         this.loading.signatures = false;
-        console.log('Signatures for project: ' + this.projectId + ' for company: ' + this.companyId);
-        console.log(response);
         if (response.signatures) {
           let cclaSignatures = response.signatures.filter((sig) => sig.signatureType === 'ccla');
-          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
           if (cclaSignatures.length) {
-            console.log('CCLA Signatures for project id: ' + this.projectId + ' and company id: ' + this.companyId);
-            console.log(cclaSignatures);
             this.cclaSignature = cclaSignatures[0];
 
             // Sort the values
@@ -188,12 +156,6 @@ export class ProjectPage {
       },
       (exception) => {
         this.loading.signatures = false;
-        console.log(
-          'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-          this.companyId +
-          ' and project ID: ' +
-          this.projectId
-        );
         console.log(exception);
       }
     );
@@ -203,8 +165,6 @@ export class ProjectPage {
     this.claService.getEmployeeProjectSignatures(this.companyId, this.projectId).subscribe(
       (response) => {
         this.loading.acknowledgements = false;
-        console.log('Employee signatures:');
-        console.log(response);
         if (response.signatures) {
           const sigs = response.signatures || [];
           this.employeeSignatures = sigs.sort((a, b) => {
@@ -218,19 +178,12 @@ export class ProjectPage {
       },
       (exception) => {
         this.loading.acknowledgements = false;
-        console.log(
-          'Exception while calling: getEmployeeProjectSignatures() for company ID: ' +
-          this.companyId +
-          ' and project ID: ' +
-          this.projectId
-        );
         console.log(exception);
       }
     );
   }
 
   getManager(userId) {
-    console.log('Looking up manager: ' + userId);
     this.claService.getUser(userId).subscribe((response) => {
       this.manager = response;
     });
@@ -328,8 +281,10 @@ export class ProjectPage {
     alert.present();
   }
 
-  deleteManager(payload: ClaManager) {
-    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload).subscribe(() => this.getCLAManagers());
+  deleteManager(payload) {
+    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload.lfid).subscribe(() =>
+      this.getCLAManagers()
+    );
   }
 
   openManagerModal() {
@@ -396,7 +351,6 @@ export class ProjectPage {
             this.claService
               .deleteCclaWhitelistRequest(this.companyId, this.projectId, requestID)
               .subscribe((res) => console.log('res', res));
-              // window.location.reload(true)
           }
         }
       ]
@@ -406,68 +360,10 @@ export class ProjectPage {
   }
 
   dismiss() {
-    
     this.viewCtrl.dismiss();
-    
   }
 
   acceptPendingRequest() {
 
   }
-
-  
-
-
-  /*
-  openGithubOrgWhitelistModal() {
-    // Maybe this happens if we authorize GH and come back after the flow and we haven't fully loaded...
-    if (this.cclaSignature == null) {
-      this.claService.getCompanyProjectSignatures(this.companyId, this.projectId)
-        .subscribe(response => {
-            let cclaSignatures = response.filter(sig => sig.signatureType === 'ccla');
-            if (cclaSignatures.length) {
-              this.cclaSignature = cclaSignatures[0];
-              console.log('CCLA Signature:');
-              console.log(this.cclaSignature);
-              this.getCLAManagers();
-              this.getGitHubOrgWhitelist();
-
-              // Ok to open the modal now that we have signatures loaded
-              let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
-                projectName: this.project.project_name,
-                companyName: this.company.company_name,
-                projectId: this.cclaSignature.projectID,
-                companyId: this.companyId,
-                corporateClaId: this.projectId,
-                signatureId: this.cclaSignature.signatureID
-              });
-              modal.onDidDismiss(data => {
-                // Refresh the list
-                this.getGitHubOrgWhitelist();
-              });
-              modal.present();
-            }
-          },
-          exception => {
-            console.log("Exception while calling: getCompanyProjectSignatures() for company ID: " +
-              this.companyId + ' and project ID: ' + this.projectId);
-            console.log(exception);
-          });
-    } else {
-      let modal = this.modalCtrl.create("GithubOrgWhitelistModal", {
-        projectName: this.project.project_name,
-        companyName: this.company.company_name,
-        projectId: this.cclaSignature.projectID,
-        companyId: this.companyId,
-        corporateClaId: this.projectId,
-        signatureId: this.cclaSignature.signatureID
-      });
-      modal.onDidDismiss(data => {
-        // Refresh the list
-        this.getGitHubOrgWhitelist();
-      });
-      modal.present();
-    }
-  }
-   */
 }
