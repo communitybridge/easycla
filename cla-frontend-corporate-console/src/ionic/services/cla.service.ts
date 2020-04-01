@@ -801,8 +801,8 @@ export class ClaService {
   /**
    * DELETE /signature/{signature_id}/manager/{lfid}
    */
-  deleteCLAManager(projectId, payload) {
-    const url: URL = this.getV1Endpoint('/v1/signature/' + projectId + '/manager/' + payload.lfid);
+  deleteCLAManager(projectId, lfid) {
+    const url: URL = this.getV1Endpoint('/v1/signature/' + projectId + '/manager/' + lfid);
     return this.http
       .delete(url)
       .map((res) => res.json())
