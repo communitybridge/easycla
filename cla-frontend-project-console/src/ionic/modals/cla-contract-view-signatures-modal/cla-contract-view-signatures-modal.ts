@@ -31,13 +31,8 @@ export class ClaContractViewSignaturesModal {
   claProjectId: string;
   claProjectName: string;
 
-  ColumnMode = ColumnMode;
-  SortType = SortType;
-
   loading: any;
   //sort: any;
-  columns: any[];
-  rows: any[];
 
   form: FormGroup;
   searchString: string;
@@ -46,22 +41,24 @@ export class ClaContractViewSignaturesModal {
   users: any[];
   filteredData: any[];
   data: any;
-  page: any;
+
 
   // Pagination next/previous options
-  nextKey: string;
-  previousKeys: any[];
+  limitPerPage: number = 10;
+  resultCount: number = 0;
+  nextKey = null;
+  previousKeys = [];
 
   // Easy sort table variables
-  columnData = [];
-  column = [
-    {head:'Type', dataKey:'signatureReferenceType'}, 
-    {head:'Name', dataKey:'userName,'}, 
-    {head:'Company Name', dataKey:'companyName'}, 
-    {head:'GitHubID', dataKey:'userGHID'},
-    {head:'LFID', dataKey:'userLFID'},
-    {head:'Version', dataKey:'version'},
-    {head:'Date', dataKey:'signatureCreated'},
+  columnData: any[] = [];
+  column: any[] = [
+    { head: 'Type', dataKey: 'signatureReferenceType' },
+    { head: 'Name', dataKey: 'userName,' },
+    { head: 'Company Name', dataKey: 'companyName' },
+    { head: 'GitHubID', dataKey: 'userGHID' },
+    { head: 'LFID', dataKey: 'userLFID' },
+    { head: 'Version', dataKey: 'version' },
+    { head: 'Date', dataKey: 'signatureCreated' },
   ];
 
   constructor(
@@ -110,26 +107,10 @@ export class ClaContractViewSignaturesModal {
   }
 
   getDefaults() {
-    this.page = {
-      pageNumber: 0,
-    };
-
-    // Pagination initialization
-    this.nextKey = null;
-    this.previousKeys = [];
-
     this.data = {};
     this.loading = {
       signatures: true,
     };
-  }
-
-  async getUser(signatureReferenceId) {
-    return await this.claService.getUser(signatureReferenceId).toPromise();
-  }
-
-  async getCompany(referenceId) {
-    return await this.claService.getCompany(referenceId).toPromise();
   }
 
   filterDatatable() {
@@ -153,7 +134,7 @@ export class ClaContractViewSignaturesModal {
     this.claService
       .getProjectSignaturesV3(
         this.claProjectId,
-        100,
+        this.limitPerPage,
         lastKeyScanned,
         this.searchString,
         this.searchField.value,
@@ -162,17 +143,29 @@ export class ClaContractViewSignaturesModal {
       )
       .subscribe((response) => {
         this.data = response;
-        this.page.totalCount = this.data.resultCount;
-        console.log('data', this.data);
-        if(this.data && this.data.signatures){
+        this.resultCount = this.data.resultCount;
+
+        // Pagination Logic - add the key used to render this page to our previous keys
+        if (lastKeyScanned) {
+          this.previousKeys.push(lastKeyScanned);    
+        }
+        // If we have a next key (usually we would unless there are no more records)
+        if (this.data.lastKeyScanned) {
+          this.nextKey = this.data.lastKeyScanned;
+        } else {
+          this.nextKey = null;
+        }
+        
+        if (this.data && this.data.signatures) {
           this.columnData = this.data.signatures.map(e => ({
-            ...e, 
-            signatureCreated:  e.signatureCreated.split('T')[0],
+            ...e,
+            signatureCreated: e.signatureCreated.split('T')[0],
             signatureReferenceType: this.getSignatureType(e),
-            icon: this.getSignatureType(e) === 'Company' || 
-            this.getSignatureType(e) === 'Employee' ? 
-            {index: 0, iconName: 'briefcase'}: 
-            {index: 0, iconName: 'person'}
+            companyName: e.companyName ? e.companyName : '',
+            icon: this.getSignatureType(e) === 'Company' ||
+              this.getSignatureType(e) === 'Employee' ?
+              { index: 0, iconName: 'briefcase' } :
+              { index: 0, iconName: 'person' }
           }))
         } else {
           this.columnData = []
@@ -194,7 +187,7 @@ export class ClaContractViewSignaturesModal {
       // Since the most recent previous key is the current page - we want to go one more back to the one before
       // so we pop two and use the second key as the key to use to render the page
       this.previousKeys.pop();
-      const previousLastScannedKey = this.previousKeys.pop();
+      const previousLastScannedKey =  this.previousKeys.length > 0 ? this.previousKeys.pop() : '';
       this.getSignatures(previousLastScannedKey);
     } else {
       this.getSignatures();
@@ -202,27 +195,11 @@ export class ClaContractViewSignaturesModal {
   }
 
   previousButtonDisabled(): boolean {
-    return !(this.previousKeys.length > 1);
+    return this.previousKeys.length == 0;
   }
 
   nextButtonDisabled(): boolean {
     return this.nextKey == null && this.previousKeys.length >= 0;
-  }
-
-  previousButtonColor(): string {
-    if (this.previousKeys.length <= 1) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
-  }
-
-  nextButtonColor(): string {
-    if (this.nextKey == null && this.previousKeys.length >= 0) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
   }
 
   signaturePopover(ev, signature) {
@@ -268,13 +245,7 @@ export class ClaContractViewSignaturesModal {
     }
   }
 
-  signatureDetails(data) {
-    console.log('signature details');
-  }
 
-  signatureCla(data) {
-    console.log('signature cla');
-  }
 
   dismiss() {
     this.viewCtrl.dismiss();
