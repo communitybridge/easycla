@@ -715,7 +715,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	}
 
 	if params.SignatureType != nil {
-		if params.SearchTerm == nil {
+		if params.SearchTerm != nil {
 			indexName = "signature-project-id-type-index"
 			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
 		} else {
