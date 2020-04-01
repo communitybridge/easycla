@@ -5,6 +5,7 @@ package github_organizations
 
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/github_organizations"
@@ -21,6 +22,25 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(*result)
+		})
+	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
+		func(params github_organizations.AddProjectGithubOrganizationParams, claUser *auth.User) middleware.Responder {
+			result, err := service.AddGithubOrganization(params.ProjectSFID, &v1Models.CreateGithubOrganization{
+				OrganizationName: params.Body.OrganizationName,
+			})
+			if err != nil {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
+			}
+			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(*result)
+		})
+
+	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
+		func(params github_organizations.DeleteProjectGithubOrganizationParams, claUser *auth.User) middleware.Responder {
+			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
+			if err != nil {
+				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
+			}
+			return github_organizations.NewDeleteProjectGithubOrganizationOK()
 		})
 }
 

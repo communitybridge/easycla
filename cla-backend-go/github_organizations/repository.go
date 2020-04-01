@@ -4,12 +4,16 @@
 package github_organizations
 
 import (
+	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -26,6 +30,8 @@ const (
 // Repository interface defines the functions for the github organizations data model
 type Repository interface {
 	GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error)
+	AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
+	DeleteGithubOrganization(externalProjectID string, githubOrgName string) error
 }
 
 type repository struct {
@@ -42,6 +48,62 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 		githubOrgTableName: fmt.Sprintf("cla-%s-github-orgs", stage),
 	}
 }
+func (repo repository) AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
+	_, currentTime := utils.CurrentTime()
+	githubOrg := &GithubOrganization{
+		DateCreated:                currentTime,
+		DateModified:               currentTime,
+		OrganizationInstallationID: 0,
+		OrganizationName:           input.OrganizationName,
+		OrganizationSfid:           externalProjectID,
+		Version:                    "v1",
+	}
+	av, err := dynamodbattribute.MarshalMap(githubOrg)
+	if err != nil {
+		return nil, err
+	}
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:                av,
+		TableName:           aws.String(repo.githubOrgTableName),
+		ConditionExpression: aws.String("attribute_not_exists(organization_name)"),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return nil, errors.New("github organization already exist")
+			}
+		}
+		log.Error("cannot put github organization in dynamodb", err)
+		return nil, err
+	}
+	return toModel(githubOrg), nil
+}
+
+func (repo repository) DeleteGithubOrganization(externalProjectID string, githubOrgName string) error {
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		ExpressionAttributeNames: map[string]*string{
+			"#projectSFID": aws.String("organization_sfid"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":externalProjectID": {
+				S: aws.String(externalProjectID),
+			},
+		},
+		ConditionExpression: aws.String("#projectSFID = :externalProjectID"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"organization_name": {S: aws.String(githubOrgName)},
+		},
+		TableName: aws.String(repo.githubOrgTableName),
+	})
+	if err != nil {
+		errMsg := fmt.Sprintf("error deleting github organization: %s", githubOrgName)
+		log.Error(errMsg, err)
+		return errors.New(errMsg)
+	}
+	return nil
+}
+
 func (repo repository) GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error) {
 	var condition expression.KeyConditionBuilder
 	builder := expression.NewBuilder()

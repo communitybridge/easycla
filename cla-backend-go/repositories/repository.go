@@ -4,7 +4,10 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -26,6 +29,7 @@ const (
 type Repository interface {
 	GetMetrics() (*models.RepositoryMetrics, error)
 	GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error)
+	DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error
 }
 
 // NewRepository create new Repository
@@ -123,4 +127,88 @@ func (repo repo) getProjectRepositories(projectID string) ([]*models.GithubRepos
 		out = append(out, gr.toModel())
 	}
 	return out, nil
+}
+
+// getRepositoriesByGithubOrg returns an array of GH repositories for the specified project ID
+func (repo repo) getRepositoriesByGithubOrg(githubOrgName string) ([]*models.GithubRepository, error) {
+	var out []*models.GithubRepository
+	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	builder := expression.NewBuilder()
+	filter := expression.Name("repository_organization_name").Equal(expression.Value(githubOrgName))
+	builder = builder.WithFilter(filter)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+	}
+
+	results, err := repo.dynamoDBClient.Scan(scanInput)
+	if err != nil {
+		log.Warnf("unable to get github organizations repositories. error = %s", err.Error())
+		return nil, err
+	}
+	if len(results.Items) == 0 {
+		return out, nil
+	}
+	var result []*GithubRepository
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &result)
+	if err != nil {
+		return nil, err
+	}
+	for _, gr := range result {
+		out = append(out, gr.toModel())
+	}
+	return out, nil
+}
+
+func (repo repo) deleteGithubRepository(externalProjectID, ghRepoID string) error {
+	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		ExpressionAttributeNames: map[string]*string{
+			"#projectSFID": aws.String("repository_sfdc_id"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":externalProjectID": {
+				S: aws.String(externalProjectID),
+			},
+		},
+		ConditionExpression: aws.String("#projectSFID = :externalProjectID"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {S: aws.String(ghRepoID)},
+		},
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return errors.New("project id not matching with github repositories project id")
+			}
+		}
+		log.Error(fmt.Sprintf("error deleting github repository with id: %s", ghRepoID), err)
+		return err
+	}
+	return nil
+}
+
+func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error {
+	ghrepos, err := repo.getRepositoriesByGithubOrg(githubOrgName)
+	if err != nil {
+		return err
+	}
+	for _, ghrepo := range ghrepos {
+		err = repo.deleteGithubRepository(externalProjectID, ghrepo.RepositoryID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
