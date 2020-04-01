@@ -45,13 +45,18 @@ export class ClaContractViewCompaniesSignaturesModal {
   page: any;
 
   // Pagination next/previous options
-  nextKey: string;
-  previousKeys: any[];
+  limitPerPage: number = 10;
+  resultCount: number = 0;
+  nextKey = null;
+  previousKeys = [];
+
+
+  errorMsg = '';
 
   // Easy sort table variables
   columnData = [];
-  column = [{head:'Company', dataKey:'companyName'}, {head:'Version', dataKey:'version'}, {head:'Date Signed', dataKey:'signatureCreated'}];
-  childColumn = [{head:'Name', dataKey:'username'}, {head:'Email', dataKey:'lfEmail'}, {head:'username/LFID', dataKey:'lfUsername'}];
+  column = [{ head: 'Company', dataKey: 'companyName' }, { head: 'Version', dataKey: 'version' }, { head: 'Date Signed', dataKey: 'signatureCreated' }];
+  childColumn = [{ head: 'Name', dataKey: 'username' }, { head: 'Email', dataKey: 'lfEmail' }, { head: 'username/LFID', dataKey: 'lfUsername' }];
 
   constructor(
     public navCtrl: NavController,
@@ -135,11 +140,12 @@ export class ClaContractViewCompaniesSignaturesModal {
 
   // get all signatures
   getSignatures(lastKeyScanned = '') {
+    this.errorMsg = '';
     this.loading.signatures = true;
     this.claService
       .getProjectSignaturesV3(
         this.claProjectId,
-        100,
+        this.limitPerPage,
         lastKeyScanned,
         this.searchString,
         this.searchField.value,
@@ -148,21 +154,35 @@ export class ClaContractViewCompaniesSignaturesModal {
       )
       .subscribe((response) => {
         this.data = response;
-        if(this.data && this.data.signatures){
-          this.columnData = this.data.signatures.map(e => ({...e, signatureCreated:  e.signatureCreated.split('T')[0]}))
+
+        // Pagination Logic - add the key used to render this page to our previous keys
+        if (lastKeyScanned) {
+          this.previousKeys.push(lastKeyScanned);
+        }
+        // If we have a next key (usually we would unless there are no more records)
+        if (this.data.lastKeyScanned) {
+          this.nextKey = this.data.lastKeyScanned;
+        } else {
+          this.nextKey = null;
+        }
+
+        if (this.data && this.data.signatures) {
+          this.columnData = this.data.signatures.map(e => ({ ...e, signatureCreated: e.signatureCreated.split('T')[0] }))
+        } else {
+          this.columnData = []
         }
 
         this.page.totalCount = this.data.resultCount;
         this.loading.signatures = false;
+      }, err => {
+        this.errorMsg = 'Could not retrieve company signature data. Please try again';
+        this.loading.signatures = false;
       });
-  }
-
-  toggleExpandRow(row) {
-    this.table.rowDetail.toggleExpandRow(row);
   }
 
   getNextPage() {
     if (this.nextKey) {
+
       this.getSignatures(this.nextKey);
     } else {
       this.getSignatures();
@@ -174,7 +194,7 @@ export class ClaContractViewCompaniesSignaturesModal {
       // Since the most recent previous key is the current page - we want to go one more back to the one before
       // so we pop two and use the second key as the key to use to render the page
       this.previousKeys.pop();
-      const previousLastScannedKey = this.previousKeys.pop();
+      const previousLastScannedKey = this.previousKeys.length > 0 ? this.previousKeys.pop() : '';
       this.getSignatures(previousLastScannedKey);
     } else {
       this.getSignatures();
@@ -182,45 +202,12 @@ export class ClaContractViewCompaniesSignaturesModal {
   }
 
   previousButtonDisabled(): boolean {
-    return !(this.previousKeys.length > 1);
+    return this.previousKeys.length == 0;
   }
 
   nextButtonDisabled(): boolean {
     return this.nextKey == null && this.previousKeys.length >= 0;
   }
-
-  previousButtonColor(): string {
-    if (this.previousKeys.length <= 1) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
-  }
-
-  nextButtonColor(): string {
-    if (this.nextKey == null && this.previousKeys.length >= 0) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
-  }
-
-  /**
-   * Helper function to dump the pagination details.
-   */
-  debugShowPaginationReport() {
-    console.log('NextKey: ' + this.nextKey);
-    console.log('PreviousKeys:');
-    console.log(this.previousKeys);
-    console.log('------------------------------');
-  }
-
-  /**
-   * Default sorting.
-   *
-   * @param prop
-   */
-  sortMembers(prop) {}
 
   signaturePopover(ev, signature) {
     let actions = {

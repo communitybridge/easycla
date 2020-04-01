@@ -48,6 +48,13 @@ export class ProjectClaPage {
   ) {
     this.sfdcProjectId = navParams.get('projectId');
     this.getDefaults();
+    this.listenEvents();
+  }
+
+  listenEvents() {
+    this.events.subscribe('reloadProjectCla', () => {
+      this.getClaProjects();
+    });
   }
 
   getDefaults() {
@@ -88,31 +95,17 @@ export class ProjectClaPage {
       this.claProjects = this.sortClaProjects(response.projects);
     })
   }
-  
+
   getGithubOrganisation() {
     this.loading.orgs = true;
     this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
       this.loading.orgs = false;
-      for (let organization of organizations) {
-        this.claService.getGithubGetNamespace(organization.organization_name).subscribe(
-          (providerInfo) => {
-            organization.providerInfo = providerInfo;
-          },
-          (exception) => {
-            organization.providerInfo = null;
-          }
-        );
-
-        if (organization.organization_installation_id) {
-          this.claService
-            .getGithubOrganizationRepositories(organization.organization_name)
-            .subscribe((repositories) => {
-              organization.repositories = repositories;
-            });
-        }
-      }
-      this.githubOrganizations = organizations;
+      this.githubOrganizations = organizations.list;
     });
+  }
+
+  getOrganisationName(url) {
+    return url.split('/').pop();
   }
 
   backToProjects() {
@@ -134,7 +127,7 @@ export class ProjectClaPage {
     }
     modal.onDidDismiss((data) => {
       if (data) {
-        this.getGithubOrganisation();
+        this.getClaProjects();
       }
 
     });
@@ -221,7 +214,7 @@ export class ProjectClaPage {
       claProjectId: claProjectId
     });
     modal.onDidDismiss((data) => {
-      this.getGithubOrganisation();
+      this.getClaProjects();
     });
     modal.present();
   }
@@ -242,7 +235,7 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
       console.log('data', data)
-      this.getGithubOrganisation();
+      this.getClaProjects();
     });
     modal.present();
   }
@@ -307,8 +300,10 @@ export class ProjectClaPage {
   }
 
   deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(organization.organization_name).subscribe((response) => {
-      this.getGithubOrganisation();
+    this.claService.deleteGithubOrganization(this.sfdcProjectId ,organization.organizationName).subscribe((response) => {
+      if(response.status === 200) {
+        this.getGithubOrganisation();
+      }
     });
   }
 

@@ -50,38 +50,12 @@
           <div *ngIf="!loading.signatures && rows && rows.length === 0" class="empty-signatures">
             <h2>No Signatures</h2>
           </div>
-          <div *ngIf="!loading.signatures &&  rows && rows.length > 0">
-            <ngx-datatable class='material' [headerHeight]="50" [rows]="rows" [rowHeight]="'auto'"
-              [columnMode]="ColumnMode.force" [sortType]="SortType.multi" (sort)="sortMembers($event)">
-              <ngx-datatable-column name="Type" prop="Type" [sortable]="true" [draggable]="true" [resizeable]="true">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span *ngIf="row['Type'] === 'individual'">
-                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
-                  </span>
-                  <span *ngIf="row['Type'] === 'employee'">
-                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
-                  </span>
-                  <span *ngIf="row['Type'] === 'company'">
-                    <ion-icon name="briefcase"></ion-icon> {{ row['Type'] | titlecase }}
-                  </span>
-                  <span *ngIf="row['Type'] === 'unknown'">
-                    <ion-icon name="person"></ion-icon> {{ row['Type'] | titlecase }}
-                  </span>
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Name" prop="Name" [sortable]="true" [draggable]="true" [resizeable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Company" prop="Company" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="GitHub ID" prop="GitHubID" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="LFID" prop="LFID" [sortable]="true" [draggable]="true" [resizeable]="true">
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Version" prop="Version" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
-              <ngx-datatable-column name="Date Signed" prop="Date" [sortable]="true" [draggable]="true"
-                [resizeable]="true"></ngx-datatable-column>
-            </ngx-datatable>
+          <div *ngIf="!loading.signatures && columnData.length > 0">
+            <easy-sort-table 
+            [column]="column" 
+            [columnData]="columnData"
+            [data]="data"
+            ></easy-sort-table>
           </div>
         </div>
       </ion-col>
@@ -93,9 +67,9 @@
   <ion-row class="align-items-center">
     <ion-col col-12 class="pagination-buttons">
       <ion-buttons>
-        <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()"
+        <button [disabled]="previousButtonDisabled() || loading.signatures" ion-button
           (click)="getPreviousPage()">Prev</button>
-        <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()"
+        <button [disabled]="nextButtonDisabled() || loading.signatures" ion-button
           (click)="getNextPage()">Next</button>
       </ion-buttons>
     </ion-col>

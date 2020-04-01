@@ -28,7 +28,6 @@ export class SortTableComponent {
     this.sort(this.column[0].dataKey);
   }
 
-  
   compareValues(key, order = 'asc') {
     return function innerSort(a, b) {
       if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
@@ -36,9 +35,9 @@ export class SortTableComponent {
       }
   
       const varA = (typeof a[key] === 'string')
-        ? a[key].toUpperCase() : a[key];
+        ? a[key].toLowerCase().trim() : a[key];
       const varB = (typeof b[key] === 'string')
-        ? b[key].toUpperCase() : b[key];
+        ? b[key].toLowerCase().trim()  : b[key];
   
       let comparison = 0;
       if (varA > varB) {

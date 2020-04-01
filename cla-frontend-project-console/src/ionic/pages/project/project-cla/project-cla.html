@@ -54,36 +54,36 @@
                   <ion-row *ngIf="!loading.orgs">
                     <ion-col class="vertical-rule-right" col-12 col-md-6
                       *ngFor="let organization of githubOrganizations">
-                      <ion-card-content *ngIf="organization.providerInfo">
+                      <ion-card-content>
                         <ion-card-title>
                           <ion-icon name="logo-github"></ion-icon>
-                          <span>{{ organization.organization_name }}</span>
+                          <span>{{ getOrganisationName(organization.organizationName) }}</span>
                         </ion-card-title>
 
                         <p>
-                          <a target="_blank" href="https://github.com/{{ organization.organization_name }}">
-                            https://github.com/{{organization.organization_name }}
+                          <a target="_blank" href="https://github.com/{{ getOrganisationName(organization.organizationName) }}">
+                            https://github.com/{{getOrganisationName(organization.organizationName)}}
                           </a>
                         </p>
 
-                        <h3 *ngIf="organization.providerInfo === null" class="namespace-error">
+                        <h3 *ngIf="organization.githubInfo === null" class="namespace-error">
                           Error occurred during fetching Github account.
                         </h3>
 
-                        <h3 *ngIf="organization.providerInfo?.errors" class="namespace-error">
-                          {{organization.providerInfo?.errors.namespace}}
+                        <h3 *ngIf="organization.githubInfo.error" class="namespace-error">
+                          {{organization.githubInfo.error}}
                         </h3>
 
-                        <h3
-                          *ngIf="!organization.organization_installation_id && organization.providerInfo?.errors === undefined"
-                          class="not-configured-warning">
-                          Not Configured.
-                          <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
-                        </h3>
+                        <ng-container *ngIf="!organization.githubInfo.error">
+                          <h3 *ngIf="!organization.organizationInstallationID" class="not-configured-warning">
+                            Not Configured.
+                            <a (click)="openClaOrganizationAppModal()">Please connect the CLA App to the Github Org.</a>
+                          </h3>
+                        </ng-container>
 
                         <p>{{ organization.providerInfo?.bio }}</p>
 
-                        <div *ngIf="organization.providerInfo" class="organization-actions">
+                        <div *ngIf="organization.githubInfo" class="organization-actions">
                           <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
                             color="light">
                             Delete
