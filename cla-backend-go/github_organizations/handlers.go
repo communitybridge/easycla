@@ -21,6 +21,24 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(result)
 		})
+
+	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
+		func(params github_organizations.AddProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.AddGithubOrganization(params.ProjectSFID, params.Body)
+			if err != nil {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
+			}
+			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(result)
+		})
+
+	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
+		func(params github_organizations.DeleteProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
+			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
+			if err != nil {
+				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
+			}
+			return github_organizations.NewDeleteProjectGithubOrganizationOK()
+		})
 }
 
 type codedResponse interface {

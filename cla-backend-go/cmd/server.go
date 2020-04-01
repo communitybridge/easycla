@@ -200,7 +200,7 @@ func server(localMode bool) http.Handler {
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
-	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo)
+	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
