@@ -93,33 +93,7 @@ export class ProjectClaPage {
       this.loading.claProjects = false;
       this.projectsByExternalId = response.projects;
       this.claProjects = this.sortClaProjects(response.projects);
-      this.loading.claProjects = false;
-
-      if (this.claProjects) {
-        this.claProjects.map((project) => {
-          this.claService.getProjectRepositoriesByrOrg(project.projectID).subscribe((githubOrganizations) => {
-            project.githubOrganizations = githubOrganizations;
-          });
-        });
-      }
-
-
-      // Get Github Organizations
-      this.getGithubOrganisation();
-      this.getGerrit();
-
-    });
-  }
-
-  getGerrit() {
-    if (this.projectsByExternalId !== null) {
-      for (let project of this.projectsByExternalId) {
-        //Get Gerrit Instances
-        this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
-          project.gerrits = gerrits;
-        });
-      }
-    }
+    })
   }
 
   getGithubOrganisation() {
@@ -326,7 +300,7 @@ export class ProjectClaPage {
   }
 
   deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(this.sfdcProjectId ,organization.organizationName).subscribe((response) => {
+    this.claService.deleteGithubOrganization(this.sfdcProjectId , this.getOrganisationName(organization.organizationName)).subscribe((response) => {
       if(response.status === 200) {
         this.getGithubOrganisation();
       }

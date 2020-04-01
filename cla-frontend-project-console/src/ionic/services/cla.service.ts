@@ -637,10 +637,10 @@ export class ClaService {
   /**
    * GET /project/{project_id}/repositories_by_org
    **/
-  getProjectRepositoriesByrOrg(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
-    return this.http.get(url).map((res) => res.json());
-  }
+  // getProjectRepositoriesByrOrg(projectId) {
+  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
+  //   return this.http.get(url).map((res) => res.json());
+  // }
 
   /**
    * POST /repository
@@ -933,10 +933,10 @@ export class ClaService {
     return { ...project, ...objLogoUrl };
   }
 
-  getGerritInstance(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
-    return this.http.get(url).map((res) => res.json());
-  }
+  // getGerritInstance(projectId) {
+  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
+  //   return this.http.get(url).map((res) => res.json());
+  // }
 
   deleteGerritInstance(gerritId) {
     const url: URL = this.getV1Endpoint('/v1/gerrit/' + gerritId);

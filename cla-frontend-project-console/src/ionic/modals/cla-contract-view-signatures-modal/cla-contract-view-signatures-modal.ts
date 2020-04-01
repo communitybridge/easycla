@@ -153,7 +153,7 @@ export class ClaContractViewSignaturesModal {
         if (this.data.lastKeyScanned) {
           this.nextKey = this.data.lastKeyScanned;
         } else {
-          this.columnData = []
+          this.nextKey = null;
         }
         
         if (this.data && this.data.signatures) {
