@@ -1600,6 +1600,34 @@ paths:
         - github-organizations
 
   /project/{projectSFID}/github/repositories:
+    post:
+      summary: API to add the gitHub repository
+      security:
+        - OauthSecurity: []
+      operationId: addProjectGithubRepository
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: github-repository-input
+          schema:
+            $ref: '#/definitions/github-repository-input'
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-repository'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
     get:
       summary: API to fetch the gitHub repositories of the project
       security:
@@ -1622,7 +1650,33 @@ paths:
         403:
           $ref: '#/responses/forbidden'
       tags:
-        - github-organizations
+        - github-repositories
+  /project/{projectSFID}/github/repositories/{repositoryID}:
+    delete:
+      summary: API to add the gitHub repository
+      security:
+        - OauthSecurity: []
+      operationId: deleteProjectGithubRepository
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
 
   /events:
     get:
@@ -2940,6 +2994,13 @@ definitions:
 
   github-repository-input:
     type: object
+    required:
+      - repositoryExternalID
+      - repositoryName
+      - repositoryOrganizationName
+      - repositoryProjectID
+      - repositoryType
+      - repositoryUrl
     properties:
       repositoryExternalID:
         type: string

@@ -201,6 +201,7 @@ func server(localMode bool) http.Handler {
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	repositoriesService := repositories.NewService(repositoriesRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -236,6 +237,7 @@ func server(localMode bool) http.Handler {
 	v2Metrics.Configure(v2API, metricsService)
 	github_organizations.Configure(api, githubOrganizationsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService)
+	repositories.Configure(api, repositoriesService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

@@ -272,17 +272,17 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 	if err != nil {
 		return nil, err
 	}
-	repository := &models.GithubRepository{
+	repository := &GithubRepository{
 		DateCreated:                currentTime,
 		DateModified:               currentTime,
-		RepositoryExternalID:       input.RepositoryExternalID,
+		RepositoryExternalID:       *input.RepositoryExternalID,
 		RepositoryID:               repoID.String(),
-		RepositoryName:             input.RepositoryName,
-		RepositoryOrganizationName: input.RepositoryOrganizationName,
-		RepositoryProjectID:        input.RepositoryProjectID,
+		RepositoryName:             *input.RepositoryName,
+		RepositoryOrganizationName: *input.RepositoryOrganizationName,
+		RepositoryProjectID:        *input.RepositoryProjectID,
 		RepositorySfdcID:           externalProjectID,
-		RepositoryType:             input.RepositoryType,
-		RepositoryURL:              input.RepositoryURL,
+		RepositoryType:             *input.RepositoryType,
+		RepositoryURL:              *input.RepositoryURL,
 		Version:                    "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(repository)
@@ -297,7 +297,7 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 		log.Error("cannot put github repository in dynamodb", err)
 		return nil, err
 	}
-	return repository, nil
+	return repository.toModel(), nil
 }
 
 func (repo repo) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
