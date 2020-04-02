@@ -1603,7 +1603,8 @@ paths:
     post:
       summary: API to add the gitHub repository
       security:
-        - OauthSecurity: []
+        - OauthSecurity:
+            - project
       operationId: addProjectGithubRepository
       parameters:
         - name: projectSFID
@@ -1631,7 +1632,8 @@ paths:
     get:
       summary: API to fetch the gitHub repositories of the project
       security:
-        - OauthSecurity: []
+        - OauthSecurity:
+            - project
       operationId: getProjectGithubRepositories
       parameters:
         - name: projectSFID
@@ -1655,7 +1657,8 @@ paths:
     delete:
       summary: API to add the gitHub repository
       security:
-        - OauthSecurity: []
+        - OauthSecurity:
+            - project
       operationId: deleteProjectGithubRepository
       parameters:
         - name: projectSFID

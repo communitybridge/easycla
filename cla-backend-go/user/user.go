@@ -21,3 +21,12 @@ type CLAUser struct {
 type Provider struct {
 	ProviderUserID string
 }
+
+func (claUser *CLAUser) IsAuthorizedForProject(projectSFID string) bool {
+	for _, v := range claUser.ProjectIDs {
+		if v == projectSFID {
+			return true
+		}
+	}
+	return false
+}

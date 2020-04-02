@@ -14,6 +14,9 @@ import (
 func Configure(api *operations.ClaAPI, service Service) {
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, claUser *user.CLAUser) middleware.Responder {
+			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
+				return github_repositories.NewGetProjectGithubRepositoriesUnauthorized()
+			}
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
@@ -23,6 +26,9 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
+			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
+				return github_repositories.NewAddProjectGithubRepositoryUnauthorized()
+			}
 			result, err := service.AddGithubRepository(params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
@@ -32,6 +38,9 @@ func Configure(api *operations.ClaAPI, service Service) {
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
+			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
+				return github_repositories.NewDeleteProjectGithubRepositoryUnauthorized()
+			}
 			err := service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))

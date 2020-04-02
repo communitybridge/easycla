@@ -105,7 +105,7 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	for _, scope := range scopes {
 		switch Scope(scope) {
 		case projectScope:
-			projectIDs, err := a.userPermissioner.GetUserProjectIDs(lfuser.UserID)
+			projectIDs, err := a.userPermissioner.GetUserProjectIDs(lfuser.LFUsername)
 			if err != nil {
 				log.Warnf("SecurityAuth - GetUserProjectIDs error for user id: %s, error: %+v", lfuser.UserID, err)
 				return nil, err
