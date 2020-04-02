@@ -67,9 +67,9 @@
   <ion-row class="align-items-center">
     <ion-col col-12 class="pagination-buttons">
       <ion-buttons>
-        <button [disabled]="previousButtonDisabled()" ion-button [color]="previousButtonColor()"
+        <button [disabled]="previousButtonDisabled() || loading.signatures" ion-button
           (click)="getPreviousPage()">Prev</button>
-        <button [disabled]="nextButtonDisabled()" ion-button [color]="nextButtonColor()"
+        <button [disabled]="nextButtonDisabled() || loading.signatures" ion-button
           (click)="getNextPage()">Next</button>
       </ion-buttons>
     </ion-col>
