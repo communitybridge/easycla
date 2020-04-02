@@ -1545,6 +1545,31 @@ paths:
       tags:
         - github-organizations
 
+  /project/{projectSFID}/github/repositories:
+    get:
+      summary: API to fetch the gitHub repositories of the project
+      security:
+        - OauthSecurity: []
+      operationId: getProjectGithubRepositories
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/list-github-repositories'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-organizations
+
   /events:
     get:
       summary: search events
@@ -2859,6 +2884,22 @@ definitions:
         items:
           $ref: '#/definitions/github-repository'
 
+  github-repository-input:
+    type: object
+    properties:
+      repositoryExternalID:
+        type: string
+      repositoryName:
+        type: string
+      repositoryOrganizationName:
+        type: string
+      repositoryProjectID:
+        type: string
+      repositoryType:
+        type: string
+      repositoryUrl:
+        type: string
+
   github-repository:
     type: object
     properties:
@@ -2972,6 +3013,14 @@ definitions:
             items:
               type: string
               example: "communitybridge/easycla-api"
+
+  list-github-repositories:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository'
 
 responses:
   resource-deleted:
