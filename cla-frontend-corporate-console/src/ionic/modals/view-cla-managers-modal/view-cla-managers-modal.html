@@ -13,7 +13,7 @@
 
 <ion-content>
   <ion-row>
-    <ion-searchbar placeholder="Search Manager">
+    <ion-searchbar placeholder="Search Manager By Name" (ionChange)="searchCLAManager($event)">
     </ion-searchbar>
   </ion-row>
   <ion-grid class="managers">
@@ -23,7 +23,7 @@
         </ion-label>
         <ion-col col-12>
           <ion-list>
-            <ion-item ion-item *ngFor="let manager of managers">
+            <ion-item ion-item *ngFor="let manager of filteredManagers">
               <ion-label>{{ manager.username || manager.lfUsername }} ({{ manager.lfEmail }})</ion-label>
             </ion-item>
           </ion-list>
