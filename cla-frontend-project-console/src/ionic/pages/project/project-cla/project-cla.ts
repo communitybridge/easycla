@@ -51,11 +51,11 @@ export class ProjectClaPage {
     this.listenEvents();
   }
 
-  listenEvents(){
-    this.events.subscribe('reloadProjectCla',() => {
-     this.getClaProjects();
+  listenEvents() {
+    this.events.subscribe('reloadProjectCla', () => {
+      this.getClaProjects();
     });
- }
+  }
 
   getDefaults() {
     this.loading = {
@@ -93,59 +93,19 @@ export class ProjectClaPage {
       this.loading.claProjects = false;
       this.projectsByExternalId = response.projects;
       this.claProjects = this.sortClaProjects(response.projects);
-      this.loading.claProjects = false;
-
-      if (this.claProjects) {
-        this.claProjects.map((project) => {
-          this.claService.getProjectRepositoriesByrOrg(project.projectID).subscribe((githubOrganizations) => {
-            project.githubOrganizations = githubOrganizations;
-          });
-        });
-      }
-
-
-      // Get Github Organizations
-      this.getGithubOrganisation();
-      this.getGerrit();
-
-    });
+    })
   }
 
-  getGerrit() {
-    if (this.projectsByExternalId !== null) {
-      for (let project of this.projectsByExternalId) {
-        //Get Gerrit Instances
-        this.claService.getGerritInstance(project.projectID).subscribe((gerrits) => {
-          project.gerrits = gerrits;
-        });
-      }
-    }
-  }
-  
   getGithubOrganisation() {
     this.loading.orgs = true;
     this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
       this.loading.orgs = false;
-      for (let organization of organizations) {
-        this.claService.getGithubGetNamespace(organization.organization_name).subscribe(
-          (providerInfo) => {
-            organization.providerInfo = providerInfo;
-          },
-          (exception) => {
-            organization.providerInfo = null;
-          }
-        );
-
-        if (organization.organization_installation_id) {
-          this.claService
-            .getGithubOrganizationRepositories(organization.organization_name)
-            .subscribe((repositories) => {
-              organization.repositories = repositories;
-            });
-        }
-      }
-      this.githubOrganizations = organizations;
+      this.githubOrganizations = organizations.list;
     });
+  }
+
+  getOrganisationName(url) {
+    return url.split('/').pop();
   }
 
   backToProjects() {
@@ -340,8 +300,10 @@ export class ProjectClaPage {
   }
 
   deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(organization.organization_name).subscribe((response) => {
-      this.getGithubOrganisation();
+    this.claService.deleteGithubOrganization(this.sfdcProjectId , this.getOrganisationName(organization.organizationName)).subscribe((response) => {
+      if(response.status === 200) {
+        this.getGithubOrganisation();
+      }
     });
   }
 
