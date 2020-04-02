@@ -59,7 +59,6 @@ export class ClaOrganizationProviderModal {
     this.loading = true;
     this.showErrorMsg = false;
     let trimName = this.form.value.orgName.trim();
-    console.log(trimName);
     this.claService.testGitHubOrganization(trimName).subscribe((res: any)=> {
       this.loading = false;
       if(res.status ===  200) {
