@@ -3133,8 +3133,23 @@ definitions:
           list:
             type: array
             items:
-              type: string
-              example: "communitybridge/easycla-api"
+              $ref: '#/definitions/github-repository-info'
+
+  github-repository-info:
+    type: object
+    properties:
+      repositoryGithubID:
+        type: integer
+        example: 250509778
+      repositoryName:
+        type: string
+        example: "communitybridge/easycla"
+      repositoryType:
+        type: string
+        example: "github"
+      repositoryUrl:
+        type: string
+        example: "https://github.com/communitybridge/easycla"
 
   list-github-repositories:
     type: object

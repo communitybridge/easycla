@@ -25,8 +25,14 @@ import (
 
 // index
 const (
-	ProjectRepositoryIndex = "project-repository-index"
-	SFDCRepositoryIndex    = "sfdc-repository-index"
+	ProjectRepositoryIndex  = "project-repository-index"
+	SFDCRepositoryIndex     = "sfdc-repository-index"
+	ExternalRepositoryIndex = "external-repository-index"
+)
+
+// errors
+var (
+	ErrGithubRepositoryNotFound = errors.New("github repository not found")
 )
 
 // Repository defines functions of Repositories
@@ -199,7 +205,7 @@ func (repo repo) deleteGithubRepository(externalProjectID, ghRepoID string) erro
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("project id not matching with github repositories project id")
+				return errors.New("github repository does not exist or repository_sfdc_id does not match with specifiled project id")
 			}
 		}
 		log.Error(fmt.Sprintf("error deleting github repository with id: %s", ghRepoID), err)
@@ -267,6 +273,14 @@ func (repo repo) ListProjectRepositories(externalProjectID string) (*models.List
 }
 
 func (repo repo) AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+	_, err := repo.getRepositoryByGithubID(utils.StringValue(input.RepositoryExternalID))
+	if err != nil {
+		if err != ErrGithubRepositoryNotFound {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("github repository already exist")
+	}
 	_, currentTime := utils.CurrentTime()
 	repoID, err := uuid.NewV4()
 	if err != nil {
@@ -275,14 +289,14 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 	repository := &GithubRepository{
 		DateCreated:                currentTime,
 		DateModified:               currentTime,
-		RepositoryExternalID:       *input.RepositoryExternalID,
+		RepositoryExternalID:       utils.StringValue(input.RepositoryExternalID),
 		RepositoryID:               repoID.String(),
-		RepositoryName:             *input.RepositoryName,
-		RepositoryOrganizationName: *input.RepositoryOrganizationName,
-		RepositoryProjectID:        *input.RepositoryProjectID,
+		RepositoryName:             utils.StringValue(input.RepositoryName),
+		RepositoryOrganizationName: utils.StringValue(input.RepositoryOrganizationName),
+		RepositoryProjectID:        utils.StringValue(input.RepositoryProjectID),
 		RepositorySfdcID:           externalProjectID,
-		RepositoryType:             *input.RepositoryType,
-		RepositoryURL:              *input.RepositoryURL,
+		RepositoryType:             utils.StringValue(input.RepositoryType),
+		RepositoryURL:              utils.StringValue(input.RepositoryURL),
 		Version:                    "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(repository)
@@ -302,4 +316,42 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 
 func (repo repo) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
 	return repo.deleteGithubRepository(externalProjectID, repositoryID)
+}
+
+func (repo repo) getRepositoryByGithubID(externalID string) (*models.GithubRepository, error) {
+	var condition expression.KeyConditionBuilder
+	builder := expression.NewBuilder()
+	condition = expression.Key("repository_external_id").Equal(expression.Value(externalID))
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.repositoryTableName),
+		IndexName:                 aws.String(ExternalRepositoryIndex),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("unable to get project github repositories. error = %s", err.Error())
+		return nil, err
+	}
+	var result *GithubRepository
+	if len(results.Items) == 0 {
+		return nil, ErrGithubRepositoryNotFound
+	}
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &result)
+	if err != nil {
+		return nil, err
+	}
+	return result.toModel(), nil
 }

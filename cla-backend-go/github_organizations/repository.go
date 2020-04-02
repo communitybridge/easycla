@@ -166,7 +166,7 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 					}
 				}
 				ghorg.Repositories = &models.GithubOrganizationRepositories{
-					List: make([]string, 0),
+					List: make([]*models.GithubRepositoryInfo, 0),
 				}
 				if ghorg.OrganizationInstallationID != 0 {
 					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
@@ -175,7 +175,14 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 						ghorg.Repositories.Error = err.Error()
 						return
 					}
-					ghorg.Repositories.List = list
+					for _, repoInfo := range list {
+						ghorg.Repositories.List = append(ghorg.Repositories.List, &models.GithubRepositoryInfo{
+							RepositoryGithubID: utils.Int64Value(repoInfo.ID),
+							RepositoryName:     utils.StringValue(repoInfo.FullName),
+							RepositoryURL:      utils.StringValue(repoInfo.URL),
+							RepositoryType:     "github",
+						})
+					}
 				}
 			}(ghorganization)
 		}
