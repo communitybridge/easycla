@@ -57,3 +57,4 @@ The project includes source code from keycloak, which is licensed under the Apac
 
 This project’s documentation is licensed under the Creative Commons Attribution 4.0 International License \(CC-BY-4.0\). A copy of the license is available in LICENSE-docs.
 
+contribution
