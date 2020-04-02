@@ -182,7 +182,7 @@
 
                     <div class="manager-details" *ngIf="!manager.email">
                       <div class="manager-name">
-                        <span>{{ manager.name }}</span>
+                        <span>{{ manager.lfid }}</span>
                         <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                       </div>
                       <h4 class="error-message">The user has not signed in.</h4>
