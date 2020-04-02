@@ -1521,6 +1521,34 @@ paths:
         - github
 
   /project/{projectSFID}/github/organizations:
+    post:
+      summary: API to add new gitHub oranization in the project
+      security:
+        - OauthSecurity: []
+      operationId: addProjectGithubOrganization
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/create-github-organization'
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-organization'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-organizations
     get:
       summary: API to fetch the gitHub oranizations of the project
       security:
@@ -1536,6 +1564,32 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/github-organizations'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-organizations
+  /project/{projectSFID}/github/organizations/{orgName}:
+    delete:
+      summary: API to delete gitHub oranization in the project
+      security:
+        - OauthSecurity: []
+      operationId: deleteProjectGithubOrganization
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: orgName
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
         400:
           $ref: '#/responses/invalid-request'
         401:
@@ -2959,6 +3013,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/github-organization'
+
+  create-github-organization:
+    type: object
+    properties:
+      organizationName:
+        type: string
+        example: "kubernetes"
 
   github-organization:
     type: object

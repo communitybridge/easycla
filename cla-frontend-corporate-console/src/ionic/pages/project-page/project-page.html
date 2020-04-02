@@ -168,41 +168,21 @@
                 <ion-item *ngIf="managersRestricted && !loading.managers">
                   <p>Only Company Admins can view and update this list.</p>
                 </ion-item>
-                <!-- <ion-item *ngFor="let manager of managers">
+                
+                <ion-item *ngFor="let manager of managers">
                   <div class="manager">
                     <ion-icon name="person" item-left class="icon-md"></ion-icon>
                     <div class="manager-details" *ngIf="manager.email">
                       <div class="manager-name">
-                        <span>{{ manager.name }}</span>
-                        <span *ngIf="managers.length > 1" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                        <span>{{ manager.name}}</span>
+                        <span *ngIf="managers.length > 1 && !managersRestricted" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                       </div>
                       <h4>{{ manager.email }}</h4>
                     </div>
 
                     <div class="manager-details" *ngIf="!manager.email">
                       <div class="manager-name">
-                        <span>{{ manager.lfid }}</span>
-                        <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
-                      </div>
-                      <h4 class="error-message">The user has not signed in.</h4>
-                    </div>
-                  </div>
-                </ion-item> -->
-
-                <ion-item *ngFor="let manager of claMangers">
-                  <div class="manager">
-                    <ion-icon name="person" item-left class="icon-md"></ion-icon>
-                    <div class="manager-details" *ngIf="manager.lfEmail">
-                      <div class="manager-name">
-                        <span>{{ manager.username || manager.lfUsername}}</span>
-                        <span *ngIf="claMangers.length > 1 && !managersRestricted" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
-                      </div>
-                      <h4>{{ manager.lfEmail }}</h4>
-                    </div>
-
-                    <div class="manager-details" *ngIf="!manager.lfEmail">
-                      <div class="manager-name">
-                        <span>{{ manager.username || manager.lfUsername }}</span>
+                        <span>{{ manager.name }}</span>
                         <span (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                       </div>
                       <h4 class="error-message">The user has not signed in.</h4>
@@ -210,7 +190,7 @@
                   </div>
                 </ion-item>
               </ion-list>
-              <button bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
+              <button title="Add CLA Manager" bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
                 <ion-icon name="add"></ion-icon>
               </button>
             </ion-card-content>
@@ -261,6 +241,4 @@
     </ion-grid>
   </div>
   <cla-footer></cla-footer>
-
-
 </ion-content>

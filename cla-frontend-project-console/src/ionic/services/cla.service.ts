@@ -637,10 +637,10 @@ export class ClaService {
   /**
    * GET /project/{project_id}/repositories_by_org
    **/
-  getProjectRepositoriesByrOrg(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
-    return this.http.get(url).map((res) => res.json());
-  }
+  // getProjectRepositoriesByrOrg(projectId) {
+  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
+  //   return this.http.get(url).map((res) => res.json());
+  // }
 
   /**
    * POST /repository
@@ -670,7 +670,9 @@ export class ClaService {
    * GET /sfdc/${sfid}/github/organizations
    */
   getOrganizations(sfid) {
-    const url: URL = this.getV1Endpoint('/v1/sfdc/' + sfid + '/github/organizations');
+    // Outdated V1
+    // const url: URL = this.getV1Endpoint('/v1/sfdc/' + sfid + '/github/organizations');
+    const url: URL = this.getV3Endpoint(`/v3/project/${sfid}/github/organizations`);
     return this.http.get(url).map((res) => res.json());
   }
 
@@ -847,31 +849,8 @@ export class ClaService {
    * POST /github/organizations
    */
   postGithubOrganization(organization) {
-    /*
-      organization: {
-        'organization_project_id': '<project-id>',
-        'organization_name': 'org-name'
-      }
-     */
     const url: URL = this.getV1Endpoint('/v1/github/organizations');
     return this.http.post(url, organization).map((res) => res.json());
-  }
-
-  /**
-   * GET /github/get/namespace/{namespace}
-   */
-  getGithubGetNamespace(namespace) {
-    const url: URL = this.getV1Endpoint(`/v1/github/get/namespace/${namespace}` );
-    return this.http.get(url).map((res) => res.json())
-      .catch((error) => Observable.throw(error));
-  }
-
-  /**
-   * GET /github/check/namespace/{namespace}
-   */
-  getGithubCheckNamespace(namespace) {
-    const url: URL = this.getV1Endpoint('/v1/github/check/namespace/' + namespace);
-    return this.http.get(url).map((res) => res.json());
   }
 
   /**
@@ -885,17 +864,11 @@ export class ClaService {
   /**
    * DELETE /github/organizations/{organization_name}
    */
-  deleteGithubOrganization(organizationName) {
-    const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
-    return this.http.delete(url).map((res) => res.json());
-  }
-
-  /**
-   * GET /github/organizations/{organization_name}/repositories
-   */
-  getGithubOrganizationRepositories(organizationName) {
-    const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName + '/repositories');
-    return this.http.get(url).map((res) => res.json());
+  deleteGithubOrganization(projectSFID:string, organizationName:string) {
+    // outdated: v1
+    // const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
+    const url: URL = this.getV3Endpoint(`/v3/project/${projectSFID}/github/organizations/${organizationName}`);
+    return this.http.delete(url);
   }
 
   /**
@@ -960,10 +933,10 @@ export class ClaService {
     return { ...project, ...objLogoUrl };
   }
 
-  getGerritInstance(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
-    return this.http.get(url).map((res) => res.json());
-  }
+  // getGerritInstance(projectId) {
+  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
+  //   return this.http.get(url).map((res) => res.json());
+  // }
 
   deleteGerritInstance(gerritId) {
     const url: URL = this.getV1Endpoint('/v1/gerrit/' + gerritId);
