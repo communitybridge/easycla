@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/gofrs/uuid"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,6 +26,7 @@ import (
 // index
 const (
 	ProjectRepositoryIndex = "project-repository-index"
+	SFDCRepositoryIndex    = "sfdc-repository-index"
 )
 
 // Repository defines functions of Repositories
@@ -30,19 +34,24 @@ type Repository interface {
 	GetMetrics() (*models.RepositoryMetrics, error)
 	GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error)
 	DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error
+	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
+	DeleteGithubRepository(externalProjectID string, repositoryID string) error
+	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 }
 
 // NewRepository create new Repository
 func NewRepository(awsSession *session.Session, stage string) Repository {
 	return &repo{
-		stage:          stage,
-		dynamoDBClient: dynamodb.New(awsSession),
+		stage:               stage,
+		dynamoDBClient:      dynamodb.New(awsSession),
+		repositoryTableName: fmt.Sprintf("cla-%s-repositories", stage),
 	}
 }
 
 type repo struct {
-	stage          string
-	dynamoDBClient *dynamodb.DynamoDB
+	stage               string
+	dynamoDBClient      *dynamodb.DynamoDB
+	repositoryTableName string
 }
 
 // GetMetrics returns the metrics for the github repository
@@ -211,4 +220,86 @@ func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, githu
 		}
 	}
 	return nil
+}
+
+// List github repositories of project by external/salesforce project id
+func (repo repo) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
+	out := &models.ListGithubRepositories{
+		List: make([]*models.GithubRepository, 0),
+	}
+	var condition expression.KeyConditionBuilder
+	builder := expression.NewBuilder()
+
+	condition = expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID))
+
+	builder = builder.WithKeyCondition(condition)
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.repositoryTableName),
+		IndexName:                 aws.String(SFDCRepositoryIndex),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("unable to get project github repositories. error = %s", err.Error())
+		return nil, err
+	}
+	if len(results.Items) == 0 {
+		return out, nil
+	}
+	var result []*GithubRepository
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &result)
+	if err != nil {
+		return nil, err
+	}
+	for _, gr := range result {
+		out.List = append(out.List, gr.toModel())
+	}
+	return out, nil
+}
+
+func (repo repo) AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+	_, currentTime := utils.CurrentTime()
+	repoID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+	repository := &models.GithubRepository{
+		DateCreated:                currentTime,
+		DateModified:               currentTime,
+		RepositoryExternalID:       input.RepositoryExternalID,
+		RepositoryID:               repoID.String(),
+		RepositoryName:             input.RepositoryName,
+		RepositoryOrganizationName: input.RepositoryOrganizationName,
+		RepositoryProjectID:        input.RepositoryProjectID,
+		RepositorySfdcID:           externalProjectID,
+		RepositoryType:             input.RepositoryType,
+		RepositoryURL:              input.RepositoryURL,
+		Version:                    "v1",
+	}
+	av, err := dynamodbattribute.MarshalMap(repository)
+	if err != nil {
+		return nil, err
+	}
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(repo.repositoryTableName),
+	})
+	if err != nil {
+		log.Error("cannot put github repository in dynamodb", err)
+		return nil, err
+	}
+	return repository, nil
+}
+
+func (repo repo) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
+	return repo.deleteGithubRepository(externalProjectID, repositoryID)
 }
