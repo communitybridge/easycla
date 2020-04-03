@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/go-github/github"
+
 	"github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // GetInstallationRepositories returns list of repositories for github app installation
-func GetInstallationRepositories(installationID int64) ([]string, error) {
+func GetInstallationRepositories(installationID int64) ([]*github.Repository, error) {
 	client, err := newGithubAppClient(installationID)
 	if err != nil {
 		return nil, errors.New("cannot create github client")
@@ -20,11 +22,5 @@ func GetInstallationRepositories(installationID int64) ([]string, error) {
 		err = fmt.Errorf("unable to get repositories for installation id : %d", installationID)
 		return nil, err
 	}
-	result := make([]string, 0)
-	for _, repo := range repos {
-		if repo.FullName != nil {
-			result = append(result, *repo.FullName)
-		}
-	}
-	return result, nil
+	return repos, nil
 }

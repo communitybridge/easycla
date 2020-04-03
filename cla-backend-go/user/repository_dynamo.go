@@ -107,13 +107,13 @@ func (repo RepositoryDynamo) GetUserAndProfilesByLFID(lfidUsername string) (CLAU
 }
 
 // GetUserProjectIDs returns a list of user's projects when provided the user id
-func (repo RepositoryDynamo) GetUserProjectIDs(userID string) ([]string, error) {
+func (repo RepositoryDynamo) GetUserProjectIDs(LfUsername string) ([]string, error) {
 	tableName := fmt.Sprintf("cla-%s-user-permissions", repo.Stage)
 	result, err := repo.DynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"username": {
-				S: aws.String(userID),
+				S: aws.String(LfUsername),
 			},
 		},
 	})
