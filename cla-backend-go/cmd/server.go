@@ -28,6 +28,7 @@ import (
 	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
 	v2Events "github.com/communitybridge/easycla/cla-backend-go/v2/events"
 	v2Metrics "github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
+	v2Repositories "github.com/communitybridge/easycla/cla-backend-go/v2/repositories"
 	v2Version "github.com/communitybridge/easycla/cla-backend-go/v2/version"
 	"github.com/communitybridge/easycla/cla-backend-go/version"
 
@@ -237,7 +238,8 @@ func server(localMode bool) http.Handler {
 	v2Metrics.Configure(v2API, metricsService)
 	github_organizations.Configure(api, githubOrganizationsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService)
-	repositories.Configure(api, repositoriesService)
+	repositories.Configure(api, repositoriesService, eventsService)
+	v2Repositories.Configure(v2API, repositoriesService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

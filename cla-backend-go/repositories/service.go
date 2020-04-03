@@ -12,6 +12,7 @@ type Service interface {
 	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	DeleteGithubRepository(externalProjectID string, repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
+	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
 }
 
 type service struct {
@@ -35,4 +36,7 @@ func (s *service) DeleteGithubRepository(externalProjectID string, repositoryID 
 }
 func (s *service) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
 	return s.repo.ListProjectRepositories(externalProjectID)
+}
+func (s *service) GetGithubRepository(repositoryID string) (*models.GithubRepository, error) {
+	return s.repo.GetGithubRepository(repositoryID)
 }

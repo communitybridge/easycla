@@ -3,6 +3,7 @@
 
 package events
 
+// event types
 const (
 	// CreateUser event type
 	CreateUser = "Create User"
@@ -30,5 +31,7 @@ const (
 	//DeleteUserFromCompanyACL = "Delete User From Company ACL"
 
 	// DeletePendingInvite event type
-	DeletePendingInvite = "Delete Pending Invite"
+	DeletePendingInvite    = "Delete Pending Invite"
+	AddGithubRepository    = "Add Github Repository"
+	DeleteGithubRepository = "Delete Github Repository"
 )

@@ -43,6 +43,7 @@ type Repository interface {
 	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	DeleteGithubRepository(externalProjectID string, repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
+	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
 }
 
 // NewRepository create new Repository
@@ -354,4 +355,27 @@ func (repo repo) getRepositoryByGithubID(externalID string) (*models.GithubRepos
 		return nil, err
 	}
 	return result.toModel(), nil
+}
+
+func (repo *repo) GetGithubRepository(repositoryID string) (*models.GithubRepository, error) {
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(repo.repositoryTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {
+				S: aws.String(repositoryID),
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Item) == 0 {
+		return nil, ErrGithubRepositoryNotFound
+	}
+	var out GithubRepository
+	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out.toModel(), nil
 }

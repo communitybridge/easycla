@@ -572,6 +572,90 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - github-organizations
+  /project/{projectSFID}/github/repositories:
+    post:
+      summary: API to add the gitHub repository
+      operationId: addProjectGithubRepository
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: github-repository-input
+          schema:
+            $ref: '#/definitions/github-repository-input'
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-repository'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
+    get:
+      summary: API to fetch the gitHub repositories of the project
+      operationId: getProjectGithubRepositories
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/list-github-repositories'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
+  /project/{projectSFID}/github/repositories/{repositoryID}:
+    delete:
+      summary: API to add the gitHub repository
+      operationId: deleteProjectGithubRepository
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
 
 responses:
   unauthorized:
@@ -632,6 +716,30 @@ parameters:
     required: false
     # UUID v4 regex
     # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+  x-acl:
+    name: X-ACL
+    description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
+    in: header
+    type: string
+    required: true
+    x-example: JImlzQWRtaW4iOiB0cnVlLAoJImFsbG93ZWQiOiB0cnVlLAoJImNvbnRleHQiOic3lzdGVtIgp9Cg==
+  x-username:
+    name: X-USERNAME
+    description: The username/LFID value - assigned/set by the API Gateway based on login credentials
+    in: header
+    type: string
+    x-example: zachking123
+  x-email:
+    name: X-EMAIL
+    description: The email value - assigned/set by the API Gateway based on login credentials
+    in: header
+    type: string
+    x-example: zachking@mail.com
+  x-request-id:
+    name: X-REQUEST-ID
+    description: The unique request ID value - assigned/set by the API Gateway based on the login session
+    in: header
+    type: string
 
 definitions:
   version:
@@ -776,6 +884,27 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "EventList"
+
+  github-repository-input:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "GithubRepositoryInput"
+
+  github-repository:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "GithubRepository"
+
+  list-github-repositories:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "ListGithubRepositories"
 
   project-metrics:
     type: object
