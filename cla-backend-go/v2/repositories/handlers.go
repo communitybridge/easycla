@@ -4,6 +4,7 @@ package repositories
 
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/github_repositories"
@@ -13,7 +14,7 @@ import (
 )
 
 // Configure establishes the middleware handlers for the repository service
-func Configure(api *operations.EasyclaAPI, service repositories.Service) {
+func Configure(api *operations.EasyclaAPI, service repositories.Service, eventService events.Service) {
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -31,16 +32,25 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service) {
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
+			addGithubRepositoryEvent(eventService, authUser, &params.GithubRepositoryInput)
 			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(*result)
 		})
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			err := service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
+			ghRepo, err := service.GetGithubRepository(params.RepositoryID)
+			if err != nil {
+				if err == repositories.ErrGithubRepositoryNotFound {
+					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
+				}
+				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
+			}
+			err = service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
+			deleteGithubRepositoryEvent(eventService, authUser, ghRepo.RepositoryName, ghRepo.RepositoryProjectID)
 			return github_repositories.NewDeleteProjectGithubRepositoryOK()
 		})
 }

@@ -239,7 +239,7 @@ func server(localMode bool) http.Handler {
 	github_organizations.Configure(api, githubOrganizationsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService)
 	repositories.Configure(api, repositoriesService, eventsService)
-	v2Repositories.Configure(v2API, repositoriesService)
+	v2Repositories.Configure(v2API, repositoriesService, eventsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
