@@ -7,6 +7,7 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// SetAuthUserProperties adds username and email to auth user
 func SetAuthUserProperties(authUser *auth.User, xUserName *string, xEmail *string) {
 
 	if xUserName != nil {

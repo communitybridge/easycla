@@ -22,6 +22,7 @@ type Provider struct {
 	ProviderUserID string
 }
 
+// IsAuthorizedForProject checks if user have access of the project {
 func (claUser *CLAUser) IsAuthorizedForProject(projectSFID string) bool {
 	for _, v := range claUser.ProjectIDs {
 		if v == projectSFID {
