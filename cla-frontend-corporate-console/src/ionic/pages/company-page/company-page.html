@@ -23,12 +23,15 @@
         <ion-col col-12 col-md-8>
           <ion-card>
             <ion-card-title>
-              <h2>Sign New CLA</h2>
+              <h1>Sign New CLA</h1>
             </ion-card-title>
+            <ion-card-title>
+                <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your
+                  company,
+                  click "Sign New CLA" below
+                </p>
+              </ion-card-title>
             <ion-card-content>
-              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your company,
-                click "Sign New CLA" below</p>
-
               <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
                   Sign New CLA
@@ -40,8 +43,8 @@
       </ion-row>
     </ion-grid>
 
-    <ion-row *ngIf="rows.length > 0">
-      <ion-grid [loading-display]="loading.projects && loading.companySignatures">
+    <ion-row>
+      <ion-grid>
         <ion-row justify-content-center>
           <ion-col col-12 col-md-8>
             <ion-card>
@@ -49,18 +52,20 @@
                 <h1>Projects with Signed CLAs</h1>
               </ion-card-title>
               <ion-card-title>
-                <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work at your
+                <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work
+                  at your
                   company click "Manage Whitelist" for the project interest</p>
               </ion-card-title>
-  
+
               <ion-card-title>
                 <p>
-                  "Request Access" will send an email to CLA Managers of that project requesting CLA Manager privileges for you.
+                  "Request Access" will send an email to CLA Managers of that project requesting CLA Manager privileges
+                  for you.
                 </p>
               </ion-card-title>
               <ion-card-content>
                 <ion-grid>
-                  <ion-row>
+                  <ion-row *ngIf="rows.length > 0">
                     <ion-col col-12>
                       <div>
                         <table class="table">
@@ -84,37 +89,39 @@
                             </tr>
                           </thead>
                           <tbody>
-  
+
                             <tr *ngFor="let row of rows">
                               <td class="wrap-word" data-title="Project Name">
                                 <span>{{ row.ProjectName}}</span>
                               </td>
-  
+
                               <td data-title="Status" *ngIf="row.Status === 'Request Access'">
                                 <button clear ion-button color="secondary">
                                   {{ row.Status}}
                                 </button>
                               </td>
-  
+
                               <td data-title="Status" *ngIf="row.Status !== 'Request Access'">
                                 <span [title]="row.Status">{{ row.Status}}</span>
                               </td>
-  
+
                               <td data-title="CLA Manager">
-                                <button clear ion-button color="secondary" (click)="viewCLAManager(row.ProjectManagers, row.ProjectName)">
+                                <button clear ion-button color="secondary" (click)="viewCLAManager(row)">
                                   View Manager
                                 </button>
                               </td>
-  
+
                               <td data-title="Whitelist">
-                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary"
+                                  (click)="onSelect(row.ProjectID)">
                                   Manage Whitelist
                                 </button>
-                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary" (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary"
+                                  (click)="onSelect(row.ProjectID)">
                                   View Whitelist
                                 </button>
                               </td>
-  
+
                               <td data-title="Project Name" class="text-center">
                                 <span>{{ row.PendingRequests}}</span>
                               </td>
@@ -124,6 +131,15 @@
                       </div>
                     </ion-col>
                   </ion-row>
+                  <ion-row *ngIf="rows.length<=0">
+                    <ion-col col-12 *ngIf="loading.projects">
+                      Wait we are loading signed CLA...
+                    </ion-col>
+                    <ion-col col-12 class="error" *ngIf="!loading.projects">
+                      No signed CLA found.
+                    </ion-col>
+                  </ion-row>
+
                 </ion-grid>
               </ion-card-content>
             </ion-card>
@@ -133,21 +149,22 @@
     </ion-row>
 
 
-    <ion-grid [loading-display]="loading.invites">
+    <ion-grid>
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
             <ion-card-title>
               <h1>Pending CLA Managers Requests</h1>
             </ion-card-title>
-            <ion-card-content>
-              <ion-card-title>
-                <p>You can also see pending requests from individual contributors of your companies whose PRs have been gated
-                  by EasyCLA.</p>
-              </ion-card-title>
+            <ion-card-title>
+              <p>You can also see pending requests from individual contributors of your companies whose PRs have been
+                gated
+                by EasyCLA.</p>
+            </ion-card-title>
 
+            <ion-card-content>
               <ion-list>
-                <ion-row>
+                <ion-row *ngIf="invites.length > 0">
                   <table class="table table-hover invites">
                     <thead>
                       <tr>
@@ -187,6 +204,14 @@
                       </tr>
                     </tbody>
                   </table>
+                </ion-row>
+                <ion-row *ngIf="invites.length <= 0">
+                  <ion-col col-12 *ngIf="loading.invites">
+                    We are loading pending request.
+                  </ion-col>
+                  <ion-col col-12 class="error" *ngIf="!loading.invites">
+                    No pending requests found.
+                  </ion-col>
                 </ion-row>
               </ion-list>
             </ion-card-content>

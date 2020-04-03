@@ -37,7 +37,7 @@ export class CompanyPage {
 
   data: any;
   columns: any[];
-  rows: any[];
+  rows: any[] = [];
   allSignatures: any[];
   userEmail: string;
 
@@ -60,7 +60,6 @@ export class CompanyPage {
     };
     this.company = new ClaCompanyModel();
     this.pendingRequests = [];
-    this.projects = [];
     this.userEmail = localStorage.getItem('user_email');
 
     this.data = {};
@@ -93,29 +92,24 @@ export class CompanyPage {
   }
 
   getCompanySignatures() {
-    //console.log('Loading company signatures...');
     this.loading.companySignatures = true;
     this.loading.projects = true;
 
-    // Clear out our projects and table models
-    this.projects = [];
-    this.rows = [];
-
     this.claService.getCompanySignatures(this.companyId).subscribe(
       (response) => {
+        this.loading.companySignatures = false;
+
         if (response.resultCount > 0) {
-          //console.log('Filtering Company signatures...');
           this.companySignatures = response.signatures.filter((signature) => signature.signatureSigned === true);
-          //console.log('Filtered Company signatures: ' + this.companySignatures.length);
-          //console.log('Loading projects...');
-          for (let signature of this.companySignatures) {
-            this.getProject(signature.projectID, signature.signatureACL);
+          if (this.companySignatures.length <= 0) {
+            this.loading.projects = false;
           }
-          this.loading.companySignatures = false;
+          for (let signature of this.companySignatures) {
+            this.getProject(signature);
+          }
+        } else {
           this.loading.projects = false;
         }
-        this.loading.companySignatures = true;
-        this.loading.projects = true;
       },
       (exception) => {
         this.loading.companySignatures = false;
@@ -124,39 +118,31 @@ export class CompanyPage {
     );
   }
 
-  getProject(projectId, signatureACL) {
-    //console.log('Loading project: ' + projectId);
-    this.claService.getProject(projectId).subscribe((response) => {
-      //console.log('Loaded project: ');
-      //console.log(response);
-      this.projects.push(response);
-
-      this.loading.projects = false;
-      this.rows = this.mapProjects(this.projects, signatureACL);
+  getProject(signature) {
+    this.claService.getProject(signature.projectID).subscribe((response) => {
+      this.mapProjects(response, signature.signatureACL);
     });
   }
 
-  mapProjects(projects, signatureACL) {
-    let pendingRequest = []
-    let rows = [];
-    for (let project of projects) {
-      this.claService.getProjectWhitelistRequest(this.companyId, project.project_id).subscribe((res) => {
+  mapProjects(projectDetail, signatureACL) {
+    if (projectDetail) {
+      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id).subscribe((res) => {
         let pendingRequest = [];
+        this.loading.projects = false;
         if (res.list.length > 0) {
           pendingRequest = res.list.filter((r) => {
-            return r.projectId === project.project_id
+            return r.projectId === projectDetail.project_id
           })
         }
-        rows.push({
-          ProjectID: project.project_id,
-          ProjectName: project.project_name,
+        this.rows.push({
+          ProjectID: projectDetail.project_id,
+          ProjectName: projectDetail.project_name,
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
           PendingRequests: pendingRequest.length,
         });
       })
     }
-    return rows;
   }
 
   onSelect(projectId) {
@@ -170,20 +156,12 @@ export class CompanyPage {
     });
   }
 
-  viewCLAManager(managers, ProjectName) {
+  viewCLAManager(row) {
     let modal = this.modalCtrl.create('ViewCLAManagerModal', {
-      managers,
-      ProjectName
-    });
-    modal.onDidDismiss((data) => {
-      console.log('ViewCLAManagerModal dismissed with data: ' + data);
-      // A refresh of data anytime the modal is dismissed
-      if (data) {
-        // this.getUserByUserId();
-      }
+      'managers': row.ProjectManagers,
+      'ProjectName': row.ProjectName
     });
     modal.present();
-
   }
 
   openCompanyModal() {
@@ -191,7 +169,6 @@ export class CompanyPage {
       company: this.company
     });
     modal.onDidDismiss((data) => {
-      // A refresh of data anytime the modal is dismissed
       this.getCompany();
     });
     modal.present();
@@ -236,12 +213,7 @@ export class CompanyPage {
   getInvites() {
     this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
-      if (this.invites.length > 0) {
-        this.loading.invites = false;
-      }
-      else {
-        this.loading.invites = true;
-      }
+      this.loading.invites = false;
     });
   }
 
@@ -283,7 +255,6 @@ export class CompanyPage {
         return 'Pending';
       }
     }
-
     return 'Request Access'
   }
 }
