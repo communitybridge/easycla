@@ -31,7 +31,9 @@ const (
 	//DeleteUserFromCompanyACL = "Delete User From Company ACL"
 
 	// DeletePendingInvite event type
-	DeletePendingInvite    = "Delete Pending Invite"
-	AddGithubRepository    = "Add Github Repository"
-	DeleteGithubRepository = "Delete Github Repository"
+	DeletePendingInvite      = "Delete Pending Invite"
+	AddGithubRepository      = "Add Github Repository"
+	DeleteGithubRepository   = "Delete Github Repository"
+	AddGithubOrganization    = "Add Github Organization"
+	DeleteGithubOrganization = "Delete Github Organization"
 )

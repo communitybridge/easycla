@@ -236,8 +236,8 @@ func server(localMode bool) http.Handler {
 	v2Events.Configure(v2API, eventsService)
 	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
-	github_organizations.Configure(api, githubOrganizationsService)
-	v2GithubOrganizations.Configure(v2API, githubOrganizationsService)
+	github_organizations.Configure(api, githubOrganizationsService, eventsService)
+	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)
 	repositories.Configure(api, repositoriesService, eventsService)
 	v2Repositories.Configure(v2API, repositoriesService, eventsService)
 
