@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { AlertController, ViewController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { AlertController, ViewController, IonicPage, ModalController, NavParams, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
@@ -40,13 +40,13 @@ export class ProjectPage {
   sort: any;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
     public alertCtrl: AlertController,
     public modalCtrl: ModalController,
     private sortService: SortService,
     public viewCtrl: ViewController,
+    public navCtrl: NavController
   ) {
     this.companyId = navParams.get('companyId');
     this.projectId = navParams.get('projectId');
@@ -365,5 +365,11 @@ export class ProjectPage {
 
   acceptPendingRequest() {
 
+  }
+
+  back(){
+    this.navCtrl.setRoot('CompanyPage', {
+      companyId: this.companyId
+    });
   }
 }

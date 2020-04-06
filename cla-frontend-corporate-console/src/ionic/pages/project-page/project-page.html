@@ -1,11 +1,11 @@
 <ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
+  <ion-toolbar>
+    <button ion-button class="back-btn" (click)="back()">
+        <ion-icon name="arrow-round-back"></ion-icon>
     </button>
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
+  </ion-toolbar>
   <get-help></get-help>
 </ion-header>
 
