@@ -1,7 +1,10 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>
-      Request Company Access to {{ company.company_name }}
+    <ion-title *ngIf="company.company_name !==undefined">
+      <label class="company-title">Request Company Access to
+        <span class="name"
+          [title]="company.company_name">{{trimCharacter(company.company_name,20)}}</span>
+      </label>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">

@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
@@ -41,7 +41,6 @@ export class ClaEmployeeRequestAccessModal {
     public modalCtrl: ModalController,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
-    private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
@@ -145,17 +144,10 @@ export class ClaEmployeeRequestAccessModal {
     this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
       (response) => {
         this.loading = false;
-        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-        console.log(response);
         if (response.signatures) {
           let cclaSignatures = response.signatures.filter((sig) => sig.signatureType === 'ccla');
-          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
           if (cclaSignatures.length) {
-            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-            console.log(cclaSignatures);
             this.cclaSignature = cclaSignatures[0];
-            console.log(this.cclaSignature);
-            console.log(this.cclaSignature.signatureACL);
             if (this.cclaSignature.signatureACL != null) {
               for (let manager of this.cclaSignature.signatureACL) {
                 this.insertAndSortManagersList({
@@ -172,9 +164,9 @@ export class ClaEmployeeRequestAccessModal {
         this.loading = false;
         console.log(
           'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-            companyId +
-            ' and project ID: ' +
-            projectId
+          companyId +
+          ' and project ID: ' +
+          projectId
         );
         console.log(exception);
       }
@@ -190,8 +182,6 @@ export class ClaEmployeeRequestAccessModal {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     this.formErrors = [];
-    console.log("Form");
-    console.log(this.form);
     let data = {
       company_id: this.companyId,
       user_id: this.userId,
@@ -227,7 +217,7 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
-        console.log(this.userId+ ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.log(this.userId + ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
       },
       (exception) => {
         console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
@@ -273,5 +263,9 @@ export class ClaEmployeeRequestAccessModal {
         });
       }
     });
+  }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }
