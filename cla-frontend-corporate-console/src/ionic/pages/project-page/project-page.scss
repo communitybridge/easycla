@@ -75,7 +75,6 @@ project-page {
     }
   }
 
-
   .delete-btn {
     font-size: 12px;
     color: #db4e4e;
@@ -98,5 +97,14 @@ project-page {
 
   ion-footer {
     position: relative;
+  }
+}
+
+.back-btn {
+  background-color: white;
+  box-shadow: none;
+  &:hover {
+    background-color: white !important;
+    box-shadow: none !important;
   }
 }
