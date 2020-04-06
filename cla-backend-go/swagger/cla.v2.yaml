@@ -743,14 +743,10 @@ paths:
           required: true
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/companyName'
-        - $ref: '#/parameters/userName'
         - $ref: '#/parameters/searchTerm'
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/fullMatch'
         - $ref: '#/parameters/signatureType'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
       responses:
         '200':
           description: 'Success'
@@ -783,10 +779,6 @@ paths:
           required: true
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/companyName'
-        - $ref: '#/parameters/userName'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
       responses:
         '200':
           description: 'Success'
@@ -815,9 +807,6 @@ paths:
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
-        - $ref: '#/parameters/userName'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
       responses:
         '200':
           description: 'Success'
@@ -845,10 +834,7 @@ paths:
           required: true
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/companyName'
         - $ref: '#/parameters/userName'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
       responses:
         '200':
           description: 'Success'
@@ -881,10 +867,6 @@ paths:
           required: true
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/companyName'
-        - $ref: '#/parameters/userName'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
       responses:
         '200':
           description: 'Success'

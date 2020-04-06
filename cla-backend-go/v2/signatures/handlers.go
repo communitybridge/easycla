@@ -187,17 +187,13 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams, authUser *auth.User) middleware.Responder {
 		projectSignatures, err := service.GetProjectSignatures(v1Signatures.GetProjectSignaturesParams{
 			HTTPRequest:   params.HTTPRequest,
-			CompanyName:   params.CompanyName,
 			FullMatch:     params.FullMatch,
-			Ghid:          params.Ghid,
-			Lfid:          params.Lfid,
 			NextKey:       params.NextKey,
 			PageSize:      params.PageSize,
 			ProjectID:     params.ProjectID,
 			SearchField:   params.SearchField,
 			SearchTerm:    params.SearchTerm,
 			SignatureType: params.SignatureType,
-			UserName:      params.UserName,
 		})
 		if err != nil {
 			log.Warnf("error retrieving project signatures for projectID: %s, error: %+v",
@@ -213,13 +209,9 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		projectSignatures, err := service.GetProjectCompanySignatures(v1Signatures.GetProjectCompanySignaturesParams{
 			HTTPRequest: params.HTTPRequest,
 			CompanyID:   params.CompanyID,
-			CompanyName: params.CompanyName,
-			Ghid:        params.Ghid,
-			Lfid:        params.Lfid,
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
 			ProjectID:   params.ProjectID,
-			UserName:    params.UserName,
 		})
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
@@ -235,13 +227,9 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		projectSignatures, err := service.GetProjectCompanyEmployeeSignatures(v1Signatures.GetProjectCompanyEmployeeSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
 			CompanyID:   params.CompanyID,
-			CompanyName: params.CompanyName,
-			Ghid:        params.Ghid,
-			Lfid:        params.Lfid,
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
 			ProjectID:   params.ProjectID,
-			UserName:    params.UserName,
 		})
 		if err != nil {
 			log.Warnf("error retrieving employee project signatures for project: %s, company: %s, error: %+v",
@@ -258,11 +246,8 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			HTTPRequest: params.HTTPRequest,
 			CompanyID:   params.CompanyID,
 			CompanyName: params.CompanyName,
-			Ghid:        params.Ghid,
-			Lfid:        params.Lfid,
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
-			UserName:    params.UserName,
 		})
 		if err != nil {
 			log.Warnf("error retrieving company signatures for companyID: %s, error: %+v", params.CompanyID, err)
@@ -276,9 +261,6 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams, authUser *auth.User) middleware.Responder {
 		userSignatures, err := service.GetUserSignatures(v1Signatures.GetUserSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
-			CompanyName: params.CompanyName,
-			Ghid:        params.Ghid,
-			Lfid:        params.Lfid,
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
 			UserName:    params.UserName,
