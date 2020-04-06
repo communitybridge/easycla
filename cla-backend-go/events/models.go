@@ -55,3 +55,34 @@ func (e *Event) toEvent() *models.Event { //nolint
 		EventTimeEpoch:         e.EventTimeEpoch,
 	}
 }
+
+// DBProjectModel data model
+type DBProjectModel struct {
+	DateCreated                      string                   `dynamodbav:"date_created"`
+	DateModified                     string                   `dynamodbav:"date_modified"`
+	ProjectExternalID                string                   `dynamodbav:"project_external_id"`
+	ProjectID                        string                   `dynamodbav:"project_id"`
+	ProjectName                      string                   `dynamodbav:"project_name"`
+	Version                          string                   `dynamodbav:"version"`
+	ProjectCclaEnabled               bool                     `dynamodbav:"project_ccla_enabled"`
+	ProjectCclaRequiresIclaSignature bool                     `dynamodbav:"project_ccla_requires_icla_signature"`
+	ProjectIclaEnabled               bool                     `dynamodbav:"project_icla_enabled"`
+	ProjectCorporateDocuments        []DBProjectDocumentModel `dynamodbav:"project_corporate_documents"`
+	ProjectIndividualDocuments       []DBProjectDocumentModel `dynamodbav:"project_individual_documents"`
+	ProjectMemberDocuments           []DBProjectDocumentModel `dynamodbav:"project_member_documents"`
+	ProjectACL                       []string                 `dynamodbav:"project_acl"`
+}
+
+// DBProjectDocumentModel is a data model for the CLA Group Project documents
+type DBProjectDocumentModel struct {
+	DocumentName            string `dynamodbav:"document_name"`
+	DocumentFileID          string `dynamodbav:"document_file_id"`
+	DocumentPreamble        string `dynamodbav:"document_preamble"`
+	DocumentLegalEntityName string `dynamodbav:"document_legal_entity_name"`
+	DocumentAuthorName      string `dynamodbav:"document_author_name"`
+	DocumentContentType     string `dynamodbav:"document_content_type"`
+	DocumentS3URL           string `dynamodbav:"document_s3_url"`
+	DocumentMajorVersion    string `dynamodbav:"document_major_version"`
+	DocumentMinorVersion    string `dynamodbav:"document_minor_version"`
+	DocumentCreationDate    string `dynamodbav:"document_creation_date"`
+}

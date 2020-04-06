@@ -1599,6 +1599,90 @@ paths:
       tags:
         - github-organizations
 
+  /project/{projectSFID}/github/repositories:
+    post:
+      summary: API to add the gitHub repository
+      security:
+        - OauthSecurity:
+            - project
+      operationId: addProjectGithubRepository
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: github-repository-input
+          schema:
+            $ref: '#/definitions/github-repository-input'
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/github-repository'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
+    get:
+      summary: API to fetch the gitHub repositories of the project
+      security:
+        - OauthSecurity:
+            - project
+      operationId: getProjectGithubRepositories
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/list-github-repositories'
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+      tags:
+        - github-repositories
+  /project/{projectSFID}/github/repositories/{repositoryID}:
+    delete:
+      summary: API to add the gitHub repository
+      security:
+        - OauthSecurity:
+            - project
+      operationId: deleteProjectGithubRepository
+      parameters:
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+        400:
+          $ref: '#/responses/invalid-request'
+        401:
+          $ref: '#/responses/unauthorized'
+        403:
+          $ref: '#/responses/forbidden'
+        404:
+          $ref: '#/responses/not-found'
+      tags:
+        - github-repositories
+
   /events:
     get:
       summary: search events
@@ -2913,6 +2997,29 @@ definitions:
         items:
           $ref: '#/definitions/github-repository'
 
+  github-repository-input:
+    type: object
+    required:
+      - repositoryExternalID
+      - repositoryName
+      - repositoryOrganizationName
+      - repositoryProjectID
+      - repositoryType
+      - repositoryUrl
+    properties:
+      repositoryExternalID:
+        type: string
+      repositoryName:
+        type: string
+      repositoryOrganizationName:
+        type: string
+      repositoryProjectID:
+        type: string
+      repositoryType:
+        type: string
+      repositoryUrl:
+        type: string
+
   github-repository:
     type: object
     properties:
@@ -3031,8 +3138,31 @@ definitions:
           list:
             type: array
             items:
-              type: string
-              example: "communitybridge/easycla-api"
+              $ref: '#/definitions/github-repository-info'
+
+  github-repository-info:
+    type: object
+    properties:
+      repositoryGithubID:
+        type: integer
+        example: 250509778
+      repositoryName:
+        type: string
+        example: "communitybridge/easycla"
+      repositoryType:
+        type: string
+        example: "github"
+      repositoryUrl:
+        type: string
+        example: "https://github.com/communitybridge/easycla"
+
+  list-github-repositories:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository'
 
 responses:
   resource-deleted:

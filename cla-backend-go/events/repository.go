@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -110,6 +109,7 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 		log.Warnf("Unable to create a new event, error: %v", err)
 		return err
 	}
+	log.Printf("added event : %s", eventID.String())
 
 	return nil
 }
@@ -188,7 +188,7 @@ func (repo repository) GetProject(projectID string) (*models.Project, error) {
 		return nil, errors.New("project does not exist")
 	}
 
-	var dbModel project.DBProjectModel
+	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(result.Item, &dbModel)
 	if err != nil {
 		log.Warnf("error unmarshalling db project model, error: %+v", err)
@@ -414,7 +414,7 @@ func buildProjection() expression.ProjectionBuilder {
 }
 
 // buildProjectModel maps the database model to the API response model
-func buildProjectModel(dbModel project.DBProjectModel) *models.Project {
+func buildProjectModel(dbModel DBProjectModel) *models.Project {
 	return &models.Project{
 		ProjectID:          dbModel.ProjectID,
 		ProjectName:        dbModel.ProjectName,

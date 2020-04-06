@@ -80,9 +80,21 @@ stages:
                           required: false
                         list:
                           type: seq
-                          required: true
                           sequence:
-                          - type: str
+                          - type: map
+                            mapping:
+                              repositoryGithubID:
+                                type: int
+                                required: true
+                              repositoryName:
+                                type: str
+                                required: true
+                              repositoryType:
+                                type: str
+                                required: true
+                              repositoryUrl:
+                                type: str
+                                required: true
   - name: add gihtub organization with no auth
     request:
       url: "{v2_api_url}/v4/project/a0941000002wBz4AAE/github/organizations"

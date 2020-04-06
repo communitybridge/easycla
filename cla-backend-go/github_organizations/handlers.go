@@ -4,6 +4,7 @@
 package github_organizations
 
 import (
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/github_organizations"
@@ -12,7 +13,7 @@ import (
 )
 
 // Configure setups handlers on api with service
-func Configure(api *operations.ClaAPI, service Service) {
+func Configure(api *operations.ClaAPI, service Service, eventService events.Service) {
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, claUser *user.CLAUser) middleware.Responder {
 			result, err := service.GetGithubOrganizations(params.ProjectSFID)
@@ -28,6 +29,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+			addGithubOrganizationEvent(eventService, claUser, params.Body.OrganizationName)
 			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(result)
 		})
 
@@ -37,6 +39,7 @@ func Configure(api *operations.ClaAPI, service Service) {
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+			deleteGithubOrganizationEvent(eventService, claUser, params.OrgName)
 			return github_organizations.NewDeleteProjectGithubOrganizationOK()
 		})
 }

@@ -431,16 +431,6 @@ export class ClaService {
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
-
-  deleteProject(projectId) {
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId);
-    return this.http
-      .delete(url)
-      .map((res) => res.json())
-      .catch((error) => this.handleServiceError(error));
-  }
-
- 
  
   /**
    * POST /v1/request-corporate-signature
