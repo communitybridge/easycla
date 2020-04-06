@@ -671,6 +671,313 @@ paths:
       tags:
         - github-repositories
 
+  /signatures/id/{signatureID}:
+    get:
+      summary: Get the signature by ID
+      description: Returns the signature when provided the signature ID
+      operationId: getSignature
+      parameters:
+        - name: signatureID
+          description: the signature ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - signatures
+
+  # DD: This query makes no sense - why do we need all the extra parameters when we have the signature id?
+  /signatures/{signatureID}:
+    get:
+      summary: Get the signature by ID
+      description: Returns a list of signatures when provided the signature ID
+      operationId: getSignatures
+      parameters:
+        - name: signatureID
+          description: the signature ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}:
+    get:
+      summary: Get project signatures
+      description: Returns a list of project signature models when provided the project ID
+      operationId: getProjectSignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/searchTerm'
+        - $ref: '#/parameters/searchField'
+        - $ref: '#/parameters/fullMatch'
+        - $ref: '#/parameters/signatureType'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}/company/{companyID}:
+    get:
+      summary: Get project company signatures
+      description: Returns a list of project signature models when provided the project ID and company ID
+      operationId: getProjectCompanySignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/company/{companyID}:
+    get:
+      summary: Get company signatures
+      description: Returns a list of company signatures when provided the company ID
+      operationId: getCompanySignatures
+      parameters:
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/user/{userID}:
+    get:
+      summary: Get user signatures
+      description: Returns a list of user signatures when provided the user ID
+      operationId: getUserSignatures
+      parameters:
+        - name: userID
+          description: the user ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}/company/{companyID}/employee:
+    get:
+      summary: Get project company signatures for the employees
+      description: Returns a list of employee project signature models when provided the project ID and company ID
+      operationId: getProjectCompanyEmployeeSignatures
+      parameters:
+        - name: projectID
+          description: the project ID
+          in: path
+          type: string
+          required: true
+        - name: companyID
+          description: the company ID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/userName'
+        - $ref: '#/parameters/lfid'
+        - $ref: '#/parameters/ghid'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/{signatureID}/gh-org-whitelist:
+    get:
+      summary: Signature Update
+      operationId: getGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+    delete:
+      summary: Signature Update
+      operationId: deleteGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/gh-org-whitelist'
+      responses:
+        '204':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+    post:
+      summary: Signature Update
+      operationId: addGitHubOrgWhitelist
+      parameters:
+        - name: signatureID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/gh-org-whitelist'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/github-org'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -730,6 +1037,40 @@ parameters:
     required: false
     # UUID v4 regex
     # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
+  companyName:
+    name: companyName
+    description: The optional company name filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  userName:
+    name: userName
+    description: The optional user name filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  signatureType:
+    name: signatureType
+    in: query
+    type: string
+    required: false
+    enum: [ccla,cla]
+  lfid:
+    name: lfid
+    description: The optional LFID filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
+  ghid:
+    name: ghid
+    description: The optional GitHub ID filter
+    in: query
+    type: string
+    required: false
+    pattern: '^\w+$'
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -1223,6 +1564,34 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Models"
       type: "CreateGithubOrganization"
+
+  signature:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "Signature"
+
+  signatures:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "Signatures"
+
+  github-org:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "GithubOrg"
+
+  gh-org-whitelist:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "GhOrgWhitelist"
 
   error-response:
     type: object
