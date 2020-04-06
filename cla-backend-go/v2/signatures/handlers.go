@@ -163,26 +163,6 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
 	})
 
-	// Get Signatures
-	api.SignaturesGetSignaturesHandler = signatures.GetSignaturesHandlerFunc(func(params signatures.GetSignaturesParams, authUser *auth.User) middleware.Responder {
-		signatureList, err := service.GetSignatures(v1Signatures.GetSignaturesParams{
-			HTTPRequest: params.HTTPRequest,
-			CompanyName: params.CompanyName,
-			Ghid:        params.Ghid,
-			Lfid:        params.Lfid,
-			NextKey:     params.NextKey,
-			PageSize:    params.PageSize,
-			SignatureID: params.SignatureID,
-			UserName:    params.UserName,
-		})
-		if err != nil {
-			log.Warnf("error retrieving user signatures for signatureID: %s, error: %+v", params.SignatureID, err)
-			return signatures.NewGetSignaturesBadRequest().WithPayload(errorResponse(err))
-		}
-
-		return signatures.NewGetSignaturesOK().WithPayload(*signatureList)
-	})
-
 	// Get Project Signatures
 	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams, authUser *auth.User) middleware.Responder {
 		projectSignatures, err := service.GetProjectSignatures(v1Signatures.GetProjectSignaturesParams{

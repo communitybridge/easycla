@@ -698,37 +698,6 @@ paths:
       tags:
         - signatures
 
-  # DD: This query makes no sense - why do we need all the extra parameters when we have the signature id?
-  /signatures/{signatureID}:
-    get:
-      summary: Get the signature by ID
-      description: Returns a list of signatures when provided the signature ID
-      operationId: getSignatures
-      parameters:
-        - name: signatureID
-          description: the signature ID
-          in: path
-          type: string
-          required: true
-        - $ref: '#/parameters/pageSize'
-        - $ref: '#/parameters/nextKey'
-        - $ref: '#/parameters/companyName'
-        - $ref: '#/parameters/userName'
-        - $ref: '#/parameters/lfid'
-        - $ref: '#/parameters/ghid'
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/signatures'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - signatures
 
   /signatures/project/{projectID}:
     get:
