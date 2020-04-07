@@ -23,8 +23,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-// Repository interface defines the functions for the users service
-type Repository interface {
+// UserRepository interface defines the functions for the users repository
+type UserRepository interface {
 	GetMetrics() (*models.UserMetrics, error)
 	CreateUser(user *models.User) (*models.User, error)
 	Save(user *models.UserUpdate) (*models.User, error)
@@ -41,7 +41,7 @@ type repository struct {
 }
 
 // NewRepository creates a new instance of the whitelist service
-func NewRepository(awsSession *session.Session, stage string) Repository {
+func NewRepository(awsSession *session.Session, stage string) UserRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),

@@ -31,8 +31,8 @@ var (
 	ErrProjectIDMissing    = errors.New("project id is missing")
 )
 
-// Repository defines functions of Project repository
-type Repository interface {
+// ProjectRepository defines functions of Project repository
+type ProjectRepository interface {
 	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjectByID(projectID string) (*models.Project, error)
@@ -48,7 +48,7 @@ type Repository interface {
 }
 
 // NewRepository creates instance of project repository
-func NewRepository(awsSession *session.Session, stage string, ghRepo repositories.Repository, gerritRepo gerrits.Repository) Repository {
+func NewRepository(awsSession *session.Session, stage string, ghRepo repositories.Repository, gerritRepo gerrits.Repository) ProjectRepository {
 	return &repo{
 		dynamoDBClient: dynamodb.New(awsSession),
 		stage:          stage,

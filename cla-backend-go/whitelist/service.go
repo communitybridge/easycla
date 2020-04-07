@@ -28,14 +28,14 @@ var (
 
 type service struct {
 	repo        Repository
-	userRepo    users.Repository
-	companyRepo company.RepositoryService
-	projectRepo project.Repository
+	userRepo    users.UserRepository
+	companyRepo company.CompanyRepository
+	projectRepo project.ProjectRepository
 	httpClient  *http.Client
 }
 
 // NewService creates a new whitelist service
-func NewService(repo Repository, userRepo users.Repository, companyRepo company.RepositoryService, projectRepo project.Repository, httpClient *http.Client) service {
+func NewService(repo Repository, userRepo users.UserRepository, companyRepo company.CompanyRepository, projectRepo project.ProjectRepository, httpClient *http.Client) service {
 	return service{
 		repo:        repo,
 		userRepo:    userRepo,

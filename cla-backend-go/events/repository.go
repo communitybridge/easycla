@@ -40,9 +40,9 @@ var (
 type Repository interface {
 	CreateEvent(event *models.Event) error
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
-	GetProject(projectID string) (*models.Project, error)
-	GetCompany(companyID string) (*models.Company, error)
-	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	//GetProject(projectID string) (*models.Project, error)
+	//GetCompany(companyID string) (*models.Company, error)
+	//GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetRecentEvents(pageSize int64) (*models.EventList, error)
 }
 

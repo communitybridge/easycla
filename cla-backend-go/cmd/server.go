@@ -97,6 +97,12 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
+type CombinedRepo struct {
+	users.UserRepository
+	company.CompanyRepository
+	project.ProjectRepository
+}
+
 // server function called by environment specific server functions
 func server(localMode bool) http.Handler {
 
@@ -191,7 +197,11 @@ func server(localMode bool) http.Handler {
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
-	eventsService := events.NewService(eventsRepo)
+	eventsService := events.NewService(eventsRepo, CombinedRepo{
+		UserRepository:    usersRepo,
+		CompanyRepository: companyRepo,
+		ProjectRepository: projectRepo,
+	})
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
