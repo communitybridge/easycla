@@ -54,9 +54,10 @@ export class ClaEmployeeRequestAccessModal {
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
     this.authenticated = navParams.get('authenticated');
+
     this.form = formBuilder.group({
       user_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      message: [''],
+      message: ['', Validators.compose([Validators.required])],
       recipient_name: [''],
       recipient_email: [''],
       manager: [''],
@@ -73,10 +74,18 @@ export class ClaEmployeeRequestAccessModal {
       this.showManagerEnterOption = false;
       this.resetFormValues('recipient_name');
       this.resetFormValues('recipient_email');
+      this.form.controls['recipient_name'].clearValidators();
+      this.form.controls['recipient_email'].clearValidators();
     } else if (option === 'enter manager') {
       this.showManagerSelectOption = false;
       this.showManagerEnterOption = true;
-      this.resetFormValues('manager');
+      if(this.managers.length > 1) {
+        this.resetFormValues('manager');
+      }
+      this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
+      this.form.controls['recipient_email'].setValidators(Validators.compose([Validators.required, EmailValidator.isValid]));
+      this.form.controls['recipient_name'].updateValueAndValidity();
+      this.form.controls['recipient_email'].updateValueAndValidity();
     }
   }
 
@@ -91,13 +100,16 @@ export class ClaEmployeeRequestAccessModal {
     return manager;
   }
 
-  getDefaults() {
+   getDefaults() {
     this.userEmails = [];
   }
 
   ngOnInit() {
     this.getUser(this.userId, this.authenticated).subscribe((user) => {
       if (user) {
+        if(user.user_emails.length === 1) {
+          this.form.controls['user_email'].setValue(user.user_emails[0]);
+        }
         this.userEmails = user.user_emails || [];
         if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
           this.userEmails.push(user.lf_email);
@@ -149,6 +161,9 @@ export class ClaEmployeeRequestAccessModal {
           if (cclaSignatures.length) {
             this.cclaSignature = cclaSignatures[0];
             if (this.cclaSignature.signatureACL != null) {
+              if(this.cclaSignature.signatureACL.length === 1) {
+                this.form.controls['manager'].setValue(this.cclaSignature.signatureACL[0].userID);
+              }
               for (let manager of this.cclaSignature.signatureACL) {
                 this.insertAndSortManagersList({
                   userID: manager.userID,
@@ -182,6 +197,17 @@ export class ClaEmployeeRequestAccessModal {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     this.formErrors = [];
+    console.log("Form");
+    console.log(this.form);
+
+    if (!this.form.valid) {
+      this.getFormValidationErrors();
+      this.currentlySubmitting = false;
+      // prevent submit
+      console.log('invalid')
+      return;
+    }
+
     let data = {
       company_id: this.companyId,
       user_id: this.userId,
@@ -198,12 +224,7 @@ export class ClaEmployeeRequestAccessModal {
           : undefined
     };
 
-    if (!this.form.valid) {
-      this.getFormValidationErrors();
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
+    
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, data).subscribe((response) => {
       this.loading = true;
       this.emailSent();
@@ -254,6 +275,13 @@ export class ClaEmployeeRequestAccessModal {
             case 'user_email':
               message = `*Email Authorize Field is ${keyError}`;
               break;
+            case 'recipient_email':
+              message = `*Receipent Email Field is ${keyError}`;
+              break;
+            case 'message':
+                  message = `*Message Field is ${keyError}`;
+              break;
+
             default:
               message = `Check Fields for errors`;
           }
