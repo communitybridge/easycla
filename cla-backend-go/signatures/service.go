@@ -22,7 +22,6 @@ import (
 type SignatureService interface {
 	GetMetrics() (*models.SignatureMetrics, error)
 	GetSignature(signatureID string) (*models.Signature, error)
-	GetSignatures(params signatures.GetSignaturesParams) (*models.Signatures, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
@@ -55,23 +54,6 @@ func (s service) GetMetrics() (*models.SignatureMetrics, error) {
 // GetSignature returns the signature associated with the specified signature ID
 func (s service) GetSignature(signatureID string) (*models.Signature, error) {
 	return s.repo.GetSignature(signatureID)
-}
-
-// GetSignatures returns the list of signatures associated with the specified signature ID
-func (s service) GetSignatures(params signatures.GetSignaturesParams) (*models.Signatures, error) {
-
-	const defaultPageSize int64 = 10
-	var pageSize = defaultPageSize
-	if params.PageSize != nil {
-		pageSize = *params.PageSize
-	}
-
-	signatureList, err := s.repo.GetSignatures(params, pageSize)
-	if err != nil {
-		return nil, err
-	}
-
-	return signatureList, nil
 }
 
 // GetProjectSignatures returns the list of signatures associated with the specified project

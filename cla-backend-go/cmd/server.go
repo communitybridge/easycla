@@ -42,6 +42,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+	v2Signatures "github.com/communitybridge/easycla/cla-backend-go/v2/signatures"
 
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -225,6 +226,7 @@ func server(localMode bool) http.Handler {
 	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
+	v2Signatures.Configure(v2API, signaturesService, sessionStore, eventsService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	onboard.Configure(api, onboardService, eventsService)
