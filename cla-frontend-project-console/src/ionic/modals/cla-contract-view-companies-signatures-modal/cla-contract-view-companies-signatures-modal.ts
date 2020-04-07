@@ -45,7 +45,7 @@ export class ClaContractViewCompaniesSignaturesModal {
   page: any;
 
   // Pagination next/previous options
-  limitPerPage: number = 10;
+  limitPerPage: number = 100;
   resultCount: number = 0;
   nextKey = null;
   previousKeys = [];
@@ -119,9 +119,6 @@ export class ClaContractViewCompaniesSignaturesModal {
 
   }
 
-  async getCompany(referenceId) {
-    return await this.claService.getCompany(referenceId).toPromise();
-  }
 
   filterDatatable() {
     if (this.form.valid) {
