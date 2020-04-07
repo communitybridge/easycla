@@ -47,7 +47,7 @@
                   <ion-label class="clickable" (click)="viewCompany(company.CompanyID, company.Status)">
                     <a href="javascript:void(0);"
                       [title]="company.CompanyName">{{ trimCharacter(company.CompanyName,25) }}</a>
-                    <span *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
+                    <span class="alert" *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
                   </ion-label>
                 </ion-item>
               </ion-list>

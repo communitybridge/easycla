@@ -103,7 +103,6 @@ export class AddCompanyModal {
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
-        // this.getAllCompanies();
         window.location.reload(true);
         this.dismiss();
       },
@@ -139,30 +138,14 @@ export class AddCompanyModal {
 
   joinCompany() {
     this.loading.submit = true;
-    const user = {
-      'lfUsername': this.userId, // required
-      // Additional fields that should be updated - API only allow a few fields to be updated
-      'companyID': this.existingCompanyId,
-    };
-    this.claService.updateUserV3(user).subscribe(
-      () => {
-        this.dismiss();
-        this.sendCompanyNotification(true);
-      },
-      (exception) => {
-        this.loading.submit = false;
-        console.log('Exception while calling: updateUserV3() for user ' + this.userName +
-          ' and company ID: ' + this.existingCompanyId);
-        console.log(exception);
-      }
-    );
+    this.sendInvitationForCompany(this.existingCompanyId);
   }
 
   dismiss() {
     this.viewCtrl.dismiss(this.existingCompanyId);
   }
 
-  companyExistAlert(company_id) {
+  companyExistAlert(companyId) {
     let alert = this.alertCtrl.create({
       title: 'Company ' + this.companyName + ' already exists',
       message: 'The company you tried to create already exists in the CLA system. Would you like to request access?',
@@ -170,15 +153,7 @@ export class AddCompanyModal {
         {
           text: 'Request',
           handler: () => {
-            const userId = localStorage.getItem('userid');
-            const userEmail = localStorage.getItem('user_email');
-            const userName = localStorage.getItem('user_name');
-            this.claService
-              .sendInviteRequestEmail(company_id, userId, userEmail, userName)
-              .subscribe(() => {
-                this.sendCompanyNotification(false);
-                this.dismiss();
-              });
+            this.sendInvitationForCompany(companyId);
           }
         },
         {
@@ -193,6 +168,17 @@ export class AddCompanyModal {
     alert.present();
   }
 
+  sendInvitationForCompany(companyId) {
+    const userId = localStorage.getItem('userid');
+    const userEmail = localStorage.getItem('user_email');
+    const userName = localStorage.getItem('user_name');
+    this.claService
+      .sendInviteRequestEmail(companyId, userId, userEmail, userName)
+      .subscribe(() => {
+        this.sendCompanyNotification(true);
+        this.dismiss();
+      });
+  }
 
   getAllCompanies() {
     if (!this.companies) {

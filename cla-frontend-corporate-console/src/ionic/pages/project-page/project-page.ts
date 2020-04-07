@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { AlertController, ViewController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { AlertController, ViewController, IonicPage, ModalController, NavParams, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
@@ -29,30 +29,30 @@ export class ProjectPage {
   companyId: string;
   projectId: string;
   managers: ClaManager[];
-  managersRestricted: boolean;
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
   pendingRequests: any[]
   project: any;
   users: any;
-
+  userEmail: any;
   sort: any;
+  canEdit: boolean = false;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
     public alertCtrl: AlertController,
     public modalCtrl: ModalController,
     private sortService: SortService,
     public viewCtrl: ViewController,
+    public navCtrl: NavController
   ) {
+    this.userEmail = localStorage.getItem('user_email');
     this.companyId = navParams.get('companyId');
     this.projectId = navParams.get('projectId');
     this.showModal = navParams.get('modal');
     this.getDefaults();
-    this.managersRestricted = true;
   }
 
   getDefaults() {
@@ -101,12 +101,20 @@ export class ProjectPage {
       this.loading.managers = false;
       if (response.errors != null) {
         this.managers = [];
-        this.managersRestricted = true;
       } else {
         this.managers = response;
-        this.managersRestricted = false;
+        this.canEdit = this.hasEditAccess();
       }
     });
+  }
+
+  hasEditAccess() {
+    for (let i = 0; i < this.managers.length; i++) {
+      if (this.managers[i].email === this.userEmail) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getProjectSignatures() {
@@ -365,5 +373,11 @@ export class ProjectPage {
 
   acceptPendingRequest() {
 
+  }
+
+  back(){
+    this.navCtrl.setRoot('CompanyPage', {
+      companyId: this.companyId
+    });
   }
 }

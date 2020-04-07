@@ -18,4 +18,15 @@ cla-employee-request-access-modal {
     font-size: 1.2rem;
     color: #999;
   }
+  
+  .company-title {
+    font-size: 18px;
+    .name {
+      color: #4c79b6;
+    }
+  }
+
+  .error-message {
+    color:  #ff0000;
+  }
 }
