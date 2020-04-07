@@ -147,23 +147,14 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewAddGithubOrganizationFromClaBadRequest()
 		}
 
-		// Create an event
-		// Need the company name - lookup th company record
-		companyModel, companyErr := service.GetCompany(params.CompanyID)
-		if companyErr != nil {
-			log.Warnf("error looking up company using the company id: %s, error: %+v",
-				params.CompanyID, companyErr)
-		}
-
-		eventsService.CreateAuditEvent(
-			events.AddUserToCompanyACL,
-			claUser,
-			"", // no project context
-			params.CompanyID,
-			fmt.Sprintf("%s added user %s to the ACL for company: %s (%s)",
-				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLUserAdded,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLUserAddedEventData{
+				UserLFID: params.User.UserLFID,
+			},
+		})
 
 		return company.NewAddUsertoCompanyAccessListOK()
 	})
@@ -219,23 +210,14 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event
-		// need the company name - lookup th company record
-		companyModel, companyErr := service.GetCompany(params.CompanyID)
-		if companyErr != nil {
-			log.Warnf("error looking up company using the company id: %s, error: %+v",
-				params.CompanyID, companyErr)
-		}
-
-		eventsService.CreateAuditEvent(
-			events.DeletePendingInvite,
-			claUser,
-			"", // no project context
-			params.CompanyID,
-			fmt.Sprintf("%s deleted pending invite for user %s for company: %s (%s)",
-				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.PendingInviteDeleted,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.PendingInviteDeletedEventData{
+				UserLFID: params.User.UserLFID,
+			},
+		})
 
 		return company.NewDeletePendingInviteOK()
 	})

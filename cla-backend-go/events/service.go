@@ -15,9 +15,6 @@ import (
 // Service interface defines methods of event service
 type Service interface {
 	LogEvent(args *LogEventArgs) error
-	CreateEvent(event models.Event) error
-	CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string, containsPII bool)
-	CreateAuditEventWithUserID(eventType string, userID, projectID, companyID, data string, containsPII bool)
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
 }
@@ -292,5 +289,5 @@ func (s *service) LogEvent(args *LogEventArgs) error {
 		UserID:                 args.UserID,
 		UserName:               args.UserName,
 	}
-	return s.CreateEvent(event)
+	return s.repo.CreateEvent(&event)
 }

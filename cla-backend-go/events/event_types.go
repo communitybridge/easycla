@@ -5,12 +5,6 @@ package events
 
 // event types
 const (
-	// CreateUser event type
-	CreateUser = "Create User"
-	// UpdateUser event type
-	UpdateUser = "Update User"
-	// DeleteUser event type
-	DeleteUser = "Delete User"
 
 	// CreateTemplate event type
 	CreateTemplate = "Create Template"
@@ -26,14 +20,31 @@ const (
 	DeleteCCLAWhitelistRequest = "Delete CCLA WL Request"
 
 	// AddUserToCompanyACL event type
-	AddUserToCompanyACL = "Add User To Company ACL"
 	// DeleteUserFromCompanyACL event type
 	//DeleteUserFromCompanyACL = "Delete User From Company ACL"
 
 	// DeletePendingInvite event type
-	DeletePendingInvite      = "Delete Pending Invite"
-	AddGithubRepository      = "Add Github Repository"
-	DeleteGithubRepository   = "Delete Github Repository"
 	AddGithubOrganization    = "Add Github Organization"
 	DeleteGithubOrganization = "Delete Github Organization"
+)
+
+// events
+// naming convention : <resource>.<action>
+const (
+	CLATemplateCreated = "cla_template.created"
+	UserCreated        = "user.created"
+	UserUpdated        = "user.updated"
+	UserDeleted        = "user.deleted"
+
+	GithubRepositoryAdded   = "github_repository.added"
+	GithubRepositoryDeleted = "github_repository.deleted"
+
+	GithubOrganizationAdded   = "github_organization.added"
+	GithubOrganizationDeleted = "github_organization.deleted"
+
+	PendingInviteDeleted = "pending_invite.deleted"
+	CompanyACLUserAdded  = "company_acl.user_added"
+
+	CCLAWhitelistRequestCreated = "ccla_whitelist_request.created"
+	CCLAWhitelistRequestDeleted = "ccla_whitelist_request.deleted"
 )

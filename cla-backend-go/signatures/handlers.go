@@ -4,8 +4,6 @@
 package signatures
 
 import (
-	"fmt"
-
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -93,31 +91,32 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			return company.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event
-		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
-		var projectID = ""
-		var companyID = ""
-		var companyName = ""
-		if getSigErr != nil || signatureModel == nil {
-			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
-				params.SignatureID, getSigErr)
-		}
-		if signatureModel != nil {
-			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
-		}
+		/*
+			// Create an event
+			signatureModel, getSigErr := service.GetSignature(params.SignatureID)
+			var projectID = ""
+			var companyID = ""
+			var companyName = ""
+			if getSigErr != nil || signatureModel == nil {
+				log.Warnf("error looking up signature using signature_id: %s, error: %+v",
+					params.SignatureID, getSigErr)
+			}
+			if signatureModel != nil {
+				projectID = signatureModel.ProjectID
+				companyID = signatureModel.SignatureReferenceID
+				companyName = signatureModel.CompanyName
+			}
 
-		eventsService.CreateAuditEvent(
-			events.AddGithubOrgToWL, // event type
-			claUser,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s added GitHub Org %s to the whitelist for project %s company %s (%s).",
-				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
-
+			eventsService.CreateAuditEvent(
+				events.AddGithubOrgToWL, // event type
+				claUser,
+				projectID,
+				companyID,
+				fmt.Sprintf("CLA Manager %s added GitHub Org %s to the whitelist for project %s company %s (%s).",
+					claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
+				true,
+			)
+		*/
 		return company.NewAddGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
 	})
 
@@ -143,31 +142,32 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			return company.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event
-		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
-		var projectID = ""
-		var companyID = ""
-		var companyName = ""
-		if getSigErr != nil || signatureModel == nil {
-			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
-				params.SignatureID, getSigErr)
-		}
-		if signatureModel != nil {
-			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
-		}
+		/*
+			// Create an event
+			signatureModel, getSigErr := service.GetSignature(params.SignatureID)
+			var projectID = ""
+			var companyID = ""
+			var companyName = ""
+			if getSigErr != nil || signatureModel == nil {
+				log.Warnf("error looking up signature using signature_id: %s, error: %+v",
+					params.SignatureID, getSigErr)
+			}
+			if signatureModel != nil {
+				projectID = signatureModel.ProjectID
+				companyID = signatureModel.SignatureReferenceID
+				companyName = signatureModel.CompanyName
+			}
 
-		eventsService.CreateAuditEvent(
-			events.DeleteGithubOrgFromWL, // event type
-			claUser,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s removed GitHub Org %s from the whitelist for project %s company %s (%s).",
-				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
-
+			eventsService.CreateAuditEvent(
+				events.DeleteGithubOrgFromWL, // event type
+				claUser,
+				projectID,
+				companyID,
+				fmt.Sprintf("CLA Manager %s removed GitHub Org %s from the whitelist for project %s company %s (%s).",
+					claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
+				true,
+			)
+		*/
 		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
 	})
 

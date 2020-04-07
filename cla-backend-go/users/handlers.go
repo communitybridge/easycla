@@ -54,14 +54,11 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		claUser.UserID = userModel.UserID
 
 		// Create an event - run as a go-routine
-		eventsService.CreateAuditEvent(
-			events.CreateUser,
-			claUser,
-			"", // no project context for creating users
-			"", // no company context for creating users
-			fmt.Sprintf("%s created a new user %+v", claUser.Name, userModel),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.UserCreated,
+			UserModel: userModel,
+			EventData: &events.UserCreatedEventData{},
+		})
 
 		return users.NewAddUserOK().WithPayload(userModel)
 	})
@@ -80,15 +77,11 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event - run as a go-routine
-		eventsService.CreateAuditEvent(
-			events.UpdateUser,
-			claUser,
-			"", // no project context for creating users
-			"", // no company context for creating users
-			fmt.Sprintf("%s updated user %+v", claUser.Name, userModel),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.UserUpdated,
+			UserModel: userModel,
+			EventData: &events.UserCreatedEventData{},
+		})
 
 		return users.NewUpdateUserOK().WithPayload(userModel)
 	})
@@ -124,15 +117,13 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event - run as a go-routine
-		eventsService.CreateAuditEvent(
-			events.DeleteUser,
-			claUser,
-			"", // no project context for creating users
-			"", // no company context for creating users
-			fmt.Sprintf("%s deleted user id: %s", claUser.Name, params.UserID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.UserDeleted,
+			UserID:    claUser.UserID,
+			EventData: &events.UserDeletedEventData{
+				DeletedUserID: params.UserID,
+			},
+		})
 
 		return users.NewDeleteUserNoContent()
 	})

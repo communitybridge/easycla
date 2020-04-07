@@ -4,8 +4,6 @@
 package whitelist
 
 import (
-	"fmt"
-
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -44,28 +42,29 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 
 			// Create an event
 			// Need to lookup the signature for additional details
-			signatureModel, sigErr := signatureService.GetSignature(params.CorporateClaID)
-			var projectID = ""
-			var companyName = ""
-			if sigErr != nil || signatureModel == nil {
-				log.Warnf("error looking up signature in the whitelist handler for GH Org: %s, company id: %s, error: %v",
-					*params.GithubOrganizationID.ID, params.CorporateClaID, err)
-			}
-			if signatureModel != nil {
-				projectID = signatureModel.ProjectID
-				companyName = signatureModel.CompanyName
-			}
+			/*
+				signatureModel, sigErr := signatureService.GetSignature(params.CorporateClaID)
+				var projectID = ""
+				var companyName = ""
+				if sigErr != nil || signatureModel == nil {
+					log.Warnf("error looking up signature in the whitelist handler for GH Org: %s, company id: %s, error: %v",
+						*params.GithubOrganizationID.ID, params.CorporateClaID, err)
+				}
+				if signatureModel != nil {
+					projectID = signatureModel.ProjectID
+					companyName = signatureModel.CompanyName
+				}
 
-			eventsService.CreateAuditEvent(
-				events.AddGithubOrgToWL,
-				claUser,
-				projectID,
-				params.CompanyID,
-				fmt.Sprintf("%s added GH Org %s to whitelist for project: %s, company: %s (%s)",
-					claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
-				true,
-			)
-
+				eventsService.CreateAuditEvent(
+					events.AddGithubOrgToWL,
+					claUser,
+					projectID,
+					params.CompanyID,
+					fmt.Sprintf("%s added GH Org %s to whitelist for project: %s, company: %s (%s)",
+						claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
+					true,
+				)
+			*/
 			return company.NewAddGithubOrganizationFromClaOK()
 		})
 
@@ -102,30 +101,31 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				return company.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
 			}
 
-			// Create an event
-			// Need to lookup the signature for additional details
-			signatureModel, sigErr := signatureService.GetSignature(params.CorporateClaID)
-			var projectID = ""
-			var companyName = ""
-			if sigErr != nil || signatureModel == nil {
-				log.Warnf("error looking up signature in the whitelist handler for GH Org: %s, company id: %s, error: %v",
-					*params.GithubOrganizationID.ID, params.CorporateClaID, err)
-			}
-			if signatureModel != nil {
-				projectID = signatureModel.ProjectID
-				companyName = signatureModel.CompanyName
-			}
+			/*
+				// Create an event
+				// Need to lookup the signature for additional details
+				signatureModel, sigErr := signatureService.GetSignature(params.CorporateClaID)
+				var projectID = ""
+				var companyName = ""
+				if sigErr != nil || signatureModel == nil {
+					log.Warnf("error looking up signature in the whitelist handler for GH Org: %s, company id: %s, error: %v",
+						*params.GithubOrganizationID.ID, params.CorporateClaID, err)
+				}
+				if signatureModel != nil {
+					projectID = signatureModel.ProjectID
+					companyName = signatureModel.CompanyName
+				}
 
-			eventsService.CreateAuditEvent(
-				events.DeleteGithubOrgFromWL,
-				claUser,
-				projectID,
-				params.CompanyID,
-				fmt.Sprintf("%s deleted GH Org %s from the CLA whitelist for project: %s, company: %s (%s)",
-					claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
-				true,
-			)
-
+				eventsService.CreateAuditEvent(
+					events.DeleteGithubOrgFromWL,
+					claUser,
+					projectID,
+					params.CompanyID,
+					fmt.Sprintf("%s deleted GH Org %s from the CLA whitelist for project: %s, company: %s (%s)",
+						claUser.Name, *params.GithubOrganizationID.ID, projectID, companyName, params.CompanyID),
+					true,
+				)
+			*/
 			return company.NewDeleteGithubOrganizationFromClaOK()
 		})
 
@@ -136,16 +136,13 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				return company.NewAddCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
 
-			// Create an event - run as a go-routine
-			eventsService.CreateAuditEventWithUserID(
-				events.CreateCCLAWhitelistRequest,
-				params.Body.UserID,
-				params.ProjectID,
-				params.CompanyID,
-				fmt.Sprintf("%s created a CCLA Whitelist Request for project: %s, company: %s - request id: %s",
-					params.Body.UserID, params.ProjectID, params.CompanyID, requestID),
-				false,
-			)
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType: events.CCLAWhitelistRequestCreated,
+				ProjectID: params.ProjectID,
+				CompanyID: params.CompanyID,
+				UserID:    params.Body.UserID,
+				EventData: &events.CCLAWhitelistRequestDeletedEventData{RequestID: requestID},
+			})
 
 			return company.NewAddCclaWhitelistRequestOK()
 		})
@@ -157,16 +154,13 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				return company.NewDeleteCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
 
-			// Create an event - run as a go-routine
-			eventsService.CreateAuditEvent(
-				events.DeleteCCLAWhitelistRequest,
-				claUser,
-				params.ProjectID,
-				params.CompanyID,
-				fmt.Sprintf("%s deleted a CCLA Whitelist Request for project: %s, company: %s - request id: %s",
-					claUser.Name, params.ProjectID, params.CompanyID, params.RequestID),
-				true,
-			)
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType: events.CCLAWhitelistRequestDeleted,
+				ProjectID: params.ProjectID,
+				CompanyID: params.CompanyID,
+				UserID:    claUser.UserID,
+				EventData: &events.CCLAWhitelistRequestDeletedEventData{RequestID: params.RequestID},
+			})
 
 			return company.NewDeleteCclaWhitelistRequestOK()
 		})
