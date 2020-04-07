@@ -103,7 +103,6 @@ export class AddCompanyModal {
     this.claService.postCompany(company).subscribe(
       (response) => {
         this.currentlySubmitting = false;
-        // this.getAllCompanies();
         window.location.reload(true);
         this.dismiss();
       },
@@ -176,7 +175,7 @@ export class AddCompanyModal {
     this.claService
       .sendInviteRequestEmail(companyId, userId, userEmail, userName)
       .subscribe(() => {
-        this.sendCompanyNotification(false);
+        this.sendCompanyNotification(true);
         this.dismiss();
       });
   }
