@@ -7,15 +7,15 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding headerspacing overflow-scroll="true">
+<ion-content headerspacing overflow-scroll="true">
   <header>
     <ion-grid>
-      <ion-row>
+      <ion-row align-items-center>
         <ion-col col-12 col-md-2>
           <img [src]="project.logoUrl" alt="{{ project.name }} Logo" />
         </ion-col>
         <ion-col col-12 col-md-10>
-          <h1>{{ project.project_name }}</h1>
+          <div class="project-title">{{ project.project_name }}</div>
         </ion-col>
       </ion-row>
     </ion-grid>
@@ -66,6 +66,6 @@
     </ion-row>
   </ion-grid>
 
-</ion-content>
+  <cla-footer></cla-footer>
 
-<cla-footer></cla-footer>
+</ion-content>
