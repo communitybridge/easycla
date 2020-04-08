@@ -2427,7 +2427,11 @@ definitions:
     title: Signatures
     description: Signature Metrics
     properties:
-      count:
+      totalCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      totalUniqueCount:
         type: integer
         format: int64
         x-omitempty: false
@@ -2440,6 +2444,10 @@ definitions:
         format: int64
         x-omitempty: false
       iclaCount:
+        type: integer
+        format: int64
+        x-omitempty: false
+      employeeAndIndividualUnqiueCount:
         type: integer
         format: int64
         x-omitempty: false
