@@ -94,7 +94,7 @@ EasyCLA presents a review agreement link where you confirm your association with
 
    A dialog appears and informs you: You are done!
 
-   ![You are done](../.gitbook/assets/cla-github-you-are-done-1.png)
+   ![You are done](https://github.com/communitybridge/easycla/tree/725b7d86ec71a8f73ce7a3488e637b53b669bc41/.gitbook/assets/cla-github-you-are-done-1.png)
 
 3. Click **RETURN TO REPO**.
 
@@ -114,7 +114,7 @@ To send an email notification to your company's CLA manager to sign Corporate CL
 
    A message shows that your email is successfully sent.
 
-   ![](../.gitbook/assets/email-to-whitelist%20%281%29.png)
+   ![](https://github.com/communitybridge/easycla/tree/725b7d86ec71a8f73ce7a3488e637b53b669bc41/.gitbook/assets/email-to-whitelist%20%281%29.png)
 
 ## If You are not whitelisted
 
