@@ -102,7 +102,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving CCLA signature total record count, error: %v", err)
 			return
@@ -116,7 +118,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving employee signature total record count, error: %v", err)
 			return
@@ -130,7 +134,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
 			return
@@ -144,7 +150,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, uniqueCount, err := repo.getSignatureManagerCounts(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving CLA Manager counts, error: %v", err)
 			return
