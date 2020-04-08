@@ -4,9 +4,11 @@ import (
 	"context"
 	"os"
 
-	"github.com/communitybridge/easycla/cla-backend-go/config"
-
 	"github.com/aws/aws-lambda-go/lambda"
+
+	"github.com/communitybridge/easycla/cla-backend-go/token"
+
+	"github.com/communitybridge/easycla/cla-backend-go/config"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,6 +47,7 @@ func init() {
 	}
 
 	metricsRepo = metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
+	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 }
 
 func handler(ctx context.Context, event events.CloudWatchEvent) {
