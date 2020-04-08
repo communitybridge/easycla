@@ -270,16 +270,10 @@ export class ClaService {
   /**
    * /user/{user_id}/request-company-ccla
    */
-  postUserCCLARequestToManager(userId, data) {
-    if (this.localTesting) {
-      return this.http
-        .post(this.v2ClaAPIURLLocal + '/v2/user/' + userId + '/request-company-ccla/', data)
-        .map((res) => res.json());
-    } else {
-      return this.http
-        .post(this.claApiUrl + '/v2/user/' + userId + '/request-company-ccla/', data)
-        .map((res) => res.json());
-    }
+  postUserCCLARequestToManager(companyId, projectId) {
+    return this.http
+      .post(this.claApiUrl + '/v3/company/' + companyId + '/ccla_whitelist_requests?projectId=' + projectId)
+      .map((res) => res.json());
   }
 
   /**
@@ -636,14 +630,14 @@ export class ClaService {
     return this.http
       .delete(
         this.claApiUrl +
-          '/v1/project/' +
-          projectId +
-          '/document/' +
-          documentType +
-          '/' +
-          majorVersion +
-          '/' +
-          minorVersion
+        '/v1/project/' +
+        projectId +
+        '/document/' +
+        documentType +
+        '/' +
+        majorVersion +
+        '/' +
+        minorVersion
       )
       .map((res) => res.json());
   }
@@ -759,14 +753,14 @@ export class ClaService {
     return this.http
       .get(
         this.claApiUrl +
-          '/v2/repository-provider/' +
-          provider +
-          '/sign/' +
-          installationId +
-          '/' +
-          githubRepositoryId +
-          '/' +
-          changeRequestId
+        '/v2/repository-provider/' +
+        provider +
+        '/sign/' +
+        installationId +
+        '/' +
+        githubRepositoryId +
+        '/' +
+        changeRequestId
       )
       .map((res) => res.json());
   }
@@ -852,9 +846,9 @@ export class ClaService {
   postCCLAWhitelistRequest(companyID, projectID, user) {
 
     if (this.localTesting) {
-      return this.http.post(this.v3ClaAPIURLLocal + '/v3/company/' + companyID + '/ccla_whitelist_requests/'+ projectID, user);
+      return this.http.post(this.v3ClaAPIURLLocal + '/v3/company/' + companyID + '/ccla_whitelist_requests/' + projectID, user);
     } else {
-      return this.http.post(this.claApiUrl + '/v3/company/' + companyID + '/ccla_whitelist_requests/'+ projectID, user);
+      return this.http.post(this.claApiUrl + '/v3/company/' + companyID + '/ccla_whitelist_requests/' + projectID, user);
     }
   }
 

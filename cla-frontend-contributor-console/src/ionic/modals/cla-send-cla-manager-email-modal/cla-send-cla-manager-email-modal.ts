@@ -109,15 +109,9 @@ export class ClaSendClaManagerEmailModal {
     this.currentlySubmitting = true;
     if (!this.form.valid) {
       this.currentlySubmitting = false;
-      // prevent submit
       return;
     }
-    let data = {
-      user_email: this.form.value.email,
-      company_id: this.companyId,
-      project_id: this.projectId
-    };
-    this.claService.postUserCCLARequestToManager(this.userId, data).subscribe((response) => {
+    this.claService.postUserCCLARequestToManager(this.companyId, this.projectId).subscribe((response) => {
       this.emailSent();
     });
   }
