@@ -29,7 +29,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
 				UserID:    params.Body.UserID,
-				EventData: &events.CCLAWhitelistRequestDeletedEventData{RequestID: requestID},
+				EventData: &events.CCLAWhitelistRequestCreatedEventData{RequestID: requestID},
 			})
 
 			return company.NewAddCclaWhitelistRequestOK()

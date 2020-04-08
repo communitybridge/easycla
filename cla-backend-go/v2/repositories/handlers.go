@@ -34,7 +34,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 				EventType:         events.GithubRepositoryAdded,
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
 				ExternalProjectID: params.ProjectSFID,
-				UserName:          authUser.UserName,
+				LfUsername:        authUser.UserName,
 				EventData: &events.GithubRepositoryAddedEventData{
 					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
 				},

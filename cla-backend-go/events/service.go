@@ -75,10 +75,10 @@ type LogEventArgs struct {
 	CompanyModel      *models.Company
 	LfUsername        string
 	UserID            string
-	UserName          string
 	UserModel         *models.User
 	ExternalProjectID string
 	EventData         EventData
+	userName          string
 	projectName       string
 	companyName       string
 }
@@ -86,6 +86,7 @@ type LogEventArgs struct {
 func (s *service) loadCompany(args *LogEventArgs) error {
 	if args.CompanyModel != nil {
 		args.companyName = args.CompanyModel.CompanyName
+		args.CompanyID = args.CompanyModel.CompanyID
 		return nil
 	}
 	if args.CompanyID != "" {
@@ -101,6 +102,7 @@ func (s *service) loadCompany(args *LogEventArgs) error {
 
 func (s *service) loadProject(args *LogEventArgs) error {
 	if args.ProjectModel != nil {
+		args.ProjectID = args.ProjectModel.ProjectID
 		args.projectName = args.ProjectModel.ProjectName
 		args.ExternalProjectID = args.ProjectModel.ProjectExternalID
 		return nil
@@ -119,8 +121,9 @@ func (s *service) loadProject(args *LogEventArgs) error {
 
 func (s *service) loadUser(args *LogEventArgs) error {
 	if args.UserModel != nil {
-		args.UserName = args.UserModel.Username
+		args.userName = args.UserModel.Username
 		args.UserID = args.UserModel.UserID
+		args.LfUsername = args.UserModel.LfUsername
 		return nil
 	}
 	if args.UserID == "" && args.LfUsername == "" {
@@ -141,8 +144,9 @@ func (s *service) loadUser(args *LogEventArgs) error {
 		}
 	}
 	args.UserModel = userModel
-	args.UserName = userModel.Username
+	args.userName = userModel.Username
 	args.UserID = userModel.UserID
+	args.LfUsername = userModel.LfUsername
 	return nil
 }
 
@@ -189,7 +193,7 @@ func (s *service) LogEvent(args *LogEventArgs) {
 		EventProjectName:       args.projectName,
 		EventType:              args.EventType,
 		UserID:                 args.UserID,
-		UserName:               args.UserName,
+		UserName:               args.userName,
 	}
 	err = s.repo.CreateEvent(&event)
 	if err != nil {

@@ -80,7 +80,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType: events.UserUpdated,
 			UserModel: userModel,
-			EventData: &events.UserCreatedEventData{},
+			EventData: &events.UserUpdatedEventData{},
 		})
 
 		return users.NewUpdateUserOK().WithPayload(userModel)
