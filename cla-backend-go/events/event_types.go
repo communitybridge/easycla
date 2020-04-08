@@ -47,4 +47,7 @@ const (
 
 	CCLAWhitelistRequestCreated = "ccla_whitelist_request.created"
 	CCLAWhitelistRequestDeleted = "ccla_whitelist_request.deleted"
+
+	WhitelistGithubOrganizationAdded   = "whitelist.github_organization_added"
+	WhitelistGithubOrganizationDeleted = "whitelist.github_organization_deleted"
 )

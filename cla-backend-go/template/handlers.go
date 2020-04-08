@@ -36,7 +36,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventType: events.CLATemplateCreated,
 			ProjectID: params.ClaGroupID,
 			UserID:    claUser.UserID,
-			EventData: nil,
+			EventData: &events.CLATemplateCreatedEventData{},
 		})
 
 		return template.NewCreateCLAGroupTemplateOK().WithPayload(&pdfUrls)

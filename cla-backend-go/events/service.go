@@ -5,8 +5,9 @@ package events
 
 import (
 	"errors"
+	"fmt"
 
-	"github.com/communitybridge/easycla/cla-backend-go/user"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	eventOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
@@ -40,116 +41,12 @@ func NewService(repo Repository, combinedRepo CombinedRepo) Service {
 }
 
 func (s *service) CreateEvent(event models.Event) error {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("panic occured in CreateEvent", fmt.Errorf("%v", r))
+		}
+	}()
 	return s.repo.CreateEvent(&event)
-}
-
-// CreateAuditEventWithUserID creates an audit event record in the database
-func (s *service) CreateAuditEventWithUserID(eventType, userID, projectID, companyID, data string, containsPII bool) {
-	/*
-		var projectName = "not defined"
-		var projectExternalID = "not defined"
-		if projectID != "" {
-			projectModel, projectErr := s.combinedRepo.GetProjectByID(projectID)
-			if projectErr != nil || projectModel == nil {
-				log.Warnf("error looking up the project by id: %s, error: %+v", projectID, projectErr)
-			}
-			if projectModel != nil {
-				projectName = projectModel.ProjectName
-				projectExternalID = projectModel.ProjectExternalID
-			}
-		}
-		var companyName = "not defined"
-		if companyID != "" {
-			companyModel, companyErr := s.repo.GetCompany(companyID)
-			if companyErr != nil || companyModel == nil {
-				log.Warnf("error looking up the company by id: %s, error: %+v", companyID, companyErr)
-			}
-			if companyModel != nil {
-				companyName = companyModel.CompanyName
-			}
-		}
-		var userName = "not defined"
-		if userID != "" {
-			userModel, userErr := s.repo.GetUserByUserName(userID, true)
-			if userErr != nil || userModel == nil {
-				log.Warnf("error looking up the user by id: %s, error: %+v", userID, userErr)
-			}
-			if userModel != nil {
-				userName = userModel.Username
-			}
-		}
-		// Create and log the event
-		eventErr := s.CreateEvent(models.Event{
-			UserID:                 userID,
-			UserName:               userName,
-			EventProjectID:         projectID,
-			EventProjectName:       projectName,
-			EventCompanyID:         companyID,
-			EventCompanyName:       companyName,
-			EventType:              eventType,
-			EventTime:              time.Now().UTC().Format(time.RFC3339),
-			EventTimeEpoch:         time.Now().Unix(),
-			EventData:              data,
-			EventProjectExternalID: projectExternalID,
-			ContainsPII:            containsPII,
-		})
-		if eventErr != nil {
-			log.Warnf("error adding event type: %s by user %s (%s) for project: %s (%s) and company: %s (%s) to the event log, error: %v",
-				eventType, userName, userID, projectName, projectID, companyName, companyID, eventErr)
-		}
-	*/
-}
-
-// CreateAuditEvent creates an audit event record in the database
-func (s *service) CreateAuditEvent(eventType string, claUser *user.CLAUser, projectID, companyID, data string, containsPII bool) {
-	/*
-
-		var projectName = "not defined"
-		var projectExternalID = "not defined"
-		if projectID != "" {
-			projectModel, projectErr := s.repo.GetProject(projectID)
-			if projectErr != nil || projectModel == nil {
-				log.Warnf("error looking up the project by id: %s, error: %+v", projectID, projectErr)
-			}
-			if projectModel != nil {
-				projectName = projectModel.ProjectName
-				projectExternalID = projectModel.ProjectExternalID
-			}
-		}
-
-		var companyName = "not defined"
-		if companyID != "" {
-			companyModel, companyErr := s.repo.GetCompany(companyID)
-			if companyErr != nil || companyModel == nil {
-				log.Warnf("error looking up the company by id: %s, error: %+v", companyID, companyErr)
-			}
-			if companyModel != nil {
-				companyName = companyModel.CompanyName
-			}
-		}
-
-		// Create and log the event
-		eventErr := s.CreateEvent(models.Event{
-			UserID:                 claUser.UserID,
-			UserName:               claUser.Name,
-			EventProjectID:         projectID,
-			EventProjectName:       projectName,
-			EventCompanyID:         companyID,
-			EventCompanyName:       companyName,
-			EventType:              eventType,
-			EventTime:              time.Now().UTC().Format(time.RFC3339),
-			EventTimeEpoch:         time.Now().Unix(),
-			EventData:              data,
-			EventProjectExternalID: projectExternalID,
-			ContainsPII:            containsPII,
-		})
-
-		if eventErr != nil {
-			log.Warnf("error adding event type: %s by user %s (%s) for project: %s (%s) and company: %s (%s) to the event log, error: %v",
-				eventType, claUser.Name, claUser.UserID, projectName, projectID, companyName, companyID, eventErr)
-		}
-
-	*/
 }
 
 // SearchEvents service definition

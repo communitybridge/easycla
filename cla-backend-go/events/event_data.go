@@ -46,6 +46,12 @@ type CCLAWhitelistRequestCreatedEventData struct {
 type CCLAWhitelistRequestDeletedEventData struct {
 	RequestID string
 }
+type WhitelistGithubOrganizationAddedEventData struct {
+	GithubOrganizationName string
+}
+type WhitelistGithubOrganizationDeletedEventData struct {
+	GithubOrganizationName string
+}
 
 func (ed *GithubRepositoryAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] added github repository [%s] to project [%s]", args.UserName, ed.RepositoryName, args.projectName)
@@ -110,5 +116,17 @@ func (ed *CCLAWhitelistRequestDeletedEventData) GetEventString(args *LogEventArg
 func (ed *CCLAWhitelistRequestCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] created a CCLA Whitelist Request for project: [%s], company: [%s] - request id: %s",
 		args.UserName, args.projectName, args.companyName, ed.RequestID)
+	return data, true
+}
+
+func (ed *WhitelistGithubOrganizationAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s] added GitHub Organization [%s] to the whitelist for project [%s] company [%s]",
+		args.UserName, ed.GithubOrganizationName, args.projectName, args.companyName)
+	return data, true
+}
+
+func (ed *WhitelistGithubOrganizationDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s] removed GitHub Organization [%s] from the whitelist for project [%s] company [%s]",
+		args.UserName, ed.GithubOrganizationName, args.projectName, args.companyName)
 	return data, true
 }

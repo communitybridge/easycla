@@ -144,7 +144,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 		if err != nil {
 			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
 				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
-			return company.NewAddGithubOrganizationFromClaBadRequest()
+			return company.NewAddUsertoCompanyAccessListBadRequest()
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
