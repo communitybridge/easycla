@@ -42,12 +42,20 @@ const (
 	GithubOrganizationAdded   = "github_organization.added"
 	GithubOrganizationDeleted = "github_organization.deleted"
 
-	PendingInviteDeleted = "pending_invite.deleted"
-	CompanyACLUserAdded  = "company_acl.user_added"
+	CompanyACLUserAdded      = "company_acl.user_added"
+	CompanyACLRequestAdded   = "company_acl.request_added"
+	CompanyACLRequestDeleted = "company_acl.request_deleted"
 
 	CCLAWhitelistRequestCreated = "ccla_whitelist_request.created"
 	CCLAWhitelistRequestDeleted = "ccla_whitelist_request.deleted"
 
 	WhitelistGithubOrganizationAdded   = "whitelist.github_organization_added"
 	WhitelistGithubOrganizationDeleted = "whitelist.github_organization_deleted"
+
+	ClaManagerAccessRequestAdded   = "cla_manager.access_request_added"
+	ClaManagerAccessRequestDeleted = "cla_manager.access_request_deleted"
+
+	ProjectCreated = "project.created"
+	ProjectUpdated = "project.updated"
+	ProjectDeleted = "project.deleted"
 )

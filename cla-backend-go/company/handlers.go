@@ -200,6 +200,15 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewSendInviteRequestBadRequest().WithPayload(errorResponse(err))
 		}
 
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLRequestAdded,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLRequestAddedEventData{
+				UserID: params.Body.UserID,
+			},
+		})
+
 		return company.NewSendInviteRequestOK()
 	})
 
@@ -211,10 +220,10 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.PendingInviteDeleted,
+			EventType: events.CompanyACLRequestDeleted,
 			CompanyID: params.CompanyID,
 			UserID:    claUser.UserID,
-			EventData: &events.PendingInviteDeletedEventData{
+			EventData: &events.CompanyACLRequestDeletedEventData{
 				UserLFID: params.User.UserLFID,
 			},
 		})
