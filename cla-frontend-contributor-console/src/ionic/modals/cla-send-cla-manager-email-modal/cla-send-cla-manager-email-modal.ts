@@ -21,7 +21,7 @@ export class ClaSendClaManagerEmailModal {
   userId: string;
   companyId: string;
   authenticated: boolean;
-
+  hasRequestError: boolean = false;
   company: any;
 
   project: any;
@@ -105,15 +105,26 @@ export class ClaSendClaManagerEmailModal {
   }
 
   submit() {
+    this.hasRequestError = false;
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     if (!this.form.valid) {
       this.currentlySubmitting = false;
       return;
     }
-    this.claService.postUserCCLARequestToManager(this.companyId, this.projectId).subscribe((response) => {
-      this.emailSent();
-    });
+    const data = {
+      userId: this.userId
+    };
+
+    this.claService.postUserCCLARequestToManager(this.companyId, this.projectId, data).subscribe(
+      (response) => {
+        this.emailSent();
+      },
+      (exception) => {
+        this.hasRequestError = true;
+        console.log( this.hasRequestError)
+      }
+    );
   }
 
   getProject(projectId) {
